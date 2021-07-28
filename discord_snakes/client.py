@@ -15,7 +15,7 @@ class Snake:
 
         # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
-        self.WSClient = WebsocketClient
+        self.ws: WebsocketClient = WebsocketClient
 
         self._connection = None
         self._closed = False
@@ -27,6 +27,10 @@ class Snake:
     def is_closed(self) -> bool:
         return self._closed
 
+    @property
+    def latency(self) -> float:
+        return self.ws.latency
+
     async def login(self, token):
         """
         Login to discord
@@ -34,26 +38,34 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         await self.http.login(token.strip())
-        dat = await self.WSClient.connect(self.http)
-        dat.dispatcher = self.dispatch
-
-        await self.dispatch("login")
-
-        await dat.run()
+        self.ws = await self.ws.connect(self.http, self.dispatch)
+        self.dispatch("login")
+        await self.ws.run()
 
     def start(self, token):
         self.loop.run_until_complete(self.login(token))
 
-    async def dispatch(self, event: str, *args, **kwargs):
-        log.debug(f"Dispatching event: {event}")
+    def _queue_task(self, coro, event_name, *args, **kwargs):
+        async def _async_wrap(_coro, _event_name, *_args, **_kwargs):
+            try:
+                await coro(*_args, **_kwargs)
+            except asyncio.CancelledError:
+                pass
+            except Exception as e:
+                log.error(e)
 
-        # todo: improve this
+        wrapped = _async_wrap(coro, event_name, *args, **kwargs)
+
+        return asyncio.create_task(wrapped, name=f"snake:: {event_name}")
+
+    def dispatch(self, event: str, *args, **kwargs):
+        log.debug(f"Dispatching event: {event}")
 
         listeners = self._listeners.get(event)
         if listeners:
             for _listen in listeners:
                 try:
-                    await _listen(*args, **kwargs)
+                    self._queue_task(_listen, event, *args, **kwargs)
                 except Exception as e:
                     log.error(f"Error running listener: {e}")
 

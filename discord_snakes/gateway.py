@@ -6,6 +6,7 @@ import threading
 import time
 import traceback
 import zlib
+from typing import Optional
 
 import orjson
 from aiohttp import WSMsgType
@@ -83,7 +84,7 @@ class WebsocketClient:
         "intents",
         "auto_reconnect",
         "session_id",
-        "dispatcher",
+        "dispatch",
         "sequence",
         "_keep_alive",
         "_closed",
@@ -99,11 +100,10 @@ class WebsocketClient:
 
         self.auto_reconnect = None
         self.session_id = None
-        self.dispatcher = None
         self._zlib = zlib.decompressobj()
 
         self.sequence = None
-        self._keep_alive = None
+        self._keep_alive: Optional[BeeGees] = None
         self._max_heartbeat_timeout = 120
         self.thread_id = threading.get_ident()
         self._trace = []
@@ -111,11 +111,16 @@ class WebsocketClient:
         self._closed = False
 
     @classmethod
-    async def connect(cls, http):
+    async def connect(cls, http, dispatch):
         cls.http = http
         cls._gateway = await http.get_gateway()
         cls.ws = await cls.http.websock_connect(cls._gateway)
+        cls.dispatch = dispatch
         return cls()
+
+    @property
+    def latency(self) -> float:
+        return float("inf") if not self._keep_alive else self._keep_alive.latency
 
     def close_reason(self, code):
         """Client was disconnected, print the reason"""
@@ -192,7 +197,7 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
-                await self.dispatcher("ready")
+            self.dispatch(event.lower())
 
     async def run(self):
         while not self._closed:
