@@ -37,7 +37,12 @@ class Snake:
         dat = await self.WSClient.connect(self.http)
         dat.dispatcher = self.dispatch
 
+        await self.dispatch("login")
+
         await dat.run()
+
+    def start(self, token):
+        self.loop.run_until_complete(self.login(token))
 
     async def dispatch(self, event: str, *args, **kwargs):
         log.debug(f"Dispatching event: {event}")
@@ -62,7 +67,7 @@ class Snake:
         if not event:
             event = coro.__name__
 
-        event = event.strip("on_")
+        event = event.replace("on_", "")
 
         if event not in self._listeners:
             self._listeners[event] = []
