@@ -83,6 +83,7 @@ class WebsocketClient:
         "intents",
         "auto_reconnect",
         "session_id",
+        "dispatcher",
         "sequence",
         "_keep_alive",
         "_closed",
@@ -98,6 +99,7 @@ class WebsocketClient:
 
         self.auto_reconnect = None
         self.session_id = None
+        self.dispatcher = None
         self._zlib = zlib.decompressobj()
 
         self.sequence = None
@@ -190,6 +192,7 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
+                await self.dispatcher("ready")
 
     async def run(self):
         while not self._closed:
