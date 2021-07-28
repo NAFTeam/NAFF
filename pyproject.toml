@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "discord-snake"
+version = "0.1.0"
+description = ""
+authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiohttp = "^3.7.4"
+orjson = "^3.6.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
