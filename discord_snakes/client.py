@@ -12,7 +12,10 @@ log = logging.getLogger(logger_name)
 class Snake:
     def __init__(self, loop=None):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
+
+        # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
+        self.WSClient = WebsocketClient
 
         self._connection = None
         self._closed = False
@@ -31,7 +34,7 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         await self.http.login(token.strip())
-        dat = await WebsocketClient.connect(self.http)
+        dat = await self.WSClient.connect(self.http)
         dat.dispatcher = self.dispatch
 
         await dat.run()
