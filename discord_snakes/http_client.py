@@ -101,7 +101,7 @@ class HTTPClient:
 
                         # ratelimits
                         remaining = response.headers.get("X-Ratelimit-Remaining")
-                        if remaining == "0" or response.status == 429:
+                        if remaining == "0" and response.status == 429:
                             raise RateLimited(route=route, code=response.status, resp=response)
 
                         if 300 > response.status >= 200:
@@ -151,15 +151,65 @@ class HTTPClient:
             data = await self.request(Route("GET", "/gateway"))
         except HTTPError as exc:
             raise GatewayNotFound from exc
-        return "{0}?encoding={1}&v=8&compress=zlib-stream".format(data["url"], "json")
+        return "{0}?encoding={1}&v=9&compress=zlib-stream".format(data["url"], "json")
 
     async def websock_connect(self, url: str):
         return await self.__session.ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0
         )
 
-    async def get_user(self, user_id: Snowflake):
-        return await self.request(Route("GET", "/users/{user_id}", user_id=user_id))
+    # region getters
 
-    async def send_typing(self, channel_id: Snowflake):
-        return await self.request(Route("POST", "/channels/{channel_id}/typing", channel_id=channel_id))
+    async def get_user(self, user_id: Snowflake):
+        """
+        Returns a user object for a given user ID
+        :param user_id: The user to get
+        :return: user
+        """
+        return await self.request(Route("GET", f"/users/{user_id}"))
+
+    async def get_message(self, channel_id: Snowflake, message_id):
+        """
+        Returns a specific message in the channel. Returns a message object on success
+        :param channel_id: the channel this message belongs to
+        :param message_id: the id of the message
+        :return: message or None
+        """
+        return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
+
+    async def get_channel(self, channel_id: Snowflake):
+        """
+        Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included
+        :param channel_id: The id of the channel
+        :return: channel
+        """
+        return await self.request(Route("GET", f"/channels/{channel_id}"))
+
+    async def get_guilds(self, limit=200, before: Optional[Snowflake] = None, after: Optional[Snowflake] = None):
+        """
+        Returns a list of partial guild objects the current user is a member of
+        req. `guilds` scope
+        :param limit: max number of guilds to return (1-200)
+        :param before: get guilds before this guild ID
+        :param after: get guilds after this guild ID
+        :return: List[guilds]
+        """
+        params = {"limit": limit}
+
+        if before:
+            params["before"] = before
+        if after:
+            params["after"] = after
+        return await self.request(Route("GET", f"/users/@me/guilds", params=params))
+
+    async def get_guild(self, guild_id: Snowflake, with_counts: Optional[bool] = False):
+        """
+        Returns the guild object for the given ID
+        :param guild_id: the id of the guild
+        :param with_counts: when `true`, will return approximate member and presence counts for the guild
+        :return: a guild object
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)})
+
+
+# endregion
