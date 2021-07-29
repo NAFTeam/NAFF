@@ -1,8 +1,13 @@
 import asyncio
 import logging
+import traceback
+from random import randint
 from typing import Coroutine, Optional, List, Dict
 
+import aiohttp
+
 from discord_snakes.const import logger_name
+from discord_snakes.errors import WebSocketRestart, GatewayNotFound, WebSocketClosed, SnakeException
 from discord_snakes.gateway import WebsocketClient
 from discord_snakes.http_client import HTTPClient
 from discord_snakes.models.discord_objects.guild import Guild
@@ -50,9 +55,62 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         await self.http.login(token.strip())
-        self.ws = await self.ws.connect(self.http, self.dispatch, self.intents)
         self.dispatch("login")
-        await self.ws.run()
+        await self._ws_connect()
+
+    async def _ws_connect(self):
+        params = {
+            "http": self.http,
+            "dispatch": self.dispatch,
+            "intents": self.intents,
+            "resume": False,
+            "session_id": None,
+            "sequence": None,
+        }
+        while not self.is_closed:
+            log.info(f"Attempting to {'re' if params['resume'] else ''}connect to gateway...")
+
+            try:
+                self.ws = await self.ws.connect(**params)
+
+                await self.ws.run()
+            except WebSocketRestart as ex:
+                # internally requested restart
+                self.dispatch("disconnect")
+                if ex.resume:
+                    params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                    continue
+                params.update(resume=False, session_id=None, sequence=None)
+
+            except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
+                self.dispatch("disconnect")
+
+                if isinstance(ex, WebSocketClosed):
+                    if ex.code == 1000:
+                        # clean close
+                        return
+                    elif ex.code == 4011:
+                        raise SnakeException("Your bot is too large, you must use shards") from None
+                    elif ex.code == 4013:
+                        raise SnakeException("Invalid Intents have been passed") from None
+                    elif ex.code == 4014:
+                        raise SnakeException(
+                            "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
+                        ) from None
+                    raise
+
+                if isinstance(ex, OSError) and ex.errno in (54, 10054):
+                    print("should reconnect")
+                    params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                    continue
+                params.update(resume=False, session_id=None, sequence=None)
+
+            except Exception as e:
+                self.dispatch("disconnect")
+                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                params.update(resume=False, session_id=None, sequence=None)
+
+            await asyncio.sleep(randint(1, 5))
 
     def start(self, token):
         self.loop.run_until_complete(self.login(token))
