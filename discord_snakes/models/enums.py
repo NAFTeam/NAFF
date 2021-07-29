@@ -72,15 +72,3 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
     # Special members
     none = 0
     all = AntiFlag()
-
-
-# print(int(Intents.all))
-for e in Intents:
-    print(e)
-
-for i in Intents.PRIVILEGED:
-    print(i)
-
-
-print(int(Intents.all))
-print(Intents.MESSAGES)
