@@ -68,13 +68,12 @@ class Snake:
     def dispatch(self, event: str, *args, **kwargs):
         log.debug(f"Dispatching event: {event}")
 
-        listeners = self._listeners.get(event)
-        if listeners:
-            for _listen in listeners:
-                try:
-                    self._queue_task(_listen, event, *args, **kwargs)
-                except Exception as e:
-                    log.error(f"Error running listener: {e}")
+        listeners = self._listeners.get(event, [])
+        for _listen in listeners:
+            try:
+                self._queue_task(_listen, event, *args, **kwargs)
+            except Exception as e:
+                log.error(f"Error running listener: {e}")
 
     def add_listener(self, coro: Coroutine, event: Optional[str] = None):
         """

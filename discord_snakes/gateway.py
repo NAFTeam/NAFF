@@ -209,6 +209,7 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
+                self.dispatch("ready")
             if event == "GUILD_CREATE":
                 self.dispatch("raw_guild_create", msg["d"])
 
