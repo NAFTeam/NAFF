@@ -76,7 +76,7 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
     DEFAULT = NON_PRIVILEGED
 
     # Special members
-    none = 0
+    NONE = 0
     ALL = AntiFlag()
 
     @classmethod
@@ -111,7 +111,7 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
         kwargs = locals()
         del kwargs["cls"]
 
-        base = cls.none
+        base = cls.NONE
         for key in kwargs:
             if kwargs[key]:
                 base = base | getattr(cls, key)
@@ -142,5 +142,5 @@ class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):
     BUG_HUNTER = BUG_HUNTER_LEVEL_1 | BUG_HUNTER_LEVEL_2
 
     # Special members
-    none = 0
+    NONE = 0
     ALL = AntiFlag()
