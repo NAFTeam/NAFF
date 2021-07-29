@@ -1,6 +1,14 @@
 from enum import IntEnum, IntFlag
 
 
+class AntiFlag:
+    def __init__(self, anti=0):
+        self.anti = anti
+
+    def __get__(self, instance, cls):
+        return ~cls(self.anti)
+
+
 class WebSocketOPCodes(IntEnum):
     DISPATCH = 0
     HEARTBEAT = 1
@@ -18,6 +26,7 @@ class WebSocketOPCodes(IntEnum):
 
 
 class Intents(IntFlag):
+    # Intents defined by Discord API
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1
     GUILD_BANS = 1 << 2
@@ -33,3 +42,15 @@ class Intents(IntFlag):
     DIRECT_MESSAGES = 1 << 12
     DIRECT_MESSAGE_REACTIONS = 1 << 13
     DIRECT_MESSAGE_TYPING = 1 << 14
+
+    # Shortcuts/grouping/aliases
+    MESSAGES = GUILD_MESSAGES | DIRECT_MESSAGES
+    REACTIONS = GUILD_MESSAGE_REACTIONS | DIRECT_MESSAGE_REACTIONS
+    TYPING = GUILD_MESSAGE_TYPING | DIRECT_MESSAGE_TYPING
+
+    PRIVILEGED = GUILD_PRESENCES | GUILD_MEMBERS
+    NON_PRIVILEGED = AntiFlag(PRIVILEGED)
+
+    # Special members
+    none = 0
+    all = AntiFlag()
