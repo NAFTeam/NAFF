@@ -5,7 +5,7 @@ from discord_snakes.models.snowflake import Snowflake
 
 
 class Route:
-    BASE: ClassVar[str] = "https://discord.com/api/v8"
+    BASE: ClassVar[str] = "https://discord.com/api/v9"
 
     def __init__(self, method: str, path: str, **parameters: Any):
         self.path: str = path
@@ -14,12 +14,7 @@ class Route:
         url = f"{self.BASE}{self.path}"
         if parameters:
             if parameters:
-                url = url.format_map(
-                    {
-                        k: _uriquote(v) if isinstance(v, str) else v
-                        for k, v in parameters.items()
-                    }
-                )
+                url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
         self.url: str = url
 
         self.channel_id: Optional[Snowflake] = parameters.get("channel_id")
