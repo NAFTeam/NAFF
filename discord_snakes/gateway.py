@@ -11,6 +11,7 @@ import orjson
 from aiohttp import WSMsgType
 
 from discord_snakes.const import logger_name
+from discord_snakes.errors import WebSocketClosed, WebSocketRestart
 from discord_snakes.models.enums import WebSocketOPCodes as OPCODE
 
 log = logging.getLogger(logger_name)
@@ -94,11 +95,12 @@ class WebsocketClient:
         "_trace",
     )
 
-    def __init__(self):
+    def __init__(self, session_id=None, sequence=None):
         self.event_handler = None
 
         self.auto_reconnect = None
-        self.session_id = None
+        self.session_id = session_id
+        self.sequence = sequence
 
         self.buffer = bytearray()
         self._zlib = zlib.decompressobj()
@@ -112,38 +114,20 @@ class WebsocketClient:
         self._closed = False
 
     @classmethod
-    async def connect(cls, http, dispatch, intents):
+    async def connect(cls, http, dispatch, intents, resume=False, session_id=None, sequence=None):
         cls.http = http
         cls._gateway = await http.get_gateway()
         cls.intents = intents
         cls.dispatch = dispatch
         cls.ws = await cls.http.websock_connect(cls._gateway)
+        dispatch("connect")
+        if resume:
+            return cls(session_id, sequence)
         return cls()
 
     @property
     def latency(self) -> float:
         return float("inf") if not self._keep_alive else self._keep_alive.latency
-
-    def close_reason(self, code):
-        """Client was disconnected, print the reason"""
-        dat = {
-            "1000": "Normal Closure",
-            "4000": "We're not sure what went wrong. Try reconnecting?",
-            "4001": "You sent an invalid Gateway opcode or an invalid payload for an opcode. Don't do that!",
-            "4002": "You sent an invalid payload to us. Don't do that!",
-            "4003": "You sent us a payload prior to identifying.",
-            "4004": "The account token sent with your identify payload is incorrect.",
-            "4005": "You sent more than one identify payload. Don't do that!",
-            "4007": "The sequence sent when resuming the session was invalid. Reconnect and start a new session.",
-            "4008": "Woah nelly! You're sending payloads to us too quickly. Slow it down! You will be disconnected on receiving this.",
-            "4009": "Your session timed out. Reconnect and start a new one.",
-            "4010": "You sent us an invalid shard when identifying.",
-            "4011": "The session would have handled too many guilds - you are required to shard your connection in order to connect.",
-            "4012": "You sent an invalid version for the gateway.",
-            "4013": "You sent an invalid intent for a Gateway Intent. You may have incorrectly calculated the bitwise value.",
-            "4014": "You sent a disallowed intent for a Gateway Intent. You may have tried to specify an intent that you have not enabled or are not approved for.",
-        }
-        return dat[str(code)]
 
     async def receive(self):
         resp = await self.ws.receive()
@@ -162,7 +146,8 @@ class WebsocketClient:
             msg = msg.decode("utf-8")
 
         if resp.type == WSMsgType.CLOSE:
-            log.error(self.close_reason(msg))
+            await self.close(msg)
+            raise WebSocketClosed(msg)
 
         msg = orjson.loads(msg)
         log.debug(f"Websocket Event: {msg}")
@@ -179,7 +164,10 @@ class WebsocketClient:
                 self._keep_alive = BeeGees(ws=self, interval=interval)
                 await self.send_json(self._keep_alive.get_payload())
                 self._keep_alive.start()
-                await self.identify()
+                if not self.session_id:
+                    await self.identify()
+                else:
+                    await self.resume()
                 return
 
             if op == OPCODE.HEARTBEAT:
@@ -191,14 +179,18 @@ class WebsocketClient:
                     self._keep_alive.ack()
                 return
 
-            if op in (OPCODE.RECONNECT, OPCODE.INVALIDATE_SESSION):
-                await self.close()
-                # todo: reconnection / resume logic
-                if op == OPCODE.RECONNECT:
-                    log.debug("Requested to reconnect")
-                else:
-                    log.debug("Session invalid, reconnect required")
-                return
+            if op in (OPCODE.INVALIDATE_SESSION, OPCODE.RECONNECT):
+                # session invalidated, restart
+                if data is True or op == OPCODE.RECONNECT:
+                    await self.close()
+                    raise WebSocketRestart(True)
+
+                self.session_id = self.sequence = None
+                log.warning("Session has been invalidated")
+
+                await self.close(code=1000)
+                raise WebSocketRestart
+
         else:
             event = msg.get("t")
 
@@ -213,7 +205,7 @@ class WebsocketClient:
 
     async def run(self):
         while not self._closed:
-            resp = await self.receive()
+            await self.receive()
 
     def __del__(self):
         if not self._closed:
@@ -223,6 +215,7 @@ class WebsocketClient:
         if self._closed:
             return
         await self.ws.close(code=code)
+        self._keep_alive.stop()
         self._closed = True
 
     async def send(self, data):
@@ -245,6 +238,15 @@ class WebsocketClient:
         }
         await self.send_json(data)
         log.debug(f"Client has identified itself to Gateway, requesting intents: {self.intents}!")
+
+    async def resume(self):
+        data = {
+            "op": OPCODE.RESUME,
+            "d": {"token": self.http.token, "seq": self.sequence, "session_id": self.session_id},
+        }
+        await self.send_json(data)
+        self.dispatch("resume")
+        log.debug(f"Client is attempting to resume a connection")
 
     async def send_heartbeat(self, data):
         await self.send_json(data)
