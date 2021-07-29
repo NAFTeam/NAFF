@@ -8,9 +8,9 @@ class BaseUser:
     __slots__ = "id", "username", "discriminator", "avatar"
 
     def __init__(self, data: dict):
-        self.id = data["id"]
-        self.username = data["username"]
-        self.discriminator = data["discriminator"]
+        self.id: int = data["id"]
+        self.username: str = data["username"]
+        self.discriminator: int = data["discriminator"]
         self.avatar = data["avatar"]  # todo convert to asset
 
     def __str__(self):
@@ -23,8 +23,8 @@ class BaseUser:
 
 class User(BaseUser):
     __slots__ = (
-        "bot",
-        "system",
+        "is_bot",
+        "is_system",
         "mfa_enabled",
         "locale",
         "verified",
@@ -39,15 +39,15 @@ class User(BaseUser):
 
     def __init__(self, data: dict):
         super().__init__(data)
-        self.bot = data.get("bot", False)
-        self.system = data.get("system", False)
-        self.mfa_enabled = data.get("mfa_enabled", False)
-        self.locale = (data.get("locale", None),)
-        self.verified = data.get("verified", False)
-        self.email = data.get("email", None)
-        self.flags = UserFlags(data.get("flags", 0))
-        self.premium_type = PremiumTypes(data.get("premium_type", 0))
-        self.public_flags = UserFlags(data.get("public_flags", 0))
+        self.is_bot: bool = data.get("bot", False)
+        self.is_system: bool = data.get("system", False)
+        self.mfa_enabled: bool = data.get("mfa_enabled", False)
+        self.locale: Optional[str] = data.get("locale")
+        self.verified: Optional[bool] = data.get("verified")
+        self.email: Optional[str] = data.get("email")
+        self.flags: UserFlags = UserFlags(data.get("flags", 0))
+        self.premium_type: PremiumTypes = PremiumTypes(data.get("premium_type", 0))
+        self.public_flags: UserFlags = UserFlags(data.get("public_flags", 0))
         self.banner = data.get("banner")  # todo convert to asset
         self.banner_color = data.get("banner_color")  # todo convert to color objects
         self.accent_color = data.get("accent_color")
