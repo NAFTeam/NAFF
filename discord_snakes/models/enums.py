@@ -1,6 +1,11 @@
+import logging
 from enum import IntEnum, IntFlag, EnumMeta, _decompose
-from operator import or_
 from functools import reduce
+from operator import or_
+
+from discord_snakes.const import logger_name
+
+log = logging.getLogger(logger_name)
 
 
 class AntiFlag:
@@ -68,7 +73,46 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
 
     PRIVILEGED = GUILD_PRESENCES | GUILD_MEMBERS
     NON_PRIVILEGED = AntiFlag(PRIVILEGED)
+    DEFAULT = NON_PRIVILEGED
 
     # Special members
     none = 0
-    all = AntiFlag()
+    ALL = AntiFlag()
+
+    @classmethod
+    def new(
+        cls,
+        GUILDS=False,
+        GUILD_MEMBERS=False,
+        GUILD_BANS=False,
+        GUILD_EMOJIS_AND_STICKERS=False,
+        GUILD_INTEGRATIONS=False,
+        GUILD_WEBHOOKS=False,
+        GUILD_INVITES=False,
+        GUILD_VOICE_STATES=False,
+        GUILD_PRESENCES=False,
+        GUILD_MESSAGES=False,
+        GUILD_MESSAGE_REACTIONS=False,
+        GUILD_MESSAGE_TYPING=False,
+        DIRECT_MESSAGES=False,
+        DIRECT_MESSAGE_REACTIONS=False,
+        DIRECT_MESSAGE_TYPING=False,
+        MESSAGES=False,
+        REACTIONS=False,
+        TYPING=False,
+        PRIVILEGED=False,
+        NON_PRIVILEGED=False,
+        DEFAULT=True,
+        ALL=False,
+    ):
+        """
+        Set your desired intents
+        """
+        kwargs = locals()
+        del kwargs["cls"]
+
+        base = cls.none
+        for key in kwargs:
+            if kwargs[key]:
+                base = base | getattr(cls, key)
+        return cls(base)

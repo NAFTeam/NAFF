@@ -4,7 +4,6 @@ import logging
 import sys
 import threading
 import time
-import traceback
 import zlib
 from typing import Optional
 
@@ -12,7 +11,6 @@ import orjson
 from aiohttp import WSMsgType
 
 from discord_snakes.const import logger_name
-from discord_snakes.errors import BadRequest, SnakeException
 from discord_snakes.models.enums import WebSocketOPCodes as OPCODE
 
 log = logging.getLogger(logger_name)
@@ -98,7 +96,6 @@ class WebsocketClient:
 
     def __init__(self):
         self.event_handler = None
-        self.intents = None
 
         self.auto_reconnect = None
         self.session_id = None
@@ -115,11 +112,12 @@ class WebsocketClient:
         self._closed = False
 
     @classmethod
-    async def connect(cls, http, dispatch):
+    async def connect(cls, http, dispatch, intents):
         cls.http = http
         cls._gateway = await http.get_gateway()
-        cls.ws = await cls.http.websock_connect(cls._gateway)
+        cls.intents = intents
         cls.dispatch = dispatch
+        cls.ws = await cls.http.websock_connect(cls._gateway)
         return cls()
 
     @property
@@ -239,14 +237,14 @@ class WebsocketClient:
             "op": OPCODE.IDENTIFY,
             "d": {
                 "token": self.http.token,
-                "intents": 513,
+                "intents": self.intents,
                 "large_threshold": 250,
                 "properties": {"$os": sys.platform, "$browser": "discord.snakes", "$device": "discord.snakes"},
             },
             "compress": True,
         }
         await self.send_json(data)
-        log.debug("Client has identified itself to Gateway!")
+        log.debug(f"Client has identified itself to Gateway, requesting intents: {self.intents}!")
 
     async def send_heartbeat(self, data):
         await self.send_json(data)

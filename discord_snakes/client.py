@@ -12,8 +12,13 @@ log = logging.getLogger(logger_name)
 
 
 class Snake:
-    def __init__(self, loop=None):
+    def __init__(
+        self,
+        intents,
+        loop=None,
+    ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
+        self.intents = intents
 
         # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
@@ -45,7 +50,7 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         await self.http.login(token.strip())
-        self.ws = await self.ws.connect(self.http, self.dispatch)
+        self.ws = await self.ws.connect(self.http, self.dispatch, self.intents)
         self.dispatch("login")
         await self.ws.run()
 
