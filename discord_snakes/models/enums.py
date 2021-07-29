@@ -144,3 +144,9 @@ class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):
     # Special members
     NONE = 0
     ALL = AntiFlag()
+
+
+class PremiumTypes(IntEnum):
+    NONE = 0
+    NITRO_CLASSIC = 1
+    NITRO = 2
