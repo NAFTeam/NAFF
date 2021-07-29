@@ -1,4 +1,6 @@
-from enum import IntEnum, IntFlag
+from enum import IntEnum, IntFlag, EnumMeta, _decompose
+from operator import or_
+from functools import reduce
 
 
 class AntiFlag:
@@ -6,7 +8,23 @@ class AntiFlag:
         self.anti = anti
 
     def __get__(self, instance, cls):
-        return ~cls(self.anti)
+        negative = ~cls(self.anti)
+        positive = cls(reduce(or_, negative))
+        return positive
+
+
+def _distinct(source):
+    return (x for x in source if (x.value & (x.value - 1)) == 0 and x.value != 0)
+
+
+class DistinctFlag(EnumMeta):
+    def __iter__(cls):
+        yield from _distinct(super().__iter__())
+
+
+class DistinctMixin:
+    def __iter__(self):
+        yield from _decompose(self.__class__, self)[0]
 
 
 class WebSocketOPCodes(IntEnum):
@@ -25,7 +43,7 @@ class WebSocketOPCodes(IntEnum):
     GUILD_SYNC = 12
 
 
-class Intents(IntFlag):
+class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
     # Intents defined by Discord API
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1
@@ -54,3 +72,15 @@ class Intents(IntFlag):
     # Special members
     none = 0
     all = AntiFlag()
+
+
+# print(int(Intents.all))
+for e in Intents:
+    print(e)
+
+for i in Intents.PRIVILEGED:
+    print(i)
+
+
+print(int(Intents.all))
+print(Intents.MESSAGES)
