@@ -11,7 +11,14 @@ class BaseUser:
         self.id = data["id"]
         self.username = data["username"]
         self.discriminator = data["discriminator"]
-        self.avatar = data["avatar"]
+        self.avatar = data["avatar"]  # todo convert to asset
+
+    def __str__(self):
+        return f"{self.username}#{self.discriminator}"
+
+    @property
+    def mention(self):
+        return f"<@{self.id}>"
 
 
 class User(BaseUser):
@@ -41,6 +48,6 @@ class User(BaseUser):
         self.flags = UserFlags(data.get("flags", 0))
         self.premium_type = PremiumTypes(data.get("premium_type", 0))
         self.public_flags = UserFlags(data.get("public_flags", 0))
-        self.banner = data.get("banner")
-        self.banner_color = data.get("banner_color")
+        self.banner = data.get("banner")  # todo convert to asset
+        self.banner_color = data.get("banner_color")  # todo convert to color objects
         self.accent_color = data.get("accent_color")
