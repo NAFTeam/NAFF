@@ -1,7 +1,6 @@
-from typing import Optional, Literal
+from typing import Optional
 
-from discord_snakes.models.snowflake import Snowflake
-from discord_snakes.models.enums import UserFlags, PremiumTypes
+from dis_snek.models.enums import UserFlags, PremiumTypes
 
 
 class BaseUser:

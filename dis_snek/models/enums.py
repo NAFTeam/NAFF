@@ -3,7 +3,7 @@ from enum import IntEnum, IntFlag, EnumMeta, _decompose
 from functools import reduce
 from operator import or_
 
-from discord_snakes.const import logger_name
+from dis_snek.const import logger_name
 
 log = logging.getLogger(logger_name)
 

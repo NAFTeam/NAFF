@@ -10,9 +10,9 @@ from typing import Optional
 import orjson
 from aiohttp import WSMsgType
 
-from discord_snakes.const import logger_name
-from discord_snakes.errors import WebSocketClosed, WebSocketRestart
-from discord_snakes.models.enums import WebSocketOPCodes as OPCODE
+from dis_snek.const import logger_name
+from dis_snek.errors import WebSocketClosed, WebSocketRestart
+from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 
 log = logging.getLogger(logger_name)
 
@@ -192,16 +192,15 @@ class WebsocketClient:
                 raise WebSocketRestart
 
         else:
-            event = msg.get("t")
-
-            if event == "READY":
+            if msg.get("t") == "READY":
                 self._trace = data.get("_trace", [])
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
                 self.dispatch("ready")
-            if event == "GUILD_CREATE":
-                self.dispatch("raw_guild_create", msg["d"])
+            else:
+                self.dispatch("raw_socket_receive", msg)
+            self.dispatch(f"raw_{msg.get('t').lower()}", data)
 
     async def run(self):
         while not self._closed:
@@ -232,7 +231,7 @@ class WebsocketClient:
                 "token": self.http.token,
                 "intents": self.intents,
                 "large_threshold": 250,
-                "properties": {"$os": sys.platform, "$browser": "discord.snakes", "$device": "discord.snakes"},
+                "properties": {"$os": sys.platform, "$browser": "dis.snek", "$device": "dis.snek"},
             },
             "compress": True,
         }

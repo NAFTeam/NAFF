@@ -6,12 +6,13 @@ from typing import Coroutine, Optional, List, Dict
 
 import aiohttp
 
-from discord_snakes.const import logger_name
-from discord_snakes.errors import WebSocketRestart, GatewayNotFound, WebSocketClosed, SnakeException
-from discord_snakes.gateway import WebsocketClient
-from discord_snakes.http_client import HTTPClient
-from discord_snakes.models.discord_objects.guild import Guild
-from discord_snakes.models.snowflake import Snowflake
+from dis_snek.const import logger_name
+from dis_snek.errors import WebSocketRestart, GatewayNotFound, WebSocketClosed, SnakeException
+from dis_snek.gateway import WebsocketClient
+from dis_snek.http_client import HTTPClient
+from dis_snek.models.discord_objects.guild import Guild
+from dis_snek.models.discord_objects.user import User
+from dis_snek.models.snowflake import Snowflake
 
 log = logging.getLogger(logger_name)
 
@@ -35,10 +36,11 @@ class Snake:
 
         # caches
         self.guilds_cache = set()
+        self._user: User = None
 
         self._listeners: Dict[str, List] = {}
 
-        self.add_listener(self._on_raw_guild_create, "raw_guild_create")
+        self.add_listener(self.on_socket_raw, "raw_socket_receive")
 
     @property
     def is_closed(self) -> bool:
@@ -48,13 +50,18 @@ class Snake:
     def latency(self) -> float:
         return self.ws.latency
 
+    @property
+    def user(self) -> User:
+        return self._user
+
     async def login(self, token):
         """
         Login to discord
         :param token: Your bots token
         """
         log.debug(f"Logging in with token: {token}")
-        await self.http.login(token.strip())
+        me = await self.http.login(token.strip())
+        self._user = User(me)
         self.dispatch("login")
         await self._ws_connect()
 
@@ -161,6 +168,32 @@ class Snake:
         """
         self.guilds_cache.add(Guild(data))
 
-    async def get_guild(self, guild_id: Snowflake, with_counts: bool = False):
+    async def on_socket_raw(self, raw: dict):
+        """
+        Processes socket events and dispatches non-raw events
+        :param raw: raw socket data
+        """
+        event = raw.get("t")
+        data = raw.get("d")
+
+        if event == "GUILD_CREATE":
+            guild = Guild(data)
+            # cache guild
+            self.guilds_cache.add(guild)
+            self.dispatch("guild_create", guild)
+
+        # if event == "INTERACTION_CREATE":
+
+        print(event, data)
+
+    async def get_guild(self, guild_id: Snowflake, with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
         return Guild(g_data)
+
+    async def get_guilds(self, limit: int = 200, before: Optional[Snowflake] = None, after: Optional[Snowflake] = None):
+        g_data = await self.http.get_guilds(limit, before, after)
+        to_return = []
+        for g in g_data:
+            to_return.append(Guild(g))
+
+        return to_return

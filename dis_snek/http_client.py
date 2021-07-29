@@ -9,11 +9,11 @@ from urllib.parse import quote as _uriquote
 import aiohttp
 import orjson
 
-from discord_snakes.const import __repo_url__, __version__, __py_version__, logger_name
-from discord_snakes.errors import *
-from discord_snakes.models.route import Route
-from discord_snakes.models.snowflake import Snowflake
-from discord_snakes.utils.utils_json import response_decode
+from dis_snek.const import __repo_url__, __version__, __py_version__, logger_name
+from dis_snek.errors import *
+from dis_snek.models.route import Route
+from dis_snek.models.snowflake import Snowflake
+from dis_snek.utils.utils_json import response_decode
 
 log = logging.getLogger(logger_name)
 

@@ -1,7 +1,7 @@
 from typing import ClassVar, Any, Optional
 from urllib.parse import quote as _uriquote
 
-from discord_snakes.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake
 
 
 class Route:

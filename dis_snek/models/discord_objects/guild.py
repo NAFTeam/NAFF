@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from discord_snakes.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake
 
 
 class BaseGuild:
