@@ -23,7 +23,12 @@ class Snake:
         self._closed = False
         self._ready: asyncio.Event = asyncio.Event()
 
+        # caches
+        self.guilds_cache = set()
+
         self._listeners: Dict[str, List] = {}
+
+        self.add_listener(self._on_raw_guild_create, "raw_guild_create")
 
     @property
     def is_closed(self) -> bool:
@@ -86,6 +91,13 @@ class Snake:
         if event not in self._listeners:
             self._listeners[event] = []
         self._listeners[event].append(coro)
+
+    async def _on_raw_guild_create(self, data: dict):
+        """
+        Automatically cache a guild upon GUILD_CREATE event from gateway
+        :param data: raw guild data
+        """
+        self.guilds_cache.add(Guild(data))
 
     async def get_guild(self, guild_id: Snowflake, with_counts: bool = False):
         g_data = await self.http.get_guild(guild_id, with_counts)

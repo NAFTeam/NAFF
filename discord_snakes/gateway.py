@@ -43,17 +43,18 @@ class BeeGees(threading.Thread):
             data = self.get_payload()
             log.debug(self.msg, 0, data["d"])
             f = asyncio.run_coroutine_threadsafe(self.ws.send_heartbeat(data), loop=self.ws.http.loop)
+            duration = 0
             try:
                 # block until sending is complete
-                total = 0
                 while True:
                     try:
                         f.result(10)
                         break
                     except concurrent.futures.TimeoutError:
-                        total += 10
-                        log.warning("Heartbeat took too l")
+                        duration += 10
+                        log.warning("Heartbeat took too long")
             except Exception:
+                log.debug(f"Unable to send heartbeat for {duration} seconds. Closing")
                 self.stop()
             else:
                 self._last_send = time.perf_counter()
@@ -88,6 +89,7 @@ class WebsocketClient:
         "sequence",
         "_keep_alive",
         "_closed",
+        "buffer",
         "_zlib",
         "_max_heartbeat_timeout",
         "thread_id",
@@ -100,6 +102,8 @@ class WebsocketClient:
 
         self.auto_reconnect = None
         self.session_id = None
+
+        self.buffer = bytearray()
         self._zlib = zlib.decompressobj()
 
         self.sequence = None
@@ -148,7 +152,15 @@ class WebsocketClient:
         msg = resp.data
 
         if type(resp.data) is bytes:
-            msg = self._zlib.decompress(msg)
+            self.buffer.extend(msg)
+
+            if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
+                # message isnt complete yet, wait
+                return
+
+            msg = self._zlib.decompress(self.buffer)
+            self.buffer = bytearray()
+
             msg = msg.decode("utf-8")
 
         if resp.type == WSMsgType.CLOSE:
@@ -197,7 +209,8 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
-            self.dispatch(event.lower())
+            if event == "GUILD_CREATE":
+                self.dispatch("raw_guild_create", msg["d"])
 
     async def run(self):
         while not self._closed:
