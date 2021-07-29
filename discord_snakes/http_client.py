@@ -56,7 +56,7 @@ class HTTPClient:
     def __init__(
         self, connector: Optional[aiohttp.BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None
     ):
-        self.connector = connector
+        self.connector: Optional[aiohttp.BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.__session: aiohttp.ClientSession = None
         self._retries: int = 5
@@ -122,7 +122,7 @@ class HTTPClient:
                             raise HTTPError(response.reason, route, response.status, response)
 
                 except OSError as e:
-                    if tries < self._retries - 1 and e.errno in (54, 10054):
+                    if (tries < self._retries - 1 and e.errno in (54, 10054)):
                         await asyncio.sleep(1 + tries * 2)
                         continue
                     raise
@@ -131,12 +131,12 @@ class HTTPClient:
         self.__session = aiohttp.ClientSession(
             connector=self.connector, ws_response_class=DiscordClientWebSocketResponse
         )
-        self.token = token
+        self.token: str = token
         try:
             return await self.request(Route("GET", "/users/@me"))
         except HTTPError as e:
             if e.status_code == 401:
-                raise HTTPError("An improper was token passed", e.route, e.status_code, e.response) from e
+                raise HTTPError("An improper token was passed", e.route, e.status_code, e.response) from e
             raise
 
     async def close(self):
@@ -148,7 +148,7 @@ class HTTPClient:
 
     async def get_gateway(self):
         try:
-            data = await self.request(Route("GET", "/gateway"))
+            data: dict = await self.request(Route("GET", "/gateway"))
         except HTTPError as exc:
             raise GatewayNotFound from exc
         return "{0}?encoding={1}&v=9&compress=zlib-stream".format(data["url"], "json")
@@ -194,7 +194,7 @@ class HTTPClient:
         :param after: get guilds after this guild ID
         :return: List[guilds]
         """
-        params = {"limit": limit}
+        params: Dict[int, Optional[Snowflake]] = {"limit": limit}
 
         if before:
             params["before"] = before
