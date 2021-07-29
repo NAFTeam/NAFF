@@ -3,6 +3,7 @@ from typing import Optional, Literal
 from discord_snakes.models.snowflake import Snowflake
 from discord_snakes.models.enums import UserFlags, PremiumTypes
 
+
 class BaseUser:
     __slots__ = "id", "username", "discriminator", "avatar"
 
@@ -37,9 +38,9 @@ class User(BaseUser):
         self.locale = (data.get("locale", None),)
         self.verified = data.get("verified", False)
         self.email = data.get("email", None)
-        self.flags = data.get("flags", 0)
-        self.premium_type = data.get("premium_type", 0)
-        self.public_flags = data.get("public_flags", 0)
+        self.flags = UserFlags(data.get("flags", 0))
+        self.premium_type = PremiumTypes(data.get("premium_type", 0))
+        self.public_flags = UserFlags(data.get("public_flags", 0))
         self.banner = data.get("banner")
         self.banner_color = data.get("banner_color")
         self.accent_color = data.get("accent_color")
