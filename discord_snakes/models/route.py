@@ -21,3 +21,7 @@ class Route:
         self.guild_id: Optional[Snowflake] = parameters.get("guild_id")
         self.webhook_id: Optional[Snowflake] = parameters.get("webhook_id")
         self.webhook_token: Optional[str] = parameters.get("webhook_token")
+
+    @property
+    def rl_bucket(self):
+        return f"{self.channel_id}:{self.guild_id}:{self.path}"

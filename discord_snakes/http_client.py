@@ -1,20 +1,19 @@
 import asyncio
+import datetime
 import logging
-import time
+import traceback
 from types import TracebackType
-from typing import TYPE_CHECKING, TypeVar, Coroutine, Any, Optional, Type, Dict, Union
+from typing import TypeVar, Coroutine, Any, Optional, Type, Dict, Union
 from urllib.parse import quote as _uriquote
 
+import aiohttp
 import orjson
 
-import aiohttp
-
+from discord_snakes.const import __repo_url__, __version__, __py_version__, logger_name
 from discord_snakes.errors import *
-from discord_snakes.models.discord_objects.user import User
 from discord_snakes.models.route import Route
 from discord_snakes.models.snowflake import Snowflake
 from discord_snakes.utils.utils_json import response_decode
-from discord_snakes.const import __repo_url__, __version__, __py_version__, logger_name
 
 log = logging.getLogger(logger_name)
 
@@ -62,6 +61,8 @@ class HTTPClient:
         self._retries: int = 5
         self.token: Optional[str] = None
 
+        self.ratelimit_locks = {}
+
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
         )
@@ -70,11 +71,24 @@ class HTTPClient:
         if self.__session and not self.__session.closed:
             self.loop.run_until_complete(self.__session.close())
 
+    def _parse_ratelimit(self, header: dict):
+        return {
+            "bucket": header.get("x-ratelimit-bucket"),
+            "limit": header.get("x-ratelimit-limit"),
+            "remaining": header.get("x-ratelimit-remaining"),
+            "delta": float(header.get("x-ratelimit-reset-after")),
+            "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset"))),
+        }
+
     async def request(self, route: Route, **kwargs: Any):
         """Make a request to the discord API"""
-        lock = asyncio.Lock()
-
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
+
+        lock = self.ratelimit_locks.get(route.rl_bucket)
+        if lock is None:
+            lock = asyncio.Lock()
+            if route.rl_bucket is not None:
+                self.ratelimit_locks[route.rl_bucket] = lock
 
         if self.token is not None:
             headers["Authorization"] = "Bot " + self.token
@@ -101,8 +115,14 @@ class HTTPClient:
 
                         # ratelimits
                         remaining = response.headers.get("X-Ratelimit-Remaining")
-                        if remaining == "0" and response.status == 429:
-                            raise RateLimited(route=route, code=response.status, resp=response)
+                        if remaining == "0" and response.status != 429:
+                            r_limit = self._parse_ratelimit(response.headers)
+                            log.debug(
+                                f"A rate limit has been reached. (Bucket: {route.rl_bucket} | Retrying in: {r_limit['delta']}"
+                            )
+
+                            maybe_unlock.defer()
+                            self.loop.call_later(r_limit["delta"], lock.release)
 
                         if 300 > response.status >= 200:
                             log.debug(f"{route.method} {route.url} has received {data}")
@@ -122,10 +142,12 @@ class HTTPClient:
                             raise HTTPError(response.reason, route, response.status, response)
 
                 except OSError as e:
-                    if (tries < self._retries - 1 and e.errno in (54, 10054)):
+                    if tries < self._retries - 1 and e.errno in (54, 10054):
                         await asyncio.sleep(1 + tries * 2)
                         continue
                     raise
+                except Exception as e:
+                    log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     async def login(self, token: str):
         self.__session = aiohttp.ClientSession(
@@ -210,6 +232,17 @@ class HTTPClient:
         :return: a guild object
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)})
+
+    async def get_slash_commands(self, application_id: Snowflake, guild_id: Optional[Snowflake] = None):
+        """
+        Requests all SlashCommands for this application from discord
+        :param application_id: the what application to query
+        :param guild_id: specify a guild to get commands from
+        :return:
+        """
+        if not guild_id:
+            return await self.request(Route("GET", f"/applications/{application_id}/commands"))
+        return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
 
 # endregion
