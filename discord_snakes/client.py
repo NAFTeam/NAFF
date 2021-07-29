@@ -5,6 +5,8 @@ from typing import Coroutine, Optional, List, Dict
 from discord_snakes.const import logger_name
 from discord_snakes.gateway import WebsocketClient
 from discord_snakes.http_client import HTTPClient
+from discord_snakes.models.discord_objects.guild import Guild
+from discord_snakes.models.snowflake import Snowflake
 
 log = logging.getLogger(logger_name)
 
@@ -84,3 +86,7 @@ class Snake:
         if event not in self._listeners:
             self._listeners[event] = []
         self._listeners[event].append(coro)
+
+    async def get_guild(self, guild_id: Snowflake, with_counts: bool = False):
+        g_data = await self.http.get_guild(guild_id, with_counts)
+        return Guild(g_data)
