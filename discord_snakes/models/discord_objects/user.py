@@ -1,12 +1,12 @@
 from typing import Optional, Literal
 
 from discord_snakes.models.snowflake import Snowflake
-
+from discord_snakes.models.enums import UserFlags, PremiumTypes
 
 class BaseUser:
     __slots__ = "id", "username", "discriminator", "avatar"
 
-    def _update(self, data: dict):
+    def __init__(self, data: dict):
         self.id = data["id"]
         self.username = data["username"]
         self.discriminator = data["discriminator"]
@@ -29,11 +29,8 @@ class User(BaseUser):
         "accent_color",
     )
 
-    def __init__(self, data):
-        self._update(data)
-
-    def _update(self, data: dict):
-        super()._update(data)
+    def __init__(self, data: dict):
+        super().__init__(data)
         self.bot = data.get("bot", False)
         self.system = data.get("system", False)
         self.mfa_enabled = data.get("mfa_enabled", False)
