@@ -3,6 +3,7 @@ from typing import Optional, List
 
 from dis_snek.models.discord_objects.user import User, Member
 from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.enums import MessageFlags, MessageTypes, MessageActivityTypes
 
 
 class Message:
@@ -32,9 +33,9 @@ class Message:
         self.sticker_items: Optional[List[dict]] = data.get("sticker_items")
         self.components: Optional[List[dict]] = data.get("components")
         self.pinned: bool = data.get("pinned", False)
-        self.flags: int = data.get("flags", 0)  # todo convert to flags
+        self.flags: int = MessageFlags(data.get("flags", 0))
         self.tts: bool = data["tts"]
-        self.type: int = data["type"]
+        self.type: int = MessageTypes(data["type"])
 
         # related content
         self.reactions: Optional[List[dict]] = data.get("reactions", [])
