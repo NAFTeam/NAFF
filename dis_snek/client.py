@@ -197,3 +197,6 @@ class Snake:
             to_return.append(Guild(g))
 
         return to_return
+
+    async def send_message(self, channel: Snowflake, content: str):
+        await self.http.create_message(channel, content)

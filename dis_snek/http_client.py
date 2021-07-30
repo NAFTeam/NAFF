@@ -3,7 +3,7 @@ import datetime
 import logging
 import traceback
 from types import TracebackType
-from typing import TypeVar, Coroutine, Any, Optional, Type, Dict, Union
+from typing import TypeVar, Coroutine, Any, Optional, Type, Dict, Union, List
 from urllib.parse import quote as _uriquote
 
 import aiohttp
@@ -247,5 +247,25 @@ class HTTPClient:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
+    # endregion
 
-# endregion
+    async def create_message(
+        self,
+        channel_id: Snowflake,
+        content: Optional[str],
+        tts: Optional[bool] = False,
+        embeds: Optional[List[Dict]] = None,
+    ):
+        """
+
+        :return:
+        """
+        payload = {}
+
+        if content:
+            payload["content"] = content
+        if tts:
+            payload[tts] = tts
+        if embeds:
+            payload["embeds"] = embeds
+        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), json=payload)
