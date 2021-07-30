@@ -124,8 +124,6 @@ class Guild(BaseGuild):
         for t_data in threads:
             self._threads.append(Channel.create(t_data, self._client))
 
-        breakpoint()
-
     @property
     async def channels(self) -> List[TYPE_ALL_CHANNEL]:
         if not self._channels:
