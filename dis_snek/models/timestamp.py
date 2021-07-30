@@ -53,6 +53,14 @@ class Timestamp(datetime):
         return super().fromisocalendar(year, week, day).replace(tzinfo=timezone.utc)
 
     @classmethod
+    def fromtimestamp(cls, t: float, tz = None): # TODO: typehint this
+        timestamp = super().fromtimestamp(t, tz=tz)
+        
+        if timestamp.tzinfo is None: # assume naive datetimes are based on local timezone
+            return timestamp.astimezone()
+        return timestamp
+
+    @classmethod
     def fromordinal(cls, n: int):
         return super().fromordinal(n).replace(tzinfo=timezone.utc)
 
