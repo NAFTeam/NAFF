@@ -263,6 +263,7 @@ class HTTPClient:
         content: Optional[str],
         tts: Optional[bool] = False,
         embeds: Optional[List[Dict]] = None,
+        components: Optional[List[dict]] = None,
     ):
         """
 
@@ -276,4 +277,6 @@ class HTTPClient:
             payload[tts] = tts
         if embeds:
             payload["embeds"] = embeds
+        if components:
+            payload["components"] = components
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), json=payload)

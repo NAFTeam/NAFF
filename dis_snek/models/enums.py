@@ -212,3 +212,32 @@ class ChannelTypes(IntEnum):
     GUILD_PUBLIC_THREAD = 11
     GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
+
+
+class ComponentType(IntEnum):
+    """
+    The types of components supported by discord
+    """
+
+    ACTION_ROW = 1
+    BUTTON = 2
+    SELECT = 3
+
+
+class ButtonStyle(IntEnum):
+    """
+    The styles of buttons supported
+    """
+
+    BLUE = 1
+    BLURPLE = 1
+    GRAY = 2
+    GREY = 2
+    GREEN = 3
+    RED = 4
+    URL = 5
+
+    PRIMARY = 1
+    SECONDARY = 2
+    SUCCESS = 3
+    DANGER = 4
