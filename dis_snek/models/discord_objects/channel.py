@@ -9,6 +9,19 @@ if TYPE_CHECKING:
 
 
 class Channel:
+    __slots__ = (
+        "_client",
+        "id",
+        "_type",
+        "name",
+        "topic",
+        "position",
+        "parent_id",
+        "permission_overwrites",
+        "slsh_permissions",
+        "_raw",
+    )
+
     def __init__(self, data: dict, client):
         self._client: Snake = client
 
@@ -60,6 +73,8 @@ class Store(Channel):
 
 
 class TextChannel(Channel):
+    __slots__ = "nsfw", "slow_mode_time", "last_message_id", "default_auto_archive_duration", "last_pin_timestamp"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
         self.nsfw: bool = data.get("nsfw", False)
@@ -74,6 +89,8 @@ class TextChannel(Channel):
 
 
 class VoiceChannel(Channel):
+    __slots__ = "bitrate", "user_limit", "rtc_region", "video_quality_mode"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
         self.bitrate: int = data.get("bitrate")
@@ -84,6 +101,8 @@ class VoiceChannel(Channel):
 
 
 class DM(TextChannel):
+    __slots__ = "owner_id", "application_id", "recipients"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
 
@@ -93,6 +112,8 @@ class DM(TextChannel):
 
 
 class GuildText(TextChannel):
+    __slots__ = "guild_id"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
 
@@ -100,6 +121,8 @@ class GuildText(TextChannel):
 
 
 class Thread(GuildText):
+    __slots__ = "message_count", "member_count", "archived", "auto_archive_duration", "locked", "archive_timestamp"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
         self.message_count: int = data.get("message_count", 0)
@@ -121,6 +144,8 @@ class GuildNews(GuildText):
 
 
 class GuildVoice(VoiceChannel):
+    __slots__ = "guild_id"
+
     def __init__(self, data: dict, client):
         super().__init__(data, client)
         self.guild_id: Snowflake = data.get("guild_id", None)
