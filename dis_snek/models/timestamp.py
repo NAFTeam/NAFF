@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 
 class TimestampStyles(str, Enum):
@@ -17,7 +18,7 @@ class Timestamp(datetime):
     def from_datetime(cls, dt: datetime):
         return cls.utcfromtimestamp(dt.timestamp())
 
-    def format(self, style=None):
+    def format(self, style: Optional[TimestampStyles] = None):
         if not style:
             return f"<t:{self.timestamp():.0f}>"
         else:
