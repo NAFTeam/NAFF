@@ -1,6 +1,8 @@
-from typing import Optional
+from datetime import datetime
+from typing import Optional, List
 
 from dis_snek.models.enums import UserFlags, PremiumTypes
+from dis_snek.models.snowflake import Snowflake
 
 
 class BaseUser:
@@ -50,3 +52,25 @@ class User(BaseUser):
         self.banner = data.get("banner")  # todo convert to asset
         self.banner_color = data.get("banner_color")  # todo convert to color objects
         self.accent_color = data.get("accent_color")
+
+
+class Member(User):
+    __slots__ = ("nickname", "roles", "joined_at", "premium_since", "deafened", "muted", "pending", "permissions")
+
+    def __init__(self, data: dict):
+
+        super().__init__(data.get("user", {}))
+
+        self.nickname: str = data.get("nick", self.username)
+        self.roles: List[Snowflake] = data.get("roles")  # List of IDs
+
+        self.joined_at: datetime = datetime.fromisoformat(data.get("joined_at"))
+        self.premium_since: Optional[datetime] = None
+
+        if timestamp := data.get("premium_since"):
+            self.premium_since = datetime.fromisoformat(timestamp)
+
+        self.deafened: bool = data.get("deaf", False)
+        self.muted: bool = data.get("mute", False)
+        self.pending: bool = data.get("pending", False)
+        self.permissions: str = data.get("permissions")  # todo convert to permission object

@@ -233,6 +233,9 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)})
 
+    async def get_member(self, guild_id: Snowflake, user_id: Snowflake):
+        return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
+
     async def get_slash_commands(self, application_id: Snowflake, guild_id: Optional[Snowflake] = None):
         """
         Requests all SlashCommands for this application from discord
