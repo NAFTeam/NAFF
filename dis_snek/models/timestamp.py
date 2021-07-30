@@ -56,7 +56,7 @@ class Timestamp(datetime):
     def fromordinal(cls, n: int):
         return super().fromordinal(n).replace(tzinfo=timezone.utc)
 
-    def tosnowflake(self, high: bool = False):
+    def tosnowflake(self, high: bool = False) -> Snowflake:
         """Returns a numeric snowflake pretending to be created at the given date.
 
         When using as the lower end of a range, use ``tosnowflake(high=False) - 1``
