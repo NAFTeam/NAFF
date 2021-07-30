@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List, Union
 
-from dis_snek.models.enums import ChannelTypes as ct
+from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake
 
 if TYPE_CHECKING:
@@ -31,30 +31,24 @@ class Channel:
         :param client:
         :return:
         """
-        t = data["type"]
-        if t == ct.GUILD_TEXT:
-            return GuildText(data, client)
+        type_mapping = {
+            ChannelTypes.GUILD_TEXT: GuildText,
+            ChannelTypes.GUILD_NEWS: GuildNews,
+            ChannelTypes.GUILD_VOICE: GuildVoice,
+            ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
+            ChannelTypes.GUILD_CATEGORY: Category,
+            ChannelTypes.GUILD_STORE: Store,
 
-        elif t == ct.GUILD_VOICE:
-            return GuildVoice(data, client)
+            ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
+            ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
+            ChannelTypes.GUILD_NEWS_THREAD: Thread,
 
-        elif t == ct.GUILD_NEWS:
-            return GuildNews(data, client)
+            ChannelTypes.DM: DM,
+            ChannelTypes.GROUP_DM: DM,
+        }
+        channel_type = ChannelTypes(data["type"])
 
-        elif t == ct.GUILD_STAGE_VOICE:
-            return Thread(data, client)
-
-        elif t == ct.GUILD_CATEGORY:
-            return Category(data, client)
-
-        elif t == ct.GUILD_STORE:
-            return Store(data, client)
-
-        elif t in [ct.GUILD_PUBLIC_THREAD, ct.GUILD_PRIVATE_THREAD, ct.GUILD_NEWS_THREAD]:
-            return Thread(data, client)
-
-        elif t in (ct.DM, ct.GROUP_DM):
-            return DM(data, client)
+        return type_mapping[channel_type](data, client)
 
 
 class Category(Channel):
