@@ -2,9 +2,11 @@ from datetime import datetime
 from datetime import timezone
 from enum import Enum
 from typing import Optional
+
 from .snowflake import Snowflake
 
 DISCORD_EPOCH = 1420070400000
+
 
 class TimestampStyles(str, Enum):
     ShortTime = "t"
@@ -23,15 +25,15 @@ class Timestamp(datetime):
     def fromdatetime(cls, dt: datetime):
         timestamp = cls.fromtimestamp(dt.timestamp(), tz=dt.tzinfo)
 
-        if timestamp.tzinfo is None: # assume naive datetimes are based on local timezone
+        if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
             return timestamp.astimezone()
-        return timestamp 
+        return timestamp
 
     @classmethod
     def utcfromtimestamp(cls, t: float):
         """Construct a timezone-aware UTC datetime from a POSIX timestamp."""
         return super().utcfromtimestamp(t).replace(tzinfo=timezone.utc)
-        
+
     @classmethod
     def fromsnowflake(cls, snowflake: Snowflake):
         if isinstance(snowflake, str):
@@ -43,8 +45,8 @@ class Timestamp(datetime):
     @classmethod
     def fromisoformat(cls, date_string: str):
         timestamp = super().fromisoformat(date_string)
-        
-        if timestamp.tzinfo is None: # assume naive datetimes are based on local timezone
+
+        if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
             return timestamp.astimezone()
         return timestamp
 
@@ -53,10 +55,10 @@ class Timestamp(datetime):
         return super().fromisocalendar(year, week, day).astimezone()
 
     @classmethod
-    def fromtimestamp(cls, t: float, tz = None): # TODO: typehint this
+    def fromtimestamp(cls, t: float, tz=None):  # TODO: typehint this
         timestamp = super().fromtimestamp(t, tz=tz)
-        
-        if timestamp.tzinfo is None: # assume naive datetimes are based on local timezone
+
+        if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
             return timestamp.astimezone()
         return timestamp
 
