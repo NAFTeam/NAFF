@@ -2,7 +2,7 @@ import asyncio
 import logging
 import traceback
 from random import randint
-from typing import Coroutine, Optional, List, Dict
+from typing import Coroutine, Optional, List, Dict, Callable, Any
 
 import aiohttp
 
@@ -145,7 +145,7 @@ class Snake:
             except Exception as e:
                 log.error(f"Error running listener: {e}")
 
-    def add_listener(self, coro: Coroutine, event: Optional[str] = None):
+    def add_listener(self, coro: Callable[..., Coroutine[Any, Any, Any]], event: Optional[str] = None):
         """
         Add a listener for an event, if no event is passed, one is determined
         :param coro: the coroutine to run
