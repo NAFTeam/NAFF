@@ -166,7 +166,7 @@ class Snake:
         Automatically cache a guild upon GUILD_CREATE event from gateway
         :param data: raw guild data
         """
-        self.guilds_cache.add(Guild(data))
+        self.guilds_cache.add(Guild(data, self))
 
     async def on_socket_raw(self, raw: dict):
         """
@@ -177,7 +177,7 @@ class Snake:
         data = raw.get("d")
 
         if event == "GUILD_CREATE":
-            guild = Guild(data)
+            guild = Guild(data, self)
             # cache guild
             self.guilds_cache.add(guild)
             self.dispatch("guild_create", guild)
@@ -188,13 +188,13 @@ class Snake:
 
     async def get_guild(self, guild_id: Snowflake, with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
-        return Guild(g_data)
+        return Guild(g_data, self)
 
     async def get_guilds(self, limit: int = 200, before: Optional[Snowflake] = None, after: Optional[Snowflake] = None):
         g_data = await self.http.get_guilds(limit, before, after)
         to_return = []
         for g in g_data:
-            to_return.append(Guild(g))
+            to_return.append(Guild(g, self))
 
         return to_return
 

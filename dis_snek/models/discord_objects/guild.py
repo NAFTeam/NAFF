@@ -1,12 +1,16 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from dis_snek.models.snowflake import Snowflake
 
+if TYPE_CHECKING:
+    from dis_snek.client import Snake
+
 
 class BaseGuild:
-    __slots__ = "id", "unavailable"
+    __slots__ = "id", "unavailable", "_client"
 
-    def __init__(self, data):
+    def __init__(self, data, client):
+        self._client: Snake = client
         self.id: Snowflake = data["id"]
         self.unavailable: bool = data.get("unavailable", False)
 
@@ -59,8 +63,8 @@ class Guild(BaseGuild):
         "stickers",
     )
 
-    def __init__(self, data: dict):
-        super(Guild, self).__init__(data)
+    def __init__(self, data: dict, client):
+        super().__init__(data, client)
 
         self.name: str = data.get("name")
         self.icon: Optional[str] = data.get("icon")
