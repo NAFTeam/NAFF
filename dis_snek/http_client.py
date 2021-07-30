@@ -224,7 +224,7 @@ class HTTPClient:
             params["after"] = after
         return await self.request(Route("GET", f"/users/@me/guilds", params=params))
 
-    async def get_guild(self, guild_id: Snowflake, with_counts: Optional[bool] = False):
+    async def get_guild(self, guild_id: Snowflake, with_counts: Optional[bool] = True):
         """
         Returns the guild object for the given ID
         :param guild_id: the id of the guild
@@ -235,6 +235,14 @@ class HTTPClient:
 
     async def get_member(self, guild_id: Snowflake, user_id: Snowflake):
         return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
+
+    async def get_channels(self, guild_id: Snowflake):
+        """
+        Get a guilds channels
+        :param guild_id: the id of the guild
+        :return:
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
 
     async def get_slash_commands(self, application_id: Snowflake, guild_id: Optional[Snowflake] = None):
         """

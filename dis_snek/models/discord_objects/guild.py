@@ -1,5 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING
 
+from dis_snek.models.discord_objects.channel import Channel, Thread, TYPE_ALL_CHANNEL
 from dis_snek.models.snowflake import Snowflake
 
 if TYPE_CHECKING:
@@ -44,8 +45,8 @@ class Guild(BaseGuild):
         "member_count",
         "voice_states",
         "members",
-        "channels",
-        "threads",
+        "_channels",
+        "_threads",
         "presences",
         "max_presences",
         "max_members",
@@ -93,8 +94,8 @@ class Guild(BaseGuild):
         self.member_count: int = data.get("member_count", 0)
         self.voice_states: List[{}] = data.get("voice_states", 0)
         self.members: List[{}] = data.get("members", [])
-        self.channels: List[{}] = data.get("channels", [])
-        self.threads: List[{}] = data.get("threads", [])
+        self._channels: List[Channel] = []
+        self._threads: List[Thread] = []
         self.presences: List[{}] = data.get("presences", [])
         self.max_presences: Optional[int] = data.get("max_presences")
         self.max_members: Optional[int] = data.get("max_members")
@@ -113,3 +114,24 @@ class Guild(BaseGuild):
 
         if not self.member_count and "approximate_member_count" in data:
             self.member_count = data.get("approximate_member_count", 0)
+
+        channels: List[{}] = data.get("channels", [])
+        threads: List[{}] = data.get("threads", [])
+
+        for c_data in channels:
+            self._channels.append(Channel.create(c_data, self._client))
+
+        for t_data in threads:
+            self._threads.append(Channel.create(t_data, self._client))
+
+        breakpoint()
+
+    @property
+    async def channels(self) -> List[TYPE_ALL_CHANNEL]:
+        if not self._channels:
+            # need to acquire channels
+            _channels = await self._client.http.get_channels(self.id)
+
+            for c_data in _channels:
+                self._channels.append(Channel.create(c_data, self._client))
+        return self._channels
