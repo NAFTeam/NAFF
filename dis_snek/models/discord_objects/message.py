@@ -1,9 +1,24 @@
 from datetime import datetime
 from typing import Optional, List
+from dataclasses import dataclass
 
 from dis_snek.models.discord_objects.user import User, Member
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.enums import MessageFlags, MessageTypes, MessageActivityTypes
+
+
+@dataclass
+class MessageActivity:
+    type: MessageActivityTypes
+    party_id: str = None
+
+
+@dataclass
+class MessageReference:  # todo refactor into actual class, add pointers to actual message, channel, guild objects
+    message_id: Optional[int] = None
+    channel_id: Optional[int] = None
+    guild_id: Optional[int] = None
+    fail_if_not_exists: bool = True
 
 
 class Message:
@@ -39,14 +54,18 @@ class Message:
 
         # related content
         self.reactions: Optional[List[dict]] = data.get("reactions", [])
-        self.message_reference: Optional[dict] = data.get("message_reference")
-        self.referenced_message: Optional[Message] = (
-            Message(data["referenced_message"]) if data["referenced_message"] else None
+        self.message_reference: Optional[MessageReference] = (
+            MessageReference(**data["message_reference"]) if "message_reference" in data else None
         )
-        self.activity: Optional[dict] = data.get("activity")
+        self.referenced_message: Optional[Message] = (
+            Message(data["referenced_message"]) if "referenced_message" in data else None
+        )
+        self.activity: Optional[MessageActivity] = (
+            MessageActivity(**data["activity"]) if "activity" in data else None
+        )
 
         # time
         self.sent_at: datetime = datetime.fromisoformat(data["timestamp"])
         self.edited_at: Optional[datetime] = (
-            datetime.fromisoformat(data["edited_timestamp"]) if data["edited_timestamp"] else None
+            datetime.fromisoformat(data["edited_timestamp"]) if "edited_timestamp" in data else None
         )
