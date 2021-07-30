@@ -18,6 +18,12 @@ log = logging.getLogger(logger_name)
 
 
 class BeeGees(threading.Thread):
+    """
+    Keeps the gateway alive
+
+    ♫ Stayin' Alive ♫
+    """
+
     def __init__(self, ws, interval):
         self.ws = ws
         self._main_thread_id = ws.thread_id
@@ -218,7 +224,6 @@ class WebsocketClient:
         self._closed = True
 
     async def send(self, data):
-        log.debug(f"Sent packet to discord: {data}")
         await self.ws.send_str(data)
 
     async def send_json(self, data):
