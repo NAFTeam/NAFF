@@ -129,7 +129,7 @@ class Snake:
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                log.error(e)
+                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
         wrapped = _async_wrap(coro, event_name, *args, **kwargs)
 
