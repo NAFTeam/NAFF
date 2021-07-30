@@ -8,7 +8,7 @@ from dis_snek.models.enums import ComponentType, ButtonStyle
 log = logging.getLogger(logger_name)
 
 
-class ComponentBase:
+class BaseComponent:
     """
     A base component class
     """
@@ -40,20 +40,8 @@ class ComponentBase:
                 "Note: Discord will always return custom_id as a string"
             )
 
-    def __setitem__(self, key, value):
-        if hasattr(self, key):
-            self.__setattr__(key, value)
-            self._checks()
-            return
-        raise KeyError(f"No attribute with the name: {key}")
 
-    def __getitem__(self, key):
-        if hasattr(self, key):
-            return self.__getattribute__(key)
-        raise KeyError(f"No attribute with the name: {key}")
-
-
-class Button(ComponentBase):
+class Button(BaseComponent):
     __slots__ = "style", "label", "emoji", "url", "disabled"
 
     def __init__(
@@ -106,7 +94,7 @@ class Button(ComponentBase):
         return to_return
 
 
-class SelectOption(ComponentBase):
+class SelectOption(BaseComponent):
     __slots__ = "label", "value", "emoji", "description", "default"
 
     def __init__(self, label: str, value: str, emoji: None, description: str = None, default: bool = False):
@@ -157,7 +145,7 @@ class SelectOption(ComponentBase):
         }
 
 
-class Select(ComponentBase):
+class Select(BaseComponent):
     __slots__ = (
         "options",
         "placeholder",
@@ -244,18 +232,6 @@ class ActionRow:
     def __len__(self) -> int:
         return len(self._components)
 
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return self.components[key]
-        return self.__getattribute__(key)
-
-    def __setitem__(self, key, value):
-        if isinstance(key, int):
-            self._components[key] = value
-            self._checks()
-            return
-        return self.__setattr__(key, value)
-
     def _checks(self):
         if len(self.components) == 0 or len(self.components) > 5:
             raise TypeError("Number of components in one row should be between 1 and 5.")
@@ -264,6 +240,9 @@ class ActionRow:
             raise TypeError("Action row must have only one select component and nothing else")
 
     def append_checks(self, component):
+        # todo: fix this mess
+        # yes Striga, i see you looking here and screaming, is bad code. ill fix it later
+
         def check_single_component(_comp):
             if isinstance(_comp, dict):
                 # convert dict into object
