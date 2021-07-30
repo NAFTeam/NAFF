@@ -56,17 +56,41 @@ class Embed:
             total += len(field["name"]) + len(field["value"])
         return total
 
-    def set_thumbnail(self, url):
+    def set_thumbnail(self, url: str):
+        """
+        Set the thumbnail of the embed
+        :param url: the url of the image to use
+        """
         self.thumbnail = {"url": url}
 
-    def set_image(self, url):
+    def set_image(self, url: str):
+        """
+        Set the image of the embed
+        :param url: the url of the image to use
+        """
         self.image = {"url": url}
 
-    def set_author(self, name: str, icon_url: Optional[str] = None, url: Optional[str] = None):
-        self.author = {"name": name, "icon_url": icon_url, "url": url}
+    def set_author(self, name: str, icon_url: Optional[str] = None):
+        """
+        Set the author field of the embed
+        :param name: The text to go in the name section
+        :param icon_url: A url of an image to use as the icon
+        """
+        self.author = {"name": name, "icon_url": icon_url}
 
     def set_footer(self, text: str, icon_url: Optional[str] = None):
+        """
+        Set the footer field of the embed
+        :param text: The text to go in the name section
+        :param icon_url: A url of an image to use as the icon
+        """
         self.footer = {"text": text, "icon_url": icon_url}
 
     def add_field(self, name: str, value: str, inline: bool = False):
+        """
+        Add a field to the embed
+        :param name: The name of this field
+        :param value: The value in this field
+        :param inline: Should this field be inline with other fields?
+        """
         self.fields.append({"name": name, "value": value, "inline": inline})
