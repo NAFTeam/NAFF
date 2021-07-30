@@ -4,7 +4,6 @@ from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.timestamp import Timestamp
 
-
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
@@ -39,11 +38,9 @@ class Channel:
             ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
             ChannelTypes.GUILD_CATEGORY: Category,
             ChannelTypes.GUILD_STORE: Store,
-
             ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
             ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
             ChannelTypes.GUILD_NEWS_THREAD: Thread,
-
             ChannelTypes.DM: DM,
             ChannelTypes.GROUP_DM: DM,
         }
@@ -69,10 +66,11 @@ class TextChannel(Channel):
         self.slow_mode_time: int = data.get("rate_limit_per_user", 0)
 
         self.last_message_id: Snowflake = data.get("last_message_id")
-        self.last_pin_timestamp: Optional[Timestamp] = (
-            Timestamp.fromisoformat(data["last_pin_timestamp"]) if data.get("last_pin_timestamp") else None
-        )
         self.default_auto_archive_duration: int = data.get("default_auto_archive_duration", 60)
+
+        self.last_pin_timestamp: Optional[Timestamp] = None
+        if timestamp := data.get("last_pin_timestamp"):
+            self.last_pin_timestamp = Timestamp.fromisoformat(timestamp)
 
 
 class VoiceChannel(Channel):
@@ -110,12 +108,11 @@ class Thread(GuildText):
         thread_data = data.get("thread_metadata", {})
         self.archived = thread_data.get("archived", False)
         self.auto_archive_duration: int = thread_data.get("auto_archive_duration", self.default_auto_archive_duration)
-        self.archive_timestamp: Optional[Timestamp] = (
-            Timestamp.fromisoformat(thread_data.get("archive_timestamp"))
-            if thread_data.get("archive_timestamp")
-            else None
-        )
         self.locked: bool = thread_data.get("locked", False)
+
+        self.archive_timestamp: Optional[Timestamp] = None
+        if timestamp := thread_data.get("archive_timestamp"):
+            self.archive_timestamp = Timestamp.fromisoformat(timestamp)
 
 
 class GuildNews(GuildText):

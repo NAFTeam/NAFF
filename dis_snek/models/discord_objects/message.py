@@ -1,10 +1,10 @@
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
-from dataclasses import dataclass
 
 from dis_snek.models.discord_objects.user import User, Member
-from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.enums import MessageFlags, MessageTypes, MessageActivityTypes
+from dis_snek.models.snowflake import Snowflake
 
 
 @dataclass
@@ -54,15 +54,18 @@ class Message:
 
         # related content
         self.reactions: Optional[List[dict]] = data.get("reactions", [])
-        self.message_reference: Optional[MessageReference] = (
-            MessageReference(**data["message_reference"]) if "message_reference" in data else None
-        )
-        self.referenced_message: Optional[Message] = (
-            Message(data["referenced_message"]) if "referenced_message" in data else None
-        )
-        self.activity: Optional[MessageActivity] = (
-            MessageActivity(**data["activity"]) if "activity" in data else None
-        )
+        self.message_reference: Optional[MessageReference] = None
+        self.referenced_message: Optional[Message] = None
+        self.activity: Optional[MessageActivity] = None
+
+        if m_ref := data.get("message_reference"):
+            self.message_reference = MessageReference(**m_ref)
+
+        if ref_m := data.get("referenced_message"):
+            self.referenced_message = Message(ref_m)
+
+        if act := data.get("activity"):
+            self.activity = MessageActivity(**act)
 
         # time
         self.sent_at: datetime = datetime.fromisoformat(data["timestamp"])
