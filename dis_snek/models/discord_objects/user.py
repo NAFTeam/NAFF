@@ -57,9 +57,11 @@ class User(BaseUser):
 class Member(User):
     __slots__ = ("nickname", "roles", "joined_at", "premium_since", "deafened", "muted", "pending", "permissions")
 
-    def __init__(self, data: dict):
-
-        super().__init__(data.get("user", {}))
+    def __init__(self, data: dict, user_data: Optional[dict] = None):
+        if user_data:
+            super().__init__(user_data)
+        else:
+            super().__init__(data["user"])
 
         self.nickname: str = data.get("nick", self.username)
         self.roles: List[Snowflake] = data.get("roles")  # List of IDs
