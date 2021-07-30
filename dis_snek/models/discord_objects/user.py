@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Optional, List
 
 from dis_snek.models.enums import UserFlags, PremiumTypes
 from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.timestamp import Timestamp
 
 
 class BaseUser:
@@ -66,11 +66,11 @@ class Member(User):
         self.nickname: str = data.get("nick", self.username)
         self.roles: List[Snowflake] = data.get("roles")  # List of IDs
 
-        self.joined_at: datetime = datetime.fromisoformat(data.get("joined_at"))
-        self.premium_since: Optional[datetime] = None
+        self.joined_at: Timestamp = Timestamp.fromisoformat(data.get("joined_at"))
+        self.premium_since: Optional[Timestamp] = None
 
         if timestamp := data.get("premium_since"):
-            self.premium_since = datetime.fromisoformat(timestamp)
+            self.premium_since = Timestamp.fromisoformat(timestamp)
 
         self.deafened: bool = data.get("deaf", False)
         self.muted: bool = data.get("mute", False)
