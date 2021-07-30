@@ -50,7 +50,7 @@ class Timestamp(datetime):
 
     @classmethod
     def fromisocalendar(cls, year: int, week: int, day: int):
-        timestamp = super().fromisocalendar(year, week, day).astimezone()
+        return super().fromisocalendar(year, week, day).astimezone()
 
     @classmethod
     def fromtimestamp(cls, t: float, tz = None): # TODO: typehint this
