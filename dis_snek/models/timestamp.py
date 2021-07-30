@@ -50,7 +50,7 @@ class Timestamp(datetime):
 
     @classmethod
     def fromisocalendar(cls, year: int, week: int, day: int):
-        return super().fromisocalendar(year, week, day).replace(tzinfo=timezone.utc)
+        timestamp = super().fromisocalendar(year, week, day).astimezone()
 
     @classmethod
     def fromtimestamp(cls, t: float, tz = None): # TODO: typehint this
@@ -62,7 +62,7 @@ class Timestamp(datetime):
 
     @classmethod
     def fromordinal(cls, n: int):
-        return super().fromordinal(n).replace(tzinfo=timezone.utc)
+        return super().fromordinal(n).astimezone()
 
     def tosnowflake(self, high: bool = False) -> Snowflake:
         """Returns a numeric snowflake pretending to be created at the given date.
