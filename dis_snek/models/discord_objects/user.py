@@ -1,15 +1,15 @@
 from typing import Optional, List
 
 from dis_snek.models.enums import UserFlags, PremiumTypes
-from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type, Snowflake
 from dis_snek.models.timestamp import Timestamp
 
 
-class BaseUser:
+class BaseUser(Snowflake):
     __slots__ = "id", "username", "discriminator", "avatar"
 
     def __init__(self, data: dict):
-        self.id: int = data["id"]
+        self.id: Snowflake_Type = data["id"]
         self.username: str = data["username"]
         self.discriminator: int = data["discriminator"]
         self.avatar = data["avatar"]  # todo convert to asset
@@ -64,7 +64,7 @@ class Member(User):
             super().__init__(data["user"])
 
         self.nickname: str = data.get("nick", self.username)
-        self.roles: List[Snowflake] = data.get("roles")  # List of IDs
+        self.roles: List[Snowflake_Type] = data.get("roles")  # List of IDs
 
         self.joined_at: Timestamp = Timestamp.fromisoformat(data.get("joined_at"))
         self.premium_since: Optional[Timestamp] = None

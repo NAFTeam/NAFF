@@ -1,9 +1,7 @@
 from datetime import datetime
 from datetime import timezone
 from enum import Enum
-from typing import Optional
-
-from .snowflake import Snowflake
+from typing import Optional, Union
 
 DISCORD_EPOCH = 1420070400000
 
@@ -35,7 +33,7 @@ class Timestamp(datetime):
         return super().utcfromtimestamp(t).replace(tzinfo=timezone.utc)
 
     @classmethod
-    def fromsnowflake(cls, snowflake: Snowflake):
+    def fromsnowflake(cls, snowflake: Union[str, int]):
         if isinstance(snowflake, str):
             snowflake = int(snowflake)
 
@@ -66,7 +64,7 @@ class Timestamp(datetime):
     def fromordinal(cls, n: int):
         return super().fromordinal(n).astimezone()
 
-    def tosnowflake(self, high: bool = False) -> Snowflake:
+    def tosnowflake(self, high: bool = False) -> Union[str, int]:
         """Returns a numeric snowflake pretending to be created at the given date.
 
         When using as the lower end of a range, use ``tosnowflake(high=False) - 1``

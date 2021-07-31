@@ -12,7 +12,7 @@ from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.user import User
-from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
 
@@ -186,11 +186,13 @@ class Snake:
 
         print(event, data)
 
-    async def get_guild(self, guild_id: Snowflake, with_counts: bool = False) -> Guild:
+    async def get_guild(self, guild_id: Snowflake_Type, with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
         return Guild(g_data, self)
 
-    async def get_guilds(self, limit: int = 200, before: Optional[Snowflake] = None, after: Optional[Snowflake] = None):
+    async def get_guilds(
+        self, limit: int = 200, before: Optional[Snowflake_Type] = None, after: Optional[Snowflake_Type] = None
+    ):
         g_data = await self.http.get_guilds(limit, before, after)
         to_return = []
         for g in g_data:
@@ -198,5 +200,5 @@ class Snake:
 
         return to_return
 
-    async def send_message(self, channel: Snowflake, content: str):
+    async def send_message(self, channel: Snowflake_Type, content: str):
         await self.http.create_message(channel, content)

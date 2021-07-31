@@ -12,7 +12,7 @@ import orjson
 from dis_snek.const import __repo_url__, __version__, __py_version__, logger_name
 from dis_snek.errors import *
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.utils_json import response_decode
 
 log = logging.getLogger(logger_name)
@@ -182,7 +182,7 @@ class HTTPClient:
 
     # region getters
 
-    async def get_user(self, user_id: Snowflake):
+    async def get_user(self, user_id: Snowflake_Type):
         """
         Returns a user object for a given user ID
         :param user_id: The user to get
@@ -190,7 +190,7 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
-    async def get_message(self, channel_id: Snowflake, message_id):
+    async def get_message(self, channel_id: Snowflake_Type, message_id):
         """
         Returns a specific message in the channel. Returns a message object on success
         :param channel_id: the channel this message belongs to
@@ -199,7 +199,7 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
 
-    async def get_channel(self, channel_id: Snowflake):
+    async def get_channel(self, channel_id: Snowflake_Type):
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included
         :param channel_id: The id of the channel
@@ -207,7 +207,9 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/channels/{channel_id}"))
 
-    async def get_guilds(self, limit=200, before: Optional[Snowflake] = None, after: Optional[Snowflake] = None):
+    async def get_guilds(
+        self, limit=200, before: Optional[Snowflake_Type] = None, after: Optional[Snowflake_Type] = None
+    ):
         """
         Returns a list of partial guild objects the current user is a member of
         req. `guilds` scope
@@ -216,7 +218,7 @@ class HTTPClient:
         :param after: get guilds after this guild ID
         :return: List[guilds]
         """
-        params: Dict[int, Optional[Snowflake]] = {"limit": limit}
+        params: Dict[int, Optional[Snowflake_Type]] = {"limit": limit}
 
         if before:
             params["before"] = before
@@ -224,7 +226,7 @@ class HTTPClient:
             params["after"] = after
         return await self.request(Route("GET", f"/users/@me/guilds", params=params))
 
-    async def get_guild(self, guild_id: Snowflake, with_counts: Optional[bool] = True):
+    async def get_guild(self, guild_id: Snowflake_Type, with_counts: Optional[bool] = True):
         """
         Returns the guild object for the given ID
         :param guild_id: the id of the guild
@@ -233,10 +235,10 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)})
 
-    async def get_member(self, guild_id: Snowflake, user_id: Snowflake):
+    async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type):
         return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
 
-    async def get_channels(self, guild_id: Snowflake):
+    async def get_channels(self, guild_id: Snowflake_Type):
         """
         Get a guilds channels
         :param guild_id: the id of the guild
@@ -244,7 +246,7 @@ class HTTPClient:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
 
-    async def get_slash_commands(self, application_id: Snowflake, guild_id: Optional[Snowflake] = None):
+    async def get_slash_commands(self, application_id: Snowflake_Type, guild_id: Optional[Snowflake_Type] = None):
         """
         Requests all SlashCommands for this application from discord
         :param application_id: the what application to query
@@ -259,7 +261,7 @@ class HTTPClient:
 
     async def create_message(
         self,
-        channel_id: Snowflake,
+        channel_id: Snowflake_Type,
         content: Optional[str],
         tts: Optional[bool] = False,
         embeds: Optional[List[Dict]] = None,

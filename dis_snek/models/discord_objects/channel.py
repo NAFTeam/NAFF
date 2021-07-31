@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING, Optional, List, Union
 
 from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type, Snowflake
 from dis_snek.models.timestamp import Timestamp
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
-class Channel:
+class Channel(Snowflake):
     __slots__ = (
         "_client",
         "id",
@@ -25,13 +25,13 @@ class Channel:
     def __init__(self, data: dict, client):
         self._client: Snake = client
 
-        self.id: Snowflake = data["id"]
+        self.id = data["id"]
         self._type: int = data["type"]
         self.name: Optional[str] = data.get("name")
         self.topic: Optional[str] = data.get("topic")
 
         self.position: Optional[int] = data.get("position", 0)
-        self.parent_id: Optional[Snowflake] = data.get("parent_id")
+        self.parent_id: Optional[Snowflake_Type] = data.get("parent_id")
         self.permission_overwrites: list[dict] = data.get("permission_overwrites", [])
         self.slsh_permissions: Optional[str] = data.get("permissions")
         self._raw = data
@@ -80,7 +80,7 @@ class TextChannel(Channel):
         self.nsfw: bool = data.get("nsfw", False)
         self.slow_mode_time: int = data.get("rate_limit_per_user", 0)
 
-        self.last_message_id: Snowflake = data.get("last_message_id")
+        self.last_message_id: Snowflake_Type = data.get("last_message_id")
         self.default_auto_archive_duration: int = data.get("default_auto_archive_duration", 60)
 
         self.last_pin_timestamp: Optional[Timestamp] = None
@@ -107,7 +107,7 @@ class DM(TextChannel):
         super().__init__(data, client)
 
         self.owner_id = data.get("owner_id")
-        self.application_id: Optional[Snowflake] = data.get("application_id")
+        self.application_id: Optional[Snowflake_Type] = data.get("application_id")
         self.recipients: List[dict] = data.get("recipients")
 
 
@@ -117,7 +117,7 @@ class GuildText(TextChannel):
     def __init__(self, data: dict, client):
         super().__init__(data, client)
 
-        self.guild_id: Snowflake
+        self.guild_id: Snowflake_Type
 
 
 class Thread(GuildText):
@@ -148,7 +148,7 @@ class GuildVoice(VoiceChannel):
 
     def __init__(self, data: dict, client):
         super().__init__(data, client)
-        self.guild_id: Snowflake = data.get("guild_id", None)
+        self.guild_id: Snowflake_Type = data.get("guild_id", None)
 
 
 class GuildStageVoice(GuildVoice):
