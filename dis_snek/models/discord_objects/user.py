@@ -12,6 +12,7 @@ from dis_snek.models.timestamp import Timestamp
 
 class BaseUser(Snowflake):
     """Base class for User, essentially partial user discord model"""
+
     __slots__ = "id", "username", "discriminator", "avatar"
 
     id: Snowflake_Type
@@ -122,3 +123,7 @@ class Member(User):
     @property
     def display_name(self) -> str:
         return self.nickname or self.username
+
+    @property
+    def premium(self) -> bool:
+        return self.premium_since is not None
