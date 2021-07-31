@@ -8,6 +8,8 @@ authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
 python = "^3.9"
 aiohttp = "^3.7.4"
 orjson = "^3.6.0"
+attrs = "^21.2.0"
+mypy = "^0.910"
 
 [tool.poetry.dev-dependencies]
 
