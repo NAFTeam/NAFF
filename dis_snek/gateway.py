@@ -86,7 +86,6 @@ class BeeGees(threading.Thread):
         self._last_recv = time.perf_counter()
         self.latency = float("inf")
         self.heartbeat_timeout = ws._max_heartbeat_timeout
-        breakpoint()
 
     def run(self) -> None:
         """Start automatically sending heartbeats to discord."""
