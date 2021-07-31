@@ -51,7 +51,7 @@ class WebSocketOPCodes(IntEnum):
     GUILD_SYNC = 12
 
 
-class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
+class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
     # Intents defined by Discord API
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1
@@ -121,7 +121,7 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):
         return base
 
 
-class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):
+class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
     # Flags defined by Discord API
     DISCORD_EMPLOYEE = 1 << 0
     PARTNERED_SERVER_OWNER = 1 << 1
@@ -187,7 +187,7 @@ class MessageActivityTypes(IntEnum):
     JOIN_REQUEST = 5
 
 
-class MessageFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):
+class MessageFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
     # Flags defined by Discord API
     CROSSPOSTED = 1 << 0
     IS_CROSSPOST = 1 << 1
