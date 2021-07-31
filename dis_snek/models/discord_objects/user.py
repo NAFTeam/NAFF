@@ -1,5 +1,7 @@
 from typing import List
 from typing import Optional
+from typing import Dict
+from typing import Any
 
 from dis_snek.models.enums import PremiumTypes
 from dis_snek.models.enums import UserFlags
@@ -9,19 +11,25 @@ from dis_snek.models.timestamp import Timestamp
 
 
 class BaseUser(Snowflake):
+    """Base class for User, essentially partial user discord model"""
     __slots__ = "id", "username", "discriminator", "avatar"
 
-    def __init__(self, data: dict):
-        self.id: Snowflake_Type = data["id"]
-        self.username: str = data["username"]
-        self.discriminator: int = data["discriminator"]
+    id: Snowflake_Type
+    username: str
+    discriminator: int
+    # avatar:
+
+    def __init__(self, data: Dict[str, Any]):
+        self.id = data["id"]
+        self.username = data["username"]
+        self.discriminator = data["discriminator"]
         self.avatar = data["avatar"]  # todo convert to asset
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
 
     @property
-    def mention(self):
+    def mention(self) -> str:
         return f"<@{self.id}>"
 
 
@@ -29,53 +37,80 @@ class User(BaseUser):
     __slots__ = (
         "is_bot",
         "is_system",
+        "premium_type",
+        "public_flags",
+        # "banner",
+        # "banner_color",
+        # "accent_color",
+    )
+
+    is_bot: bool
+    is_system: bool
+    public_flags: UserFlags
+    premium_type: PremiumTypes
+
+    def __init__(self, data: Dict[str, Any]):
+        super().__init__(data)
+        self.is_bot = data.get("bot", False)
+        self.is_system = data.get("system", False)
+        self.public_flags = UserFlags(data.get("public_flags", 0))
+        self.premium_type = PremiumTypes(data.get("premium_type", 0))
+
+        # self.banner = data.get("banner")  # todo convert to asset
+        # self.banner_color = data.get("banner_color")  # todo convert to color objects
+        # self.accent_color = data.get("accent_color")
+
+
+class SnakeBotUser(User):
+    __slots__ = (
         "mfa_enabled",
         "locale",
         "verified",
         "email",
         "flags",
-        "premium_type",
-        "public_flags",
-        "banner",
-        "banner_color",
-        "accent_color",
     )
+    verified: bool
+    mfa_enabled: bool
+    email: Optional[str]
+    locale: Optional[str]
+    flags: UserFlags
 
-    def __init__(self, data: dict):
+    def __init__(self, data: Dict[str, Any]):
         super().__init__(data)
-        self.is_bot: bool = data.get("bot", False)
-        self.is_system: bool = data.get("system", False)
-        self.mfa_enabled: bool = data.get("mfa_enabled", False)
-        self.locale: Optional[str] = data.get("locale")
-        self.verified: Optional[bool] = data.get("verified")
-        self.email: Optional[str] = data.get("email")
-        self.flags: UserFlags = UserFlags(data.get("flags", 0))
-        self.premium_type: PremiumTypes = PremiumTypes(data.get("premium_type", 0))
-        self.public_flags: UserFlags = UserFlags(data.get("public_flags", 0))
-        self.banner = data.get("banner")  # todo convert to asset
-        self.banner_color = data.get("banner_color")  # todo convert to color objects
-        self.accent_color = data.get("accent_color")
+        self.verified = data.get("verified", False)
+        self.mfa_enabled = data.get("mfa_enabled", False)
+        self.email = data.get("email")
+        self.locale = data.get("locale")
+        self.flags = UserFlags(data.get("flags", 0))
 
 
 class Member(User):
     __slots__ = ("nickname", "roles", "joined_at", "premium_since", "deafened", "muted", "pending", "permissions")
+    nickname: str
+    roles: List[Snowflake_Type]
+    joined_at: Timestamp
+    premium_since: Optional[Timestamp]
+    deafened: bool
+    muted: bool
+    pending: Optional[bool]
+    permissions: Optional[str]
 
-    def __init__(self, data: dict, user_data: Optional[dict] = None):
+    def __init__(self, data: Dict[str, Any], user_data: Optional[dict] = None):
         if user_data:
             super().__init__(user_data)
         else:
             super().__init__(data["user"])
 
-        self.nickname: str = data.get("nick", self.username)
-        self.roles: List[Snowflake_Type] = data.get("roles")  # List of IDs
-
-        self.joined_at: Timestamp = Timestamp.fromisoformat(data.get("joined_at"))
-        self.premium_since: Optional[Timestamp] = None
+        self.nickname = data.get("nick") or self.username
+        self.roles = data["roles"]  # List of IDs
+        self.joined_at = Timestamp.fromisoformat(data["joined_at"])
 
         if timestamp := data.get("premium_since"):
             self.premium_since = Timestamp.fromisoformat(timestamp)
+        else:
+            self.premium_since = None
 
-        self.deafened: bool = data.get("deaf", False)
-        self.muted: bool = data.get("mute", False)
-        self.pending: bool = data.get("pending", False)
-        self.permissions: str = data.get("permissions")  # todo convert to permission object
+        self.deafened = data["deaf"]
+        self.muted = data["mute"]
+        self.pending = data.get("pending")
+        self.permissions = data.get("permissions")  # todo convert to permission object
