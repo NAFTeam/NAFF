@@ -32,6 +32,10 @@ class BaseUser(Snowflake):
     def mention(self) -> str:
         return f"<@{self.id}>"
 
+    @property
+    def display_name(self) -> str:
+        return self.username
+
 
 class User(BaseUser):
     __slots__ = (
@@ -101,7 +105,7 @@ class Member(User):
         else:
             super().__init__(data["user"])
 
-        self.nickname = data.get("nick") or self.username
+        self.nickname = data.get("nick")
         self.roles = data["roles"]  # List of IDs
         self.joined_at = Timestamp.fromisoformat(data["joined_at"])
 
@@ -114,3 +118,7 @@ class Member(User):
         self.muted = data["mute"]
         self.pending = data.get("pending")
         self.permissions = data.get("permissions")  # todo convert to permission object
+
+    @property
+    def display_name(self) -> str:
+        return self.nickname or self.username
