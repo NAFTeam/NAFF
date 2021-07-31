@@ -20,6 +20,7 @@ from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.user import User
+from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
@@ -44,7 +45,7 @@ class Snake:
 
         # caches
         self.guilds_cache = set()
-        self._user: User = None
+        self._user: SnakeBotUser = None
 
         self._listeners: Dict[str, List] = {}
 
@@ -59,7 +60,7 @@ class Snake:
         return self.ws.latency
 
     @property
-    def user(self) -> User:
+    def user(self) -> SnakeBotUser:
         return self._user
 
     async def login(self, token):
@@ -69,7 +70,7 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
-        self._user = User(me)
+        self._user = SnakeBotUser(me, self)
         self.dispatch("login")
         await self._ws_connect()
 

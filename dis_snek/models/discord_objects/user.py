@@ -2,6 +2,7 @@ from typing import List
 from typing import Optional
 from typing import Dict
 from typing import Any
+from typing import TYPE_CHECKING
 
 from dis_snek.models.enums import PremiumTypes
 from dis_snek.models.enums import UserFlags
@@ -9,18 +10,22 @@ from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 
+if TYPE_CHECKING:
+    from dis_snek.client import Snake
+
 
 class BaseUser(Snowflake):
     """Base class for User, essentially partial user discord model"""
 
-    __slots__ = "id", "username", "discriminator", "avatar"
+    __slots__ = "_client", "id", "username", "discriminator", "avatar"
 
     id: Snowflake_Type
     username: str
     discriminator: int
     # avatar:
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: Dict[str, Any], client: Snake):
+        self._client = client
         self.id = data["id"]
         self.username = data["username"]
         self.discriminator = data["discriminator"]
@@ -54,8 +59,8 @@ class User(BaseUser):
     public_flags: UserFlags
     premium_type: PremiumTypes
 
-    def __init__(self, data: Dict[str, Any]):
-        super().__init__(data)
+    def __init__(self, data: Dict[str, Any], client: Snake):
+        super().__init__(data, client)
         self.is_bot = data.get("bot", False)
         self.is_system = data.get("system", False)
         self.public_flags = UserFlags(data.get("public_flags", 0))
@@ -80,8 +85,8 @@ class SnakeBotUser(User):
     locale: Optional[str]
     flags: UserFlags
 
-    def __init__(self, data: Dict[str, Any]):
-        super().__init__(data)
+    def __init__(self, data: Dict[str, Any], client: Snake):
+        super().__init__(data, client)
         self.verified = data.get("verified", False)
         self.mfa_enabled = data.get("mfa_enabled", False)
         self.email = data.get("email")
@@ -100,11 +105,11 @@ class Member(User):
     pending: Optional[bool]
     permissions: Optional[str]
 
-    def __init__(self, data: Dict[str, Any], user_data: Optional[dict] = None):
+    def __init__(self, data: Dict[str, Any], client: Snake, user_data: Optional[dict] = None):
         if user_data:
-            super().__init__(user_data)
+            super().__init__(user_data, client)
         else:
-            super().__init__(data["user"])
+            super().__init__(data["user"], client)
 
         self.nickname = data.get("nick")
         self.roles = data["roles"]  # List of IDs
