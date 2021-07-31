@@ -3,13 +3,23 @@ import datetime
 import logging
 import traceback
 from types import TracebackType
-from typing import TypeVar, Coroutine, Any, Optional, Type, Dict, Union, List
+from typing import Any
+from typing import Coroutine
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import TypeVar
+from typing import Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp
 import orjson
 
-from dis_snek.const import __repo_url__, __version__, __py_version__, logger_name
+from dis_snek.const import __py_version__
+from dis_snek.const import __repo_url__
+from dis_snek.const import __version__
+from dis_snek.const import logger_name
 from dis_snek.errors import *
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type

@@ -1,5 +1,8 @@
 import logging
-from enum import IntEnum, IntFlag, EnumMeta, _decompose
+from enum import _decompose
+from enum import EnumMeta
+from enum import IntEnum
+from enum import IntFlag
 from functools import reduce
 from operator import or_
 

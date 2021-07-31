@@ -1,7 +1,8 @@
 from datetime import datetime
 from datetime import timezone
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 DISCORD_EPOCH = 1420070400000
 

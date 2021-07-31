@@ -1,7 +1,12 @@
-from typing import Optional, List, TYPE_CHECKING
+from typing import List
+from typing import Optional
+from typing import TYPE_CHECKING
 
-from dis_snek.models.discord_objects.channel import Channel, Thread, TYPE_ALL_CHANNEL
-from dis_snek.models.snowflake import Snowflake_Type, Snowflake
+from dis_snek.models.discord_objects.channel import Channel
+from dis_snek.models.discord_objects.channel import Thread
+from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL
+from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

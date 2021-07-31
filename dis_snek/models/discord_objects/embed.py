@@ -1,4 +1,5 @@
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
 from dis_snek.models.timestamp import Timestamp
 

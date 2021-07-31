@@ -1,4 +1,6 @@
-from typing import Dict, Union, Any
+from typing import Any
+from typing import Dict
+from typing import Union
 
 import aiohttp
 import orjson

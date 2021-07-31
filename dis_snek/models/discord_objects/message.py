@@ -1,10 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
-from dis_snek.models.discord_objects.user import User, Member
-from dis_snek.models.enums import MessageFlags, MessageTypes, MessageActivityTypes
-from dis_snek.models.snowflake import Snowflake_Type, Snowflake
+from dis_snek.models.discord_objects.user import Member
+from dis_snek.models.discord_objects.user import User
+from dis_snek.models.enums import MessageActivityTypes
+from dis_snek.models.enums import MessageFlags
+from dis_snek.models.enums import MessageTypes
+from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 
 
 @dataclass

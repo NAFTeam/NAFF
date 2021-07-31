@@ -1,4 +1,6 @@
-from typing import ClassVar, Any, Optional
+from typing import Any
+from typing import ClassVar
+from typing import Optional
 from urllib.parse import quote as _uriquote
 
 from dis_snek.models.snowflake import Snowflake_Type

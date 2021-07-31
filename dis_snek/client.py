@@ -2,12 +2,20 @@ import asyncio
 import logging
 import traceback
 from random import randint
-from typing import Coroutine, Optional, List, Dict, Callable, Any
+from typing import Any
+from typing import Callable
+from typing import Coroutine
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import aiohttp
 
 from dis_snek.const import logger_name
-from dis_snek.errors import WebSocketRestart, GatewayNotFound, WebSocketClosed, SnakeException
+from dis_snek.errors import GatewayNotFound
+from dis_snek.errors import SnakeException
+from dis_snek.errors import WebSocketClosed
+from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.guild import Guild

@@ -1,7 +1,11 @@
-from typing import TYPE_CHECKING, Optional, List, Union
+from typing import List
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
 from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.snowflake import Snowflake_Type, Snowflake
+from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 
 if TYPE_CHECKING:

@@ -11,7 +11,8 @@ import orjson
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name
-from dis_snek.errors import WebSocketClosed, WebSocketRestart
+from dis_snek.errors import WebSocketClosed
+from dis_snek.errors import WebSocketRestart
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 
 log = logging.getLogger(logger_name)

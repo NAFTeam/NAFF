@@ -1,7 +1,10 @@
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
-from dis_snek.models.enums import UserFlags, PremiumTypes
-from dis_snek.models.snowflake import Snowflake_Type, Snowflake
+from dis_snek.models.enums import PremiumTypes
+from dis_snek.models.enums import UserFlags
+from dis_snek.models.snowflake import Snowflake
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 
 
