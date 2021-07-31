@@ -29,6 +29,15 @@ from attr.validators import optional
 from dis_snek.models.timestamp import Timestamp
 
 
+@attr.s
+class Field:
+    """Represents an embed field."""
+
+    name: str = attr.ib()
+    value: str = attr.ib()
+    inline: bool = attr.ib(default=False)
+
+
 @attr.s(slots=True)
 class Embed(object):
     """Represents a discord embed object.
@@ -94,7 +103,15 @@ class Embed(object):
                 "Your embed is too large, go to https://discord.com/developers/docs/resources/channel#embed-limits"
             )
         # lets be nice and remove all the None values
-        return attr.asdict(self, filter=lambda k, v: v)
+
+        def process_data(key: Any, value: Any) -> Any:
+            """Determine what attributes to add to the dict."""
+            if value:
+                if key == "fields":
+                    return [attr.asdict(v) for v in value]
+                return value
+
+        return attr.asdict(self, filter=process_data)
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this
@@ -106,7 +123,7 @@ class Embed(object):
         total += len(self.author.get("title")) if self.author else 0
 
         for field in self.fields:
-            total += len(field["title"]) + len(field["value"])
+            total += len(field.name) + len(field.value)
         return total
 
     def set_thumbnail(self, url: str) -> None:
@@ -151,5 +168,5 @@ class Embed(object):
         :param value: The value in this field
         :param inline: Should this field be inline with other fields?
         """
-        self.fields.append({"title": name, "value": value, "inline": inline})
+        self.fields.append(Field(name, value, inline))
         self._fields_validation("fields", self.fields)
