@@ -21,21 +21,66 @@ DEALINGS IN THE SOFTWARE.
 """
 from typing import Any
 from typing import Optional
+from typing import List
 
 import attr
 from attr.validators import instance_of
 from attr.validators import optional
 
 from dis_snek.models.timestamp import Timestamp
+from dis_snek.utils.serializer import to_dict
+from dis_snek.utils.serializer import no_export_meta
 
 
-@attr.s
-class Field:
+@attr.s(slots=True)
+class EmbedField:
     """Represents an embed field."""
 
     name: str = attr.ib()
     value: str = attr.ib()
     inline: bool = attr.ib(default=False)
+
+    def __len__(self):
+        return len(self.name) + len(self.value)
+
+
+@attr.s(slots=True)
+class EmbedAuthor:
+    name: Optional[str] = attr.ib(default=None)
+    url: Optional[str] = attr.ib(default=None)
+    icon_url: Optional[str] = attr.ib(default=None)
+    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+
+    def __len__(self):
+        return len(self.name)
+
+
+@attr.s(slots=True)
+class EmbedAttachment:  # thumbnail or image or video
+    url: Optional[str] = attr.ib(default=None)
+    proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+    height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+    width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+
+    @property
+    def size(self):
+        return self.height, self.width
+
+
+@attr.s(slots=True)
+class EmbedFooter:
+    text: str = attr.ib()
+    icon_url: Optional[str] = attr.ib(default=None)
+    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+
+    def __len__(self):
+        return len(self.text)
+
+
+@attr.s(slots=True)
+class EmbedProvider:
+    name: Optional[str] = attr.ib(default=None)
+    url: Optional[str] = attr.ib(default=None)
 
 
 @attr.s(slots=True)
@@ -48,18 +93,20 @@ class Embed(object):
     """
 
     title: Optional[str] = attr.ib(default=None)
-    description: Optional[str] = attr.ib(default=None)
+    description: Optional[str] = attr.ib(default=None, repr=False)
     color: Optional[str] = attr.ib(default=None)
 
     url: Optional[str] = attr.ib(validator=optional(instance_of(str)), default=None, init=False)
+
     timestamp: Optional[Timestamp] = attr.ib(validator=optional(instance_of(Timestamp)), default=None, init=False)
-    footer: Optional[dict] = attr.ib(default=None, init=False)
-    image: Optional[dict] = attr.ib(default=None, init=False)
-    thumbnail: Optional[dict] = attr.ib(default=None, init=False)
-    video: Optional[dict] = attr.ib(default=None, init=False)
-    provider: Optional[dict] = attr.ib(default=None, init=False)
-    author: Optional[dict] = attr.ib(default=None, init=False)
-    fields: list = attr.ib(factory=list)
+
+    fields: List[EmbedField] = attr.ib(factory=list, repr=False)
+    author: Optional[EmbedAuthor] = attr.ib(default=None, init=False)
+    thumbnail: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False)
+    image: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False)
+    video: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False, metadata=no_export_meta)
+    footer: Optional[EmbedFooter] = attr.ib(default=None, init=False, repr=False)
+    provider: Optional[EmbedProvider] = attr.ib(default=None, init=False, repr=False, metadata=no_export_meta)
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -102,16 +149,8 @@ class Embed(object):
             raise ValueError(
                 "Your embed is too large, go to https://discord.com/developers/docs/resources/channel#embed-limits"
             )
-        # lets be nice and remove all the None values
 
-        def process_data(key: Any, value: Any) -> Any:
-            """Determine what attributes to add to the dict."""
-            if value:
-                if key == "fields":
-                    return [attr.asdict(v) for v in value]
-                return value
-
-        return attr.asdict(self, filter=process_data)
+        return to_dict(self)
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this
@@ -119,12 +158,26 @@ class Embed(object):
         total = 0
         total += len(self.title) if self.title else 0
         total += len(self.description) if self.description else 0
-        total += len(self.footer.get("text")) if self.footer else 0
-        total += len(self.author.get("title")) if self.author else 0
+        total += len(self.footer) if self.footer else 0
+        total += len(self.author) if self.author else 0
 
         for field in self.fields:
-            total += len(field.name) + len(field.value)
+            total += len(field)
         return total
+
+    def set_author(self,
+                   name: str,
+                   url: Optional[str] = None,
+                   icon_url: Optional[str] = None,
+                   ) -> None:
+        """
+        Set the author field of the embed.
+
+        :param name: The text to go in the title section
+        :param url: A url link to the author
+        :param icon_url: A url of an image to use as the icon
+        """
+        self.author = EmbedAuthor(name=name, url=url, icon_url=icon_url)
 
     def set_thumbnail(self, url: str) -> None:
         """
@@ -132,7 +185,7 @@ class Embed(object):
 
         :param url: the url of the image to use
         """
-        self.thumbnail = {"url": url}
+        self.thumbnail = EmbedAttachment(url=url)
 
     def set_image(self, url: str) -> None:
         """
@@ -140,16 +193,7 @@ class Embed(object):
 
         :param url: the url of the image to use
         """
-        self.image = {"url": url}
-
-    def set_author(self, name: str, icon_url: Optional[str] = None) -> None:
-        """
-        Set the author field of the embed.
-
-        :param name: The text to go in the title section
-        :param icon_url: A url of an image to use as the icon
-        """
-        self.author = {"title": name, "icon_url": icon_url}
+        self.image = EmbedAttachment(url=url)
 
     def set_footer(self, text: str, icon_url: Optional[str] = None) -> None:
         """
@@ -158,7 +202,7 @@ class Embed(object):
         :param text: The text to go in the title section
         :param icon_url: A url of an image to use as the icon
         """
-        self.footer = {"text": text, "icon_url": icon_url}
+        self.footer = EmbedFooter(text=text, icon_url=icon_url)
 
     def add_field(self, name: str, value: str, inline: bool = False) -> None:
         """
@@ -168,5 +212,6 @@ class Embed(object):
         :param value: The value in this field
         :param inline: Should this field be inline with other fields?
         """
-        self.fields.append(Field(name, value, inline))
+        self.fields.append(EmbedField(name, value, inline))
         self._fields_validation("fields", self.fields)
+
