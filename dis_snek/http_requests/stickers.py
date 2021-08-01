@@ -1,4 +1,4 @@
-from mypy.build import Any
+from typing import Any
 
 
 class StickerRequests:
