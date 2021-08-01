@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from typing import Any
-from typing import Optional
 import time
 import attr
 
@@ -43,6 +42,14 @@ class TTLCache(OrderedDict):
 
         if default is attr.NOTHING:
             raise KeyError(key)
+
+        return default
+
+    def get(self, key, default=None):
+        item = super().get(key, default)
+        if item is not default:
+            self._reset_expiration(key, item)
+            return item.value
 
         return default
 
