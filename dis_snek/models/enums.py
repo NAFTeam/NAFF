@@ -286,6 +286,16 @@ class ComponentType(IntEnum):
     SELECT = 3
 
 
+class InteractionType(IntEnum):
+    """
+    The interactions supported by discord
+    """
+
+    CHAT_INPUT = 1
+    USER = 2
+    MESSAGE = 3
+
+
 class ButtonStyle(IntEnum):
     """
     The styles of buttons supported

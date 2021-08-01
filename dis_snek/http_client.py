@@ -58,8 +58,6 @@ from dis_snek.http_requests import WebhookRequests
 from dis_snek.models.route import Route
 from dis_snek.utils.utils_json import response_decode
 
-# from dis_snek.http_requests import *
-
 log = logging.getLogger(logger_name)
 
 T = TypeVar("T")
@@ -224,6 +222,8 @@ class HTTPClient(
                     if tries < self._retries - 1 and e.errno in (54, 10054):
                         await asyncio.sleep(1 + tries * 2)
                         continue
+                    raise
+                except (Forbidden, NotFound, DiscordError, HTTPError):
                     raise
                 except Exception as e:
                     log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
