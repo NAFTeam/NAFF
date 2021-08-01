@@ -1,10 +1,12 @@
 from typing import Union
 
+import attr
 from dis_snek.models.timestamp import Timestamp
 
 Snowflake_Type = Union[str, int]
 
 
+@attr.s(cmp=False, hash=False, slots=True)
 class Snowflake:
     """A base object for anything with a snowflake
     Holds several methods that are likely to be used by them"""
