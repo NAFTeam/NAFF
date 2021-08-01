@@ -70,7 +70,7 @@ class Snake:
         """
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
-        self._user = SnakeBotUser(me, self)
+        self._user = SnakeBotUser.from_dict(me, self)
         self.dispatch("login")
         await self._ws_connect()
 

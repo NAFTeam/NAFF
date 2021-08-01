@@ -2,34 +2,31 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import TYPE_CHECKING
+
+import attr
+from attr.converters import optional as optional_c
 
 from dis_snek.models.enums import PremiumTypes
 from dis_snek.models.enums import UserFlags
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-
-if TYPE_CHECKING:
-    pass
+from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
 
 
-class BaseUser(Snowflake):
+@attr.s(slots=True, str=False, kw_only=True)
+class BaseUser(Snowflake, IgnoreExtraKeysMixin):
     """Base class for User, essentially partial user discord model"""
 
-    __slots__ = "_client", "id", "username", "discriminator", "avatar"
+    _client: Any = attr.ib(repr=False)
+    id: Snowflake_Type = attr.ib()
+    username: str = attr.ib()
+    discriminator: int = attr.ib()
+    avatar: str = attr.ib()  # todo convert to asset
 
-    id: Snowflake_Type
-    username: str
-    discriminator: int
-    # avatar:
-
-    def __init__(self, data: Dict[str, Any], client: Any):
-        self._client = client
-        self.id = data["id"]
-        self.username = data["username"]
-        self.discriminator = data["discriminator"]
-        self.avatar = data["avatar"]  # todo convert to asset
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], client: Any):
+        return cls(client=client, **cls._filter_kwargs(data))
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
@@ -43,87 +40,38 @@ class BaseUser(Snowflake):
         return self.username
 
 
+@attr.s(slots=True, kw_only=True)
 class User(BaseUser):
-    __slots__ = (
-        "is_bot",
-        "is_system",
-        "premium_type",
-        "public_flags",
-        # "banner",
-        # "banner_color",
-        # "accent_color",
-    )
+    bot: bool = attr.ib(default=False)
+    system: bool = attr.ib(default=False)
+    public_flags: UserFlags = attr.ib(default=0, converter=UserFlags)
+    premium_type: PremiumTypes = attr.ib(default=0, converter=PremiumTypes)
 
-    is_bot: bool
-    is_system: bool
-    public_flags: UserFlags
-    premium_type: PremiumTypes
-
-    def __init__(self, data: Dict[str, Any], client: Any):
-        super().__init__(data, client)
-        self.is_bot = data.get("bot", False)
-        self.is_system = data.get("system", False)
-        self.public_flags = UserFlags(data.get("public_flags", 0))
-        self.premium_type = PremiumTypes(data.get("premium_type", 0))
-
-        # self.banner = data.get("banner")  # todo convert to asset
-        # self.banner_color = data.get("banner_color")  # todo convert to color objects
-        # self.accent_color = data.get("accent_color")
+    banner: Any = attr.ib(default=None)  # todo convert to asset
+    banner_color: Any = attr.ib(default=None)  # todo convert to color objects
+    accent_color: Any = attr.ib(default=None)
+    bio: Any = attr.ib(default=None)
 
 
+@attr.s(slots=True, kw_only=True)
 class SnakeBotUser(User):
-    __slots__ = (
-        "mfa_enabled",
-        "locale",
-        "verified",
-        "email",
-        "flags",
-    )
-    verified: bool
-    mfa_enabled: bool
-    email: Optional[str]
-    locale: Optional[str]
-    flags: UserFlags
-
-    def __init__(self, data: Dict[str, Any], client: Any):
-        super().__init__(data, client)
-        self.verified = data.get("verified", False)
-        self.mfa_enabled = data.get("mfa_enabled", False)
-        self.email = data.get("email")
-        self.locale = data.get("locale")
-        self.flags = UserFlags(data.get("flags", 0))
+    verified: bool = attr.ib()
+    mfa_enabled: bool = attr.ib(default=False)
+    email: Optional[str] = attr.ib(default=None)
+    locale: Optional[str] = attr.ib(default=None)
+    flags: UserFlags = attr.ib(default=0, converter=UserFlags)
 
 
+@attr.s(slots=True, kw_only=True)
 class Member(User):
-    __slots__ = ("nickname", "roles", "joined_at", "premium_since", "deafened", "muted", "pending", "permissions")
-    nickname: str
-    roles: List[Snowflake_Type]
-    joined_at: Timestamp
-    premium_since: Optional[Timestamp]
-    deafened: bool
-    muted: bool
-    pending: Optional[bool]
-    permissions: Optional[str]
-
-    def __init__(self, data: Dict[str, Any], client: Any, user_data: Optional[dict] = None):
-        if user_data:
-            super().__init__(user_data, client)
-        else:
-            super().__init__(data["user"], client)
-
-        self.nickname = data.get("nick")
-        self.roles = data["roles"]  # List of IDs
-        self.joined_at = Timestamp.fromisoformat(data["joined_at"])
-
-        if timestamp := data.get("premium_since"):
-            self.premium_since = Timestamp.fromisoformat(timestamp)
-        else:
-            self.premium_since = None
-
-        self.deafened = data["deaf"]
-        self.muted = data["mute"]
-        self.pending = data.get("pending")
-        self.permissions = data.get("permissions")  # todo convert to permission object
+    nickname: str = attr.ib()
+    deafened: bool = attr.ib()
+    muted: bool = attr.ib()
+    roles: List[Snowflake_Type] = attr.ib()
+    joined_at: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
+    premium_since: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+    pending: Optional[bool] = attr.ib(default=None)
+    permissions: Optional[str] = attr.ib(default=None)  # todo convert to permission object
 
     @property
     def display_name(self) -> str:
