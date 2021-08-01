@@ -223,6 +223,8 @@ class HTTPClient(
                         await asyncio.sleep(1 + tries * 2)
                         continue
                     raise
+                except (Forbidden, NotFound, DiscordError, HTTPError):
+                    raise
                 except Exception as e:
                     log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
