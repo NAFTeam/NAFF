@@ -1,10 +1,11 @@
 from collections import OrderedDict
 from typing import Any
+from typing import Optional
 import time
 import attr
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True)
 class TTLItem:
     value: Any = attr.ib()
     expire: float = attr.ib()
@@ -14,7 +15,7 @@ class TTLItem:
 
 
 class TTLCache(OrderedDict):
-    def __init__(self, ttl=1, soft_limit=50, hard_limit=250):
+    def __init__(self, ttl=600, soft_limit=50, hard_limit=250):
         super().__init__()
 
         self.ttl = ttl
@@ -31,6 +32,7 @@ class TTLCache(OrderedDict):
 
     def __getitem__(self, key):
         item = super().__getitem__(key)
+        self._reset_expiration(key, item)
         return item.value
 
     def pop(self, key, default=attr.NOTHING):
@@ -43,6 +45,10 @@ class TTLCache(OrderedDict):
             raise KeyError(key)
 
         return default
+
+    def _reset_expiration(self, key: Any, item: TTLItem):
+        self.move_to_end(key)
+        item.expire = time.monotonic() + self.ttl
 
     def _first_item(self):
         return next(iter(self.items()))
