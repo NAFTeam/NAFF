@@ -27,7 +27,6 @@ from types import TracebackType
 from typing import Any
 from typing import Coroutine
 from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Type
 from typing import TypeVar
@@ -48,9 +47,18 @@ from dis_snek.errors import Forbidden
 from dis_snek.errors import GatewayNotFound
 from dis_snek.errors import HTTPError
 from dis_snek.errors import NotFound
+from dis_snek.http_requests import ChannelRequests
+from dis_snek.http_requests import GuildRequests
+from dis_snek.http_requests import InteractionRequests
+from dis_snek.http_requests import MessageRequests
+from dis_snek.http_requests import ReactionRequests
+from dis_snek.http_requests import StickerRequests
+from dis_snek.http_requests import UserRequests
+from dis_snek.http_requests import WebhookRequests
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.utils_json import response_decode
+
+# from dis_snek.http_requests import *
 
 log = logging.getLogger(logger_name)
 
@@ -101,7 +109,16 @@ class CanUnlock:
             self.lock.release()
 
 
-class HTTPClient:
+class HTTPClient(
+    ChannelRequests,
+    GuildRequests,
+    InteractionRequests,
+    MessageRequests,
+    ReactionRequests,
+    StickerRequests,
+    UserRequests,
+    WebhookRequests,
+):
     """A http client for sending requests to the Discord API."""
 
     def __init__(
@@ -255,121 +272,3 @@ class HTTPClient:
         return await self.__session.ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0
         )
-
-    # region getters
-
-    async def get_user(self, user_id: Snowflake_Type) -> dict:
-        """
-        Get a user object for a given user ID.
-
-        :param user_id: The user to get
-        :return: user
-        """
-        return await self.request(Route("GET", f"/users/{user_id}"))
-
-    async def get_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> dict:
-        """
-        Get a specific message in the channel. Returns a message object on success.
-
-        :param channel_id: the channel this message belongs to
-        :param message_id: the id of the message
-        :return: message or None
-        """
-        return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
-
-    async def get_channel(self, channel_id: Snowflake_Type) -> dict:
-        """
-        Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.
-
-        :param channel_id: The id of the channel
-        :return: channel
-        """
-        return await self.request(Route("GET", f"/channels/{channel_id}"))
-
-    async def get_guilds(
-        self, limit: int = 200, before: Optional[Snowflake_Type] = None, after: Optional[Snowflake_Type] = None
-    ) -> List[Dict]:
-        """
-        Get a list of partial guild objects the current user is a member of req. `guilds` scope.
-
-        :param limit: max number of guilds to return (1-200)
-        :param before: get guilds before this guild ID
-        :param after: get guilds after this guild ID
-        :return: List[guilds]
-        """
-        params: Dict[str, Union[int, str]] = {"limit": limit}
-
-        if before:
-            params["before"] = before
-        if after:
-            params["after"] = after
-        return await self.request(Route("GET", "/users/@me/guilds", params=params))
-
-    async def get_guild(self, guild_id: Snowflake_Type, with_counts: Optional[bool] = True) -> dict:
-        """
-        Get the guild object for the given ID.
-
-        :param guild_id: the id of the guild
-        :param with_counts: when `true`, will return approximate member and presence counts for the guild
-        :return: a guild object
-        """
-        return await self.request(
-            Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)}  # type: ignore
-        )
-
-    async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type) -> Dict:
-        """
-        Get a member of a guild by ID.
-
-        :param guild_id: The id of the guild
-        :param user_id: The user id to grab
-        :return:
-        """
-        return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
-
-    async def get_channels(self, guild_id: Snowflake_Type) -> List[Dict]:
-        """
-        Get a guilds channels.
-
-        :param guild_id: the id of the guild
-        :return:
-        """
-        return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
-
-    async def get_slash_commands(
-        self, application_id: Snowflake_Type, guild_id: Optional[Snowflake_Type] = None
-    ) -> List[Dict]:
-        """
-        Get all SlashCommands for this application from discord.
-
-        :param application_id: the what application to query
-        :param guild_id: specify a guild to get commands from
-        :return:
-        """
-        if not guild_id:
-            return await self.request(Route("GET", f"/applications/{application_id}/commands"))
-        return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
-
-    # endregion
-
-    async def create_message(
-        self,
-        channel_id: Snowflake_Type,
-        content: Optional[str],
-        tts: Optional[bool] = False,
-        embeds: Optional[List[Dict]] = None,
-        components: Optional[List[dict]] = None,
-    ) -> Any:
-        """Send a message to the specified channel. Incomplete."""
-        # todo: Complete this
-        payload: Dict[str, Any] = {}
-
-        if content:
-            payload["content"] = content
-        if tts:
-            payload["tts"] = tts
-        if embeds:
-            payload["embeds"] = embeds
-        if components:
-            payload["components"] = components
-        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), json=payload)
