@@ -58,8 +58,6 @@ from dis_snek.http_requests import WebhookRequests
 from dis_snek.models.route import Route
 from dis_snek.utils.utils_json import response_decode
 
-# from dis_snek.http_requests import *
-
 log = logging.getLogger(logger_name)
 
 T = TypeVar("T")
