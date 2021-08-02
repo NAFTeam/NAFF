@@ -27,7 +27,7 @@ from typing import Union
 
 import attr
 
-from dis_snek.models.discord_objects.channel import Channel
+from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import InteractionType
 
@@ -62,7 +62,7 @@ class OptionType(IntEnum):
             return cls.BOOLEAN
         if issubclass(t, BaseUser):
             return cls.USER
-        if issubclass(t, Channel):
+        if issubclass(t, BaseChannel):
             return cls.CHANNEL
         # todo role
         if issubclass(t, float):

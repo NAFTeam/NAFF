@@ -3,45 +3,28 @@ from typing import Optional
 from typing import TYPE_CHECKING
 from typing import Union
 
+import attr
+from attr.converters import optional as optional_c
+
 from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
+from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
-class Channel(Snowflake):
-    __slots__ = (
-        "_client",
-        "id",
-        "_type",
-        "name",
-        "topic",
-        "position",
-        "parent_id",
-        "permission_overwrites",
-        "slsh_permissions",
-        "_raw",
-    )
+@attr.s(slots=True, kw_only=True)
+class BaseChannel(Snowflake, IgnoreExtraKeysMixin):
+    _client: Snake = attr.ib(repr=False)
 
-    def __init__(self, data: dict, client):
-        self._client: Snake = client
-
-        self.id = data["id"]
-        self._type: int = data["type"]
-        self.name: Optional[str] = data.get("name")
-        self.topic: Optional[str] = data.get("topic")
-
-        self.position: Optional[int] = data.get("position", 0)
-        self.parent_id: Optional[Snowflake_Type] = data.get("parent_id")
-        self.permission_overwrites: list[dict] = data.get("permission_overwrites", [])
-        self.slsh_permissions: Optional[str] = data.get("permissions")
-        self._raw = data
+    _type: ChannelTypes = attr.ib(converter=ChannelTypes)
+    name: Optional[str] = attr.ib(default=None)
 
     @classmethod
-    def create(cls, data, client):
+    def from_dict(cls, data, client):
         """
         Creates a channel object of the appropriate type
         :param data:
@@ -53,8 +36,8 @@ class Channel(Snowflake):
             ChannelTypes.GUILD_NEWS: GuildNews,
             ChannelTypes.GUILD_VOICE: GuildVoice,
             ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
-            ChannelTypes.GUILD_CATEGORY: Category,
-            ChannelTypes.GUILD_STORE: Store,
+            ChannelTypes.GUILD_CATEGORY: GuildCategory,
+            ChannelTypes.GUILD_STORE: GuildStore,
             ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
             ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
             ChannelTypes.GUILD_NEWS_THREAD: Thread,
@@ -63,103 +46,99 @@ class Channel(Snowflake):
         }
         channel_type = ChannelTypes(data["type"])
 
-        return type_mapping[channel_type](data, client)
+        return type_mapping[channel_type].from_dict_typed(data, client)
+
+    @classmethod
+    def from_dict_typed(cls, data, client):
+        return cls(client=client, **cls._filter_kwargs(data))
 
 
-class Category(Channel):
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
+@attr.s(slots=True, kw_only=True)
+class _GuildMixin:
+    guild_id: Optional[int] = attr.ib(default=None)
+    position: Optional[int] = attr.ib(default=0)
+    nsfw: bool = attr.ib(default=False)
+    parent_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    permission_overwrites: list[dict] = attr.ib(factory=list)  # todo  permissions obj
+    permissions: Optional[str] = attr.ib(default=None)  # only in slash
 
 
-class Store(Channel):
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
+@attr.s(slots=True, kw_only=True)
+class TextChannel(BaseChannel):
+    rate_limit_per_user: int = attr.ib(default=0)
+    last_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    default_auto_archive_duration: int = attr.ib(default=60)
+    last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
 
-class TextChannel(Channel):
-    __slots__ = "nsfw", "slow_mode_time", "last_message_id", "default_auto_archive_duration", "last_pin_timestamp"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-        self.nsfw: bool = data.get("nsfw", False)
-        self.slow_mode_time: int = data.get("rate_limit_per_user", 0)
-
-        self.last_message_id: Snowflake_Type = data.get("last_message_id")
-        self.default_auto_archive_duration: int = data.get("default_auto_archive_duration", 60)
-
-        self.last_pin_timestamp: Optional[Timestamp] = None
-        if timestamp := data.get("last_pin_timestamp"):
-            self.last_pin_timestamp = Timestamp.fromisoformat(timestamp)
+@attr.s(slots=True, kw_only=True)
+class VoiceChannel(BaseChannel):
+    bitrate: int = attr.ib()
+    user_limit: int = attr.ib()
+    rtc_region: str = attr.ib(default="auto")
+    video_quality_mode: int = attr.ib(default=1)  # todo convert to enum
 
 
-class VoiceChannel(Channel):
-    __slots__ = "bitrate", "user_limit", "rtc_region", "video_quality_mode"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-        self.bitrate: int = data.get("bitrate")
-        self.user_limit: int = data.get("user_limit")
-
-        self.rtc_region: str = data.get("rtc_region", "auto")
-        self.video_quality_mode: int = data.get("video_quality_mode", 1)
+@attr.s(slots=True, kw_only=True)
+class GuildVoice(VoiceChannel, _GuildMixin):
+    pass
 
 
-class DM(TextChannel):
-    __slots__ = "owner_id", "application_id", "recipients"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-
-        self.owner_id = data.get("owner_id")
-        self.application_id: Optional[Snowflake_Type] = data.get("application_id")
-        self.recipients: List[dict] = data.get("recipients")
-
-
-class GuildText(TextChannel):
-    __slots__ = "guild_id"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-
-        self.guild_id: Snowflake_Type
-
-
-class Thread(GuildText):
-    __slots__ = "message_count", "member_count", "archived", "auto_archive_duration", "locked", "archive_timestamp"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-        self.message_count: int = data.get("message_count", 0)
-        self.member_count: int = data.get("member_count", 0)
-
-        thread_data = data.get("thread_metadata", {})
-        self.archived = thread_data.get("archived", False)
-        self.auto_archive_duration: int = thread_data.get("auto_archive_duration", self.default_auto_archive_duration)
-        self.locked: bool = thread_data.get("locked", False)
-
-        self.archive_timestamp: Optional[Timestamp] = None
-        if timestamp := thread_data.get("archive_timestamp"):
-            self.archive_timestamp = Timestamp.fromisoformat(timestamp)
-
-
-class GuildNews(GuildText):
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-
-
-class GuildVoice(VoiceChannel):
-    __slots__ = "guild_id"
-
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
-        self.guild_id: Snowflake_Type = data.get("guild_id", None)
-
-
+@attr.s(slots=True, kw_only=True)
 class GuildStageVoice(GuildVoice):
-    def __init__(self, data: dict, client):
-        super().__init__(data, client)
+    pass
+
+
+@attr.s(slots=True, kw_only=True)
+class DM(TextChannel):
+    owner_id: Snowflake_Type = attr.ib()
+    application_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    recipients: List[dict] = attr.ib(factory=list)
+
+
+@attr.s(slots=True, kw_only=True)
+class GuildText(TextChannel, _GuildMixin):
+    topic: Optional[str] = attr.ib(default=None)
+
+
+@attr.s(slots=True, kw_only=True)
+class GuildNews(GuildText):
+    pass
+
+
+@attr.s(slots=True, kw_only=True)
+class GuildCategory(GuildText):
+    pass  # todo forbid send() and getting messages
+
+
+@attr.s(slots=True, kw_only=True)
+class GuildStore(GuildText):
+    pass  # todo forbid send() and getting messages
+
+
+@attr.s(slots=True, kw_only=True)
+class Thread(GuildText):
+    message_count: int = attr.ib(default=0)
+    member_count: int = attr.ib(default=0)
+
+    archived: bool = attr.ib(default=False)
+    auto_archive_duration: int = attr.ib(factory=attr.Factory(
+        lambda self: self.default_auto_archive_duration, takes_self=True
+    ))
+    locked: bool = attr.ib(default=False)
+    archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+
+    @classmethod
+    def from_dict_typed(cls, data, client):
+        thread_metadata: dict = data.get("thread_metadata", {})
+        data.update(thread_metadata)
+        return cls(client=client, **cls._filter_kwargs(data))
+
+    @property
+    def private(self):
+        return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
 
 
 TYPE_ALL_CHANNEL = Union[
-    Channel, Category, Store, TextChannel, VoiceChannel, DM, GuildText, Thread, GuildNews, GuildVoice, GuildStageVoice
+    BaseChannel, GuildCategory, GuildStore, TextChannel, VoiceChannel, DM, GuildText, Thread, GuildNews, GuildVoice, GuildStageVoice
 ]
