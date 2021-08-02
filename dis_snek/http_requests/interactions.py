@@ -38,4 +38,4 @@ class InteractionRequests:
         if guild_id:
             endpoint = f"/applications/{app_id}/guilds/{guild_id}/commands"
 
-        await self.request(Route("PUT", endpoint), json=data)
+        return await self.request(Route("PUT", endpoint), json=data)

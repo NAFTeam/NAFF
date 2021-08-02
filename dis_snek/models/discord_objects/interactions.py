@@ -21,7 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import re
 from enum import IntEnum
-from typing import Dict
+from typing import Dict, Coroutine, Callable
 from typing import List
 from typing import Union
 
@@ -30,6 +30,7 @@ import attr
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import InteractionType
+from dis_snek.models.snowflake import Snowflake_Type
 
 
 class OptionType(IntEnum):
@@ -151,8 +152,18 @@ class SlashCommand:
 
     name: str = attr.ib()
     description: str = attr.ib(default="No Description Set")
+    scope: Union[str, int] = attr.ib(default="global", converter=lambda v: str(v))
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     default_permission: bool = attr.ib(default=True)
+    cmd_id: Snowflake_Type = attr.ib(default=None)
+    call: Callable[..., Coroutine] = attr.ib(default=None)
+
+    def __setattr__(self, key, value):
+        if key == "scope":
+            # scope is used internally as a dict key, however people are used to snowflakes being int
+            # this allows int scopes, but converts them to string transparently
+            value = str(value)
+        super().__setattr__(key, value)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -172,4 +183,11 @@ class SlashCommand:
         """
         self._name_validator("name", self.name)
         self._description_validator("description", self.description)
-        return attr.asdict(self)
+        data = attr.asdict(self)
+
+        # remove internal data from dictionary
+        del data["scope"]
+        del data["call"]
+        del data["cmd_id"]
+
+        return data

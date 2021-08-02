@@ -292,7 +292,8 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
-                self.dispatch("ready")
+                self.dispatch("websocket_ready", data)
+                return
             else:
                 self.dispatch("raw_socket_receive", msg)
             self.dispatch(f"raw_{msg.get('t').lower()}", data)

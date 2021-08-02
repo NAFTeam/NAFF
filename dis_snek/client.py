@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 import traceback
 from random import randint
 from typing import Any
@@ -19,6 +20,7 @@ from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.guild import Guild
+from dis_snek.models.discord_objects.interactions import SlashCommand
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.snowflake import Snowflake_Type
@@ -27,11 +29,7 @@ log = logging.getLogger(logger_name)
 
 
 class Snake:
-    def __init__(
-        self,
-        intents,
-        loop=None,
-    ):
+    def __init__(self, intents, loop=None, sync_slash=False):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         self.intents = intents
 
@@ -41,15 +39,19 @@ class Snake:
 
         self._connection = None
         self._closed = False
+        self.sync_slash = sync_slash
         self._ready: asyncio.Event = asyncio.Event()
 
         # caches
         self.guilds_cache = set()
         self._user: SnakeBotUser = None
+        self.slash_commands = {}
+        self._slash_scopes = {}
 
         self._listeners: Dict[str, List] = {}
 
         self.add_listener(self.on_socket_raw, "raw_socket_receive")
+        self.add_listener(self._on_websocket_ready, "websocket_ready")
 
     @property
     def is_closed(self) -> bool:
@@ -170,12 +172,116 @@ class Snake:
             self._listeners[event] = []
         self._listeners[event].append(coro)
 
+    async def _init_slash(self) -> None:
+        """
+        Initialise slash commands.
+
+        If `sync_slash` this will submit all registered slash commands to discord.
+        Otherwise, it will get the list of interactions and cache their scopes.
+        """
+        if self.sync_slash:
+            await self.submit_slash_commands()
+        else:
+            scopes = [g.id for g in self.guilds_cache] + [None]
+
+            for scope in scopes:
+                resp_data = await self.http.get_interaction_element(self.user.id, scope)
+
+                for cmd_data in resp_data:
+                    self._slash_scopes[str(cmd_data["id"])] = scope
+                    try:
+                        self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                    except KeyError:
+                        pass
+
+    def add_slash_command(self, command: SlashCommand):
+        """
+        Add a slash command to the client.
+
+        :param command: The command to add
+        :return:
+        """
+        if command.scope not in self.slash_commands:
+            self.slash_commands[command.scope] = {}
+        self.slash_commands[command.scope][command.name] = command
+
+    async def submit_slash_commands(self) -> None:
+        """Submit registered slash commands to discord."""
+        scopes = [k for k in self.slash_commands.keys()]
+
+        for scope in scopes:
+            data = [v.to_dict() for v in self.slash_commands[scope].values()]
+
+            resp_data = await self.http.post_interaction_element(
+                self.user.id, data, guild_id=scope if scope != "global" else None
+            )
+
+            # cache data
+            for cmd_data in resp_data:
+                self._slash_scopes[str(cmd_data["id"])] = scope
+                self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+
+    async def dispatch_slash_command(self, interaction_data: dict) -> None:
+        """
+        Identify and dispatch slash commands.
+
+        :param interaction_data:
+        :return:
+        """
+        # Yes this is temporary, im just blocking out the basic logic
+
+        cmd_id = interaction_data["data"]["id"]
+        name = interaction_data["data"]["name"]
+        scope = self._slash_scopes.get(str(cmd_id))
+
+        if scope in self.slash_commands:
+            command: SlashCommand = self.slash_commands[scope][name]
+            print(f"{command.scope} :: {command.name} should be called")
+            await command.call()
+        else:
+            log.error(f"Unknown cmd_id received:: {cmd_id} ({name})")
+
     async def _on_raw_guild_create(self, data: dict):
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway
         :param data: raw guild data
         """
         self.guilds_cache.add(Guild(data, self))
+
+    async def _on_websocket_ready(self, data: dict) -> None:
+        """
+        Catches websocket ready and determines when to dispatch the client `READY` signal.
+
+        :param data: the websocket ready packet
+        """
+        expected_guild_count = len(data["guilds"])
+        last_count = 0
+        current_count = -1
+
+        last_rcv = time.perf_counter()
+        while True:
+            # wait a while to let guilds cache
+            await asyncio.sleep(0.5)
+
+            current_count = len(self.guilds_cache)
+            if current_count != expected_guild_count:
+                if current_count == last_count:
+                    # count hasnt changed, check how long we've been waiting
+                    if time.perf_counter() - last_rcv >= 3:
+                        # timeout
+                        log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                        break
+                else:
+                    last_rcv = time.perf_counter()
+                    last_count = current_count
+
+                continue
+            break
+
+        # cache slash commands
+        await self._init_slash()
+
+        self.dispatch("ready")
 
     async def on_socket_raw(self, raw: dict):
         """
@@ -191,8 +297,8 @@ class Snake:
             self.guilds_cache.add(guild)
             self.dispatch("guild_create", guild)
 
-        # if event == "INTERACTION_CREATE":
-
+        if event == "INTERACTION_CREATE":
+            await self.dispatch_slash_command(data)
         print(event, data)
 
     async def get_guild(self, guild_id: Snowflake_Type, with_counts: bool = False) -> Guild:
@@ -211,3 +317,10 @@ class Snake:
 
     async def send_message(self, channel: Snowflake_Type, content: str):
         await self.http.create_message(channel, content)
+
+    def slash_command(self, name: str, description: str = "No description set", scope: Snowflake_Type = "global"):
+        def wrapper(func):
+            cmd = SlashCommand(name, description, scope, call=func)
+            self.add_slash_command(cmd)
+
+        return wrapper

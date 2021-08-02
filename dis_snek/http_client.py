@@ -148,8 +148,8 @@ class HTTPClient(
             "bucket": header.get("x-ratelimit-bucket"),
             "limit": header.get("x-ratelimit-limit"),
             "remaining": header.get("x-ratelimit-remaining"),
-            "delta": float(header.get("x-ratelimit-reset-after")),  # type: ignore
-            "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset"))),  # type: ignore
+            "delta": float(header.get("x-ratelimit-reset-after", 0)),  # type: ignore
+            "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset", 0))),  # type: ignore
         }
 
     async def request(self, route: Route, **kwargs: Any) -> Any:
@@ -202,7 +202,10 @@ class HTTPClient(
                             self.loop.call_later(r_limit["delta"], lock.release)
 
                         if 300 > response.status >= 200:
-                            log.debug(f"{route.method} {route.url} has received {data}")
+                            r_limit = self._parse_ratelimit(response.headers)
+                            log.debug(
+                                f"{route.method} {route.url} ({r_limit['remaining']} calls remaining) has received {data}"
+                            )
                             return data
 
                         if response.status in {500, 502, 504}:
