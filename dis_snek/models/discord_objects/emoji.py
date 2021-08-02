@@ -1,44 +1,39 @@
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+
+import attr
 
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
-
-if TYPE_CHECKING:
-    from dis_snek.client import Snake
+from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
 
 
-class Emoji(Snowflake):
-    __slots__ = (
-        "_client",
-        "id",
-        "name",
-        "roles",
-        "creator",
-        "require_colons",
-        "managed",
-        "animated",
-        "available",
-        "guild_id",
-    )
+@attr.s(slots=True, kw_only=True)
+class Emoji(Snowflake, IgnoreExtraKeysMixin):
+    id: Optional[Snowflake_Type] = attr.ib(default=None)  # can be None for Standard Emoji
+    _client: Any = attr.ib()
 
-    def __init__(self, data: dict, client, guild_id: Optional[Snowflake_Type] = None):
-        self.id = data["id"]  # this is the only data guaranteed to be given
-        self._client: Snake = client
+    name: Optional[str] = attr.ib(default=None)
+    roles: List[Snowflake] = attr.ib(factory=list)
+    creator: Optional[User] = attr.ib(default=None)
 
-        self.name: Optional[str] = data.get("name")
-        self.roles: Optional[List[Snowflake]] = data.get("roles")
-        self.creator: Optional[User] = User(data.get("user")) if data.get("user") else None
+    require_colons: bool = attr.ib(default=False)
+    managed: bool = attr.ib(default=False)
+    animated: bool = attr.ib(default=False)
+    available: bool = attr.ib(default=False)
 
-        self.require_colons: bool = data.get("require_colons", False)
-        self.managed: bool = data.get("managed", False)
-        self.animated: bool = data.get("animated", False)
-        self.available: bool = data.get("available", False)
+    guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
 
-        self.guild_id: Optional[Snowflake_Type] = None
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], client: Any):
+        creator_dict = data.pop("user", default=None)
+        creator = User.from_dict(creator_dict, client) if creator_dict else None
+        return cls(client=client, creator=creator, **cls._filter_kwargs(data))
 
     def to_dict(self):
         data = {
