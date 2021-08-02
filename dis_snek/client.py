@@ -241,7 +241,9 @@ class Snake:
         if scope in self.slash_commands:
             command: SlashCommand = self.slash_commands[scope][name]
             print(f"{command.scope} :: {command.name} should be called")
-            await command.call()
+
+            ctx = InteractionContext.from_dict(interaction_data, self)
+            await command.call(ctx)
         else:
             log.error(f"Unknown cmd_id received:: {cmd_id} ({name})")
 

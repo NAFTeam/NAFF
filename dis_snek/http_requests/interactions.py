@@ -39,3 +39,31 @@ class InteractionRequests:
             endpoint = f"/applications/{app_id}/guilds/{guild_id}/commands"
 
         return await self.request(Route("PUT", endpoint), json=data)
+
+    async def post_initial_response(self, payload: dict, interaction_id: str, token: str) -> None:
+        """
+        Post an initial response to an interaction.
+
+        :param payload: the payload to send
+        :param interaction_id: the id of the interaction
+        :param token: the token of the interaction
+        """
+
+        return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), json=payload)
+
+    async def post_followup(self, payload: dict, application_id: str, token: str) -> None:
+        """
+        Send a followup to an interaction.
+
+        :param payload: the payload to send
+        :param application_id: the id of the application
+        :param token: the token of the interaction
+        """
+
+        return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), json=payload)
+
+    async def edit(self, payload: dict, application_id: str, token: str, message_id: str = "@original"):
+
+        return await self.request(
+            Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), json=payload
+        )
