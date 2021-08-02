@@ -1,3 +1,4 @@
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -99,8 +100,8 @@ class Guild(BaseGuild):
         self.member_count: int = data.get("member_count", 0)
         self.voice_states: List[{}] = data.get("voice_states", 0)
         self.members: List[{}] = data.get("members", [])
-        self._channels: List[BaseChannel] = []
-        self._threads: List[Thread] = []
+        self._channels: Dict[str, BaseChannel] = {}
+        self._threads: Dict[str, Thread] = {}
         self.presences: List[{}] = data.get("presences", [])
         self.max_presences: Optional[int] = data.get("max_presences")
         self.max_members: Optional[int] = data.get("max_members")
@@ -124,10 +125,12 @@ class Guild(BaseGuild):
         threads: List[{}] = data.get("threads", [])
 
         for c_data in channels:
-            self._channels.append(BaseChannel.from_dict(c_data, self._client))
+            _channel = BaseChannel.from_dict(c_data, self._client)
+            self._channels[_channel.id] = _channel
 
         for t_data in threads:
-            self._threads.append(BaseChannel.from_dict(t_data, self._client))
+            _channel = BaseChannel.from_dict(t_data, self._client)
+            self._threads[_channel.id] = _channel
 
     @property
     async def channels(self) -> List[TYPE_ALL_CHANNEL]:

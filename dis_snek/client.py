@@ -19,10 +19,11 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
+from dis_snek.models.discord_objects.context import InteractionContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import SlashCommand
-from dis_snek.models.discord_objects.user import User
 from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.discord_objects.user import User
 from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
@@ -43,7 +44,7 @@ class Snake:
         self._ready: asyncio.Event = asyncio.Event()
 
         # caches
-        self.guilds_cache = set()
+        self.guilds_cache = {}
         self._user: SnakeBotUser = None
         self.slash_commands = {}
         self._slash_scopes = {}
@@ -182,17 +183,20 @@ class Snake:
         if self.sync_slash:
             await self.submit_slash_commands()
         else:
-            scopes = [g.id for g in self.guilds_cache] + [None]
+            await self._cache_slash()
 
-            for scope in scopes:
-                resp_data = await self.http.get_interaction_element(self.user.id, scope)
+    async def _cache_slash(self):
+        """Get all interactions used by this bot and cache them."""
+        scopes = [g.id for g in self.guilds_cache.values()] + [None]
+        for scope in scopes:
+            resp_data = await self.http.get_interaction_element(self.user.id, scope)
 
-                for cmd_data in resp_data:
-                    self._slash_scopes[str(cmd_data["id"])] = scope
-                    try:
-                        self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
-                    except KeyError:
-                        pass
+            for cmd_data in resp_data:
+                self._slash_scopes[str(cmd_data["id"])] = scope if scope else "global"
+                try:
+                    self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                except KeyError:
+                    pass
 
     def add_slash_command(self, command: SlashCommand):
         """
@@ -246,7 +250,7 @@ class Snake:
         Automatically cache a guild upon GUILD_CREATE event from gateway
         :param data: raw guild data
         """
-        self.guilds_cache.add(Guild(data, self))
+        self.guilds_cache[data["id"]] = Guild(data, self)
 
     async def _on_websocket_ready(self, data: dict) -> None:
         """
@@ -294,7 +298,7 @@ class Snake:
         if event == "GUILD_CREATE":
             guild = Guild(data, self)
             # cache guild
-            self.guilds_cache.add(guild)
+            self.guilds_cache[guild.id] = guild
             self.dispatch("guild_create", guild)
 
         if event == "INTERACTION_CREATE":
