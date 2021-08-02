@@ -2,6 +2,7 @@ from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 from typing import Union
+from typing import Any
 
 import attr
 from attr.converters import optional as optional_c
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 @attr.s(slots=True, kw_only=True)
 class BaseChannel(Snowflake, IgnoreExtraKeysMixin):
-    _client: Snake = attr.ib(repr=False)
+    _client: Any = attr.ib(repr=False)
 
     _type: ChannelTypes = attr.ib(converter=ChannelTypes)
     name: Optional[str] = attr.ib(default=None)
@@ -53,7 +54,6 @@ class BaseChannel(Snowflake, IgnoreExtraKeysMixin):
         return cls(client=client, **cls._filter_kwargs(data))
 
 
-@attr.s(slots=True, kw_only=True)
 class _GuildMixin:
     guild_id: Optional[int] = attr.ib(default=None)
     position: Optional[int] = attr.ib(default=0)
@@ -122,7 +122,7 @@ class Thread(GuildText):
     member_count: int = attr.ib(default=0)
 
     archived: bool = attr.ib(default=False)
-    auto_archive_duration: int = attr.ib(factory=attr.Factory(
+    auto_archive_duration: int = attr.ib(default=attr.Factory(
         lambda self: self.default_auto_archive_duration, takes_self=True
     ))
     locked: bool = attr.ib(default=False)
