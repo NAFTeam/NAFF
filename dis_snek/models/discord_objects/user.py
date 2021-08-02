@@ -19,7 +19,6 @@ class BaseUser(Snowflake, IgnoreExtraKeysMixin):
     """Base class for User, essentially partial user discord model"""
 
     _client: Any = attr.ib(repr=False)
-    id: Snowflake_Type = attr.ib()
     username: str = attr.ib()
     discriminator: int = attr.ib()
     avatar: str = attr.ib()  # todo convert to asset

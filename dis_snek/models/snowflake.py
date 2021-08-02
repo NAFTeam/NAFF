@@ -11,7 +11,7 @@ class Snowflake:
     """A base object for anything with a snowflake
     Holds several methods that are likely to be used by them"""
 
-    id: Snowflake_Type
+    id: Snowflake_Type = attr.ib()
 
     def __eq__(self, other):
         if hasattr(other, "id"):
