@@ -12,7 +12,7 @@ class IgnoreExtraKeysMixin:
     @classmethod
     def _get_keys(cls):
         if (keys := getattr(cls, "_keys", None)) is None:
-            keys = frozenset(field.name for field in attr.fields(cls))
+            keys = frozenset(field.name.removeprefix("_") for field in attr.fields(cls))
             setattr(cls, "_keys", keys)
         return keys
 
