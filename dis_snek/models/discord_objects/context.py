@@ -5,7 +5,7 @@ from typing import List
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import BaseComponent
+from dis_snek.models.discord_objects.components import ActionRow
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
@@ -40,23 +40,16 @@ class InteractionContext(Context):
 
     data: Dict = attr.ib(factory=dict)
 
-    values: List = attr.ib(factory=list)
-
     @classmethod
     def from_dict(cls, data: Dict, client):
         """Create a context object from a dictionary"""
-        cls._client = client
-        cls._token = data["token"]
-        cls.interaction_id = data["id"]
-        cls.data = data
-
-        return cls()
+        return cls(client=client, token=data["token"], interaction_id=data["id"], data=data)
 
     async def defer(self, ephemeral=False):
         """
         Defers the response, showing a loading state.
 
-        :param hidden: Should the response be ephemeral
+        :param ephemeral: Should the response be ephemeral
         """
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
@@ -76,7 +69,7 @@ class InteractionContext(Context):
         tts: bool = False,
         allowed_mentions: dict = None,
         ephemeral: bool = False,
-        components: List[BaseComponent] = None,
+        components: List[ActionRow] = None,
     ):
         message = {
             "content": content,
@@ -99,3 +92,70 @@ class InteractionContext(Context):
             self.responded = True
         else:
             await self._client.http.post_followup(message, self._client.user.id, self._token)
+
+
+@attr.s
+class ComponentContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+    component_type: int = attr.ib(default=0)
+
+    values: List = attr.ib(factory=list)
+
+    defer_edit_origin: bool = attr.ib(default=False)
+
+    @classmethod
+    def from_dict(cls, data: Dict, client):
+        """Create a context object from a dictionary"""
+        return cls(
+            client=client,
+            token=data["token"],
+            interaction_id=data["id"],
+            custom_id=data["data"]["custom_id"],
+            component_type=data["data"]["component_type"],
+            data=data,
+        )
+
+    async def defer(self, ephemeral=False, edit_origin: bool = False):
+        """
+        Defers the response, showing a loading state.
+
+        :param ephemeral: Should the response be ephemeral
+        :param edit_origin: Whether we intend to edit the original message
+        """
+        if self.deferred or self.responded:
+            raise Exception("You have already responded to this interaction!")
+
+        payload = {"type": 6 if edit_origin else 5}
+
+        if ephemeral:
+            if edit_origin:
+                raise ValueError("`edit_origin` and `ephemeral` are mutually exclusive")
+            payload["data"] = {"flags": 64}
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+        self.deferred = True
+        self.ephemeral = ephemeral
+        self.defer_edit_origin = edit_origin
+
+    async def edit_origin(
+        self, content: str = None, embeds: List[Embed] = None, tts: bool = False, components: List[ActionRow] = None
+    ):
+        """Edits the original message of the component."""
+
+        message = {}
+
+        if content:
+            message["content"] = str(content)
+
+        if components:
+            message["components"] = components
+        if embeds:
+            message["embeds"] = embeds
+
+        if self.deferred:
+            await self._client.http.edit(message, self._client.user.id, self._token)
+            self.deferred = False
+            self.defer_edit_origin = False
+        else:
+            payload = {"type": 7, "data": message}
+            await self._client.http.post_initial_response(payload, self.interaction_id, self._token)

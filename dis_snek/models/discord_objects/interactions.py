@@ -70,17 +70,22 @@ class OptionType(IntEnum):
             return cls.NUMBER
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class ContextMenu:
     """
     Represents a discord context menu.
 
     :param name: The name of this entry
     :param type: The type of entry (user or message)
+    :param call: The coroutine to call when this interaction is received
     """
 
     name: str = attr.ib()
     type: InteractionType = attr.ib()
+    scope: Snowflake_Type = attr.ib(default="global", converter=str)
+
+    cmd_id: Snowflake_Type = attr.ib(default=None)
+    call: Callable[..., Coroutine] = attr.ib(default=None)
 
     def to_dict(self) -> dict:
         """
@@ -88,7 +93,7 @@ class ContextMenu:
 
         :return: dict
         """
-        return attr.asdict(self)
+        return {"name": self.name, "type": self.type}
 
 
 @attr.s(slots=True)
@@ -139,7 +144,7 @@ class SlashCommandOption:
         return attr.asdict(self, filter=lambda key, value: value)
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class SlashCommand:
     """
     Represents a discord slash command.
@@ -152,18 +157,11 @@ class SlashCommand:
 
     name: str = attr.ib()
     description: str = attr.ib(default="No Description Set")
-    scope: Union[str, int] = attr.ib(default="global", converter=lambda v: str(v))
+    scope: Snowflake_Type = attr.ib(default="global", converter=str)
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     default_permission: bool = attr.ib(default=True)
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
-
-    def __setattr__(self, key, value):
-        if key == "scope":
-            # scope is used internally as a dict key, however people are used to snowflakes being int
-            # this allows int scopes, but converts them to string transparently
-            value = str(value)
-        super().__setattr__(key, value)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:

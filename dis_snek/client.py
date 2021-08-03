@@ -20,18 +20,19 @@ from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import InteractionContext, Context
+from dis_snek.models.discord_objects.context import InteractionContext, Context, ComponentContext
 from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.interactions import SlashCommand
+from dis_snek.models.discord_objects.interactions import SlashCommand, ContextMenu
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.enums import InteractionType, ComponentType
 from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
 
 
 class Snake:
-    def __init__(self, intents, loop=None, sync_slash=False):
+    def __init__(self, intents, loop=None, sync_interactions=False):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         self.intents = intents
 
@@ -41,13 +42,14 @@ class Snake:
 
         self._connection = None
         self._closed = False
-        self.sync_slash = sync_slash
+        self.sync_interactions = sync_interactions
 
         # caches
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
-        self.slash_commands = {}
-        self._slash_scopes = {}
+        self.interactions = {}
+
+        self._interaction_scopes = {}
 
         self._listeners: Dict[str, List] = {}
 
@@ -191,48 +193,48 @@ class Snake:
         self.add_listener(coro)
         return coro
 
-    async def _init_slash(self) -> None:
+    async def _init_interactions(self) -> None:
         """
         Initialise slash commands.
 
-        If `sync_slash` this will submit all registered slash commands to discord.
+        If `sync_interactions` this will submit all registered slash commands to discord.
         Otherwise, it will get the list of interactions and cache their scopes.
         """
-        if self.sync_slash:
-            await self.submit_slash_commands()
+        if self.sync_interactions:
+            await self.submit_interactions()
         else:
-            await self._cache_slash()
+            await self._cache_interactions()
 
-    async def _cache_slash(self):
+    async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
         scopes = [g.id for g in self.guilds_cache.values()] + [None]
         for scope in scopes:
             resp_data = await self.http.get_interaction_element(self.user.id, scope)
 
             for cmd_data in resp_data:
-                self._slash_scopes[str(cmd_data["id"])] = scope if scope else "global"
+                self._interaction_scopes[str(cmd_data["id"])] = scope if scope else "global"
                 try:
-                    self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                    self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                 except KeyError:
                     pass
 
-    def add_slash_command(self, command: SlashCommand):
+    def add_interaction(self, command: Union[SlashCommand, ContextMenu]):
         """
         Add a slash command to the client.
 
         :param command: The command to add
         :return:
         """
-        if command.scope not in self.slash_commands:
-            self.slash_commands[command.scope] = {}
-        self.slash_commands[command.scope][command.name] = command
+        if command.scope not in self.interactions:
+            self.interactions[command.scope] = {}
+        self.interactions[command.scope][command.name] = command
 
-    async def submit_slash_commands(self) -> None:
+    async def submit_interactions(self) -> None:
         """Submit registered slash commands to discord."""
-        scopes = [k for k in self.slash_commands.keys()]
+        scopes = [k for k in self.interactions.keys()]
 
         for scope in scopes:
-            data = [v.to_dict() for v in self.slash_commands[scope].values()]
+            data = [v.to_dict() for v in self.interactions[scope].values()]
 
             resp_data = await self.http.post_interaction_element(
                 self.user.id, data, guild_id=scope if scope != "global" else None
@@ -240,8 +242,8 @@ class Snake:
 
             # cache data
             for cmd_data in resp_data:
-                self._slash_scopes[str(cmd_data["id"])] = scope
-                self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                self._interaction_scopes[str(cmd_data["id"])] = scope
+                self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
 
     async def get_context(self, data: Dict, interaction: bool = False) -> Union[Context, InteractionContext]:
         """
@@ -252,9 +254,10 @@ class Snake:
         :param interaction: Is this an interaction or not?
         :return: A context object
         """
+        cls = InteractionContext if data["type"] == 1 else ComponentContext
 
         if interaction:
-            cls = InteractionContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
+            cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
             cls.guild = self.guilds_cache[data.get("guild_id")]
             if cls.guild:
                 # this channel line is a placeholder
@@ -280,18 +283,34 @@ class Snake:
         """
         # Yes this is temporary, im just blocking out the basic logic
 
-        cmd_id = interaction_data["data"]["id"]
-        name = interaction_data["data"]["name"]
-        scope = self._slash_scopes.get(str(cmd_id))
+        if interaction_data["type"] in (1, 2):
+            # Slash Commands
+            interaction_id = interaction_data["data"]["id"]
+            name = interaction_data["data"]["name"]
+            scope = self._interaction_scopes.get(str(interaction_id))
 
-        if scope in self.slash_commands:
-            command: SlashCommand = self.slash_commands[scope][name]
-            print(f"{command.scope} :: {command.name} should be called")
+            if scope in self.interactions:
+                command: SlashCommand = self.interactions[scope][name]
+                print(f"{command.scope} :: {command.name} should be called")
 
+                ctx = await self.get_context(interaction_data, True)
+                await command.call(ctx)
+            else:
+                log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
+
+        elif interaction_data["type"] == 3:
+            # Buttons, Selects, ContextMenu::Message
             ctx = await self.get_context(interaction_data, True)
-            await command.call(ctx)
+            component_type = interaction_data["data"]["component_type"]
+
+            if component_type == ComponentType.BUTTON:
+                self.dispatch("button", ctx)
+            if component_type == ComponentType.SELECT:
+                self.dispatch("select", ctx)
+            self.dispatch("component", ctx)
+
         else:
-            log.error(f"Unknown cmd_id received:: {cmd_id} ({name})")
+            raise NotImplementedError(f"Unknown Interaction Recieved: {interaction_data['type']}")
 
     async def _on_raw_message_create(self, data: dict):
         msg = Message(data)
@@ -335,7 +354,7 @@ class Snake:
             break
 
         # cache slash commands
-        await self._init_slash()
+        await self._init_interactions()
 
         self.dispatch("ready")
 
@@ -379,6 +398,15 @@ class Snake:
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
             cmd = SlashCommand(name, description, scope, call=func)
-            self.add_slash_command(cmd)
+            self.add_interaction(cmd)
+
+        return wrapper
+
+    def context_menu(self, name: str, type: InteractionType, scope: Snowflake_Type):
+        def wrapper(func):
+            if not asyncio.iscoroutinefunction(func):
+                raise ValueError("Commands must be coroutines")
+            cmd = ContextMenu(name, type, scope, call=func)
+            self.add_interaction(cmd)
 
         return wrapper
