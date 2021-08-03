@@ -23,6 +23,7 @@ from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.context import InteractionContext, Context
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import SlashCommand
+from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.snowflake import Snowflake_Type
 
@@ -41,7 +42,6 @@ class Snake:
         self._connection = None
         self._closed = False
         self.sync_slash = sync_slash
-        self._ready: asyncio.Event = asyncio.Event()
 
         # caches
         self.guilds_cache = {}
@@ -53,6 +53,7 @@ class Snake:
 
         self.add_listener(self.on_socket_raw, "raw_socket_receive")
         self.add_listener(self._on_websocket_ready, "websocket_ready")
+        self.add_listener(self._on_raw_message_create, "raw_message_create")
 
     @property
     def is_closed(self) -> bool:
@@ -291,6 +292,10 @@ class Snake:
             await command.call(ctx)
         else:
             log.error(f"Unknown cmd_id received:: {cmd_id} ({name})")
+
+    async def _on_raw_message_create(self, data: dict):
+        msg = Message(data)
+        self.dispatch("message_create", msg)
 
     async def _on_raw_guild_create(self, data: dict):
         """
