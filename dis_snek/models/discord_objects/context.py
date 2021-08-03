@@ -1,4 +1,6 @@
-from typing import Any, List, Dict
+from typing import Any
+from typing import Dict
+from typing import List
 
 import attr
 
@@ -61,7 +63,7 @@ class InteractionContext(Context):
 
         payload = {"type": 5}
         if ephemeral:
-            payload["flags"] = 64
+            payload["data"] = {"flags": 64}
 
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
         self.ephemeral = ephemeral
