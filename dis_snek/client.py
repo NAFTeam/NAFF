@@ -3,7 +3,7 @@ import logging
 import time
 import traceback
 from random import randint
-from typing import Any
+from typing import Any, Union
 from typing import Callable
 from typing import Coroutine
 from typing import Dict
@@ -19,11 +19,11 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models.discord_objects.context import InteractionContext
+from dis_snek.models.discord_objects.channel import BaseChannel
+from dis_snek.models.discord_objects.context import InteractionContext, Context
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import SlashCommand
 from dis_snek.models.discord_objects.user import SnakeBotUser
-from dis_snek.models.discord_objects.user import User
 from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
@@ -225,6 +225,34 @@ class Snake:
                 self._slash_scopes[str(cmd_data["id"])] = scope
                 self.slash_commands[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
 
+    async def get_context(self, data: Dict, interaction: bool = False) -> Union[Context, InteractionContext]:
+        """
+        Return a context object based on data passed
+
+        :param client: The bot itself
+        :param data: The data of the event
+        :param interaction: Is this an interaction or not?
+        :return: A context object
+        """
+
+        if interaction:
+            cls = InteractionContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
+            cls.guild = self.guilds_cache[data.get("guild_id")]
+            if cls.guild:
+                # this channel line is a placeholder
+                cls.channel = BaseChannel.from_dict(await self.http.get_channel(data["channel_id"]), self)
+                cls.author = data["member"]
+
+            else:
+                cls.author = data["user"]
+            cls.data = data
+
+        else:
+            # todo: non-interaction context
+            raise NotImplementedError
+
+        return cls
+
     async def dispatch_slash_command(self, interaction_data: dict) -> None:
         """
         Identify and dispatch slash commands.
@@ -242,7 +270,7 @@ class Snake:
             command: SlashCommand = self.slash_commands[scope][name]
             print(f"{command.scope} :: {command.name} should be called")
 
-            ctx = InteractionContext.from_dict(interaction_data, self)
+            ctx = await self.get_context(interaction_data, True)
             await command.call(ctx)
         else:
             log.error(f"Unknown cmd_id received:: {cmd_id} ({name})")
