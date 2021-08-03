@@ -37,7 +37,8 @@ class Message(Snowflake):
         self.nonce: Optional[str] = data.get("nonce")
 
         # objects
-        self.author: User = User(data.get("author")) if "member" not in data else Member(data["member"], data["author"])
+        # self.author: User = User(data.get("author")) if "member" not in data else Member(data["member"], data["author"])
+        self.author: dict = data.get("member") or data.get("author")
         self.application: Optional[dict] = data.get("application") if self.application_id else None
         self.thread: Optional[dict] = data.get("thread")
         self.interaction: Optional[dict] = data.get("interaction")
@@ -74,6 +75,6 @@ class Message(Snowflake):
 
         # time
         self.sent_at: datetime = datetime.fromisoformat(data["timestamp"])
-        self.edited_at: Optional[datetime] = (
-            datetime.fromisoformat(data["edited_timestamp"]) if "edited_timestamp" in data else None
-        )
+        self.edited_at: Optional[datetime] = None
+        if timestamp := data.get("edited_timestamp"):
+            self.edited_at = datetime.fromisoformat(timestamp)
