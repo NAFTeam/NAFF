@@ -267,7 +267,7 @@ class Snake:
             else:
                 cls.author = data["user"]
             cls.data = data
-
+            cls.target_id = data["data"].get("target_id")
         else:
             # todo: non-interaction context
             raise NotImplementedError

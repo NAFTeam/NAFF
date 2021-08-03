@@ -10,6 +10,7 @@ from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import User
+from dis_snek.models.snowflake import Snowflake_Type
 
 
 @attr.s
@@ -33,6 +34,7 @@ class InteractionContext(Context):
 
     _token: str = attr.ib(default=None)
     interaction_id: str = attr.ib(default=None)
+    target_id: Snowflake_Type = attr.ib(default=None)
 
     deferred: bool = attr.ib(default=False)
     responded: bool = attr.ib(default=False)
