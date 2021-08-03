@@ -11,14 +11,14 @@ from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
+from dis_snek.utils.attr_utils import DictSerializationMixin
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
 @attr.s(slots=True, kw_only=True)
-class BaseChannel(Snowflake, IgnoreExtraKeysMixin):
+class BaseChannel(Snowflake, DictSerializationMixin):
     _client: Any = attr.ib(repr=False)
 
     _type: ChannelTypes = attr.ib(converter=ChannelTypes)
@@ -51,7 +51,7 @@ class BaseChannel(Snowflake, IgnoreExtraKeysMixin):
 
     @classmethod
     def from_dict_typed(cls, data, client):
-        return cls(client=client, **cls._filter_kwargs(data))
+        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
 
 class _GuildMixin:

@@ -10,11 +10,11 @@ from dis_snek.models.discord_objects.user import User
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
+from dis_snek.utils.attr_utils import DictSerializationMixin
 
 
 @attr.s(slots=True, kw_only=True)
-class Emoji(Snowflake, IgnoreExtraKeysMixin):
+class Emoji(Snowflake, DictSerializationMixin):
     id: Optional[Snowflake_Type] = attr.ib(default=None)  # can be None for Standard Emoji
     _client: Any = attr.ib()
 

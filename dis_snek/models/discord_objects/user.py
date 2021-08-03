@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -11,21 +10,17 @@ from dis_snek.models.enums import UserFlags
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import IgnoreExtraKeysMixin
+from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.utils.attr_utils import default_kwargs
 
 
-@attr.s(slots=True, str=False, kw_only=True)
-class BaseUser(Snowflake, IgnoreExtraKeysMixin):
+@attr.define(str=False, **default_kwargs)
+class BaseUser(Snowflake, DictSerializationMixin):
     """Base class for User, essentially partial user discord model"""
-
-    _client: Any = attr.ib(repr=False)
-    username: str = attr.ib()
-    discriminator: int = attr.ib()
-    avatar: str = attr.ib()  # todo convert to asset
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: Any):
-        return cls(client=client, **cls._filter_kwargs(data))
+    _client: Any = attr.field(repr=False)
+    username: str = attr.field()
+    discriminator: int = attr.field()
+    _avatar: str = attr.field()  # todo convert to asset
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
