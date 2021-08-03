@@ -164,6 +164,9 @@ class Snake:
         :param event: the event to listen for
         :return:
         """
+        if not asyncio.iscoroutinefunction(coro):
+            raise ValueError("Listeners must be coroutines")
+
         if not event:
             event = coro.__name__
 
@@ -368,6 +371,8 @@ class Snake:
 
     def slash_command(self, name: str, description: str = "No description set", scope: Snowflake_Type = "global"):
         def wrapper(func):
+            if not asyncio.iscoroutinefunction(func):
+                raise ValueError("Commands must be coroutines")
             cmd = SlashCommand(name, description, scope, call=func)
             self.add_slash_command(cmd)
 
