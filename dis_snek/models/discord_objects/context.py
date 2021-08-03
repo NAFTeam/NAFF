@@ -86,7 +86,7 @@ class InteractionContext(Context):
             "components": components or [],
         }
 
-        if ephemeral or self.ephemeral:
+        if ephemeral or (self.ephemeral and self.deferred):
             message["flags"] = 64
 
         if not self.responded:
