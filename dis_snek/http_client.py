@@ -208,6 +208,7 @@ class HTTPClient(
                             )
                             return data
 
+                        log.error(f"Request Message: {await response.read()}")
                         if response.status in {500, 502, 504}:
                             await asyncio.sleep(1 + tries * 2)
                             continue
