@@ -17,6 +17,7 @@ from dis_snek.utils.attr_utils import default_kwargs
 @attr.define(str=False, **default_kwargs)
 class BaseUser(Snowflake, DictSerializationMixin):
     """Base class for User, essentially partial user discord model"""
+
     _client: Any = attr.field(repr=False)
     username: str = attr.field()
     discriminator: int = attr.field()
@@ -58,10 +59,10 @@ class SnakeBotUser(User):
 
 @attr.s(slots=True, kw_only=True)
 class Member(User):
-    nickname: str = attr.ib()
-    deafened: bool = attr.ib()
-    muted: bool = attr.ib()
-    roles: List[Snowflake_Type] = attr.ib()
+    nickname: str = attr.ib(default="")
+    deafened: bool = attr.ib(default=False)
+    muted: bool = attr.ib(default=False)
+    roles: List[Snowflake_Type] = attr.ib(default="")
     joined_at: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
     premium_since: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
     pending: Optional[bool] = attr.ib(default=None)

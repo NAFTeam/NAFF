@@ -40,8 +40,11 @@ class Message(Snowflake):
         self.nonce: Optional[str] = data.get("nonce")
 
         # objects
-        # self.author: User = User(data.get("author")) if "member" not in data else Member(data["member"], data["author"])
-        self.author: dict = data.get("member") or data.get("author")
+        if "member" not in data:
+            self.author: User = User.from_dict(data.get("author"), client)
+        else:
+            self.author: Member = Member.from_dict({**data.get("member"), **data.get("author")}, client)
+
         self.application: Optional[dict] = data.get("application") if self.application_id else None
         self.thread: Optional[dict] = data.get("thread")
         self.interaction: Optional[dict] = data.get("interaction")
