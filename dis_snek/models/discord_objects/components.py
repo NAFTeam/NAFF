@@ -368,7 +368,7 @@ def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
 
     :param component: A component dict
     """
-    if component.get("type") == ComponentType.ACTIONROW:
+    if component.get("type") == ComponentType.ACTION_ROW:
         row = ActionRow()
         for comp in component.get("components"):
             row.append(convert_dict(comp))
