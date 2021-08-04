@@ -1,11 +1,11 @@
-from typing import Any
+from typing import Any, Union
 from typing import Dict
 from typing import List
 
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import ActionRow
+from dis_snek.models.discord_objects.components import ActionRow, process_components
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
@@ -71,14 +71,14 @@ class InteractionContext(Context):
         tts: bool = False,
         allowed_mentions: dict = None,
         ephemeral: bool = False,
-        components: List[ActionRow] = None,
+        components: List[Union[Dict, ActionRow]] = None,
     ):
         message = {
             "content": content,
             "tts": tts,
             "embeds": [e.to_dict() for e in embeds] if embeds else [],
             "allowed_mentions": {},
-            "components": components or [],
+            "components": process_components(components) if components else [],
         }
 
         if ephemeral or (self.ephemeral and self.deferred):
@@ -140,17 +140,21 @@ class ComponentContext(InteractionContext):
         self.defer_edit_origin = edit_origin
 
     async def edit_origin(
-        self, content: str = None, embeds: List[Embed] = None, tts: bool = False, components: List[ActionRow] = None
+        self,
+        content: str = None,
+        embeds: List[Embed] = None,
+        tts: bool = False,
+        components: List[Union[Dict, ActionRow]] = None,
     ):
         """Edits the original message of the component."""
 
-        message = {}
+        message: Dict[str, Any] = {}
 
         if content:
             message["content"] = str(content)
 
         if components:
-            message["components"] = components
+            message["components"] = process_components(components)
         if embeds:
             message["embeds"] = embeds
 

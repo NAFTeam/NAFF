@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import List
+from typing import List, Any
 from typing import Optional
 from typing import Union
 
@@ -9,6 +9,46 @@ from dis_snek.models.enums import ButtonStyle
 from dis_snek.models.enums import ComponentType
 
 log = logging.getLogger(logger_name)
+
+
+def process_components(components: Any) -> List[dict]:
+    """
+    Recursively process the passed components into a format discord will understand.
+
+    :param components: List of dict / components to process"""
+    if isinstance(components, list):
+        if all(isinstance(c, dict) for c in components):
+            # user has passed a list of dicts, this is the correct format, blindly send it
+            return components
+
+        if isinstance(components[0], list):
+            # list of lists... actionRow-less sending
+            converted = []
+            for row in components:
+                converted.append(ActionRow(*row))
+            return process_components(converted)
+
+        if all(isinstance(c, (Button, Select)) for c in components):
+            # list of naked components
+            return process_components([components])
+
+        if all(isinstance(c, ActionRow) for c in components):
+            # we have a list of action rows
+            converted = []
+            for row in components:
+                converted.append(row.to_dict)
+            return process_components(converted)
+
+    if isinstance(components, (ActionRow, Button, Select)):
+        # naked component was passed
+        return process_components([components])
+
+    if isinstance(components, dict):
+        # if a naked dictionary is passed, assume the user knows what they're doing and send it blindly
+        # after wrapping it in a list for discord
+        components = [components]
+
+    return components
 
 
 class BaseComponent:
