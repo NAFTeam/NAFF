@@ -213,14 +213,7 @@ class HTTPClient(
                             await asyncio.sleep(1 + tries * 2)
                             continue
 
-                        if response.status == 403:
-                            raise Forbidden(response.reason, route, response.status, response)
-                        elif response.status == 404:
-                            raise NotFound(response.reason, route, response.status, response)
-                        elif response.status >= 500:
-                            raise DiscordError(response.reason, route, response.status, response)
-                        else:
-                            raise HTTPError(response.reason, route, response.status, response)
+                        self._raise_exception(response, route)
 
                 except OSError as e:
                     if tries < self._retries - 1 and e.errno in (54, 10054):
@@ -231,6 +224,20 @@ class HTTPClient(
                     raise
                 except Exception as e:
                     log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+    def _raise_exception(self, response, route):
+        if response.status == 403:
+            raise Forbidden(response.reason, route, response.status, response)
+        elif response.status == 404:
+            raise NotFound(response.reason, route, response.status, response)
+        elif response.status >= 500:
+            raise DiscordError(response.reason, route, response.status, response)
+        else:
+            raise HTTPError(response.reason, route, response.status, response)
+
+    # async def request_cdn(self, ):
+    #     async with self.__session.request(route.method, route.url, **kwargs) as response:
+    #         pass
 
     async def login(self, token: str) -> dict:
         """
