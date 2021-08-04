@@ -289,12 +289,20 @@ class Snake:
             name = interaction_data["data"]["name"]
             scope = self._interaction_scopes.get(str(interaction_id))
 
+            kwargs = {}
+            if "options" in interaction_data["data"]:
+                for option in interaction_data["data"]["options"]:
+                    kwargs[option["name"]] = option["value"]
+
             if scope in self.interactions:
                 command: SlashCommand = self.interactions[scope][name]
                 print(f"{command.scope} :: {command.name} should be called")
 
                 ctx = await self.get_context(interaction_data, True)
-                await command.call(ctx)
+                ctx.kwargs = kwargs
+                ctx.args = kwargs.values()
+
+                await command.call(ctx, **kwargs)
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -393,11 +401,13 @@ class Snake:
     async def send_message(self, channel: Snowflake_Type, content: str):
         await self.http.create_message(channel, content)
 
-    def slash_command(self, name: str, description: str = "No description set", scope: Snowflake_Type = "global"):
+    def slash_command(
+        self, name: str, description: str = "No description set", scope: Snowflake_Type = "global", options=None
+    ):
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
-            cmd = SlashCommand(name, description, scope, call=func)
+            cmd = SlashCommand(name, description, scope, call=func, options=options)
             self.add_interaction(cmd)
 
         return wrapper
