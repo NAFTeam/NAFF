@@ -46,6 +46,10 @@ class Emoji(Snowflake, DictSerializationMixin):
         return f"<{'a:' if self.animated else ''}{self.name}:{self.id}>"
 
     @property
+    def req_format(self):
+        return f"{self.name}:{self.id}"
+
+    @property
     def is_usable(self) -> bool:
         """
         Determines if this emoji is usable by the current user

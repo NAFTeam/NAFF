@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Union
 from typing import Optional
 
+from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.discord_objects.user import Member
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.enums import MessageActivityTypes
@@ -27,7 +28,9 @@ class MessageReference:  # todo refactor into actual class, add pointers to actu
 
 
 class Message(Snowflake):
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, client):
+        self._client = client
+
         # ids
         self.id: Snowflake_Type = data["id"]
         self.channel_id: Snowflake_Type = data["channel_id"]
@@ -68,7 +71,7 @@ class Message(Snowflake):
             self.message_reference = MessageReference(**m_ref)
 
         if ref_m := data.get("referenced_message"):
-            self.referenced_message = Message(ref_m)
+            self.referenced_message = Message(ref_m, self._client)
 
         if act := data.get("activity"):
             self.activity = MessageActivity(**act)
@@ -78,3 +81,14 @@ class Message(Snowflake):
         self.edited_at: Optional[datetime] = None
         if timestamp := data.get("edited_timestamp"):
             self.edited_at = datetime.fromisoformat(timestamp)
+
+    async def add_reaction(self, emoji: Union[Emoji, str]):
+        """
+        Add a reaction to this message.
+
+        :param emoji: the emoji to react with
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.req_format
+
+        await self._client.http.create_reaction(self.channel_id, self.id, emoji)
