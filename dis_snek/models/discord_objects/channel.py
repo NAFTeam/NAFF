@@ -132,7 +132,7 @@ class Thread(GuildText):
     def from_dict_typed(cls, data, client):
         thread_metadata: dict = data.get("thread_metadata", {})
         data.update(thread_metadata)
-        return cls(client=client, **cls._filter_kwargs(data))
+        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property
     def private(self):
