@@ -71,7 +71,7 @@ class TTLCache(OrderedDict):
         item.expire = time.monotonic() + self.ttl
 
     def _first_item(self):
-        return next(iter(self.items()))
+        return next(super().items().__iter__())
 
     def expire(self):
         """Removes expired elements from the cache"""
