@@ -91,7 +91,7 @@ class GlobalCache:
         guild = self.guid_cache.get(guild_id)
         if request_fallback and guild is None:
             data = await self._client.http.get_guild(guild_id)
-            guild = Guild(data, self._client)  # todo refactor with from_dict
+            guild = Guild.from_dict(data, self._client)
         return guild
 
     def place_guild_data(self, guild_id, data):
