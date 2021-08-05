@@ -5,12 +5,13 @@ import sys
 import time
 import traceback
 from random import randint
-from typing import Any, Union
+from typing import Any
 from typing import Callable
 from typing import Coroutine
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 import aiohttp
 
@@ -21,15 +22,18 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.smart_cache import GlobalCache
-from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import InteractionContext, Context, ComponentContext
+from dis_snek.models.discord_objects.context import ComponentContext
+from dis_snek.models.discord_objects.context import Context
+from dis_snek.models.discord_objects.context import InteractionContext
 from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.interactions import SlashCommand, ContextMenu
+from dis_snek.models.discord_objects.interactions import ContextMenu
+from dis_snek.models.discord_objects.interactions import SlashCommand
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser
-from dis_snek.models.enums import InteractionType, ComponentType
+from dis_snek.models.enums import ComponentType
+from dis_snek.models.enums import InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.smart_cache import GlobalCache
 
 log = logging.getLogger(logger_name)
 
@@ -263,10 +267,10 @@ class Snake:
 
         if interaction:
             cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
-            cls.guild = self.guilds_cache[data.get("guild_id")]
+            cls.guild = await self.cache.get_guild(data.get("guild_id"))
             if cls.guild:
                 # this channel line is a placeholder
-                cls.channel = BaseChannel.from_dict(await self.http.get_channel(data["channel_id"]), self)
+                cls.channel = await self.cache.get_channel(data["channel_id"])
                 cls.author = data["member"]
 
             else:
