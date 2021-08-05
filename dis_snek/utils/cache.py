@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from collections.abc import ValuesView
+from collections.abc import ItemsView
 from typing import Any
 import time
 import attr
@@ -45,13 +47,20 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, reset_expiration=True):
         item = super().get(key, default)
         if item is not default:
-            self._reset_expiration(key, item)
+            if reset_expiration:
+                self._reset_expiration(key, item)
             return item.value
 
         return default
+
+    def values(self):
+        return _CacheValuesView(self)
+
+    def items(self):
+        return _CacheItemsView(self)
 
     def _reset_expiration(self, key: Any, item: TTLItem):
         self.move_to_end(key)
@@ -76,3 +85,38 @@ class TTLCache(OrderedDict):
                 self.popitem(last=False)
             else:
                 break
+
+
+class _CacheValuesView(ValuesView):
+    def __contains__(self, value):
+        for key in self._mapping:
+            v = self._mapping.get(key, reset_expiration=False)
+            if v is value or v == value:
+                return True
+        return False
+
+    def __iter__(self):
+        for key in self._mapping:
+            yield self._mapping.get(key, reset_expiration=False)
+
+    def __reversed__(self):
+        for key in reversed(self._mapping):
+            yield self._mapping.get(key, reset_expiration=False)
+
+
+class _CacheItemsView(ItemsView):
+    def __contains__(self, item):
+        key, value = item
+        v = self._mapping.get(key, default=attr.NOTHING, reset_expiration=False)
+        if v is attr.NOTHING:
+            return False
+        else:
+            return v is value or v == value
+
+    def __iter__(self):
+        for key in self._mapping:
+            yield key, self._mapping.get(key, reset_expiration=False)
+
+    def __reversed__(self):
+        for key in reversed(self._mapping):
+            yield key, self._mapping.get(key, reset_expiration=False)
