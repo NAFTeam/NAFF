@@ -137,6 +137,7 @@ class HTTPClient(
             headers["Authorization"] = "Bot " + self.token
         if json:
             headers["Content-Type"] = "application/json"
+            kwargs["json"] = json
         if reason:
             headers["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
@@ -185,6 +186,7 @@ class HTTPClient(
                 if tries < self._retries - 1 and e.errno in (54, 10054):
                     await asyncio.sleep(1 + tries * 2)
                     continue
+                lock.release()
                 raise
             except (Forbidden, NotFound, DiscordError, HTTPError):
                 lock.release()
@@ -195,7 +197,8 @@ class HTTPClient(
         lock.release()  # shouldn't get called, but here just to be clean
 
     async def _raise_exception(self, response, route):
-        resp_text = await response.read().encode("utf-8")
+        resp_text = await response.read()
+        resp_text = resp_text.decode("utf-8")
         if response.status == 403:
             raise Forbidden(resp_text, route, response.status, response)
         elif response.status == 404:
