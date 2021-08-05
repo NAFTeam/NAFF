@@ -19,6 +19,7 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
+from dis_snek.smart_cache import GlobalCache
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.context import InteractionContext, Context, ComponentContext
 from dis_snek.models.discord_objects.guild import Guild
@@ -45,6 +46,7 @@ class Snake:
         self.sync_interactions = sync_interactions
 
         # caches
+        self.cache = GlobalCache(self)
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
         self.interactions = {}
@@ -207,7 +209,7 @@ class Snake:
 
     async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
-        scopes = [g.id for g in self.guilds_cache.values()] + [None]
+        scopes = [g.id for g in self.cache.guid_cache.values()] + [None]
         for scope in scopes:
             resp_data = await self.http.get_interaction_element(self.user.id, scope)
 
@@ -329,7 +331,7 @@ class Snake:
         Automatically cache a guild upon GUILD_CREATE event from gateway
         :param data: raw guild data
         """
-        self.guilds_cache[data["id"]] = Guild(data, self)
+        self.cache.place_guild_data(data["id"], data)
 
     async def _on_websocket_ready(self, data: dict) -> None:
         """
@@ -346,7 +348,7 @@ class Snake:
             # wait a while to let guilds cache
             await asyncio.sleep(0.5)
 
-            current_count = len(self.guilds_cache)
+            current_count = len(self.cache.guid_cache)
             if current_count != expected_guild_count:
                 if current_count == last_count:
                     # count hasnt changed, check how long we've been waiting
@@ -375,9 +377,9 @@ class Snake:
         data = raw.get("d")
 
         if event == "GUILD_CREATE":
-            guild = Guild(data, self)
             # cache guild
-            self.guilds_cache[guild.id] = guild
+            guild_id = data["id"]
+            guild = self.cache.place_guild_data(guild_id, data)
             self.dispatch("guild_create", guild)
 
         if event == "INTERACTION_CREATE":
