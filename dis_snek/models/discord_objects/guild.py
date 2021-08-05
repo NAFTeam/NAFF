@@ -2,6 +2,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Any
+from typing import TYPE_CHECKING
 
 import attr
 from attr.converters import optional as optional_c
@@ -13,6 +14,9 @@ from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.attr_utils import default_kwargs
 from dis_snek.utils.attr_utils import DictSerializationMixin
+
+if TYPE_CHECKING:
+    from dis_snek.client import Snake
 
 
 @attr.s(**default_kwargs)
@@ -49,9 +53,6 @@ class Guild(BaseGuild):
     large: bool = attr.ib(default=False)
     member_count: int = attr.ib(default=0)
     voice_states: List[dict] = attr.ib(factory=list)
-    members: List[dict] = attr.ib(factory=list)
-    # _channels: Dict[str, BaseChannel] = {}
-    # _threads: Dict[str, Thread] = {}
     presences: List[dict] = attr.ib(factory=list)
     max_presences: Optional[int] = attr.ib(default=None)
     max_members: Optional[int] = attr.ib(default=None)
@@ -68,19 +69,37 @@ class Guild(BaseGuild):
     stage_instances: List[dict] = attr.ib(factory=list)
     stickers: List[dict] = attr.ib(factory=list)
 
+    members: List[dict] = attr.ib(factory=list)
+    channel_ids: List[Snowflake_Type] = attr.ib(factory=list)
+    thread_ids: List[Snowflake_Type] = attr.ib(factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], client: "Snake"):
+        data = cls.process_dict(data, client)
+        return super().from_dict(data, client)
+
+    @classmethod
+    def process_dict(cls, data, client):
+        channels_data = data.pop("channels", [])
+        channel_ids = []
+        for channel_data in channels_data:
+            channel_id = channel_data["id"]
+            client.cache.place_channel_data(channel_id, channel_data)
+            channel_ids.append(channel_id)
+        data["channel_ids"] = channel_ids
+
+        threads_data = data.pop("threads", [])
+        thread_ids = []
+        for thread_data in threads_data:
+            thread_id = thread_data["id"]
+            client.cache.place_channel_data(thread_id, thread_data)
+            thread_ids.append(thread_id)
+        data["thread_ids"] = thread_ids
+
+        return data
+
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
-
-    # channels: List[{}] = data.get("channels", [])
-    # threads: List[{}] = data.get("threads", [])
-    #
-    # for c_data in channels:
-    #     _channel = BaseChannel.from_dict(c_data, self._client)
-    #     self._channels[_channel.id] = _channel
-    #
-    # for t_data in threads:
-    #     _channel = BaseChannel.from_dict(t_data, self._client)
-    #     self._threads[_channel.id] = _channel
 
     # @property
     # async def channels(self) -> List[TYPE_ALL_CHANNEL]:
