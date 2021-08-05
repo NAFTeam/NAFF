@@ -37,7 +37,7 @@ class GlobalCache:
             user = User.from_dict(data, self._client)
         return user
 
-    async def place_user_data(self, user_id, data):
+    def place_user_data(self, user_id, data):
         user = self.user_cache.get(user_id)
         if user is None:
             user = User.from_dict(data, self._client)
@@ -53,7 +53,7 @@ class GlobalCache:
             member = Member.from_dict(data, self._client)
         return member
 
-    async def place_member_data(self, guild_id, user_id, data):
+    def place_member_data(self, guild_id, user_id, data):
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
             member = Member.from_dict(data, self._client)
@@ -78,7 +78,7 @@ class GlobalCache:
             channel = BaseChannel.from_dict(data, self._client)
         return channel
 
-    async def place_channel_data(self, channel_id, data):
+    def place_channel_data(self, channel_id, data):
         channel = self.channel_cache.get(channel_id)
         if channel is None:
             channel = BaseChannel.from_dict(data, self._client)
