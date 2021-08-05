@@ -213,8 +213,7 @@ class Snake:
         """
         if self.sync_interactions:
             await self.submit_interactions()
-        else:
-            await self._cache_interactions()
+        await self._cache_interactions()
 
     async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
