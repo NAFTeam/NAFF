@@ -14,6 +14,7 @@ from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.attr_utils import default_kwargs
 from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.utils.cache import CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 @attr.s(**default_kwargs)
 class BaseGuild(Snowflake, DictSerializationMixin):
-    _client: Any = attr.ib()
+    _client: "Snake" = attr.ib()
     unavailable: bool = attr.ib(default=False)
 
 
@@ -97,6 +98,22 @@ class Guild(BaseGuild):
         data["thread_ids"] = thread_ids
 
         return data
+
+    async def get_channel(self, channel_id: Snowflake_Type) -> BaseChannel:
+        if channel_id not in self.channel_id:  # I'm not sure if it's needed
+            raise ValueError("Channel with such id does not exist in this guild!")
+
+        channel: BaseChannel = await self._client.cache.get_channel(channel_id)
+
+        guild_id = getattr(channel, "guild_id", None)
+        if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
+            raise ValueError("Specified channel does not belong to this guild!")
+
+        return channel
+
+    @property
+    def channels(self):
+        return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
 
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
