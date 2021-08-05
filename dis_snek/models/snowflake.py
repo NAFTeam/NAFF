@@ -1,4 +1,5 @@
 from typing import Union
+from contextlib import suppress
 
 import attr
 from dis_snek.models.timestamp import Timestamp
@@ -31,3 +32,16 @@ class Snowflake:
         :return:
         """
         return Timestamp.fromsnowflake(self.id)
+
+
+def to_snowflake(snowflake: Snowflake_Type):
+    if not isinstance(snowflake, (int, str)):
+        raise TypeError("ID (snowflake) should be instance of int or str!")
+
+    with suppress(ValueError):
+        snowflake = int(snowflake)
+
+    if 22 > snowflake.bit_length() > 64:
+        raise ValueError("ID (snowflake) is not in correct discord format!")
+
+    return snowflake
