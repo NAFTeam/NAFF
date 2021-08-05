@@ -1,5 +1,7 @@
 import asyncio
+import importlib.util
 import logging
+import sys
 import time
 import traceback
 from random import randint
@@ -50,6 +52,7 @@ class Snake:
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
         self.interactions = {}
+        self.__extensions = {}
 
         self._interaction_scopes = {}
 
@@ -422,3 +425,73 @@ class Snake:
             self.add_interaction(cmd)
 
         return wrapper
+
+    def load_extension(self, name, package=None):
+        """
+        Load an extension.
+
+        :param name: The name of the extension
+        :param package: The package this extension is in
+        """
+        name = importlib.util.resolve_name(name, package)
+
+        if name in self.__extensions:
+            raise Exception(f"{name} already loaded")
+
+        module = importlib.import_module(name, package)
+        try:
+            setup = getattr(module, "setup")
+            setup(self)
+        except AttributeError:
+            log.error(f"No setup function in {name}")
+        except Exception as e:
+            log.error(e)
+        else:
+            self.__extensions[name] = module
+            return
+
+        del sys.modules[name]
+
+    def unload_extension(self, name, package=None):
+        """
+        unload an extension.
+
+        :param name: The name of the extension
+        :param package: The package this extension is in
+        """
+        name = importlib.util.resolve_name(name, package)
+        module = self.__extensions.get(name)
+
+        if module is None:
+            raise Exception(f"No extension called {name} is loaded")
+
+        try:
+            teardown = getattr(module, "teardown")
+            teardown()
+        except AttributeError:
+            pass
+
+        # todo: remove any events / commands / utils from this extension
+
+        del sys.modules[name]
+        del self.__extensions[name]
+
+    def reload_extension(self, name, package=None):
+        """
+        Helper method to reload an extension.
+        Simply unloads, then loads the extension.
+
+        :param name: The name of the extension
+        :param package: The package this extension is in
+        """
+        name = importlib.util.resolve_name(name, package)
+        module = self.__extensions.get(name)
+
+        if module is None:
+            log.warning("Attempted to reload extension thats not loaded. Loading extension instead")
+            return self.load_extension(name, package)
+
+        self.unload_extension(name, package)
+        self.load_extension(name, package)
+
+        # todo: maybe add an ability to revert to the previous version if unable to load the new one
