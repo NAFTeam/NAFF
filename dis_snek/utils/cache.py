@@ -2,7 +2,11 @@ from collections import OrderedDict
 from collections.abc import ValuesView
 from collections.abc import ItemsView
 from typing import Any
+from typing import List
+from typing import Callable
+
 import time
+
 import attr
 
 
@@ -120,3 +124,19 @@ class _CacheItemsView(ItemsView):
     def __reversed__(self):
         for key in reversed(self._mapping):
             yield key, self._mapping.get(key, reset_expiration=False)
+
+
+@attr.define()
+class CacheView:  # for global cache
+    ids: List = attr.field()
+    _method: Callable = attr.field()
+
+    def __await__(self):
+        return self.get_dict().__await__()
+
+    async def get_dict(self):
+        return {instance_id: instance async for instance_id, instance in self}
+
+    async def __aiter__(self):
+        for instance_id in self.ids:
+            yield instance_id, await self._method(instance_id)
