@@ -130,7 +130,7 @@ class SlashCommandOption:
     """
 
     name: str = attr.ib()
-    type: OptionType = attr.ib()
+    type: Union[OptionType, int] = attr.ib()
     description: str = attr.ib(default="No Description Set")
     required: bool = attr.ib(default=True)
     choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)

@@ -28,6 +28,8 @@ from dis_snek.models.discord_objects.context import InteractionContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import ContextMenu
 from dis_snek.models.discord_objects.interactions import SlashCommand
+from dis_snek.models.discord_objects.interactions import SlashCommandChoice
+from dis_snek.models.discord_objects.interactions import SlashCommandOption
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentType
@@ -416,17 +418,69 @@ class Snake:
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
-            cmd = SlashCommand(name, description, scope, call=func, options=options)
+
+            opt = options
+            if hasattr(func, "options"):
+                if opt:
+                    opt += func.options
+                else:
+                    opt = func.options
+
+            cmd = SlashCommand(name, description, scope, call=func, options=opt)
+            func.cmd_id = f"{scope}::{name}"
             self.add_interaction(cmd)
+            return func
 
         return wrapper
 
-    def context_menu(self, name: str, type: InteractionType, scope: Snowflake_Type):
+    def context_menu(self, name: str, context_type: InteractionType, scope: Snowflake_Type):
+        """
+        Decorator to create a context menu command.
+
+        :param name: The name of this context menu
+        :param context_type: The type of context menu
+        :param scope: The scope (ie guild_id or global)
+        :return:
+        """
+
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
-            cmd = ContextMenu(name, type, scope, call=func)
+            cmd = ContextMenu(name, context_type, scope, call=func)
             self.add_interaction(cmd)
+            return func
+
+        return wrapper
+
+    def slash_option(
+        self,
+        name: str,
+        description: str,
+        opt_type: Union[InteractionType, int],
+        required: bool = False,
+        choices: List[Union[SlashCommandChoice, dict]] = None,
+    ):
+        """
+        Decorator to add an option to your slash command.
+
+        :param name: The name of this option
+        :param opt_type: The type of option
+        :param description: The description of this option
+        :param required: "This option must be filled to use the command"
+        :param choices: A list of choices the user has to pick between
+        """
+
+        def wrapper(func):
+            if hasattr(func, "cmd_id"):
+                raise Exception("slash_option decorators must be positioned under a slash_command decorator")
+            option = SlashCommandOption(
+                name=name, type=opt_type, description=description, required=required, choices=choices if choices else []
+            )
+
+            if not hasattr(func, "options"):
+                func.options = []
+            func.options.append(option)
+            return func
 
         return wrapper
 
