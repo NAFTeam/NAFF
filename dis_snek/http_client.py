@@ -23,6 +23,7 @@ import asyncio
 import datetime
 import logging
 import traceback
+from collections import defaultdict
 from types import TracebackType
 from typing import Any
 from typing import Coroutine
@@ -99,7 +100,7 @@ class HTTPClient(
         self.__session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._retries: int = 5
         self.token: Optional[str] = None
-        self.ratelimit_locks: Dict[str, asyncio.Lock] = {}
+        self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
@@ -143,11 +144,10 @@ class HTTPClient(
 
         kwargs["headers"] = headers
 
-        lock = self.ratelimit_locks.get(route.rl_bucket)
-        if lock is None:
+        if route.rl_bucket is not None:
+            lock = self.ratelimit_locks[route.rl_bucket]
+        else:
             lock = asyncio.Lock()
-            if route.rl_bucket is not None:
-                self.ratelimit_locks[route.rl_bucket] = lock
 
         response: Optional[aiohttp.ClientResponse] = None
         data: Optional[Union[Dict[str, Any], str]] = None
