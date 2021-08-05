@@ -94,4 +94,11 @@ class GlobalCache:
             guild = Guild(data, self._client)  # todo refactor with from_dict
         return guild
 
-    # todo place guild
+    def place_guild_data(self, guild_id, data):
+        guild = self.guid_cache.get(guild_id)
+        if guild is None:
+            guild = Guild.from_dict(data, self._client)
+            self.guid_cache[guild_id] = guild
+        else:
+            guild.update_from_dict(data)
+        return guild
