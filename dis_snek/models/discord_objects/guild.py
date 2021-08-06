@@ -1,23 +1,28 @@
-from typing import Dict
+from typing import Union
 from typing import List
 from typing import Optional
-from typing import Any
+from typing import Awaitable
 from typing import TYPE_CHECKING
+
+from functools import partial
 
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.channel import Thread
 from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import default_kwargs
 from dis_snek.utils.attr_utils import DictSerializationMixin
 from dis_snek.utils.cache import CacheView
+from dis_snek.utils.cache import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.channel import BaseChannel
+    from dis_snek.models.discord_objects.channel import Thread
+    from dis_snek.models.discord_objects.user import Member
 
 
 @attr.s(**default_kwargs)
@@ -70,14 +75,9 @@ class Guild(BaseGuild):
     stage_instances: List[dict] = attr.ib(factory=list)
     stickers: List[dict] = attr.ib(factory=list)
 
-    members: List[dict] = attr.ib(factory=list)
     channel_ids: List[Snowflake_Type] = attr.ib(factory=list)
     thread_ids: List[Snowflake_Type] = attr.ib(factory=list)
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: "Snake"):
-        data = cls.process_dict(data, client)
-        return super().from_dict(data, client)
+    member_ids: List[Snowflake_Type] = attr.ib(factory=list)
 
     @classmethod
     def process_dict(cls, data, client):
@@ -97,13 +97,22 @@ class Guild(BaseGuild):
             thread_ids.append(thread_id)
         data["thread_ids"] = thread_ids
 
+        members_data = data.pop("members", [])
+        members_ids = []
+        guild_id = data["id"]
+        for member_data in members_data:
+            user_id = member_data["user"]["id"]
+            client.cache.place_member_data(guild_id, user_id, member_data)
+            members_ids.append(user_id)
+        data["member_ids"] = members_ids
         return data
 
-    async def get_channel(self, channel_id: Snowflake_Type) -> BaseChannel:
-        if channel_id not in self.channel_id:  # I'm not sure if it's needed
+    async def get_channel(self, channel_id: Snowflake_Type) -> "BaseChannel":
+        channel_id = to_snowflake(channel_id)
+        if channel_id not in self.channel_ids:  # I'm not sure if it's needed
             raise ValueError("Channel with such id does not exist in this guild!")
 
-        channel: BaseChannel = await self._client.cache.get_channel(channel_id)
+        channel: "BaseChannel" = await self._client.cache.get_channel(channel_id)
 
         guild_id = getattr(channel, "guild_id", None)
         if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
@@ -114,6 +123,44 @@ class Guild(BaseGuild):
     @property
     def channels(self):
         return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
+
+    async def get_thread(self, thread_id: Snowflake_Type) -> "Thread":
+        thread_id = to_snowflake(thread_id)
+        if thread_id not in self.channel_ids:  # I'm not sure if it's needed
+            raise ValueError("Thread with such id does not exist in this guild!")
+
+        thread: "Thread" = await self._client.cache.get_channel(thread_id)
+
+        guild_id = getattr(thread, "guild_id", None)
+        if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
+            raise ValueError("Specified thread does not belong to this guild!")
+
+        return thread
+
+    @property
+    def threads(self):
+        return CacheView(ids=self.thread_ids, method=self._client.cache.get_channel)
+
+    async def get_member(self, user_id: Snowflake_Type) -> "Member":
+        user_id = to_snowflake(user_id)
+        if user_id not in self.member_ids:  # I'm not sure if it's needed
+            raise ValueError("Member with such id does not exist in this guild!")
+
+        member: "Member" = await self._client.cache.get_member(self.id, user_id)
+
+        # guild_id = getattr(thread, "guild_id", None)
+        # if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
+        #     raise ValueError("Specified member does not belong to this guild!")
+
+        return member
+
+    @property
+    def members(self):
+        return CacheView(ids=self.member_ids, method=partial(self._client.cache.get_member, self.id))
+
+    @property
+    def me(self) -> Union["Member", Awaitable["Member"]]:
+        return CacheProxy(id=self._client._user.id, method=partial(self._client.cache.get_member, self.id))
 
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
