@@ -275,6 +275,14 @@ class ChannelTypes(IntEnum):
     GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
 
+    @property
+    def is_guild(self):
+        return self.value not in {1, 3}
+
+    @property
+    def is_voice(self):
+        return self.value in {2, 13}
+
 
 class ComponentType(IntEnum):
     """
