@@ -142,3 +142,5 @@ class Thread(GuildText):
 TYPE_ALL_CHANNEL = Union[
     BaseChannel, GuildCategory, GuildStore, TextChannel, VoiceChannel, DM, GuildText, Thread, GuildNews, GuildVoice, GuildStageVoice
 ]
+
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
