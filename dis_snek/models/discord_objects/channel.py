@@ -1,15 +1,9 @@
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
-from typing import Any
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
-
 from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
@@ -55,7 +49,7 @@ class BaseChannel(Snowflake, DictSerializationMixin):
 
 
 class _GuildMixin:
-    guild_id: Optional[int] = attr.ib(default=None)
+    guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional[Snowflake_Type] = attr.ib(default=None)
@@ -122,9 +116,9 @@ class Thread(GuildText):
     member_count: int = attr.ib(default=0)
 
     archived: bool = attr.ib(default=False)
-    auto_archive_duration: int = attr.ib(default=attr.Factory(
-        lambda self: self.default_auto_archive_duration, takes_self=True
-    ))
+    auto_archive_duration: int = attr.ib(
+        default=attr.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
+    )
     locked: bool = attr.ib(default=False)
     archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
@@ -140,5 +134,15 @@ class Thread(GuildText):
 
 
 TYPE_ALL_CHANNEL = Union[
-    BaseChannel, GuildCategory, GuildStore, TextChannel, VoiceChannel, DM, GuildText, Thread, GuildNews, GuildVoice, GuildStageVoice
+    BaseChannel,
+    GuildCategory,
+    GuildStore,
+    TextChannel,
+    VoiceChannel,
+    DM,
+    GuildText,
+    Thread,
+    GuildNews,
+    GuildVoice,
+    GuildStageVoice,
 ]
