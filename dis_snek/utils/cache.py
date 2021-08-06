@@ -146,3 +146,21 @@ class CacheView:  # for global cache
     async def __aiter__(self):
         for instance_id in self.ids:
             yield instance_id, await self._method(instance_id)
+
+
+@attr.define()
+class CacheProxy:
+    id: Any = attr.field()
+    _method: Callable = attr.field()
+
+    def __await__(self):
+        return self._method(self.id).__await__()
+
+    def __getattr__(self, item):
+        return self._get_proxy_attr(item)
+    
+    async def _get_proxy_attr(self, item):
+        instance = await self
+        value = getattr(instance, item)
+        # if isinstance(value, func)
+        return value
