@@ -152,3 +152,5 @@ TYPE_ALL_CHANNEL = Union[
     GuildVoice,
     GuildStageVoice,
 ]
+
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]

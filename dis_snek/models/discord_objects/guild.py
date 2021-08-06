@@ -1,7 +1,9 @@
 from typing import Union
 from typing import List
+from typing import Dict
 from typing import Optional
 from typing import Awaitable
+from typing import AsyncIterator
 from typing import TYPE_CHECKING
 
 from functools import partial
@@ -17,6 +19,7 @@ from dis_snek.utils.attr_utils import default_kwargs
 from dis_snek.utils.attr_utils import DictSerializationMixin
 from dis_snek.utils.cache import CacheView
 from dis_snek.utils.cache import CacheProxy
+from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -107,12 +110,12 @@ class Guild(BaseGuild):
         data["member_ids"] = members_ids
         return data
 
-    async def get_channel(self, channel_id: Snowflake_Type) -> "BaseChannel":
+    async def get_channel(self, channel_id: Snowflake_Type) -> TYPE_GUILD_CHANNEL:
         channel_id = to_snowflake(channel_id)
         if channel_id not in self.channel_ids:  # I'm not sure if it's needed
             raise ValueError("Channel with such id does not exist in this guild!")
 
-        channel: "BaseChannel" = await self._client.cache.get_channel(channel_id)
+        channel: TYPE_GUILD_CHANNEL = await self._client.cache.get_channel(channel_id)
 
         guild_id = getattr(channel, "guild_id", None)
         if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
@@ -121,7 +124,7 @@ class Guild(BaseGuild):
         return channel
 
     @property
-    def channels(self):
+    def channels(self) -> Union[Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
         return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
 
     async def get_thread(self, thread_id: Snowflake_Type) -> "Thread":
@@ -138,7 +141,7 @@ class Guild(BaseGuild):
         return thread
 
     @property
-    def threads(self):
+    def threads(self) -> Union[Awaitable[Dict[Snowflake_Type, "Thread"]], AsyncIterator["Thread"]]:
         return CacheView(ids=self.thread_ids, method=self._client.cache.get_channel)
 
     async def get_member(self, user_id: Snowflake_Type) -> "Member":
@@ -155,11 +158,11 @@ class Guild(BaseGuild):
         return member
 
     @property
-    def members(self):
+    def members(self) -> Union[Awaitable[Dict[Snowflake_Type, "Member"]], AsyncIterator["Member"]]:
         return CacheView(ids=self.member_ids, method=partial(self._client.cache.get_member, self.id))
 
     @property
-    def me(self) -> Union["Member", Awaitable["Member"]]:
+    def me(self) -> Union[Awaitable["Member"], "Member"]:
         return CacheProxy(id=self._client._user.id, method=partial(self._client.cache.get_member, self.id))
 
     # if not self.member_count and "approximate_member_count" in data:
