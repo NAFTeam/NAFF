@@ -21,7 +21,7 @@ class Timestamp(datetime):
     """A special class that represents Discord timestamps."""
 
     @classmethod
-    def fromdatetime(cls, dt: datetime):
+    def fromdatetime(cls, dt: datetime) -> datetime:
         timestamp = cls.fromtimestamp(dt.timestamp(), tz=dt.tzinfo)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
@@ -29,12 +29,12 @@ class Timestamp(datetime):
         return timestamp
 
     @classmethod
-    def utcfromtimestamp(cls, t: float):
+    def utcfromtimestamp(cls, t: float) -> datetime:
         """Construct a timezone-aware UTC datetime from a POSIX timestamp."""
         return super().utcfromtimestamp(t).replace(tzinfo=timezone.utc)
 
     @classmethod
-    def fromsnowflake(cls, snowflake: Union[str, int]):
+    def fromsnowflake(cls, snowflake: Union[str, int]) -> datetime:
         if isinstance(snowflake, str):
             snowflake = int(snowflake)
 
@@ -42,7 +42,7 @@ class Timestamp(datetime):
         return cls.utcfromtimestamp(timestamp)
 
     @classmethod
-    def fromisoformat(cls, date_string: str):
+    def fromisoformat(cls, date_string: str) -> datetime:
         timestamp = super().fromisoformat(date_string)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
@@ -50,11 +50,11 @@ class Timestamp(datetime):
         return timestamp
 
     @classmethod
-    def fromisocalendar(cls, year: int, week: int, day: int):
+    def fromisocalendar(cls, year: int, week: int, day: int) -> datetime:
         return super().fromisocalendar(year, week, day).astimezone()
 
     @classmethod
-    def fromtimestamp(cls, t: float, tz=None):  # TODO: typehint this
+    def fromtimestamp(cls, t: float, tz=None) -> datetime:
         timestamp = super().fromtimestamp(t, tz=tz)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
@@ -62,7 +62,7 @@ class Timestamp(datetime):
         return timestamp
 
     @classmethod
-    def fromordinal(cls, n: int):
+    def fromordinal(cls, n: int) -> datetime:
         return super().fromordinal(n).astimezone()
 
     def tosnowflake(self, high: bool = False) -> Union[str, int]:
@@ -76,7 +76,7 @@ class Timestamp(datetime):
         discord_millis = int(self.timestamp() * 1000 - DISCORD_EPOCH)
         return (discord_millis << 22) + (2 ** 22 - 1 if high else 0)
 
-    def format(self, style: Optional[TimestampStyles] = None):
+    def format(self, style: Optional[TimestampStyles] = None) -> str:
         if not style:
             return f"<t:{self.timestamp():.0f}>"
         else:
