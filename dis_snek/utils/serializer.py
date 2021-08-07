@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timezone
+
 from attr import fields
 from attr import has
 
@@ -34,5 +37,10 @@ def _to_dict_any(inst):
         return {key: _to_dict_any(value) for key, value in inst.items()}
     elif isinstance(inst, (list, tuple, set, frozenset)):
         return [_to_dict_any(item) for item in inst]
+    elif isinstance(inst, datetime):
+        if inst.tzinfo:
+            return inst.isoformat()
+        else:
+            return inst.replace(tzinfo=timezone.utc).isoformat()
     else:
         return inst

@@ -36,9 +36,15 @@ class DictSerializationMixin:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: Any):
+        data = cls.process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
+    @classmethod
+    def process_dict(cls, data, client):
+        return data
+
     def update_from_dict(self, data):
+        data = self.process_dict(data, self._client)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             setattr(self, key, value)
 

@@ -18,7 +18,10 @@ class TimestampStyles(str, Enum):
 
 
 class Timestamp(datetime):
-    """A special class that represents Discord timestamps."""
+    """A special class that represents Discord timestamps.
+
+    Assumes that all naive datetimes are based on local timezone.
+    """
 
     @classmethod
     def fromdatetime(cls, dt: datetime) -> datetime:

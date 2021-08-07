@@ -149,6 +149,11 @@ class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
     ALL = AntiFlag()
 
 
+class TeamMembershipState(IntEnum):
+    INVITED = 1
+    ACCEPTED = 2
+
+
 class PremiumTypes(IntEnum):
     NONE = 0
     NITRO_CLASSIC = 1
@@ -201,6 +206,17 @@ class MessageFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ign
     # Special members
     NONE = 0
     ALL = AntiFlag()
+
+
+class StickerTypes(IntEnum):
+    STANDARD = 1
+    GUILD = 2
+
+
+class StickerFormatTypes(IntEnum):
+    PNG = 1
+    APNG = 2
+    LOTTIE = 3
 
 
 class Permissions(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
@@ -274,6 +290,14 @@ class ChannelTypes(IntEnum):
     GUILD_PUBLIC_THREAD = 11
     GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
+
+    @property
+    def is_guild(self):
+        return self.value not in {1, 3}
+
+    @property
+    def is_voice(self):
+        return self.value in {2, 13}
 
 
 class ComponentType(IntEnum):
