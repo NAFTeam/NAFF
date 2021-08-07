@@ -1,4 +1,8 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
@@ -56,6 +60,16 @@ class GuildRequests:
         :return:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
+
+    async def get_roles(self, guild_id: Snowflake_Type) -> List[Dict]:
+        """
+        Get a guild's roles.
+
+        :param guild_id: The ID of the guild
+
+        :return: List of roles
+        """
+        return await self.request(Route("GET", f"/guild/{guild_id}/roles"))
 
     async def modify_guild(self, guild_id: Snowflake_Type, reason: str = None, **kwargs) -> None:
         """
