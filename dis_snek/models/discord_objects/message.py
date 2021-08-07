@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -124,11 +125,20 @@ class Message(Snowflake, DictSerializationMixin):
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
-    async def delete(self, delay: int = 0):
+    async def delete(self, delay: int = None):
         """
         Deletes a message.
 
         :param delay: Seconds to wait before deleting message
         """
-        # TODO: Implement delay
+        if delay is not None:
+
+            async def delayed_delete():
+                await asyncio.sleep(delay)
+                try:
+                    await self._client.http.delete_message(self.channel_id, self.id)
+                except Exception:
+                    pass  # No real way to handle this
+
+            asyncio.ensure_future(delayed_delete(), self._client.loop)
         await self._client.http.delete_message(self.channel_id, self.id)
