@@ -109,6 +109,7 @@ class ChannelRequests:
     ) -> None:
         """
         Move a channel.
+
         :param guild_id: The ID of the guild this affects
         :param channel_id: The ID of the channel to move
         :param new_pos: The new position of this channel
