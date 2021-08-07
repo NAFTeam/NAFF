@@ -125,6 +125,35 @@ class Message(Snowflake, DictSerializationMixin):
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
+    async def clear_reaction(self, emoji: Union[Emoji, str]):
+        """
+        Clear a specific reaction from message
+
+        :param emoji: The emoji to clear
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.req_format
+
+        await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
+
+    async def remove_reaction(self, emoji: Union[Emoji, str], member: Union[Member, Snowflake_Type]):
+        """
+        Remove a specific reaction that a user reacted with
+
+        :param emoji: Emoji to remove
+        :param member: Member to remove reaction of
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.req_format
+        if isinstance(member, Member):
+            member = member.id
+
+        await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
+
+    async def clear_reactions(self):
+        """Clear all emojis from a message."""
+        await self._client.http.clear_reactions(self.channel.id, self.id)
+
     async def delete(self, delay: int = None):
         """
         Deletes a message.
