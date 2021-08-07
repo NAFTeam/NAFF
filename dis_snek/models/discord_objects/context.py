@@ -40,6 +40,8 @@ class InteractionContext(Context):
     responded: bool = attr.ib(default=False)
     ephemeral: bool = attr.ib(default=False)
 
+    resolved: dict = attr.ib(factory=dict)
+
     data: Dict = attr.ib(factory=dict)
 
     @classmethod

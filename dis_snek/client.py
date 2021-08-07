@@ -22,6 +22,7 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.errors import WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
+from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.context import ComponentContext
 from dis_snek.models.discord_objects.context import Context
 from dis_snek.models.discord_objects.context import InteractionContext
@@ -31,7 +32,7 @@ from dis_snek.models.discord_objects.interactions import SlashCommand
 from dis_snek.models.discord_objects.interactions import SlashCommandChoice
 from dis_snek.models.discord_objects.interactions import SlashCommandOption
 from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.discord_objects.user import SnakeBotUser, Member, User
 from dis_snek.models.enums import ComponentType
 from dis_snek.models.enums import InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
@@ -273,11 +274,34 @@ class Snake:
                 # this channel line is a placeholder
                 cls.channel = await self.cache.get_channel(data["channel_id"])
                 cls.author = data["member"]
-
             else:
                 cls.author = data["user"]
             cls.data = data
             cls.target_id = data["data"].get("target_id")
+
+            if res_data := data["data"].get("resolved"):
+                # todo: maybe a resolved dataclass instead of this?
+                if channels := res_data.get("channels"):
+                    cls.resolved["channels"] = {}
+                    for key, _channel in channels.items():
+                        cls.resolved["channels"][key] = BaseChannel.from_dict(_channel, self)
+
+                if members := res_data.get("members"):
+                    cls.resolved["members"] = {}
+                    for key, _member in members.items():
+                        user_obj = res_data["users"][key]
+                        cls.resolved["members"][key] = Member.from_dict({**_member, **user_obj}, self)
+
+                elif users := res_data.get("users"):
+                    cls.resolved["users"] = {}
+                    for key, _user in users.items():
+                        cls.resolved["users"][key] = User.from_dict(_user, self)
+
+                if roles := res_data.get("roles"):
+                    cls.resolved["roles"] = {}
+                    for key, _role in roles.items():
+                        # todo: convert to role object
+                        cls.resolved["roles"][key] = _role
         else:
             # todo: non-interaction context
             raise NotImplementedError
