@@ -58,11 +58,11 @@ class GlobalCache:
         if member is None:
             if "user" in data:
                 member = Member.from_dict({**data, **data["user"]}, self._client)
-                self.user_cache.place_user_data(user_id, data["user"])
+                self.place_user_data(user_id, data["user"])
             else:
                 member = Member.from_dict({**data["member"], **data}, self._client)
                 member_data = data.pop("member")
-                self.user_cache.place_user_data(user_id, **data)
+                self.place_user_data(user_id, **data)
                 data["member"] = member_data
             self.member_cache[(guild_id, user_id)] = member
         else:
