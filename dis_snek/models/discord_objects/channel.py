@@ -10,11 +10,13 @@ from attr.converters import optional as optional_c
 from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.message import Message
 
 
 @attr.s(slots=True, kw_only=True)
@@ -69,6 +71,11 @@ class TextChannel(BaseChannel):
     last_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
     default_auto_archive_duration: int = attr.ib(default=60)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+
+    async def fetch_message(self, message_id: Snowflake_Type) -> "Message":
+        message_id = to_snowflake(message_id)
+        message: "Message" = await self._client.cache.get_message(self.id, message_id)
+        return message
 
 
 @attr.s(slots=True, kw_only=True)

@@ -19,7 +19,8 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.user import Member
 from dis_snek.models.discord_objects.user import User
-from dis_snek.models.enums import MessageActivityTypes, ChannelTypes
+from dis_snek.models.enums import ChannelTypes
+from dis_snek.models.enums import MessageActivityTypes
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.enums import MessageTypes
 from dis_snek.models.snowflake import Snowflake
@@ -95,6 +96,23 @@ class Message(Snowflake, DictSerializationMixin):
     components: Optional[List[ComponentType]] = attr.ib(default=None)
     sticker_items: Optional[List[Sticker]] = attr.ib(default=None)  # TODO: StickerItem -> Sticker
 
+    # @classmethod
+    # def process_dict(cls, data, client):
+    #     roles_data = data.pop("mention_roles")
+    #     roles = []
+    #     for role_data in roles_data:
+    #         role_id = role_data["id"]
+    #         role = client.cache.get_role(data["guild_id"], role_id)
+    #         roles.append(role)
+    #     data["mention_roles"] = roles
+    #
+    #     mentions_data = data.pop("mentions")
+    #     mentions = []
+    #     for mention_data in mentions_data:
+    #         member_id = mention_data["id"]
+    #         member = client.cache.get_member(data["guild_id"], member_id)
+    #     return data
+
     async def add_reaction(self, emoji: Union[Emoji, str]):
         """
         Add a reaction to this message.
@@ -105,3 +123,12 @@ class Message(Snowflake, DictSerializationMixin):
             emoji = emoji.req_format
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
+
+    async def delete(self, delay: int = 0):
+        """
+        Deletes a message.
+
+        :param delay: Seconds to wait before deleting message
+        """
+        # TODO: Implement delay
+        await self._client.http.delete_message(self.channel_id, self.id)
