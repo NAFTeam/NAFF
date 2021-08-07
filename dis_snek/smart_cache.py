@@ -1,18 +1,18 @@
-from typing import Dict
-from typing import TYPE_CHECKING
 from collections import defaultdict
 from functools import partial
+from typing import Dict
+from typing import TYPE_CHECKING
+
 import attr
 
-
-from dis_snek.utils.cache import TTLCache
-from dis_snek.models.snowflake import Snowflake_Type
-
-from dis_snek.models.discord_objects.user import User
-from dis_snek.models.discord_objects.user import Member
-from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
+from dis_snek.models.discord_objects.message import Message
+from dis_snek.models.discord_objects.role import Role
+from dis_snek.models.discord_objects.user import Member
+from dis_snek.models.discord_objects.user import User
+from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.utils.cache import TTLCache
 
 
 if TYPE_CHECKING:
@@ -27,13 +27,14 @@ class GlobalCache:
     member_cache: TTLCache = attr.field(factory=TTLCache)  # key: (guild_id, user_id)
     message_cache: TTLCache = attr.field(factory=TTLCache)  # key: (channel_id, message_id)
     channel_cache: TTLCache = attr.field(factory=TTLCache)  # key: channel_id
-    guid_cache: TTLCache = attr.field(factory=TTLCache)  # key: guild_id
+    guild_cache: TTLCache = attr.field(factory=TTLCache)  # key: guild_id
+    role_cache: TTLCache = attr.field(factory=TTLCache)  # key: role_id
 
     async def get_user(self, user_id: Snowflake_Type, request_fallback=True) -> User:
         user = self.user_cache.get(user_id)
         if request_fallback and user is None:
             data = await self._client.http.get_user(user_id)
-            user = User.from_dict(data, self._client)
+            user = self.place_user_data(user_id, data)
         return user
 
     def place_user_data(self, user_id, data):
@@ -49,13 +50,20 @@ class GlobalCache:
         member = self.member_cache.get((guild_id, user_id))
         if request_fallback and member is None:
             data = await self._client.http.get_member(guild_id, user_id)
-            member = Member.from_dict(data, self._client)
+            member = self.place_member_data(guild_id, user_id, data)
         return member
 
     def place_member_data(self, guild_id, user_id, data):
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            member = Member.from_dict({**data, **data["user"]}, self._client)
+            if "user" in data:
+                member = Member.from_dict({**data, **data["user"]}, self._client)
+                self.user_cache.place_user_data(user_id, data["user"])
+            else:
+                member = Member.from_dict({**data["member"], **data}, self._client)
+                member_data = data.pop("member")
+                self.user_cache.place_user_data(user_id, **data)
+                data["member"] = member_data
             self.member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
@@ -65,16 +73,24 @@ class GlobalCache:
         message = self.message_cache.get((channel_id, message_id))
         if request_fallback and message is None:
             data = await self._client.http.get_message(channel_id, message_id)
-            message = Message(data)  # todo refactor with from_dict
+            message = self.place_message_data(channel_id, message_id, data)
         return message
 
-    # todo place message
+    async def place_message_data(self, channel_id, message_id, data):
+        message = self.message_cache.get((channel_id, message_id))
+        if message is None:
+            # TODO: Evaluate if from_dict is enough
+            message = Message.from_dict(data, self._client)
+            self.message_cache[(channel_id, message_id)] = message
+        else:
+            message.update_from_dict(data)
+        return message
 
     async def get_channel(self, channel_id: Snowflake_Type, request_fallback=True):
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
             data = await self._client.http.get_channel(channel_id)
-            channel = BaseChannel.from_dict(data, self._client)
+            channel = self.place_channel_data(channel_id, data)
         return channel
 
     def place_channel_data(self, channel_id, data):
@@ -87,17 +103,47 @@ class GlobalCache:
         return channel
 
     async def get_guild(self, guild_id: Snowflake_Type, request_fallback=True):
-        guild = self.guid_cache.get(guild_id)
+        guild = self.guild_cache.get(guild_id)
         if request_fallback and guild is None:
             data = await self._client.http.get_guild(guild_id)
-            guild = Guild.from_dict(data, self._client)
+            guild = self.place_guild_data(guild_id, data)
         return guild
 
     def place_guild_data(self, guild_id, data):
-        guild = self.guid_cache.get(guild_id)
+        guild = self.guild_cache.get(guild_id)
         if guild is None:
             guild = Guild.from_dict(data, self._client)
-            self.guid_cache[guild_id] = guild
+            self.guild_cache[guild_id] = guild
         else:
             guild.update_from_dict(data)
         return guild
+
+    async def get_role(self, guild_id: Snowflake_Type, role_id: Snowflake_Type, request_fallback=True):
+        role = self.role_cache.get(role_id)
+        if request_fallback and role is None:
+            data = await self._client.http.get_roles(guild_id)
+            role = self.place_role_data(guild_id, role_id, data)
+        return role
+
+    def place_role_data(self, guild_id, role_id, data):
+        role = self.role_cache.get(role_id)
+        if role is None:
+            for item in data:
+                item.update({"guild_id": guild_id})
+                r = Role.from_dict(item, self._client)
+                if r.id == role_id:
+                    role = r
+                self.role_cache[role_id] = r
+        else:
+            for item in data:
+                item.update({"guild_id": guild_id})
+                if item["id"] == role_id:
+                    role.update_from_dict(item)
+                else:
+                    r = self.role_cache.get(item["id"])
+                    if r:
+                        r.update_from_dict(item)
+                    else:
+                        r = Role.from_dict(item, self._client)
+                        self.role_cache[role_id] = r
+        return role
