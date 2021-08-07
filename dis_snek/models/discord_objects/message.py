@@ -19,14 +19,12 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.user import Member
 from dis_snek.models.discord_objects.user import User
-from dis_snek.models.enum import ChannelTypes
-from dis_snek.models.enums import MessageActivityTypes
+from dis_snek.models.enums import MessageActivityTypes, ChannelTypes
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.enums import MessageTypes
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import default_kwargs
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
 
@@ -73,7 +71,7 @@ class Message(Snowflake, DictSerializationMixin):
     author: Union[Member, User] = attr.ib()  # TODO: create override for detecting PartialMember
     content: str = attr.ib()
     timestamp: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
-    edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.from_isoformat))
+    edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
     mentions: List[Member] = attr.ib(factory=list)

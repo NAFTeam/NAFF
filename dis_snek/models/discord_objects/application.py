@@ -2,7 +2,6 @@ from typing import List
 from typing import Optional
 
 import attr
-from attr.coverters import optional as optional_c
 
 from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.discord_objects.user import User

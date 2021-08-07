@@ -15,7 +15,6 @@ from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 
 
-
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
@@ -56,7 +55,7 @@ class GlobalCache:
     def place_member_data(self, guild_id, user_id, data):
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            member = Member.from_dict(data, self._client)
+            member = Member.from_dict({**data, **data["user"]}, self._client)
             self.member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
