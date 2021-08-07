@@ -331,7 +331,7 @@ class Snake:
             raise NotImplementedError(f"Unknown Interaction Recieved: {interaction_data['type']}")
 
     async def _on_raw_message_create(self, data: dict):
-        msg = Message(data, self)
+        msg = Message.from_dict(data, self)
         self.dispatch("message_create", msg)
 
     async def _on_raw_guild_create(self, data: dict):
