@@ -19,17 +19,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from datetime import datetime
 from typing import Any
-from typing import Optional
 from typing import List
+from typing import Optional
 
 import attr
 from attr.validators import instance_of
 from attr.validators import optional
 
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.serializer import to_dict
+from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.serializer import no_export_meta
+from dis_snek.utils.serializer import to_dict
 
 
 @attr.s(slots=True)
@@ -98,7 +100,9 @@ class Embed(object):
 
     url: Optional[str] = attr.ib(validator=optional(instance_of(str)), default=None, init=False)
 
-    timestamp: Optional[Timestamp] = attr.ib(validator=optional(instance_of(Timestamp)), default=None, init=False)
+    timestamp: Optional[Timestamp] = attr.ib(
+        default=None, validator=optional(instance_of((datetime, float, int))), converter=timestamp_converter
+    )
 
     fields: List[EmbedField] = attr.ib(factory=list, repr=False)
     author: Optional[EmbedAuthor] = attr.ib(default=None, init=False)
@@ -165,11 +169,12 @@ class Embed(object):
             total += len(field)
         return total
 
-    def set_author(self,
-                   name: str,
-                   url: Optional[str] = None,
-                   icon_url: Optional[str] = None,
-                   ) -> None:
+    def set_author(
+        self,
+        name: str,
+        url: Optional[str] = None,
+        icon_url: Optional[str] = None,
+    ) -> None:
         """
         Set the author field of the embed.
 
@@ -214,4 +219,3 @@ class Embed(object):
         """
         self.fields.append(EmbedField(name, value, inline))
         self._fields_validation("fields", self.fields)
-
