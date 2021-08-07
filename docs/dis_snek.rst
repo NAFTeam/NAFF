@@ -20,14 +20,6 @@ dis\_snek.client module
    :undoc-members:
    :show-inheritance:
 
-dis\_snek.const module
-----------------------
-
-.. automodule:: dis_snek.const
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dis\_snek.errors module
 -----------------------
 
