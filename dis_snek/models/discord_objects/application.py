@@ -5,6 +5,7 @@ import attr
 
 from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.discord_objects.user import User
+from dis_snek.models.enums import ApplicationFlags
 from dis_snek.models.snowflake import Snowflake
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.attr_utils import DictSerializationMixin
@@ -28,4 +29,4 @@ class Application(Snowflake, DictSerializationMixin):
     primary_sku_id: Optional[Snowflake_Type] = attr.ib(default=None)
     slug: Optional[str] = attr.ib(default=None)
     cover_image: Optional[str] = attr.ib(default=None)
-    flags: Optional[int] = attr.ib(default=None)  # TODO: flags enum
+    flags: Optional[ApplicationFlags] = attr.ib(default=None, converter=ApplicationFlags)

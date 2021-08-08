@@ -1,11 +1,13 @@
-from typing import Any, Union
+from typing import Any
 from typing import Dict
 from typing import List
+from typing import Union
 
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.components import ActionRow
+from dis_snek.models.discord_objects.components import process_components
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
@@ -75,6 +77,16 @@ class InteractionContext(Context):
         ephemeral: bool = False,
         components: List[Union[Dict, ActionRow]] = None,
     ):
+        """
+        Sends a message response to the context.
+
+        :param content: Message content
+        :param embed: The embed to send
+        :param embeds: List of embeds to send
+        :param tts: Should this response use tts
+        :param ephemeral: Should the response be ephemeral
+        :param components: List of interaction components
+        """
         message = {
             "content": content,
             "tts": tts,
@@ -148,7 +160,14 @@ class ComponentContext(InteractionContext):
         tts: bool = False,
         components: List[Union[Dict, ActionRow]] = None,
     ):
-        """Edits the original message of the component."""
+        """
+        Edits the original message of the component.
+
+        :param content: Message content
+        :param embeds: List of embeds to send
+        :param tts: Should this response use tts
+        :param components: List of interaction components
+        """
 
         message: Dict[str, Any] = {}
 

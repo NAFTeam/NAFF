@@ -32,7 +32,9 @@ from dis_snek.models.discord_objects.interactions import SlashCommand
 from dis_snek.models.discord_objects.interactions import SlashCommandChoice
 from dis_snek.models.discord_objects.interactions import SlashCommandOption
 from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import SnakeBotUser, Member, User
+from dis_snek.models.discord_objects.user import Member
+from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.discord_objects.user import User
 from dis_snek.models.enums import ComponentType
 from dis_snek.models.enums import InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
@@ -218,7 +220,7 @@ class Snake:
 
     async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
-        scopes = [g.id for g in self.cache.guid_cache.values()] + [None]
+        scopes = [g.id for g in self.cache.guild_cache.values()] + [None]
         for scope in scopes:
             resp_data = await self.http.get_interaction_element(self.user.id, scope)
 
@@ -380,7 +382,7 @@ class Snake:
             # wait a while to let guilds cache
             await asyncio.sleep(0.5)
 
-            current_count = len(self.cache.guid_cache)
+            current_count = len(self.cache.guild_cache)
             if current_count != expected_guild_count:
                 if current_count == last_count:
                     # count hasnt changed, check how long we've been waiting

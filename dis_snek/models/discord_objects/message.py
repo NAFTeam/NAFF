@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -19,7 +20,8 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.user import Member
 from dis_snek.models.discord_objects.user import User
-from dis_snek.models.enums import MessageActivityTypes, ChannelTypes
+from dis_snek.models.enums import ChannelTypes
+from dis_snek.models.enums import MessageActivityTypes
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.enums import MessageTypes
 from dis_snek.models.snowflake import Snowflake
@@ -95,6 +97,23 @@ class Message(Snowflake, DictSerializationMixin):
     components: Optional[List[ComponentType]] = attr.ib(default=None)
     sticker_items: Optional[List[Sticker]] = attr.ib(default=None)  # TODO: StickerItem -> Sticker
 
+    # @classmethod
+    # def process_dict(cls, data, client):
+    #     roles_data = data.pop("mention_roles")
+    #     roles = []
+    #     for role_data in roles_data:
+    #         role_id = role_data["id"]
+    #         role = client.cache.get_role(data["guild_id"], role_id)
+    #         roles.append(role)
+    #     data["mention_roles"] = roles
+    #
+    #     mentions_data = data.pop("mentions")
+    #     mentions = []
+    #     for mention_data in mentions_data:
+    #         member_id = mention_data["id"]
+    #         member = client.cache.get_member(data["guild_id"], member_id)
+    #     return data
+
     async def add_reaction(self, emoji: Union[Emoji, str]):
         """
         Add a reaction to this message.
@@ -105,3 +124,50 @@ class Message(Snowflake, DictSerializationMixin):
             emoji = emoji.req_format
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
+
+    async def clear_reaction(self, emoji: Union[Emoji, str]):
+        """
+        Clear a specific reaction from message
+
+        :param emoji: The emoji to clear
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.req_format
+
+        await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
+
+    async def remove_reaction(self, emoji: Union[Emoji, str], member: Union[Member, Snowflake_Type]):
+        """
+        Remove a specific reaction that a user reacted with
+
+        :param emoji: Emoji to remove
+        :param member: Member to remove reaction of
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.req_format
+        if isinstance(member, Member):
+            member = member.id
+
+        await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
+
+    async def clear_reactions(self):
+        """Clear all emojis from a message."""
+        await self._client.http.clear_reactions(self.channel.id, self.id)
+
+    async def delete(self, delay: int = None):
+        """
+        Deletes a message.
+
+        :param delay: Seconds to wait before deleting message
+        """
+        if delay is not None:
+
+            async def delayed_delete():
+                await asyncio.sleep(delay)
+                try:
+                    await self._client.http.delete_message(self.channel_id, self.id)
+                except Exception:
+                    pass  # No real way to handle this
+
+            asyncio.ensure_future(delayed_delete(), self._client.loop)
+        await self._client.http.delete_message(self.channel_id, self.id)
