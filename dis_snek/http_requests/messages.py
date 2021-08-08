@@ -36,3 +36,13 @@ class MessageRequests:
     async def delete_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, reason: str = None) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
+
+    async def get_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> dict:
+        """
+        Get a specific message in the channel. Returns a message object on success.
+
+        :param channel_id: the channel this message belongs to
+        :param message_id: the id of the message
+        :return: message or None
+        """
+        return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))

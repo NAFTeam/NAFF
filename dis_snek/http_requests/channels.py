@@ -7,16 +7,6 @@ from dis_snek.models.snowflake import Snowflake_Type
 class ChannelRequests:
     request: Any
 
-    async def get_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> dict:
-        """
-        Get a specific message in the channel. Returns a message object on success.
-
-        :param channel_id: the channel this message belongs to
-        :param message_id: the id of the message
-        :return: message or None
-        """
-        return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
-
     async def get_channel(self, channel_id: Snowflake_Type) -> dict:
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.
@@ -122,3 +112,100 @@ class ChannelRequests:
             payload["parent_id"] = parent_id
 
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), json=payload)
+
+    async def modify_channel(self, channel_id: Snowflake_Type, data: dict) -> dict:
+        """
+        Update a channel's settings, returns the updated channel object on success.
+
+        :param channel_id: The ID of the channel to update
+        :param data: The data to update with
+        :return: Channel object on success
+        """
+        return await self.request(Route("PATCH", f"channels/{channel_id}"), json=data)
+
+    async def delete_channel(self, channel_id: Snowflake_Type):
+        """
+        Delete the channel
+        :param channel_id: The ID of the channel to delete
+        """
+        return await self.request(Route("DELETE", f"channels/{channel_id}"))
+
+    async def get_channel_invites(self, channel_id: Snowflake_Type) -> List[dict]:
+        """
+        Get the invites for the channel.
+
+        :param channel_id: The ID of the channel to retrieve from
+        :return: List of invite objects
+        """
+        return await self.request(Route("GET", f"/channels/{channel_id}/invites"))
+
+    async def create_channel_invite(
+        self,
+        channel_id: Snowflake_Type,
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        target_type: int = None,
+        target_user_id: Snowflake_Type = None,
+        target_application_id: Snowflake_Type = None,
+    ) -> dict:
+        """
+        Create an invite for the given channel.
+
+        :param channel_id: The ID of the channel to create an invite for
+        :param max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
+        :param max_uses: max number of uses or 0 for unlimited. between 0 and 100
+        :param temporary: whether this invite only grants temporary membership
+        :param unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
+        :param target_type: the type of target for this voice channel invite
+        :param target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
+        :param target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
+        :return: an invite object
+        """
+        payload = dict(max_age=max_age, max_uses=max_uses, temporary=temporary, unique=unique)
+        if target_type:
+            payload["target_type"] = target_type
+        if target_user_id:
+            payload["target_user_id"] = target_user_id
+        if target_application_id:
+            payload["target_application_id"] = target_application_id
+
+        return await self.request(Route("POST", f"channels/{channel_id}/invites"), json=payload)
+
+    async def delete_channel_permission(self, channel_id: Snowflake_Type, overwrite_id: int) -> None:
+        """
+        Delete a channel permission overwrite for a user or role in a channel.
+
+        :param channel_id: The ID of the channel.
+        :param overwrite_id: The ID of the overwrite
+        """
+        return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"))
+
+    async def follow_news_channel(self, channel_id: Snowflake_Type, webhook_channel_id: Snowflake_Type) -> dict:
+        """
+        Follow a news channel to send messages to the target channel.
+
+        :param channel_id: The channel to follow
+        :param webhook_channel_id: ID of the target channel
+        :return: Followed channel object
+        """
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/followers"), json={"webhook_channel_id": webhook_channel_id}
+        )
+
+    async def trigger_typing_indicator(self, channel_id: Snowflake_Type) -> None:
+        """
+        Post a typing indicator for the specified channel. Generally bots should not implement this route.
+
+        :param channel_id: The id of the channel to "type" in
+        """
+        return await self.request(Route("POST", f"/channels/{channel_id}/typing"))
+
+    async def get_pinned_messages(self, channel_id: Snowflake_Type) -> List[dict]:
+        """
+        Get all pinned messages from a channel.
+        :param channel_id: The ID of the channel to get pins from
+        :return: A list of pinned message objects
+        """
+        return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
