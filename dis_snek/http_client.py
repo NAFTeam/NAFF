@@ -54,6 +54,7 @@ from dis_snek.http_requests import InteractionRequests
 from dis_snek.http_requests import MessageRequests
 from dis_snek.http_requests import ReactionRequests
 from dis_snek.http_requests import StickerRequests
+from dis_snek.http_requests import ThreadRequests
 from dis_snek.http_requests import UserRequests
 from dis_snek.http_requests import WebhookRequests
 from dis_snek.models.route import Route
@@ -87,6 +88,7 @@ class HTTPClient(
     MessageRequests,
     ReactionRequests,
     StickerRequests,
+    ThreadRequests,
     UserRequests,
     WebhookRequests,
 ):
