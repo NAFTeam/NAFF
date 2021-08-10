@@ -181,11 +181,11 @@ class SlashCommand:
         """
         self._name_validator("name", self.name)
         self._description_validator("description", self.description)
-        data = attr.asdict(self)
+        data = attr.asdict(self, filter=lambda key, value: value)
 
         # remove internal data from dictionary
-        del data["scope"]
-        del data["call"]
-        del data["cmd_id"]
+        data.pop("scope", None)
+        data.pop("call", None)
+        data.pop("cmd_id", None)
 
         return data
