@@ -215,8 +215,9 @@ class Snake:
         Otherwise, it will get the list of interactions and cache their scopes.
         """
         if self.sync_interactions:
-            await self.submit_interactions()
-        await self._cache_interactions()
+            await self.synchronise_interactions()
+        else:
+            await self._cache_interactions()
 
     async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
@@ -242,21 +243,49 @@ class Snake:
             self.interactions[command.scope] = {}
         self.interactions[command.scope][command.name] = command
 
-    async def submit_interactions(self) -> None:
-        """Submit registered slash commands to discord."""
+    async def synchronise_interactions(self) -> None:
+        """Synchronise registered interactions with discord
+
+        One flaw of this is it cant determine if context menus need updating,
+        as discord isn't returning that data on get req, so they are unnecessarily updated"""
+
+        # first we need to make sure our local copy of cmd_ids is up-to-date
+        await self._cache_interactions()
         scopes = [k for k in self.interactions.keys()]
 
         for scope in scopes:
-            data = [v.to_dict() for v in self.interactions[scope].values()]
+            resp_data = await self.http.get_interaction_element(self.user.id, scope if scope != "global" else None)
+            to_sync = []
 
-            resp_data = await self.http.post_interaction_element(
-                self.user.id, data, guild_id=scope if scope != "global" else None
-            )
+            for local_cmd in self.interactions[scope].values():
+                # try and find remote equiv of this command
+                remote_cmd = next((v for v in resp_data if v["id"] == local_cmd.cmd_id), None)
+                local_cmd = local_cmd.to_dict()
+                if not remote_cmd:
+                    # if no remote, likely a new command, sync it
+                    to_sync.append(local_cmd)
+                    continue
 
-            # cache data
-            for cmd_data in resp_data:
-                self._interaction_scopes[str(cmd_data["id"])] = scope
-                self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                if (
+                    local_cmd["name"] != remote_cmd["name"]
+                    or local_cmd.get("description", "") != remote_cmd.get("description", "")
+                    or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
+                    or local_cmd.get("options") != remote_cmd.get("options")
+                ):  # if command local data doesnt match remote, a change has been made, sync it
+                    # todo: check permission data when we implement interaction perms
+                    to_sync.append(local_cmd)
+
+            if to_sync:
+                log.debug(f"Updating {len(to_sync)} commands in {scope}")
+                sync_resp = await self.http.post_interaction_element(
+                    self.user.id, to_sync, guild_id=scope if scope != "global" else None
+                )
+                # cache cmd_ids and their scopes
+                for cmd_data in sync_resp:
+                    self._interaction_scopes[str(cmd_data["id"])] = scope
+                    self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+            else:
+                log.debug(f"{scope} is already up-to-date")
 
     async def get_context(self, data: Dict, interaction: bool = False) -> Union[Context, InteractionContext]:
         """
