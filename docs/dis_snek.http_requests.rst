@@ -49,6 +49,14 @@ dis\_snek.http\_requests.stickers module
    :undoc-members:
    :show-inheritance:
 
+dis\_snek.http\_requests.threads module
+----------------------------------------
+
+.. automodule:: dis_snek.http_requests.threads
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dis\_snek.http\_requests.users module
 -------------------------------------
 
