@@ -66,6 +66,7 @@ class ChannelRequests:
         bitrate=64,
         user_limit: int = 0,
         rate_limit_per_user=0,
+        reason: str = None,
     ) -> Dict:
         """"""
         payload = dict(
@@ -87,7 +88,7 @@ class ChannelRequests:
 
         # clean up payload
         payload = {key: value for key, value in payload.items() if value is not None}
-        return await self.request(Route("POST", f"/guilds/{guild_id}/channels", json=payload))
+        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), json=payload, reason=reason)
 
     async def move_channel(
         self,
@@ -96,6 +97,7 @@ class ChannelRequests:
         new_pos: int,
         parent_id: Snowflake_Type = None,
         lock_perms: bool = False,
+        reason: str = None,
     ) -> None:
         """
         Move a channel.
@@ -105,30 +107,33 @@ class ChannelRequests:
         :param new_pos: The new position of this channel
         :param parent_id: The parent ID if needed
         :param lock_perms: Sync permissions with the new parent
+        :param reason: An optional reason for the audit log
         :return:
         """
         payload = dict(id=channel_id, position=new_pos, lock_permissions=lock_perms)
         if parent_id:
             payload["parent_id"] = parent_id
 
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), json=payload)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), json=payload, reason=reason)
 
-    async def modify_channel(self, channel_id: Snowflake_Type, data: dict) -> dict:
+    async def modify_channel(self, channel_id: Snowflake_Type, data: dict, reason: str = None) -> dict:
         """
         Update a channel's settings, returns the updated channel object on success.
 
         :param channel_id: The ID of the channel to update
         :param data: The data to update with
+        :param reason: An optional reason for the audit log
         :return: Channel object on success
         """
-        return await self.request(Route("PATCH", f"channels/{channel_id}"), json=data)
+        return await self.request(Route("PATCH", f"channels/{channel_id}"), json=data, reason=reason)
 
-    async def delete_channel(self, channel_id: Snowflake_Type):
+    async def delete_channel(self, channel_id: Snowflake_Type, reason: str = None):
         """
         Delete the channel
         :param channel_id: The ID of the channel to delete
+        :param reason: An optional reason for the audit log
         """
-        return await self.request(Route("DELETE", f"channels/{channel_id}"))
+        return await self.request(Route("DELETE", f"channels/{channel_id}"), reason=reason)
 
     async def get_channel_invites(self, channel_id: Snowflake_Type) -> List[dict]:
         """
@@ -149,6 +154,7 @@ class ChannelRequests:
         target_type: int = None,
         target_user_id: Snowflake_Type = None,
         target_application_id: Snowflake_Type = None,
+        reason: str = None,
     ) -> dict:
         """
         Create an invite for the given channel.
@@ -161,6 +167,7 @@ class ChannelRequests:
         :param target_type: the type of target for this voice channel invite
         :param target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
         :param target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
+        :param reason: An optional reason for the audit log
         :return: an invite object
         """
         payload = dict(max_age=max_age, max_uses=max_uses, temporary=temporary, unique=unique)
@@ -171,16 +178,19 @@ class ChannelRequests:
         if target_application_id:
             payload["target_application_id"] = target_application_id
 
-        return await self.request(Route("POST", f"channels/{channel_id}/invites"), json=payload)
+        return await self.request(Route("POST", f"channels/{channel_id}/invites"), json=payload, reason=reason)
 
-    async def delete_channel_permission(self, channel_id: Snowflake_Type, overwrite_id: int) -> None:
+    async def delete_channel_permission(
+        self, channel_id: Snowflake_Type, overwrite_id: int, reason: str = None
+    ) -> None:
         """
         Delete a channel permission overwrite for a user or role in a channel.
 
         :param channel_id: The ID of the channel.
         :param overwrite_id: The ID of the overwrite
+        :param reason: An optional reason for the audit log
         """
-        return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"))
+        return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"), reason=reason)
 
     async def follow_news_channel(self, channel_id: Snowflake_Type, webhook_channel_id: Snowflake_Type) -> dict:
         """
