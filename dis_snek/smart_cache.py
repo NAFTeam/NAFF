@@ -126,24 +126,19 @@ class GlobalCache:
         return role
 
     def place_role_data(self, guild_id, role_id, data):
-        role = self.role_cache.get(role_id)
-        if role is None:
-            for item in data:
-                item.update({"guild_id": guild_id})
-                r = Role.from_dict(item, self._client)
-                if r.id == role_id:
-                    role = r
-                self.role_cache[role_id] = r
-        else:
-            for item in data:
-                item.update({"guild_id": guild_id})
-                if item["id"] == role_id:
-                    role.update_from_dict(item)
-                else:
-                    r = self.role_cache.get(item["id"])
-                    if r:
-                        r.update_from_dict(item)
-                    else:
-                        r = Role.from_dict(item, self._client)
-                        self.role_cache[role_id] = r
+        role = None
+        for role_data in data:
+            role_data.update({"guild_id": guild_id})
+            role_data_id = role_data["id"]
+
+            cached_role = self.role_cache.get(role_data_id)
+            if cached_role is None:
+                cached_role = Role.from_dict(role_data, self._client)
+                self.role_cache[role_data_id] = cached_role
+            else:
+                cached_role.update_from_dict(role_data)
+
+            if role_data_id == role_id:
+                role = cached_role
+
         return role
