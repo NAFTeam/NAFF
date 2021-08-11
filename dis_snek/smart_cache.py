@@ -53,14 +53,8 @@ class GlobalCache:
     def place_member_data(self, guild_id, user_id, data):
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            if "user" in data:
-                member = Member.from_dict({**data, **data["user"]}, self._client)
-                self.place_user_data(user_id, data["user"])
-            else:
-                member = Member.from_dict({**data["member"], **data}, self._client)
-                member_data = data.pop("member")
-                self.place_user_data(user_id, **data)
-                data["member"] = member_data
+            data.update({"guild_id": guild_id})
+            member = Member.from_dict(data, self._client)
             self.member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
