@@ -1,7 +1,8 @@
-from typing import Union
 from contextlib import suppress
+from typing import Union
 
 import attr
+
 from dis_snek.models.timestamp import Timestamp
 
 Snowflake_Type = Union[str, int]

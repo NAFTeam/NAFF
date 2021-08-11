@@ -1,5 +1,4 @@
-from typing import Dict
-from typing import Any
+from typing import Any, Dict
 
 import attr
 
@@ -12,6 +11,7 @@ def converter(attribute):
     def decorator(func):
         attribute.converter = func
         return staticmethod(func)
+
     return decorator
 
 

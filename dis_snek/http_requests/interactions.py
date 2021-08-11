@@ -1,8 +1,4 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
@@ -51,7 +47,7 @@ class InteractionRequests:
 
         return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), json=payload)
 
-    async def post_followup(self, payload: dict, application_id: str, token: str) -> None:
+    async def post_followup(self, payload: dict, application_id: Snowflake_Type, token: str) -> None:
         """
         Send a followup to an interaction.
 
@@ -62,8 +58,68 @@ class InteractionRequests:
 
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), json=payload)
 
-    async def edit(self, payload: dict, application_id: str, token: str, message_id: str = "@original"):
+    async def edit(self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"):
 
         return await self.request(
             Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), json=payload
         )
+
+    async def edit_application_command_permissions(
+        self, application_id: Snowflake_Type, scope: Snowflake_Type, cmd_id: Snowflake_Type, permissions: List[dict]
+    ) -> dict:
+        """
+        Edits command permissions for a specific command.
+
+        :param application_id: the id of the application
+        :param scope: The scope this command is in
+        :param cmd_id: The command id to edit
+        :param permissions: The permissions to set to this command
+        :return: Guild Application Command Permissions
+        """
+        return await self.request(
+            Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions"),
+            json=permissions,
+        )
+
+    async def batch_edit_application_command_permissions(
+        self, application_id: Snowflake_Type, scope: Snowflake_Type, data: List[dict]
+    ) -> dict:
+        """
+        Edit multiple command permissions within a single scope.
+
+        :param application_id: the id of the application
+        :param scope: The scope this command is in
+        :param data: The permissions to be set
+        :return: array of GuildApplicationCommandPermissions objects
+        """
+        return await self.request(
+            Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
+            json=data,
+        )
+
+    async def get_application_command_permissions(
+        self, application_id: Snowflake_Type, scope: Snowflake_Type, cmd_id: Snowflake_Type
+    ) -> dict:
+        """
+        Get permission data for a command.
+
+        :param application_id: the id of the application
+        :param scope: The scope this command is in
+        :param cmd_id: The command id to edit
+        :return: guild application command permissions
+        """
+        return await self.request(
+            Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions")
+        )
+
+    async def batch_get_application_command_permissions(
+        self, application_id: Snowflake_Type, scope: Snowflake_Type
+    ) -> dict:
+        """
+        Get permission data for all commands in a scope
+
+        :param application_id: the id of the application
+        :param scope: The scope this command is in
+        :return: list of guild application command permissions
+        """
+        return await self.request(Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/permissions"))

@@ -1,30 +1,17 @@
-from typing import Union
-from typing import List
-from typing import Dict
-from typing import Optional
-from typing import Awaitable
-from typing import AsyncIterator
-from typing import TYPE_CHECKING
-
 from functools import partial
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import default_kwargs
-from dis_snek.utils.attr_utils import DictSerializationMixin
-from dis_snek.utils.cache import CacheView
-from dis_snek.utils.cache import CacheProxy
-from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
+from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL, TYPE_GUILD_CHANNEL
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
+from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
+from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import BaseChannel
-    from dis_snek.models.discord_objects.channel import Thread
+    from dis_snek.models.discord_objects.channel import BaseChannel, Thread
     from dis_snek.models.discord_objects.user import Member
 
 

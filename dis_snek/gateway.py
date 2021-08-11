@@ -26,20 +26,14 @@ import sys
 import threading
 import time
 import zlib
-from typing import Any
-from typing import Callable
-from typing import Coroutine
-from typing import List
-from typing import Optional
+from typing import Any, Callable, Coroutine, List, Optional
 
 import orjson
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name
-from dis_snek.errors import WebSocketClosed
-from dis_snek.errors import WebSocketRestart
-from dis_snek.http_client import DiscordClientWebSocketResponse
-from dis_snek.http_client import HTTPClient
+from dis_snek.errors import WebSocketClosed, WebSocketRestart
+from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
 from dis_snek.models.enums import Intents
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 

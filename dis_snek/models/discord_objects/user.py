@@ -1,17 +1,12 @@
-from typing import Any
-from typing import List
-from typing import Optional
+from typing import Any, List, Optional
 
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.models.enums import PremiumTypes
-from dis_snek.models.enums import UserFlags
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.enums import PremiumTypes, UserFlags
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import DictSerializationMixin
-from dis_snek.utils.attr_utils import default_kwargs
+from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
 
 
 @attr.define(str=False, **default_kwargs)

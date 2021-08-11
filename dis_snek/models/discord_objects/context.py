@@ -1,13 +1,9 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Union
+from typing import Any, Dict, List, Union
 
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import ActionRow
-from dis_snek.models.discord_objects.components import process_components
+from dis_snek.models.discord_objects.components import ActionRow, process_components
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message

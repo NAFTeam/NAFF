@@ -5,38 +5,35 @@ import sys
 import time
 import traceback
 from random import randint
-from typing import Any
-from typing import Callable
-from typing import Coroutine
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
 
 from dis_snek.const import logger_name
-from dis_snek.errors import GatewayNotFound
-from dis_snek.errors import SnakeException
-from dis_snek.errors import WebSocketClosed
-from dis_snek.errors import WebSocketRestart
+from dis_snek.errors import (
+    GatewayNotFound,
+    SnakeException,
+    WebSocketClosed,
+    WebSocketRestart,
+)
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import ComponentContext
-from dis_snek.models.discord_objects.context import Context
-from dis_snek.models.discord_objects.context import InteractionContext
+from dis_snek.models.discord_objects.context import (
+    ComponentContext,
+    Context,
+    InteractionContext,
+)
 from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.interactions import ContextMenu
-from dis_snek.models.discord_objects.interactions import SlashCommand
-from dis_snek.models.discord_objects.interactions import SlashCommandChoice
-from dis_snek.models.discord_objects.interactions import SlashCommandOption
+from dis_snek.models.discord_objects.interactions import (
+    ContextMenu,
+    SlashCommand,
+    SlashCommandChoice,
+    SlashCommandOption,
+)
 from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import Member
-from dis_snek.models.discord_objects.user import SnakeBotUser
-from dis_snek.models.discord_objects.user import User
-from dis_snek.models.enums import ComponentType
-from dis_snek.models.enums import InteractionType
+from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
+from dis_snek.models.enums import ComponentType, InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
 

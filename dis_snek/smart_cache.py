@@ -1,7 +1,6 @@
 from collections import defaultdict
 from functools import partial
-from typing import Dict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 import attr
 
@@ -9,11 +8,9 @@ from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
-from dis_snek.models.discord_objects.user import Member
-from dis_snek.models.discord_objects.user import User
+from dis_snek.models.discord_objects.user import Member, User
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.cache import TTLCache
-
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

@@ -1,8 +1,6 @@
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 
-from attr import fields
-from attr import has
+from attr import fields, has
 
 no_export_meta = dict(no_export=True)
 

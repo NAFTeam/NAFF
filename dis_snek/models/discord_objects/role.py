@@ -2,8 +2,7 @@ from typing import Optional
 
 import attr
 
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
 
