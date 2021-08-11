@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
@@ -64,6 +64,7 @@ class UserRequests:
         mute: bool = None,
         deaf: bool = None,
         channel_id: Snowflake_Type = None,
+        reason: str = None,
     ) -> Dict:
         """
         Modify attributes of a guild member.
@@ -74,10 +75,11 @@ class UserRequests:
         :param roles: Array of role ids the member is assigned
         :param mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
         :param deaf: Whether the user is deafened in voice channels
-        :param channel_id: 	id of channel to move user to (if they are connected to voice)
+        :param channel_id: id of channel to move user to (if they are connected to voice)
+        :param reason: An optional reason for the audit log
         :return: The updated member object
         """
         payload = dict(nick=nickname, roles=roles, mute=mute, deaf=deaf, channel_id=channel_id)
         # clean up payload
         payload = {key: value for key, value in payload.items() if value is not None}
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), json=payload)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), json=payload, reason=reason)

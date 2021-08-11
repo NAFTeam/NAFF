@@ -1,11 +1,7 @@
-from collections import OrderedDict
-from collections.abc import ValuesView
-from collections.abc import ItemsView
-from typing import Any
-from typing import List
-from typing import Callable
-
 import time
+from collections import OrderedDict
+from collections.abc import ItemsView, ValuesView
+from typing import Any, Callable, List
 
 import attr
 
@@ -158,7 +154,7 @@ class CacheProxy:
 
     def __getattr__(self, item):
         return self._get_proxy_attr(item)
-    
+
     async def _get_proxy_attr(self, item):
         instance = await self
         value = getattr(instance, item)

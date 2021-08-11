@@ -1,8 +1,4 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type

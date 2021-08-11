@@ -21,9 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import re
 from enum import IntEnum
-from typing import Dict, Coroutine, Callable
-from typing import List
-from typing import Union
+from typing import Callable, Coroutine, Dict, List, Union
 
 import attr
 

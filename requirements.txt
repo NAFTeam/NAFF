@@ -1,4 +1,4 @@
 aiohttp
-orjson
-mypy
 attrs
+mypy
+orjson

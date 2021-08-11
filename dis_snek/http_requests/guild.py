@@ -1,8 +1,4 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
@@ -105,9 +101,7 @@ class GuildRequests:
             if key not in expected:
                 del kwargs[key]
 
-        # todo: support X-Audit-Log-Reason header
-
-        await self.request(Route("PATCH", f"/guilds/{guild_id}"), json=kwargs)
+        await self.request(Route("PATCH", f"/guilds/{guild_id}"), json=kwargs, reason=reason)
 
     async def delete_guild(self, guild_id: Snowflake_Type) -> None:
         """

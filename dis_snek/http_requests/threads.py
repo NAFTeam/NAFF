@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
@@ -122,6 +122,7 @@ class ThreadRequests:
         auto_archive_duration: int = 60,
         thread_type: int = 11,
         message_id: Optional[Snowflake_Type] = None,
+        reason: str = None,
     ) -> dict:
         """
         Create a thread in the given channel.
@@ -133,13 +134,14 @@ class ThreadRequests:
             can be set to: 60, 1440, 4320, 10080
         :param thread_type: The type of thread, defaults to public. ignored if creating thread from a message
         :param message_id: An optional message to create a thread from.
+        :param reason: An optional reason for the audit log
         :return: The created thread
         """
         payload = dict(name=name, auto_archive_duration=auto_archive_duration)
         if message_id:
             return await self.request(
-                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), json=payload
+                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), json=payload, reason=reason
             )
         else:
             payload["type"] = thread_type
-            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), json=payload)
+            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), json=payload, reason=reason)

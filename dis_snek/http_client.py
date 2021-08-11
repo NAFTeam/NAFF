@@ -25,13 +25,7 @@ import logging
 import traceback
 from collections import defaultdict
 from types import TracebackType
-from typing import Any
-from typing import Coroutine
-from typing import Dict
-from typing import Optional
-from typing import Type
-from typing import TypeVar
-from typing import Union
+from typing import Any, Coroutine, Dict, Optional, Type, TypeVar, Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp  # type: ignore
@@ -39,24 +33,25 @@ import orjson
 from aiohttp import ClientWebSocketResponse
 from multidict import CIMultiDictProxy  # type: ignore
 
-from dis_snek.const import __py_version__
-from dis_snek.const import __repo_url__
-from dis_snek.const import __version__
-from dis_snek.const import logger_name
-from dis_snek.errors import DiscordError
-from dis_snek.errors import Forbidden
-from dis_snek.errors import GatewayNotFound
-from dis_snek.errors import HTTPError
-from dis_snek.errors import NotFound
-from dis_snek.http_requests import ChannelRequests
-from dis_snek.http_requests import GuildRequests
-from dis_snek.http_requests import InteractionRequests
-from dis_snek.http_requests import MessageRequests
-from dis_snek.http_requests import ReactionRequests
-from dis_snek.http_requests import StickerRequests
-from dis_snek.http_requests import ThreadRequests
-from dis_snek.http_requests import UserRequests
-from dis_snek.http_requests import WebhookRequests
+from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name
+from dis_snek.errors import (
+    DiscordError,
+    Forbidden,
+    GatewayNotFound,
+    HTTPError,
+    NotFound,
+)
+from dis_snek.http_requests import (
+    ChannelRequests,
+    GuildRequests,
+    InteractionRequests,
+    MessageRequests,
+    ReactionRequests,
+    StickerRequests,
+    ThreadRequests,
+    UserRequests,
+    WebhookRequests,
+)
 from dis_snek.models.route import Route
 from dis_snek.utils.utils_json import response_decode
 

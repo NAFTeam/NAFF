@@ -1,13 +1,11 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 import attr
 
 from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.enums import ApplicationFlags
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
 

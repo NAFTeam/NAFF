@@ -1,12 +1,9 @@
 import logging
 import uuid
-from typing import List, Any
-from typing import Optional
-from typing import Union
+from typing import Any, List, Optional, Union
 
 from dis_snek.const import logger_name
-from dis_snek.models.enums import ButtonStyle
-from dis_snek.models.enums import ComponentType
+from dis_snek.models.enums import ButtonStyle, ComponentType
 
 log = logging.getLogger(logger_name)
 

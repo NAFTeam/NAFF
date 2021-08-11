@@ -1,10 +1,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
@@ -18,14 +15,14 @@ from dis_snek.models.discord_objects.interactions import InteractionType
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
-from dis_snek.models.discord_objects.user import Member
-from dis_snek.models.discord_objects.user import User
-from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.enums import MessageActivityTypes
-from dis_snek.models.enums import MessageFlags
-from dis_snek.models.enums import MessageTypes
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.discord_objects.user import Member, User
+from dis_snek.models.enums import (
+    ChannelTypes,
+    MessageActivityTypes,
+    MessageFlags,
+    MessageTypes,
+)
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
 

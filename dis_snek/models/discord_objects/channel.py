@@ -1,16 +1,10 @@
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.snowflake import Snowflake
-from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
 

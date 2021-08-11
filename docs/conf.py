@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.abspath(".."))
 
 from dis_snek.const import __version__
 
-
 # -- Project information -----------------------------------------------------
 
 project = "dis-snek"
