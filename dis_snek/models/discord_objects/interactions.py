@@ -85,6 +85,17 @@ class ContextMenu:
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
 
+    @name.validator
+    def _name_validator(self, attribute: str, value: str) -> None:
+        if not 1 <= len(value) <= 32:
+            raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
+
+    @type.validator
+    def _type_validator(self, attribute: str, value: int):
+        if not isinstance(value, InteractionType):
+            if value not in InteractionType.__members__.values():
+                raise ValueError("Context Menu type not recognised, please consult the docs.")
+
     def to_dict(self) -> dict:
         """
         Convert this object into a dict ready for discord.
@@ -115,7 +126,7 @@ class SlashCommandChoice:
         return attr.asdict(self)
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class SlashCommandOption:
     """
     Represents a discord slash command option.
@@ -132,6 +143,16 @@ class SlashCommandOption:
     description: str = attr.ib(default="No Description Set")
     required: bool = attr.ib(default=True)
     choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)
+
+    @name.validator
+    def _name_validator(self, attribute: str, value: str) -> None:
+        if not re.match(r"^[\w-]{1,32}$", value) or value != value.lower():
+            raise ValueError("Options names must be lower case and match this regex: ^[\w-]{1,32}$")  # noqa: W605
+
+    @description.validator
+    def _description_validator(self, attribute: str, value: str) -> None:
+        if not 1 <= len(value) <= 100:
+            raise ValueError("Options must be between 1 and 100 characters long")
 
     def to_dict(self) -> dict:
         """
@@ -164,12 +185,23 @@ class SlashCommand:
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
         if not re.match(r"^[\w-]{1,32}$", value) or value != value.lower():
-            raise ValueError("Slash Command names must be lower case and match this regex: ^[\w-]{1,32}$")  # noqa: W605
+            raise ValueError(
+                "Slash Command option names must be lower case and match this regex: ^[\w-]{1,32}$"
+            )  # noqa: W605
 
     @description.validator
     def _description_validator(self, attribute: str, value: str) -> None:
         if not 1 <= len(value) <= 100:
             raise ValueError("Description must be between 1 and 100 characters long")
+
+    @options.validator
+    def _options_validator(self, attribute: str, value: List) -> None:
+        if value:
+            if isinstance(value, list):
+                if len(value) > 25:
+                    raise ValueError("Slash commands can only hold 25 options")
+            else:
+                raise TypeError("Options attribute must be either None or a list of options")
 
     def to_dict(self) -> dict:
         """
