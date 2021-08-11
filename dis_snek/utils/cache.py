@@ -1,7 +1,8 @@
 import time
+from inspect import isawaitable
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union
 
 import attr
 
@@ -153,10 +154,25 @@ class CacheProxy:
         return self._method(self.id).__await__()
 
     def __getattr__(self, item):
-        return self._get_proxy_attr(item)
+        return AttributeProxy(self, item)
 
-    async def _get_proxy_attr(self, item):
-        instance = await self
-        value = getattr(instance, item)
-        # if isinstance(value, func)
+
+@attr.define()
+class AttributeProxy:
+    _proxy: Union["CacheProxy", "AttributeProxy"] = attr.field()
+    _item: Any = attr.field()
+
+    def __await__(self):
+        return self._get_proxy_attr().__await__()
+
+    def __getattr__(self, item):
+        return AttributeProxy(self, item)
+
+    async def _get_proxy_attr(self):
+        instance = await self._proxy
+        value = getattr(instance, self._item)
+
+        while isawaitable(value):  # for deeply nested async properties
+            value = await value
+
         return value
