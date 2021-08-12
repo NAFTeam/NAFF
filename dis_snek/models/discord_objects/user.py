@@ -12,6 +12,7 @@ from dis_snek.utils.cache import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.channel import DM
     from dis_snek.models.discord_objects.guild import Guild
 
 
@@ -47,6 +48,10 @@ class User(BaseUser):
     banner_color: Any = attr.ib(default=None)  # todo convert to color objects
     accent_color: Any = attr.ib(default=None)
     bio: Any = attr.ib(default=None)
+
+    @property
+    def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
+        return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
 
 
 @attr.s(slots=True, kw_only=True)
@@ -85,11 +90,11 @@ class Member(Snowflake, DictSerializationMixin):
         return data
 
     @property
-    def user(self) -> Union[Awaitable["User"], "User"]:
+    def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
         return CacheProxy(id=self.id, method=self._client.cache.get_user)
 
     @property
-    def guild(self) -> Union[Awaitable["Guild"], "Guild"]:
+    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
         return CacheProxy(id=self.guild_id, method=self._client.cache.get_guild)
 
     @property

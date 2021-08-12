@@ -9,6 +9,7 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
+from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.cache import TTLCache
 
@@ -26,6 +27,8 @@ class GlobalCache:
     channel_cache: TTLCache = attr.field(factory=TTLCache)  # key: channel_id
     guild_cache: TTLCache = attr.field(factory=TTLCache)  # key: guild_id
     role_cache: TTLCache = attr.field(factory=TTLCache)  # key: role_id
+
+    dm_channels: dict = attr.field(factory=dict)
 
     async def get_user(self, user_id: Snowflake_Type, request_fallback=True) -> User:
         user = self.user_cache.get(user_id)
@@ -91,6 +94,17 @@ class GlobalCache:
             self.channel_cache[channel_id] = channel
         else:
             channel.update_from_dict(data)
+        return channel
+
+    def place_dm_channel_id(self, user_id, channel_id):
+        self.dm_channels[user_id] = channel_id
+
+    async def get_dm_channel(self, user_id):
+        channel_id = self.dm_channels.get(user_id)
+        if channel_id is None:
+            return None  # todo add endpoint to create DM channel with user
+
+        channel = await self.get_channel(channel_id)
         return channel
 
     async def get_guild(self, guild_id: Snowflake_Type, request_fallback=True):

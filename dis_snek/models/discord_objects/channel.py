@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Dict, Optional, Union, Awaitable, AsyncIterator
 
 import attr
 from attr.converters import optional as optional_c
@@ -7,15 +7,17 @@ from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.user import User
     from dis_snek.models.discord_objects.message import Message
 
 
 @attr.s(slots=True, kw_only=True)
 class BaseChannel(Snowflake, DictSerializationMixin):
-    _client: Any = attr.ib(repr=False)
+    _client: "Snake" = attr.ib(repr=False)
 
     _type: ChannelTypes = attr.ib(converter=ChannelTypes)
     name: Optional[str] = attr.ib(default=None)
@@ -39,7 +41,7 @@ class BaseChannel(Snowflake, DictSerializationMixin):
             ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
             ChannelTypes.GUILD_NEWS_THREAD: Thread,
             ChannelTypes.DM: DM,
-            ChannelTypes.GROUP_DM: DM,
+            ChannelTypes.GROUP_DM: DMGroup,
         }
         channel_type = ChannelTypes(data["type"])
 
@@ -47,7 +49,7 @@ class BaseChannel(Snowflake, DictSerializationMixin):
 
     @classmethod
     def from_dict_typed(cls, data, client):
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+        return super().from_dict(data, client)
 
 
 class _GuildMixin:
@@ -91,10 +93,39 @@ class GuildStageVoice(GuildVoice):
 
 
 @attr.s(slots=True, kw_only=True)
-class DM(TextChannel):
+class DMGroup(TextChannel):
     owner_id: Snowflake_Type = attr.ib()
     application_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    recipients: List[dict] = attr.ib(factory=list)
+    _recipients_ids: List[Snowflake_Type] = attr.ib(factory=list)
+
+    @classmethod
+    def process_dict(cls, data, client):
+        recipients_data = data.pop("recipients", [])
+        recipients_ids = []
+        for recipient_data in recipients_data:
+            recipient_id = recipient_data["id"]
+            recipients_ids.append(recipient_id)
+        data["recipients_ids"] = recipients_ids
+
+        return super().from_dict_typed(data, client)
+
+    @property
+    def recipients(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "User"]], AsyncIterator["User"]]:
+        return CacheView(ids=self._recipients_ids, method=self._client.cache.get_user)
+
+
+@attr.s(slots=True, kw_only=True)
+class DM(DMGroup):
+    @classmethod
+    def process_dict(cls, data, client: "Snake"):
+        data = super().process_dict(data, client)
+        user_id = data["recipients_ids"][0]
+        client.cache.place_dm_channel_id(user_id, data["id"])
+        return data
+
+    @property
+    def recipient(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
+        return CacheProxy(id=self._recipients_ids[0], method=self._client.cache.get_user)
 
 
 @attr.s(slots=True, kw_only=True)
@@ -130,10 +161,10 @@ class Thread(GuildText):
     archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
     @classmethod
-    def from_dict_typed(cls, data, client):
+    def process_dict(cls, data, client):
         thread_metadata: dict = data.get("thread_metadata", {})
         data.update(thread_metadata)
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+        return data
 
     @property
     def private(self):
@@ -146,6 +177,7 @@ TYPE_ALL_CHANNEL = Union[
     GuildStore,
     TextChannel,
     VoiceChannel,
+    DMGroup,
     DM,
     GuildText,
     Thread,
