@@ -2,16 +2,15 @@ from functools import partial
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
-from attr.converters import optional as optional_c
 
-from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL, TYPE_GUILD_CHANNEL
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
+from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import BaseChannel, Thread
+    from dis_snek.models.discord_objects.channel import Thread
     from dis_snek.models.discord_objects.user import Member
 
 
@@ -97,70 +96,21 @@ class Guild(BaseGuild):
         data["member_ids"] = members_ids
         return data
 
-    async def get_channel(self, channel_id: Snowflake_Type) -> TYPE_GUILD_CHANNEL:
-        channel_id = to_snowflake(channel_id)
-        if channel_id not in self.channel_ids:  # I'm not sure if it's needed
-            raise ValueError("Channel with such id does not exist in this guild!")
-
-        channel: TYPE_GUILD_CHANNEL = await self._client.cache.get_channel(channel_id)
-
-        guild_id = getattr(channel, "guild_id", None)
-        if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
-            raise ValueError("Specified channel does not belong to this guild!")
-
-        return channel
-
     @property
-    def channels(self) -> Union[Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
+    def channels(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
         return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
 
-    async def get_thread(self, thread_id: Snowflake_Type) -> "Thread":
-        thread_id = to_snowflake(thread_id)
-        if thread_id not in self.channel_ids:  # I'm not sure if it's needed
-            raise ValueError("Thread with such id does not exist in this guild!")
-
-        thread: "Thread" = await self._client.cache.get_channel(thread_id)
-
-        guild_id = getattr(thread, "guild_id", None)
-        if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
-            raise ValueError("Specified thread does not belong to this guild!")
-
-        return thread
-
     @property
-    def threads(self) -> Union[Awaitable[Dict[Snowflake_Type, "Thread"]], AsyncIterator["Thread"]]:
+    def threads(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Thread"]], AsyncIterator["Thread"]]:
         return CacheView(ids=self.thread_ids, method=self._client.cache.get_channel)
 
-    async def get_member(self, user_id: Snowflake_Type) -> "Member":
-        user_id = to_snowflake(user_id)
-        if user_id not in self.member_ids:  # I'm not sure if it's needed
-            raise ValueError("Member with such id does not exist in this guild!")
-
-        member: "Member" = await self._client.cache.get_member(self.id, user_id)
-
-        # guild_id = getattr(thread, "guild_id", None)
-        # if guild_id is None or guild_id != self.id:  # I'm not sure if it's needed
-        #     raise ValueError("Specified member does not belong to this guild!")
-
-        return member
-
     @property
-    def members(self) -> Union[Awaitable[Dict[Snowflake_Type, "Member"]], AsyncIterator["Member"]]:
+    def members(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Member"]], AsyncIterator["Member"]]:
         return CacheView(ids=self.member_ids, method=partial(self._client.cache.get_member, self.id))
 
     @property
-    def me(self) -> Union[Awaitable["Member"], "Member"]:
+    def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
         return CacheProxy(id=self._client._user.id, method=partial(self._client.cache.get_member, self.id))
 
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
-
-    # @property
-    # async def channels(self) -> List[TYPE_ALL_CHANNEL]:
-    #     if not self._channels:
-    #         # need to acquire channels
-    #         _channels = await self._client.http.get_channels(self.id)
-    #
-    #         for c_data in _channels:
-    #             self._channels.append(BaseChannel.from_dict(c_data, self._client))
-    #     return self._channels
