@@ -3,6 +3,7 @@ from inspect import isawaitable
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
 from typing import Any, Callable, List, Union
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 
 import attr
 
@@ -125,16 +126,22 @@ class _CacheItemsView(ItemsView):
 
 @attr.define()
 class CacheView:  # for global cache
-    ids: List = attr.field()
+    ids: List[Snowflake_Type] = attr.field()
     _method: Callable = attr.field()
 
     def __await__(self):
-        return self.get_dict().__await__()
+        return self.get_dict().__await__()  # todo list instead?
 
     async def get_dict(self):
         return {instance_id: instance async for instance_id, instance in self}
 
+    async def get_list(self):
+        return [instance async for _, instance in self]
+
     async def get(self, item):
+        item = to_snowflake(item)
+        if item not in self.ids:
+            raise ValueError("Object with such ID does not belong to this instance")
         return await self._method(item)
 
     def __getitem__(self, item):
@@ -142,7 +149,7 @@ class CacheView:  # for global cache
 
     async def __aiter__(self):
         for instance_id in self.ids:
-            yield instance_id, await self._method(instance_id)
+            yield instance_id, await self._method(instance_id)  # todo list instead?
 
 
 @attr.define()
