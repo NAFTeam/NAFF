@@ -205,9 +205,12 @@ class HTTPClient(
         else:
             raise HTTPError(resp_text, route, response.status, response)
 
-    # async def request_cdn(self, ):
-    #     async with self.__session.request(route.method, route.url, **kwargs) as response:
-    #         pass
+    async def request_cdn(self, url, asset) -> bytes:
+        log.debug(f"{asset} requests {url} from CDN")
+        async with self.__session.get(url) as response:
+            if response.status == 200:
+                return await response.read()
+            await self._raise_exception(response, asset)
 
     async def login(self, token: str) -> dict:
         """
