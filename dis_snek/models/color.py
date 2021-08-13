@@ -1,7 +1,6 @@
 import re
+import enum
 import colorsys
-# from collections import namedtuple
-
 from typing import Tuple
 
 import attr
@@ -21,7 +20,7 @@ class Color:
             if re.match(self.hex_regex, color):
                 self.hex = color
             else:
-                pass
+                self._rgb = BrandColors[color]._rgb  # todo exception handling for better message
         else:
             raise TypeError
 
@@ -88,3 +87,14 @@ class Color:
         self.rgb = tuple(round(v*255) for v in colorsys.hsv_to_rgb(*value))
 
 
+# maybe should be just a dict but not sure
+# or just str enum but no so sure again
+class BrandColors(Color, enum.Enum):
+    # https://discord.com/branding
+    blurple = "#5865F2"
+    green = "#57F287"
+    yellow = "#FEE75C"
+    fuchsia = "#EB459E"
+    red = "#ED4245"
+    white = "#FFFFFF"
+    black = "#000000"
