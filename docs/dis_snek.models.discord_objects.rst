@@ -9,6 +9,14 @@ dis\_snek.models.discord\_objects.application module
    :undoc-members:
    :show-inheritance:
 
+dis\_snek.models.discord\_objects.asset module
+----------------------------------------------------
+
+.. automodule:: dis_snek.models.discord_objects.asset
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dis\_snek.models.discord\_objects.channel module
 ------------------------------------------------
 
