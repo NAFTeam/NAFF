@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Awaitable, List, Optional, Union
 import attr
 from attr.converters import optional as optional_c
 
-# from dis_snek.models.discord_objects.asset import Asset
+from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
@@ -27,6 +27,10 @@ class BaseUser(Snowflake, DictSerializationMixin):
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
+
+    @property
+    def avatar(self) -> "Asset":
+        return Asset.from_path_hash(self._client, f"avatars/{self.id}/{{}}", self._avatar)
 
     @property
     def mention(self) -> str:
