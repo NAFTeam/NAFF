@@ -12,6 +12,15 @@ Subpackages
 Submodules
 ----------
 
+dis\_snek.models.color module
+-----------------------------
+
+.. automodule:: dis_snek.models.color
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 dis\_snek.models.enums module
 -----------------------------
 
