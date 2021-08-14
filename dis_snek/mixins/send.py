@@ -11,7 +11,7 @@ class SendMixin:
     async def send(
         self,
         content: Optional[str],
-        embeds: Optional[List[Embed]] = None,
+        embeds: Optional[Union[List[Embed], Embed]] = None,
         components: Optional[List[Union[Dict, ActionRow]]] = None,
         tts: Optional[bool] = False,
         allowed_mentions: Optional[dict] = None,
@@ -28,6 +28,8 @@ class SendMixin:
         # TODO: InteractionContext handling
         if embeds is None:
             embeds = []
+        elif isinstance(embeds, Embed):
+            embeds = [embeds]
         embeds = [e.to_dict() for e in embeds]
         components = process_components(components) if components else []
 
