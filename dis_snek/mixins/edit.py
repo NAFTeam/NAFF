@@ -13,7 +13,7 @@ class EditMixin:
         content: Optional[str],
         embeds: Optional[Union[List[Embed], Embed]] = None,
         components: Optional[
-            List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+            Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
     ):
         """
