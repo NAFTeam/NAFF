@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 
-from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed
 
 
@@ -11,8 +11,10 @@ class SendMixin:
     async def send(
         self,
         content: Optional[str],
-        embeds: Optional[Union[List[Embed], Embed]] = None,
-        components: Optional[List[Union[Dict, ActionRow]]] = None,
+        embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
+        components: Union[
+            None, List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+        ] = None,
         tts: Optional[bool] = False,
         allowed_mentions: Optional[dict] = None,
     ):
@@ -26,11 +28,14 @@ class SendMixin:
         :return: New message object
         """
         # TODO: InteractionContext handling
+        # Wrap single instances in a list
+        if isinstance(embeds, (Embed, dict)):
+            embeds = [embeds]
+        # Handle none
         if embeds is None:
             embeds = []
-        elif isinstance(embeds, Embed):
-            embeds = [embeds]
-        embeds = [e.to_dict() for e in embeds]
+        elif isinstance(embeds, list):
+            embeds = [e.to_dict() if isinstance(e, Embed) else e for e in embeds]
         components = process_components(components) if components else []
 
         method = self._send_http_method()

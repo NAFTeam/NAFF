@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 
-from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed
 
 
@@ -12,7 +12,9 @@ class EditMixin:
         self,
         content: Optional[str],
         embeds: Optional[Union[List[Embed], Embed]] = None,
-        components: Optional[List[Union[Dict, ActionRow]]] = None,
+        components: Union[
+            None, List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+        ] = None,
     ):
         """
         Edit an existing message
@@ -23,13 +25,16 @@ class EditMixin:
         :return: New message object
         """
         # TODO: InteractionContext handling
+        # Wrap single instances in a list
+        if isinstance(embeds, (Embed, dict)):
+            embeds = [embeds]
+        # Handle none
         if embeds is None:
             embeds = []
-        elif isinstance(embeds, Embed):
-            embeds = [embeds]
-        embeds = [e.to_dict() for e in embeds]
+        elif isinstance(embeds, list):
+            embeds = [e.to_dict() if isinstance(e, Embed) else e for e in embeds]
+        components = process_components(components) if components else []
 
         method = self._edit_http_method()
 
-        components = process_components(components) if components else []
         await method(self.channel_id, self.id, content, embeds, components)
