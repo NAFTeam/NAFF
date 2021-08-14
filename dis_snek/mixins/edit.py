@@ -12,8 +12,8 @@ class EditMixin:
         self,
         content: Optional[str],
         embeds: Optional[Union[List[Embed], Embed]] = None,
-        components: Union[
-            None, List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+        components: Optional[
+            List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
     ):
         """

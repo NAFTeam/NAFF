@@ -12,8 +12,8 @@ class SendMixin:
         self,
         content: Optional[str],
         embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
-        components: Union[
-            None, List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+        components: Optional[
+            List[List[Union[BaseComponent, Dict]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
         tts: Optional[bool] = False,
         allowed_mentions: Optional[dict] = None,
