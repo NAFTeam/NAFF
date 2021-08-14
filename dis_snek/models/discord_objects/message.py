@@ -1,15 +1,19 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
-from dis_snek.mixins.edit import EditMixin
 from typing import Any, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.mixins.edit import EditMixin
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
-from dis_snek.models.discord_objects.components import ActionRow, ComponentType, process_components
+from dis_snek.models.discord_objects.components import (
+    ActionRow,
+    ComponentType,
+    process_components,
+)
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.discord_objects.interactions import InteractionType

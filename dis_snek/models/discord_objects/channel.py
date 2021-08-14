@@ -1,11 +1,20 @@
-from dis_snek.mixins.send import SendMixin
-from dis_snek.models.discord_objects.components import ActionRow, process_components
-from dis_snek.models.discord_objects.embed import Embed
-from typing import TYPE_CHECKING, Any, List, Dict, Optional, Union, Awaitable, AsyncIterator
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Dict,
+    List,
+    Optional,
+    Union,
+)
 
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.mixins.send import SendMixin
+from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -14,8 +23,8 @@ from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.user import User
     from dis_snek.models.discord_objects.message import Message
+    from dis_snek.models.discord_objects.user import User
 
 
 @attr.s(slots=True, kw_only=True)
