@@ -27,6 +27,7 @@ from dis_snek.models.discord_objects.context import (
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     ContextMenu,
+    OptionType,
     SlashCommand,
     SlashCommandChoice,
     SlashCommandOption,
@@ -507,7 +508,7 @@ class Snake:
         self,
         name: str,
         description: str,
-        opt_type: Union[InteractionType, int],
+        opt_type: Union[OptionType, int],
         required: bool = False,
         choices: List[Union[SlashCommandChoice, dict]] = None,
     ):
