@@ -97,7 +97,9 @@ class Guild(BaseGuild):
         return data
 
     @property
-    def channels(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
+    def channels(
+        self,
+    ) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
         return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
 
     @property

@@ -77,8 +77,8 @@ class Color:
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
         # noinspection PyTypeChecker
-        return tuple(v/255 for v in self.rgb)
-    
+        return tuple(v / 255 for v in self.rgb)
+
     @rgb.setter
     def rgb(self, value: Tuple[int, int, int]):
         # noinspection PyTypeChecker
@@ -92,9 +92,9 @@ class Color:
 
     @hex.setter
     def hex(self, value: str):
-        value = value.lstrip('#')
+        value = value.lstrip("#")
         # split hex into 3 parts of 2 digits and convert each to int from base-16 number
-        self.rgb = tuple(int(value[i:i+2], 16) for i in (0, 2, 4))
+        self.rgb = tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
 
     @property
     def hsv(self) -> Tuple[float, float, float]:
@@ -102,7 +102,7 @@ class Color:
 
     @hsv.setter
     def hsv(self, value):
-        self.rgb = tuple(round(v*255) for v in colorsys.hsv_to_rgb(*value))
+        self.rgb = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(*value))
 
 
 # maybe should be just a dict but not sure
