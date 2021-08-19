@@ -256,26 +256,25 @@ class Snake:
             cmds_resp_data = await self.http.get_interaction_element(
                 self.user.id, cmd_scope if cmd_scope != "global" else None
             )
+            need_to_sync = False
             cmds_to_sync = []
 
             for local_cmd in self.interactions[cmd_scope].values():
                 # try and find remote equiv of this command
                 remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
                 local_cmd = local_cmd.to_dict()
-                if not remote_cmd:
-                    # if no remote, likely a new command, sync it
-                    cmds_to_sync.append(local_cmd)
-                    continue
+                cmds_to_sync.append(local_cmd)
 
                 if (
-                    local_cmd["name"] != remote_cmd["name"]
+                    not remote_cmd
+                    or local_cmd["name"] != remote_cmd["name"]
                     or local_cmd.get("description", "") != remote_cmd.get("description", "")
                     or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
                     or local_cmd.get("options") != remote_cmd.get("options")
                 ):  # if command local data doesnt match remote, a change has been made, sync it
-                    cmds_to_sync.append(local_cmd)
+                    need_to_sync = True
 
-            if cmds_to_sync:
+            if need_to_sync:
                 log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
                 cmd_sync_resp = await self.http.post_interaction_element(
                     self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != "global" else None
@@ -296,7 +295,7 @@ class Snake:
                     )
 
             for perm_scope in guild_perms:
-                log.debug(f"Updating {len(guild_perms[perm_scope])} commands in {perm_scope}")
+                log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
                 perm_sync_resp = await self.http.batch_edit_application_command_permissions(
                     application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
                 )
