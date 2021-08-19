@@ -211,6 +211,7 @@ class SlashCommand:
         """
         self._name_validator("name", self.name)
         self._description_validator("description", self.description)
+        self._options_validator("options", self.options)
 
         # Don't convert None or empty data structures
         data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
