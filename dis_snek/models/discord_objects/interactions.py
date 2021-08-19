@@ -211,7 +211,9 @@ class SlashCommand:
         """
         self._name_validator("name", self.name)
         self._description_validator("description", self.description)
-        data = attr.asdict(self, filter=lambda key, value: value)
+
+        # Don't convert None or empty data structures
+        data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
         # remove internal data from dictionary
         data.pop("scope", None)
