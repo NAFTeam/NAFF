@@ -41,8 +41,9 @@ class Asset:
         url = url + extension
         return await self._client.http.request_cdn(url, self)
 
-    async def save(self, fd: Union[str, bytes, PathLike, int],
-                   extension: Optional[str] = None, size: Optional[int] = None) -> int:
+    async def save(
+        self, fd: Union[str, bytes, PathLike, int], extension: Optional[str] = None, size: Optional[int] = None
+    ) -> int:
         content = await self.get(extension=extension, size=size)
-        with open(fd, 'wb') as f:
+        with open(fd, "wb") as f:
             return f.write(content)
