@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from dis_snek.models.discord_objects.role import Role
 import re
 from enum import IntEnum
 from typing import Callable, Coroutine, Dict, List, Union
@@ -66,6 +67,19 @@ class OptionType(IntEnum):
         # todo role
         if issubclass(t, float):
             return cls.NUMBER
+
+
+class PermissionType(IntEnum):
+
+    ROLE = 1
+    USER = 2
+
+    @classmethod
+    def from_type(cls, t: type):
+        if issubclass(t, Role):
+            return cls.ROLE
+        if issubclass(t, BaseUser):
+            return cls.USER
 
 
 @attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -163,6 +177,22 @@ class SlashCommandOption:
         return attr.asdict(self, filter=lambda key, value: value)
 
 
+@attr.s(slots=True)
+class SlashPermission:
+
+    id: Snowflake_Type = attr.ib()
+    type: Union[PermissionType, int] = attr.ib()
+    permission: bool = attr.ib()
+
+    def to_dict(self) -> dict:
+        """
+        Convert this object into a dict ready for discord.
+
+        :return: dict
+        """
+        return attr.asdict(self)
+
+
 @attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class SlashCommand:
     """
@@ -179,6 +209,7 @@ class SlashCommand:
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     default_permission: bool = attr.ib(default=True)
+    permissions: Dict[Snowflake_Type, Union[SlashPermission, Dict]] = attr.ib(factory=dict)
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
 
@@ -211,7 +242,10 @@ class SlashCommand:
         """
         self._name_validator("name", self.name)
         self._description_validator("description", self.description)
-        data = attr.asdict(self, filter=lambda key, value: value)
+        self._options_validator("options", self.options)
+
+        # Don't convert None or empty data structures
+        data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
         # remove internal data from dictionary
         data.pop("scope", None)
