@@ -35,7 +35,7 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
-from dis_snek.models.enums import ComponentType, InteractionType
+from dis_snek.models.enums import ComponentType, Intents, InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
 
@@ -43,7 +43,12 @@ log = logging.getLogger(logger_name)
 
 
 class Snake:
-    def __init__(self, intents, loop=None, sync_interactions=False):
+    def __init__(
+        self,
+        intents: Union[int, Intents] = Intents.DEFAULT,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+        sync_interactions: bool = False,
+    ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         self.intents = intents
 
