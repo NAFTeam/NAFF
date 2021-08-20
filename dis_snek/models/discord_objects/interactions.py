@@ -82,6 +82,22 @@ class PermissionType(IntEnum):
             return cls.USER
 
 
+@attr.s(slots=True)
+class Permission:
+
+    id: Snowflake_Type = attr.ib()
+    type: Union[PermissionType, int] = attr.ib()
+    permission: bool = attr.ib()
+
+    def to_dict(self) -> dict:
+        """
+        Convert this object into a dict ready for discord.
+
+        :return: dict
+        """
+        return attr.asdict(self)
+
+
 @attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class ContextMenu:
     """
@@ -95,6 +111,8 @@ class ContextMenu:
     name: str = attr.ib()
     type: InteractionType = attr.ib()
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
+    default_permission: bool = attr.ib(default=True)
+    permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
 
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
@@ -116,7 +134,14 @@ class ContextMenu:
 
         :return: dict
         """
-        return {"name": self.name, "type": self.type}
+        data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
+
+        # remove internal data from dictionary
+        data.pop("scope", None)
+        data.pop("call", None)
+        data.pop("cmd_id", None)
+
+        return data
 
 
 @attr.s(slots=True)
@@ -177,22 +202,6 @@ class SlashCommandOption:
         return attr.asdict(self, filter=lambda key, value: value)
 
 
-@attr.s(slots=True)
-class SlashPermission:
-
-    id: Snowflake_Type = attr.ib()
-    type: Union[PermissionType, int] = attr.ib()
-    permission: bool = attr.ib()
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
-        return attr.asdict(self)
-
-
 @attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class SlashCommand:
     """
@@ -209,7 +218,7 @@ class SlashCommand:
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     default_permission: bool = attr.ib(default=True)
-    permissions: Dict[Snowflake_Type, Union[SlashPermission, Dict]] = attr.ib(factory=dict)
+    permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
 

@@ -31,7 +31,7 @@ from dis_snek.models.discord_objects.interactions import (
     SlashCommand,
     SlashCommandChoice,
     SlashCommandOption,
-    SlashPermission,
+    Permission,
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
@@ -487,7 +487,7 @@ class Snake:
         scope: Snowflake_Type = "global",
         options=None,
         default_permission: bool = True,
-        permissions: Optional[Dict[Snowflake_Type, Union[SlashPermission, Dict]]] = None,
+        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
     ):
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
@@ -522,7 +522,14 @@ class Snake:
 
         return wrapper
 
-    def context_menu(self, name: str, context_type: InteractionType, scope: Snowflake_Type):
+    def context_menu(
+        self,
+        name: str,
+        context_type: InteractionType,
+        scope: Snowflake_Type,
+        default_permission: bool = True,
+        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
+    ):
         """
         Decorator to create a context menu command.
 
@@ -535,7 +542,22 @@ class Snake:
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
-            cmd = ContextMenu(name, context_type, scope, call=func)
+
+            perm = permissions
+            if hasattr(func, "permissions"):
+                if perm:
+                    perm.update(func.permissions)
+                else:
+                    perm = func.permissions
+
+            cmd = ContextMenu(
+                name=name,
+                type=context_type,
+                scope=scope,
+                default_permission=default_permission,
+                permissions=perm,
+                call=func,
+            )
             self.add_interaction(cmd)
             return func
 
@@ -573,7 +595,7 @@ class Snake:
 
         return wrapper
 
-    def slash_permission(self, guild_id: Snowflake_Type, permissions: List[Union[SlashPermission, Dict]]):
+    def slash_permission(self, guild_id: Snowflake_Type, permissions: List[Union[Permission, Dict]]):
         def wrapper(func):
             if hasattr(func, "cmd_id"):
                 raise Exception("slash_option decorators must be positioned under a slash_command decorator")
