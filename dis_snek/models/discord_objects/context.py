@@ -1,4 +1,5 @@
-from dis_snek.models.discord_objects.interactions import CallbackDataFlag, CallbackType
+from dis_snek.models.enums import MessageFlags
+from dis_snek.models.discord_objects.interactions import CallbackType
 from typing import Any, Dict, List, Union
 
 import attr
@@ -93,7 +94,7 @@ class InteractionContext(Context):
         }
 
         if ephemeral or (self.ephemeral and self.deferred):
-            message["flags"] = CallbackDataFlag.EPHEMERAL
+            message["flags"] = MessageFlags.EPHEMERAL
 
         if not self.responded:
             if self.deferred:
@@ -147,7 +148,7 @@ class ComponentContext(InteractionContext):
         if ephemeral:
             if edit_origin:
                 raise ValueError("`edit_origin` and `ephemeral` are mutually exclusive")
-            payload["data"] = {"flags": CallbackDataFlag.EPHEMERAL}
+            payload["data"] = {"flags": MessageFlags.EPHEMERAL}
 
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
         self.deferred = True

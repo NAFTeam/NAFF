@@ -92,12 +92,6 @@ class CallbackType(IntEnum):
     UPDATE_MESSAGE = 7
 
 
-class CallbackDataFlag(IntEnum):
-    """Types of data flags supported by interaction response."""
-
-    EPHEMERAL = 1 << 6  # 64
-
-
 @attr.s(slots=True)
 class Permission:
 
