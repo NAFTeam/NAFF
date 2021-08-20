@@ -7,6 +7,7 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
+from dis_snek.models.color import Color
 from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
 from dis_snek.utils.cache import CacheProxy
 
@@ -23,7 +24,7 @@ class BaseUser(Snowflake, DictSerializationMixin):
     _client: "Snake" = attr.field(repr=False)
     username: str = attr.field()
     discriminator: int = attr.field()
-    _avatar: str = attr.field()  # todo convert to asset
+    _avatar: str = attr.field()
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
@@ -48,14 +49,23 @@ class User(BaseUser):
     public_flags: UserFlags = attr.ib(default=0, converter=UserFlags)
     premium_type: PremiumTypes = attr.ib(default=0, converter=PremiumTypes)
 
-    banner: Any = attr.ib(default=None)  # todo convert to asset
-    banner_color: Any = attr.ib(default=None)  # todo convert to color objects
-    accent_color: Any = attr.ib(default=None)
-    bio: Any = attr.ib(default=None)
+    _banner: Optional[str] = attr.ib(default=None)
+    # _banner_color: Any = attr.ib(default=None)  # probably deprecated in api?
+    _accent_color: Optional[int] = attr.ib(default=None)
 
     @property
     def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
         return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
+
+    @property
+    def banner(self) -> "Asset":
+        return Asset.from_path_hash(self._client, f"banners/{self.id}/{{}}", self._banner)
+
+    @property
+    def accent_color(self) -> Optional["Color"]:
+        if self._accent_color is None:
+            return None
+        return Color(self._accent_color)
 
 
 @attr.s(slots=True, kw_only=True)
@@ -65,6 +75,7 @@ class SnakeBotUser(User):
     email: Optional[str] = attr.ib(default=None)
     locale: Optional[str] = attr.ib(default=None)
     flags: UserFlags = attr.ib(default=0, converter=UserFlags)
+    bio: str = attr.ib(default="")
 
 
 @attr.s(slots=True, kw_only=True)

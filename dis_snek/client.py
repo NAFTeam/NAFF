@@ -27,9 +27,11 @@ from dis_snek.models.discord_objects.context import (
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     ContextMenu,
+    OptionType,
     SlashCommand,
     SlashCommandChoice,
     SlashCommandOption,
+    Permission,
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
@@ -248,41 +250,56 @@ class Snake:
 
         # first we need to make sure our local copy of cmd_ids is up-to-date
         await self._cache_interactions()
-        scopes = [k for k in self.interactions.keys()]
+        cmd_scopes = [k for k in self.interactions.keys()]
+        guild_perms = {}
 
-        for scope in scopes:
-            resp_data = await self.http.get_interaction_element(self.user.id, scope if scope != "global" else None)
-            to_sync = []
+        for cmd_scope in cmd_scopes:
+            cmds_resp_data = await self.http.get_interaction_element(
+                self.user.id, cmd_scope if cmd_scope != "global" else None
+            )
+            need_to_sync = False
+            cmds_to_sync = []
 
-            for local_cmd in self.interactions[scope].values():
+            for local_cmd in self.interactions[cmd_scope].values():
                 # try and find remote equiv of this command
-                remote_cmd = next((v for v in resp_data if v["id"] == local_cmd.cmd_id), None)
+                remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
                 local_cmd = local_cmd.to_dict()
-                if not remote_cmd:
-                    # if no remote, likely a new command, sync it
-                    to_sync.append(local_cmd)
-                    continue
+                cmds_to_sync.append(local_cmd)
 
                 if (
-                    local_cmd["name"] != remote_cmd["name"]
+                    not remote_cmd
+                    or local_cmd["name"] != remote_cmd["name"]
                     or local_cmd.get("description", "") != remote_cmd.get("description", "")
                     or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
                     or local_cmd.get("options") != remote_cmd.get("options")
                 ):  # if command local data doesnt match remote, a change has been made, sync it
-                    # todo: check permission data when we implement interaction perms
-                    to_sync.append(local_cmd)
+                    need_to_sync = True
 
-            if to_sync:
-                log.debug(f"Updating {len(to_sync)} commands in {scope}")
-                sync_resp = await self.http.post_interaction_element(
-                    self.user.id, to_sync, guild_id=scope if scope != "global" else None
+            if need_to_sync:
+                log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
+                cmd_sync_resp = await self.http.post_interaction_element(
+                    self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != "global" else None
                 )
                 # cache cmd_ids and their scopes
-                for cmd_data in sync_resp:
-                    self._interaction_scopes[str(cmd_data["id"])] = scope
-                    self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                for cmd_data in cmd_sync_resp:
+                    self._interaction_scopes[str(cmd_data["id"])] = cmd_scope
+                    self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
             else:
-                log.debug(f"{scope} is already up-to-date")
+                log.debug(f"{cmd_scope} is already up-to-date")
+
+            for local_cmd in self.interactions[cmd_scope].values():
+                for perm_scope, perms in local_cmd.permissions.items():
+                    if perm_scope not in guild_perms:
+                        guild_perms[perm_scope] = []
+                    guild_perms[perm_scope].append(
+                        {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in perms]}
+                    )
+
+            for perm_scope in guild_perms:
+                log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
+                perm_sync_resp = await self.http.batch_edit_application_command_permissions(
+                    application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
+                )
 
     async def get_context(self, data: Dict, interaction: bool = False) -> Union[Context, InteractionContext]:
         """
@@ -464,7 +481,13 @@ class Snake:
         await self.http.create_message(channel, content)
 
     def slash_command(
-        self, name: str, description: str = "No description set", scope: Snowflake_Type = "global", options=None
+        self,
+        name: str,
+        description: str = "No description set",
+        scope: Snowflake_Type = "global",
+        options=None,
+        default_permission: bool = True,
+        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
     ):
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
@@ -477,14 +500,36 @@ class Snake:
                 else:
                     opt = func.options
 
-            cmd = SlashCommand(name, description, scope, call=func, options=opt)
+            perm = permissions
+            if hasattr(func, "permissions"):
+                if perm:
+                    perm.update(func.permissions)
+                else:
+                    perm = func.permissions
+
+            cmd = SlashCommand(
+                name,
+                description,
+                scope,
+                call=func,
+                options=opt,
+                default_permission=default_permission,
+                permissions=perm,
+            )
             func.cmd_id = f"{scope}::{name}"
             self.add_interaction(cmd)
             return func
 
         return wrapper
 
-    def context_menu(self, name: str, context_type: InteractionType, scope: Snowflake_Type):
+    def context_menu(
+        self,
+        name: str,
+        context_type: InteractionType,
+        scope: Snowflake_Type,
+        default_permission: bool = True,
+        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
+    ):
         """
         Decorator to create a context menu command.
 
@@ -497,7 +542,22 @@ class Snake:
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
-            cmd = ContextMenu(name, context_type, scope, call=func)
+
+            perm = permissions
+            if hasattr(func, "permissions"):
+                if perm:
+                    perm.update(func.permissions)
+                else:
+                    perm = func.permissions
+
+            cmd = ContextMenu(
+                name=name,
+                type=context_type,
+                scope=scope,
+                default_permission=default_permission,
+                permissions=perm,
+                call=func,
+            )
             self.add_interaction(cmd)
             return func
 
@@ -507,7 +567,7 @@ class Snake:
         self,
         name: str,
         description: str,
-        opt_type: Union[InteractionType, int],
+        opt_type: Union[OptionType, int],
         required: bool = False,
         choices: List[Union[SlashCommandChoice, dict]] = None,
     ):
@@ -531,6 +591,23 @@ class Snake:
             if not hasattr(func, "options"):
                 func.options = []
             func.options.append(option)
+            return func
+
+        return wrapper
+
+    def slash_permission(self, guild_id: Snowflake_Type, permissions: List[Union[Permission, Dict]]):
+        def wrapper(func):
+            if hasattr(func, "cmd_id"):
+                raise Exception("slash_option decorators must be positioned under a slash_command decorator")
+
+            if not hasattr(func, "permissions"):
+                func.permissions = {}
+
+            if guild_id not in func.permissions:
+                func.permissions[guild_id] = permissions
+            else:
+                func.permissions[guild_id] += permissions
+
             return func
 
         return wrapper

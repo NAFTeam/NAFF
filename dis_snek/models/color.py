@@ -10,17 +10,19 @@ import attr
 class Color:
     hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
-    _rgb: Tuple[int, int, int] = attr.ib()
+    value: int = attr.ib()
 
     def __init__(self, color=None):
         color = color or (0, 0, 0)
+        if isinstance(color, int):
+            self.value = color
         if isinstance(color, (tuple, list)):
             self.rgb = color
         elif isinstance(color, str):
             if re.match(self.hex_regex, color):
                 self.hex = color
             else:
-                self._rgb = BrandColors[color]._rgb  # todo exception handling for better message
+                self.value = BrandColors[color].value  # todo exception handling for better message
         else:
             raise TypeError
 
@@ -53,30 +55,46 @@ class Color:
 
     # Properties and setter methods
 
+    def _get_byte(self, n):
+        return (self.value >> (8 * n)) & 255
+
+    @property
+    def r(self) -> int:
+        return self._get_byte(0)
+
+    @property
+    def g(self) -> int:
+        return self._get_byte(1)
+
+    @property
+    def b(self) -> int:
+        return self._get_byte(2)
+
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        return self._rgb
+        return self._get_byte(0), self._get_byte(1), self._get_byte(2)
 
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
         # noinspection PyTypeChecker
-        return tuple(v/255 for v in self._rgb)
-    
+        return tuple(v / 255 for v in self.rgb)
+
     @rgb.setter
     def rgb(self, value: Tuple[int, int, int]):
         # noinspection PyTypeChecker
-        self._rgb = tuple(self.clamp(v) for v in value)
+        r, g, b = (self.clamp(v) for v in value)
+        self.value = (r << 16) + (g << 8) + b
 
     @property
     def hex(self) -> str:
-        r, g, b = self._rgb
+        r, g, b = self.rgb
         return f"#{r:02x}{g:02x}{b:02x}"
 
     @hex.setter
     def hex(self, value: str):
-        value = value.lstrip('#')
+        value = value.lstrip("#")
         # split hex into 3 parts of 2 digits and convert each to int from base-16 number
-        self.rgb = tuple(int(value[i:i+2], 16) for i in (0, 2, 4))
+        self.rgb = tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
 
     @property
     def hsv(self) -> Tuple[float, float, float]:
@@ -84,7 +102,7 @@ class Color:
 
     @hsv.setter
     def hsv(self, value):
-        self.rgb = tuple(round(v*255) for v in colorsys.hsv_to_rgb(*value))
+        self.rgb = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(*value))
 
 
 # maybe should be just a dict but not sure
