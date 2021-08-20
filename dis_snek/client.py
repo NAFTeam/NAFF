@@ -35,7 +35,7 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
-from dis_snek.models.enums import ComponentType, Intents, InteractionType
+from dis_snek.models.enums import ComponentType, Intents, CommandType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
 
@@ -530,7 +530,7 @@ class Snake:
     def context_menu(
         self,
         name: str,
-        context_type: InteractionType,
+        context_type: CommandType,
         scope: Snowflake_Type,
         default_permission: bool = True,
         permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,

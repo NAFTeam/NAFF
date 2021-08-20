@@ -28,7 +28,7 @@ import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.user import BaseUser
-from dis_snek.models.enums import InteractionType
+from dis_snek.models.enums import CommandType
 from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -119,7 +119,7 @@ class ContextMenu:
     """
 
     name: str = attr.ib()
-    type: InteractionType = attr.ib()
+    type: CommandType = attr.ib()
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
@@ -134,8 +134,8 @@ class ContextMenu:
 
     @type.validator
     def _type_validator(self, attribute: str, value: int):
-        if not isinstance(value, InteractionType):
-            if value not in InteractionType.__members__.values():
+        if not isinstance(value, CommandType):
+            if value not in CommandType.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
 
     def to_dict(self) -> dict:

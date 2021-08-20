@@ -317,9 +317,9 @@ class ComponentType(IntEnum):
     SELECT = 3
 
 
-class InteractionType(IntEnum):
+class CommandType(IntEnum):
     """
-    The interactions supported by discord
+    The interaction commands supported by discord
     """
 
     CHAT_INPUT = 1
