@@ -174,7 +174,7 @@ class SlashCommandOption:
 
         :return: dict
         """
-        return attr.asdict(self, filter=lambda key, value: value)
+        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
 
 @attr.s(slots=True)
