@@ -327,6 +327,16 @@ class CommandType(IntEnum):
     MESSAGE = 3
 
 
+class InteractionType(IntEnum):
+    """
+    The type of interaction received by discord
+    """
+
+    PING = 1
+    APPLICATION_COMMAND = 2
+    MESSAGE_COMPONENT = 3
+
+
 class ButtonStyle(IntEnum):
     """
     The styles of buttons supported

@@ -35,7 +35,7 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
-from dis_snek.models.enums import ComponentType, Intents, CommandType
+from dis_snek.models.enums import ComponentType, Intents, CommandType, InteractionType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
 
@@ -315,7 +315,7 @@ class Snake:
         :param interaction: Is this an interaction or not?
         :return: A context object
         """
-        cls = InteractionContext if data["type"] == 1 else ComponentContext
+        cls = ComponentContext if data["type"] == InteractionType.MESSAGE_COMPONENT else InteractionContext
 
         if interaction:
             cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
@@ -367,7 +367,7 @@ class Snake:
         """
         # Yes this is temporary, im just blocking out the basic logic
 
-        if interaction_data["type"] in (1, 2):
+        if interaction_data["type"] in (InteractionType.PING, InteractionType.APPLICATION_COMMAND):
             # Slash Commands
             interaction_id = interaction_data["data"]["id"]
             name = interaction_data["data"]["name"]
@@ -390,7 +390,7 @@ class Snake:
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
-        elif interaction_data["type"] == 3:
+        elif interaction_data["type"] == InteractionType.MESSAGE_COMPONENT:
             # Buttons, Selects, ContextMenu::Message
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
