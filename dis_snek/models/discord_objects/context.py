@@ -89,7 +89,7 @@ class InteractionContext(Context):
             "content": content,
             "tts": tts,
             "embeds": [e.to_dict() for e in embeds] if embeds else [],
-            "allowed_mentions": {},
+            "allowed_mentions": allowed_mentions,
             "components": process_components(components) if components else [],
         }
 
@@ -171,13 +171,14 @@ class ComponentContext(InteractionContext):
         :param components: List of interaction components
         """
 
-        message: Dict[str, Any] = {}
+        message: Dict[str, Any] = {"tts": tts}
 
         if content:
             message["content"] = str(content)
 
         if components:
             message["components"] = process_components(components)
+
         if embeds:
             message["embeds"] = embeds
 
