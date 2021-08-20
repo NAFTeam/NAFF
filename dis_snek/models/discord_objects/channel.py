@@ -1,8 +1,20 @@
-from typing import TYPE_CHECKING, Any, List, Dict, Optional, Union, Awaitable, AsyncIterator
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Dict,
+    List,
+    Optional,
+    Union,
+)
 
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.mixins.send import SendMixin
+from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -11,8 +23,8 @@ from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.user import User
     from dis_snek.models.discord_objects.message import Message
+    from dis_snek.models.discord_objects.user import User
 
 
 @attr.s(slots=True, kw_only=True)
@@ -62,7 +74,7 @@ class _GuildMixin:
 
 
 @attr.s(slots=True, kw_only=True)
-class TextChannel(BaseChannel):
+class TextChannel(BaseChannel, SendMixin):
     rate_limit_per_user: int = attr.ib(default=0)
     last_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
     default_auto_archive_duration: int = attr.ib(default=60)
@@ -72,6 +84,9 @@ class TextChannel(BaseChannel):
         message_id = to_snowflake(message_id)
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
+
+    def _send_http_method(self) -> Any:
+        return self._client.http.create_message
 
 
 @attr.s(slots=True, kw_only=True)

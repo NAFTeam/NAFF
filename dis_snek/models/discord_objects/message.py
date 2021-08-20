@@ -1,14 +1,19 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.mixins.edit import EditMixin
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
-from dis_snek.models.discord_objects.components import ComponentType
+from dis_snek.models.discord_objects.components import (
+    ActionRow,
+    ComponentType,
+    process_components,
+)
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.discord_objects.interactions import InteractionType
@@ -63,7 +68,7 @@ class MessageReference:  # todo refactor into actual class, add pointers to actu
 
 
 @attr.s(slots=True, kw_only=True)
-class Message(Snowflake, DictSerializationMixin):
+class Message(Snowflake, DictSerializationMixin, EditMixin):
     _client: Any = attr.ib(repr=False)
     channel_id: Snowflake_Type = attr.ib()
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
@@ -153,7 +158,7 @@ class Message(Snowflake, DictSerializationMixin):
 
     async def delete(self, delay: int = None):
         """
-        Deletes a message.
+        Delete message.
 
         :param delay: Seconds to wait before deleting message
         """
@@ -168,3 +173,14 @@ class Message(Snowflake, DictSerializationMixin):
 
             asyncio.ensure_future(delayed_delete(), self._client.loop)
         await self._client.http.delete_message(self.channel_id, self.id)
+
+    async def pin(self):
+        """Pin message"""
+        await self._client.http.pin_message(self.channel_id, self.id)
+
+    async def unpin(self):
+        """Unpin message"""
+        await self._client.http.unpin_message(self.channel_id, self.id)
+
+    def _edit_http_method(self) -> Any:
+        return self._client.http.edit_message
