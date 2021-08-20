@@ -1,6 +1,6 @@
-import re
-import enum
 import colorsys
+import enum
+import re
 from typing import Tuple
 
 import attr

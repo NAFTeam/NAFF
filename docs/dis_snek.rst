@@ -10,6 +10,7 @@ Subpackages
    dis_snek.http_requests
    dis_snek.models
    dis_snek.utils
+   dis_snek.mixins
 
 
 dis\_snek.client module

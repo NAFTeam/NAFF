@@ -28,10 +28,10 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     ContextMenu,
     OptionType,
+    Permission,
     SlashCommand,
     SlashCommandChoice,
     SlashCommandOption,
-    Permission,
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User

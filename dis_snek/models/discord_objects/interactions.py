@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-from dis_snek.models.discord_objects.role import Role
 import re
 from enum import IntEnum
 from typing import Callable, Coroutine, Dict, List, Union
@@ -27,6 +26,7 @@ from typing import Callable, Coroutine, Dict, List, Union
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
+from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import InteractionType
 from dis_snek.models.snowflake import Snowflake_Type

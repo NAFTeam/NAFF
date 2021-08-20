@@ -1,5 +1,6 @@
-from typing import Optional, Union, TYPE_CHECKING
 from os import PathLike
+from typing import TYPE_CHECKING, Optional, Union
+
 import attr
 
 if TYPE_CHECKING:

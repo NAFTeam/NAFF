@@ -1,11 +1,12 @@
 import time
-from inspect import isawaitable
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
+from inspect import isawaitable
 from typing import Any, Callable, List, Union
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 
 import attr
+
+from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 
 
 @attr.s(slots=True)

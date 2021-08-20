@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Any, Awaitable, List, Optional, Union
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.models.color import Color
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.models.color import Color
 from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
 from dis_snek.utils.cache import CacheProxy
 

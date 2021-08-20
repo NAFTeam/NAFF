@@ -97,14 +97,6 @@ dis\_snek.models.discord\_objects.role module
    :undoc-members:
    :show-inheritance:
 
-dis\_snek.models.discord\_objects.send\_mixin module
-----------------------------------------------------
-
-.. automodule:: dis_snek.models.discord_objects.send_mixin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dis\_snek.models.discord\_objects.sticker module
 ------------------------------------------------
 
