@@ -58,9 +58,9 @@ class InteractionContext(Context):
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
 
-        payload = {"type": 5}
+        payload = {"type": CallbackType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE}
         if ephemeral:
-            payload["data"] = {"flags": 64}
+            payload["data"] = {"flags": MessageFlags.EPHEMERAL}
 
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
         self.ephemeral = ephemeral
