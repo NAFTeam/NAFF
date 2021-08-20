@@ -206,7 +206,7 @@ class Select(BaseComponent):
         self._type: Union[ComponentType, int] = ComponentType.SELECT
         self.custom_id: str = custom_id
         self.options: List[dict, SelectOption] = options
-        self.placeholder: Optional = placeholder
+        self.placeholder: Optional[str] = placeholder
         self.max_values: Optional[int] = min_values
         self.min_values: Optional[int] = max_values
         self.disabled: bool = disabled
