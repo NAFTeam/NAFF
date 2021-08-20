@@ -28,11 +28,11 @@ import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.user import BaseUser
-from dis_snek.models.enums import CommandType
+from dis_snek.models.enums import CommandTypes
 from dis_snek.models.snowflake import Snowflake_Type
 
 
-class OptionType(IntEnum):
+class OptionTypes(IntEnum):
     """Option types supported by slash commands."""
 
     SUB_COMMAND = 1
@@ -69,7 +69,7 @@ class OptionType(IntEnum):
             return cls.NUMBER
 
 
-class PermissionType(IntEnum):
+class PermissionTypes(IntEnum):
 
     ROLE = 1
     USER = 2
@@ -82,7 +82,7 @@ class PermissionType(IntEnum):
             return cls.USER
 
 
-class CallbackType(IntEnum):
+class CallbackTypes(IntEnum):
     """Types of callback supported by interaction response."""
 
     PONG = 1
@@ -96,7 +96,7 @@ class CallbackType(IntEnum):
 class Permission:
 
     id: Snowflake_Type = attr.ib()
-    type: Union[PermissionType, int] = attr.ib()
+    type: Union[PermissionTypes, int] = attr.ib()
     permission: bool = attr.ib()
 
     def to_dict(self) -> dict:
@@ -119,7 +119,7 @@ class ContextMenu:
     """
 
     name: str = attr.ib()
-    type: CommandType = attr.ib()
+    type: CommandTypes = attr.ib()
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
@@ -134,8 +134,8 @@ class ContextMenu:
 
     @type.validator
     def _type_validator(self, attribute: str, value: int):
-        if not isinstance(value, CommandType):
-            if value not in CommandType.__members__.values():
+        if not isinstance(value, CommandTypes):
+            if value not in CommandTypes.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
 
     def to_dict(self) -> dict:
@@ -188,7 +188,7 @@ class SlashCommandOption:
     """
 
     name: str = attr.ib()
-    type: Union[OptionType, int] = attr.ib()
+    type: Union[OptionTypes, int] = attr.ib()
     description: str = attr.ib(default="No Description Set")
     required: bool = attr.ib(default=True)
     choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)

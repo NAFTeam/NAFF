@@ -307,7 +307,7 @@ class ChannelTypes(IntEnum):
         return self.value in {2, 13}
 
 
-class ComponentType(IntEnum):
+class ComponentTypes(IntEnum):
     """
     The types of components supported by discord
     """
@@ -317,7 +317,7 @@ class ComponentType(IntEnum):
     SELECT = 3
 
 
-class CommandType(IntEnum):
+class CommandTypes(IntEnum):
     """
     The interaction commands supported by discord
     """
@@ -327,7 +327,7 @@ class CommandType(IntEnum):
     MESSAGE = 3
 
 
-class InteractionType(IntEnum):
+class InteractionTypes(IntEnum):
     """
     The type of interaction received by discord
     """
@@ -337,7 +337,7 @@ class InteractionType(IntEnum):
     MESSAGE_COMPONENT = 3
 
 
-class ButtonStyle(IntEnum):
+class ButtonStyles(IntEnum):
     """
     The styles of buttons supported
     """

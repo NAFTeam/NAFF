@@ -3,7 +3,7 @@ import uuid
 from typing import Any, List, Optional, Union
 
 from dis_snek.const import logger_name
-from dis_snek.models.enums import ButtonStyle, ComponentType
+from dis_snek.models.enums import ButtonStyles, ComponentTypes
 
 log = logging.getLogger(logger_name)
 
@@ -86,15 +86,15 @@ class Button(BaseComponent):
 
     def __init__(
         self,
-        style: Union[ButtonStyle, int],
+        style: Union[ButtonStyles, int],
         label: str = None,
         emoji: Union[dict] = None,
         custom_id: str = None,
         url: str = None,
         disabled: bool = False,
     ):
-        self._type: Union[ComponentType, int] = ComponentType.BUTTON
-        self.style: Union[ButtonStyle, int] = style
+        self._type: Union[ComponentTypes, int] = ComponentTypes.BUTTON
+        self.style: Union[ButtonStyles, int] = style
         self.label: Optional[str] = label
         self.emoji: Optional[dict] = emoji
         self.custom_id: str = custom_id
@@ -104,7 +104,7 @@ class Button(BaseComponent):
     def _checks(self):
         super()._checks()
 
-        if self.style == ButtonStyle.URL:
+        if self.style == ButtonStyles.URL:
             if self.custom_id:
                 raise TypeError("A link button cannot have a `custom_id`!")
             if not self.url:
@@ -126,7 +126,7 @@ class Button(BaseComponent):
             to_return["label"] = self.label
         if self.emoji:
             to_return["emoji"] = self.emoji
-        if self.style == ButtonStyle.URL:
+        if self.style == ButtonStyles.URL:
             to_return["url"] = self.url
         else:
             to_return["custom_id"] = self.custom_id or str(uuid.uuid4())
@@ -203,7 +203,7 @@ class Select(BaseComponent):
         max_values: int = None,
         disabled: bool = False,
     ):
-        self._type: Union[ComponentType, int] = ComponentType.SELECT
+        self._type: Union[ComponentTypes, int] = ComponentTypes.SELECT
         self.custom_id: str = custom_id
         self.options: List[dict, SelectOption] = options
         self.placeholder: Optional[str] = placeholder
@@ -260,7 +260,7 @@ class ActionRow:
     __slots__ = "_type", "_components", "max_items"
 
     def __init__(self, *components: Union[dict, Select, Button]):
-        self._type = ComponentType.ACTION_ROW
+        self._type = ComponentTypes.ACTION_ROW
 
         self._components = []
 
@@ -276,7 +276,7 @@ class ActionRow:
         if len(self.components) == 0 or len(self.components) > 5:
             raise TypeError("Number of components in one row should be between 1 and 5.")
 
-        if any(x.type == ComponentType.SELECT for x in self._components) and len(self._components) != 1:
+        if any(x.type == ComponentTypes.SELECT for x in self._components) and len(self._components) != 1:
             raise TypeError("Action row must have only one select component and nothing else")
 
     def append_checks(self, component):
@@ -286,7 +286,7 @@ class ActionRow:
         def check_single_component(_comp):
             if isinstance(_comp, dict):
                 # convert dict into object
-                if _comp["type"] == ComponentType.BUTTON:
+                if _comp["type"] == ComponentTypes.BUTTON:
                     _comp = Button(
                         style=_comp.get("style"),
                         label=_comp.get("label"),
@@ -295,7 +295,7 @@ class ActionRow:
                         url=_comp.get("url"),
                         disabled=_comp.get("disabled", False),
                     )
-                elif _comp["type"] == ComponentType.SELECT:
+                elif _comp["type"] == ComponentTypes.SELECT:
                     _comp = Select(
                         custom_id=_comp.get("custom_id"),
                         options=_comp.get("options"),
@@ -305,9 +305,9 @@ class ActionRow:
                         disabled=_comp.get("disabled", False),
                     )
 
-            if any(x.type == ComponentType.SELECT for x in self._components):
+            if any(x.type == ComponentTypes.SELECT for x in self._components):
                 raise TypeError("Action row must have only one select component and nothing else")
-            elif _comp.type == ComponentType.SELECT and len(self) != 0:
+            elif _comp.type == ComponentTypes.SELECT and len(self) != 0:
                 raise TypeError("Action row must have only one select component and nothing else")
 
         if len(self) == self.max_items:
@@ -365,13 +365,13 @@ def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
 
     :param component: A component dict
     """
-    if component.get("type") == ComponentType.ACTION_ROW:
+    if component.get("type") == ComponentTypes.ACTION_ROW:
         row = ActionRow()
         for comp in component.get("components"):
             row.append(convert_dict(comp))
         return row
 
-    elif component.get("type") == ComponentType.BUTTON:
+    elif component.get("type") == ComponentTypes.BUTTON:
         return Button(
             label=component.get("label"),
             custom_id=component.get("custom_id"),
@@ -380,7 +380,7 @@ def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
             emoji=component.get("emoji"),
         )
 
-    elif component.get("type") == ComponentType.SELECT:
+    elif component.get("type") == ComponentTypes.SELECT:
         return Select(
             options=component.get("options"),
             custom_id=component.get("custom_id"),

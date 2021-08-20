@@ -27,7 +27,7 @@ from dis_snek.models.discord_objects.context import (
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     ContextMenu,
-    OptionType,
+    OptionTypes,
     SlashCommand,
     SlashCommandChoice,
     SlashCommandOption,
@@ -35,7 +35,7 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
-from dis_snek.models.enums import ComponentType, Intents, CommandType, InteractionType
+from dis_snek.models.enums import ComponentTypes, Intents, CommandTypes, InteractionTypes
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
 
@@ -315,7 +315,7 @@ class Snake:
         :param interaction: Is this an interaction or not?
         :return: A context object
         """
-        cls = ComponentContext if data["type"] == InteractionType.MESSAGE_COMPONENT else InteractionContext
+        cls = ComponentContext if data["type"] == InteractionTypes.MESSAGE_COMPONENT else InteractionContext
 
         if interaction:
             cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
@@ -367,7 +367,7 @@ class Snake:
         """
         # Yes this is temporary, im just blocking out the basic logic
 
-        if interaction_data["type"] in (InteractionType.PING, InteractionType.APPLICATION_COMMAND):
+        if interaction_data["type"] in (InteractionTypes.PING, InteractionTypes.APPLICATION_COMMAND):
             # Slash Commands
             interaction_id = interaction_data["data"]["id"]
             name = interaction_data["data"]["name"]
@@ -390,14 +390,14 @@ class Snake:
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
-        elif interaction_data["type"] == InteractionType.MESSAGE_COMPONENT:
+        elif interaction_data["type"] == InteractionTypes.MESSAGE_COMPONENT:
             # Buttons, Selects, ContextMenu::Message
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            if component_type == ComponentType.BUTTON:
+            if component_type == ComponentTypes.BUTTON:
                 self.dispatch("button", ctx)
-            if component_type == ComponentType.SELECT:
+            if component_type == ComponentTypes.SELECT:
                 self.dispatch("select", ctx)
             self.dispatch("component", ctx)
 
@@ -530,7 +530,7 @@ class Snake:
     def context_menu(
         self,
         name: str,
-        context_type: CommandType,
+        context_type: CommandTypes,
         scope: Snowflake_Type,
         default_permission: bool = True,
         permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
@@ -572,7 +572,7 @@ class Snake:
         self,
         name: str,
         description: str,
-        opt_type: Union[OptionType, int],
+        opt_type: Union[OptionTypes, int],
         required: bool = False,
         choices: List[Union[SlashCommandChoice, dict]] = None,
     ):

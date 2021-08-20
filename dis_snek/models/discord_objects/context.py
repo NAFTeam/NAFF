@@ -1,5 +1,5 @@
 from dis_snek.models.enums import MessageFlags
-from dis_snek.models.discord_objects.interactions import CallbackType
+from dis_snek.models.discord_objects.interactions import CallbackTypes
 from typing import Any, Dict, List, Union
 
 import attr
@@ -58,7 +58,7 @@ class InteractionContext(Context):
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
 
-        payload = {"type": CallbackType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE}
+        payload = {"type": CallbackTypes.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE}
         if ephemeral:
             payload["data"] = {"flags": MessageFlags.EPHEMERAL}
 
@@ -101,7 +101,7 @@ class InteractionContext(Context):
                 await self._client.http.edit(message, self._client.user.id, self._token)
                 self.deferred = False
             else:
-                payload = {"type": CallbackType.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
+                payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
             self.responded = True
         else:
@@ -140,9 +140,9 @@ class ComponentContext(InteractionContext):
             raise Exception("You have already responded to this interaction!")
 
         payload = {
-            "type": CallbackType.DEFERRED_UPDATE_MESSAGE
+            "type": CallbackTypes.DEFERRED_UPDATE_MESSAGE
             if edit_origin
-            else CallbackType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+            else CallbackTypes.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
         }
 
         if ephemeral:
@@ -187,5 +187,5 @@ class ComponentContext(InteractionContext):
             self.deferred = False
             self.defer_edit_origin = False
         else:
-            payload = {"type": CallbackType.UPDATE_MESSAGE, "data": message}
+            payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)

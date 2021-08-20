@@ -11,12 +11,12 @@ from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
 from dis_snek.models.discord_objects.components import (
     ActionRow,
-    ComponentType,
+    ComponentTypes,
     process_components,
 )
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji
-from dis_snek.models.discord_objects.interactions import CommandType
+from dis_snek.models.discord_objects.interactions import CommandTypes
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -94,9 +94,9 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
     message_reference: Optional[MessageReference] = attr.ib(default=None)
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
     referenced_message: Optional["Message"] = attr.ib(default=None)
-    interaction: Optional[CommandType] = attr.ib(default=None)
+    interaction: Optional[CommandTypes] = attr.ib(default=None)
     thread: Optional[Thread] = attr.ib(default=None)  # TODO: Validation
-    components: Optional[List[ComponentType]] = attr.ib(default=None)
+    components: Optional[List[ComponentTypes]] = attr.ib(default=None)
     sticker_items: Optional[List[Sticker]] = attr.ib(default=None)  # TODO: StickerItem -> Sticker
 
     # @classmethod
