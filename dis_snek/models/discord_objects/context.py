@@ -1,3 +1,4 @@
+from dis_snek.models.discord_objects.interactions import CallbackDataFlag, CallbackType
 from typing import Any, Dict, List, Union
 
 import attr
@@ -92,14 +93,14 @@ class InteractionContext(Context):
         }
 
         if ephemeral or (self.ephemeral and self.deferred):
-            message["flags"] = 64
+            message["flags"] = CallbackDataFlag.EPHEMERAL
 
         if not self.responded:
             if self.deferred:
                 await self._client.http.edit(message, self._client.user.id, self._token)
                 self.deferred = False
             else:
-                payload = {"type": 4, "data": message}
+                payload = {"type": CallbackType.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
             self.responded = True
         else:
@@ -137,12 +138,16 @@ class ComponentContext(InteractionContext):
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
 
-        payload = {"type": 6 if edit_origin else 5}
+        payload = {
+            "type": CallbackType.DEFERRED_UPDATE_MESSAGE
+            if edit_origin
+            else CallbackType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+        }
 
         if ephemeral:
             if edit_origin:
                 raise ValueError("`edit_origin` and `ephemeral` are mutually exclusive")
-            payload["data"] = {"flags": 64}
+            payload["data"] = {"flags": CallbackDataFlag.EPHEMERAL}
 
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
         self.deferred = True
@@ -180,5 +185,5 @@ class ComponentContext(InteractionContext):
             self.deferred = False
             self.defer_edit_origin = False
         else:
-            payload = {"type": 7, "data": message}
+            payload = {"type": CallbackType.UPDATE_MESSAGE, "data": message}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
