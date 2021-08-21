@@ -58,11 +58,37 @@ class InteractionRequests:
 
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), json=payload)
 
-    async def edit(self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"):
+    async def edit_message(
+        self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"
+    ) -> dict:
+        """
+        Edits an existing interaction message.
+
+        :param payload: The payload to send.
+        :param application_id: The id of the application.
+        :param token: The token of the interaction.
+        :param message_id: The target message to edit. Defaults to @original which represents the initial response message.
+
+        :return: The edited message data.
+        """
 
         return await self.request(
             Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), json=payload
         )
+
+    async def get_message(self, application_id: str, token: str, message_id: str = "@original") -> dict:
+        """
+        Gets an existing interaction message.
+
+        :param payload: The payload to send.
+        :param application_id: The id of the application.
+        :param token: The token of the interaction.
+        :param message_id: The target message to get. Defaults to @original which represents the initial response message.
+
+        :return: The message data.
+        """
+
+        return await self.request(Route("GET", f"/webhooks/{application_id}/{token}/messages/{message_id}"))
 
     async def edit_application_command_permissions(
         self, application_id: Snowflake_Type, scope: Snowflake_Type, cmd_id: Snowflake_Type, permissions: List[dict]

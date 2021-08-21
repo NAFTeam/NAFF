@@ -150,6 +150,7 @@ class BaseInteractionCommand:
 
         return data
 
+
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class ContextMenu(BaseInteractionCommand):
     """

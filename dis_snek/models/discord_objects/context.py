@@ -74,7 +74,7 @@ class InteractionContext(Context):
         allowed_mentions: dict = None,
         ephemeral: bool = False,
         components: List[Union[Dict, ActionRow]] = None,
-    ):
+    ) -> Message:
         """
         Sends a message response to the context.
 
@@ -84,6 +84,8 @@ class InteractionContext(Context):
         :param tts: Should this response use tts
         :param ephemeral: Should the response be ephemeral
         :param components: List of interaction components
+
+        :return: The message after it was sent.
         """
         message = {
             "content": content,
@@ -96,16 +98,21 @@ class InteractionContext(Context):
         if ephemeral or (self.ephemeral and self.deferred):
             message["flags"] = MessageFlags.EPHEMERAL
 
+        message_data = None
         if not self.responded:
             if self.deferred:
-                await self._client.http.edit(message, self._client.user.id, self._token)
+                message_data = await self._client.http.edit_message(message, self._client.user.id, self._token)
                 self.deferred = False
             else:
                 payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+                message_data = await self._client.http.get_message(self._client.user.id, self._token)
             self.responded = True
         else:
-            await self._client.http.post_followup(message, self._client.user.id, self._token)
+            message_data = await self._client.http.post_followup(message, self._client.user.id, self._token)
+
+        self.message = Message.from_dict(message_data, self._client) if message_data else None
+        return self.message
 
 
 @attr.s
@@ -161,7 +168,7 @@ class ComponentContext(InteractionContext):
         embeds: List[Embed] = None,
         tts: bool = False,
         components: List[Union[Dict, ActionRow]] = None,
-    ):
+    ) -> Message:
         """
         Edits the original message of the component.
 
@@ -169,6 +176,8 @@ class ComponentContext(InteractionContext):
         :param embeds: List of embeds to send
         :param tts: Should this response use tts
         :param components: List of interaction components
+
+        :return: The message after it was edited.
         """
 
         message: Dict[str, Any] = {"tts": tts}
@@ -182,10 +191,15 @@ class ComponentContext(InteractionContext):
         if embeds:
             message["embeds"] = embeds
 
+        message_data = None
         if self.deferred:
-            await self._client.http.edit(message, self._client.user.id, self._token)
+            message_data = await self._client.http.edit(message, self._client.user.id, self._token)
             self.deferred = False
             self.defer_edit_origin = False
         else:
             payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+            message_data = await self._client.http.get_message(self._client.user.id, self._token)
+
+        self.message = Message.from_dict(message_data, self._client) if message_data else None
+        return self.message
