@@ -116,13 +116,11 @@ class Permission:
         return attr.asdict(self)
 
 
-@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class ContextMenu:
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class BaseInteractionCommand:
     """
-    Represents a discord context menu.
+    Represents a discord abstract interaction command.
 
-    :param name: The name of this entry.
-    :param type: The type of entry (user or message).
     :param scope: Denotes whether its global or for specific guild.
     :param default_permission: Is this command available to all users?
     :param permissions: Map of guild id and its respective list of permissions to apply.
@@ -130,25 +128,12 @@ class ContextMenu:
     :param call: The coroutine to call when this interaction is received.
     """
 
-    name: str = attr.ib()
-    type: CommandTypes = attr.ib()
     scope: Snowflake_Type = attr.ib(default="global", converter=str)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
 
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
-
-    @name.validator
-    def _name_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= 32:
-            raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
-
-    @type.validator
-    def _type_validator(self, attribute: str, value: int):
-        if not isinstance(value, CommandTypes):
-            if value not in CommandTypes.__members__.values():
-                raise ValueError("Context Menu type not recognised, please consult the docs.")
 
     def to_dict(self) -> dict:
         """
@@ -164,6 +149,29 @@ class ContextMenu:
         data.pop("cmd_id", None)
 
         return data
+
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class ContextMenu(BaseInteractionCommand):
+    """
+    Represents a discord context menu.
+
+    :param name: The name of this entry.
+    :param type: The type of entry (user or message).
+    """
+
+    name: str = attr.ib()
+    type: CommandTypes = attr.ib()
+
+    @name.validator
+    def _name_validator(self, attribute: str, value: str) -> None:
+        if not 1 <= len(value) <= 32:
+            raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
+
+    @type.validator
+    def _type_validator(self, attribute: str, value: int):
+        if not isinstance(value, CommandTypes):
+            if value not in CommandTypes.__members__.values():
+                raise ValueError("Context Menu type not recognised, please consult the docs.")
 
 
 @attr.s(slots=True)
@@ -224,30 +232,19 @@ class SlashCommandOption:
         return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
 
-@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SlashCommand:
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class SlashCommand(BaseInteractionCommand):
     """
     Represents a discord slash command.
 
     :param name: The name of this command.
     :param description: The description of this command.
-    :param scope: Denotes whether its global or for specific guild.
-    :param options: A list of options for this command
-    :param default_permission: Is this command available to all users?
-    :param permissions: Map of guild id and its respective list of permissions to apply.
-    :param cmd_id: The id of this command given by discord.
-    :param call: The coroutine to call when this interaction is received.
+    :param options: A list of options for this command.
     """
 
     name: str = attr.ib()
     description: str = attr.ib(default="No Description Set")
-    scope: Snowflake_Type = attr.ib(default="global", converter=str)
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
-    default_permission: bool = attr.ib(default=True)
-    permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
-
-    cmd_id: Snowflake_Type = attr.ib(default=None)
-    call: Callable[..., Coroutine] = attr.ib(default=None)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -269,23 +266,3 @@ class SlashCommand:
                     raise ValueError("Slash commands can only hold 25 options")
             else:
                 raise TypeError("Options attribute must be either None or a list of options")
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
-        self._name_validator("name", self.name)
-        self._description_validator("description", self.description)
-        self._options_validator("options", self.options)
-
-        # Don't convert None or empty data structures
-        data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
-
-        # remove internal data from dictionary
-        data.pop("scope", None)
-        data.pop("call", None)
-        data.pop("cmd_id", None)
-
-        return data

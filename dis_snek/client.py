@@ -513,9 +513,9 @@ class Snake:
                     perm = func.permissions
 
             cmd = SlashCommand(
-                name,
-                description,
-                scope,
+                name=name,
+                description=description,
+                scope=scope,
                 call=func,
                 options=opt,
                 default_permission=default_permission,
