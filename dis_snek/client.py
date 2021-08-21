@@ -617,10 +617,8 @@ class Snake:
                 func.permissions = {}
 
             if guild_id not in func.permissions:
-                func.permissions[guild_id] = permissions
-            else:
-                func.permissions[guild_id] += permissions
-
+                func.permissions[guild_id] = []
+            func.permissions[guild_id] += permissions
             return func
 
         return wrapper
