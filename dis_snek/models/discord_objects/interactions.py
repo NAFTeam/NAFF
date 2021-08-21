@@ -70,6 +70,7 @@ class OptionTypes(IntEnum):
 
 
 class PermissionTypes(IntEnum):
+    """Types of target supported by the interaction permission."""
 
     ROLE = 1
     USER = 2
@@ -94,6 +95,13 @@ class CallbackTypes(IntEnum):
 
 @attr.s(slots=True)
 class Permission:
+    """
+    Represents a interaction permission.
+
+    :param id: The id of the role or user.
+    :param type: The type of id (user or role)
+    :permission: The state of permission. ``True`` to allow, ``False``, to disallow.
+    """
 
     id: Snowflake_Type = attr.ib()
     type: Union[PermissionTypes, int] = attr.ib()
@@ -113,9 +121,13 @@ class ContextMenu:
     """
     Represents a discord context menu.
 
-    :param name: The name of this entry
-    :param type: The type of entry (user or message)
-    :param call: The coroutine to call when this interaction is received
+    :param name: The name of this entry.
+    :param type: The type of entry (user or message).
+    :param scope: Denotes whether its global or for specific guild.
+    :param default_permission: Is this command available to all users?
+    :param permissions: Map of guild id and its respective list of permissions to apply.
+    :param cmd_id: The id of this command given by discord.
+    :param call: The coroutine to call when this interaction is received.
     """
 
     name: str = attr.ib()
@@ -217,10 +229,14 @@ class SlashCommand:
     """
     Represents a discord slash command.
 
-    :param name: The name of this command
-    :param description: The description of this command
+    :param name: The name of this command.
+    :param description: The description of this command.
+    :param scope: Denotes whether its global or for specific guild.
     :param options: A list of options for this command
     :param default_permission: Is this command available to all users?
+    :param permissions: Map of guild id and its respective list of permissions to apply.
+    :param cmd_id: The id of this command given by discord.
+    :param call: The coroutine to call when this interaction is received.
     """
 
     name: str = attr.ib()
@@ -229,6 +245,7 @@ class SlashCommand:
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
+
     cmd_id: Snowflake_Type = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
 

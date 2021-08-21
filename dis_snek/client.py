@@ -589,6 +589,7 @@ class Snake:
         def wrapper(func):
             if hasattr(func, "cmd_id"):
                 raise Exception("slash_option decorators must be positioned under a slash_command decorator")
+
             option = SlashCommandOption(
                 name=name, type=opt_type, description=description, required=required, choices=choices if choices else []
             )
@@ -601,6 +602,13 @@ class Snake:
         return wrapper
 
     def slash_permission(self, guild_id: Snowflake_Type, permissions: List[Union[Permission, Dict]]):
+        """
+        Decorator to add permissions for a guild to your slash command or context menu.
+
+        :param guild_id: The target guild to apply the permissions.
+        :param permissions: A list of interaction permission rights.
+        """
+
         def wrapper(func):
             if hasattr(func, "cmd_id"):
                 raise Exception("slash_option decorators must be positioned under a slash_command decorator")
@@ -609,10 +617,8 @@ class Snake:
                 func.permissions = {}
 
             if guild_id not in func.permissions:
-                func.permissions[guild_id] = permissions
-            else:
-                func.permissions[guild_id] += permissions
-
+                func.permissions[guild_id] = []
+            func.permissions[guild_id] += permissions
             return func
 
         return wrapper
