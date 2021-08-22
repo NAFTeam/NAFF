@@ -162,7 +162,7 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
 
         :param delay: Seconds to wait before deleting message
         """
-        if delay is not None:
+        if delay is not None and delay > 0:
 
             async def delayed_delete():
                 await asyncio.sleep(delay)
@@ -171,8 +171,10 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
                 except Exception:
                     pass  # No real way to handle this
 
-            asyncio.ensure_future(delayed_delete(), self._client.loop)
-        await self._client.http.delete_message(self.channel_id, self.id)
+            asyncio.ensure_future(delayed_delete())
+        
+        else:
+            await self._client.http.delete_message(self.channel_id, self.id)
 
     async def pin(self):
         """Pin message"""
