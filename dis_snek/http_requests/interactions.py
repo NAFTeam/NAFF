@@ -58,7 +58,7 @@ class InteractionRequests:
 
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), json=payload)
 
-    async def edit_message(
+    async def edit_interaction_message(
         self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"
     ) -> dict:
         """

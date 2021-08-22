@@ -24,6 +24,7 @@ class BaseComponent:
         self._checks()
         return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
+
 class InteractiveComponent(BaseComponent):
     """
     A base interactive component class. This should never be instantiated.

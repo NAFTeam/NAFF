@@ -43,28 +43,16 @@ class MessageRequests:
 
     async def edit_message(
         self,
+        payload: dict,
         channel_id: Snowflake_Type,
         message_id: Snowflake_Type,
-        content: Optional[str],
-        embeds: Optional[List[Dict]] = None,
-        components: Optional[List[dict]] = None,
     ) -> dict:
         """Edit an existing message
 
-        :param channel_id: Channel of message to edit
-        :param message_id: Message to edit
-        :param content: Content of the edit
-        :param embeds: Message embeds
-        :param components: Message components
+        :param payload:
+        :param channel_id: Channel of message to edit.
+        :param message_id: Message to edit.
+
         :return: Message object of edited message
         """
-        # TODO: Add support for attachments, file, flags, allowed_mentions
-        payload: Dict[str, Any] = {}
-
-        if content:
-            payload["content"] = content
-        if embeds:
-            payload["embeds"] = embeds
-        if components:
-            payload["components"] = components
         return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), json=payload)

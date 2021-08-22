@@ -184,5 +184,5 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
         """Unpin message"""
         await self._client.http.unpin_message(self.channel_id, self.id)
 
-    def _edit_http_method(self) -> Any:
-        return self._client.http.edit_message
+    def _edit_http_request(self, message) -> Any:
+        return self._client.http.edit_message(message, self.channel_id, self.id)

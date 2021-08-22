@@ -74,7 +74,9 @@ class InteractionContext(Context, SendMixin):
         message_data = None
         if not self.responded:
             if self.deferred:
-                message_data = await self._client.http.edit_message(message, self._client.user.id, self._token)
+                message_data = await self._client.http.edit_interaction_message(
+                    message, self._client.user.id, self._token
+                )
                 self.deferred = False
             else:
                 payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
@@ -166,7 +168,7 @@ class ComponentContext(InteractionContext):
 
         message_data = None
         if self.deferred:
-            message_data = await self._client.http.edit(message, self._client.user.id, self._token)
+            message_data = await self._client.http.edit_interaction_message(message, self._client.user.id, self._token)
             self.deferred = False
             self.defer_edit_origin = False
         else:
