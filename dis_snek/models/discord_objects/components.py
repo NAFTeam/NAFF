@@ -384,12 +384,28 @@ def process_components(
             # list of lists... actionRow-less sending
             return [ActionRow(*row).to_dict for row in components]
 
-        if all(isinstance(c, (Button, Select)) for c in components):
+        if all(isinstance(c, TYPE_SINGLE_COMPONENT) for c in components):
             # list of naked components
             return [ActionRow(*components).to_dict]
 
-        if all(isinstance(c, ActionRow) for c in components):
+        if all(isinstance(c, TYPE_GROUP_COMPONENT) for c in components):
             # we have a list of action rows
             return [action_row.to_dict for action_row in components]
 
     raise ValueError(f"Invalid components: {components}")
+
+
+TYPE_SINGLE_COMPONENT = [
+    Button,
+    Select,
+]
+
+TYPE_GROUP_COMPONENT = [
+    ActionRow
+]
+
+TYPE_COMPONENT_MAPPING = {
+    ComponentTypes.ACTION_ROW: ActionRow,
+    ComponentTypes.BUTTON: Button,
+    ComponentTypes.SELECT: Select,
+}
