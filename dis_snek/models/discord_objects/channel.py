@@ -85,8 +85,8 @@ class TextChannel(BaseChannel, SendMixin):
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
 
-    def _send_http_method(self) -> Any:
-        return self._client.http.create_message
+    async def _send_http_request(self, message) -> "Message":
+        return await self._client.http.create_message(message, self.id)
 
 
 @attr.s(slots=True, kw_only=True)

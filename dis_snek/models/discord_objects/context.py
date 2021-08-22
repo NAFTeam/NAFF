@@ -1,3 +1,4 @@
+from dis_snek.mixins.send import SendMixin
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.discord_objects.interactions import CallbackTypes
 from typing import Any, Dict, List, Union
@@ -29,7 +30,7 @@ class Context:
 
 
 @attr.s
-class InteractionContext(Context):
+class InteractionContext(Context, SendMixin):
     """Represents the context of an interaction"""
 
     _token: str = attr.ib(default=None)
@@ -66,38 +67,7 @@ class InteractionContext(Context):
         self.ephemeral = ephemeral
         self.deferred = True
 
-    async def send(
-        self,
-        content: str = "",
-        embeds: List[Embed] = None,
-        tts: bool = False,
-        allowed_mentions: dict = None,
-        ephemeral: bool = False,
-        components: List[Union[Dict, ActionRow]] = None,
-    ) -> Message:
-        """
-        Sends a message response to the context.
-
-        :param content: Message content
-        :param embed: The embed to send
-        :param embeds: List of embeds to send
-        :param tts: Should this response use tts
-        :param ephemeral: Should the response be ephemeral
-        :param components: List of interaction components
-
-        :return: The message after it was sent.
-        """
-        message = {
-            "content": content,
-            "tts": tts,
-            "embeds": [e.to_dict() for e in embeds] if embeds else [],
-            "allowed_mentions": allowed_mentions,
-            "components": process_components(components) if components else [],
-        }
-
-        if ephemeral or (self.ephemeral and self.deferred):
-            message["flags"] = MessageFlags.EPHEMERAL
-
+    async def _send_http_request(self, message: dict) -> dict:
         message_data = None
         if not self.responded:
             if self.deferred:
@@ -106,13 +76,12 @@ class InteractionContext(Context):
             else:
                 payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
-                message_data = await self._client.http.get_message(self._client.user.id, self._token)
+                message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
             self.responded = True
         else:
             message_data = await self._client.http.post_followup(message, self._client.user.id, self._token)
 
-        self.message = Message.from_dict(message_data, self._client) if message_data else None
-        return self.message
+        return message_data
 
 
 @attr.s
@@ -199,7 +168,7 @@ class ComponentContext(InteractionContext):
         else:
             payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
-            message_data = await self._client.http.get_message(self._client.user.id, self._token)
+            message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
 
         self.message = Message.from_dict(message_data, self._client) if message_data else None
         return self.message

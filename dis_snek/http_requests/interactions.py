@@ -76,7 +76,7 @@ class InteractionRequests:
             Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), json=payload
         )
 
-    async def get_message(self, application_id: str, token: str, message_id: str = "@original") -> dict:
+    async def get_interaction_message(self, application_id: str, token: str, message_id: str = "@original") -> dict:
         """
         Gets an existing interaction message.
 
