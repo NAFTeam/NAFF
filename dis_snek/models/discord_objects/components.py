@@ -39,6 +39,14 @@ class InteractiveComponent(BaseComponent):
 
 @attr.s(slots=True, eq=False)
 class Button(InteractiveComponent):
+    """
+    :param style: Buttons come in a variety of styles to convey different types of actions.
+    :param label: The text that appears on the button, max 80 characters.
+    :param emoji: The emoji that appears on the button.
+    :param custom_id: A developer-defined identifier for the button, max 100 characters.
+    :param url: A url for link-style buttons.
+    :param disabled: Disable the button and make it not interactable, default false.
+    """
 
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
@@ -98,6 +106,15 @@ class SelectOption(BaseComponent):
 
 @attr.s(slots=True, eq=False)
 class Select(InteractiveComponent):
+    """
+    :param options: The choices in the select, max 25.
+    :param custom_id: A developer-defined identifier for the button, max 100 characters.
+    :param placeholder: The custom placeholder text to show if nothing is selected, max 100 characters.
+    :param min_values: The minimum number of items that must be chosen. (default 1, min 0, max 25)
+    :param max_values: The maximum number of items that can be chosen. (default 1, max 25)
+    :param disabled: Disable the select and make it not interactable, default false.
+    :param type: The action role type number defined by discord. This cannot be modified.
+    """
 
     options: List[dict] = attr.ib(factory=list)
     custom_id: str = attr.ib(default=None, validator=str_validator)
@@ -146,6 +163,10 @@ class Select(InteractiveComponent):
 
 @attr.s(slots=True, init=False)
 class ActionRow(BaseComponent):
+    """
+    :param components:
+    :param type: The action role type number defined by discord. This cannot be modified.
+    """
 
     _max_items = 5
 
