@@ -147,7 +147,7 @@ class Embed(object):
 
         if len(self) > 6000:
             raise ValueError(
-                "Your embed is too large, go to https://discord.com/developers/docs/resources/channel#embed-limits"
+                "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
 
         return to_dict(self)
@@ -218,6 +218,11 @@ class Embed(object):
 
 
 def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> List[dict]:
+    """
+    Process the passed embeds into a format discord will understand.
+
+    :param components: List of dict / embeds to process
+    """
     if not embeds:
         # Its just empty, so nothing to process.
         return

@@ -1,6 +1,5 @@
 from typing import (
     TYPE_CHECKING,
-    Any,
     AsyncIterator,
     Awaitable,
     Dict,
@@ -13,8 +12,6 @@ import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.discord_objects.components import ActionRow, process_components
-from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.enums import ChannelTypes
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -189,7 +186,9 @@ TYPE_ALL_CHANNEL = Union[
     GuildStageVoice,
 ]
 
+
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+
 
 TYPE_MAPPING = {
     ChannelTypes.GUILD_TEXT: GuildText,

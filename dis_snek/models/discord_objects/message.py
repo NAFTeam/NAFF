@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
@@ -9,11 +8,7 @@ from attr.converters import optional as optional_c
 from dis_snek.mixins.edit import EditMixin
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
-from dis_snek.models.discord_objects.components import (
-    ActionRow,
-    ComponentTypes,
-    process_components,
-)
+from dis_snek.models.discord_objects.components import ComponentTypes
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.discord_objects.interactions import CommandTypes
@@ -30,6 +25,9 @@ from dis_snek.models.enums import (
 from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import DictSerializationMixin
+
+if TYPE_CHECKING:
+    from dis_snek.client import Snake
 
 
 @attr.s(slots=True, kw_only=True)
@@ -69,7 +67,7 @@ class MessageReference:  # todo refactor into actual class, add pointers to actu
 
 @attr.s(slots=True, kw_only=True)
 class Message(Snowflake, DictSerializationMixin, EditMixin):
-    _client: Any = attr.ib(repr=False)
+    _client: "Snake" = attr.ib(repr=False)
     channel_id: Snowflake_Type = attr.ib()
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
     author: Union[Member, User] = attr.ib()  # TODO: create override for detecting PartialMember
@@ -184,5 +182,5 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
         """Unpin message"""
         await self._client.http.unpin_message(self.channel_id, self.id)
 
-    def _edit_http_request(self, message) -> Any:
+    def _edit_http_request(self, message) -> dict:
         return self._client.http.edit_message(message, self.channel_id, self.id)
