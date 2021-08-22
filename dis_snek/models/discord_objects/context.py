@@ -148,6 +148,7 @@ class ComponentContext(InteractionContext):
 
         :return: The message after it was edited.
         """
+        # TODO Not sure if this can use a mixin...
 
         message: Dict[str, Any] = {"tts": tts}
 
@@ -170,5 +171,6 @@ class ComponentContext(InteractionContext):
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
             message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
 
-        self.message = Message.from_dict(message_data, self._client) if message_data else None
-        return self.message
+        if message_data:
+            self.message = await self._client.cache.place_message_data(message_data["channel_id"], message_data["id"], message_data)
+            return self.message
