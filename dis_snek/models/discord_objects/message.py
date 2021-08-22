@@ -172,7 +172,7 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
                     pass  # No real way to handle this
 
             asyncio.ensure_future(delayed_delete())
-        
+
         else:
             await self._client.http.delete_message(self.channel_id, self.id)
 
