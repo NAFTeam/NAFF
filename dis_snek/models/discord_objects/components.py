@@ -230,7 +230,7 @@ def process_components(
             # user has passed a list of dicts, this is the correct format, blindly send it
             return components
 
-        if isinstance(components[0], list):
+        if all(isinstance(c, list) for c in components):
             # list of lists... actionRow-less sending
             return [ActionRow(*row).to_dict() for row in components]
 
