@@ -1,51 +1,12 @@
 import logging
 import uuid
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from dis_snek.const import logger_name
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 
+
 log = logging.getLogger(logger_name)
-
-
-def process_components(components: Any) -> List[dict]:
-    """
-    Recursively process the passed components into a format discord will understand.
-
-    :param components: List of dict / components to process"""
-    if isinstance(components, list):
-        if all(isinstance(c, dict) for c in components):
-            # user has passed a list of dicts, this is the correct format, blindly send it
-            return components
-
-        if isinstance(components[0], list):
-            # list of lists... actionRow-less sending
-            converted = []
-            for row in components:
-                converted.append(ActionRow(*row))
-            return process_components(converted)
-
-        if all(isinstance(c, (Button, Select)) for c in components):
-            # list of naked components
-            return process_components([components])
-
-        if all(isinstance(c, ActionRow) for c in components):
-            # we have a list of action rows
-            converted = []
-            for row in components:
-                converted.append(row.to_dict)
-            return process_components(converted)
-
-    if isinstance(components, (ActionRow, Button, Select)):
-        # naked component was passed
-        return process_components([components])
-
-    if isinstance(components, dict):
-        # if a naked dictionary is passed, assume the user knows what they're doing and send it blindly
-        # after wrapping it in a list for discord
-        components = [components]
-
-    return components
 
 
 class BaseComponent:
@@ -55,20 +16,17 @@ class BaseComponent:
 
     __slots__ = "_type", "custom_id"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, dict):
             other = convert_dict(other)
-
-        if self.custom_id == other.custom_id and self.type == other.type:
-            return True
-        return False
+            return self.custom_id == other.custom_id and self.type == other.type
 
     @property
-    def type(self):
+    def type(self) -> Union[ComponentTypes, int]:
         return self._type
 
     @property
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return self.__dict__
 
     def _checks(self):
@@ -392,3 +350,46 @@ def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
 
     else:
         raise TypeError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
+
+
+def process_components(
+    components: Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+) -> List[Dict]:
+    """
+    Recursively process the passed components into a format discord will understand.
+
+    :param components: List of dict / components to process
+    """
+    if isinstance(components, list):
+        if all(isinstance(c, dict) for c in components):
+            # user has passed a list of dicts, this is the correct format, blindly send it
+            return components
+
+        if isinstance(components[0], list):
+            # list of lists... actionRow-less sending
+            converted = []
+            for row in components:
+                converted.append(ActionRow(*row))
+            return process_components(converted)
+
+        if all(isinstance(c, (Button, Select)) for c in components):
+            # list of naked components
+            return process_components([components])
+
+        if all(isinstance(c, ActionRow) for c in components):
+            # we have a list of action rows
+            converted = []
+            for row in components:
+                converted.append(row.to_dict)
+            return process_components(converted)
+
+    if isinstance(components, (ActionRow, Button, Select)):
+        # naked component was passed
+        return process_components([components])
+
+    if isinstance(components, dict):
+        # if a naked dictionary is passed, assume the user knows what they're doing and send it blindly
+        # after wrapping it in a list for discord
+        components = [components]
+
+    return components

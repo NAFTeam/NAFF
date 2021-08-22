@@ -26,6 +26,7 @@ from dis_snek.models.discord_objects.context import (
 )
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
+    BaseInteractionCommand,
     ContextMenu,
     OptionTypes,
     SlashCommand,
@@ -38,6 +39,7 @@ from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
 from dis_snek.models.enums import ComponentTypes, Intents, CommandTypes, InteractionTypes
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.smart_cache import GlobalCache
+
 
 log = logging.getLogger(logger_name)
 
@@ -61,13 +63,13 @@ class Snake:
         self.sync_interactions = sync_interactions
 
         # caches
-        self.cache = GlobalCache(self)
+        self.cache: GlobalCache = GlobalCache(self)
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
-        self.interactions = {}
+        self.interactions: Dict[Snowflake_Type, Dict[str, BaseInteractionCommand]] = {}
         self.__extensions = {}
 
-        self._interaction_scopes = {}
+        self._interaction_scopes: Dict[Snowflake_Type, Snowflake_Type] = {}
 
         self._listeners: Dict[str, List] = {}
 
@@ -306,7 +308,9 @@ class Snake:
                     application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
                 )
 
-    async def get_context(self, data: Dict, interaction: bool = False) -> Union[Context, InteractionContext]:
+    async def get_context(
+        self, data: Dict, interaction: bool = False
+    ) -> Union[Context, InteractionContext, ComponentContext]:
         """
         Return a context object based on data passed
 
@@ -404,11 +408,11 @@ class Snake:
         else:
             raise NotImplementedError(f"Unknown Interaction Recieved: {interaction_data['type']}")
 
-    async def _on_raw_message_create(self, data: dict):
+    async def _on_raw_message_create(self, data: dict) -> None:
         msg = Message.from_dict(data, self)
         self.dispatch("message_create", msg)
 
-    async def _on_raw_guild_create(self, data: dict):
+    async def _on_raw_guild_create(self, data: dict) -> None:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway
         :param data: raw guild data
@@ -490,7 +494,7 @@ class Snake:
         name: str,
         description: str = "No description set",
         scope: Snowflake_Type = "global",
-        options=None,
+        options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
         default_permission: bool = True,
         permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
     ):

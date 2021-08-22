@@ -66,13 +66,14 @@ class Timestamp(datetime):
     def fromordinal(cls, n: int) -> datetime:
         return super().fromordinal(n).astimezone()
 
-    def tosnowflake(self, high: bool = False) -> Union[str, int]:
+    def to_snowflake(self, high: bool = False) -> Union[str, int]:
         """Returns a numeric snowflake pretending to be created at the given date.
 
         When using as the lower end of a range, use ``tosnowflake(high=False) - 1``
         to be inclusive, ``high=True`` to be exclusive.
         When using as the higher end of a range, use ``tosnowflake(high=True) + 1``
-        to be inclusive, ``high=False`` to be exclusive"""
+        to be inclusive, ``high=False`` to be exclusive
+        """
 
         discord_millis = int(self.timestamp() * 1000 - DISCORD_EPOCH)
         return (discord_millis << 22) + (2 ** 22 - 1 if high else 0)

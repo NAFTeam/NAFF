@@ -2,6 +2,7 @@ import logging
 from enum import EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
+from typing import Tuple
 
 from dis_snek.const import logger_name
 
@@ -18,7 +19,7 @@ class AntiFlag:
         return positive
 
 
-def _distinct(source):
+def _distinct(source) -> Tuple:
     return (x for x in source if (x.value & (x.value - 1)) == 0 and x.value != 0)
 
 
@@ -299,11 +300,11 @@ class ChannelTypes(IntEnum):
     GUILD_STAGE_VOICE = 13
 
     @property
-    def is_guild(self):
+    def is_guild(self) -> bool:
         return self.value not in {1, 3}
 
     @property
-    def is_voice(self):
+    def is_voice(self) -> bool:
         return self.value in {2, 13}
 
 

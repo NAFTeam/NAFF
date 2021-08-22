@@ -35,32 +35,20 @@ class BaseChannel(Snowflake, DictSerializationMixin):
     name: Optional[str] = attr.ib(default=None)
 
     @classmethod
-    def from_dict(cls, data, client):
+    def from_dict(cls, data, client) -> "TYPE_ALL_CHANNEL":
         """
         Creates a channel object of the appropriate type
+
         :param data:
         :param client:
+
         :return:
         """
-        type_mapping = {
-            ChannelTypes.GUILD_TEXT: GuildText,
-            ChannelTypes.GUILD_NEWS: GuildNews,
-            ChannelTypes.GUILD_VOICE: GuildVoice,
-            ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
-            ChannelTypes.GUILD_CATEGORY: GuildCategory,
-            ChannelTypes.GUILD_STORE: GuildStore,
-            ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
-            ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
-            ChannelTypes.GUILD_NEWS_THREAD: Thread,
-            ChannelTypes.DM: DM,
-            ChannelTypes.GROUP_DM: DMGroup,
-        }
         channel_type = ChannelTypes(data["type"])
-
-        return type_mapping[channel_type].from_dict_typed(data, client)
+        return TYPE_MAPPING[channel_type].from_dict_typed(data, client)
 
     @classmethod
-    def from_dict_typed(cls, data, client):
+    def from_dict_typed(cls, data, client) -> "TYPE_ALL_CHANNEL":
         return super().from_dict(data, client)
 
 
@@ -69,7 +57,7 @@ class _GuildMixin:
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    permission_overwrites: list[dict] = attr.ib(factory=list)  # todo  permissions obj
+    permission_overwrites: list[dict] = attr.ib(factory=list)  # TODO  permissions obj
     permissions: Optional[str] = attr.ib(default=None)  # only in slash
 
 
@@ -114,7 +102,7 @@ class DMGroup(TextChannel):
     _recipients_ids: List[Snowflake_Type] = attr.ib(factory=list)
 
     @classmethod
-    def process_dict(cls, data, client):
+    def process_dict(cls, data: dict, client) -> "DMGroup":
         recipients_data = data.pop("recipients", [])
         recipients_ids = []
         for recipient_data in recipients_data:
@@ -132,11 +120,11 @@ class DMGroup(TextChannel):
 @attr.s(slots=True, kw_only=True)
 class DM(DMGroup):
     @classmethod
-    def process_dict(cls, data, client: "Snake"):
+    def process_dict(cls, data: dict, client: "Snake") -> "DM":
         data = super().process_dict(data, client)
         user_id = data["recipients_ids"][0]
         client.cache.place_dm_channel_id(user_id, data["id"])
-        return data
+        return super().from_dict_typed(data, client)
 
     @property
     def recipient(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
@@ -176,13 +164,13 @@ class Thread(GuildText):
     archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
     @classmethod
-    def process_dict(cls, data, client):
+    def process_dict(cls, data: dict, client: "Snake") -> "Thread":
         thread_metadata: dict = data.get("thread_metadata", {})
         data.update(thread_metadata)
-        return data
+        return super().from_dict_typed(data, client)
 
     @property
-    def private(self):
+    def private(self) -> bool:
         return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
 
 
@@ -202,3 +190,17 @@ TYPE_ALL_CHANNEL = Union[
 ]
 
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+
+TYPE_MAPPING = {
+    ChannelTypes.GUILD_TEXT: GuildText,
+    ChannelTypes.GUILD_NEWS: GuildNews,
+    ChannelTypes.GUILD_VOICE: GuildVoice,
+    ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
+    ChannelTypes.GUILD_CATEGORY: GuildCategory,
+    ChannelTypes.GUILD_STORE: GuildStore,
+    ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
+    ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
+    ChannelTypes.GUILD_NEWS_THREAD: Thread,
+    ChannelTypes.DM: DM,
+    ChannelTypes.GROUP_DM: DMGroup,
+}

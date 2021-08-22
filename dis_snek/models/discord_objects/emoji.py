@@ -25,12 +25,12 @@ class Emoji(Snowflake, DictSerializationMixin):
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: Any):
+    def from_dict(cls, data: Dict[str, Any], client: Any) -> "Emoji":
         creator_dict = data.pop("user", default=None)
         creator = User.from_dict(creator_dict, client) if creator_dict else None
         return cls(client=client, creator=creator, **cls._filter_kwargs(data))
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         data = {
             "id": self.id,
             "name": self.name,
@@ -41,7 +41,7 @@ class Emoji(Snowflake, DictSerializationMixin):
         return f"<{'a:' if self.animated else ''}{self.name}:{self.id}>"
 
     @property
-    def req_format(self):
+    def req_format(self) -> str:
         return f"{self.name}:{self.id}"
 
     @property
@@ -54,7 +54,7 @@ class Emoji(Snowflake, DictSerializationMixin):
         # todo: check roles
         return True
 
-    async def delete(self, reason: Optional[str] = None):
+    async def delete(self, reason: Optional[str] = None) -> None:
         if self.guild_id:
             await self._client.http.request(Route("DELETE", f"/guilds/{self.guild_id}/emojis/{self.id}"), reason=reason)
         raise ValueError("Cannot delete emoji, no guild_id set")

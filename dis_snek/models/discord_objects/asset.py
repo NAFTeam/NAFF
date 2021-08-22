@@ -9,17 +9,18 @@ if TYPE_CHECKING:
 @attr.s(slots=True)
 class Asset:
     BASE = "https://cdn.discordapp.com"
+
     _client: "Snake" = attr.field()
     url: str = attr.field()
     hash: Optional[str] = attr.field(default=None)
 
     @classmethod
-    def from_path_hash(cls, client: "Snake", path: str, asset_hash: str):
+    def from_path_hash(cls, client: "Snake", path: str, asset_hash: str) -> "Asset":
         url = f"{cls.BASE}/{path.format(asset_hash)}"
         return cls(client=client, url=url, hash=asset_hash)
 
     @property
-    def animated(self):
+    def animated(self) -> bool:
         if not self.hash:
             return None
         return self.hash.startswith("a_")

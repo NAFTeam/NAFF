@@ -1,7 +1,7 @@
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.discord_objects.interactions import CallbackTypes
-from typing import Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import attr
 
@@ -13,12 +13,15 @@ from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.snowflake import Snowflake_Type
 
+if TYPE_CHECKING:
+    from dis_snek.client import Snake
+
 
 @attr.s
 class Context:
     """Represents the context of a command"""
 
-    _client: Any = attr.ib(default=None)
+    _client: "Snake" = attr.ib(default=None)
     message: Message = attr.ib(default=None)
 
     args: List = attr.ib(factory=list)
@@ -46,11 +49,11 @@ class InteractionContext(Context, SendMixin):
     data: Dict = attr.ib(factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict, client):
+    def from_dict(cls, data: Dict, client: "Snake") -> "InteractionContext":
         """Create a context object from a dictionary"""
         return cls(client=client, token=data["token"], interaction_id=data["id"], data=data)
 
-    async def defer(self, ephemeral=False):
+    async def defer(self, ephemeral=False) -> None:
         """
         Defers the response, showing a loading state.
 
@@ -94,7 +97,7 @@ class ComponentContext(InteractionContext):
     defer_edit_origin: bool = attr.ib(default=False)
 
     @classmethod
-    def from_dict(cls, data: Dict, client):
+    def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
         """Create a context object from a dictionary"""
         return cls(
             client=client,
@@ -105,7 +108,7 @@ class ComponentContext(InteractionContext):
             data=data,
         )
 
-    async def defer(self, ephemeral=False, edit_origin: bool = False):
+    async def defer(self, ephemeral=False, edit_origin: bool = False) -> None:
         """
         Defers the response, showing a loading state.
 

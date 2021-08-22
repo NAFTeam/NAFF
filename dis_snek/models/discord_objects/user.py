@@ -80,7 +80,7 @@ class SnakeBotUser(User):
 
 @attr.s(slots=True, kw_only=True)
 class Member(Snowflake, DictSerializationMixin):
-    _client: Any = attr.field(repr=False)
+    _client: "Snake" = attr.field(repr=False)
     guild_id: Snowflake = attr.field()
     nickname: Optional[str] = attr.ib(default=None)
     deafened: bool = attr.ib(default=False)
@@ -102,7 +102,7 @@ class Member(Snowflake, DictSerializationMixin):
             client.cache.place_user_data(data["id"], data)
             data.update(member_data)
 
-        return data
+        return data  # TODO Why this isn't returning the class object...?
 
     @property
     def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:

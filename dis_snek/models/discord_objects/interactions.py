@@ -47,7 +47,7 @@ class OptionTypes(IntEnum):
     NUMBER = 10
 
     @classmethod
-    def from_type(cls, t: type):
+    def from_type(cls, t: type) -> "OptionTypes":
         """
         Convert data types to their corresponding OptionType.
 
@@ -76,7 +76,7 @@ class PermissionTypes(IntEnum):
     USER = 2
 
     @classmethod
-    def from_type(cls, t: type):
+    def from_type(cls, t: type) -> "PermissionTypes":
         if issubclass(t, Role):
             return cls.ROLE
         if issubclass(t, BaseUser):

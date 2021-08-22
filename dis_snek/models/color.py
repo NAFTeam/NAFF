@@ -1,7 +1,7 @@
 import re
-import enum
 import colorsys
 from typing import Tuple
+from enum import Enum
 
 import attr
 
@@ -32,30 +32,30 @@ class Color:
     # Helper methods
 
     @staticmethod
-    def clamp(x, min_value=0, max_value=255):
+    def clamp(x, min_value=0, max_value=255) -> int:
         return max(min_value, min(x, max_value))
 
     # Constructor methods
 
     @classmethod
-    def from_rgb(cls, r, g, b):
+    def from_rgb(cls, r, g, b) -> "Color":
         return cls((r, g, b))
 
     @classmethod
-    def from_hex(cls, value):
+    def from_hex(cls, value) -> "Color":
         instance = cls()
         instance.hex = value
         return instance
 
     @classmethod
-    def from_hsv(cls, h, s, v):
+    def from_hsv(cls, h, s, v) -> "Color":
         instance = cls()
         instance.hsv = h, s, v
         return instance
 
     # Properties and setter methods
 
-    def _get_byte(self, n):
+    def _get_byte(self, n) -> int:
         return (self.value >> (8 * n)) & 255
 
     @property
@@ -107,12 +107,12 @@ class Color:
 
 # maybe should be just a dict but not sure
 # or just str enum but no so sure again
-class BrandColors(Color, enum.Enum):
+class BrandColors(Color, Enum):
     # https://discord.com/branding
-    blurple = "#5865F2"
-    green = "#57F287"
-    yellow = "#FEE75C"
-    fuchsia = "#EB459E"
-    red = "#ED4245"
-    white = "#FFFFFF"
-    black = "#000000"
+    BLURPLE = "#5865F2"
+    GREEN = "#57F287"
+    YELLOW = "#FEE75C"
+    FUCHSIA = "#EB459E"
+    RED = "#ED4245"
+    WHITE = "#FFFFFF"
+    BLACK = "#000000"

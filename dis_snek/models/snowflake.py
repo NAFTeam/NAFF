@@ -35,7 +35,7 @@ class Snowflake:
         return Timestamp.fromsnowflake(self.id)
 
 
-def to_snowflake(snowflake: Snowflake_Type):
+def to_snowflake(snowflake: Snowflake_Type) -> int:
     if not isinstance(snowflake, (int, str)):
         raise TypeError("ID (snowflake) should be instance of int or str!")
 

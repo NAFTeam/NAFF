@@ -25,19 +25,19 @@ class Role(Snowflake, DictSerializationMixin):
     tags: Optional["RoleTags"] = attr.ib(default=None)
 
     @property
-    def is_bot_managed(self):
+    def is_bot_managed(self) -> bool:
         if self.tags is not None:
             return self.tags.bot_id is not None
         return False
 
     @property
-    def is_integration(self):
+    def is_integration(self) -> bool:
         if self.tags is not None:
             return self.tags.integration_id is not None
         return False
 
     @property
-    def is_premium(self):
+    def is_premium(self) -> bool:
         if self.tags is not None:
             return self.tags.premium_subscriber
         return False
