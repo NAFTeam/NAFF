@@ -36,9 +36,9 @@ class SendMixin:
 
         :return: New message object.
         """
-        embeds = process_embeds(embeds) if components else []
+        embeds = process_embeds(embeds)
 
-        components = process_components(components) if components else []
+        components = process_components(components)
 
         # TODO Files support.
 

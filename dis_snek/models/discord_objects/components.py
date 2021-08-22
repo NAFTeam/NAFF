@@ -353,13 +353,28 @@ def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
 
 
 def process_components(
-    components: Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+    components: Optional[
+        Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+    ]
 ) -> List[Dict]:
     """
-    Recursively process the passed components into a format discord will understand.
+    Process the passed components into a format discord will understand.
 
     :param components: List of dict / components to process
     """
+    if not components:
+        # Its just empty, so nothing to process.
+        return
+
+    if isinstance(components, dict):
+        # If a naked dictionary is passed, assume the user knows what they're doing and send it blindly
+        # after wrapping it in a list for discord
+        return [components]
+
+    if issubclass(type(components), BaseComponent):
+        # Naked component was passed
+        components = [components]
+
     if isinstance(components, list):
         if all(isinstance(c, dict) for c in components):
             # user has passed a list of dicts, this is the correct format, blindly send it
@@ -367,29 +382,14 @@ def process_components(
 
         if isinstance(components[0], list):
             # list of lists... actionRow-less sending
-            converted = []
-            for row in components:
-                converted.append(ActionRow(*row))
-            return process_components(converted)
+            return [ActionRow(*row).to_dict for row in components]
 
         if all(isinstance(c, (Button, Select)) for c in components):
             # list of naked components
-            return process_components([components])
+            return [ActionRow(*components).to_dict]
 
         if all(isinstance(c, ActionRow) for c in components):
             # we have a list of action rows
-            converted = []
-            for row in components:
-                converted.append(row.to_dict)
-            return process_components(converted)
+            return [action_row.to_dict for action_row in components]
 
-    if isinstance(components, (ActionRow, Button, Select)):
-        # naked component was passed
-        return process_components([components])
-
-    if isinstance(components, dict):
-        # if a naked dictionary is passed, assume the user knows what they're doing and send it blindly
-        # after wrapping it in a list for discord
-        components = [components]
-
-    return components
+    raise ValueError(f"Invalid components: {components}")

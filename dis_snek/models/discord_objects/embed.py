@@ -219,13 +219,20 @@ class Embed(object):
 
 def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> List[dict]:
     if not embeds:
+        # Its just empty, so nothing to process.
         return
 
     if isinstance(embeds, Embed):
+        # Single embed, convert it to dict and wrap it into a list for discord.
         return [embeds.to_dict()]
 
     if isinstance(embeds, dict):
+        # We assume the dict correctly represents a single discord embed and just send it blindly
+        # after wrapping it in a list for discord
         return [embeds]
 
     if isinstance(embeds, list):
+        # A list of embeds, convert Embed to dict representation if needed.
         return [embed.to_dict() if isinstance(embeds, Embed) else embed for embed in embeds]
+
+    raise ValueError(f"Invalid embeds: {embeds}")
