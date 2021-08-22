@@ -1,355 +1,205 @@
-import logging
+from dis_snek.utils.attr_utils import str_validator
+
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
-from dis_snek.const import logger_name
+import attr
+
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
-
-
-log = logging.getLogger(logger_name)
 
 
 class BaseComponent:
     """
-    A base component class
+    A base component class. This should never be instantiated.
     """
 
-    __slots__ = "_type", "custom_id"
-
-    def __eq__(self, other: Any) -> bool:
-        if isinstance(other, dict):
-            other = convert_dict(other)
-            return self.custom_id == other.custom_id and self.type == other.type
-
-    @property
-    def type(self) -> Union[ComponentTypes, int]:
-        return self._type
-
-    @property
-    def to_dict(self) -> dict:
-        return self.__dict__
+    def __init__(self) -> None:
+        raise NotImplementedError
 
     def _checks(self):
         """Checks all attributes of this object are valid"""
-        if self.custom_id is not None and not isinstance(self.custom_id, str):
-            self.custom_id = str(self.custom_id)
-            log.warning(
-                "Custom_id has been automatically converted to a string. Please use strings in future\n"
-                "Note: Discord will always return custom_id as a string"
-            )
+        pass
+
+    def to_dict(self) -> dict:
+        self._checks()
+        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
+
+class InteractiveComponent(BaseComponent):
+    """
+    A base interactive component class. This should never be instantiated.
+    """
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, dict):
+            other = convert_to_component(other)
+            return self.custom_id == other.custom_id and self.type == other.type
+        return False
 
 
-class Button(BaseComponent):
-    __slots__ = "style", "label", "emoji", "url", "disabled"
+@attr.s(slots=True, eq=False)
+class Button(InteractiveComponent):
 
-    def __init__(
-        self,
-        style: Union[ButtonStyles, int],
-        label: str = None,
-        emoji: Union[dict] = None,
-        custom_id: str = None,
-        url: str = None,
-        disabled: bool = False,
-    ):
-        self._type: Union[ComponentTypes, int] = ComponentTypes.BUTTON
-        self.style: Union[ButtonStyles, int] = style
-        self.label: Optional[str] = label
-        self.emoji: Optional[dict] = emoji
-        self.custom_id: str = custom_id
-        self.url: Optional[str] = url
-        self.disabled: bool = disabled
+    style: Union[ButtonStyles, int] = attr.ib()
+    label: Optional[str] = attr.ib(default=None)
+    emoji: Optional[dict] = attr.ib(default=None)  # TODO Partial emoji
+    custom_id: Optional[str] = attr.ib(default=None, validator=str_validator)
+    url: Optional[str] = attr.ib(default=None)
+    disabled: bool = attr.ib(default=False)
+    type: Union[ComponentTypes, int] = attr.ib(
+        default=ComponentTypes.BUTTON, init=False, on_setattr=attr.setters.frozen
+    )
+
+    @style.validator
+    def _style_validator(self, attribute: str, value: int):
+        if not isinstance(value, ButtonStyles) and not value in ButtonStyles.__members__.values():
+            raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
     def _checks(self):
-        super()._checks()
-
         if self.style == ButtonStyles.URL:
             if self.custom_id:
                 raise TypeError("A link button cannot have a `custom_id`!")
             if not self.url:
                 raise TypeError("A link button must have a `url`!")
-        elif self.url:
-            raise TypeError("You can't have a URL on a non-link button!")
+        else:
+            if self.url:
+                raise TypeError("You can't have a URL on a non-link button!")
+            if not self.custom_id:
+                self.custom_id = str(uuid.uuid4())  # Default a random id
 
         if not self.label and not self.emoji:
             raise TypeError("You must have at least a label or emoji on a button.")
 
-    @property
-    def to_dict(self) -> dict:
-        """
-        Returns a dictionary representing this component, that discord can process
-        """
-        self._checks()
-        to_return = {"type": self._type, "style": self.style, "disabled": self.disabled}
-        if self.label:
-            to_return["label"] = self.label
-        if self.emoji:
-            to_return["emoji"] = self.emoji
-        if self.style == ButtonStyles.URL:
-            to_return["url"] = self.url
-        else:
-            to_return["custom_id"] = self.custom_id or str(uuid.uuid4())
 
-        return to_return
-
-
+@attr.s(slots=True)
 class SelectOption(BaseComponent):
-    __slots__ = "label", "value", "emoji", "description", "default"
 
-    def __init__(self, label: str, value: str, emoji: None, description: str = None, default: bool = False):
-        self.label: str = label
-        self.value: str = value
-        self.emoji: Optional[dict] = emoji
-        self.description: Optional[str] = description
-        self.default: bool = default
-        self.checks()
+    label: str = attr.ib(validator=str_validator)
+    value: str = attr.ib(validator=str_validator)
+    description: Optional[str] = attr.ib(default=None)
+    emoji: Optional[dict] = attr.ib(default=None)  # TODO Partial emoji
+    default: bool = attr.ib(default=False)
 
-    def checks(self):
-        if not len(self.label) or len(self.label) > 25:
-            raise ValueError("Label length should be between 1 and 25.")
+    @label.validator
+    def _label_validator(self, attribute: str, value: str):
+        if not value or len(value) > 100:
+            raise ValueError("Label length should be between 1 and 100.")
 
-        if not isinstance(self.value, str):
-            self.value = str(self.value)
-            log.warning(
-                "Value has been automatically converted to a string. Please use strings in future\n"
-                "Note: Discord will always return value as a string"
-            )
-
-        if not len(self.value) or len(self.value) > 100:
+    @value.validator
+    def _value_validator(self, attribute: str, value: str):
+        if not value or len(value) > 100:
             raise ValueError("Value length should be between 1 and 100.")
 
-        if self.description is not None and len(self.description) > 50:
-            raise ValueError("Description length must be 50 or lower.")
-
-    @property
-    def custom_id(self):
-        return self.value
-
-    @custom_id.setter
-    def custom_id(self, value):
-        self.value = value
-
-    @property
-    def to_dict(self) -> dict:
-        """
-        Returns a dictionary representing this component, that discord can process
-        """
-        self.checks()
-        return {
-            "label": self.label,
-            "value": self.value,
-            "description": self.description,
-            "default": self.default,
-            "emoji": self.emoji,
-        }
+    @description.validator
+    def _description_validator(self, attribute: str, value: str):
+        if value is not None and len(value) > 100:
+            raise ValueError("Description length must be 100 or lower.")
 
 
-class Select(BaseComponent):
-    __slots__ = (
-        "options",
-        "placeholder",
-        "max_values",
-        "min_values",
-        "disabled",
+@attr.s(slots=True, eq=False)
+class Select(InteractiveComponent):
+
+    options: List[dict] = attr.ib(factory=list)
+    custom_id: str = attr.ib(default=None, validator=str_validator)
+    placeholder: str = attr.ib(default=None)
+    min_values: Optional[int] = attr.ib(default=None)
+    max_values: Optional[int] = attr.ib(default=None)
+    disabled: bool = attr.ib(default=False)
+    type: Union[ComponentTypes, int] = attr.ib(
+        default=ComponentTypes.SELECT, init=False, on_setattr=attr.setters.frozen
     )
-
-    def __init__(
-        self,
-        options: List[dict],
-        custom_id: str = None,
-        placeholder: str = None,
-        min_values: int = None,
-        max_values: int = None,
-        disabled: bool = False,
-    ):
-        self._type: Union[ComponentTypes, int] = ComponentTypes.SELECT
-        self.custom_id: str = custom_id
-        self.options: List[dict, SelectOption] = options
-        self.placeholder: Optional[str] = placeholder
-        self.max_values: Optional[int] = min_values
-        self.min_values: Optional[int] = max_values
-        self.disabled: bool = disabled
 
     def __len__(self) -> int:
         return len(self.options)
 
+    @placeholder.validator
+    def _placeholder_validator(self, attribute: str, value: str):
+        if value is not None and len(value) > 100:
+            raise ValueError("Placeholder length must be 100 or lower.")
+
+    @min_values.validator
+    def _min_values_validator(self, attribute: str, value: int):
+        if value < 0:
+            raise ValueError("Select min value cannot be a negative number.")
+
+    @max_values.validator
+    def _max_values_validator(self, attribute: str, value: int):
+        if value < 0:
+            raise ValueError("Select max value cannot be a negative number.")
+
     def _checks(self):
-        super()._checks()
+        if not self.custom_id:
+            self.custom_id = str(uuid.uuid4())
+
+        if not self.options:
+            raise TypeError("Selects needs to have at least 1 option.")
 
         if len(self.options) > 25:
-            raise TypeError("Options length should be between 1 and 25.")
-
-    @property
-    def to_dict(self) -> dict:
-        """
-        Returns a dictionary representing this component, that discord can process
-        """
-        self._checks()
-
-        if not self.options or len(self.options) > 25:
             raise TypeError("Selects can only hold 25 options")
-        options = []
-        for opt in self.options:
-            if isinstance(opt, SelectOption):
-                opt = opt.to_dict
-            options.append(opt)
-        return {
-            "type": self._type,
-            "options": options,
-            "custom_id": self.custom_id or str(uuid.uuid4()),
-            "placeholder": self.placeholder or "",
-            "min_values": self.min_values,
-            "max_values": self.max_values,
-            "disabled": self.disabled,
-        }
 
-    def add_checks(self, option):
-        if not isinstance(option, SelectOption) and not isinstance(dict):
-            raise TypeError("Only SelectOption objects, or dicts representing them are supported")
-
-        if self.options == 25:
-            raise TypeError("Selects can only hold 25 options")
+        if self.max_values < self.min_values:
+            raise TypeError("Selects max value cannot be less than min value.")
 
     def add_option(self, option: Union[SelectOption, dict]):
-        self.add_checks(option)
         self.options.append(option)
 
 
-class ActionRow:
-    __slots__ = "_type", "_components", "max_items"
+@attr.s(slots=True, init=False)
+class ActionRow(BaseComponent):
 
-    def __init__(self, *components: Union[dict, Select, Button]):
-        self._type = ComponentTypes.ACTION_ROW
+    _max_items = 5
 
-        self._components = []
+    components: List[Union[dict, Select, Button]] = attr.ib(factory=list)
+    type: Union[ComponentTypes, int] = attr.ib(
+        default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attr.setters.frozen
+    )
 
-        self.max_items = 5
-
-        for comp in components:
-            self.append(comp)
+    def __init__(self, *components: Union[dict, Select, Button]) -> None:
+        self.__attrs_init__(components)
 
     def __len__(self) -> int:
-        return len(self._components)
+        return len(self.components)
 
-    def _checks(self):
-        if len(self.components) == 0 or len(self.components) > 5:
-            raise TypeError("Number of components in one row should be between 1 and 5.")
+    def _component_checks(self, component: Union[dict, Select, Button]):
+        if isinstance(component, dict):
+            component = convert_to_component(component)
 
-        if any(x.type == ComponentTypes.SELECT for x in self._components) and len(self._components) != 1:
-            raise TypeError("Action row must have only one select component and nothing else")
+        if not issubclass(type(component), InteractiveComponent):
+            raise TypeError("You can only add select or button to the action row.")
 
-    def append_checks(self, component):
-        # todo: fix this mess
-        # yes Striga, i see you looking here and screaming, is bad code. ill fix it later
-
-        def check_single_component(_comp):
-            if isinstance(_comp, dict):
-                # convert dict into object
-                if _comp["type"] == ComponentTypes.BUTTON:
-                    _comp = Button(
-                        style=_comp.get("style"),
-                        label=_comp.get("label"),
-                        emoji=_comp.get("emoji"),
-                        custom_id=_comp.get("custom_id"),
-                        url=_comp.get("url"),
-                        disabled=_comp.get("disabled", False),
-                    )
-                elif _comp["type"] == ComponentTypes.SELECT:
-                    _comp = Select(
-                        custom_id=_comp.get("custom_id"),
-                        options=_comp.get("options"),
-                        placeholder=_comp.get("placeholder"),
-                        max_values=_comp.get("max_values"),
-                        min_values=_comp.get("min_values"),
-                        disabled=_comp.get("disabled", False),
-                    )
-
-            if any(x.type == ComponentTypes.SELECT for x in self._components):
-                raise TypeError("Action row must have only one select component and nothing else")
-            elif _comp.type == ComponentTypes.SELECT and len(self) != 0:
-                raise TypeError("Action row must have only one select component and nothing else")
-
-        if len(self) == self.max_items:
-            # ensure action row does not overflow
-            if len(self._components) == 5:
-                raise TypeError("Number of components in one row should be between 1 and 5.")
-
-        if isinstance(component, list):
-            # list of components
-            if not all(isinstance(x, (dict, ActionRow, Button, Select)) for x in component):
-                raise TypeError("Action rows can only hold component objects or dictionaries representing them")
-            if len(component) + len(self) > 5:
-                raise TypeError("Number of components in one row should be between 1 and 5.")
-
-            for comp in component:
-                check_single_component(comp)
-
-        else:
-            check_single_component(component)
-
+        component._checks()
         return component
 
-    @property
-    def components(self) -> list:
-        return self._components
+    def _checks(self):
+        self.components = [self._component_checks(c) for c in self.components]
 
-    @property
-    def type(self):
-        return self._type
+        if not (0 < len(self.components) <= ActionRow._max_items):
+            raise TypeError(f"Number of components in one row should be between 1 and {ActionRow._max_items}.")
 
-    @property
-    def to_dict(self) -> dict:
+        if any(x.type == ComponentTypes.SELECT for x in self.components) and len(self.components) != 1:
+            raise TypeError("Action row must have only one select component and nothing else.")
+
+    def add_components(self, *components: Union[dict, Button, Select]):
         """
-        Returns a dictionary representing this component, that discord can process
+        Add one or more component(s) to this action row
+
+        :param components:
         """
-        self._checks()
-
-        _components = []
-        for comp in self.components:
-            _components.append(comp.to_dict)
-        return {"type": self._type, "components": _components}
-
-    def append(self, component: Union[dict, Button, Select]):
-        """Add a component to this action row"""
-        component = self.append_checks(component)
-        self._components.append(component)
-
-    def remove(self, index: int):
-        del self._components[index]
+        for c in components:
+            self.components.append(self._component_checks(c))
 
 
-def convert_dict(component: dict) -> Union[ActionRow, Button, Select]:
+def convert_to_component(component: dict) -> Union[ActionRow, Button, Select]:
     """
     Converts a dict representation of a component into its object form
 
     :param component: A component dict
     """
-    if component.get("type") == ComponentTypes.ACTION_ROW:
-        row = ActionRow()
-        for comp in component.get("components"):
-            row.append(convert_dict(comp))
-        return row
+    componentType = component.pop("type")
+    componentClass = TYPE_COMPONENT_MAPPING.get(componentType)
+    if not componentClass:
+        raise TypeError(f"Unknown component type of {component} ({componentType}), please consult the docs.")
 
-    elif component.get("type") == ComponentTypes.BUTTON:
-        return Button(
-            label=component.get("label"),
-            custom_id=component.get("custom_id"),
-            style=component.get("style"),
-            disabled=component.get("disabled", False),
-            emoji=component.get("emoji"),
-        )
-
-    elif component.get("type") == ComponentTypes.SELECT:
-        return Select(
-            options=component.get("options"),
-            custom_id=component.get("custom_id"),
-            placeholder=component.get("placeholder"),
-            min_values=component.get("min_values"),
-            max_values=component.get("max_values"),
-            disabled=component.get("disabled", False),
-        )
-
-    else:
-        raise TypeError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
+    return componentClass(**component)
 
 
 def process_components(
@@ -382,27 +232,18 @@ def process_components(
 
         if isinstance(components[0], list):
             # list of lists... actionRow-less sending
-            return [ActionRow(*row).to_dict for row in components]
+            return [ActionRow(*row).to_dict() for row in components]
 
-        if all(isinstance(c, TYPE_SINGLE_COMPONENT) for c in components):
+        if all(issubclass(type(c), InteractiveComponent) for c in components):
             # list of naked components
-            return [ActionRow(*components).to_dict]
+            return [ActionRow(*components).to_dict()]
 
-        if all(isinstance(c, TYPE_GROUP_COMPONENT) for c in components):
+        if all(isinstance(c, ActionRow) for c in components):
             # we have a list of action rows
-            return [action_row.to_dict for action_row in components]
+            return [action_row.to_dict() for action_row in components]
 
     raise ValueError(f"Invalid components: {components}")
 
-
-TYPE_SINGLE_COMPONENT = [
-    Button,
-    Select,
-]
-
-TYPE_GROUP_COMPONENT = [
-    ActionRow
-]
 
 TYPE_COMPONENT_MAPPING = {
     ComponentTypes.ACTION_ROW: ActionRow,

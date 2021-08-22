@@ -343,6 +343,14 @@ class ButtonStyles(IntEnum):
     The styles of buttons supported
     """
 
+    # Based on discord api
+    PRIMARY = 1
+    SECONDARY = 2
+    SUCCESS = 3
+    DANGER = 4
+    LINK = 5
+
+    # Aliases
     BLUE = 1
     BLURPLE = 1
     GRAY = 2
@@ -350,8 +358,3 @@ class ButtonStyles(IntEnum):
     GREEN = 3
     RED = 4
     URL = 5
-
-    PRIMARY = 1
-    SECONDARY = 2
-    SUCCESS = 3
-    DANGER = 4

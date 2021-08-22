@@ -1,8 +1,14 @@
+import logging
 from typing import Any, Dict
 
 import attr
 
+from dis_snek.const import logger_name
 from dis_snek.utils.serializer import to_dict
+
+
+log = logging.getLogger(logger_name)
+
 
 default_kwargs = dict(kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 
@@ -13,6 +19,15 @@ def converter(attribute):
         return staticmethod(func)
 
     return decorator
+
+
+def str_validator(self, attribute: attr.Attribute, value: Any):
+    if not isinstance(value, str):
+        setattr(self, attribute.name, str(value))
+        log.warning(
+            f"Value of {attribute.name} has been automatically converted to a string. Please use strings in future.\n"
+            "Note: Discord will always return value as a string"
+        )
 
 
 class DictSerializationMixin:
