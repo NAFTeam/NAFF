@@ -5,7 +5,7 @@ from dis_snek.models.discord_objects.components import BaseComponent, process_co
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.message import Message
+    from dis_snek.models.discord_objects.message import Message, AllowedMentions
 
 
 class SendMixin:
@@ -21,7 +21,7 @@ class SendMixin:
             Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
         tts: Optional[bool] = False,
-        allowed_mentions: Optional[dict] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
         """
@@ -39,6 +39,9 @@ class SendMixin:
         embeds = process_embeds(embeds)
 
         components = process_components(components)
+
+        if allowed_mentions and not isinstance(allowed_mentions, dict):
+            allowed_mentions = allowed_mentions.to_dict()
 
         # TODO Files support.
 

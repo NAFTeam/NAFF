@@ -1,5 +1,5 @@
 import logging
-from enum import EnumMeta, IntEnum, IntFlag, _decompose
+from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
 from typing import Tuple
@@ -358,3 +358,10 @@ class ButtonStyles(IntEnum):
     GREEN = 3
     RED = 4
     URL = 5
+
+
+class MentionTypes(str, Enum):
+
+    EVERYONE = "everyone"
+    ROLES = "roles"
+    USERS = "users"

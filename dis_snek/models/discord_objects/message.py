@@ -1,3 +1,4 @@
+from ast import parse
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Union
@@ -15,9 +16,10 @@ from dis_snek.models.discord_objects.interactions import CommandTypes
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.sticker import Sticker
-from dis_snek.models.discord_objects.user import Member, User
+from dis_snek.models.discord_objects.user import BaseUser, Member, User
 from dis_snek.models.enums import (
     ChannelTypes,
+    MentionTypes,
     MessageActivityTypes,
     MessageFlags,
     MessageTypes,
@@ -63,6 +65,47 @@ class MessageReference:  # todo refactor into actual class, add pointers to actu
     channel_id: Optional[int] = None
     guild_id: Optional[int] = None
     fail_if_not_exists: bool = True
+
+
+@attr.s(slots=True)
+class AllowedMentions:
+    """
+    The allowed mention field allows for more granular control over mentions without various hacks to the message content. 
+    This will always validate against message content to avoid phantom pings, and check against user/bot permissions.
+
+    :param parse: An array of allowed mention types to parse from the content.
+    :param roles: Array of role_ids to mention. (Max size of 100)
+    :param users: Array of user_ids to mention. (Max size of 100)
+    :param replied_user: For replies, whether to mention the author of the message being replied to. (default false)
+    """
+
+    parse: Optional[List[str]] = attr.ib(factory=list)
+    roles: Optional[List[Snowflake_Type]] = attr.ib(factory=list)
+    users: Optional[List[Snowflake_Type]] = attr.ib(factory=list)
+    replied_user = attr.ib(default=False)
+
+    def add_roles(self, *roles: Union[Role, Snowflake_Type]):
+        for role in roles:
+            if isinstance(role, Snowflake):
+                role = role.id
+            self.roles.append(role)
+
+    def add_users(self, *users: Union[Member, BaseUser, Snowflake_Type]):
+        for user in users:
+            if isinstance(user, Snowflake):
+                user = user.id
+            self.users.append(user)
+
+    def to_dict(self) -> dict:
+        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
+
+    @classmethod
+    def all(cls):
+        return cls(parse=list(MentionTypes.__members__.values()), replied_user=True)
+
+    @classmethod
+    def none(cls):
+        return cls()
 
 
 @attr.s(slots=True, kw_only=True)

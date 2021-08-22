@@ -1,7 +1,10 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
+
+if TYPE_CHECKING:
+    from dis_snek.models.discord_objects.message import Message, AllowedMentions
 
 
 class EditMixin:
@@ -15,7 +18,8 @@ class EditMixin:
         components: Optional[
             Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
-    ):
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+    ) -> "Message":
         """
         Edit an existing message
 
@@ -31,10 +35,14 @@ class EditMixin:
 
         components = process_components(components)
 
+        if allowed_mentions and not isinstance(allowed_mentions, dict):
+            allowed_mentions = allowed_mentions.to_dict()
+
         message = dict(
             content=content,
             embeds=embeds,
             components=components,
+            allowed_mentions=allowed_mentions,
         )
 
         # Remove keys without any data.
