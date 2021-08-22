@@ -20,7 +20,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import attr
 from attr.validators import instance_of, optional
@@ -215,3 +215,17 @@ class Embed(object):
         """
         self.fields.append(EmbedField(name, value, inline))
         self._fields_validation("fields", self.fields)
+
+
+def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> List[dict]:
+    if not embeds:
+        return
+
+    if isinstance(embeds, Embed):
+        return [embeds.to_dict()]
+
+    if isinstance(embeds, dict):
+        return [embeds]
+
+    if isinstance(embeds, list):
+        return [embed.to_dict() if isinstance(embeds, Embed) else embed for embed in embeds]

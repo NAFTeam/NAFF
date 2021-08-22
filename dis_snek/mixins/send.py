@@ -2,7 +2,7 @@ from dis_snek.models.enums import MessageFlags
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
-from dis_snek.models.discord_objects.embed import Embed
+from dis_snek.models.discord_objects.embed import Embed, process_embeds
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.message import Message
@@ -16,14 +16,14 @@ class SendMixin:
         self,
         content: Optional[str],
         embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
-        files = None,
+        files=None,
         components: Optional[
             Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
         tts: Optional[bool] = False,
         allowed_mentions: Optional[dict] = None,
         flags: Optional[Union[int, MessageFlags]] = None,
-    ) -> 'Message':
+    ) -> "Message":
         """
         Send a message
 
@@ -36,18 +36,11 @@ class SendMixin:
 
         :return: New message object.
         """
-        # Wrap single instances in a list
-        if isinstance(embeds, (Embed, dict)):
-            embeds = [embeds]
-        # Handle none
-        if embeds is None:
-            embeds = []
-        elif isinstance(embeds, list):
-            embeds = [e.to_dict() if isinstance(e, Embed) else e for e in embeds]
+        embeds = process_embeds(embeds) if components else []
 
         components = process_components(components) if components else []
 
-        #TODO Files support.
+        # TODO Files support.
 
         message = dict(
             content=content,
