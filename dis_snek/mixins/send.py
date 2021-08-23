@@ -62,6 +62,13 @@ class SendMixin:
 
         message_data = None
         if filepath:
+            # Some special checks when sending file.
+            if embeds or allowed_mentions:
+                raise ValueError("Embeds and allow mentions is not supported when sending a file.")
+            if flags & MessageFlags.EPHEMERAL == flags:
+                raise ValueError("Ephemeral messages does not support sending of files.")
+
+            # We need to use multipart/form-data for file sending here.
             form = FormData(message)
             with open(str(filepath), "rb") as buffer:
                 form.add_field("file", buffer)

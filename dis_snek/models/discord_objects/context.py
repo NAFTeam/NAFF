@@ -75,7 +75,7 @@ class InteractionContext(Context, SendMixin):
         if isinstance(message, FormData):
             # Special conditions if we are sending a file.
             if self.ephemeral:
-                raise ValueError("Ephemeral message does not support files.")
+                raise ValueError("Ephemeral messages does not support sending of files.")
             if not self.responded and not self.deferred:
                 # Discord doesn't allow files at initial response, so we defer then edit.
                 await self.defer()
