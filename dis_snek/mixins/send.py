@@ -12,19 +12,19 @@ if TYPE_CHECKING:
 
 
 class SendMixin:
-    def _send_http_request(self, message: Union[dict, FormData]) -> dict:
+    async def _send_http_request(self, message: Union[dict, FormData]) -> dict:
         raise NotImplementedError
 
     async def send(
         self,
-        content: Optional[str],
+        content: Optional[str] = None,
         embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
         filepath: Union[str, Path] = None,
         components: Optional[
             Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
         tts: Optional[bool] = False,
-        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", Dict]] = None,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
         """
@@ -40,13 +40,9 @@ class SendMixin:
         :return: New message object.
         """
         embeds = process_embeds(embeds)
-
         components = process_components(components)
-
         if allowed_mentions and not isinstance(allowed_mentions, dict):
             allowed_mentions = allowed_mentions.to_dict()
-
-        # TODO Files support.
 
         message = dict(
             content=content,
@@ -65,7 +61,7 @@ class SendMixin:
             # Some special checks when sending file.
             if embeds or allowed_mentions:
                 raise ValueError("Embeds and allow mentions is not supported when sending a file.")
-            if flags & MessageFlags.EPHEMERAL == flags:
+            if flags and flags & MessageFlags.EPHEMERAL == flags:
                 raise ValueError("Ephemeral messages does not support sending of files.")
 
             # We need to use multipart/form-data for file sending here.
