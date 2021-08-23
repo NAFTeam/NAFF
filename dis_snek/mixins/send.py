@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from aiohttp.formdata import FormData
 from dis_snek.models.enums import MessageFlags
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
@@ -9,14 +12,14 @@ if TYPE_CHECKING:
 
 
 class SendMixin:
-    def _send_http_request(self, message: dict) -> dict:
+    def _send_http_request(self, message: Union[dict, FormData]) -> dict:
         raise NotImplementedError
 
     async def send(
         self,
         content: Optional[str],
         embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
-        files=None,
+        filepath: Union[str, Path] = None,
         components: Optional[
             Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
         ] = None,
@@ -57,7 +60,14 @@ class SendMixin:
         # Remove keys without any data.
         message = {k: v for k, v in message.items() if v}
 
-        message_data = await self._send_http_request(message)
+        message_data = None
+        if filepath:
+            form = FormData(message)
+            with open(str(filepath), "rb") as buffer:
+                form.add_field("file", buffer)
+                message_data = await self._send_http_request(form)
+        else:
+            message_data = await self._send_http_request(message)
 
         if message_data:
             return await self._client.cache.place_message_data(

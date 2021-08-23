@@ -88,7 +88,7 @@ class ChannelRequests:
 
         # clean up payload
         payload = {key: value for key, value in payload.items() if value is not None}
-        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), json=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
     async def move_channel(
         self,
@@ -114,7 +114,7 @@ class ChannelRequests:
         if parent_id:
             payload["parent_id"] = parent_id
 
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), json=payload, reason=reason)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
     async def modify_channel(self, channel_id: Snowflake_Type, data: dict, reason: str = None) -> dict:
         """
@@ -125,7 +125,7 @@ class ChannelRequests:
         :param reason: An optional reason for the audit log
         :return: Channel object on success
         """
-        return await self.request(Route("PATCH", f"channels/{channel_id}"), json=data, reason=reason)
+        return await self.request(Route("PATCH", f"channels/{channel_id}"), data=data, reason=reason)
 
     async def delete_channel(self, channel_id: Snowflake_Type, reason: str = None):
         """
@@ -178,7 +178,7 @@ class ChannelRequests:
         if target_application_id:
             payload["target_application_id"] = target_application_id
 
-        return await self.request(Route("POST", f"channels/{channel_id}/invites"), json=payload, reason=reason)
+        return await self.request(Route("POST", f"channels/{channel_id}/invites"), data=payload, reason=reason)
 
     async def delete_channel_permission(
         self, channel_id: Snowflake_Type, overwrite_id: int, reason: str = None
@@ -201,7 +201,7 @@ class ChannelRequests:
         :return: Followed channel object
         """
         return await self.request(
-            Route("POST", f"/channels/{channel_id}/followers"), json={"webhook_channel_id": webhook_channel_id}
+            Route("POST", f"/channels/{channel_id}/followers"), data={"webhook_channel_id": webhook_channel_id}
         )
 
     async def trigger_typing_indicator(self, channel_id: Snowflake_Type) -> None:

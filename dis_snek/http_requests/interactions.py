@@ -34,7 +34,7 @@ class InteractionRequests:
         if guild_id:
             endpoint = f"/applications/{app_id}/guilds/{guild_id}/commands"
 
-        return await self.request(Route("PUT", endpoint), json=data)
+        return await self.request(Route("PUT", endpoint), data=data)
 
     async def post_initial_response(self, payload: dict, interaction_id: str, token: str) -> None:
         """
@@ -45,7 +45,7 @@ class InteractionRequests:
         :param token: the token of the interaction
         """
 
-        return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), json=payload)
+        return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), data=payload)
 
     async def post_followup(self, payload: dict, application_id: Snowflake_Type, token: str) -> None:
         """
@@ -56,7 +56,7 @@ class InteractionRequests:
         :param token: the token of the interaction
         """
 
-        return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), json=payload)
+        return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), data=payload)
 
     async def edit_interaction_message(
         self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"
@@ -73,7 +73,7 @@ class InteractionRequests:
         """
 
         return await self.request(
-            Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), json=payload
+            Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), data=payload
         )
 
     async def get_interaction_message(self, application_id: str, token: str, message_id: str = "@original") -> dict:
@@ -104,7 +104,7 @@ class InteractionRequests:
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions"),
-            json=permissions,
+            data=permissions,
         )
 
     async def batch_edit_application_command_permissions(
@@ -120,7 +120,7 @@ class InteractionRequests:
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
-            json=data,
+            data=data,
         )
 
     async def get_application_command_permissions(

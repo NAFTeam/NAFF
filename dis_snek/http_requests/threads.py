@@ -66,7 +66,7 @@ class ThreadRequests:
             payload["limit"] = limit
         if before:
             payload["before"] = before
-        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), json=payload)
+        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), data=payload)
 
     async def list_private_archived_threads(
         self, channel_id: Snowflake_Type, limit: int = None, before: Optional[Snowflake_Type] = None
@@ -84,7 +84,7 @@ class ThreadRequests:
             payload["limit"] = limit
         if before:
             payload["before"] = before
-        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), json=payload)
+        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), data=payload)
 
     async def list_joined_private_archived_threads(
         self, channel_id: Snowflake_Type, limit: int = None, before: Optional[Snowflake_Type] = None
@@ -103,7 +103,7 @@ class ThreadRequests:
         if before:
             payload["before"] = before
         return await self.request(
-            Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), json=payload
+            Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), data=payload
         )
 
     async def list_active_threads(self, guild_id: Snowflake_Type) -> List[dict]:
@@ -140,8 +140,8 @@ class ThreadRequests:
         payload = dict(name=name, auto_archive_duration=auto_archive_duration)
         if message_id:
             return await self.request(
-                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), json=payload, reason=reason
+                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), data=payload, reason=reason
             )
         else:
             payload["type"] = thread_type
-            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), json=payload, reason=reason)
+            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), data=payload, reason=reason)

@@ -101,7 +101,7 @@ class GuildRequests:
             if key not in expected:
                 del kwargs[key]
 
-        await self.request(Route("PATCH", f"/guilds/{guild_id}"), json=kwargs, reason=reason)
+        await self.request(Route("PATCH", f"/guilds/{guild_id}"), data=kwargs, reason=reason)
 
     async def delete_guild(self, guild_id: Snowflake_Type) -> None:
         """

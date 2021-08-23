@@ -70,7 +70,7 @@ class MessageReference:  # todo refactor into actual class, add pointers to actu
 @attr.s(slots=True)
 class AllowedMentions:
     """
-    The allowed mention field allows for more granular control over mentions without various hacks to the message content. 
+    The allowed mention field allows for more granular control over mentions without various hacks to the message content.
     This will always validate against message content to avoid phantom pings, and check against user/bot permissions.
 
     :param parse: An array of allowed mention types to parse from the content.

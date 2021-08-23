@@ -29,8 +29,7 @@ from typing import Any, Coroutine, Dict, Optional, Type, TypeVar, Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp  # type: ignore
-import orjson
-from aiohttp import ClientWebSocketResponse
+from aiohttp import ClientWebSocketResponse, FormData, BaseConnector, ClientSession, ClientResponse
 from multidict import CIMultiDictProxy  # type: ignore
 
 from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name
@@ -63,7 +62,7 @@ MU = TypeVar("MU", bound="CanUnlock")
 Response = Coroutine[Any, Any, T]
 
 
-class DiscordClientWebSocketResponse(aiohttp.ClientWebSocketResponse):
+class DiscordClientWebSocketResponse(ClientWebSocketResponse):
     """Represents the websocket connection with discord."""
 
     async def close(self, *, code: int = 4000, message: bytes = b"") -> bool:
@@ -89,12 +88,10 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(
-        self, connector: Optional[aiohttp.BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None
-    ):
-        self.connector: Optional[aiohttp.BaseConnector] = connector
+    def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
+        self.connector: Optional[BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
-        self.__session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self.__session: ClientSession = ClientSession()
         self._retries: int = 5
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
@@ -122,7 +119,9 @@ class HTTPClient(
             "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset", 0))),  # type: ignore
         }
 
-    async def request(self, route: Route, json: dict = None, reason: str = None, **kwargs: Dict[str, Any]) -> Any:
+    async def request(
+        self, route: Route, data: Union[dict, FormData] = None, reason: str = None, **kwargs: Dict[str, Any]
+    ) -> Any:
         """
         Make a request to discord
         :param route: The route to take
@@ -133,9 +132,11 @@ class HTTPClient(
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
         if self.token is not None:
             headers["Authorization"] = "Bot " + self.token
-        if json:
+        if isinstance(data, dict):
             headers["Content-Type"] = "application/json"
-            kwargs["json"] = json
+            kwargs["json"] = data
+        elif isinstance(data, FormData):
+            kwargs["data"] = data
         if reason:
             headers["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
@@ -146,15 +147,17 @@ class HTTPClient(
         else:
             lock = asyncio.Lock()
 
-        response: Optional[aiohttp.ClientResponse] = None
-        data: Optional[Union[Dict[str, Any], str]] = None
+        response: Optional[ClientResponse] = None
+        result: Optional[Union[Dict[str, Any], str]] = None
 
         await lock.acquire()
         for tries in range(self._retries):
             try:
                 async with self.__session.request(route.method, route.url, **kwargs) as response:
-                    log.debug(f"{route.method} {route.url}{f' with {json}' if json else ''} returned {response.status}")
-                    data = await response_decode(response)
+                    log.debug(
+                        f"{route.method} {route.url}{f' with {result}' if result else ''} returned {response.status}"
+                    )
+                    result = await response_decode(response)
 
                     remaining = response.headers.get("X-Ratelimit-Remaining")
                     if remaining == "0" and response.status != 429:
@@ -168,7 +171,7 @@ class HTTPClient(
 
                     if 300 > response.status >= 200:
                         lock.release()
-                        return data
+                        return result
 
                     if response.status in {500, 502, 504}:
                         log.warning(

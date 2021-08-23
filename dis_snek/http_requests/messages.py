@@ -9,7 +9,7 @@ class MessageRequests:
 
     async def create_message(self, payload: dict, channel_id: Snowflake_Type) -> dict:
         """Send a message to the specified channel."""
-        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), json=payload)
+        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
     async def delete_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, reason: str = None) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
@@ -55,4 +55,4 @@ class MessageRequests:
 
         :return: Message object of edited message
         """
-        return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), json=payload)
+        return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), data=payload)

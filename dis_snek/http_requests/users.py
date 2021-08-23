@@ -39,7 +39,7 @@ class UserRequests:
         if after:
             payload["after"] = after
 
-        return await self.request(Route("GET", f"/guilds/{guild_id}/members"), json=payload)
+        return await self.request(Route("GET", f"/guilds/{guild_id}/members"), data=payload)
 
     async def search_guild_members(self, guild_id: Snowflake_Type, query: str, limit: int = 1) -> List[Dict]:
         """
@@ -52,7 +52,7 @@ class UserRequests:
         """
 
         return await self.request(
-            Route("GET", f"/guilds/{guild_id}/members/search"), json=dict(query=query, limit=limit)
+            Route("GET", f"/guilds/{guild_id}/members/search"), data=dict(query=query, limit=limit)
         )
 
     async def modify_guild_member(
@@ -82,4 +82,4 @@ class UserRequests:
         payload = dict(nick=nickname, roles=roles, mute=mute, deaf=deaf, channel_id=channel_id)
         # clean up payload
         payload = {key: value for key, value in payload.items() if value is not None}
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), json=payload, reason=reason)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), data=payload, reason=reason)
