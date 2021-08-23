@@ -71,7 +71,7 @@ class TextChannel(BaseChannel, SendMixin):
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
 
-    async def _send_http_request(self, message: Union[dict, formdata]) -> "Message":
+    async def _send_http_request(self, message: Union[dict, FormData]) -> "Message":
         return await self._client.http.create_message(message, self.id)
 
 

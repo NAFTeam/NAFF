@@ -1,3 +1,4 @@
+from aiohttp.formdata import FormData
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.discord_objects.interactions import CallbackTypes
@@ -70,7 +71,15 @@ class InteractionContext(Context, SendMixin):
         self.ephemeral = ephemeral
         self.deferred = True
 
-    async def _send_http_request(self, message: dict) -> dict:
+    async def _send_http_request(self, message: Union[dict, FormData]) -> dict:
+        if isinstance(message, FormData):
+            # Special conditions if we are sending a file.
+            if self.ephemeral:
+                raise ValueError("Ephemeral message does not support files.")
+            if not self.responded and not self.deferred:
+                # Discord doesn't allow files at initial response, so we defer then edit.
+                await self.defer()
+
         message_data = None
         if not self.responded:
             if self.deferred:
