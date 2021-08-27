@@ -1,3 +1,4 @@
+from dis_snek.models.discord_objects.emoji import PartialEmoji
 from dis_snek.utils.attr_utils import str_validator
 
 import uuid
@@ -50,7 +51,7 @@ class Button(InteractiveComponent):
 
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
-    emoji: Optional[dict] = attr.ib(default=None)  # TODO Partial emoji
+    emoji: Optional[Union[PartialEmoji, dict]] = attr.ib(default=None)  # TODO Allow str for standard unicode emoji
     custom_id: Optional[str] = attr.ib(default=None, validator=str_validator)
     url: Optional[str] = attr.ib(default=None)
     disabled: bool = attr.ib(default=False)

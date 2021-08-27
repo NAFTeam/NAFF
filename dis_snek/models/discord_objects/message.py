@@ -11,7 +11,7 @@ from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
 from dis_snek.models.discord_objects.components import ComponentTypes
 from dis_snek.models.discord_objects.embed import Embed
-from dis_snek.models.discord_objects.emoji import Emoji
+from dis_snek.models.discord_objects.emoji import Emoji, PartialEmoji
 from dis_snek.models.discord_objects.interactions import CommandTypes
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.role import Role
@@ -157,36 +157,36 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
     #         member = client.cache.get_member(data["guild_id"], member_id)
     #     return data
 
-    async def add_reaction(self, emoji: Union[Emoji, str]):
+    async def add_reaction(self, emoji: Union[PartialEmoji, str]):
         """
         Add a reaction to this message.
 
         :param emoji: the emoji to react with
         """
-        if isinstance(emoji, Emoji):
+        if issubclass(type(emoji), PartialEmoji):
             emoji = emoji.req_format
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
-    async def clear_reaction(self, emoji: Union[Emoji, str]):
+    async def clear_reaction(self, emoji: Union[PartialEmoji, str]):
         """
         Clear a specific reaction from message
 
         :param emoji: The emoji to clear
         """
-        if isinstance(emoji, Emoji):
+        if issubclass(type(emoji), PartialEmoji):
             emoji = emoji.req_format
 
         await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union[Emoji, str], member: Union[Member, Snowflake_Type]):
+    async def remove_reaction(self, emoji: Union[PartialEmoji, str], member: Union[Member, Snowflake_Type]):
         """
         Remove a specific reaction that a user reacted with
 
         :param emoji: Emoji to remove
         :param member: Member to remove reaction of
         """
-        if isinstance(emoji, Emoji):
+        if issubclass(type(emoji), PartialEmoji):
             emoji = emoji.req_format
         if isinstance(member, Member):
             member = member.id
