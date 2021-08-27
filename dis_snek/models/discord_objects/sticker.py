@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import attr
 
@@ -8,14 +8,19 @@ from dis_snek.models.snowflake import Snowflake, Snowflake_Type
 from dis_snek.utils.attr_utils import DictSerializationMixin
 
 
-@attr.s(slots=True, kw_only=True)
-class Sticker(Snowflake, DictSerializationMixin):
-    pack_id: Optional[Snowflake_Type] = attr.ib(default=None)
+@attr.s(slots=True)
+class PartialSticker(Snowflake, DictSerializationMixin):
+    _client: Any = attr.ib(repr=False)
     name: str = attr.ib()
+    format_type: StickerFormatTypes = attr.ib(converter=StickerFormatTypes)
+
+
+@attr.s(slots=True, kw_only=True)
+class Sticker(PartialSticker):
+    pack_id: Optional[Snowflake_Type] = attr.ib(default=None)
     description: Optional[str] = attr.ib(default=None)
     tags: str = attr.ib()
     type: StickerTypes = attr.ib(converter=StickerTypes)
-    format_type: StickerFormatTypes = attr.ib(converter=StickerFormatTypes)
     available: Optional[bool] = attr.ib(default=True)
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
     user: Optional[User] = attr.ib(default=None)

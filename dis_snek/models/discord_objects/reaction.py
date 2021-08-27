@@ -6,6 +6,7 @@ from dis_snek.utils.attr_utils import DictSerializationMixin
 
 @attr.s(slots=True, kw_only=True)
 class Reaction(DictSerializationMixin):
+    _client = attr.ib(repr=False)
     # TODO: custom_emoji, message
     count: int = attr.ib()
     me: bool = attr.ib(default=False)

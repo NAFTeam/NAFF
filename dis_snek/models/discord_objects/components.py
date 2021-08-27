@@ -17,6 +17,10 @@ class BaseComponent:
     def __init__(self) -> None:
         raise NotImplementedError
 
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+
     def _checks(self):
         """Checks all attributes of this object are valid"""
         pass
@@ -178,9 +182,14 @@ class ActionRow(BaseComponent):
 
     def __init__(self, *components: Union[dict, Select, Button]) -> None:
         self.__attrs_init__(components)
+        self.components = [self._component_checks(c) for c in self.components]
 
     def __len__(self) -> int:
         return len(self.components)
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(*data["components"])
 
     def _component_checks(self, component: Union[dict, Select, Button]):
         if isinstance(component, dict):
@@ -193,8 +202,6 @@ class ActionRow(BaseComponent):
         return component
 
     def _checks(self):
-        self.components = [self._component_checks(c) for c in self.components]
-
         if not (0 < len(self.components) <= ActionRow._max_items):
             raise TypeError(f"Number of components in one row should be between 1 and {ActionRow._max_items}.")
 
@@ -211,18 +218,20 @@ class ActionRow(BaseComponent):
             self.components.append(self._component_checks(c))
 
 
-def convert_to_component(component: dict) -> Union[ActionRow, Button, Select]:
+def convert_to_component(data: dict) -> Union[ActionRow, Button, Select]:
     """
     Converts a dict representation of a component into its object form
 
     :param component: A component dict
     """
-    componentType = component.pop("type")
+    componentType = data.pop("type", None)
     componentClass = TYPE_COMPONENT_MAPPING.get(componentType)
     if not componentClass:
-        raise TypeError(f"Unknown component type of {component} ({componentType}), please consult the docs.")
+        raise TypeError(f"Unknown component type for {data} ({componentType}), please consult the docs.")
 
-    return componentClass(**component)
+    data.pop("hash", None) # Zero clue why discord sometimes include a hash attribute...
+
+    return componentClass.from_dict(data)
 
 
 def process_components(

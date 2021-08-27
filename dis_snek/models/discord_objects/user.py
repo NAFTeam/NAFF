@@ -97,12 +97,11 @@ class Member(Snowflake, DictSerializationMixin):
             user_data = data.pop("user")
             client.cache.place_user_data(user_data["id"], user_data)
             data.update(user_data)
-        else:
+        elif "member" in data:
             member_data = data.pop("member")
             client.cache.place_user_data(data["id"], data)
             data.update(member_data)
-
-        return data  # TODO Why this isn't returning the class object...?
+        return data
 
     @property
     def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:

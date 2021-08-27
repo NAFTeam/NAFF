@@ -1,24 +1,27 @@
 from ast import parse
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Union
+from dis_snek.utils.cache import CacheProxy
+from typing import TYPE_CHECKING, Awaitable, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.edit import EditMixin
+from dis_snek.models.discord_objects import components
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
-from dis_snek.models.discord_objects.components import ComponentTypes
+from dis_snek.models.discord_objects.components import ComponentTypes, convert_to_component
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji, PartialEmoji
 from dis_snek.models.discord_objects.interactions import CommandTypes
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.role import Role
-from dis_snek.models.discord_objects.sticker import Sticker
+from dis_snek.models.discord_objects.sticker import PartialSticker, Sticker
 from dis_snek.models.discord_objects.user import BaseUser, Member, User
 from dis_snek.models.enums import (
     ChannelTypes,
+    InteractionTypes,
     MentionTypes,
     MessageActivityTypes,
     MessageFlags,
@@ -34,6 +37,7 @@ if TYPE_CHECKING:
 
 @attr.s(slots=True, kw_only=True)
 class Attachment(Snowflake, DictSerializationMixin):
+    _client: "Snake" = attr.ib(repr=False)
     filename: str = attr.ib()
     content_type: Optional[str] = attr.ib(default=None)
     size: int = attr.ib()
@@ -49,6 +53,7 @@ class Attachment(Snowflake, DictSerializationMixin):
 
 @attr.s(slots=True, kw_only=True)
 class ChannelMention(Snowflake, DictSerializationMixin):
+    _client: "Snake" = attr.ib(repr=False)
     guild_id: Snowflake_Type = attr.ib()
     type: ChannelTypes = attr.ib(converter=ChannelTypes)
     name: str = attr.ib()
@@ -60,12 +65,32 @@ class MessageActivity:
     party_id: str = None
 
 
-class MessageReference:  # todo refactor into actual class, add pointers to actual message, channel, guild objects
-    message_id: Optional[int] = None
-    channel_id: Optional[int] = None
-    guild_id: Optional[int] = None
-    fail_if_not_exists: bool = True
+@attr.s(slots=True)
+class MessageReference:
+    # Add pointers to actual message, channel, guild objects
+    message_id: Optional[int] = attr.ib(default=None)
+    channel_id: Optional[int] = attr.ib(default=None)
+    guild_id: Optional[int] = attr.ib(default=None)
+    fail_if_not_exists: bool = attr.ib(default=True)
 
+
+@attr.s(slots=True)
+class MesssageInteraction(Snowflake, DictSerializationMixin):
+    _client: "Snake" = attr.ib(repr=False)
+    _user_id: Snowflake_Type = attr.ib()
+    type: InteractionTypes = attr.ib(converter=InteractionTypes)
+    name: str = attr.ib()
+
+    @classmethod
+    def process_dict(cls, data, client):
+        user_data = data["user"]
+        data["user_id"] = user_data["id"]
+        client.cache.place_user_data(user_data["id"], user_data)
+        return data
+
+    @property
+    def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
+        return CacheProxy(id=self._user_id, method=self._client.cache.get_user)
 
 @attr.s(slots=True)
 class AllowedMentions:
@@ -119,12 +144,12 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
-    mentions: List[Member] = attr.ib(factory=list)
-    mention_roles: List[Role] = attr.ib(factory=list)
+    mentions: List[Union[Member, User]] = attr.ib(factory=list)
+    mention_roles: List[Snowflake_Type] = attr.ib(factory=list)  # TODO: Perhaps automatically get the role data.
     mention_channels: Optional[List[ChannelMention]] = attr.ib(default=None)
-    attachments: List["Attachment"] = attr.ib(factory=list)
+    attachments: List[Attachment] = attr.ib(factory=list)
     embeds: List[Embed] = attr.ib(factory=list)
-    reactions: Optional[List[Reaction]] = attr.ib(default=None)
+    reactions: List[Reaction] = attr.ib(factory=list)
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
     webhook_id: Optional[Snowflake_Type] = attr.ib(default=None)
@@ -132,30 +157,76 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional[Application] = attr.ib(default=None)  # TODO: partial application
     application_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    message_reference: Optional[MessageReference] = attr.ib(default=None)
+    message_reference: Optional[MessageReference] = attr.ib(default=None, converter=optional_c(MessageReference))
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
     referenced_message: Optional["Message"] = attr.ib(default=None)
-    interaction: Optional[CommandTypes] = attr.ib(default=None)
+    interaction: Optional[CommandTypes] = attr.ib(default=None)  # TODO: This should be a message interaction object
     thread: Optional[Thread] = attr.ib(default=None)  # TODO: Validation
-    components: Optional[List[ComponentTypes]] = attr.ib(default=None)
-    sticker_items: Optional[List[Sticker]] = attr.ib(default=None)  # TODO: StickerItem -> Sticker
+    components: Optional[List[ComponentTypes]] = attr.ib(default=None)  # TODO: This should be a component object
+    sticker_items: Optional[List[PartialSticker]] = attr.ib(default=None)  # TODO: Perhaps automatically get the full sticker data.
 
-    # @classmethod
-    # def process_dict(cls, data, client):
-    #     roles_data = data.pop("mention_roles")
-    #     roles = []
-    #     for role_data in roles_data:
-    #         role_id = role_data["id"]
-    #         role = client.cache.get_role(data["guild_id"], role_id)
-    #         roles.append(role)
-    #     data["mention_roles"] = roles
-    #
-    #     mentions_data = data.pop("mentions")
-    #     mentions = []
-    #     for mention_data in mentions_data:
-    #         member_id = mention_data["id"]
-    #         member = client.cache.get_member(data["guild_id"], member_id)
-    #     return data
+    @classmethod
+    def process_dict(cls, data: dict, client) -> dict:
+        # TODO: Is there a way to dynamically do this instead of hard coding?
+
+        if "member" in data:
+            author_data = data["author"]
+            author_data["member"] = data["member"]
+            author_data["member"]["guild_id"] = data["guild_id"]
+            data["author"] = Member.from_dict(author_data, client)
+        else:
+            data["author"] = User.from_dict(data["author"], client)
+
+        mentions = []
+        for user_data in data["mentions"]:
+            if "member" in user_data:
+                user_data["member"]["guild_id"] = data["guild_id"]
+                mentions.append(Member.from_dict(user_data, client))
+            else:
+                mentions.append(User.from_dict(user_data, client))
+        data["mentions"] = mentions
+
+        if "mention_channels" in data:
+            mention_channels = []
+            for channel_data in data["mention_channels"]:
+                mention_channels.append(ChannelMention.from_dict(channel_data, client))
+
+        attachments = []
+        for attachment_data in data["attachments"]:
+            attachments.append(Attachment.from_dict(attachment_data, client))
+        data["attachments"] = attachments
+
+        # TODO: Convert to embed objects
+
+        if "reactions" in data:
+            reactions = []
+            for reaction_data in data["reactions"]:
+                reactions.append(Reaction.from_dict(reaction_data, client))
+            data["reactions"] = reactions
+
+        # TODO: Convert to application object
+
+        if data.get("referenced_message", None):
+            data["referenced_message"] = Message.from_dict(data["referenced_message"], client)
+
+        if "interaction" in data:
+            data["interaction"] = MesssageInteraction.from_dict(data["interaction"], client)
+
+        # TODO: Convert to thread object
+
+        if "components" in data:
+            components = []
+            for component_data in data["components"]:
+                components.append(convert_to_component(component_data))
+            data["components"] = components
+
+        if "sticker_items" in data:
+            stickers = []
+            for sticker_data in data["sticker_items"]:
+                stickers.append(PartialSticker.from_dict(sticker_data, client))
+            data["sticker_items"] = stickers
+
+        return data
 
     async def add_reaction(self, emoji: Union[PartialEmoji, str]):
         """
