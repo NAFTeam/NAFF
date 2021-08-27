@@ -132,7 +132,7 @@ class HTTPClient(
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
         if self.token is not None:
             headers["Authorization"] = "Bot " + self.token
-        if isinstance(data, dict):
+        if isinstance(data, (list, dict)):
             headers["Content-Type"] = "application/json"
             kwargs["json"] = data
         elif isinstance(data, FormData):
