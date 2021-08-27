@@ -73,9 +73,11 @@ class Snake:
 
         self._listeners: Dict[str, List] = {}
 
-        self.add_listener(self.on_socket_raw, "raw_socket_receive")
+        self.add_listener(self._on_raw_socket_receive, "raw_socket_receive")
         self.add_listener(self._on_websocket_ready, "websocket_ready")
         self.add_listener(self._on_raw_message_create, "raw_message_create")
+        self.add_listener(self._on_raw_guild_create, "raw_guild_create")
+        self.add_listener(self._dispatch_interaction, "raw_interaction_create")
 
     @property
     def is_closed(self) -> bool:
@@ -193,7 +195,7 @@ class Snake:
         if not event:
             event = coro.__name__
 
-        event = event.replace("on_", "")
+        event = event.removeprefix("on_")
 
         if event not in self._listeners:
             self._listeners[event] = []
@@ -362,12 +364,11 @@ class Snake:
 
         return cls
 
-    async def dispatch_slash_command(self, interaction_data: dict) -> None:
+    async def _dispatch_interaction(self, interaction_data: dict) -> None:
         """
-        Identify and dispatch slash commands.
+        Identify and dispatch interaction of slash commands or components.
 
-        :param interaction_data:
-        :return:
+        :param interaction_data: raw interaction data
         """
         # Yes this is temporary, im just blocking out the basic logic
 
@@ -399,25 +400,32 @@ class Snake:
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
+            self.dispatch("component", ctx)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch("button", ctx)
             if component_type == ComponentTypes.SELECT:
                 self.dispatch("select", ctx)
-            self.dispatch("component", ctx)
 
         else:
-            raise NotImplementedError(f"Unknown Interaction Recieved: {interaction_data['type']}")
+            raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     async def _on_raw_message_create(self, data: dict) -> None:
+        """
+        Automatically convert MESSAGE_CREATE event data to the object.
+
+        :param data: raw message data
+        """
         msg = Message.from_dict(data, self)
         self.dispatch("message_create", msg)
 
     async def _on_raw_guild_create(self, data: dict) -> None:
         """
-        Automatically cache a guild upon GUILD_CREATE event from gateway
+        Automatically cache a guild upon GUILD_CREATE event from gateway.
+
         :param data: raw guild data
         """
-        self.cache.place_guild_data(data["id"], data)
+        guild = self.cache.place_guild_data(data["id"], data)
+        self.dispatch("guild_create", guild)
 
     async def _on_websocket_ready(self, data: dict) -> None:
         """
@@ -454,23 +462,16 @@ class Snake:
 
         self.dispatch("ready")
 
-    async def on_socket_raw(self, raw: dict):
+    async def _on_raw_socket_receive(self, raw: dict):
         """
         Processes socket events and dispatches non-raw events
+
         :param raw: raw socket data
         """
+        # TODO: I think don't really need this anymore? Unless just for debugging.
         event = raw.get("t")
         data = raw.get("d")
-
-        if event == "GUILD_CREATE":
-            # cache guild
-            guild_id = data["id"]
-            guild = self.cache.place_guild_data(guild_id, data)
-            self.dispatch("guild_create", guild)
-
-        if event == "INTERACTION_CREATE":
-            await self.dispatch_slash_command(data)
-        print(event, data)
+        log.debug(f"EVENT: {event}: {data}")
 
     async def get_guild(self, guild_id: Snowflake_Type, with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
