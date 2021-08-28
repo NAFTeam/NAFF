@@ -16,7 +16,7 @@ class Color:
         color = color or (0, 0, 0)
         if isinstance(color, int):
             self.value = color
-        if isinstance(color, (tuple, list)):
+        elif isinstance(color, (tuple, list)):
             self.rgb = color
         elif isinstance(color, str):
             if re.match(self.hex_regex, color):
