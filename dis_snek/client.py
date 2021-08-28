@@ -424,7 +424,7 @@ class Snake:
 
         :param data: raw guild data
         """
-        guild = self.cache.place_guild_data(data["id"], data)
+        guild = self.cache.place_guild_data(data)
         self.dispatch("guild_create", guild)
 
     async def _on_websocket_ready(self, data: dict) -> None:

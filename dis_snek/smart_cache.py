@@ -33,10 +33,11 @@ class GlobalCache:
         user = self.user_cache.get(user_id)
         if request_fallback and user is None:
             data = await self._client.http.get_user(user_id)
-            user = self.place_user_data(user_id, data)
+            user = self.place_user_data(data)
         return user
 
-    def place_user_data(self, user_id, data) -> User:
+    def place_user_data(self, data) -> User:
+        user_id = data["id"]
         user = self.user_cache.get(user_id)
         if user is None:
             user = User.from_dict(data, self._client)
@@ -49,10 +50,11 @@ class GlobalCache:
         member = self.member_cache.get((guild_id, user_id))
         if request_fallback and member is None:
             data = await self._client.http.get_member(guild_id, user_id)
-            member = self.place_member_data(guild_id, user_id, data)
+            member = self.place_member_data(guild_id, data)
         return member
 
-    def place_member_data(self, guild_id, user_id, data) -> Member:
+    def place_member_data(self, guild_id, data) -> Member:
+        user_id = data["user"]["id"] if "user" in data else data["id"]
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
             data.update({"guild_id": guild_id})
@@ -68,10 +70,11 @@ class GlobalCache:
         message = self.message_cache.get((channel_id, message_id))
         if request_fallback and message is None:
             data = await self._client.http.get_message(channel_id, message_id)
-            message = self.place_message_data(channel_id, message_id, data)
+            message = self.place_message_data(channel_id, data)
         return message
 
-    async def place_message_data(self, channel_id, message_id, data) -> Message:
+    async def place_message_data(self, channel_id, data) -> Message:
+        message_id = data["id"]
         message = self.message_cache.get((channel_id, message_id))
         if message is None:
             # TODO: Evaluate if from_dict is enough
@@ -85,10 +88,11 @@ class GlobalCache:
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
             data = await self._client.http.get_channel(channel_id)
-            channel = self.place_channel_data(channel_id, data)
+            channel = self.place_channel_data(data)
         return channel
 
-    def place_channel_data(self, channel_id, data) -> BaseChannel:
+    def place_channel_data(self, data) -> BaseChannel:
+        channel_id = data["id"]
         channel = self.channel_cache.get(channel_id)
         if channel is None:
             channel = BaseChannel.from_dict(data, self._client)
@@ -97,7 +101,7 @@ class GlobalCache:
             channel.update_from_dict(data)
         return channel
 
-    def place_dm_channel_id(self, user_id, channel_id) -> DM:
+    def place_dm_channel_id(self, user_id, channel_id):
         self.dm_channels[user_id] = channel_id
 
     async def get_dm_channel(self, user_id) -> DM:
@@ -112,10 +116,11 @@ class GlobalCache:
         guild = self.guild_cache.get(guild_id)
         if request_fallback and guild is None:
             data = await self._client.http.get_guild(guild_id)
-            guild = self.place_guild_data(guild_id, data)
+            guild = self.place_guild_data(data)
         return guild
 
-    def place_guild_data(self, guild_id, data) -> Guild:
+    def place_guild_data(self, data) -> Guild:
+        guild_id = data["id"]
         guild = self.guild_cache.get(guild_id)
         if guild is None:
             guild = Guild.from_dict(data, self._client)

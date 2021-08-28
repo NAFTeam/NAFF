@@ -82,8 +82,7 @@ class MesssageInteraction(DiscordObject):
     @classmethod
     def process_dict(cls, data, client):
         user_data = data["user"]
-        data["user_id"] = user_data["id"]
-        client.cache.place_user_data(user_data["id"], user_data)
+        data["user_id"] = client.cache.place_user_data(user_data).id
         return data
 
     @property

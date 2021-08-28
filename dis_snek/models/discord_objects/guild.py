@@ -10,7 +10,6 @@ from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
-    from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import Thread
     from dis_snek.models.discord_objects.user import Member
 
@@ -67,29 +66,15 @@ class Guild(DiscordObject):
     @classmethod
     def process_dict(cls, data, client):
         channels_data = data.pop("channels", [])
-        channel_ids = []
-        for channel_data in channels_data:
-            channel_id = channel_data["id"]
-            client.cache.place_channel_data(channel_id, channel_data)
-            channel_ids.append(channel_id)
-        data["channel_ids"] = channel_ids
+        data["channel_ids"] = [client.cache.place_channel_data(channel_data).id for channel_data in channels_data]
 
         threads_data = data.pop("threads", [])
-        thread_ids = []
-        for thread_data in threads_data:
-            thread_id = thread_data["id"]
-            client.cache.place_channel_data(thread_id, thread_data)
-            thread_ids.append(thread_id)
-        data["thread_ids"] = thread_ids
+        data["thread_ids"] = [client.cache.place_channel_data(thread_data).id for thread_data in threads_data]
 
         members_data = data.pop("members", [])
-        members_ids = []
         guild_id = data["id"]
-        for member_data in members_data:
-            user_id = member_data["user"]["id"]
-            client.cache.place_member_data(guild_id, user_id, member_data)
-            members_ids.append(user_id)
-        data["member_ids"] = members_ids
+        data["member_ids"] = [client.cache.place_member_data(guild_id, member_data).id for member_data in members_data]
+
         return data
 
     @property
