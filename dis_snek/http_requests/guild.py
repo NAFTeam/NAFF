@@ -65,7 +65,7 @@ class GuildRequests:
 
         :return: List of roles
         """
-        return await self.request(Route("GET", f"/guild/{guild_id}/roles"))
+        return await self.request(Route("GET", f"/guilds/{guild_id}/roles"))
 
     async def modify_guild(self, guild_id: Snowflake_Type, reason: str = None, **kwargs) -> None:
         """
