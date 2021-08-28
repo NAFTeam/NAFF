@@ -59,9 +59,9 @@ class Guild(DiscordObject):
     stage_instances: List[dict] = attr.ib(factory=list)
     stickers: List[dict] = attr.ib(factory=list)
 
-    channel_ids: List[Snowflake_Type] = attr.ib(factory=list)
-    thread_ids: List[Snowflake_Type] = attr.ib(factory=list)
-    member_ids: List[Snowflake_Type] = attr.ib(factory=list)
+    _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
 
     @classmethod
     def process_dict(cls, data, client):
@@ -81,15 +81,15 @@ class Guild(DiscordObject):
     def channels(
         self,
     ) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
-        return CacheView(ids=self.channel_ids, method=self._client.cache.get_channel)
+        return CacheView(ids=self._channel_ids, method=self._client.cache.get_channel)
 
     @property
     def threads(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Thread"]], AsyncIterator["Thread"]]:
-        return CacheView(ids=self.thread_ids, method=self._client.cache.get_channel)
+        return CacheView(ids=self._thread_ids, method=self._client.cache.get_channel)
 
     @property
     def members(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Member"]], AsyncIterator["Member"]]:
-        return CacheView(ids=self.member_ids, method=partial(self._client.cache.get_member, self.id))
+        return CacheView(ids=self._member_ids, method=partial(self._client.cache.get_member, self.id))
 
     @property
     def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
