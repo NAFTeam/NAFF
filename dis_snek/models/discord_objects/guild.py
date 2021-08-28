@@ -97,8 +97,12 @@ class Guild(DiscordObject):
         return CacheView(ids=self._member_ids, method=partial(self._client.cache.get_member, self.id))
 
     @property
+    def roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+        return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self.id))
+
+    @property
     def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
-        return CacheProxy(id=self._client._user.id, method=partial(self._client.cache.get_member, self.id))
+        return CacheProxy(id=self._client.user.id, method=partial(self._client.cache.get_member, self.id))
 
     # @property
     # def
