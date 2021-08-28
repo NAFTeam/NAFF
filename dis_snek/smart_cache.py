@@ -1,6 +1,6 @@
 from collections import defaultdict
 from functools import partial
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, List, Dict, Any
 
 import attr
 
@@ -156,26 +156,26 @@ class GlobalCache:
         role = self.role_cache.get(role_id)
         if request_fallback and role is None:
             data = await self._client.http.get_roles(guild_id)
-            role = self.place_role_data(guild_id, role_id, data)
+            role = self.place_role_data(guild_id, data)[role_id]
         return role
 
-    def place_role_data(self, guild_id, role_id, data) -> Role:
+    def place_role_data(
+        self, guild_id: Snowflake_Type, data: List[Dict[Snowflake_Type, Any]]
+    ) -> Dict[Snowflake_Type, Role]:
         guild_id = to_snowflake(guild_id)
-        role_id = to_snowflake(role_id)
 
-        role = None
-        for role_data in data:  # todo not update cache on roles
+        roles = {}
+        for role_data in data:  # todo not update cache expiration order for roles
             role_data.update({"guild_id": guild_id})
-            role_data_id = to_snowflake(role_data["id"])
+            role_id = to_snowflake(role_data["id"])
 
-            cached_role = self.role_cache.get(role_data_id)
-            if cached_role is None:
-                cached_role = Role.from_dict(role_data, self._client)
-                self.role_cache[role_data_id] = cached_role
+            role = self.role_cache.get(role_id)
+            if role is None:
+                role = Role.from_dict(role_data, self._client)
+                self.role_cache[role_id] = role
             else:
-                cached_role.update_from_dict(role_data)
+                role.update_from_dict(role_data)
 
-            if role_data_id == role_id:
-                role = cached_role
+            roles[role_id] = role
 
-        return role
+        return roles
