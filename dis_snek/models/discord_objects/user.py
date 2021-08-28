@@ -59,6 +59,7 @@ class User(BaseUser):
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super().process_dict(data, client)
         if "banner" in data:
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
