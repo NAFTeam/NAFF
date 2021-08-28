@@ -4,7 +4,7 @@ import attr
 
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.base_object import DiscordObject
 from dis_snek.utils.attr_utils import define, field
 
@@ -22,7 +22,7 @@ class PartialEmoji(DiscordObject):
     :param animated: Whether this emoji is animated.
     """
 
-    id: Optional[Snowflake_Type] = attr.ib(default=None)  # can be None for Standard Emoji
+    id: Optional[Snowflake_Type] = attr.ib(default=None, converter=to_snowflake)  # can be None for Standard Emoji
     name: Optional[str] = attr.ib(default=None)
     animated: bool = attr.ib(default=False)
 

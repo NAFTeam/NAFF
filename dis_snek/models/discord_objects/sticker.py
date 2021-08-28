@@ -11,7 +11,6 @@ from dis_snek.utils.attr_utils import define, field
 
 @attr.s(slots=True)
 class PartialSticker(DiscordObject):
-    _client: Any = attr.ib(repr=False)
     name: str = attr.ib()
     format_type: StickerFormatTypes = attr.ib(converter=StickerFormatTypes)
 

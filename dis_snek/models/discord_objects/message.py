@@ -134,7 +134,6 @@ class AllowedMentions:
 
 @define()
 class Message(DiscordObject, EditMixin):
-    _client: "Snake" = attr.ib(repr=False)
     channel_id: Snowflake_Type = attr.ib()
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
     author: Union[Member, User] = attr.ib()  # TODO: create override for detecting PartialMember
@@ -165,7 +164,7 @@ class Message(DiscordObject, EditMixin):
     sticker_items: Optional[List[PartialSticker]] = attr.ib(default=None)  # TODO: Perhaps automatically get the full sticker data.
 
     @classmethod
-    def process_dict(cls, data: dict, client) -> dict:
+    def process_dict(cls, data: dict, client: "Snake") -> dict:
         # TODO: Is there a way to dynamically do this instead of hard coding?
 
         if "member" in data:

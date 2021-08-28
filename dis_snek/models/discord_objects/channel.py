@@ -28,8 +28,6 @@ if TYPE_CHECKING:
 
 @define()
 class BaseChannel(DiscordObject):
-    _client: "Snake" = field(repr=False)
-
     _type: ChannelTypes = field(converter=ChannelTypes)
     name: Optional[str] = field(default=None)
 

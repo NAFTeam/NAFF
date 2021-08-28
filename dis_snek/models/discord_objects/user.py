@@ -77,7 +77,6 @@ class SnakeBotUser(User):
 
 @define()
 class Member(DiscordObject):
-    _client: "Snake" = attr.field(repr=False)
     guild_id: "Snowflake_Type" = attr.field()
     nickname: Optional[str] = attr.ib(default=None)
     deafened: bool = attr.ib(default=False)
