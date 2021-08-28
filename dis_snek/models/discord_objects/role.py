@@ -2,19 +2,20 @@ from typing import Optional
 
 import attr
 
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 
-@attr.s(slots=True, kw_only=True)
+@define
 class RoleTags:
     bot_id: Optional[Snowflake_Type] = attr.ib(default=None)
     integration_id: Optional[Snowflake_Type] = attr.ib(default=None)
     premium_subscriber: bool = attr.ib(default=False)  # TODO: detect null in process_dict
 
 
-@attr.s(slots=True, kw_only=True)
-class Role(Snowflake, DictSerializationMixin):
+@define
+class Role(DiscordObject):
     name: str = attr.ib()
     color: int = attr.ib()
     hoist: bool = attr.ib(default=False)

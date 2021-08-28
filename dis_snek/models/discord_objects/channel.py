@@ -14,10 +14,11 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.enums import ChannelTypes
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
+from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.base_object import DiscordObject
 from dis_snek.utils.cache import CacheProxy, CacheView
+from dis_snek.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -25,12 +26,12 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import User
 
 
-@attr.s(slots=True, kw_only=True)
-class BaseChannel(Snowflake, DictSerializationMixin):
-    _client: "Snake" = attr.ib(repr=False)
+@define()
+class BaseChannel(DiscordObject):
+    _client: "Snake" = field(repr=False)
 
-    _type: ChannelTypes = attr.ib(converter=ChannelTypes)
-    name: Optional[str] = attr.ib(default=None)
+    _type: ChannelTypes = field(converter=ChannelTypes)
+    name: Optional[str] = field(default=None)
 
     @classmethod
     def from_dict(cls, data, client) -> "TYPE_ALL_CHANNEL":

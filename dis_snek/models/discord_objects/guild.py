@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 import attr
 
 from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
-from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
@@ -14,14 +15,9 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import Member
 
 
-@attr.s(**default_kwargs)
-class BaseGuild(Snowflake, DictSerializationMixin):
-    _client: "Snake" = attr.ib()
+@define()
+class Guild(DiscordObject):
     unavailable: bool = attr.ib(default=False)
-
-
-@attr.define(**default_kwargs)
-class Guild(BaseGuild):
     name: str = attr.ib()
     _icon: Optional[str] = attr.ib(default=None)  # todo merge, convert to asset
     _icon_hash: Optional[str] = attr.ib(default=None)
@@ -114,5 +110,7 @@ class Guild(BaseGuild):
     def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
         return CacheProxy(id=self._client._user.id, method=partial(self._client.cache.get_member, self.id))
 
+    # @property
+    # def
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)

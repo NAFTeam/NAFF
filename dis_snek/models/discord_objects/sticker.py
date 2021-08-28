@@ -4,18 +4,19 @@ import attr
 
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.enums import StickerFormatTypes, StickerTypes
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 
 @attr.s(slots=True)
-class PartialSticker(Snowflake, DictSerializationMixin):
+class PartialSticker(DiscordObject):
     _client: Any = attr.ib(repr=False)
     name: str = attr.ib()
     format_type: StickerFormatTypes = attr.ib(converter=StickerFormatTypes)
 
 
-@attr.s(slots=True, kw_only=True)
+@define()
 class Sticker(PartialSticker):
     pack_id: Optional[Snowflake_Type] = attr.ib(default=None)
     description: Optional[str] = attr.ib(default=None)
@@ -27,8 +28,8 @@ class Sticker(PartialSticker):
     sort_value: Optional[int] = attr.ib(default=None)
 
 
-@attr.s(slots=True, kw_only=True)
-class StickerPack(Snowflake, DictSerializationMixin):
+@define()
+class StickerPack(DiscordObject):
     stickers: List["Sticker"] = attr.ib(factory=list)
     name: str = attr.ib()
     sku_id: Snowflake_Type = attr.ib()

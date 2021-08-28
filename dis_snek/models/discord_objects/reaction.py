@@ -1,12 +1,12 @@
 import attr
 
 from dis_snek.models.discord_objects.emoji import Emoji
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 
-@attr.s(slots=True, kw_only=True)
-class Reaction(DictSerializationMixin):
-    _client = attr.ib(repr=False)
+@define()
+class Reaction(DiscordObject):
     # TODO: custom_emoji, message
     count: int = attr.ib()
     me: bool = attr.ib(default=False)

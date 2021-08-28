@@ -1,14 +1,16 @@
 from typing import TYPE_CHECKING, Any, Awaitable, List, Optional, Union
+from functools import partial
 
 import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import PremiumTypes, UserFlags
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.models.color import Color
-from dis_snek.utils.attr_utils import DictSerializationMixin, default_kwargs
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.cache import CacheProxy
 
 if TYPE_CHECKING:
@@ -17,21 +19,23 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.guild import Guild
 
 
-@attr.define(str=False, **default_kwargs)
-class BaseUser(Snowflake, DictSerializationMixin):
+@define()
+class BaseUser(DiscordObject):
     """Base class for User, essentially partial user discord model"""
-
-    _client: "Snake" = attr.field(repr=False)
     username: str = attr.field()
     discriminator: int = attr.field()
-    _avatar: str = attr.field()
+    avatar: Asset = attr.field()  # attr.field(converter=partial(Asset.from_path_hash, ))
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
 
-    @property
-    def avatar(self) -> "Asset":
-        return Asset.from_path_hash(self._client, f"avatars/{self.id}/{{}}", self._avatar)
+    # @avatar.default
+    # def _avatar_factory(self):
+    #     return Asset.from_path_hash(self._client, f"avatars/{self.id}/{{}}", self._avatar)
+
+    # @property
+    # def avatar(self) -> "Asset":
+    #     return
 
     @property
     def mention(self) -> str:
@@ -78,10 +82,10 @@ class SnakeBotUser(User):
     bio: str = attr.ib(default="")
 
 
-@attr.s(slots=True, kw_only=True)
-class Member(Snowflake, DictSerializationMixin):
+@define
+class Member(DiscordObject):
     _client: "Snake" = attr.field(repr=False)
-    guild_id: Snowflake = attr.field()
+    guild_id: "Snowflake_Type" = attr.field()
     nickname: Optional[str] = attr.ib(default=None)
     deafened: bool = attr.ib(default=False)
     muted: bool = attr.ib(default=False)

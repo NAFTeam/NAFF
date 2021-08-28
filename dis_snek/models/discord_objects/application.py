@@ -5,12 +5,13 @@ import attr
 from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.enums import ApplicationFlags
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 
 @attr.s(slots=True, kw_only=True)
-class Application(Snowflake, DictSerializationMixin):
+class Application(DiscordObject):
     name: str = attr.ib()
     icon: Optional[str] = attr.ib(default=None)
     description: Optional[str] = attr.ib()

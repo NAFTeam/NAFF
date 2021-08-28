@@ -27,17 +27,17 @@ from dis_snek.models.enums import (
     MessageFlags,
     MessageTypes,
 )
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
-@attr.s(slots=True, kw_only=True)
-class Attachment(Snowflake, DictSerializationMixin):
-    _client: "Snake" = attr.ib(repr=False)
+@define()
+class Attachment(DiscordObject):
     filename: str = attr.ib()
     content_type: Optional[str] = attr.ib(default=None)
     size: int = attr.ib()
@@ -51,9 +51,8 @@ class Attachment(Snowflake, DictSerializationMixin):
         return self.height, self.width
 
 
-@attr.s(slots=True, kw_only=True)
-class ChannelMention(Snowflake, DictSerializationMixin):
-    _client: "Snake" = attr.ib(repr=False)
+@define()
+class ChannelMention(DiscordObject):
     guild_id: Snowflake_Type = attr.ib()
     type: ChannelTypes = attr.ib(converter=ChannelTypes)
     name: str = attr.ib()
@@ -74,9 +73,8 @@ class MessageReference:
     fail_if_not_exists: bool = attr.ib(default=True)
 
 
-@attr.s(slots=True)
-class MesssageInteraction(Snowflake, DictSerializationMixin):
-    _client: "Snake" = attr.ib(repr=False)
+@define
+class MesssageInteraction(DiscordObject):
     _user_id: Snowflake_Type = attr.ib()
     type: InteractionTypes = attr.ib(converter=InteractionTypes)
     name: str = attr.ib()
@@ -91,6 +89,7 @@ class MesssageInteraction(Snowflake, DictSerializationMixin):
     @property
     def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
         return CacheProxy(id=self._user_id, method=self._client.cache.get_user)
+
 
 @attr.s(slots=True)
 class AllowedMentions:
@@ -111,13 +110,13 @@ class AllowedMentions:
 
     def add_roles(self, *roles: Union[Role, Snowflake_Type]):
         for role in roles:
-            if isinstance(role, Snowflake):
+            if isinstance(role, DiscordObject):
                 role = role.id
             self.roles.append(role)
 
     def add_users(self, *users: Union[Member, BaseUser, Snowflake_Type]):
         for user in users:
-            if isinstance(user, Snowflake):
+            if isinstance(user, DiscordObject):
                 user = user.id
             self.users.append(user)
 
@@ -133,8 +132,8 @@ class AllowedMentions:
         return cls()
 
 
-@attr.s(slots=True, kw_only=True)
-class Message(Snowflake, DictSerializationMixin, EditMixin):
+@define()
+class Message(DiscordObject, EditMixin):
     _client: "Snake" = attr.ib(repr=False)
     channel_id: Snowflake_Type = attr.ib()
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)

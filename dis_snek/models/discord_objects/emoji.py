@@ -4,15 +4,16 @@ import attr
 
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type
-from dis_snek.utils.attr_utils import DictSerializationMixin
+from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.base_object import DiscordObject
+from dis_snek.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
-@attr.s(slots=True)
-class PartialEmoji(Snowflake):
+@define()
+class PartialEmoji(DiscordObject):
     """
     Represent a basic emoji used in discord.
 
@@ -21,7 +22,7 @@ class PartialEmoji(Snowflake):
     :param animated: Whether this emoji is animated.
     """
 
-    id: Optional[Snowflake_Type] = attr.ib(default=None)
+    id: Optional[Snowflake_Type] = attr.ib(default=None)  # can be None for Standard Emoji
     name: Optional[str] = attr.ib(default=None)
     animated: bool = attr.ib(default=False)
 
@@ -42,8 +43,8 @@ class PartialEmoji(Snowflake):
         return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
 
-@attr.s(slots=True, kw_only=True)
-class Emoji(PartialEmoji, DictSerializationMixin):
+@define()
+class Emoji(PartialEmoji):
     """
     Represent a custom emoji in a guild with all its properties.
 
@@ -55,15 +56,12 @@ class Emoji(PartialEmoji, DictSerializationMixin):
     :param guild_id: The guild that this custom emoji is created in.
     """
 
-    _client: "Snake" = attr.ib()
-    roles: List[Snowflake] = attr.ib(factory=list)
+    roles: List["Snowflake_Type"] = attr.ib(factory=list)
     creator: Optional[User] = attr.ib(default=None)
-
     require_colons: bool = attr.ib(default=False)
     managed: bool = attr.ib(default=False)
-
     available: bool = attr.ib(default=False)
-    guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: Any) -> "Emoji":

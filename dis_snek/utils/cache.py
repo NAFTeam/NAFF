@@ -3,7 +3,7 @@ from inspect import isawaitable
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
 from typing import Any, Callable, List, Union
-from dis_snek.models.snowflake import Snowflake, Snowflake_Type, to_snowflake
+from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 import attr
 
