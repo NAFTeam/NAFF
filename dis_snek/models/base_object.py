@@ -25,7 +25,7 @@ class DiscordObject:
         return int(self.id) << 32
 
     @property
-    def created_at(self) -> Timestamp:
+    def created_at(self) -> "Timestamp":
         """
         Returns a timestamp representing the date-time this discord object was created
         :return:
@@ -52,12 +52,12 @@ class DiscordObject:
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: Any):
+    def from_dict(cls, data: Dict[str, Any], client: "Snake"):
         data = cls.process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def process_dict(cls, data, client):
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         return data
 
     def update_from_dict(self, data):
@@ -66,5 +66,5 @@ class DiscordObject:
             # todo improve
             setattr(self, key, value)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return to_dict(self)
