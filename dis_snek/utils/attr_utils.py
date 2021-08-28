@@ -17,12 +17,15 @@ define = partial(attr.define, **class_defaults)
 field = partial(attr.field, **field_defaults)
 
 
-def converter(attribute):
-    def decorator(func):
-        attribute.converter = func
-        return staticmethod(func)
+def copy_converter(value):
+    return value.copy()
 
-    return decorator
+# def converter(attribute):
+#     def decorator(func):
+#         attribute.converter = func
+#         return staticmethod(func)
+#
+#     return decorator
 
 
 def str_validator(self, attribute: attr.Attribute, value: Any):

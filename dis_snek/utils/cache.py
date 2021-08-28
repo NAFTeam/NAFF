@@ -4,6 +4,7 @@ from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
 from typing import Any, Callable, List, Union
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+from dis_snek.utils.attr_utils import copy_converter
 
 import attr
 
@@ -50,7 +51,6 @@ class TTLCache(OrderedDict):
         return default
 
     def get(self, key, default=None, reset_expiration=True):
-        print("GETTING FOR KEY ->", key)
         item = super().get(key, default)
         if item is not default:
             if reset_expiration:
@@ -127,7 +127,7 @@ class _CacheItemsView(ItemsView):
 
 @attr.define()
 class CacheView:  # for global cache
-    ids: List["Snowflake_Type"] = attr.field()
+    ids: List["Snowflake_Type"] = attr.field(converter=copy_converter)
     _method: Callable = attr.field()
 
     def __await__(self):
