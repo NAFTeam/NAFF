@@ -1,8 +1,9 @@
 from ast import parse
 import asyncio
 from dataclasses import dataclass
-from dis_snek.utils.cache import CacheProxy
-from typing import TYPE_CHECKING, Awaitable, List, Optional, Union
+from functools import partial
+from dis_snek.utils.cache import CacheProxy, CacheView
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
@@ -135,14 +136,11 @@ class AllowedMentions:
 class Message(DiscordObject, EditMixin):
     channel_id: Snowflake_Type = attr.ib()
     guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    author: Union[Member, User] = attr.ib()  # TODO: create override for detecting PartialMember
     content: str = attr.ib()
     timestamp: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
-    mentions: List[Union[Member, User]] = attr.ib(factory=list)
-    mention_roles: List[Snowflake_Type] = attr.ib(factory=list)  # TODO: Perhaps automatically get the role data.
     mention_channels: Optional[List[ChannelMention]] = attr.ib(default=None)
     attachments: List[Attachment] = attr.ib(factory=list)
     embeds: List[Embed] = attr.ib(factory=list)
@@ -162,32 +160,36 @@ class Message(DiscordObject, EditMixin):
     components: Optional[List[ComponentTypes]] = attr.ib(default=None)  # TODO: This should be a component object
     sticker_items: Optional[List[PartialSticker]] = attr.ib(default=None)  # TODO: Perhaps automatically get the full sticker data.
 
+    _author_id: Snowflake_Type = attr.ib()  # TODO: create override for detecting PartialMember
+    _mention_ids: List[Snowflake_Type] = attr.ib(factory=list)
+    _mention_roles: List[Snowflake_Type] = attr.ib(factory=list)
+
     @classmethod
     def process_dict(cls, data: dict, client: "Snake") -> dict:
         # TODO: Is there a way to dynamically do this instead of hard coding?
 
-        if "member" in data:
-            author_data = data["author"]
-            author_data["member"] = data["member"]
-            author_data["member"]["guild_id"] = data["guild_id"]
-            data["author"] = Member.from_dict(author_data, client)
+        author_data = data.pop("author")
+        if "guild_id" in data and "member" in data:
+            author_data["member"] = data.pop("member")
+            data["author_id"] = client.cache.place_member_data(data["guild_id"], author_data).id
         else:
-            data["author"] = User.from_dict(data["author"], client)
+            data["author_id"] = client.cache.place_user_data(author_data).id
 
-        mentions = []
-        for user_data in data["mentions"]:
-            if "member" in user_data:
-                user_data["member"]["guild_id"] = data["guild_id"]
-                mentions.append(Member.from_dict(user_data, client))
+        mention_ids = []
+        for user_data in data.pop("mentions"):
+            if "guild_id" in data and "member" in user_data:
+                mention_ids.append(client.cache.place_member_data(data["guild_id"], user_data).id)
             else:
-                mentions.append(User.from_dict(user_data, client))
-        data["mentions"] = mentions
+                mention_ids.append(client.cache.place_user_data(user_data).id)
+        data["mention_ids"] = mention_ids
 
         if "mention_channels" in data:
             mention_channels = []
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
+            data["mention_channels"] = mention_channels
 
+        # TODO: Do we need to cache attachment?
         attachments = []
         for attachment_data in data["attachments"]:
             attachments.append(Attachment.from_dict(attachment_data, client))
@@ -224,6 +226,24 @@ class Message(DiscordObject, EditMixin):
             data["sticker_items"] = stickers
 
         return data
+
+    @property
+    def author(self) -> Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]]:
+        if self.guild_id:
+            return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self.guild_id))
+        else:
+            return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
+
+    @property
+    def mentions(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]]:
+        if self.guild_id:
+            return CacheView(ids=self._mention_ids, method=partial(self._client.cache.get_member, self.guild_id))
+        else:
+            return CacheView(ids=self._mention_ids, method=self._client.cache.get_user)
+
+    @property
+    def mention_roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+        return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)    
 
     async def add_reaction(self, emoji: Union[PartialEmoji, str]):
         """
