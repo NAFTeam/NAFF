@@ -9,7 +9,7 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.utils.cache import TTLCache
 
 if TYPE_CHECKING:
@@ -30,14 +30,16 @@ class GlobalCache:
     dm_channels: dict = attr.field(factory=dict)
 
     async def get_user(self, user_id: Snowflake_Type, request_fallback=True) -> User:
+        user_id = to_snowflake(user_id)
         user = self.user_cache.get(user_id)
         if request_fallback and user is None:
+            print("ONYLLLLLLLLLLLLLLLLLLLLLLLLL")
             data = await self._client.http.get_user(user_id)
             user = self.place_user_data(data)
         return user
 
     def place_user_data(self, data) -> User:
-        user_id = data["id"]
+        user_id = to_snowflake(data["id"])
         user = self.user_cache.get(user_id)
         if user is None:
             user = User.from_dict(data, self._client)
@@ -47,16 +49,21 @@ class GlobalCache:
         return user
 
     async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type, request_fallback=True) -> Member:
+        guild_id = to_snowflake(guild_id)
+        user_id = to_snowflake(user_id)
         member = self.member_cache.get((guild_id, user_id))
         if request_fallback and member is None:
+            print("AIKYDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
             data = await self._client.http.get_member(guild_id, user_id)
             member = self.place_member_data(guild_id, data)
         return member
 
     def place_member_data(self, guild_id, data) -> Member:
-        user_id = data["user"]["id"] if "user" in data else data["id"]
+        guild_id = to_snowflake(guild_id)
+        user_id = to_snowflake(data["user"]["id"] if "user" in data else data["id"])
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
+            print("PLACEDDD")
             data.update({"guild_id": guild_id})
             member = Member.from_dict(data, self._client)
             self.member_cache[(guild_id, user_id)] = member

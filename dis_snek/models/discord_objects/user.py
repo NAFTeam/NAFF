@@ -90,15 +90,15 @@ class Member(DiscordObject):
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        # maybe move into cache?
         if "user" in data:
             user_data = data.pop("user")
             client.cache.place_user_data(user_data)
-            data.update(user_data)
+            data["id"] = user_data["id"]
         elif "member" in data:
             member_data = data.pop("member")
             client.cache.place_user_data(data)
-            data.update(member_data)
+            member_data["id"] = data["id"]
+            data = member_data
         return data
 
     @property

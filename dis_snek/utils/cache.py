@@ -50,6 +50,7 @@ class TTLCache(OrderedDict):
         return default
 
     def get(self, key, default=None, reset_expiration=True):
+        print("GETTING FOR KEY ->", key)
         item = super().get(key, default)
         if item is not default:
             if reset_expiration:
