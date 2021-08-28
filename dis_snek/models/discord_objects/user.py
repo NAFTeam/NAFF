@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Awaitable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, List, Dict, Optional, Union
 from functools import partial
 
 import attr
@@ -29,13 +29,10 @@ class BaseUser(DiscordObject):
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
 
-    # @avatar.default
-    # def _avatar_factory(self):
-    #     return Asset.from_path_hash(self._client, f"avatars/{self.id}/{{}}", self._avatar)
-
-    # @property
-    # def avatar(self) -> "Asset":
-    #     return
+    @classmethod
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
+        return data
 
     @property
     def mention(self) -> str:
