@@ -19,6 +19,17 @@ class BaseComponent:
 
     @classmethod
     def from_dict(cls, data):
+        data.pop("hash", None) # TODO Zero clue why discord sometimes include a hash attribute...
+
+        componentType = data.pop("type", None)
+        componentClass = TYPE_COMPONENT_MAPPING.get(componentType)
+        if not componentClass:
+            raise TypeError(f"Unknown component type for {data} ({componentType}), please consult the docs.")
+        
+        return componentClass.from_dict_typed(data)
+
+    @classmethod
+    def from_dict_typed(cls, data):
         return cls(**data)
 
     def _checks(self):
@@ -37,7 +48,7 @@ class InteractiveComponent(BaseComponent):
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, dict):
-            other = convert_to_component(other)
+            other = BaseComponent.from_dict(other)
             return self.custom_id == other.custom_id and self.type == other.type
         return False
 
@@ -188,12 +199,12 @@ class ActionRow(BaseComponent):
         return len(self.components)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict_typed(cls, data):
         return cls(*data["components"])
 
     def _component_checks(self, component: Union[dict, Select, Button]):
         if isinstance(component, dict):
-            component = convert_to_component(component)
+            component = BaseComponent.from_dict(component)
 
         if not issubclass(type(component), InteractiveComponent):
             raise TypeError("You can only add select or button to the action row.")
@@ -216,22 +227,6 @@ class ActionRow(BaseComponent):
         """
         for c in components:
             self.components.append(self._component_checks(c))
-
-
-def convert_to_component(data: dict) -> Union[ActionRow, Button, Select]:
-    """
-    Converts a dict representation of a component into its object form
-
-    :param component: A component dict
-    """
-    componentType = data.pop("type", None)
-    componentClass = TYPE_COMPONENT_MAPPING.get(componentType)
-    if not componentClass:
-        raise TypeError(f"Unknown component type for {data} ({componentType}), please consult the docs.")
-
-    data.pop("hash", None) # Zero clue why discord sometimes include a hash attribute...
-
-    return componentClass.from_dict(data)
 
 
 def process_components(
@@ -275,6 +270,9 @@ def process_components(
             return [action_row.to_dict() for action_row in components]
 
     raise ValueError(f"Invalid components: {components}")
+
+
+TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
 
 
 TYPE_COMPONENT_MAPPING = {

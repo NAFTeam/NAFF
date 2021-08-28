@@ -11,7 +11,7 @@ from dis_snek.mixins.edit import EditMixin
 from dis_snek.models.discord_objects import components
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import Thread
-from dis_snek.models.discord_objects.components import ComponentTypes, convert_to_component
+from dis_snek.models.discord_objects.components import BaseComponent, ComponentTypes
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.emoji import Emoji, PartialEmoji
 from dis_snek.models.discord_objects.interactions import CommandTypes
@@ -217,7 +217,7 @@ class Message(Snowflake, DictSerializationMixin, EditMixin):
         if "components" in data:
             components = []
             for component_data in data["components"]:
-                components.append(convert_to_component(component_data))
+                components.append(BaseComponent.from_dict(component_data))
             data["components"] = components
 
         if "sticker_items" in data:
