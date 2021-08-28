@@ -12,6 +12,7 @@ from dis_snek.utils.cache import CacheProxy, CacheView
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import Thread
     from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.discord_objects.role import Role
 
 
 @define()
@@ -32,7 +33,6 @@ class Guild(DiscordObject):
     verification_level: int = attr.ib(default=0)  # todo enum
     default_message_notifications: int = attr.ib(default=0)  # todo enum
     explicit_content_filter: int = attr.ib(default=0)  # todo enum
-    _roles: List[dict] = attr.ib(factory=list)
     _emojis: List[dict] = attr.ib(factory=list)
     _features: List[str] = attr.ib(factory=list)
     mfa_level: int = attr.ib(default=0)
@@ -62,9 +62,12 @@ class Guild(DiscordObject):
     _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
 
     @classmethod
     def process_dict(cls, data, client):
+        guild_id = data["id"]
+
         channels_data = data.pop("channels", [])
         data["channel_ids"] = [client.cache.place_channel_data(channel_data).id for channel_data in channels_data]
 
@@ -72,8 +75,10 @@ class Guild(DiscordObject):
         data["thread_ids"] = [client.cache.place_channel_data(thread_data).id for thread_data in threads_data]
 
         members_data = data.pop("members", [])
-        guild_id = data["id"]
         data["member_ids"] = [client.cache.place_member_data(guild_id, member_data).id for member_data in members_data]
+
+        roles_data = data.pop("roles", [])
+        data["role_ids"] = list(client.cache.place_role_data(guild_id, roles_data).keys())
 
         return data
 
