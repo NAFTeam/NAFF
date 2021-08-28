@@ -186,7 +186,5 @@ class ComponentContext(InteractionContext):
             message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
 
         if message_data:
-            self.message = await self._client.cache.place_message_data(
-                message_data["channel_id"], message_data
-            )
+            self.message = await self._client.cache.place_message_data(message_data["channel_id"], message_data)
             return self.message

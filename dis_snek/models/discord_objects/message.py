@@ -158,7 +158,9 @@ class Message(DiscordObject, EditMixin):
     interaction: Optional[CommandTypes] = attr.ib(default=None)  # TODO: This should be a message interaction object
     thread: Optional[Thread] = attr.ib(default=None)  # TODO: Validation
     components: Optional[List[ComponentTypes]] = attr.ib(default=None)  # TODO: This should be a component object
-    sticker_items: Optional[List[PartialSticker]] = attr.ib(default=None)  # TODO: Perhaps automatically get the full sticker data.
+    sticker_items: Optional[List[PartialSticker]] = attr.ib(
+        default=None
+    )  # TODO: Perhaps automatically get the full sticker data.
 
     _author_id: Snowflake_Type = attr.ib()  # TODO: create override for detecting PartialMember
     _mention_ids: List[Snowflake_Type] = attr.ib(factory=list)
@@ -235,7 +237,11 @@ class Message(DiscordObject, EditMixin):
             return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
 
     @property
-    def mentions(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]]:
+    def mentions(
+        self,
+    ) -> Union[
+        CacheView, Awaitable[Dict[Snowflake_Type, Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]
+    ]:
         if self.guild_id:
             return CacheView(ids=self._mention_ids, method=partial(self._client.cache.get_member, self.guild_id))
         else:
@@ -243,7 +249,7 @@ class Message(DiscordObject, EditMixin):
 
     @property
     def mention_roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
-        return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)    
+        return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)
 
     async def add_reaction(self, emoji: Union[PartialEmoji, str]):
         """

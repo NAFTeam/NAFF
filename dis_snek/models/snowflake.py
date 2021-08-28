@@ -19,4 +19,3 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
         raise ValueError("ID (snowflake) is not in correct discord format!")
 
     return snowflake
-

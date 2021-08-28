@@ -80,6 +80,4 @@ class EditMixin:
             message_data = await self._edit_http_request(message)
 
         if message_data:
-            return await self._client.cache.place_message_data(
-                message_data["channel_id"], message_data
-            )
+            return await self._client.cache.place_message_data(message_data["channel_id"], message_data)
