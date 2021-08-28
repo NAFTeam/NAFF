@@ -9,7 +9,8 @@ from dis_snek.const import logger_name
 
 log = logging.getLogger(logger_name)
 
-class_defaults = dict(eq=False, order=False, hash=False, slots=True, kw_only=True, on_setattr=[attr.validate, attr.converters])
+class_defaults = dict(eq=False, order=False, hash=False, slots=True, kw_only=True,
+                      on_setattr=[attr.setters.convert, attr.setters.validate])
 field_defaults = dict(repr=False)
 
 define = partial(attr.define, **class_defaults)
