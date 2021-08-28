@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING, Any, Awaitable, List, Dict, Optional, Union
-from functools import partial
 
 import attr
 from attr.converters import optional as optional_c
@@ -22,9 +21,9 @@ if TYPE_CHECKING:
 @define()
 class BaseUser(DiscordObject):
     """Base class for User, essentially partial user discord model"""
-    username: str = attr.field()
-    discriminator: int = attr.field()
-    avatar: Asset = attr.field()  # attr.field(converter=partial(Asset.from_path_hash, ))
+    username: str = field(repr=True)
+    discriminator: int = field(repr=True)
+    avatar: "Asset" = field()
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
@@ -40,46 +39,41 @@ class BaseUser(DiscordObject):
 
     @property
     def display_name(self) -> str:
-        return self.username
-
-
-@attr.s(slots=True, kw_only=True)
-class User(BaseUser):
-    bot: bool = attr.ib(default=False)
-    system: bool = attr.ib(default=False)
-    public_flags: UserFlags = attr.ib(default=0, converter=UserFlags)
-    premium_type: PremiumTypes = attr.ib(default=0, converter=PremiumTypes)
-
-    _banner: Optional[str] = attr.ib(default=None)
-    # _banner_color: Any = attr.ib(default=None)  # probably deprecated in api?
-    _accent_color: Optional[int] = attr.ib(default=None)
+        return self.username  # for duck-typing compatibility with Member
 
     @property
     def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
         return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
 
-    @property
-    def banner(self) -> "Asset":
-        return Asset.from_path_hash(self._client, f"banners/{self.id}/{{}}", self._banner)
 
-    @property
-    def accent_color(self) -> Optional["Color"]:
-        if self._accent_color is None:
-            return None
-        return Color(self._accent_color)
+@define()
+class User(BaseUser):
+    bot: bool = field(default=False)
+    system: bool = field(default=False)
+    public_flags: "UserFlags" = field(default=0, converter=UserFlags)
+    premium_type: "PremiumTypes" = field(default=0, converter=PremiumTypes)
+
+    banner: Optional["Asset"] = field(default=None)
+    # _banner_color: Any = attr.ib(default=None)  # probably deprecated in api?
+    accent_color: Optional["Color"] = field(default=None, converter=optional_c(Color))
+
+    @classmethod
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
+        return data
 
 
-@attr.s(slots=True, kw_only=True)
+@define()
 class SnakeBotUser(User):
-    verified: bool = attr.ib()
-    mfa_enabled: bool = attr.ib(default=False)
-    email: Optional[str] = attr.ib(default=None)
-    locale: Optional[str] = attr.ib(default=None)
-    flags: UserFlags = attr.ib(default=0, converter=UserFlags)
-    bio: str = attr.ib(default="")
+    verified: bool = field()
+    mfa_enabled: bool = field(default=False)
+    email: Optional[str] = field(default=None)  # needs special permissions?
+    locale: Optional[str] = field(default=None)
+    bio: Optional[str] = field(default=None)
+    flags: "UserFlags" = field(default=0, converter=UserFlags)
 
 
-@define
+@define()
 class Member(DiscordObject):
     _client: "Snake" = attr.field(repr=False)
     guild_id: "Snowflake_Type" = attr.field()
