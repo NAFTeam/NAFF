@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 @define()
 class DiscordObject:
-    _client: "Snake" = field(repr=False)
+    _client: "Snake" = field()
     id: "Snowflake_Type" = field(repr=True, converter=to_snowflake)
 
     def __eq__(self, other):

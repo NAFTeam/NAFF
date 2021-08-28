@@ -48,9 +48,9 @@ class BaseUser(DiscordObject):
 
 @define()
 class User(BaseUser):
-    bot: bool = field(default=False)
+    bot: bool = field(repr=True, default=False)
     system: bool = field(default=False)
-    public_flags: "UserFlags" = field(default=0, converter=UserFlags)
+    public_flags: "UserFlags" = field(repr=True, default=0, converter=UserFlags)
     premium_type: "PremiumTypes" = field(default=0, converter=PremiumTypes)
 
     banner: Optional["Asset"] = field(default=None)
@@ -67,7 +67,7 @@ class User(BaseUser):
 
 @define()
 class SnakeBotUser(User):
-    verified: bool = field()
+    verified: bool = field(repr=True)
     mfa_enabled: bool = field(default=False)
     email: Optional[str] = field(default=None)  # needs special permissions?
     locale: Optional[str] = field(default=None)
@@ -77,18 +77,18 @@ class SnakeBotUser(User):
 
 @define()
 class Member(DiscordObject):
-    guild_id: "Snowflake_Type" = attr.field()
-    nickname: Optional[str] = attr.ib(default=None)
-    deafened: bool = attr.ib(default=False)
-    muted: bool = attr.ib(default=False)
-    roles: List[Snowflake_Type] = attr.ib(factory=list)
-    joined_at: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
-    premium_since: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
-    pending: Optional[bool] = attr.ib(default=None)
-    permissions: Optional[str] = attr.ib(default=None)  # todo convert to permission object
+    guild_id: "Snowflake_Type" = field(repr=True)
+    nickname: Optional[str] = field(repr=True, default=None)
+    deafened: bool = field(default=False)
+    muted: bool = field(default=False)
+    roles: List["Snowflake_Type"] = field(factory=list)  # todo roles property
+    joined_at: "Timestamp" = field(converter=Timestamp.fromisoformat)
+    premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(Timestamp.fromisoformat))
+    pending: Optional[bool] = field(default=None)
+    permissions: Optional[str] = field(default=None)  # todo convert to permission object
 
     @classmethod
-    def process_dict(cls, data, client: "Snake"):
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if "user" in data:
             user_data = data.pop("user")
             client.cache.place_user_data(user_data["id"], user_data)
