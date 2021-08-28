@@ -127,7 +127,7 @@ class _CacheItemsView(ItemsView):
 
 @attr.define()
 class CacheView:  # for global cache
-    ids: List[Snowflake_Type] = attr.field()
+    ids: List["Snowflake_Type"] = attr.field()
     _method: Callable = attr.field()
 
     def __await__(self):
@@ -155,7 +155,7 @@ class CacheView:  # for global cache
 
 @attr.define()
 class CacheProxy:
-    id: Any = attr.field()
+    id: "Snowflake_Type" = attr.field()
     _method: Callable = attr.field()
 
     def __await__(self):
