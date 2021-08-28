@@ -166,7 +166,7 @@ class GlobalCache:
         role = None
         for role_data in data:  # todo not update cache on roles
             role_data.update({"guild_id": guild_id})
-            role_data_id = role_data["id"]
+            role_data_id = to_snowflake(role_data["id"])
 
             cached_role = self.role_cache.get(role_data_id)
             if cached_role is None:
