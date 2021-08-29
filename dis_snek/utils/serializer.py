@@ -22,7 +22,7 @@ def to_dict(inst):
 
         raw_value = getattr(inst, a.name)
         value = _to_dict_any(raw_value)
-        if value is not None:
+        if isinstance(value, bool) or value:
             d[a.name] = value
 
     return d
