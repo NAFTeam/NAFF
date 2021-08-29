@@ -6,17 +6,20 @@ from typing import (
     List,
     Optional,
     Union,
+    Any,
 )
+from functools import partial
+
 from aiohttp import FormData
 
 import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.enums import ChannelTypes
+from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.base_object import DiscordObject, SnowflakeObject
 from dis_snek.utils.cache import CacheProxy, CacheView
 from dis_snek.utils.attr_utils import define, field
 
@@ -32,7 +35,7 @@ class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
 
     @classmethod
-    def from_dict(cls, data, client) -> "TYPE_ALL_CHANNEL":
+    def from_dict_factory(cls, data, client) -> "TYPE_ALL_CHANNEL":
         """
         Creates a channel object of the appropriate type
 
@@ -42,20 +45,31 @@ class BaseChannel(DiscordObject):
         :return:
         """
         channel_type = ChannelTypes(data["type"])
-        return TYPE_MAPPING[channel_type].from_dict_typed(data, client)
-
-    @classmethod
-    def from_dict_typed(cls, data, client) -> "TYPE_ALL_CHANNEL":
-        return super().from_dict(data, client)
+        return TYPE_MAPPING[channel_type].from_dict(data, client)
 
 
+@define()
+class PermissionOverwrite(SnowflakeObject):
+    type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
+    allow: "Permissions" = field(repr=True, converter=Permissions)
+    deny: "Permissions" = field(repr=True, converter=Permissions)
+
+
+@define(slots=False)  # can we make some workaround?
 class _GuildMixin:
-    guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
-    parent_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    permission_overwrites: list[dict] = attr.ib(factory=list)  # TODO  permissions obj
-    permissions: Optional[str] = attr.ib(default=None)  # only in slash
+    parent_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
+
+    @classmethod
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        permission_overwrites = data.get("permission_overwrites", [])
+        data["permission_overwrites"] = {
+            obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
+        }
+        return data
 
 
 @attr.s(slots=True, kw_only=True)
@@ -83,7 +97,7 @@ class VoiceChannel(BaseChannel):
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildVoice(VoiceChannel, _GuildMixin):
+class GuildVoice(_GuildMixin, VoiceChannel):
     pass
 
 
@@ -99,7 +113,7 @@ class DMGroup(TextChannel):
     _recipients_ids: List[Snowflake_Type] = attr.ib(factory=list)
 
     @classmethod
-    def process_dict(cls, data: dict, client) -> "DMGroup":
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         recipients_data = data.pop("recipients", [])
         recipients_ids = []
         for recipient_data in recipients_data:
@@ -117,7 +131,7 @@ class DMGroup(TextChannel):
 @attr.s(slots=True, kw_only=True)
 class DM(DMGroup):
     @classmethod
-    def process_dict(cls, data: dict, client: "Snake") -> "DM":
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data = super().process_dict(data, client)
         user_id = data["recipients_ids"][0]
         client.cache.place_dm_channel_id(user_id, data["id"])
@@ -129,7 +143,7 @@ class DM(DMGroup):
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildText(TextChannel, _GuildMixin):
+class GuildText(_GuildMixin, TextChannel):
     topic: Optional[str] = attr.ib(default=None)
 
 
@@ -140,7 +154,7 @@ class GuildNews(GuildText):
 
 @attr.s(slots=True, kw_only=True)
 class GuildCategory(GuildText):
-    pass  # todo forbid send() and getting messages
+    pass  # todo forbid send() and getting messages. Anti-send-mixin?
 
 
 @attr.s(slots=True, kw_only=True)
@@ -161,10 +175,11 @@ class Thread(GuildText):
     archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
     @classmethod
-    def process_dict(cls, data: dict, client: "Snake") -> "Thread":
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super().process_dict(data, client)
         thread_metadata: dict = data.get("thread_metadata", {})
         data.update(thread_metadata)
-        return super().from_dict_typed(data, client)
+        return data
 
     @property
     def private(self) -> bool:

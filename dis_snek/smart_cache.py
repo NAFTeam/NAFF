@@ -110,7 +110,7 @@ class GlobalCache:
         channel_id = to_snowflake(data["id"])
         channel = self.channel_cache.get(channel_id)
         if channel is None:
-            channel = BaseChannel.from_dict(data, self._client)
+            channel = BaseChannel.from_dict_factory(data, self._client)
             self.channel_cache[channel_id] = channel
         else:
             channel.update_from_dict(data)

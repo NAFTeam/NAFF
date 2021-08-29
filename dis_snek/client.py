@@ -340,7 +340,7 @@ class Snake:
                 if channels := res_data.get("channels"):
                     cls.resolved["channels"] = {}
                     for key, _channel in channels.items():
-                        cls.resolved["channels"][key] = BaseChannel.from_dict(_channel, self)
+                        cls.resolved["channels"][key] = BaseChannel.from_dict_factory(_channel, self)
 
                 if members := res_data.get("members"):
                     cls.resolved["members"] = {}

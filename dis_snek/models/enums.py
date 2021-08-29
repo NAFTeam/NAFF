@@ -365,7 +365,11 @@ class ButtonStyles(IntEnum):
 
 
 class MentionTypes(str, Enum):
-
     EVERYONE = "everyone"
     ROLES = "roles"
     USERS = "users"
+
+
+class OverwriteTypes(IntEnum):
+    ROLE = 0
+    MEMBER = 1
