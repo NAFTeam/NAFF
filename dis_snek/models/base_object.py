@@ -11,8 +11,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class DiscordObject:
-    _client: "Snake" = field()
+class SnowflakeObject:
     id: "Snowflake_Type" = field(repr=True, converter=to_snowflake)
 
     def __eq__(self, other):
@@ -31,6 +30,11 @@ class DiscordObject:
         :return:
         """
         return Timestamp.from_snowflake(self.id)
+
+
+@define()
+class DiscordObject(SnowflakeObject):
+    _client: "Snake" = field()
 
     @classmethod
     def _get_keys(cls):
