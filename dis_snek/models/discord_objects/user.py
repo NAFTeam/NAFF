@@ -81,16 +81,16 @@ class SnakeBotUser(User):
 
 @define()
 class Member(DiscordObject):
-    nickname: Optional[str] = field(repr=True, default=None)
-    deafened: bool = field(default=False)
-    muted: bool = field(default=False)
+    nick: Optional[str] = field(repr=True, default=None)
+    deaf: bool = field(default=False)
+    mute: bool = field(default=False)
     joined_at: "Timestamp" = field(converter=Timestamp.fromisoformat)
     premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(Timestamp.fromisoformat))
     pending: Optional[bool] = field(default=None)
 
     _guild_id: "Snowflake_Type" = field(repr=True)
     _role_ids: List["Snowflake_Type"] = field(factory=list)
-    permissions: Optional[str] = field(default=None)  # todo convert to permission object
+    # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
