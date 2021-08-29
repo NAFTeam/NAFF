@@ -7,79 +7,61 @@ from dis_snek.models.snowflake import Snowflake_Type
 class UserRequests:
     request: Any
 
+    async def get_current_user(self):
+        """
+        Shortcut to get requester's user.
+        """
+        return self.get_user("@me")
+
     async def get_user(self, user_id: Snowflake_Type) -> dict:
         """
         Get a user object for a given user ID.
 
-        :param user_id: The user to get
+        :param user_id: The user to get.
         :return: user
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
-    async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type) -> Dict:
+    async def modify_user(self, payload: dict) -> dict:
         """
-        Get a member of a guild by ID.
+        Modify the user account settings.
 
-        :param guild_id: The id of the guild
-        :param user_id: The user id to grab
-        :return:
+        :param payload: The data to send.
         """
-        return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
+        return await self.request(Route("PATCH", f"/users/@me"), data=payload)
 
-    async def list_members(self, guild_id: Snowflake_Type, limit: int = 1, after: Snowflake_Type = None) -> List[Dict]:
+    async def get_user_guilds(self) -> list:
         """
-        List the members of a guild.
-
-        :param guild_id: The ID of the guild
-        :param limit: How many members to get (max 1000)
-        :param after: Get IDs after this snowflake
-        :return:
+        Returns a list of partial guild objects the current user is a member of. Requires the guilds OAuth2 scope.
         """
-        payload = dict(limit=limit)
-        if after:
-            payload["after"] = after
+        return await self.request(Route("GET", f"/users/@me/guilds"))
 
-        return await self.request(Route("GET", f"/guilds/{guild_id}/members"), data=payload)
-
-    async def search_guild_members(self, guild_id: Snowflake_Type, query: str, limit: int = 1) -> List[Dict]:
+    async def leave_guild(self, guild_id) -> dict:
         """
-        Search a guild for members who's username or nickname starts with provided string.
+        Leave a guild. Returns a 204 empty response on success.
 
-        :param guild_id: The ID of the guild to search
-        :param query: The string to search for
-        :param limit: The number of members to return
-        :return:
+        :param guild_id: The guild to leave from.
         """
+        return await self.request(Route("DELETE", f"/users/@me/guilds/{guild_id}"))
 
-        return await self.request(
-            Route("GET", f"/guilds/{guild_id}/members/search"), data=dict(query=query, limit=limit)
-        )
-
-    async def modify_guild_member(
-        self,
-        guild_id: Snowflake_Type,
-        user_id: Snowflake_Type,
-        nickname: str = None,
-        roles: List[Snowflake_Type] = None,
-        mute: bool = None,
-        deaf: bool = None,
-        channel_id: Snowflake_Type = None,
-        reason: str = None,
-    ) -> Dict:
+    async def create_dm(self, recipient_id) -> dict:
         """
-        Modify attributes of a guild member.
+        Create a new DM channel with a user. Returns a DM channel object.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user we're modifying
-        :param nickname: Value to set users nickname to
-        :param roles: Array of role ids the member is assigned
-        :param mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
-        :param deaf: Whether the user is deafened in voice channels
-        :param channel_id: id of channel to move user to (if they are connected to voice)
-        :param reason: An optional reason for the audit log
-        :return: The updated member object
+        :param recipient_id: The recipient to open a DM channel with.
         """
-        payload = dict(nick=nickname, roles=roles, mute=mute, deaf=deaf, channel_id=channel_id)
-        # clean up payload
-        payload = {key: value for key, value in payload.items() if value is not None}
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/users/@me/channels"), data=dict(recipient_id=recipient_id))
+    
+    async def create_group_dm(self, payload: dict) -> dict:
+        """
+        Create a new group DM channel with multiple users.
+
+        :param payload: The data to send.
+        """
+        return await self.request(Route("POST", f"/users/@me/channels"), data=payload)
+
+    async def get_user_connections(self) -> list:
+        """
+        Returns a list of connection objects. Requires the connections OAuth2 scope.
+        """
+        return await self.request(Route("GET", f"/users/@me/connections"))

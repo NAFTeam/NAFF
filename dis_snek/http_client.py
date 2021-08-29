@@ -21,6 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import asyncio
 import datetime
+from dis_snek.http_requests.members import MemberRequests
 import logging
 import traceback
 from collections import defaultdict
@@ -79,6 +80,7 @@ class HTTPClient(
     ChannelRequests,
     GuildRequests,
     InteractionRequests,
+    MemberRequests,
     MessageRequests,
     ReactionRequests,
     StickerRequests,

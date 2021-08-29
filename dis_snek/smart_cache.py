@@ -123,10 +123,10 @@ class GlobalCache:
         user_id = to_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
-            return None  # todo add endpoint to create DM channel with user
-
-        channel = await self.get_channel(channel_id)
-        return channel
+            data = await self._client.http.create_dm(user_id)
+            return self.place_channel_data(data)
+        else:
+            return await self.get_channel(channel_id)
 
     # Guild cache methods
 

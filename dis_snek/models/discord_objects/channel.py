@@ -94,7 +94,7 @@ class GuildStageVoice(GuildVoice):
 
 @attr.s(slots=True, kw_only=True)
 class DMGroup(TextChannel):
-    owner_id: Snowflake_Type = attr.ib()
+    owner_id: Snowflake_Type = attr.ib(default=None)
     application_id: Optional[Snowflake_Type] = attr.ib(default=None)
     _recipients_ids: List[Snowflake_Type] = attr.ib(factory=list)
 
@@ -107,7 +107,7 @@ class DMGroup(TextChannel):
             recipients_ids.append(recipient_id)
         data["recipients_ids"] = recipients_ids
 
-        return super().from_dict_typed(data, client)
+        return data
 
     @property
     def recipients(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "User"]], AsyncIterator["User"]]:
@@ -121,7 +121,7 @@ class DM(DMGroup):
         data = super().process_dict(data, client)
         user_id = data["recipients_ids"][0]
         client.cache.place_dm_channel_id(user_id, data["id"])
-        return super().from_dict_typed(data, client)
+        return data
 
     @property
     def recipient(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
