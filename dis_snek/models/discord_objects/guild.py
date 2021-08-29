@@ -23,8 +23,7 @@ class Guild(DiscordObject):
     _icon_hash: Optional[str] = attr.ib(default=None)
     splash: Optional[str] = attr.ib(default=None)
     discovery_splash: Optional[str] = attr.ib(default=None)
-    is_owner: bool = attr.ib(default=False)
-    owner_id: Snowflake_Type = attr.ib()
+    # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
     permissions: Optional[str] = attr.ib(default=None)  # todo convert to permissions obj
     afk_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
     afk_timeout: Optional[int] = attr.ib(default=None)
@@ -59,6 +58,7 @@ class Guild(DiscordObject):
     stage_instances: List[dict] = attr.ib(factory=list)
     stickers: List[dict] = attr.ib(factory=list)
 
+    _owner_id: "Snowflake_Type" = attr.ib()
     _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
@@ -103,6 +103,13 @@ class Guild(DiscordObject):
     @property
     def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
         return CacheProxy(id=self._client.user.id, method=partial(self._client.cache.get_member, self.id))
+
+    @property
+    def owner(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
+        return CacheProxy(id=self._owner_id, method=partial(self._client.cache.get_member, self.id))
+
+    def is_owner(self, member: "Member") -> bool:
+        return self._owner_id == member.id
 
     # @property
     # def
