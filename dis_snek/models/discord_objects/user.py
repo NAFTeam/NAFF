@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Awaitable, List, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, AsyncIterator, List, Dict, Optional, Union
+from functools import partial
 
 import attr
 from attr.converters import optional as optional_c
@@ -10,17 +11,19 @@ from dis_snek.models.timestamp import Timestamp
 from dis_snek.models.color import Color
 from dis_snek.models.base_object import DiscordObject
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.cache import CacheProxy
+from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM
     from dis_snek.models.discord_objects.guild import Guild
+    from dis_snek.models.discord_objects.role import Role
 
 
 @define()
 class BaseUser(DiscordObject):
     """Base class for User, essentially partial user discord model"""
+
     username: str = field(repr=True)
     discriminator: int = field(repr=True)
     avatar: "Asset" = field()
@@ -78,14 +81,15 @@ class SnakeBotUser(User):
 
 @define()
 class Member(DiscordObject):
-    guild_id: "Snowflake_Type" = field(repr=True)
     nickname: Optional[str] = field(repr=True, default=None)
     deafened: bool = field(default=False)
     muted: bool = field(default=False)
-    roles: List["Snowflake_Type"] = field(factory=list)  # todo roles property
     joined_at: "Timestamp" = field(converter=Timestamp.fromisoformat)
     premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(Timestamp.fromisoformat))
     pending: Optional[bool] = field(default=None)
+
+    _guild_id: "Snowflake_Type" = field(repr=True)
+    _role_ids: List["Snowflake_Type"] = field(factory=list)
     permissions: Optional[str] = field(default=None)  # todo convert to permission object
 
     @classmethod
@@ -99,6 +103,9 @@ class Member(DiscordObject):
             client.cache.place_user_data(data)
             member_data["id"] = data["id"]
             data = member_data
+
+        data["role_ids"] = data.pop("roles", [])
+
         return data
 
     @property
@@ -107,7 +114,11 @@ class Member(DiscordObject):
 
     @property
     def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-        return CacheProxy(id=self.guild_id, method=self._client.cache.get_guild)
+        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+
+    @property
+    def roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+        return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
     async def display_name(self) -> str:
