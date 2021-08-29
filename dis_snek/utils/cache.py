@@ -1,5 +1,5 @@
 import time
-from inspect import isawaitable
+from inspect import isawaitable, iscoroutinefunction
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
 from typing import Any, Callable, List, Union
@@ -164,10 +164,13 @@ class CacheProxy:
     def __getattr__(self, item):
         return AttributeProxy(self, item)
 
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return CallProxy(self, self._item, args, kwds)
+
 
 @attr.define()
 class AttributeProxy:
-    _proxy: Union["CacheProxy", "AttributeProxy"] = attr.field()
+    _proxy: Union["CacheProxy", "AttributeProxy", "CallProxy"] = attr.field()
     _item: Any = attr.field()
 
     def __await__(self):
@@ -175,6 +178,9 @@ class AttributeProxy:
 
     def __getattr__(self, item):
         return AttributeProxy(self, item)
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return CallProxy(self, self._item, args, kwds)
 
     async def _get_proxy_attr(self):
         instance = await self._proxy
@@ -184,3 +190,27 @@ class AttributeProxy:
             value = await value
 
         return value
+
+
+@attr.define()
+class CallProxy:
+    _proxy: Union["CacheProxy", "AttributeProxy", "CallProxy"] = attr.field()
+    _item: Any = attr.field()
+    _args: Any = attr.field()
+    _kwds: Any = attr.field()
+
+    def __await__(self):
+        return self._call_proxy_method().__await__()
+
+    def __getattr__(self, item):
+        return AttributeProxy(self, item)
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return CallProxy(self, self._item, args, kwds)
+
+    async def _call_proxy_method(self):
+        method = await self._proxy
+        if iscoroutinefunction(method):
+            return await method(*self._args, **self._kwds)
+        else:
+            return method(*self._args, **self._kwds)
