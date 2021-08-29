@@ -140,11 +140,11 @@ class CacheView:  # for global cache
     async def get_list(self):
         return [instance async for instance in self]
 
-    async def get(self, item):
+    def get(self, item):
         item = to_snowflake(item)
         if item not in self.ids:
             raise ValueError("Object with such ID does not belong to this instance")
-        return await self._method(item)
+        return CacheProxy(id=item, method=self._method)
 
     def __getitem__(self, item):
         return self.get(item)
@@ -167,7 +167,7 @@ class _BaseProxy:
 
 @attr.define()
 class CacheProxy(_BaseProxy):
-    id: "Snowflake_Type" = attr.field()
+    id: "Snowflake_Type" = attr.field(converter=to_snowflake)
     _method: Callable = attr.field()
 
     def __await__(self):
