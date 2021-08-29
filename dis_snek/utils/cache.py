@@ -132,13 +132,13 @@ class CacheView:  # for global cache
     _method: Callable = attr.field()
 
     def __await__(self):
-        return self.get_dict().__await__()  # todo list instead?
+        return self.get_list().__await__()
 
     async def get_dict(self):
-        return {instance_id: instance async for instance_id, instance in self}
+        return {instance.id: instance async for instance in self}
 
     async def get_list(self):
-        return [instance async for _, instance in self]
+        return [instance async for instance in self]
 
     async def get(self, item):
         item = to_snowflake(item)
@@ -151,7 +151,7 @@ class CacheView:  # for global cache
 
     async def __aiter__(self):
         for instance_id in self.ids:
-            yield instance_id, await self._method(instance_id)  # todo list instead?
+            yield await self._method(instance_id)
 
 
 class _BaseProxy:
@@ -194,6 +194,7 @@ class ValueProxy(_BaseProxy):
             value = await value
 
         return value
+
 
 @attr.define()
 class CallProxy(_BaseProxy):
