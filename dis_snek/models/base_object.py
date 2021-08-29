@@ -48,7 +48,9 @@ class DiscordObject:
 
     @classmethod
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset):
-        print("Unused kwargs:", cls.__name__, {k: v for k, v in kwargs_dict.items() if k not in keys})  # for debug
+        unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
+        if unused:
+            print("Unused kwargs:", cls.__name__, unused)  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
