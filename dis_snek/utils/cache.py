@@ -153,60 +153,53 @@ class CacheView:  # for global cache
             yield instance_id, await self._method(instance_id)  # todo list instead?
 
 
+class _BaseProxy:
+    def __getattr__(self, item):
+        return AttributeProxy(self, item)
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return CallProxy(self, self._item, args, kwds)
+
+
+SingleProxyType = Union["CacheProxy", "AttributeProxy", "CallProxy"]
+
+
 @attr.define()
-class CacheProxy:
+class CacheProxy(_BaseProxy):
     id: "Snowflake_Type" = attr.field()
     _method: Callable = attr.field()
 
     def __await__(self):
         return self._method(self.id).__await__()
 
-    def __getattr__(self, item):
-        return AttributeProxy(self, item)
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return CallProxy(self, self._item, args, kwds)
-
 
 @attr.define()
-class AttributeProxy:
-    _proxy: Union["CacheProxy", "AttributeProxy", "CallProxy"] = attr.field()
+class AttributeProxy(_BaseProxy):
+    _proxy: "SingleProxyType" = attr.field()
     _item: Any = attr.field()
 
     def __await__(self):
         return self._get_proxy_attr().__await__()
 
-    def __getattr__(self, item):
-        return AttributeProxy(self, item)
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return CallProxy(self, self._item, args, kwds)
-
     async def _get_proxy_attr(self):
         instance = await self._proxy
         value = getattr(instance, self._item)
 
-        while isawaitable(value):  # for deeply nested async properties
+        if isawaitable(value):  # for deeply nested async properties
             value = await value
 
         return value
 
 
 @attr.define()
-class CallProxy:
-    _proxy: Union["CacheProxy", "AttributeProxy", "CallProxy"] = attr.field()
+class CallProxy(_BaseProxy):
+    _proxy: "SingleProxyType" = attr.field()
     _item: Any = attr.field()
     _args: Any = attr.field()
     _kwds: Any = attr.field()
 
     def __await__(self):
         return self._call_proxy_method().__await__()
-
-    def __getattr__(self, item):
-        return AttributeProxy(self, item)
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return CallProxy(self, self._item, args, kwds)
 
     async def _call_proxy_method(self):
         method = await self._proxy
