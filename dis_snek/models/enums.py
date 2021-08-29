@@ -304,11 +304,11 @@ class ChannelTypes(IntEnum):
     GUILD_STAGE_VOICE = 13
 
     @property
-    def is_guild(self) -> bool:
+    def guild(self) -> bool:
         return self.value not in {1, 3}
 
     @property
-    def is_voice(self) -> bool:
+    def voice(self) -> bool:
         return self.value in {2, 13}
 
 
