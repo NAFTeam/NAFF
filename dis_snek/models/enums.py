@@ -27,8 +27,12 @@ class DistinctFlag(EnumMeta):
     def __iter__(cls):
         yield from _distinct(super().__iter__())
 
+    def __call__(cls, value, names=None, *, module=None, qualname=None, type=None, start=1):
+        # To automatically convert string values into ints (eg for permissions)
+        return super().__call__(int(value), names, module=module, qualname=qualname, type=type, start=start)
 
-class DistinctMixin:
+
+class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
     def __iter__(self):
         yield from _decompose(self.__class__, self)[0]
 
@@ -49,7 +53,7 @@ class WebSocketOPCodes(IntEnum):
     GUILD_SYNC = 12
 
 
-class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
+class Intents(DiscordIntFlag):  # type: ignore
     # Intents defined by Discord API
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1
@@ -119,7 +123,7 @@ class Intents(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
         return base
 
 
-class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
+class UserFlags(DiscordIntFlag):  # type: ignore
     # Flags defined by Discord API
     DISCORD_EMPLOYEE = 1 << 0
     PARTNERED_SERVER_OWNER = 1 << 1
@@ -147,7 +151,7 @@ class UserFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
     ALL = AntiFlag()
 
 
-class ApplicationFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
+class ApplicationFlags(DiscordIntFlag):  # type: ignore
     # Flags defined by the Discord API
     GATEWAY_PRESENCE = 1 << 12
     GATEWAY_PRESENCE_LIMITED = 1 << 13
@@ -200,7 +204,7 @@ class MessageActivityTypes(IntEnum):
     JOIN_REQUEST = 5
 
 
-class MessageFlags(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
+class MessageFlags(DiscordIntFlag):  # type: ignore
     # Flags defined by Discord API
     CROSSPOSTED = 1 << 0
     IS_CROSSPOST = 1 << 1
@@ -227,7 +231,7 @@ class StickerFormatTypes(IntEnum):
     LOTTIE = 3
 
 
-class Permissions(DistinctMixin, IntFlag, metaclass=DistinctFlag):  # type: ignore
+class Permissions(DiscordIntFlag):  # type: ignore
     # Permissions defined by Discord API
     CREATE_INSTANT_INVITE = 1 << 0
     KICK_MEMBERS = 1 << 1
