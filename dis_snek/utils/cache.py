@@ -165,9 +165,6 @@ class _BaseProxy:
         return CallProxy(self, self._item, args, kwds)
 
 
-SingleProxyType = Union["CacheProxy", "AttributeProxy", "CallProxy"]
-
-
 @attr.define()
 class CacheProxy(_BaseProxy):
     id: "Snowflake_Type" = attr.field()
@@ -179,7 +176,7 @@ class CacheProxy(_BaseProxy):
 
 @attr.define()
 class ValueProxy(_BaseProxy):
-    _proxy: "SingleProxyType" = attr.field()
+    _proxy: "TYPE_ALL_PROXY" = attr.field()
     _item: Any = attr.field()
     _getter: Callable = attr.field()
 
@@ -198,7 +195,7 @@ class ValueProxy(_BaseProxy):
 
 @attr.define()
 class CallProxy(_BaseProxy):
-    _proxy: "SingleProxyType" = attr.field()
+    _proxy: "TYPE_ALL_PROXY" = attr.field()
     _item: Any = attr.field()
     _args: Any = attr.field()
     _kwds: Any = attr.field()
@@ -212,3 +209,6 @@ class CallProxy(_BaseProxy):
             return await method(*self._args, **self._kwds)
         else:
             return method(*self._args, **self._kwds)
+
+
+TYPE_ALL_PROXY = Union[CacheProxy, ValueProxy, CallProxy]
