@@ -151,7 +151,7 @@ class CacheView:  # for global cache
 
     async def __aiter__(self):
         for instance_id in self.ids:
-            yield await self._method(instance_id)
+            yield await self._method(to_snowflake(instance_id))
 
 
 class _BaseProxy:
