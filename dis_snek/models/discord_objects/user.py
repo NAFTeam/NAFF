@@ -5,7 +5,7 @@ import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.enums import PremiumTypes, UserFlags
+from dis_snek.models.enums import PremiumTypes, UserFlags, Permissions
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.models.color import Color
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import DM
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
 
 
 @define()
@@ -135,3 +136,49 @@ class Member(DiscordObject):
     @property
     def premium(self) -> bool:
         return self.premium_since is not None
+
+    async def guild_permissions(self) -> Permissions:
+        guild = await self.guild
+        if guild.is_owner(self):
+            return Permissions.ALL
+
+        role_everyone = await guild.roles.get(guild.id)  # get @everyone role
+        permissions = role_everyone.permissions
+
+        async for role in self.roles:
+            permissions |= role.permissions
+
+        if Permissions.ADMINISTRATOR in permissions:
+            return Permissions.ALL
+
+        return permissions
+
+    async def channel_permissions(self, channel: "TYPE_GUILD_CHANNEL") -> Permissions:
+        permissions = await self.guild_permissions()
+        if Permissions.ADMINISTRATOR in permissions:
+            return Permissions.ALL
+
+        # Find (@everyone) role overwrite and apply it.
+        overwrites = channel._permission_overwrites
+        if overwrite_everyone := overwrites.get(channel.guild_id):
+            permissions &= ~overwrite_everyone.deny
+            permissions |= overwrite_everyone.allow
+
+        # Apply role specific overwrites.
+        allow = Permissions.NONE
+        deny = Permissions.NONE
+        for role_id in self.roles.ids:
+            if overwrite_role := overwrites.get(role_id):
+                allow |= overwrite_role.allow
+                deny |= overwrite_role.deny
+
+        permissions &= ~deny
+        permissions |= allow
+
+        # Apply member specific overwrite if it exist.
+        if overwrite_member := overwrites.get(self.id):
+            permissions &= ~overwrite_member.deny
+            permissions |= overwrite_member.allow
+
+        return permissions
+
