@@ -1,4 +1,5 @@
 import time
+from operator import getitem
 from inspect import isawaitable, iscoroutinefunction
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
@@ -155,7 +156,10 @@ class CacheView:  # for global cache
 
 class _BaseProxy:
     def __getattr__(self, item):
-        return AttributeProxy(self, item)
+        return ValueProxy(self, item, getter=getattr)
+
+    def __getitem__(self, item):
+        return ValueProxy(self, item, getter=getitem)
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return CallProxy(self, self._item, args, kwds)
@@ -174,22 +178,22 @@ class CacheProxy(_BaseProxy):
 
 
 @attr.define()
-class AttributeProxy(_BaseProxy):
+class ValueProxy(_BaseProxy):
     _proxy: "SingleProxyType" = attr.field()
     _item: Any = attr.field()
+    _getter: Callable = attr.field()
 
     def __await__(self):
         return self._get_proxy_attr().__await__()
 
     async def _get_proxy_attr(self):
         instance = await self._proxy
-        value = getattr(instance, self._item)
+        value = self._getter(instance, self._item)
 
         if isawaitable(value):  # for deeply nested async properties
             value = await value
 
         return value
-
 
 @attr.define()
 class CallProxy(_BaseProxy):
