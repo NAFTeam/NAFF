@@ -1,9 +1,6 @@
 from dis_snek.utils.serializer import to_dict
-from typing import TYPE_CHECKING, Any, Dict
+from typing import Any, Dict
 import attr
-
-if TYPE_CHECKING:
-    from dis_snek.client import Snake
 
 
 class DictSerializationMixin:
@@ -29,12 +26,12 @@ class DictSerializationMixin:
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: "Snake"):
-        data = cls.process_dict(data, client)
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+    def from_dict(cls, data: Dict[str, Any]):
+        data = cls.process_dict(data)
+        return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         return data
 
     def update_from_dict(self, data):
