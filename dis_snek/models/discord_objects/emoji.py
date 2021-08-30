@@ -1,3 +1,4 @@
+from dis_snek.mixins.serialization import DictSerializationMixin
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import attr
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class PartialEmoji(DiscordObject):
+class PartialEmoji(DictSerializationMixin):
     """
     Represent a basic emoji used in discord.
 
@@ -38,9 +39,6 @@ class PartialEmoji(DiscordObject):
             return f"{self.name}:{self.id}"
         else:
             return self.name
-
-    def to_dict(self) -> dict:
-        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
 
 @define()
