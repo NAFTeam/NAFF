@@ -297,6 +297,9 @@ class Snake:
                 log.debug(f"{cmd_scope} is already up-to-date")
 
             for local_cmd in self.interactions[cmd_scope].values():
+                if not local_cmd.permissions:
+                    continue
+
                 for perm_scope, perms in local_cmd.permissions.items():
                     if perm_scope not in guild_perms:
                         guild_perms[perm_scope] = []
