@@ -29,7 +29,7 @@ import attr
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import CommandTypes
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 
 class OptionTypes(IntEnum):
@@ -128,7 +128,7 @@ class BaseInteractionCommand:
     :param call: The coroutine to call when this interaction is received.
     """
 
-    scope: Snowflake_Type = attr.ib(default="global", converter=str)
+    scope: Snowflake_Type = attr.ib(default="global", converter=to_snowflake)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
 
