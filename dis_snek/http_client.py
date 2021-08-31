@@ -88,7 +88,7 @@ class HTTPClient(
     def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
         self.connector: Optional[BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
-        self.__session: ClientSession = ClientSession()
+        self.__session: Optional[ClientSession] = None
         self._retries: int = 5
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
