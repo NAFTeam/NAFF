@@ -2,6 +2,7 @@ from ast import parse
 import asyncio
 from dataclasses import dataclass
 from functools import partial
+from dis_snek.models.discord_objects import embed
 from dis_snek.utils.cache import CacheProxy, CacheView
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
@@ -191,13 +192,15 @@ class Message(DiscordObject, EditMixin):
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
             data["mention_channels"] = mention_channels
 
-        # TODO: Do we need to cache attachment?
         attachments = []
         for attachment_data in data["attachments"]:
             attachments.append(Attachment.from_dict(attachment_data, client))
         data["attachments"] = attachments
 
-        # TODO: Convert to embed objects
+        embeds = []
+        for embed_data in data["embeds"]:
+            embeds.append(Embed.from_dict(embed_data))
+        data["embeds"] = embeds
 
         if "reactions" in data:
             reactions = []

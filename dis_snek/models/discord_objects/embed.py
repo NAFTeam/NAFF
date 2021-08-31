@@ -20,14 +20,18 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from datetime import datetime
+
+from dis_snek.mixins.serialization import DictSerializationMixin
 from typing import Any, Dict, List, Optional, Union
 
 import attr
-from attr.validators import instance_of, optional
+from attr.validators import instance_of, optional as v_optional
+from attr.converters import optional as c_optional
 
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.serializer import no_export_meta, to_dict
+from dis_snek.utils.converters import timestamp_converter, list_converter
+from dis_snek.utils.serializer import no_export_meta
+from dis_snek.utils.attr_utils import field
 
 
 @attr.s(slots=True)
@@ -82,7 +86,7 @@ class EmbedProvider:
 
 
 @attr.s(slots=True)
-class Embed(object):
+class Embed(DictSerializationMixin):
     """Represents a discord embed object.
 
     :param title: the title of the embed
@@ -90,23 +94,23 @@ class Embed(object):
     :param color: the color of the embed
     """
 
-    title: Optional[str] = attr.ib(default=None)
-    description: Optional[str] = attr.ib(default=None, repr=False)
-    color: Optional[str] = attr.ib(default=None)
+    title: Optional[str] = field(default=None, repr=True)
+    description: Optional[str] = field(default=None, repr=True)
+    color: Optional[str] = field(default=None, repr=True)
 
-    url: Optional[str] = attr.ib(validator=optional(instance_of(str)), default=None, init=False)
+    url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
 
-    timestamp: Optional[Timestamp] = attr.ib(
-        default=None, converter=attr.converters.optional(timestamp_converter), validator=optional(instance_of((datetime, float, int)))
+    timestamp: Optional[Timestamp] = field(
+        default=None, converter=c_optional(timestamp_converter), validator=v_optional(instance_of((datetime, float, int))), repr=True
     )
 
-    fields: List[EmbedField] = attr.ib(factory=list, repr=False)
-    author: Optional[EmbedAuthor] = attr.ib(default=None, init=False)
-    thumbnail: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False)
-    image: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False)
-    video: Optional[EmbedAttachment] = attr.ib(default=None, init=False, repr=False, metadata=no_export_meta)
-    footer: Optional[EmbedFooter] = attr.ib(default=None, init=False, repr=False)
-    provider: Optional[EmbedProvider] = attr.ib(default=None, init=False, repr=False, metadata=no_export_meta)
+    fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField), repr=True)
+    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
+    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    video: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta)
+    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter))
+    provider: Optional[EmbedProvider] = field(default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta)
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -135,12 +139,7 @@ class Embed(object):
             if len(value) > 25:
                 raise ValueError("Embeds can only hold 25 fields")
 
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
+    def check_object(self):
         self._name_validation("title", self.title)
         self._description_validation("description", self.description)
         self._fields_validation("fields", self.fields)
@@ -149,8 +148,6 @@ class Embed(object):
             raise ValueError(
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
-
-        return to_dict(self)
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this
