@@ -261,6 +261,17 @@ class SlashCommand(InteractionCommand):
     description: str = attr.ib(default="No Description Set")
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
 
+    def __attrs_post_init__(self):
+        if self.callback is not None:
+            if hasattr(self.callback, "options"):
+                if not self.options:
+                    self.options = []
+                self.options += self.callback.options
+
+            if hasattr(self.callback, "permissions"):
+                self.permissions = self.callback.permissions
+        super().__attrs_post_init__()
+
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
         if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():

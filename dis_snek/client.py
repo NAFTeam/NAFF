@@ -505,28 +505,14 @@ class Snake:
             if not asyncio.iscoroutinefunction(func):
                 raise ValueError("Commands must be coroutines")
 
-            opt = options
-            if hasattr(func, "options"):
-                if opt:
-                    opt += func.options
-                else:
-                    opt = func.options
-
-            perm = permissions
-            if hasattr(func, "permissions"):
-                if perm:
-                    perm.update(func.permissions)
-                else:
-                    perm = func.permissions
-
             cmd = SlashCommand(
                 name=name,
                 description=description,
                 scope=scope,
                 callback=func,
-                options=opt,
+                options=options,
                 default_permission=default_permission,
-                permissions=perm,
+                permissions=permissions,
             )
             func.cmd_id = f"{scope}::{name}"
             self.add_interaction(cmd)

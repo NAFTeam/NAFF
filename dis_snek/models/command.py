@@ -16,13 +16,10 @@ class BaseCommand:
     pre_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
     post_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
 
-    def __setattr__(self, key, value):
-        """Intercept the callback attribute being set, and grab checks from the object"""
-        # todo: This but for interaction context... so we dont need to do ugliness in client.py
-        if key == "callback":
-            # todo: grab checks from object
+    def __attrs_post_init__(self):
+        if self.callback is not None:
+            # todo load checks here
             pass
-        super().__setattr__(key, value)
 
     async def _call_callback(self, callback_object, *args, **kwargs):
         if self.skin is not None:
