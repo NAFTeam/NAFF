@@ -34,7 +34,7 @@ from dis_snek.utils.serializer import no_export_meta
 
 
 @attr.s(slots=True)
-class EmbedField:
+class EmbedField(DictSerializationMixin):
     """Represents an embed field."""
 
     name: str = attr.ib()
@@ -241,6 +241,6 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
 
     if isinstance(embeds, list):
         # A list of embeds, convert Embed to dict representation if needed.
-        return [embed.to_dict() if isinstance(embeds, Embed) else embed for embed in embeds]
+        return [embed.to_dict() if isinstance(embed, Embed) else embed for embed in embeds]
 
     raise ValueError(f"Invalid embeds: {embeds}")
