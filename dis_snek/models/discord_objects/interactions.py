@@ -33,6 +33,7 @@ from dis_snek.const import (
     SLASH_CMD_MAX_OPTIONS,
     SLASH_CMD_MAX_DESC_LENGTH,
 )
+from dis_snek.models.command import BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
@@ -128,7 +129,7 @@ class Permission:
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class BaseInteractionCommand:
+class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
 
@@ -136,7 +137,7 @@ class BaseInteractionCommand:
     :param default_permission: Is this command available to all users?
     :param permissions: Map of guild id and its respective list of permissions to apply.
     :param cmd_id: The id of this command given by discord.
-    :param call: The coroutine to call when this interaction is received.
+    :param callback: The coroutine to callback when this interaction is received.
     """
 
     scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake)
@@ -144,7 +145,7 @@ class BaseInteractionCommand:
     permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
 
     cmd_id: "Snowflake_Type" = attr.ib(default=None)
-    call: Callable[..., Coroutine] = attr.ib(default=None)
+    callback: Callable[..., Coroutine] = attr.ib(default=None)
 
     def to_dict(self) -> dict:
         """
@@ -156,14 +157,14 @@ class BaseInteractionCommand:
 
         # remove internal data from dictionary
         data.pop("scope", None)
-        data.pop("call", None)
+        data.pop("callback", None)
         data.pop("cmd_id", None)
 
         return data
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class ContextMenu(BaseInteractionCommand):
+class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
 
@@ -247,7 +248,7 @@ class SlashCommandOption:
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SlashCommand(BaseInteractionCommand):
+class SlashCommand(InteractionCommand):
     """
     Represents a discord slash command.
 

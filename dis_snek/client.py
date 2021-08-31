@@ -16,7 +16,7 @@ from dis_snek.http_client import HTTPClient
 from dis_snek.models.discord_objects.context import ComponentContext, Context, InteractionContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
-    BaseInteractionCommand,
+    InteractionCommand,
     ContextMenu,
     OptionTypes,
     Permission,
@@ -62,7 +62,7 @@ class Snake:
         self.cache: GlobalCache = GlobalCache(self)
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
-        self.interactions: Dict["Snowflake_Type", Dict[str, BaseInteractionCommand]] = {}
+        self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         self.__extensions = {}
 
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
@@ -390,7 +390,7 @@ class Snake:
                 ctx.kwargs = kwargs
                 ctx.args = kwargs.values()
 
-                await command.call(ctx, **kwargs)
+                await command(ctx, **kwargs)
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -520,14 +520,14 @@ class Snake:
                 name=name,
                 description=description,
                 scope=scope,
-                call=func,
+                callback=func,
                 options=opt,
                 default_permission=default_permission,
                 permissions=perm,
             )
             func.cmd_id = f"{scope}::{name}"
             self.add_interaction(cmd)
-            return func
+            return cmd
 
         return wrapper
 
@@ -565,10 +565,10 @@ class Snake:
                 scope=scope,
                 default_permission=default_permission,
                 permissions=perm,
-                call=func,
+                callback=func,
             )
             self.add_interaction(cmd)
-            return func
+            return cmd
 
         return wrapper
 
