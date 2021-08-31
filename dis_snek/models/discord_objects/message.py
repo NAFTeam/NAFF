@@ -351,8 +351,7 @@ class Message(DiscordObject):
             flags=flags,
         )
 
-        print("EDIT!!!!!!!!!!!!!!!!")
-        message_data = await self._client.http.edit_message(message_payload, self.id, self.channel_id)
+        message_data = await self._client.http.edit_message(message_payload, self.channel_id, self.id)
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
