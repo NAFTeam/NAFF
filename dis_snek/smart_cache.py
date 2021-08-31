@@ -82,11 +82,11 @@ class GlobalCache:
         message = self.message_cache.get((channel_id, message_id))
         if request_fallback and message is None:
             data = await self._client.http.get_message(channel_id, message_id)
-            message = self.place_message_data(channel_id, data)
+            message = self.place_message_data(data)
         return message
 
-    async def place_message_data(self, channel_id, data) -> Message:
-        channel_id = to_snowflake(channel_id)
+    def place_message_data(self, data) -> Message:
+        channel_id = to_snowflake(data["channel_id"])
         message_id = to_snowflake(data["id"])
         message = self.message_cache.get((channel_id, message_id))
         if message is None:

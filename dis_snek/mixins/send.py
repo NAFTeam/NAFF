@@ -73,4 +73,4 @@ class SendMixin:
             message_data = await self._send_http_request(message)
 
         if message_data:
-            return await self._client.cache.place_message_data(message_data["channel_id"], message_data)
+            return self._client.cache.place_message_data(message_data)

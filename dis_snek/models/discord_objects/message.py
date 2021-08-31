@@ -155,7 +155,6 @@ class Message(DiscordObject, EditMixin):
     application_id: Optional[Snowflake_Type] = attr.ib(default=None)
     message_reference: Optional[MessageReference] = attr.ib(default=None, converter=optional_c(MessageReference))
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
-    referenced_message: Optional["Message"] = attr.ib(default=None)
     interaction: Optional[CommandTypes] = attr.ib(default=None)  # TODO: This should be a message interaction object
     thread: Optional[Thread] = attr.ib(default=None)  # TODO: Validation
     components: Optional[List[ComponentTypes]] = attr.ib(default=None)  # TODO: This should be a component object
@@ -166,6 +165,7 @@ class Message(DiscordObject, EditMixin):
     _author_id: Snowflake_Type = attr.ib()  # TODO: create override for detecting PartialMember
     _mention_ids: List[Snowflake_Type] = attr.ib(factory=list)
     _mention_roles: List[Snowflake_Type] = attr.ib(factory=list)
+    _referenced_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
 
     @classmethod
     def process_dict(cls, data: dict, client: "Snake") -> dict:
@@ -210,8 +210,9 @@ class Message(DiscordObject, EditMixin):
 
         # TODO: Convert to application object
 
-        if data.get("referenced_message", None):
-            data["referenced_message"] = Message.from_dict(data["referenced_message"], client)
+        ref_message_data = data.pop("referenced_message", None)
+        if ref_message_data:
+            data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
 
         if "interaction" in data:
             data["interaction"] = MesssageInteraction.from_dict(data["interaction"], client)
@@ -253,6 +254,12 @@ class Message(DiscordObject, EditMixin):
     @property
     def mention_roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
         return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)
+
+    @property
+    def referenced_message(self) -> Optional[Union[CacheProxy, Awaitable["Message"], "Message"]]:
+        if self._referenced_message_id:
+            return CacheProxy(id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id))
+        # TODO should we return an awaitable None, or just None.
 
     async def add_reaction(self, emoji: Union[PartialEmoji, str]):
         """
