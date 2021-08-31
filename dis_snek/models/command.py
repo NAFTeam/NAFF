@@ -10,10 +10,9 @@ class BaseCommand:
     enabled: bool = attr.ib(default=True)
 
     checks: list = attr.ib(factory=list)
+
     callback: Callable[..., Coroutine] = attr.ib(default=None)
-
     error_callback: Callable[..., Coroutine] = attr.ib(default=None)
-
     pre_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
     post_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
 
