@@ -23,7 +23,9 @@ class InteractionRequests:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
-    async def post_interaction_element(self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None):
+    async def post_interaction_element(
+        self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
+    ):
         """
         Register an interaction element.
 
@@ -93,7 +95,11 @@ class InteractionRequests:
         return await self.request(Route("GET", f"/webhooks/{application_id}/{token}/messages/{message_id}"))
 
     async def edit_application_command_permissions(
-        self, application_id: "Snowflake_Type", scope: "Snowflake_Type", cmd_id: "Snowflake_Type", permissions: List[dict]
+        self,
+        application_id: "Snowflake_Type",
+        scope: "Snowflake_Type",
+        cmd_id: "Snowflake_Type",
+        permissions: List[dict],
     ) -> dict:
         """
         Edits command permissions for a specific command.

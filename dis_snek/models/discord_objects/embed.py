@@ -100,16 +100,23 @@ class Embed(DictSerializationMixin):
     url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
 
     timestamp: Optional[Timestamp] = field(
-        default=None, converter=c_optional(timestamp_converter), validator=v_optional(instance_of((datetime, float, int))), repr=True
+        default=None,
+        converter=c_optional(timestamp_converter),
+        validator=v_optional(instance_of((datetime, float, int))),
+        repr=True,
     )
 
     fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField), repr=True)
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
     thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
     image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
-    video: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta)
+    video: Optional[EmbedAttachment] = field(
+        default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
+    )
     footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter))
-    provider: Optional[EmbedProvider] = field(default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta)
+    provider: Optional[EmbedProvider] = field(
+        default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta
+    )
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:

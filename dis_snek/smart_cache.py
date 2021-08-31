@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import DM
     from dis_snek.models.snowflake import Snowflake_Type
 
+
 @attr.define()
 class GlobalCache:
     _client: "Snake" = attr.field()

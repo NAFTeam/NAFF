@@ -19,7 +19,9 @@ class MemberRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
 
-    async def list_members(self, guild_id: "Snowflake_Type", limit: int = 1, after: "Snowflake_Type" = None) -> List[Dict]:
+    async def list_members(
+        self, guild_id: "Snowflake_Type", limit: int = 1, after: "Snowflake_Type" = None
+    ) -> List[Dict]:
         """
         List the members of a guild.
 

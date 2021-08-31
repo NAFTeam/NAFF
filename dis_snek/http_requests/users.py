@@ -53,7 +53,7 @@ class UserRequests:
         :param recipient_id: The recipient to open a DM channel with.
         """
         return await self.request(Route("POST", f"/users/@me/channels"), data=dict(recipient_id=recipient_id))
-    
+
     async def create_group_dm(self, payload: dict) -> dict:
         """
         Create a new group DM channel with multiple users.

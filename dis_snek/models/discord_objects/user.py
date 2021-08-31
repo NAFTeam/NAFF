@@ -1,6 +1,5 @@
 from functools import partial
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List,
-                    Optional, Union)
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
 from dis_snek.models.base_object import DiscordObject

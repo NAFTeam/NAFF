@@ -5,22 +5,25 @@ import sys
 import time
 import traceback
 from random import randint
-from typing import (TYPE_CHECKING, Any, Callable, Coroutine, Dict, List,
-                    Optional, Union)
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
 
 from dis_snek.const import logger_name
-from dis_snek.errors import (GatewayNotFound, SnakeException, WebSocketClosed,
-                             WebSocketRestart)
+from dis_snek.errors import GatewayNotFound, SnakeException, WebSocketClosed, WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models.discord_objects.context import (ComponentContext, Context,
-                                                     InteractionContext)
+from dis_snek.models.discord_objects.context import ComponentContext, Context, InteractionContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
-    BaseInteractionCommand, ContextMenu, OptionTypes, Permission, SlashCommand,
-    SlashCommandChoice, SlashCommandOption)
+    BaseInteractionCommand,
+    ContextMenu,
+    OptionTypes,
+    Permission,
+    SlashCommand,
+    SlashCommandChoice,
+    SlashCommandOption,
+)
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.smart_cache import GlobalCache

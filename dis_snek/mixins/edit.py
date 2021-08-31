@@ -10,8 +10,7 @@ if TYPE_CHECKING:
 
     from dis_snek.models.discord_objects.components import BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
-    from dis_snek.models.discord_objects.message import (AllowedMentions,
-                                                         Attachment, Message)
+    from dis_snek.models.discord_objects.message import AllowedMentions, Attachment, Message
 
 
 class EditMixin:

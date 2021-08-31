@@ -24,7 +24,7 @@ class Sticker(PartialSticker):
     type: StickerTypes = attr.ib(converter=StickerTypes)
     available: Optional[bool] = attr.ib(default=True)
     guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    user: Optional["User"] = attr.ib(default=None) # TODO user should be cached.
+    user: Optional["User"] = attr.ib(default=None)  # TODO user should be cached.
     sort_value: Optional[int] = attr.ib(default=None)
 
 

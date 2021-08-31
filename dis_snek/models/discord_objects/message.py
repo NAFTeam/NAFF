@@ -3,22 +3,25 @@ import json
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import (TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List,
-                    Optional, Union)
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.base_object import DiscordObject
-from dis_snek.models.discord_objects.components import (BaseComponent,
-                                                        process_components)
+from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.sticker import PartialSticker
-from dis_snek.models.enums import (ChannelTypes, InteractionTypes,
-                                   MentionTypes, MessageActivityTypes,
-                                   MessageFlags, MessageTypes)
+from dis_snek.models.enums import (
+    ChannelTypes,
+    InteractionTypes,
+    MentionTypes,
+    MessageActivityTypes,
+    MessageFlags,
+    MessageTypes,
+)
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
@@ -151,7 +154,9 @@ class Message(DiscordObject):
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional["Application"] = attr.ib(default=None)  # TODO: partial application
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    message_reference: Optional[MessageReference] = attr.ib(default=None, converter=optional_c(MessageReference.from_dict))
+    message_reference: Optional[MessageReference] = attr.ib(
+        default=None, converter=optional_c(MessageReference.from_dict)
+    )
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
     interaction: Optional["CommandTypes"] = attr.ib(default=None)  # TODO: This should be a message interaction object
     components: Optional[List["ComponentTypes"]] = attr.ib(default=None)  # TODO: This should be a component object
@@ -258,7 +263,9 @@ class Message(DiscordObject):
     @property
     def referenced_message(self) -> Optional[Union[CacheProxy, Awaitable["Message"], "Message"]]:
         if self._referenced_message_id:
-            return CacheProxy(id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id))
+            return CacheProxy(
+                id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id)
+            )
         # TODO should we return an awaitable None, or just None.
 
     async def add_reaction(self, emoji: Union["PartialEmoji", str]):
@@ -356,12 +363,14 @@ class Message(DiscordObject):
         :param delay: Seconds to wait before deleting message
         """
         if delay is not None and delay > 0:
+
             async def delayed_delete():
                 await asyncio.sleep(delay)
                 try:
                     await self._client.http.delete_message(self.channel_id, self.id)
                 except Exception:
                     pass  # No real way to handle this
+
             asyncio.ensure_future(delayed_delete())
 
         else:
@@ -390,79 +399,79 @@ def process_message_reference(message_reference: Optional[Union[MessageReference
 
     if isinstance(message_reference, dict):
         return message_reference
-    
+
     if isinstance(message_reference, MessageReference):
         return message_reference.to_dict()
-    
+
     if isinstance(message_reference, Message):
         return MessageReference(message_reference.id, message_reference.channel_id).to_dict()
-    
+
     raise ValueError(f"Invalid message reference: {message_reference}")
 
 
 def process_message_payload(
-        content: Optional[str] = None,
-        embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
-        components: Optional[
-            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
-        ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
-        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
-        attachments: Optional[Union[Attachment, dict]] = None,
-        filepath: Optional[Union[str, Path]] = None,
-        tts: bool = False,
-        flags: Optional[Union[int, MessageFlags]] = None,
+    content: Optional[str] = None,
+    embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+    components: Optional[
+        Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+    ] = None,
+    stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+    allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+    reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
+    attachments: Optional[Union[Attachment, dict]] = None,
+    filepath: Optional[Union[str, Path]] = None,
+    tts: bool = False,
+    flags: Optional[Union[int, MessageFlags]] = None,
 ) -> Union[Dict, FormData]:
-        """
-        Format message content for it to be ready to send discord.
+    """
+    Format message content for it to be ready to send discord.
 
-        :param content: Message text content.
-        :param embeds: Embedded rich content (up to 6000 characters).
-        :param components: The components to include with the message.
-        :param stickers: IDs of up to 3 stickers in the server to send in the message.
-        :param allowed_mentions: Allowed mentions for the message.
-        :param reply_to: Message to reference, must be from the same channel.
-        :param attachments: The attachments to keep, only used when editing message.
-        :param filepath: Location of file to send, defaults to None.
-        :param tts: Should this message use Text To Speech.
+    :param content: Message text content.
+    :param embeds: Embedded rich content (up to 6000 characters).
+    :param components: The components to include with the message.
+    :param stickers: IDs of up to 3 stickers in the server to send in the message.
+    :param allowed_mentions: Allowed mentions for the message.
+    :param reply_to: Message to reference, must be from the same channel.
+    :param attachments: The attachments to keep, only used when editing message.
+    :param filepath: Location of file to send, defaults to None.
+    :param tts: Should this message use Text To Speech.
 
-        :return: Dictionary or multipart data form.
-        """
-        content = str(content)
-        embeds = process_embeds(embeds)
-        components = process_components(components)
-        sticker_ids = stickers # TODO Process stickers into ids.
-        allowed_mentions = process_allowed_mentions(allowed_mentions)
-        message_reference = process_message_reference(reply_to)
-        attachments = attachments # TODO Process attachments into dict.
+    :return: Dictionary or multipart data form.
+    """
+    content = str(content)
+    embeds = process_embeds(embeds)
+    components = process_components(components)
+    sticker_ids = stickers  # TODO Process stickers into ids.
+    allowed_mentions = process_allowed_mentions(allowed_mentions)
+    message_reference = process_message_reference(reply_to)
+    attachments = attachments  # TODO Process attachments into dict.
 
-        message_data = dict(
-            content=content,
-            embeds=embeds,
-            components=components,
-            sticker_ids=sticker_ids,
-            allowed_mentions=allowed_mentions,
-            message_reference=message_reference,
-            attachments=attachments,
-            tts=tts,
-            flags=flags,
-        )
+    message_data = dict(
+        content=content,
+        embeds=embeds,
+        components=components,
+        sticker_ids=sticker_ids,
+        allowed_mentions=allowed_mentions,
+        message_reference=message_reference,
+        attachments=attachments,
+        tts=tts,
+        flags=flags,
+    )
 
-        # Remove keys without any data.
-        message_data = {k: v for k, v in message_data.items() if v is not None}
+    # Remove keys without any data.
+    message_data = {k: v for k, v in message_data.items() if v is not None}
 
-        if filepath:
-            # Some special checks when sending file.
-            if embeds or allowed_mentions:
-                raise ValueError("Embeds and allow mentions is not supported when sending a file.")
-            if flags and flags & MessageFlags.EPHEMERAL == flags:
-                raise ValueError("Ephemeral messages does not support sending of files.")
+    if filepath:
+        # Some special checks when sending file.
+        if embeds or allowed_mentions:
+            raise ValueError("Embeds and allow mentions is not supported when sending a file.")
+        if flags and flags & MessageFlags.EPHEMERAL == flags:
+            raise ValueError("Ephemeral messages does not support sending of files.")
 
-            # We need to use multipart/form-data for file sending here.
-            form = FormData()
-            form.add_field("payload_json", json.dumps(message_data))
-            form.add_field("file", open(str(filepath), "rb"))
-            return form
-        else:
-            return message_data
+        # We need to use multipart/form-data for file sending here.
+        form = FormData()
+        form.add_field("payload_json", json.dumps(message_data))
+        form.add_field("file", open(str(filepath), "rb"))
+        return form
+    else:
+        return message_data

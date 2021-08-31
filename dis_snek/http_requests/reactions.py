@@ -27,7 +27,9 @@ class ReactionRequests:
             )
         )
 
-    async def remove_self_reaction(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> None:
+    async def remove_self_reaction(
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str
+    ) -> None:
         """
         Remove client's reaction from a message
 

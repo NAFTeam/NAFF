@@ -9,13 +9,10 @@ from dis_snek.models.enums import MessageFlags
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import BaseChannel
-    from dis_snek.models.discord_objects.components import (ActionRow,
-                                                            BaseComponent)
+    from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
-    from dis_snek.models.discord_objects.message import (AllowedMentions,
-                                                         Message,
-                                                         MessageReference)
+    from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.snowflake import Snowflake_Type
@@ -222,7 +219,9 @@ class ComponentContext(InteractionContext):
 
         message_data = None
         if self.deferred:
-            message_data = await self._client.http.edit_interaction_message(message_payload, self._client.user.id, self._token)
+            message_data = await self._client.http.edit_interaction_message(
+                message_payload, self._client.user.id, self._token
+            )
             self.deferred = False
             self.defer_edit_origin = False
         else:

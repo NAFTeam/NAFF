@@ -13,7 +13,9 @@ class MessageRequests:
         """Send a message to the specified channel."""
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
-    async def delete_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: str = None) -> Any:
+    async def delete_message(
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: str = None
+    ) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
 

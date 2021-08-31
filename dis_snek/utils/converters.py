@@ -16,4 +16,5 @@ def list_converter(converter):
     def convert_action(value):
         print(converter, value)
         return [converter(**element) for element in value]
+
     return convert_action

@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List,
-                    Optional, Union)
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
@@ -17,9 +16,7 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.components import BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
-    from dis_snek.models.discord_objects.message import (AllowedMentions,
-                                                         Message,
-                                                         MessageReference)
+    from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.enums import MessageFlags

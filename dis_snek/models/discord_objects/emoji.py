@@ -54,7 +54,7 @@ class Emoji(PartialEmoji):
     """
 
     roles: List["Snowflake_Type"] = attr.ib(factory=list)
-    creator: Optional["User"] = attr.ib(default=None) # TODO Dont store this.
+    creator: Optional["User"] = attr.ib(default=None)  # TODO Dont store this.
     require_colons: bool = attr.ib(default=False)
     managed: bool = attr.ib(default=False)
     available: bool = attr.ib(default=False)
