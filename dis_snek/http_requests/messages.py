@@ -1,21 +1,23 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class MessageRequests:
     request: Any
 
-    async def create_message(self, payload: dict, channel_id: Snowflake_Type) -> dict:
+    async def create_message(self, payload: dict, channel_id: "Snowflake_Type") -> dict:
         """Send a message to the specified channel."""
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
-    async def delete_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, reason: str = None) -> Any:
+    async def delete_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: str = None) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
 
-    async def get_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> dict:
+    async def get_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> dict:
         """
         Get a specific message in the channel. Returns a message object on success.
 
@@ -25,7 +27,7 @@ class MessageRequests:
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
 
-    async def pin_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> None:
+    async def pin_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> None:
         """Pin a message to a channel
 
         :param channel_id: Channel to pin message to
@@ -33,7 +35,7 @@ class MessageRequests:
         """
         return await self.request(Route("PUT", f"/channels/{channel_id}/pins/{message_id}"))
 
-    async def unpin_message(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> None:
+    async def unpin_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> None:
         """Unpin a message to a channel
 
         :param channel_id: Channel to unpin message to
@@ -44,8 +46,8 @@ class MessageRequests:
     async def edit_message(
         self,
         payload: dict,
-        channel_id: Snowflake_Type,
-        message_id: Snowflake_Type,
+        channel_id: "Snowflake_Type",
+        message_id: "Snowflake_Type",
     ) -> dict:
         """Edit an existing message
 

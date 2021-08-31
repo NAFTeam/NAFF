@@ -1,7 +1,9 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class UserRequests:
@@ -13,7 +15,7 @@ class UserRequests:
         """
         return self.get_user("@me")
 
-    async def get_user(self, user_id: Snowflake_Type) -> dict:
+    async def get_user(self, user_id: "Snowflake_Type") -> dict:
         """
         Get a user object for a given user ID.
 

@@ -1,13 +1,15 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class ReactionRequests:
     request: Any
 
-    async def create_reaction(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, emoji: str) -> None:
+    async def create_reaction(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> None:
         """
         Create a reaction for a message.
 
@@ -25,7 +27,7 @@ class ReactionRequests:
             )
         )
 
-    async def remove_self_reaction(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, emoji: str) -> None:
+    async def remove_self_reaction(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> None:
         """
         Remove client's reaction from a message
 
@@ -44,7 +46,7 @@ class ReactionRequests:
         )
 
     async def remove_user_reaction(
-        self, channel_id: Snowflake_Type, message_id: Snowflake_Type, emoji: str, user_id: Snowflake_Type
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str, user_id: "Snowflake_Type"
     ) -> None:
         """
         Remove user's reaction from a message
@@ -65,7 +67,7 @@ class ReactionRequests:
             )
         )
 
-    async def clear_reaction(self, channel_id: Snowflake_Type, message_id: Snowflake_Type, emoji: str) -> None:
+    async def clear_reaction(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> None:
         """
         Remove specific reaction from a message
 
@@ -83,7 +85,7 @@ class ReactionRequests:
             )
         )
 
-    async def clear_reactions(self, channel_id: Snowflake_Type, message_id: Snowflake_Type) -> None:
+    async def clear_reactions(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> None:
         """
         Remove reactions from a message.
 

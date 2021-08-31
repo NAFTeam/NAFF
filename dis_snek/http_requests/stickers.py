@@ -1,13 +1,15 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class StickerRequests:
     request: Any
 
-    async def get_sticker(self, sticker_id: Snowflake_Type) -> dict:
+    async def get_sticker(self, sticker_id: "Snowflake_Type") -> dict:
         """
         Get a specific sticker.
 
@@ -16,7 +18,7 @@ class StickerRequests:
         """
         return await self.request(Route("GET", f"/stickers/{sticker_id}"))
 
-    async def get_guild_sticker(self, guild_id: Snowflake_Type, sticker_id: Snowflake_Type) -> dict:
+    async def get_guild_sticker(self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type") -> dict:
         """
         Get a sticker from a guild.
 
@@ -26,7 +28,7 @@ class StickerRequests:
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers/{sticker_id}"))
 
-    async def get_guild_stickers(self, guild_id: Snowflake_Type) -> List[dict]:
+    async def get_guild_stickers(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
         Get the stickers for a guild.
 

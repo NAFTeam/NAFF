@@ -1,13 +1,15 @@
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class MemberRequests:
     request: Any
 
-    async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type) -> Dict:
+    async def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Dict:
         """
         Get a member of a guild by ID.
 
@@ -17,7 +19,7 @@ class MemberRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
 
-    async def list_members(self, guild_id: Snowflake_Type, limit: int = 1, after: Snowflake_Type = None) -> List[Dict]:
+    async def list_members(self, guild_id: "Snowflake_Type", limit: int = 1, after: "Snowflake_Type" = None) -> List[Dict]:
         """
         List the members of a guild.
 
@@ -32,7 +34,7 @@ class MemberRequests:
 
         return await self.request(Route("GET", f"/guilds/{guild_id}/members"), data=payload)
 
-    async def search_guild_members(self, guild_id: Snowflake_Type, query: str, limit: int = 1) -> List[Dict]:
+    async def search_guild_members(self, guild_id: "Snowflake_Type", query: str, limit: int = 1) -> List[Dict]:
         """
         Search a guild for members who's username or nickname starts with provided string.
 
@@ -48,13 +50,13 @@ class MemberRequests:
 
     async def modify_guild_member(
         self,
-        guild_id: Snowflake_Type,
-        user_id: Snowflake_Type,
+        guild_id: "Snowflake_Type",
+        user_id: "Snowflake_Type",
         nickname: str = None,
-        roles: List[Snowflake_Type] = None,
+        roles: List["Snowflake_Type"] = None,
         mute: bool = None,
         deaf: bool = None,
-        channel_id: Snowflake_Type = None,
+        channel_id: "Snowflake_Type" = None,
         reason: str = None,
     ) -> Dict:
         """

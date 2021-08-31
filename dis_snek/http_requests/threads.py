@@ -1,13 +1,15 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class ThreadRequests:
     request: Any
 
-    async def join_thread(self, thread_id: Snowflake_Type) -> None:
+    async def join_thread(self, thread_id: "Snowflake_Type") -> None:
         """
         Join a thread.
 
@@ -15,7 +17,7 @@ class ThreadRequests:
         """
         return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/@me"))
 
-    async def leave_thread(self, thread_id: Snowflake_Type) -> None:
+    async def leave_thread(self, thread_id: "Snowflake_Type") -> None:
         """
         Leave a thread.
 
@@ -23,7 +25,7 @@ class ThreadRequests:
         """
         return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/@me"))
 
-    async def add_thread_member(self, thread_id: Snowflake_Type, user_id: Snowflake_Type) -> None:
+    async def add_thread_member(self, thread_id: "Snowflake_Type", user_id: "Snowflake_Type") -> None:
         """
         Add another user to a thread.
 
@@ -32,7 +34,7 @@ class ThreadRequests:
         """
         return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/@{user_id}"))
 
-    async def remove_thread_member(self, thread_id: Snowflake_Type, user_id: Snowflake_Type) -> None:
+    async def remove_thread_member(self, thread_id: "Snowflake_Type", user_id: "Snowflake_Type") -> None:
         """
         Remove another user from a thread.
 
@@ -41,7 +43,7 @@ class ThreadRequests:
         """
         return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/@{user_id}"))
 
-    async def list_thread_members(self, thread_id: Snowflake_Type) -> List[dict]:
+    async def list_thread_members(self, thread_id: "Snowflake_Type") -> List[dict]:
         """
         Get a list of members in the thread.
 
@@ -51,7 +53,7 @@ class ThreadRequests:
         return await self.request(Route("GET", f"/channels/{thread_id}/thread-members"))
 
     async def list_public_archived_threads(
-        self, channel_id: Snowflake_Type, limit: int = None, before: Optional[Snowflake_Type] = None
+        self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
     ) -> List[dict]:
         """
         Get a list of archived public threads in a channel.
@@ -69,7 +71,7 @@ class ThreadRequests:
         return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), data=payload)
 
     async def list_private_archived_threads(
-        self, channel_id: Snowflake_Type, limit: int = None, before: Optional[Snowflake_Type] = None
+        self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
     ) -> List[dict]:
         """
         Get a list of archived private threads in a channel.
@@ -87,7 +89,7 @@ class ThreadRequests:
         return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), data=payload)
 
     async def list_joined_private_archived_threads(
-        self, channel_id: Snowflake_Type, limit: int = None, before: Optional[Snowflake_Type] = None
+        self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
     ) -> List[dict]:
         """
         Get a list of archived private threads in a channel that you have joined.
@@ -106,7 +108,7 @@ class ThreadRequests:
             Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), data=payload
         )
 
-    async def list_active_threads(self, guild_id: Snowflake_Type) -> List[dict]:
+    async def list_active_threads(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
         List active threads within a guild.
 
@@ -117,11 +119,11 @@ class ThreadRequests:
 
     async def create_thread(
         self,
-        channel_id: Snowflake_Type,
+        channel_id: "Snowflake_Type",
         name: str,
         auto_archive_duration: int = 60,
         thread_type: int = 11,
-        message_id: Optional[Snowflake_Type] = None,
+        message_id: Optional["Snowflake_Type"] = None,
         reason: str = None,
     ) -> dict:
         """

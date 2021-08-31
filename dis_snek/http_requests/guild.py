@@ -1,14 +1,16 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class GuildRequests:
     request: Any
 
     async def get_guilds(
-        self, limit: int = 200, before: Optional[Snowflake_Type] = None, after: Optional[Snowflake_Type] = None
+        self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
     ) -> List[Dict]:
         """
         Get a list of partial guild objects the current user is a member of req. `guilds` scope.
@@ -26,7 +28,7 @@ class GuildRequests:
             params["after"] = after
         return await self.request(Route("GET", "/users/@me/guilds", params=params))
 
-    async def get_guild(self, guild_id: Snowflake_Type, with_counts: Optional[bool] = True) -> dict:
+    async def get_guild(self, guild_id: "Snowflake_Type", with_counts: Optional[bool] = True) -> dict:
         """
         Get the guild object for the given ID.
 
@@ -38,7 +40,7 @@ class GuildRequests:
             Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)}  # type: ignore
         )
 
-    async def get_guild_preview(self, guild_id: Snowflake_Type) -> dict:
+    async def get_guild_preview(self, guild_id: "Snowflake_Type") -> dict:
         """
         Get a guild's preview
 
@@ -47,7 +49,7 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/preview"))
 
-    async def get_channels(self, guild_id: Snowflake_Type) -> List[Dict]:
+    async def get_channels(self, guild_id: "Snowflake_Type") -> List[Dict]:
         """
         Get a guilds channels.
 
@@ -57,7 +59,7 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
 
-    async def get_roles(self, guild_id: Snowflake_Type) -> List[Dict]:
+    async def get_roles(self, guild_id: "Snowflake_Type") -> List[Dict]:
         """
         Get a guild's roles.
 
@@ -67,7 +69,7 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/roles"))
 
-    async def modify_guild(self, guild_id: Snowflake_Type, reason: str = None, **kwargs) -> None:
+    async def modify_guild(self, guild_id: "Snowflake_Type", reason: str = None, **kwargs) -> None:
         """
         Modify a guild's attributes.
 
@@ -103,7 +105,7 @@ class GuildRequests:
 
         await self.request(Route("PATCH", f"/guilds/{guild_id}"), data=kwargs, reason=reason)
 
-    async def delete_guild(self, guild_id: Snowflake_Type) -> None:
+    async def delete_guild(self, guild_id: "Snowflake_Type") -> None:
         """
         Delete the guild.
 

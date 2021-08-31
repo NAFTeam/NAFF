@@ -1,14 +1,16 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class InteractionRequests:
     request: Any
 
     async def get_interaction_element(
-        self, application_id: Snowflake_Type, guild_id: Optional[Snowflake_Type] = None
+        self, application_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None
     ) -> List[Dict]:
         """
         Get all interaction elements for this application from discord.
@@ -21,7 +23,7 @@ class InteractionRequests:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
-    async def post_interaction_element(self, app_id: Snowflake_Type, data: List[Dict], guild_id: Snowflake_Type = None):
+    async def post_interaction_element(self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None):
         """
         Register an interaction element.
 
@@ -47,7 +49,7 @@ class InteractionRequests:
 
         return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), data=payload)
 
-    async def post_followup(self, payload: dict, application_id: Snowflake_Type, token: str) -> None:
+    async def post_followup(self, payload: dict, application_id: "Snowflake_Type", token: str) -> None:
         """
         Send a followup to an interaction.
 
@@ -59,7 +61,7 @@ class InteractionRequests:
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), data=payload)
 
     async def edit_interaction_message(
-        self, payload: dict, application_id: Snowflake_Type, token: str, message_id: str = "@original"
+        self, payload: dict, application_id: "Snowflake_Type", token: str, message_id: str = "@original"
     ) -> dict:
         """
         Edits an existing interaction message.
@@ -91,7 +93,7 @@ class InteractionRequests:
         return await self.request(Route("GET", f"/webhooks/{application_id}/{token}/messages/{message_id}"))
 
     async def edit_application_command_permissions(
-        self, application_id: Snowflake_Type, scope: Snowflake_Type, cmd_id: Snowflake_Type, permissions: List[dict]
+        self, application_id: "Snowflake_Type", scope: "Snowflake_Type", cmd_id: "Snowflake_Type", permissions: List[dict]
     ) -> dict:
         """
         Edits command permissions for a specific command.
@@ -108,7 +110,7 @@ class InteractionRequests:
         )
 
     async def batch_edit_application_command_permissions(
-        self, application_id: Snowflake_Type, scope: Snowflake_Type, data: List[dict]
+        self, application_id: "Snowflake_Type", scope: "Snowflake_Type", data: List[dict]
     ) -> dict:
         """
         Edit multiple command permissions within a single scope.
@@ -124,7 +126,7 @@ class InteractionRequests:
         )
 
     async def get_application_command_permissions(
-        self, application_id: Snowflake_Type, scope: Snowflake_Type, cmd_id: Snowflake_Type
+        self, application_id: "Snowflake_Type", scope: "Snowflake_Type", cmd_id: "Snowflake_Type"
     ) -> dict:
         """
         Get permission data for a command.
@@ -139,7 +141,7 @@ class InteractionRequests:
         )
 
     async def batch_get_application_command_permissions(
-        self, application_id: Snowflake_Type, scope: Snowflake_Type
+        self, application_id: "Snowflake_Type", scope: "Snowflake_Type"
     ) -> dict:
         """
         Get permission data for all commands in a scope
