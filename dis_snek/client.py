@@ -42,8 +42,12 @@ class Snake:
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         sync_interactions: bool = False,
+        asyncio_debug: bool = False,
     ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
+        if asyncio_debug:
+            log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
+            self.loop.set_debug(True)
         self.intents = intents
 
         # "Factories"
