@@ -1,14 +1,13 @@
-from dis_snek.mixins.serialization import DictSerializationMixin
-from typing import Any, Dict, TYPE_CHECKING
-from dis_snek.utils.serializer import to_dict
+from typing import TYPE_CHECKING, Any, Dict
 
-import attr
-from dis_snek.utils.attr_utils import define, field
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
+from dis_snek.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()

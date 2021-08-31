@@ -1,8 +1,10 @@
-from typing import Optional, Union, TYPE_CHECKING
-from os import PathLike
+from typing import TYPE_CHECKING, Optional, Union
+
 import attr
 
 if TYPE_CHECKING:
+    from os import PathLike
+
     from dis_snek.client import Snake
 
 
@@ -43,7 +45,7 @@ class Asset:
         return await self._client.http.request_cdn(url, self)
 
     async def save(
-        self, fd: Union[str, bytes, PathLike, int], extension: Optional[str] = None, size: Optional[int] = None
+        self, fd: Union[str, bytes, "PathLike", int], extension: Optional[str] = None, size: Optional[int] = None
     ) -> int:
         content = await self.get(extension=extension, size=size)
         with open(fd, "wb") as f:

@@ -19,17 +19,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-from dis_snek.models.discord_objects.role import Role
 import re
 from enum import IntEnum
-from typing import Callable, Coroutine, Dict, List, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union
 
 import attr
-
 from dis_snek.models.discord_objects.channel import BaseChannel
+from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import CommandTypes
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+from dis_snek.models.snowflake import to_snowflake
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class OptionTypes(IntEnum):
@@ -103,7 +105,7 @@ class Permission:
     :permission: The state of permission. ``True`` to allow, ``False``, to disallow.
     """
 
-    id: Snowflake_Type = attr.ib()
+    id: "Snowflake_Type" = attr.ib()
     type: Union[PermissionTypes, int] = attr.ib()
     permission: bool = attr.ib()
 
@@ -128,11 +130,11 @@ class BaseInteractionCommand:
     :param call: The coroutine to call when this interaction is received.
     """
 
-    scope: Snowflake_Type = attr.ib(default="global", converter=to_snowflake)
+    scope: "Snowflake_Type" = attr.ib(default="global", converter=to_snowflake)
     default_permission: bool = attr.ib(default=True)
-    permissions: Dict[Snowflake_Type, Union[Permission, Dict]] = attr.ib(factory=dict)
+    permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
 
-    cmd_id: Snowflake_Type = attr.ib(default=None)
+    cmd_id: "Snowflake_Type" = attr.ib(default=None)
     call: Callable[..., Coroutine] = attr.ib(default=None)
 
     def to_dict(self) -> dict:

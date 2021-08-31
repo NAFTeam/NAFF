@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
+
 
 DISCORD_EPOCH = 1420070400000
 

@@ -2,11 +2,8 @@ from datetime import datetime, timezone
 
 from attr import fields, has
 
+
 no_export_meta = dict(no_export=True)
-
-
-# def not_none(a, value):
-#     return value is not None
 
 
 def to_dict(inst):

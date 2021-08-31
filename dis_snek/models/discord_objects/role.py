@@ -1,19 +1,18 @@
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Awaitable
 from functools import partial
+from typing import TYPE_CHECKING, Any, Awaitable, Dict, Optional, Union
 
 import attr
-
-from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.base_object import DiscordObject
-from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.cache import CacheProxy
 from dis_snek.models.color import Color
 from dis_snek.models.enums import Permissions
+from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.cache import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.discord_objects.guild import Guild
+    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 def sentinel_converter(value, sentinel=attr.NOTHING):

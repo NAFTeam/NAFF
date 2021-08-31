@@ -37,6 +37,7 @@ from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
 from dis_snek.models.enums import Intents
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 
+
 log = logging.getLogger(logger_name)
 
 

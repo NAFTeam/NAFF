@@ -5,40 +5,29 @@ import sys
 import time
 import traceback
 from random import randint
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
+from typing import (TYPE_CHECKING, Any, Callable, Coroutine, Dict, List,
+                    Optional, Union)
 
 import aiohttp
 
 from dis_snek.const import logger_name
-from dis_snek.errors import (
-    GatewayNotFound,
-    SnakeException,
-    WebSocketClosed,
-    WebSocketRestart,
-)
+from dis_snek.errors import (GatewayNotFound, SnakeException, WebSocketClosed,
+                             WebSocketRestart)
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import (
-    ComponentContext,
-    Context,
-    InteractionContext,
-)
+from dis_snek.models.discord_objects.context import (ComponentContext, Context,
+                                                     InteractionContext)
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
-    BaseInteractionCommand,
-    ContextMenu,
-    OptionTypes,
-    SlashCommand,
-    SlashCommandChoice,
-    SlashCommandOption,
-    Permission,
-)
-from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import Member, SnakeBotUser, User
-from dis_snek.models.enums import ComponentTypes, Intents, CommandTypes, InteractionTypes
-from dis_snek.models.snowflake import Snowflake_Type
+    BaseInteractionCommand, ContextMenu, OptionTypes, Permission, SlashCommand,
+    SlashCommandChoice, SlashCommandOption)
+from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.smart_cache import GlobalCache
+
+if TYPE_CHECKING:
+    from dis_snek.models.enums import CommandTypes
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 log = logging.getLogger(logger_name)
@@ -66,10 +55,10 @@ class Snake:
         self.cache: GlobalCache = GlobalCache(self)
         self.guilds_cache = {}
         self._user: SnakeBotUser = None
-        self.interactions: Dict[Snowflake_Type, Dict[str, BaseInteractionCommand]] = {}
+        self.interactions: Dict["Snowflake_Type", Dict[str, BaseInteractionCommand]] = {}
         self.__extensions = {}
 
-        self._interaction_scopes: Dict[Snowflake_Type, Snowflake_Type] = {}
+        self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
 
         self._listeners: Dict[str, List] = {}
 
@@ -343,18 +332,18 @@ class Snake:
                 if channels := res_data.get("channels"):
                     cls.resolved["channels"] = {}
                     for key, _channel in channels.items():
-                        cls.resolved["channels"][key] = BaseChannel.from_dict_factory(_channel, self)
+                        cls.resolved["channels"][key] = self.cache.place_channel_data(_channel)
 
                 if members := res_data.get("members"):
                     cls.resolved["members"] = {}
                     for key, _member in members.items():
                         user_obj = res_data["users"][key]
-                        cls.resolved["members"][key] = Member.from_dict({**_member, **user_obj}, self)
+                        cls.resolved["members"][key] = self.cache.place_member_data(cls.guild, {**_member, **user_obj})
 
                 elif users := res_data.get("users"):
                     cls.resolved["users"] = {}
                     for key, _user in users.items():
-                        cls.resolved["users"][key] = User.from_dict(_user, self)
+                        cls.resolved["users"][key] = self.cache.place_user_data(_user)
 
                 if roles := res_data.get("roles"):
                     cls.resolved["roles"] = {}
@@ -418,7 +407,7 @@ class Snake:
 
         :param data: raw message data
         """
-        msg = Message.from_dict(data, self)
+        msg = self.cache.place_message_data(data)
         self.dispatch("message_create", msg)
 
     async def _on_raw_guild_create(self, data: dict) -> None:
@@ -476,12 +465,12 @@ class Snake:
         data = raw.get("d")
         log.debug(f"EVENT: {event}: {data}")
 
-    async def get_guild(self, guild_id: Snowflake_Type, with_counts: bool = False) -> Guild:
+    async def get_guild(self, guild_id: "Snowflake_Type", with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
         return Guild(g_data, self)
 
     async def get_guilds(
-        self, limit: int = 200, before: Optional[Snowflake_Type] = None, after: Optional[Snowflake_Type] = None
+        self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
     ):
         g_data = await self.http.get_guilds(limit, before, after)
         to_return = []
@@ -490,17 +479,17 @@ class Snake:
 
         return to_return
 
-    async def send_message(self, channel: Snowflake_Type, content: str):
+    async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
 
     def slash_command(
         self,
         name: str,
         description: str = "No description set",
-        scope: Snowflake_Type = "global",
+        scope: "Snowflake_Type" = "global",
         options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
         default_permission: bool = True,
-        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
+        permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
     ):
         def wrapper(func):
             if not asyncio.iscoroutinefunction(func):
@@ -538,10 +527,10 @@ class Snake:
     def context_menu(
         self,
         name: str,
-        context_type: CommandTypes,
-        scope: Snowflake_Type,
+        context_type: "CommandTypes",
+        scope: "Snowflake_Type",
         default_permission: bool = True,
-        permissions: Optional[Dict[Snowflake_Type, Union[Permission, Dict]]] = None,
+        permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
     ):
         """
         Decorator to create a context menu command.
@@ -609,7 +598,7 @@ class Snake:
 
         return wrapper
 
-    def slash_permission(self, guild_id: Snowflake_Type, permissions: List[Union[Permission, Dict]]):
+    def slash_permission(self, guild_id: "Snowflake_Type", permissions: List[Union[Permission, Dict]]):
         """
         Decorator to add permissions for a guild to your slash command or context menu.
 

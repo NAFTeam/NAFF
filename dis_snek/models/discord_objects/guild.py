@@ -1,18 +1,18 @@
 from functools import partial
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import (TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List,
+                    Optional, Union)
 
 import attr
-
-from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
 from dis_snek.models.base_object import DiscordObject
-from dis_snek.utils.attr_utils import define, field
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.utils.attr_utils import define
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.channel import Thread
-    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.discord_objects.channel import (TYPE_GUILD_CHANNEL,
+                                                         Thread)
     from dis_snek.models.discord_objects.role import Role
+    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()
@@ -25,19 +25,19 @@ class Guild(DiscordObject):
     discovery_splash: Optional[str] = attr.ib(default=None)
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
     permissions: Optional[str] = attr.ib(default=None)  # todo convert to permissions obj
-    afk_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    afk_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     afk_timeout: Optional[int] = attr.ib(default=None)
     widget_enabled: bool = attr.ib(default=False)
-    widget_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    widget_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     verification_level: int = attr.ib(default=0)  # todo enum
     default_message_notifications: int = attr.ib(default=0)  # todo enum
     explicit_content_filter: int = attr.ib(default=0)  # todo enum
     _emojis: List[dict] = attr.ib(factory=list)
     _features: List[str] = attr.ib(factory=list)
     mfa_level: int = attr.ib(default=0)
-    system_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    system_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     system_channel_flags: int = attr.ib(default=0)  # todo enum
-    rules_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    rules_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     joined_at: str = attr.ib()
     large: bool = attr.ib(default=False)
     member_count: int = attr.ib(default=0)
@@ -51,7 +51,7 @@ class Guild(DiscordObject):
     premium_tier: Optional[str] = attr.ib(default=None)
     premium_subscription_count: int = attr.ib(default=0)
     preferred_locale: str = attr.ib()
-    public_updates_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    public_updates_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     max_video_channel_users: int = attr.ib(default=0)
     welcome_screen: Optional[dict] = attr.ib(factory=list)
     nsfw_level: int = attr.ib(default=0)  # todo enum
@@ -85,19 +85,19 @@ class Guild(DiscordObject):
     @property
     def channels(
         self,
-    ) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, TYPE_GUILD_CHANNEL]], AsyncIterator[TYPE_GUILD_CHANNEL]]:
+    ) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "TYPE_GUILD_CHANNEL"]], AsyncIterator["TYPE_GUILD_CHANNEL"]]:
         return CacheView(ids=self._channel_ids, method=self._client.cache.get_channel)
 
     @property
-    def threads(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Thread"]], AsyncIterator["Thread"]]:
+    def threads(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Thread"]], AsyncIterator["Thread"]]:
         return CacheView(ids=self._thread_ids, method=self._client.cache.get_channel)
 
     @property
-    def members(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Member"]], AsyncIterator["Member"]]:
+    def members(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Member"]], AsyncIterator["Member"]]:
         return CacheView(ids=self._member_ids, method=partial(self._client.cache.get_member, self.id))
 
     @property
-    def roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+    def roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
         return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self.id))
 
     @property

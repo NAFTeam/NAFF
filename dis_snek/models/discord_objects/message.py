@@ -1,44 +1,39 @@
-from ast import parse
 import asyncio
-from dataclasses import dataclass
-
-from attr.validators import optional
-from dis_snek.mixins.serialization import DictSerializationMixin
-from functools import partial
 import json
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
-
-from aiohttp.formdata import FormData
-from dis_snek.utils.cache import CacheProxy, CacheView
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import (TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List,
+                    Optional, Union)
 
 import attr
+from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
-
-from dis_snek.models.discord_objects.application import Application
-from dis_snek.models.discord_objects.components import BaseComponent, ComponentTypes, process_components
-from dis_snek.models.discord_objects.embed import Embed, process_embeds
-from dis_snek.models.discord_objects.emoji import PartialEmoji
-from dis_snek.models.discord_objects.reaction import Reaction
-from dis_snek.models.discord_objects.role import Role
-from dis_snek.models.discord_objects.sticker import PartialSticker, Sticker
-from dis_snek.models.discord_objects.user import BaseUser, Member, User
-from dis_snek.models.enums import (
-    ChannelTypes,
-    InteractionTypes,
-    MentionTypes,
-    MessageActivityTypes,
-    MessageFlags,
-    MessageTypes,
-)
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
-from dis_snek.models.timestamp import Timestamp
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.base_object import DiscordObject
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.models.discord_objects.components import (BaseComponent,
+                                                        process_components)
+from dis_snek.models.discord_objects.embed import Embed, process_embeds
+from dis_snek.models.discord_objects.reaction import Reaction
+from dis_snek.models.discord_objects.sticker import PartialSticker
+from dis_snek.models.enums import (ChannelTypes, InteractionTypes,
+                                   MentionTypes, MessageActivityTypes,
+                                   MessageFlags, MessageTypes)
+from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.timestamp import Timestamp
+from dis_snek.utils.attr_utils import define
+from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.application import Application
+    from dis_snek.models.discord_objects.components import ComponentTypes
+    from dis_snek.models.discord_objects.emoji import PartialEmoji
     from dis_snek.models.discord_objects.interactions import CommandTypes
+    from dis_snek.models.discord_objects.role import Role
+    from dis_snek.models.discord_objects.sticker import Sticker
+    from dis_snek.models.discord_objects.user import BaseUser, Member, User
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()
@@ -58,7 +53,7 @@ class Attachment(DiscordObject):
 
 @define()
 class ChannelMention(DiscordObject):
-    guild_id: Snowflake_Type = attr.ib()
+    guild_id: "Snowflake_Type" = attr.ib()
     type: ChannelTypes = attr.ib(converter=ChannelTypes)
     name: str = attr.ib()
 
@@ -80,7 +75,7 @@ class MessageReference(DictSerializationMixin):
 
 @define
 class MesssageInteraction(DiscordObject):
-    _user_id: Snowflake_Type = attr.ib()
+    _user_id: "Snowflake_Type" = attr.ib()
     type: InteractionTypes = attr.ib(converter=InteractionTypes)
     name: str = attr.ib()
 
@@ -108,17 +103,17 @@ class AllowedMentions:
     """
 
     parse: Optional[List[str]] = attr.ib(factory=list)
-    roles: Optional[List[Snowflake_Type]] = attr.ib(factory=list)
-    users: Optional[List[Snowflake_Type]] = attr.ib(factory=list)
+    roles: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
+    users: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
     replied_user = attr.ib(default=False)
 
-    def add_roles(self, *roles: Union[Role, Snowflake_Type]):
+    def add_roles(self, *roles: Union["Role", "Snowflake_Type"]):
         for role in roles:
             if isinstance(role, DiscordObject):
                 role = role.id
             self.roles.append(role)
 
-    def add_users(self, *users: Union[Member, BaseUser, Snowflake_Type]):
+    def add_users(self, *users: Union["Member", "BaseUser", "Snowflake_Type"]):
         for user in users:
             if isinstance(user, DiscordObject):
                 user = user.id
@@ -138,8 +133,8 @@ class AllowedMentions:
 
 @define()
 class Message(DiscordObject):
-    channel_id: Snowflake_Type = attr.ib()
-    guild_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    channel_id: "Snowflake_Type" = attr.ib()
+    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     content: str = attr.ib()
     timestamp: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
@@ -151,24 +146,24 @@ class Message(DiscordObject):
     reactions: List[Reaction] = attr.ib(factory=list)
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
-    webhook_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     type: MessageTypes = attr.ib(converter=MessageTypes)
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
-    application: Optional[Application] = attr.ib(default=None)  # TODO: partial application
-    application_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    application: Optional["Application"] = attr.ib(default=None)  # TODO: partial application
+    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     message_reference: Optional[MessageReference] = attr.ib(default=None, converter=optional_c(MessageReference.from_dict))
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
     interaction: Optional["CommandTypes"] = attr.ib(default=None)  # TODO: This should be a message interaction object
-    components: Optional[List[ComponentTypes]] = attr.ib(default=None)  # TODO: This should be a component object
+    components: Optional[List["ComponentTypes"]] = attr.ib(default=None)  # TODO: This should be a component object
     sticker_items: Optional[List[PartialSticker]] = attr.ib(
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
-    _author_id: Snowflake_Type = attr.ib()  # TODO: create override for detecting PartialMember
-    _mention_ids: List[Snowflake_Type] = attr.ib(factory=list)
-    _mention_roles: List[Snowflake_Type] = attr.ib(factory=list)
-    _referenced_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    _thread_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    _author_id: "Snowflake_Type" = attr.ib()  # TODO: create override for detecting PartialMember
+    _mention_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _mention_roles: List["Snowflake_Type"] = attr.ib(factory=list)
+    _referenced_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
 
     @classmethod
     def process_dict(cls, data: dict, client: "Snake") -> dict:
@@ -249,7 +244,7 @@ class Message(DiscordObject):
     def mentions(
         self,
     ) -> Union[
-        CacheView, Awaitable[Dict[Snowflake_Type, Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]
+        CacheView, Awaitable[Dict["Snowflake_Type", Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]
     ]:
         if self.guild_id:
             return CacheView(ids=self._mention_ids, method=partial(self._client.cache.get_member, self.guild_id))
@@ -257,7 +252,7 @@ class Message(DiscordObject):
             return CacheView(ids=self._mention_ids, method=self._client.cache.get_user)
 
     @property
-    def mention_roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+    def mention_roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
         return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)
 
     @property
@@ -266,38 +261,38 @@ class Message(DiscordObject):
             return CacheProxy(id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id))
         # TODO should we return an awaitable None, or just None.
 
-    async def add_reaction(self, emoji: Union[PartialEmoji, str]):
+    async def add_reaction(self, emoji: Union["PartialEmoji", str]):
         """
         Add a reaction to this message.
 
         :param emoji: the emoji to react with
         """
-        if issubclass(type(emoji), PartialEmoji):
+        if issubclass(type(emoji), "PartialEmoji"):
             emoji = emoji.req_format
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
-    async def clear_reaction(self, emoji: Union[PartialEmoji, str]):
+    async def clear_reaction(self, emoji: Union["PartialEmoji", str]):
         """
         Clear a specific reaction from message
 
         :param emoji: The emoji to clear
         """
-        if issubclass(type(emoji), PartialEmoji):
+        if issubclass(type(emoji), "PartialEmoji"):
             emoji = emoji.req_format
 
         await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union[PartialEmoji, str], member: Union[Member, Snowflake_Type]):
+    async def remove_reaction(self, emoji: Union["PartialEmoji", str], member: Union["Member", "Snowflake_Type"]):
         """
         Remove a specific reaction that a user reacted with
 
         :param emoji: Emoji to remove
-        :param member: Member to remove reaction of
+        :param member: Member to remove reaction of.
         """
-        if issubclass(type(emoji), PartialEmoji):
+        if issubclass(type(emoji), "PartialEmoji"):
             emoji = emoji.req_format
-        if isinstance(member, Member):
+        if isinstance(member, (str, int)):
             member = member.id
 
         await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
@@ -386,7 +381,7 @@ def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, D
     raise ValueError(f"Invalid allowed mentions: {allowed_mentions}")
 
 
-def process_message_reference(message_reference: Optional[Union[MessageReference, Message, dict, Snowflake_Type]]):
+def process_message_reference(message_reference: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]]):
     if not message_reference:
         return
 
@@ -411,9 +406,9 @@ def process_message_payload(
         components: Optional[
             Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
         ] = None,
-        stickers: Optional[Union[List[Union[Sticker, Snowflake_Type]], Sticker, Snowflake_Type]] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        reply_to: Optional[Union[MessageReference, Message, dict, Snowflake_Type]] = None,
+        reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
         attachments: Optional[Union[Attachment, dict]] = None,
         filepath: Optional[Union[str, Path]] = None,
         tts: bool = False,

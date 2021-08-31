@@ -1,20 +1,19 @@
-from collections import defaultdict
-from functools import partial
-from typing import TYPE_CHECKING, List, Dict, Any
+from typing import TYPE_CHECKING, Any, Dict, List
 
 import attr
 
-from dis_snek.models.discord_objects.channel import DM, BaseChannel
+from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.cache import TTLCache
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-
+    from dis_snek.models.discord_objects.channel import DM
+    from dis_snek.models.snowflake import Snowflake_Type
 
 @attr.define()
 class GlobalCache:
@@ -31,7 +30,7 @@ class GlobalCache:
 
     # User cache methods
 
-    async def get_user(self, user_id: Snowflake_Type, request_fallback=True) -> User:
+    async def get_user(self, user_id: "Snowflake_Type", request_fallback=True) -> User:
         user_id = to_snowflake(user_id)
         user = self.user_cache.get(user_id)
         if request_fallback and user is None:
@@ -51,7 +50,7 @@ class GlobalCache:
 
     # Member cache methods
 
-    async def get_member(self, guild_id: Snowflake_Type, user_id: Snowflake_Type, request_fallback=True) -> Member:
+    async def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", request_fallback=True) -> Member:
         guild_id = to_snowflake(guild_id)
         user_id = to_snowflake(user_id)
         member = self.member_cache.get((guild_id, user_id))
@@ -75,7 +74,7 @@ class GlobalCache:
     # Message cache methods
 
     async def get_message(
-        self, channel_id: Snowflake_Type, message_id: Snowflake_Type, request_fallback=True
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", request_fallback=True
     ) -> Message:
         channel_id = to_snowflake(channel_id)
         message_id = to_snowflake(message_id)
@@ -98,7 +97,7 @@ class GlobalCache:
 
     # Channel cache methods
 
-    async def get_channel(self, channel_id: Snowflake_Type, request_fallback=True) -> BaseChannel:
+    async def get_channel(self, channel_id: "Snowflake_Type", request_fallback=True) -> BaseChannel:
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
@@ -119,7 +118,7 @@ class GlobalCache:
     def place_dm_channel_id(self, user_id, channel_id):
         self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
 
-    async def get_dm_channel(self, user_id) -> DM:
+    async def get_dm_channel(self, user_id) -> "DM":
         user_id = to_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
@@ -130,7 +129,7 @@ class GlobalCache:
 
     # Guild cache methods
 
-    async def get_guild(self, guild_id: Snowflake_Type, request_fallback=True) -> Guild:
+    async def get_guild(self, guild_id: "Snowflake_Type", request_fallback=True) -> Guild:
         guild_id = to_snowflake(guild_id)
         guild = self.guild_cache.get(guild_id)
         if request_fallback and guild is None:
@@ -150,7 +149,7 @@ class GlobalCache:
 
     # Roles cache methods
 
-    async def get_role(self, guild_id: Snowflake_Type, role_id: Snowflake_Type, request_fallback=True) -> Role:
+    async def get_role(self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", request_fallback=True) -> Role:
         guild_id = to_snowflake(guild_id)
         role_id = to_snowflake(role_id)
         role = self.role_cache.get(role_id)
@@ -160,8 +159,8 @@ class GlobalCache:
         return role
 
     def place_role_data(
-        self, guild_id: Snowflake_Type, data: List[Dict[Snowflake_Type, Any]]
-    ) -> Dict[Snowflake_Type, Role]:
+        self, guild_id: "Snowflake_Type", data: List[Dict["Snowflake_Type", Any]]
+    ) -> Dict["Snowflake_Type", Role]:
         guild_id = to_snowflake(guild_id)
 
         roles = {}

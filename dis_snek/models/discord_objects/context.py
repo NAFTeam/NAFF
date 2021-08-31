@@ -1,21 +1,24 @@
 from pathlib import Path
-from dis_snek.models.discord_objects.sticker import Sticker
-from dis_snek.models.enums import MessageFlags
-from dis_snek.models.discord_objects.interactions import CallbackTypes
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import attr
-
-from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
-from dis_snek.models.discord_objects.embed import Embed
-from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference, process_message_payload
-from dis_snek.models.discord_objects.user import User
-from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.discord_objects.interactions import CallbackTypes
+from dis_snek.models.discord_objects.message import process_message_payload
+from dis_snek.models.enums import MessageFlags
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.channel import BaseChannel
+    from dis_snek.models.discord_objects.components import (ActionRow,
+                                                            BaseComponent)
+    from dis_snek.models.discord_objects.embed import Embed
+    from dis_snek.models.discord_objects.guild import Guild
+    from dis_snek.models.discord_objects.message import (AllowedMentions,
+                                                         Message,
+                                                         MessageReference)
+    from dis_snek.models.discord_objects.sticker import Sticker
+    from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @attr.s
@@ -23,14 +26,14 @@ class Context:
     """Represents the context of a command"""
 
     _client: "Snake" = attr.ib(default=None)
-    message: Message = attr.ib(default=None)
+    message: "Message" = attr.ib(default=None)
 
     args: List = attr.ib(factory=list)
     kwargs: Dict = attr.ib(factory=dict)
 
-    author: User = attr.ib(default=None)
-    channel: BaseChannel = attr.ib(default=None)
-    guild: Guild = attr.ib(default=None)
+    author: "User" = attr.ib(default=None)
+    channel: "BaseChannel" = attr.ib(default=None)
+    guild: "Guild" = attr.ib(default=None)
 
 
 @attr.s
@@ -39,7 +42,7 @@ class InteractionContext(Context):
 
     _token: str = attr.ib(default=None)
     interaction_id: str = attr.ib(default=None)
-    target_id: Snowflake_Type = attr.ib(default=None)
+    target_id: "Snowflake_Type" = attr.ib(default=None)
 
     deferred: bool = attr.ib(default=False)
     responded: bool = attr.ib(default=False)
@@ -74,17 +77,17 @@ class InteractionContext(Context):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
-            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
-        stickers: Optional[Union[List[Union[Sticker, Snowflake_Type]], Sticker, Snowflake_Type]] = None,
-        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        reply_to: Optional[Union[MessageReference, Message, dict, Snowflake_Type]] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         filepath: Optional[Union[str, Path]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
-    ):
+    ) -> "Message":
         """
         Send a message.
 
@@ -185,12 +188,12 @@ class ComponentContext(InteractionContext):
     async def edit_origin(
         self,
         content: str = None,
-        embeds: List[Embed] = None,
-        components: List[Union[Dict, ActionRow]] = None,
-        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+        embeds: List["Embed"] = None,
+        components: List[Union[Dict, "ActionRow"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         filepath: Optional[Union[str, Path]] = None,
         tts: bool = False,
-    ) -> Message:
+    ) -> "Message":
         """
         Edits the original message of the component.
 

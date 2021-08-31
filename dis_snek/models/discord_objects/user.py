@@ -1,24 +1,22 @@
-from typing import TYPE_CHECKING, Any, Awaitable, AsyncIterator, List, Dict, Optional, Union
 from functools import partial
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List,
+                    Optional, Union)
 
-import attr
 from attr.converters import optional as optional_c
-
-from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.enums import PremiumTypes, UserFlags, Permissions
-from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.models.timestamp import Timestamp
-from dis_snek.models.color import Color
 from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.color import Color
+from dis_snek.models.discord_objects.asset import Asset
+from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import DM
+    from dis_snek.models.discord_objects.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()
@@ -118,7 +116,7 @@ class Member(DiscordObject):
         return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
-    def roles(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Role"]], AsyncIterator["Role"]]:
+    def roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
         return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
@@ -126,7 +124,7 @@ class Member(DiscordObject):
         return CacheProxy(id=self._role_ids[-1], method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
-    def mutual_guilds(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "Guild"]], AsyncIterator["Guild"]]:
+    def mutual_guilds(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Guild"]], AsyncIterator["Guild"]]:
         pass  # todo?
 
     @property
@@ -181,4 +179,3 @@ class Member(DiscordObject):
             permissions |= overwrite_member.allow
 
         return permissions
-

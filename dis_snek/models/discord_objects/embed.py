@@ -20,18 +20,17 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from datetime import datetime
-
-from dis_snek.mixins.serialization import DictSerializationMixin
 from typing import Any, Dict, List, Optional, Union
 
 import attr
-from attr.validators import instance_of, optional as v_optional
 from attr.converters import optional as c_optional
-
+from attr.validators import instance_of
+from attr.validators import optional as v_optional
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.converters import timestamp_converter, list_converter
-from dis_snek.utils.serializer import no_export_meta
 from dis_snek.utils.attr_utils import field
+from dis_snek.utils.converters import list_converter, timestamp_converter
+from dis_snek.utils.serializer import no_export_meta
 
 
 @attr.s(slots=True)

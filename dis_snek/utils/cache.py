@@ -1,13 +1,16 @@
 import time
-from operator import getitem
-from inspect import isawaitable, iscoroutinefunction
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
-from typing import Any, Callable, List, Union
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
-from dis_snek.utils.attr_utils import copy_converter
+from inspect import isawaitable, iscoroutinefunction
+from operator import getitem
+from typing import TYPE_CHECKING, Any, Callable, List, Union
 
 import attr
+from dis_snek.models.snowflake import to_snowflake
+from dis_snek.utils.attr_utils import copy_converter
+
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @attr.s(slots=True)

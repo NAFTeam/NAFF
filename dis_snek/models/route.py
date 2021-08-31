@@ -1,7 +1,8 @@
-from typing import Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar, Optional
 from urllib.parse import quote as _uriquote
 
-from dis_snek.models.snowflake import Snowflake_Type
+if TYPE_CHECKING:
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class Route:
@@ -17,9 +18,9 @@ class Route:
                 url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
         self.url: str = url
 
-        self.channel_id: Optional[Snowflake_Type] = parameters.get("channel_id")
-        self.guild_id: Optional[Snowflake_Type] = parameters.get("guild_id")
-        self.webhook_id: Optional[Snowflake_Type] = parameters.get("webhook_id")
+        self.channel_id: Optional["Snowflake_Type"] = parameters.get("channel_id")
+        self.guild_id: Optional["Snowflake_Type"] = parameters.get("guild_id")
+        self.webhook_id: Optional["Snowflake_Type"] = parameters.get("webhook_id")
         self.webhook_token: Optional[str] = parameters.get("webhook_token")
 
     @property

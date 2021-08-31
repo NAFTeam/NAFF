@@ -1,13 +1,13 @@
 import logging
-from typing import Any, Dict
 from functools import partial
+from typing import Any
 
 import attr
-
 from dis_snek.const import logger_name
 
 
 log = logging.getLogger(logger_name)
+
 
 class_defaults = dict(
     eq=False,
@@ -18,6 +18,7 @@ class_defaults = dict(
     on_setattr=[attr.setters.convert, attr.setters.validate],
 )
 field_defaults = dict(repr=False)
+
 
 define = partial(attr.define, **class_defaults)
 field = partial(attr.field, **field_defaults)

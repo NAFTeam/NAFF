@@ -1,14 +1,17 @@
-from pathlib import Path
-
-from aiohttp.formdata import FormData
-from dis_snek.models.enums import MessageFlags
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
-from dis_snek.models.discord_objects.components import BaseComponent, process_components
-from dis_snek.models.discord_objects.embed import Embed, process_embeds
+from aiohttp.formdata import FormData
+from dis_snek.models.discord_objects.components import process_components
+from dis_snek.models.discord_objects.embed import process_embeds
+from dis_snek.models.enums import MessageFlags
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.message import Message, AllowedMentions
+    from pathlib import Path
+
+    from dis_snek.models.discord_objects.components import BaseComponent
+    from dis_snek.models.discord_objects.embed import Embed
+    from dis_snek.models.discord_objects.message import (AllowedMentions,
+                                                         Message)
 
 
 class SendMixin:
@@ -18,10 +21,10 @@ class SendMixin:
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]] = None,
-        filepath: Union[str, Path] = None,
+        embeds: Optional[Union[List[Union["Embed", Dict]], Union["Embed", Dict]]] = None,
+        filepath: Union[str, "Path"] = None,
         components: Optional[
-            Union[List[List[Union[BaseComponent, Dict]]], List[Union[BaseComponent, Dict]], BaseComponent, Dict]
+            Union[List[List[Union["BaseComponent", Dict]]], List[Union["BaseComponent", Dict]], "BaseComponent", Dict]
         ] = None,
         tts: Optional[bool] = False,
         allowed_mentions: Optional[Union["AllowedMentions", Dict]] = None,

@@ -1,32 +1,29 @@
-from pathlib import Path
-from dis_snek.models.discord_objects.message import AllowedMentions, MessageReference, Message, process_message_payload
-from dis_snek.models.discord_objects.sticker import Sticker
-from dis_snek.models.discord_objects.components import BaseComponent
-from dis_snek.models.discord_objects.embed import Embed
-from typing import (
-    TYPE_CHECKING,
-    AsyncIterator,
-    Awaitable,
-    Dict,
-    List,
-    Optional,
-    Union,
-    Any,
-)
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List,
+                    Optional, Union)
 
 import attr
 from attr.converters import optional as optional_c
-
-from dis_snek.models.enums import ChannelTypes, MessageFlags, OverwriteTypes, Permissions
-from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
-from dis_snek.models.timestamp import Timestamp
 from dis_snek.models.base_object import DiscordObject, SnowflakeObject
-from dis_snek.utils.cache import CacheProxy, CacheView
+from dis_snek.models.discord_objects.message import process_message_payload
+from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions
+from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.components import BaseComponent
+    from dis_snek.models.discord_objects.embed import Embed
+    from dis_snek.models.discord_objects.message import (AllowedMentions,
+                                                         Message,
+                                                         MessageReference)
+    from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.enums import MessageFlags
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()
@@ -75,11 +72,11 @@ class _GuildMixin:
 @attr.s(slots=True, kw_only=True)
 class TextChannel(BaseChannel):
     rate_limit_per_user: int = attr.ib(default=0)
-    last_message_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     default_auto_archive_duration: int = attr.ib(default=60)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
 
-    async def fetch_message(self, message_id: Snowflake_Type) -> "Message":
+    async def fetch_message(self, message_id: "Snowflake_Type") -> "Message":
         message_id = to_snowflake(message_id)
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
@@ -87,16 +84,16 @@ class TextChannel(BaseChannel):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
-            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
-        stickers: Optional[Union[List[Union[Sticker, Snowflake_Type]], Sticker, Snowflake_Type]] = None,
-        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        reply_to: Optional[Union[MessageReference, Message, dict, Snowflake_Type]] = None,
-        filepath: Optional[Union[str, Path]] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        filepath: Optional[Union[str, "Path"]] = None,
         tts: bool = False,
-        flags: Optional[Union[int, MessageFlags]] = None,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
     ):
         """
         Send a message.
@@ -149,9 +146,9 @@ class GuildStageVoice(GuildVoice):
 
 @attr.s(slots=True, kw_only=True)
 class DMGroup(TextChannel):
-    owner_id: Snowflake_Type = attr.ib(default=None)
-    application_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    _recipients_ids: List[Snowflake_Type] = attr.ib(factory=list)
+    owner_id: "Snowflake_Type" = attr.ib(default=None)
+    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _recipients_ids: List["Snowflake_Type"] = attr.ib(factory=list)
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -165,7 +162,7 @@ class DMGroup(TextChannel):
         return data
 
     @property
-    def recipients(self) -> Union[CacheView, Awaitable[Dict[Snowflake_Type, "User"]], AsyncIterator["User"]]:
+    def recipients(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "User"]], AsyncIterator["User"]]:
         return CacheView(ids=self._recipients_ids, method=self._client.cache.get_user)
 
 

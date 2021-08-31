@@ -21,41 +21,32 @@ DEALINGS IN THE SOFTWARE.
 """
 import asyncio
 import datetime
-from dis_snek.http_requests.members import MemberRequests
 import logging
 import traceback
 from collections import defaultdict
-from types import TracebackType
-from typing import Any, Coroutine, Dict, Optional, Type, TypeVar, Union
+from typing import Any, Coroutine, Dict, Optional, TypeVar, Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp  # type: ignore
-from aiohttp import ClientWebSocketResponse, FormData, BaseConnector, ClientSession, ClientResponse
+from aiohttp import (BaseConnector, ClientResponse, ClientSession,
+                     ClientWebSocketResponse, FormData)
 from multidict import CIMultiDictProxy  # type: ignore
 
-from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name
-from dis_snek.errors import (
-    DiscordError,
-    Forbidden,
-    GatewayNotFound,
-    HTTPError,
-    NotFound,
-)
-from dis_snek.http_requests import (
-    ChannelRequests,
-    GuildRequests,
-    InteractionRequests,
-    MessageRequests,
-    ReactionRequests,
-    StickerRequests,
-    ThreadRequests,
-    UserRequests,
-    WebhookRequests,
-)
+from dis_snek.const import (__py_version__, __repo_url__, __version__,
+                            logger_name)
+from dis_snek.errors import (DiscordError, Forbidden, GatewayNotFound,
+                             HTTPError, NotFound)
+from dis_snek.http_requests import (ChannelRequests, GuildRequests,
+                                    InteractionRequests, MemberRequests,
+                                    MessageRequests, ReactionRequests,
+                                    StickerRequests, ThreadRequests,
+                                    UserRequests, WebhookRequests)
 from dis_snek.models.route import Route
 from dis_snek.utils.utils_json import response_decode
 
+
 log = logging.getLogger(logger_name)
+
 
 T = TypeVar("T")
 BE = TypeVar("BE", bound=BaseException)
@@ -224,7 +215,7 @@ class HTTPClient(
         :param token: the token to use
         :return: The currently logged in bot's data
         """
-        self.__session = aiohttp.ClientSession(
+        self.__session = ClientSession(
             connector=self.connector, ws_response_class=DiscordClientWebSocketResponse
         )
         self.token = token
