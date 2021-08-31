@@ -97,7 +97,7 @@ class Embed(object):
     url: Optional[str] = attr.ib(validator=optional(instance_of(str)), default=None, init=False)
 
     timestamp: Optional[Timestamp] = attr.ib(
-        default=None, validator=optional(instance_of((datetime, float, int))), converter=timestamp_converter
+        default=None, converter=attr.converters.optional(timestamp_converter), validator=optional(instance_of((datetime, float, int)))
     )
 
     fields: List[EmbedField] = attr.ib(factory=list, repr=False)
