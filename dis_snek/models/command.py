@@ -40,7 +40,7 @@ class BaseCommand:
         :return:
         """
         try:
-            if self.can_run(context):
+            if await self.can_run(context):
                 if self.pre_run_callback is not None:
                     await self._call_callback(self.pre_run_callback, context, *args, **kwargs)
 
