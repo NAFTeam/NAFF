@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 
-from dis_snek.const import logger_name
+from dis_snek.const import logger_name, GLOBAL_SCOPE
 from dis_snek.errors import GatewayNotFound, SnakeException, WebSocketClosed, WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
@@ -230,7 +230,7 @@ class Snake:
             resp_data = await self.http.get_interaction_element(self.user.id, scope)
 
             for cmd_data in resp_data:
-                self._interaction_scopes[str(cmd_data["id"])] = scope if scope else "global"
+                self._interaction_scopes[str(cmd_data["id"])] = scope if scope else GLOBAL_SCOPE
                 try:
                     self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                 except KeyError:
@@ -260,7 +260,7 @@ class Snake:
 
         for cmd_scope in cmd_scopes:
             cmds_resp_data = await self.http.get_interaction_element(
-                self.user.id, cmd_scope if cmd_scope != "global" else None
+                self.user.id, cmd_scope if cmd_scope != GLOBAL_SCOPE else None
             )
             need_to_sync = False
             cmds_to_sync = []
@@ -283,7 +283,7 @@ class Snake:
             if need_to_sync:
                 log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
                 cmd_sync_resp = await self.http.post_interaction_element(
-                    self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != "global" else None
+                    self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != GLOBAL_SCOPE else None
                 )
                 # cache cmd_ids and their scopes
                 for cmd_data in cmd_sync_resp:
@@ -493,7 +493,7 @@ class Snake:
         self,
         name: str,
         description: str = "No description set",
-        scope: "Snowflake_Type" = "global",
+        scope: "Snowflake_Type" = GLOBAL_SCOPE,
         options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
         default_permission: bool = True,
         permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,

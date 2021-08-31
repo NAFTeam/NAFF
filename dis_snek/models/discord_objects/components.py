@@ -2,6 +2,8 @@ import uuid
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
+
+from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
 
@@ -106,17 +108,17 @@ class SelectOption(BaseComponent):
 
     @label.validator
     def _label_validator(self, attribute: str, value: str):
-        if not value or len(value) > 100:
+        if not value or len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Label length should be between 1 and 100.")
 
     @value.validator
     def _value_validator(self, attribute: str, value: str):
-        if not value or len(value) > 100:
+        if not value or len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Value length should be between 1 and 100.")
 
     @description.validator
     def _description_validator(self, attribute: str, value: str):
-        if value is not None and len(value) > 100:
+        if value is not None and len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Description length must be 100 or lower.")
 
 
@@ -147,7 +149,7 @@ class Select(InteractiveComponent):
 
     @placeholder.validator
     def _placeholder_validator(self, attribute: str, value: str):
-        if value is not None and len(value) > 100:
+        if value is not None and len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Placeholder length must be 100 or lower.")
 
     @min_values.validator
@@ -167,7 +169,7 @@ class Select(InteractiveComponent):
         if not self.options:
             raise TypeError("Selects needs to have at least 1 option.")
 
-        if len(self.options) > 25:
+        if len(self.options) > SELECTS_MAX_OPTIONS:
             raise TypeError("Selects can only hold 25 options")
 
         if self.max_values < self.min_values:
@@ -184,7 +186,7 @@ class ActionRow(BaseComponent):
     :param type: The action role type number defined by discord. This cannot be modified.
     """
 
-    _max_items = 5
+    _max_items = ACTION_ROW_MAX_ITEMS
 
     components: List[Union[dict, Select, Button]] = attr.ib(factory=list)
     type: Union[ComponentTypes, int] = attr.ib(

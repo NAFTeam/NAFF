@@ -24,6 +24,15 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union
 
 import attr
+
+from dis_snek.const import (
+    GLOBAL_SCOPE,
+    CONTEXT_MENU_NAME_LENGTH,
+    SLASH_OPTION_NAME_LENGTH,
+    SLASH_CMD_NAME_LENGTH,
+    SLASH_CMD_MAX_OPTIONS,
+    SLASH_CMD_MAX_DESC_LENGTH,
+)
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
@@ -130,7 +139,7 @@ class BaseInteractionCommand:
     :param call: The coroutine to call when this interaction is received.
     """
 
-    scope: "Snowflake_Type" = attr.ib(default="global", converter=to_snowflake)
+    scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
 
@@ -167,7 +176,7 @@ class ContextMenu(BaseInteractionCommand):
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= 32:
+        if not 1 <= len(value) <= CONTEXT_MENU_NAME_LENGTH:
             raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
 
     @type.validator
@@ -218,12 +227,14 @@ class SlashCommandOption:
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
-        if not re.match(r"^[\w-]{1,32}$", value) or value != value.lower():
-            raise ValueError("Options names must be lower case and match this regex: ^[\w-]{1,32}$")  # noqa: W605
+        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
+            raise ValueError(
+                f"Options names must be lower case and match this regex: ^[\w-]{1,{SLASH_CMD_NAME_LENGTH}}$"
+            )  # noqa: W605
 
     @description.validator
     def _description_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= 100:
+        if not 1 <= len(value) <= SLASH_OPTION_NAME_LENGTH:
             raise ValueError("Options must be between 1 and 100 characters long")
 
     def to_dict(self) -> dict:
@@ -251,21 +262,21 @@ class SlashCommand(BaseInteractionCommand):
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
-        if not re.match(r"^[\w-]{1,32}$", value) or value != value.lower():
+        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
             raise ValueError(
-                "Slash Command option names must be lower case and match this regex: ^[\w-]{1,32}$"
+                f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
             )  # noqa: W605
 
     @description.validator
     def _description_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= 100:
+        if not 1 <= len(value) <= SLASH_CMD_MAX_DESC_LENGTH:
             raise ValueError("Description must be between 1 and 100 characters long")
 
     @options.validator
     def _options_validator(self, attribute: str, value: List) -> None:
         if value:
             if isinstance(value, list):
-                if len(value) > 25:
-                    raise ValueError("Slash commands can only hold 25 options")
+                if len(value) > SLASH_CMD_MAX_OPTIONS:
+                    raise ValueError(f"Slash commands can only hold {SLASH_CMD_MAX_OPTIONS} options")
             else:
                 raise TypeError("Options attribute must be either None or a list of options")
