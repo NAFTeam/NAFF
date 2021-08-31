@@ -29,7 +29,7 @@ from attr.validators import optional as v_optional
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import field
-from dis_snek.utils.converters import list_converter, timestamp_converter
+from dis_snek.utils.converters import list_converter
 from dis_snek.utils.serializer import no_export_meta
 
 
@@ -101,7 +101,7 @@ class Embed(DictSerializationMixin):
 
     timestamp: Optional[Timestamp] = field(
         default=None,
-        converter=c_optional(timestamp_converter),
+        converter=c_optional(Timestamp.fromisoformat),
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
