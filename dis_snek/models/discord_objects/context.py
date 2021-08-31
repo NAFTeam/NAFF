@@ -1,16 +1,16 @@
-from aiohttp.formdata import FormData
-from dis_snek.mixins.send import SendMixin
+from pathlib import Path
+from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.enums import MessageFlags
 from dis_snek.models.discord_objects.interactions import CallbackTypes
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import attr
 
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.components import ActionRow, process_components
+from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
 from dis_snek.models.discord_objects.embed import Embed
 from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.message import Message
+from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference, process_message_payload
 from dis_snek.models.discord_objects.user import User
 from dis_snek.models.snowflake import Snowflake_Type
 
@@ -34,7 +34,7 @@ class Context:
 
 
 @attr.s
-class InteractionContext(Context, SendMixin):
+class InteractionContext(Context):
     """Represents the context of an interaction"""
 
     _token: str = attr.ib(default=None)
@@ -71,31 +71,68 @@ class InteractionContext(Context, SendMixin):
         self.ephemeral = ephemeral
         self.deferred = True
 
-    async def _send_http_request(self, message: Union[dict, FormData]) -> dict:
-        if isinstance(message, FormData):
-            # Special conditions if we are sending a file.
-            if self.ephemeral:
-                raise ValueError("Ephemeral messages does not support sending of files.")
-            if not self.responded and not self.deferred:
-                # Discord doesn't allow files at initial response, so we defer then edit.
-                await self.defer()
+    async def send(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        components: Optional[
+            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+        ] = None,
+        stickers: Optional[Union[List[Union[Sticker, Snowflake_Type]], Sticker, Snowflake_Type]] = None,
+        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+        reply_to: Optional[Union[MessageReference, Message, dict, Snowflake_Type]] = None,
+        filepath: Optional[Union[str, Path]] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, MessageFlags]] = None,
+    ):
+        """
+        Send a message.
+
+        :param content: Message text content.
+        :param embeds: Embedded rich content (up to 6000 characters).
+        :param components: The components to include with the message.
+        :param stickers: IDs of up to 3 stickers in the server to send in the message.
+        :param allowed_mentions: Allowed mentions for the message.
+        :param reply_to: Message to reference, must be from the same channel.
+        :param filepath: Location of file to send, defaults to None.
+        :param tts: Should this message use Text To Speech.
+
+        :return: New message object that was sent.
+        """
+        if not self.responded and not self.deferred and (filepath or stickers):
+            # Discord doesn't allow files at initial response, so we defer then edit.
+            await self.defer()
+
+        message_payload = process_message_payload(
+            content=content,
+            embeds=embeds,
+            components=components,
+            stickers=stickers,
+            allowed_mentions=allowed_mentions,
+            reply_to=reply_to,
+            filepath=filepath,
+            tts=tts,
+            flags=flags,
+        )
 
         message_data = None
-        if not self.responded:
+        if self.responded:
+            message_data = await self._client.http.post_followup(message_payload, self._client.user.id, self._token)
+        else:
             if self.deferred:
                 message_data = await self._client.http.edit_interaction_message(
-                    message, self._client.user.id, self._token
+                    message_payload, self._client.user.id, self._token
                 )
                 self.deferred = False
             else:
-                payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message}
+                payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message_payload}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
                 message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
             self.responded = True
-        else:
-            message_data = await self._client.http.post_followup(message, self._client.user.id, self._token)
 
-        return message_data
+        if message_data:
+            self.message = self._client.cache.place_message_data(message_data)
+            return self.message
 
 
 @attr.s
@@ -149,42 +186,47 @@ class ComponentContext(InteractionContext):
         self,
         content: str = None,
         embeds: List[Embed] = None,
-        tts: bool = False,
         components: List[Union[Dict, ActionRow]] = None,
+        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+        filepath: Optional[Union[str, Path]] = None,
+        tts: bool = False,
     ) -> Message:
         """
         Edits the original message of the component.
 
-        :param content: Message content
-        :param embeds: List of embeds to send
-        :param tts: Should this response use tts
-        :param components: List of interaction components
+        :param content: Message text content.
+        :param embeds: Embedded rich content (up to 6000 characters).
+        :param components: The components to include with the message.
+        :param allowed_mentions: Allowed mentions for the message.
+        :param reply_to: Message to reference, must be from the same channel.
+        :param filepath: Location of file to send, defaults to None.
+        :param tts: Should this message use Text To Speech.
 
         :return: The message after it was edited.
         """
-        # TODO Not sure if this can use a mixin...
+        if not self.responded and not self.deferred and filepath:
+            # Discord doesn't allow files at initial response, so we defer then edit.
+            await self.defer(edit_origin=True)
 
-        message: Dict[str, Any] = {"tts": tts}
-
-        if content:
-            message["content"] = str(content)
-
-        if components:
-            message["components"] = process_components(components)
-
-        if embeds:
-            message["embeds"] = embeds
+        message_payload = process_message_payload(
+            content=content,
+            embeds=embeds,
+            components=components,
+            allowed_mentions=allowed_mentions,
+            filepath=filepath,
+            tts=tts,
+        )
 
         message_data = None
         if self.deferred:
-            message_data = await self._client.http.edit_interaction_message(message, self._client.user.id, self._token)
+            message_data = await self._client.http.edit_interaction_message(message_payload, self._client.user.id, self._token)
             self.deferred = False
             self.defer_edit_origin = False
         else:
-            payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message}
+            payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message_payload}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
             message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
 
         if message_data:
-            self.message = await self._client.cache.place_message_data(message_data)
+            self.message = self._client.cache.place_message_data(message_data)
             return self.message
