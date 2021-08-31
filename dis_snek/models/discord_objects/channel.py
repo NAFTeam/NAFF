@@ -1,3 +1,4 @@
+from dis_snek.utils.converters import timestamp_converter
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
@@ -71,7 +72,7 @@ class TextChannel(BaseChannel):
     rate_limit_per_user: int = attr.ib(default=0)
     last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     default_auto_archive_duration: int = attr.ib(default=60)
-    last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+    last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
     async def fetch_message(self, message_id: "Snowflake_Type") -> "Message":
         message_id = to_snowflake(message_id)
@@ -207,7 +208,7 @@ class Thread(GuildText):
         default=attr.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
     )
     locked: bool = attr.ib(default=False)
-    archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+    archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

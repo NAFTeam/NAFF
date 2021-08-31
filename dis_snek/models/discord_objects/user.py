@@ -1,3 +1,4 @@
+from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
@@ -82,8 +83,8 @@ class Member(DiscordObject):
     nick: Optional[str] = field(repr=True, default=None)
     deaf: bool = field(default=False)
     mute: bool = field(default=False)
-    joined_at: "Timestamp" = field(converter=Timestamp.fromisoformat)
-    premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(Timestamp.fromisoformat))
+    joined_at: "Timestamp" = field(converter=timestamp_converter)
+    premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     pending: Optional[bool] = field(default=None)
 
     _guild_id: "Snowflake_Type" = field(repr=True)

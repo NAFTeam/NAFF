@@ -1,4 +1,5 @@
 import asyncio
+from dis_snek.utils.converters import timestamp_converter
 import json
 from dataclasses import dataclass
 from functools import partial
@@ -139,8 +140,8 @@ class Message(DiscordObject):
     channel_id: "Snowflake_Type" = attr.ib()
     guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     content: str = attr.ib()
-    timestamp: Timestamp = attr.ib(converter=Timestamp.fromisoformat)
-    edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(Timestamp.fromisoformat))
+    timestamp: Timestamp = attr.ib(converter=timestamp_converter)
+    edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
     mention_channels: Optional[List[ChannelMention]] = attr.ib(default=None)
