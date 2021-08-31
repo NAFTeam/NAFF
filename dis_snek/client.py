@@ -47,6 +47,9 @@ class Snake:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         if asyncio_debug:
             log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
+            import tracemalloc
+
+            tracemalloc.start()
             self.loop.set_debug(True)
         self.intents = intents
 
