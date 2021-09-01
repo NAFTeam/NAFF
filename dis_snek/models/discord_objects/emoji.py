@@ -1,11 +1,11 @@
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.base_object import DiscordObject, SnowflakeObject
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.route import Route
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define
+from dis_snek.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class PartialEmoji:
+class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """
     Represent a basic emoji used in discord.
 
@@ -42,7 +42,7 @@ class PartialEmoji:
 
 
 @define()
-class Emoji(PartialEmoji, DiscordObject):
+class Emoji(PartialEmoji):
     """
     Represent a custom emoji in a guild with all its properties.
 
@@ -53,6 +53,7 @@ class Emoji(PartialEmoji, DiscordObject):
     :param available: Whether this emoji can be used, may be false due to loss of Server Boosts.
     :param guild_id: The guild that this custom emoji is created in.
     """
+    _client: "Snake" = field()
 
     roles: List["Snowflake_Type"] = attr.ib(factory=list)
     creator: Optional["User"] = attr.ib(default=None)  # TODO Dont store this.
@@ -66,6 +67,11 @@ class Emoji(PartialEmoji, DiscordObject):
         creator_dict = data.pop("user", None)
         data["creator"] = client.cache.place_user_data(creator_dict) if creator_dict else None
         return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], client: "Snake"):
+        data = cls.process_dict(data, client)
+        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property
     def is_usable(self) -> bool:
