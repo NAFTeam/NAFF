@@ -39,8 +39,9 @@ class TTLCache(OrderedDict):
         self.expire()
 
     def __getitem__(self, key):
+        # Will not (should not) reset expiration!
         item = super().__getitem__(key)
-        self._reset_expiration(key, item)
+        # self._reset_expiration(key, item)
         return item.value
 
     def pop(self, key, default=attr.NOTHING):
