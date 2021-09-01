@@ -35,6 +35,7 @@ from dis_snek.const import __py_version__, __repo_url__, __version__, logger_nam
 from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPError, NotFound
 from dis_snek.http_requests import (
     ChannelRequests,
+    EmojiRequests,
     GuildRequests,
     InteractionRequests,
     MemberRequests,
@@ -73,6 +74,7 @@ class DiscordClientWebSocketResponse(ClientWebSocketResponse):
 
 class HTTPClient(
     ChannelRequests,
+    EmojiRequests,
     GuildRequests,
     InteractionRequests,
     MemberRequests,
