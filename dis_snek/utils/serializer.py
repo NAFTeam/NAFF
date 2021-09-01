@@ -58,14 +58,13 @@ def to_image_data(imagefile):
 
 
 def _get_file_mimetype(filedata: bytes):
-    header_byte = filedata[0:3].hex()
-    print("header_byte ->", header_byte, type(header_byte))
-
-    if header_byte == "474946":
+    if filedata.startswith((b"GIF87a", b"GIF89a")):
         return "image/gif"
-    elif header_byte == "89504e":
+    elif filedata.startswith(b'\x89PNG\x0D\x0A\x1A\x0A'):
         return "image/png"
-    elif header_byte == "ffd8ff":
+    elif filedata.startswith(b'\xff\xd8\xff'):
         return "image/jpeg"
+    elif filedata[0:4] == b'RIFF' and filedata[8:12] == b'WEBP':
+        return "image/webp"
     else:
         return "application/octet-stream"
