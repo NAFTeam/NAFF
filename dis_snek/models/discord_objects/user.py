@@ -82,9 +82,9 @@ class SnakeBotUser(User):
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
 
-    # @property
-    # def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-    #     pass
+    @property
+    def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+        return CacheView(ids=self._guild_ids, method=self._client.cache.get_guild)
 
 
 @define()
