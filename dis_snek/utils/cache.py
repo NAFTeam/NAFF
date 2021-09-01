@@ -23,12 +23,13 @@ class TTLItem:
 
 
 class TTLCache(OrderedDict):
-    def __init__(self, ttl=600, soft_limit=50, hard_limit=250):
+    def __init__(self, ttl=600, soft_limit=50, hard_limit=250, on_expire=None):
         super().__init__()
 
         self.ttl = ttl
-        self.soft_limit = soft_limit
         self.hard_limit = hard_limit
+        self.soft_limit = min(soft_limit, hard_limit)
+        self.on_expire = on_expire
 
     def __setitem__(self, key, value):
         expire = time.monotonic() + self.ttl
@@ -84,15 +85,20 @@ class TTLCache(OrderedDict):
 
         if self.hard_limit:
             while len(self) > self.hard_limit:
-                self.popitem(last=False)
+                self._expire_first()
 
         timestamp = time.monotonic()
         while True:
             key, item = self._first_item()
             if item.is_expired(timestamp):
-                self.popitem(last=False)
+                self._expire_first()
             else:
                 break
+
+    def _expire_first(self):
+        key, value = self.popitem(last=False)
+        if self.on_expire:
+            self.on_expire(key, value)
 
 
 class _CacheValuesView(ValuesView):
