@@ -1,4 +1,7 @@
+from base64 import b64encode, encode
 from datetime import datetime, timezone
+from io import IOBase
+from typing import Union
 
 from attr import fields, has
 
@@ -39,3 +42,30 @@ def _to_dict_any(inst):
             return inst.replace(tzinfo=timezone.utc).isoformat()
     else:
         return inst
+
+
+def to_image_data(imagefile):
+    if issubclass(type(imagefile), IOBase):
+        image_data = imagefile.read()
+    else:
+        with open(imagefile, 'rb') as opened_image:
+            image_data = opened_image.read()
+
+    mimetype = _get_file_mimetype(image_data)
+    encoded_image = b64encode(image_data).decode('ascii')
+
+    return f"data:{mimetype};base64,{encoded_image}"
+
+
+def _get_file_mimetype(filedata: bytes):
+    header_byte = filedata[0:3].hex()
+    print("header_byte ->", header_byte, type(header_byte))
+
+    if header_byte == "474946":
+        return "image/gif"
+    elif header_byte == "89504e":
+        return "image/png"
+    elif header_byte == "ffd8ff":
+        return "image/jpeg"
+    else:
+        return "application/octet-stream"

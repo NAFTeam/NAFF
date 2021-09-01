@@ -1,3 +1,5 @@
+import base64
+from dis_snek.utils.serializer import to_image_data
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
@@ -5,10 +7,14 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 import attr
 from attr.converters import optional
 from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
+
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, Thread
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member
@@ -115,3 +121,24 @@ class Guild(DiscordObject):
     # def
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
+
+    @property
+    def emojis(self):
+        pass # TODO Possibility get from cache
+ 
+    async def create_custom_emoji(
+        self, 
+        name: str, 
+        imagefile: Union[str, "Path", "IOBase"], 
+        roles: List[Union["Snowflake_Type", "Role"]]
+    ) -> "Emoji":
+        data_payload = dict(
+            name=name,
+            image=to_image_data(imagefile),
+            roles=roles,
+        )
+
+        print(data_payload)
+
+        emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id)
+        return Emoji.from_dict(emoji_data, self._client) # TODO Probably cache it
