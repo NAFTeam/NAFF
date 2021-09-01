@@ -1,5 +1,6 @@
 import asyncio
 import importlib.util
+import inspect
 import logging
 import sys
 import time
@@ -17,19 +18,13 @@ from dis_snek.models.discord_objects.context import ComponentContext, Context, I
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     InteractionCommand,
-    ContextMenu,
-    OptionTypes,
-    Permission,
     SlashCommand,
-    SlashCommandChoice,
-    SlashCommandOption,
 )
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.smart_cache import GlobalCache
 
 if TYPE_CHECKING:
-    from dis_snek.models.enums import CommandTypes
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -221,6 +216,11 @@ class Snake:
         If `sync_interactions` this will submit all registered slash commands to discord.
         Otherwise, it will get the list of interactions and cache their scopes.
         """
+        # allow for cogs and main to share the same decorator
+        cmds = [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, InteractionCommand)]
+        for cmd in cmds:
+            self.add_interaction(cmd)
+
         if self.sync_interactions:
             await self.synchronise_interactions()
         else:
@@ -239,7 +239,7 @@ class Snake:
                 except KeyError:
                     pass
 
-    def add_interaction(self, command: Union[SlashCommand, ContextMenu]):
+    def add_interaction(self, command: InteractionCommand):
         """
         Add a slash command to the client.
 
@@ -348,7 +348,9 @@ class Snake:
                     cls.resolved["members"] = {}
                     for key, _member in members.items():
                         user_obj = res_data["users"][key]
-                        cls.resolved["members"][key] = self.cache.place_member_data(cls.guild, {**_member, **user_obj})
+                        cls.resolved["members"][key] = self.cache.place_member_data(
+                            cls.guild.id, {**_member, **user_obj}
+                        )
 
                 elif users := res_data.get("users"):
                     cls.resolved["users"] = {}
@@ -491,130 +493,6 @@ class Snake:
 
     async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
-
-    def slash_command(
-        self,
-        name: str,
-        description: str = "No description set",
-        scope: "Snowflake_Type" = GLOBAL_SCOPE,
-        options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
-        default_permission: bool = True,
-        permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
-    ):
-        def wrapper(func):
-            if not asyncio.iscoroutinefunction(func):
-                raise ValueError("Commands must be coroutines")
-
-            cmd = SlashCommand(
-                name=name,
-                description=description,
-                scope=scope,
-                callback=func,
-                options=options,
-                default_permission=default_permission,
-                permissions=permissions,
-            )
-            func.cmd_id = f"{scope}::{name}"
-            self.add_interaction(cmd)
-            return cmd
-
-        return wrapper
-
-    def context_menu(
-        self,
-        name: str,
-        context_type: "CommandTypes",
-        scope: "Snowflake_Type",
-        default_permission: bool = True,
-        permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
-    ):
-        """
-        Decorator to create a context menu command.
-
-        :param name: The name of this context menu
-        :param context_type: The type of context menu
-        :param scope: The scope (ie guild_id or global)
-        :return:
-        """
-
-        def wrapper(func):
-            if not asyncio.iscoroutinefunction(func):
-                raise ValueError("Commands must be coroutines")
-
-            perm = permissions
-            if hasattr(func, "permissions"):
-                if perm:
-                    perm.update(func.permissions)
-                else:
-                    perm = func.permissions
-
-            cmd = ContextMenu(
-                name=name,
-                type=context_type,
-                scope=scope,
-                default_permission=default_permission,
-                permissions=perm,
-                callback=func,
-            )
-            self.add_interaction(cmd)
-            return cmd
-
-        return wrapper
-
-    def slash_option(
-        self,
-        name: str,
-        description: str,
-        opt_type: Union[OptionTypes, int],
-        required: bool = False,
-        choices: List[Union[SlashCommandChoice, dict]] = None,
-    ):
-        """
-        Decorator to add an option to your slash command.
-
-        :param name: The name of this option
-        :param opt_type: The type of option
-        :param description: The description of this option
-        :param required: "This option must be filled to use the command"
-        :param choices: A list of choices the user has to pick between
-        """
-
-        def wrapper(func):
-            if hasattr(func, "cmd_id"):
-                raise Exception("slash_option decorators must be positioned under a slash_command decorator")
-
-            option = SlashCommandOption(
-                name=name, type=opt_type, description=description, required=required, choices=choices if choices else []
-            )
-
-            if not hasattr(func, "options"):
-                func.options = []
-            func.options.append(option)
-            return func
-
-        return wrapper
-
-    def slash_permission(self, guild_id: "Snowflake_Type", permissions: List[Union[Permission, Dict]]):
-        """
-        Decorator to add permissions for a guild to your slash command or context menu.
-
-        :param guild_id: The target guild to apply the permissions.
-        :param permissions: A list of interaction permission rights.
-        """
-
-        def wrapper(func):
-            if hasattr(func, "cmd_id"):
-                raise Exception("slash_option decorators must be positioned under a slash_command decorator")
-
-            if not hasattr(func, "permissions"):
-                func.permissions = {}
-
-            if guild_id not in func.permissions:
-                func.permissions[guild_id] = []
-            func.permissions[guild_id] += permissions
-            return func
-
-        return wrapper
 
     def load_extension(self, name, package=None):
         """
