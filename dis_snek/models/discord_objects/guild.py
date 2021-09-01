@@ -1,7 +1,9 @@
+from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
+from attr.converters import optional
 from dis_snek.models.base_object import DiscordObject
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.cache import CacheProxy, CacheView
@@ -36,7 +38,7 @@ class Guild(DiscordObject):
     system_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     system_channel_flags: int = attr.ib(default=0)  # todo enum
     rules_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    joined_at: str = attr.ib()
+    joined_at: str = attr.ib(default=None, converter=optional(timestamp_converter))
     large: bool = attr.ib(default=False)
     member_count: int = attr.ib(default=0)
     voice_states: List[dict] = attr.ib(factory=list)
