@@ -501,7 +501,6 @@ class Snake:
         :param package: The package this extension is in
         """
         name = importlib.util.resolve_name(name, package)
-
         if name in self.__extensions:
             raise Exception(f"{name} already loaded")
 
@@ -509,11 +508,10 @@ class Snake:
         try:
             setup = getattr(module, "setup")
             setup(self)
-        except AttributeError:
-            log.error(f"No setup function in {name}")
         except Exception as e:
-            log.error(e)
+            log.error(f"Error loading {name}: {e}")
         else:
+            log.debug(f"Loaded Extension: {name}")
             self.__extensions[name] = module
             return
 
