@@ -1,6 +1,6 @@
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
-from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
 from dis_snek.models.base_object import DiscordObject
@@ -77,6 +77,15 @@ class SnakeBotUser(User):
     bio: Optional[str] = field(default=None)
     flags: "UserFlags" = field(default=0, converter=UserFlags)
 
+    _guild_ids: Set[str] = field(factory=set)
+
+    def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
+        self._guild_ids |= guild_ids
+
+    # @property
+    # def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+    #     pass
+
 
 @define()
 class Member(DiscordObject):
@@ -116,16 +125,16 @@ class Member(DiscordObject):
         return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
-    def roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
+    def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
         return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
     def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
         return CacheProxy(id=self._role_ids[-1], method=partial(self._client.cache.get_role, self._guild_id))
 
-    @property
-    def mutual_guilds(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Guild"]], AsyncIterator["Guild"]]:
-        pass  # todo?
+    # @property
+    # def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+    #     pass  # todo?
 
     @property
     async def display_name(self) -> str:

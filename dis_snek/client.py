@@ -3,7 +3,6 @@ import importlib.util
 import inspect
 import logging
 import sys
-import time
 import traceback
 from random import randint
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Union
@@ -23,6 +22,7 @@ from dis_snek.models.discord_objects.interactions import (
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.models.snowflake import to_snowflake
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -46,7 +46,9 @@ class Snake:
 
             tracemalloc.start()
             self.loop.set_debug(True)
+
         self.intents = intents
+        self.sync_interactions = sync_interactions
 
         # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
@@ -54,11 +56,12 @@ class Snake:
 
         self._connection = None
         self._closed = False
-        self.sync_interactions = sync_interactions
+
+        self._guild_event = asyncio.Event()
+        self.guild_event_timeout = 3
 
         # caches
         self.cache: GlobalCache = GlobalCache(self)
-        self.guilds_cache = {}
         self._user: SnakeBotUser = None
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         self.__extensions = {}
@@ -429,6 +432,8 @@ class Snake:
         :param data: raw guild data
         """
         guild = self.cache.place_guild_data(data)
+        self._guild_event.set()
+
         self.dispatch("guild_create", guild)
 
     async def _on_websocket_ready(self, data: dict) -> None:
@@ -437,29 +442,20 @@ class Snake:
 
         :param data: the websocket ready packet
         """
-        expected_guild_count = len(data["guilds"])
-        last_count = 0
-        current_count = -1
+        expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
+        self._user._add_guilds(expected_guilds)
 
-        last_rcv = time.perf_counter()
         while True:
-            # wait a while to let guilds cache
-            await asyncio.sleep(0.5)
+            try: # wait to let guilds cache
+                await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+            except asyncio.TimeoutError:
+                log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                break
+            self._guild_event.clear()
 
-            current_count = len(self.cache.guild_cache)
-            if current_count != expected_guild_count:
-                if current_count == last_count:
-                    # count hasnt changed, check how long we've been waiting
-                    if time.perf_counter() - last_rcv >= 3:
-                        # timeout
-                        log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
-                        break
-                else:
-                    last_rcv = time.perf_counter()
-                    last_count = current_count
-
-                continue
-            break
+            if len(self.cache.guild_cache) == len(expected_guilds):
+                # all guilds cached
+                break
 
         # cache slash commands
         await self._init_interactions()
@@ -477,10 +473,12 @@ class Snake:
         data = raw.get("d")
         log.debug(f"EVENT: {event}: {data}")
 
+    # todo remove/move this
     async def get_guild(self, guild_id: "Snowflake_Type", with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
         return Guild.from_dict(g_data, self)
 
+    # todo remove/move this
     async def get_guilds(
         self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
     ):
@@ -491,6 +489,7 @@ class Snake:
 
         return to_return
 
+    # todo remove/move this
     async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
 
