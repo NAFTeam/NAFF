@@ -479,7 +479,7 @@ class Snake:
 
     async def get_guild(self, guild_id: "Snowflake_Type", with_counts: bool = False) -> Guild:
         g_data = await self.http.get_guild(guild_id, with_counts)
-        return Guild(g_data, self)
+        return Guild.from_dict(g_data, self)
 
     async def get_guilds(
         self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
