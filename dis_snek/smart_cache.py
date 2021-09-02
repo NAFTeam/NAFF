@@ -102,28 +102,34 @@ class GlobalCache:
             if guilds:
                 guilds.add(guild_id)
 
-    async def _fetch_user_guild_ids(self, user_id: "Snowflake_Type", request_fallback=True):
-        for guild_id in self._client.user.guilds.ids:
-            # Try to get guild members list from the cache, without sending requests
-            guild = await self.get_guild(guild_id, request_fallback=False)
-            if guild and user_id in guild.members.ids:
-                yield guild_id
-                continue
+    async def is_user_in_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type", request_fallback=True):
+        user_id = to_snowflake(user_id)
+        guild_id = to_snowflake(guild_id)
 
-            # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
-            try:
-                member = await self.get_member(guild_id, user_id, request_fallback)
-            except NotFound:  # there is no such member in the guild (as per request)
-                continue
-            else:
-                if member:
-                    yield guild_id
+        # Try to get guild members list from the cache, without sending requests
+        guild = await self.get_guild(guild_id, request_fallback=False)
+        if guild and (user_id in guild.members.ids):
+            return True
+        # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
+        try:
+            member = await self.get_member(guild_id, user_id, request_fallback)
+        except NotFound:  # there is no such member in the guild (as per request)
+            pass
+        else:
+            if member:
+                return True
+
+        return False
 
     async def get_user_guild_ids(self, user_id: "Snowflake_Type", calculation_fallback=True, request_fallback=True):
         user_id = to_snowflake(user_id)
         guild_ids = self.user_guilds.get(user_id)
         if not guild_ids and calculation_fallback:
-            guild_ids = [guild_id async for guild_id in self._fetch_user_guild_ids(user_id, request_fallback)]
+            guild_ids = [
+                guild_id
+                for guild_id in self._client.user.guilds.ids
+                if await self.is_user_in_guild(user_id, guild_id, request_fallback)
+            ]
         return guild_ids
 
     # Message cache methods
