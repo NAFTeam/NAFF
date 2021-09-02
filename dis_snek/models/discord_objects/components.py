@@ -137,8 +137,8 @@ class Select(InteractiveComponent):
     options: List[dict] = attr.ib(factory=list)
     custom_id: str = attr.ib(default=None, validator=str_validator)
     placeholder: str = attr.ib(default=None)
-    min_values: Optional[int] = attr.ib(default=None)
-    max_values: Optional[int] = attr.ib(default=None)
+    min_values: Optional[int] = attr.ib(default=1)
+    max_values: Optional[int] = attr.ib(default=1)
     disabled: bool = attr.ib(default=False)
     type: Union[ComponentTypes, int] = attr.ib(
         default=ComponentTypes.SELECT, init=False, on_setattr=attr.setters.frozen
