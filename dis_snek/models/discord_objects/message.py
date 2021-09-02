@@ -441,7 +441,7 @@ def process_message_payload(
 
     :return: Dictionary or multipart data form.
     """
-    content = str(content)
+    content = content
     embeds = process_embeds(embeds)
     components = process_components(components)
     sticker_ids = stickers  # TODO Process stickers into ids.
