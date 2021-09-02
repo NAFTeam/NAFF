@@ -130,7 +130,8 @@ class Guild(DiscordObject):
         self, 
         name: str, 
         imagefile: Union[str, "Path", "IOBase"], 
-        roles: List[Union["Snowflake_Type", "Role"]]
+        roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
+        reason: Optional[str] = None,
     ) -> "CustomEmoji":
         data_payload = dict(
             name=name,
@@ -138,8 +139,6 @@ class Guild(DiscordObject):
             roles=roles,
         )
 
-        print(data_payload)
-
-        emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id)
+        emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
         return CustomEmoji.from_dict(emoji_data, self._client) # TODO Probably cache it

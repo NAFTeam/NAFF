@@ -22,11 +22,11 @@ class EmojiRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))
 
-    async def create_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type") -> dict:
+    async def create_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type", reason: Optional[str] = None) -> dict:
         """
         
         """
-        return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), data=payload)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), data=payload, reason=reason)
 
     async def modify_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type") -> dict:
         """
