@@ -1,16 +1,18 @@
 from attr.converters import optional
 
 from dis_snek.models.base_object import SnowflakeObject
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -83,6 +85,21 @@ class CustomEmoji(Emoji, DictSerializationMixin):
             return False
         # todo: check roles
         return True
+
+    async def modify(self, name: Optional[str] = None, roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None, reason: Optional[str] = None):
+        """
+        Modify the custom emoji information.
+        """
+        data_payload = dict_filter_none(dict(
+            name=name,
+            roles=roles,
+        ))
+
+        print(data_payload)
+        updated_data = await self._client.http.modify_guild_emoji(data_payload, self.guild_id, self.id, reason=reason)
+        print(updated_data)
+        self.update_from_dict(updated_data)
+        return self
 
     async def delete(self, reason: Optional[str] = None) -> None:
         """
