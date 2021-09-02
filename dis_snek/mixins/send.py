@@ -36,7 +36,7 @@ class SendMixin:
             filepath: Optional[Union[str, "Path"]] = None,
             tts: bool = False,
             flags: Optional[Union[int, "MessageFlags"]] = None,
-    ):
+    ) -> "Message":
         """
         Send a message.
 
