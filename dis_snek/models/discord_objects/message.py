@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
     from dis_snek.models.discord_objects.components import ComponentTypes
-    from dis_snek.models.discord_objects.emoji import PartialEmoji
+    from dis_snek.models.discord_objects.emoji import Emoji
     from dis_snek.models.discord_objects.interactions import CommandTypes
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
@@ -269,7 +269,7 @@ class Message(DiscordObject):
             )
         # TODO should we return an awaitable None, or just None.
 
-    async def add_reaction(self, emoji: Union["PartialEmoji", str]):
+    async def add_reaction(self, emoji: Union["Emoji", str]):
         """
         Add a reaction to this message.
 
@@ -280,7 +280,7 @@ class Message(DiscordObject):
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
-    async def clear_reaction(self, emoji: Union["PartialEmoji", str]):
+    async def clear_reaction(self, emoji: Union["Emoji", str]):
         """
         Clear a specific reaction from message
 
@@ -291,7 +291,7 @@ class Message(DiscordObject):
 
         await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union["PartialEmoji", str], member: Union["Member", "Snowflake_Type"]):
+    async def remove_reaction(self, emoji: Union["Emoji", str], member: Union["Member", "Snowflake_Type"]):
         """
         Remove a specific reaction that a user reacted with
 
