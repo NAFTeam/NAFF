@@ -70,10 +70,15 @@ class GlobalCache:
 
     def place_member_data(self, guild_id, data) -> Member:
         guild_id = to_snowflake(guild_id)
-        user_id = to_snowflake(data["user"]["id"] if "user" in data else data["id"])
+        is_user = "member" in data
+        user_id = to_snowflake(data["id"] if is_user else data["user"]["id"])
+
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            data.update({"guild_id": guild_id})
+            member_extra = {"guild_id": guild_id}
+            member = data["member"] if is_user else data
+            member.update(member_extra)
+
             member = Member.from_dict(data, self._client)
             self.member_cache[(guild_id, user_id)] = member
         else:
