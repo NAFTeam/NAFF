@@ -21,8 +21,8 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
-from dis_snek.smart_cache import GlobalCache
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.smart_cache import GlobalCache
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -223,6 +223,7 @@ class Snake:
         cmds = [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, InteractionCommand)]
         for cmd in cmds:
             self.add_interaction(cmd)
+        log.debug(f"{len(cmds)} application commands have been loaded from `__main__`")
 
         if self.sync_interactions:
             await self.synchronise_interactions()
@@ -446,7 +447,7 @@ class Snake:
         self._user._add_guilds(expected_guilds)
 
         while True:
-            try: # wait to let guilds cache
+            try:  # wait to let guilds cache
                 await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
             except asyncio.TimeoutError:
                 log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")

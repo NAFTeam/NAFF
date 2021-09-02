@@ -1,8 +1,11 @@
 import inspect
+import logging
 from typing import List
 
+from dis_snek.const import logger_name
 from dis_snek.models.command import BaseCommand
-from dis_snek.models.discord_objects.interactions import SlashCommand, slash_command
+
+log = logging.getLogger(logger_name)
 
 
 class Skin:
@@ -21,12 +24,9 @@ class Skin:
             if isinstance(val, BaseCommand):
                 val.skin = cls
                 cls._commands.append(val)
+                bot.add_interaction(val)
 
-        # attempt to load commands into bot
-        for cmd in cls._commands:
-            if cmd.scope not in bot.interactions:
-                bot.interactions[cmd.scope] = {}
-            bot.interactions[cmd.scope][cmd.name] = cmd
+        log.debug(f"{len(cls._commands)} application commands have been loaded from `{cls.__name__}`")
 
     def __init__(self, bot):
         # forces a user to have some sort of bot attribute
