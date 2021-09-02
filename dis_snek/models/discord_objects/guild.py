@@ -124,21 +124,23 @@ class Guild(DiscordObject):
 
     @property
     def emojis(self):
-        pass # TODO Possibility get from cache
- 
+        pass  # TODO Possibility get from cache
+
     async def create_custom_emoji(
-        self, 
-        name: str, 
-        imagefile: Union[str, "Path", "IOBase"], 
+        self,
+        name: str,
+        imagefile: Union[str, "Path", "IOBase"],
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,
     ) -> "CustomEmoji":
-        data_payload = dict_filter_none(dict(
-            name=name,
-            image=to_image_data(imagefile),
-            roles=roles,
-        ))
+        data_payload = dict_filter_none(
+            dict(
+                name=name,
+                image=to_image_data(imagefile),
+                roles=roles,
+            )
+        )
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
-        return CustomEmoji.from_dict(emoji_data, self._client) # TODO Probably cache it
+        return CustomEmoji.from_dict(emoji_data, self._client)  # TODO Probably cache it

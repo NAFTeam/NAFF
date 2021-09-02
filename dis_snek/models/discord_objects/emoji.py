@@ -56,6 +56,7 @@ class CustomEmoji(Emoji, DictSerializationMixin):
     :param available: Whether this emoji can be used, may be false due to loss of Server Boosts.
     :param guild_id: The guild that this custom emoji is created in.
     """
+
     _client: "Snake" = field()
 
     roles: List["Snowflake_Type"] = attr.ib(factory=list)
@@ -86,14 +87,21 @@ class CustomEmoji(Emoji, DictSerializationMixin):
         # todo: check roles
         return True
 
-    async def modify(self, name: Optional[str] = None, roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None, reason: Optional[str] = None):
+    async def modify(
+        self,
+        name: Optional[str] = None,
+        roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
+        reason: Optional[str] = None,
+    ):
         """
         Modify the custom emoji information.
         """
-        data_payload = dict_filter_none(dict(
-            name=name,
-            roles=roles,
-        ))
+        data_payload = dict_filter_none(
+            dict(
+                name=name,
+                roles=roles,
+            )
+        )
 
         print(data_payload)
         updated_data = await self._client.http.modify_guild_emoji(data_payload, self.guild_id, self.id, reason=reason)

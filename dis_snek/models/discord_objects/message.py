@@ -450,17 +450,19 @@ def process_message_payload(
     message_reference = process_message_reference(reply_to)
     attachments = attachments  # TODO Process attachments into dict.
 
-    message_data = dict_filter_none(dict(
-        content=content,
-        embeds=embeds,
-        components=components,
-        sticker_ids=sticker_ids,
-        allowed_mentions=allowed_mentions,
-        message_reference=message_reference,
-        attachments=attachments,
-        tts=tts,
-        flags=flags,
-    ))
+    message_data = dict_filter_none(
+        dict(
+            content=content,
+            embeds=embeds,
+            components=components,
+            sticker_ids=sticker_ids,
+            allowed_mentions=allowed_mentions,
+            message_reference=message_reference,
+            attachments=attachments,
+            tts=tts,
+            flags=flags,
+        )
+    )
 
     if filepath:
         # Some special checks when sending file.

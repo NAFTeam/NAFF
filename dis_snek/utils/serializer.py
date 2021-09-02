@@ -52,11 +52,11 @@ def to_image_data(imagefile):
     if issubclass(type(imagefile), IOBase):
         image_data = imagefile.read()
     else:
-        with open(imagefile, 'rb') as opened_image:
+        with open(imagefile, "rb") as opened_image:
             image_data = opened_image.read()
 
     mimetype = _get_file_mimetype(image_data)
-    encoded_image = b64encode(image_data).decode('ascii')
+    encoded_image = b64encode(image_data).decode("ascii")
 
     return f"data:{mimetype};base64,{encoded_image}"
 
@@ -64,11 +64,11 @@ def to_image_data(imagefile):
 def _get_file_mimetype(filedata: bytes):
     if filedata.startswith((b"GIF87a", b"GIF89a")):
         return "image/gif"
-    elif filedata.startswith(b'\x89PNG\x0D\x0A\x1A\x0A'):
+    elif filedata.startswith(b"\x89PNG\x0D\x0A\x1A\x0A"):
         return "image/png"
-    elif filedata.startswith(b'\xff\xd8\xff'):
+    elif filedata.startswith(b"\xff\xd8\xff"):
         return "image/jpeg"
-    elif filedata[0:4] == b'RIFF' and filedata[8:12] == b'WEBP':
+    elif filedata[0:4] == b"RIFF" and filedata[8:12] == b"WEBP":
         return "image/webp"
     else:
         return "application/octet-stream"

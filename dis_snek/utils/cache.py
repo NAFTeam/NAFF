@@ -138,7 +138,9 @@ class _CacheItemsView(ItemsView):
 
 @attr.define()
 class CacheView:  # for global cache
-    ids: Union[Awaitable, Callable[..., Coroutine[Any, Any, Any]], List["Snowflake_Type"]] = attr.field(converter=copy_converter)
+    ids: Union[Awaitable, Callable[..., Coroutine[Any, Any, Any]], List["Snowflake_Type"]] = attr.field(
+        converter=copy_converter
+    )
     _method: Callable = attr.field(repr=False)
 
     async def get_dict(self):
