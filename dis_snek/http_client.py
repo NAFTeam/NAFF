@@ -166,7 +166,7 @@ class HTTPClient(
                             f"retrying in {r_limit['delta']} seconds"
                         )
                         self.loop.call_later(r_limit["delta"], lock.release)
-                        return
+                        return result
 
                     if 300 > response.status >= 200:
                         lock.release()
