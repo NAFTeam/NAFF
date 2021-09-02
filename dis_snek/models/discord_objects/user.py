@@ -1,3 +1,4 @@
+from dis_snek.mixins.send import SendMixin
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
@@ -12,6 +13,8 @@ from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.cache import CacheProxy, CacheView
 
 if TYPE_CHECKING:
+    from aiohttp import FormData
+
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord_objects.guild import Guild
@@ -49,7 +52,7 @@ class BaseUser(DiscordObject):
 
 
 @define()
-class User(BaseUser):
+class User(BaseUser, SendMixin):
     bot: bool = field(repr=True, default=False)
     system: bool = field(default=False)
     public_flags: "UserFlags" = field(repr=True, default=0, converter=UserFlags)
@@ -66,6 +69,10 @@ class User(BaseUser):
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
         return data
+
+    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+        dm_id = (await self._client.cache.get_dm_channel(self.id)).id  # TODO Dont need to fetch entire channel.
+        return await self._client.http.create_message(message_payload, dm_id)
 
 
 @define()

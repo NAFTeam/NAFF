@@ -1,5 +1,4 @@
 import asyncio
-from dis_snek.utils.converters import timestamp_converter
 import json
 from dataclasses import dataclass
 from functools import partial
@@ -9,10 +8,12 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
+
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.base_object import DiscordObject
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
+from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.sticker import PartialSticker
 from dis_snek.models.enums import (
@@ -27,12 +28,12 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.cache import CacheProxy, CacheView
+from dis_snek.utils.converters import timestamp_converter
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
     from dis_snek.models.discord_objects.components import ComponentTypes
-    from dis_snek.models.discord_objects.emoji import Emoji
     from dis_snek.models.discord_objects.interactions import CommandTypes
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
@@ -275,7 +276,7 @@ class Message(DiscordObject):
 
         :param emoji: the emoji to react with
         """
-        if issubclass(type(emoji), "PartialEmoji"):
+        if issubclass(type(emoji), Emoji):
             emoji = emoji.req_format
 
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
@@ -286,7 +287,7 @@ class Message(DiscordObject):
 
         :param emoji: The emoji to clear
         """
-        if issubclass(type(emoji), "PartialEmoji"):
+        if issubclass(type(emoji), Emoji):
             emoji = emoji.req_format
 
         await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
@@ -298,9 +299,9 @@ class Message(DiscordObject):
         :param emoji: Emoji to remove
         :param member: Member to remove reaction of.
         """
-        if issubclass(type(emoji), "PartialEmoji"):
+        if issubclass(type(emoji), Emoji):
             emoji = emoji.req_format
-        if isinstance(member, (str, int)):
+        if not isinstance(member, (str, int)):
             member = member.id
 
         await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
@@ -329,7 +330,7 @@ class Message(DiscordObject):
         filepath: Optional[Union[str, Path]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
-    ):
+    ) -> "Message":
         """
         Edits the message.
 
@@ -340,6 +341,7 @@ class Message(DiscordObject):
         :param attachments: The attachments to keep, only used when editing message.
         :param filepath: Location of file to send, defaults to None.
         :param tts: Should this message use Text To Speech.
+        :param flags: Message flags to apply.
         """
         message_payload = process_message_payload(
             content=content,
@@ -435,6 +437,7 @@ def process_message_payload(
     :param attachments: The attachments to keep, only used when editing message.
     :param filepath: Location of file to send, defaults to None.
     :param tts: Should this message use Text To Speech.
+    :param flags: Message flags to apply.
 
     :return: Dictionary or multipart data form.
     """
