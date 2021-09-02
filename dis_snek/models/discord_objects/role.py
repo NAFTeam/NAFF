@@ -6,7 +6,7 @@ from dis_snek.models.base_object import DiscordObject
 from dis_snek.models.color import Color
 from dis_snek.models.enums import Permissions
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.cache import CacheProxy
+from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

@@ -27,7 +27,7 @@ from dis_snek.models.enums import (
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.cache import CacheProxy, CacheView
+from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.serializer import dict_filter_none
 
