@@ -173,14 +173,20 @@ class GlobalCache:
     def place_dm_channel_id(self, user_id, channel_id):
         self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
 
-    async def get_dm_channel(self, user_id) -> "DM":
+    async def get_dm_channel_id(self, user_id):
         user_id = to_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
             data = await self._client.http.create_dm(user_id)
-            return self.place_channel_data(data)
-        else:
-            return await self.get_channel(channel_id)
+            channel = self.place_channel_data(data)
+            channel_id = channel.id
+        return channel_id
+
+    async def get_dm_channel(self, user_id) -> "DM":
+        user_id = to_snowflake(user_id)
+        channel_id = self.get_dm_channel_id(user_id)
+        channel = await self.get_channel(channel_id)
+        return channel
 
     # Guild cache methods
 

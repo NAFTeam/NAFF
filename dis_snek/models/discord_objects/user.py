@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class BaseUser(DiscordObject):
+class BaseUser(DiscordObject, SendMixin):
     """Base class for User, essentially partial user discord model"""
 
     username: str = field(repr=True)
@@ -56,9 +56,13 @@ class BaseUser(DiscordObject):
         ids = PartialCallableProxy(self._client.cache.get_user_guild_ids, self.id)
         return CacheView(ids=ids, method=self._client.cache.get_guild)
 
+    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+        dm_id = await self._client.cache.get_dm_channel_id(self.id)
+        return await self._client.http.create_message(message_payload, dm_id)
+
 
 @define()
-class User(BaseUser, SendMixin):
+class User(BaseUser):
     bot: bool = field(repr=True, default=False)
     system: bool = field(default=False)
     public_flags: "UserFlags" = field(repr=True, default=0, converter=UserFlags)
@@ -75,10 +79,6 @@ class User(BaseUser, SendMixin):
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
         return data
-
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = (await self._client.cache.get_dm_channel(self.id)).id  # TODO Dont need to fetch entire channel.
-        return await self._client.http.create_message(message_payload, dm_id)
 
 
 @define()
