@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from dis_snek.models.route import Route
 
@@ -34,8 +34,8 @@ class EmojiRequests:
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/emojis/{emoji_id}"), data=payload)
 
-    async def delete_guild_emoji(self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type") -> None:
+    async def delete_guild_emoji(self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Optional[str] = None) -> None:
         """
         
         """
-        await self.request(Route("DELETE", f"/guilds/{guild_id}/emojis/{emoji_id}"))
+        await self.request(Route("DELETE", f"/guilds/{guild_id}/emojis/{emoji_id}"), reason=reason)

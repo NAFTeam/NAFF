@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.route import Route
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, field
 
@@ -89,7 +88,7 @@ class CustomEmoji(Emoji, DictSerializationMixin):
         """
         Deletes the custom emoji from the guild.
         """
-        if self.guild_id:
-            # TODO why is this not in HTTP package.
-            await self._client.http.request(Route("DELETE", f"/guilds/{self.guild_id}/emojis/{self.id}"), reason=reason)
-        raise ValueError("Cannot delete emoji, no guild_id set")
+        if not self.guild_id:
+            raise ValueError("Cannot delete emoji, no guild_id set")
+
+        await self._client.http.delete_guild_emoji(self.guild_id, self.id, reason=reason)
