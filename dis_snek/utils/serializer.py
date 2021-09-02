@@ -44,6 +44,10 @@ def _to_dict_any(inst):
         return inst
 
 
+def dict_filter_none(data: dict) -> dict:
+    return {k: v for k, v in data.items() if v is not None}
+
+
 def to_image_data(imagefile):
     if issubclass(type(imagefile), IOBase):
         image_data = imagefile.read()

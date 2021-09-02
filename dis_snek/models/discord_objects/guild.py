@@ -1,5 +1,5 @@
 import base64
-from dis_snek.utils.serializer import to_image_data
+from dis_snek.utils.serializer import to_image_data, dict_filter_none
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
@@ -133,11 +133,11 @@ class Guild(DiscordObject):
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,
     ) -> "CustomEmoji":
-        data_payload = dict(
+        data_payload = dict_filter_none(dict(
             name=name,
             image=to_image_data(imagefile),
             roles=roles,
-        )
+        ))
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id

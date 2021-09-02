@@ -29,6 +29,7 @@ from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.cache import CacheProxy, CacheView
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -449,7 +450,7 @@ def process_message_payload(
     message_reference = process_message_reference(reply_to)
     attachments = attachments  # TODO Process attachments into dict.
 
-    message_data = dict(
+    message_data = dict_filter_none(dict(
         content=content,
         embeds=embeds,
         components=components,
@@ -459,10 +460,7 @@ def process_message_payload(
         attachments=attachments,
         tts=tts,
         flags=flags,
-    )
-
-    # Remove keys without any data.
-    message_data = {k: v for k, v in message_data.items() if v is not None}
+    ))
 
     if filepath:
         # Some special checks when sending file.
