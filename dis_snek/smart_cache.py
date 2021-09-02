@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, List, Dict, Any
 
 import attr
 
@@ -9,6 +9,7 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.cache import TTLCache
+from dis_snek.errors import NotFound
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 class GlobalCache:
     _client: "Snake" = attr.field()
 
+    # Expiring discord objects cache
     user_cache: TTLCache = attr.field(factory=TTLCache)  # key: user_id
     member_cache: TTLCache = attr.field(factory=TTLCache)  # key: (guild_id, user_id)
     message_cache: TTLCache = attr.field(factory=TTLCache)  # key: (channel_id, message_id)
@@ -27,7 +29,9 @@ class GlobalCache:
     guild_cache: TTLCache = attr.field(factory=TTLCache)  # key: guild_id
     role_cache: TTLCache = attr.field(factory=TTLCache)  # key: role_id
 
-    dm_channels: dict = attr.field(factory=dict)
+    # Expiring id reference cache
+    dm_channels: TTLCache = attr.field(factory=TTLCache)  # key: user_id
+    user_guilds: TTLCache = attr.field(factory=TTLCache)  # key: user_id; value: set[guild_id]
 
     # User cache methods
 
@@ -83,7 +87,44 @@ class GlobalCache:
             self.member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
+
+        self.place_user_guild(user_id, guild_id)
         return member
+
+    def place_user_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type"):
+        user_id = to_snowflake(user_id)
+        guild_id = to_snowflake(guild_id)
+        if user_id == self._client.user.id:
+            # noinspection PyProtectedMember
+            self._client.user._add_guilds({guild_id})
+        else:
+            guilds = self.user_guilds.get(user_id)
+            if guilds:
+                guilds.add(guild_id)
+
+    async def _fetch_user_guild_ids(self, user_id: "Snowflake_Type", request_fallback=True):
+        for guild_id in self._client.user.guilds.ids:
+            # Try to get guild members list from the cache, without sending requests
+            guild = await self.get_guild(guild_id, request_fallback=False)
+            if guild and user_id in guild.members.ids:
+                yield guild_id
+                continue
+
+            # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
+            try:
+                member = await self.get_member(guild_id, user_id, request_fallback)
+            except NotFound:  # there is no such member in the guild (as per request)
+                continue
+            else:
+                if member:
+                    yield guild_id
+
+    async def get_user_guild_ids(self, user_id: "Snowflake_Type", calculation_fallback=True, request_fallback=True):
+        user_id = to_snowflake(user_id)
+        guild_ids = self.user_guilds.get(user_id)
+        if not guild_ids and calculation_fallback:
+            guild_ids = [guild_id async for guild_id in self._fetch_user_guild_ids(user_id, request_fallback)]
+        return guild_ids
 
     # Message cache methods
 

@@ -10,7 +10,7 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.cache import CacheProxy, CacheView
+from dis_snek.utils.cache import CacheProxy, CacheView, PartialCallableProxy
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -49,6 +49,12 @@ class BaseUser(DiscordObject):
     @property
     def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
         return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
+
+    @property
+    def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+        # Warning! mutual_guilds.ids should be awaited!
+        ids = PartialCallableProxy(self._client.cache.get_user_guild_ids, self.id)
+        return CacheView(ids=ids, method=self._client.cache.get_guild)
 
 
 @define()
@@ -138,10 +144,6 @@ class Member(DiscordObject):
     @property
     def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
         return CacheProxy(id=self._role_ids[-1], method=partial(self._client.cache.get_role, self._guild_id))
-
-    # @property
-    # def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-    #     pass  # todo?
 
     @property
     async def display_name(self) -> str:

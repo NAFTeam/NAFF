@@ -25,7 +25,9 @@ field = partial(attr.field, **field_defaults)
 
 
 def copy_converter(value):
-    return value.copy()
+    if isinstance(value, (list, set)):
+        return value.copy()
+    return value
 
 
 # def converter(attribute):
