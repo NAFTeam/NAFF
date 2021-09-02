@@ -23,12 +23,12 @@ class BaseComponent:
     def from_dict(cls, data):
         data.pop("hash", None)  # TODO Zero clue why discord sometimes include a hash attribute...
 
-        componentType = data.pop("type", None)
-        componentClass = TYPE_COMPONENT_MAPPING.get(componentType)
-        if not componentClass:
-            raise TypeError(f"Unknown component type for {data} ({componentType}), please consult the docs.")
+        component_type = data.pop("type", None)
+        component_class = TYPE_COMPONENT_MAPPING.get(component_type)
+        if not component_class:
+            raise TypeError(f"Unknown component type for {data} ({component_type}), please consult the docs.")
 
-        return componentClass.from_dict_typed(data)
+        return component_class.from_dict_typed(data)
 
     @classmethod
     def from_dict_typed(cls, data):
