@@ -3,18 +3,21 @@ from typing import Callable, Coroutine, Any
 
 import attr
 
+from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.utils.serializer import no_export_meta
+
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class BaseCommand:
-    skin: Any = attr.ib(default=None)
-    enabled: bool = attr.ib(default=True)
+class BaseCommand(DictSerializationMixin):
+    skin: Any = attr.ib(default=None, metadata=no_export_meta)
+    enabled: bool = attr.ib(default=True, metadata=no_export_meta)
 
     checks: list = attr.ib(factory=list)
 
-    callback: Callable[..., Coroutine] = attr.ib(default=None)
-    error_callback: Callable[..., Coroutine] = attr.ib(default=None)
-    pre_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
-    post_run_callback: Callable[..., Coroutine] = attr.ib(default=None)
+    callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
+    error_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
+    pre_run_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
+    post_run_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
 
     def __attrs_post_init__(self):
         if self.callback is not None:

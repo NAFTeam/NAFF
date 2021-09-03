@@ -4,16 +4,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import attr
 
 from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
-from dis_snek.utils.serializer import export_converter
+from dis_snek.utils.serializer import export_converter, to_dict
 from dis_snek.models.discord_objects.emoji import process_emoji
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.emoji import Emoji
 
 
-class BaseComponent:
+class BaseComponent(DictSerializationMixin):
     """
     A base component class. This should never be instantiated.
     """
@@ -22,27 +23,15 @@ class BaseComponent:
         raise NotImplementedError
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict_factory(cls, data) -> "TYPE_ALL_COMPONENT":
         data.pop("hash", None)  # TODO Zero clue why discord sometimes include a hash attribute...
 
         component_type = data.pop("type", None)
         component_class = TYPE_COMPONENT_MAPPING.get(component_type)
         if not component_class:
-            raise TypeError(f"Unknown component type for {data} ({component_type}), please consult the docs.")
+            raise TypeError(f"Unsupported component type for {data} ({component_type}), please consult the docs.")
 
-        return component_class.from_dict_typed(data)
-
-    @classmethod
-    def from_dict_typed(cls, data):
-        return cls(**data)
-
-    def _checks(self):
-        """Checks all attributes of this object are valid"""
-        pass
-
-    def to_dict(self) -> dict:
-        self._checks()
-        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
+        return component_class.from_dict(data)
 
 
 class InteractiveComponent(BaseComponent):
@@ -52,7 +41,7 @@ class InteractiveComponent(BaseComponent):
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, dict):
-            other = BaseComponent.from_dict(other)
+            other = BaseComponent.from_dict_factory(other)
             return self.custom_id == other.custom_id and self.type == other.type
         return False
 
@@ -83,7 +72,7 @@ class Button(InteractiveComponent):
         if not isinstance(value, ButtonStyles) and not value in ButtonStyles.__members__.values():
             raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
-    def _checks(self):
+    def check_object(self):
         if self.style == ButtonStyles.URL:
             if self.custom_id:
                 raise TypeError("A link button cannot have a `custom_id`!")
@@ -164,7 +153,7 @@ class Select(InteractiveComponent):
         if value < 0:
             raise ValueError("Select max value cannot be a negative number.")
 
-    def _checks(self):
+    def check_object(self):
         if not self.custom_id:
             self.custom_id = str(uuid.uuid4())
 
@@ -203,20 +192,20 @@ class ActionRow(BaseComponent):
         return len(self.components)
 
     @classmethod
-    def from_dict_typed(cls, data):
+    def from_dict(cls, data):
         return cls(*data["components"])
 
     def _component_checks(self, component: Union[dict, Select, Button]):
         if isinstance(component, dict):
-            component = BaseComponent.from_dict(component)
+            component = BaseComponent.from_dict_factory(component)
 
         if not issubclass(type(component), InteractiveComponent):
             raise TypeError("You can only add select or button to the action row.")
 
-        component._checks()
+        component.check_object()
         return component
 
-    def _checks(self):
+    def check_object(self):
         if not (0 < len(self.components) <= ActionRow._max_items):
             raise TypeError(f"Number of components in one row should be between 1 and {ActionRow._max_items}.")
 

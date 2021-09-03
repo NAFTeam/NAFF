@@ -239,7 +239,7 @@ class Message(DiscordObject):
         if "components" in data:
             components = []
             for component_data in data["components"]:
-                components.append(BaseComponent.from_dict(component_data))
+                components.append(BaseComponent.from_dict_factory(component_data))
             data["components"] = components
 
         if "sticker_items" in data:

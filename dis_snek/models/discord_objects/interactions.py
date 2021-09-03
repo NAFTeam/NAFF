@@ -34,12 +34,14 @@ from dis_snek.const import (
     SLASH_CMD_MAX_OPTIONS,
     SLASH_CMD_MAX_DESC_LENGTH,
 )
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.command import BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import CommandTypes
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.utils.serializer import no_export_meta, to_dict
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -143,32 +145,12 @@ class InteractionCommand(BaseCommand):
 
     name: str = attr.ib()
 
-    scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake)
+    scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake, metadata=no_export_meta)
     default_permission: bool = attr.ib(default=True)
     permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
 
-    cmd_id: "Snowflake_Type" = attr.ib(default=None)
-    callback: Callable[..., Coroutine] = attr.ib(default=None)
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
-        data = attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
-
-        # remove internal data from dictionary
-        # todo: not do this
-        data.pop("scope", None)
-        data.pop("cmd_id", None)
-        data.pop("enabled", None)
-        data.pop("skin", None)
-        data.pop("callback", None)
-        data.pop("error_callback", None)
-        data.pop("pre_run_callback", None)
-        data.pop("post_run_callback", None)
-        return data
+    cmd_id: "Snowflake_Type" = attr.ib(default=None, metadata=no_export_meta)
+    callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -196,7 +178,7 @@ class ContextMenu(InteractionCommand):
 
 
 @attr.s(slots=True)
-class SlashCommandChoice:
+class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
 
@@ -207,17 +189,9 @@ class SlashCommandChoice:
     name: str = attr.ib()
     value: Union[str, int, float] = attr.ib()
 
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
-        return attr.asdict(self)
-
 
 @attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SlashCommandOption:
+class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
 
@@ -245,14 +219,6 @@ class SlashCommandOption:
     def _description_validator(self, attribute: str, value: str) -> None:
         if not 1 <= len(value) <= SLASH_OPTION_NAME_LENGTH:
             raise ValueError("Options must be between 1 and 100 characters long")
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        :return: dict
-        """
-        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
