@@ -60,7 +60,7 @@ class Button(InteractiveComponent):
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
     emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
-    custom_id: Optional[str] = attr.ib(default=None, validator=str_validator)
+    custom_id: Optional[str] = attr.ib(factory=uuid.uuid4, validator=str_validator)
     url: Optional[str] = attr.ib(default=None)
     disabled: bool = attr.ib(default=False)
     type: Union[ComponentTypes, int] = attr.ib(
@@ -82,7 +82,7 @@ class Button(InteractiveComponent):
             if self.url:
                 raise TypeError("You can't have a URL on a non-link button!")
             if not self.custom_id:
-                self.custom_id = str(uuid.uuid4())  # Default a random id
+                raise TypeError("You need to have a custom id to identify the button.")
 
         if not self.label and not self.emoji:
             raise TypeError("You must have at least a label or emoji on a button.")
@@ -126,7 +126,7 @@ class Select(InteractiveComponent):
     """
 
     options: List[dict] = attr.ib(factory=list)
-    custom_id: str = attr.ib(default=None, validator=str_validator)
+    custom_id: str = attr.ib(factory=uuid.uuid4, validator=str_validator)
     placeholder: str = attr.ib(default=None)
     min_values: Optional[int] = attr.ib(default=1)
     max_values: Optional[int] = attr.ib(default=1)
@@ -155,7 +155,7 @@ class Select(InteractiveComponent):
 
     def check_object(self):
         if not self.custom_id:
-            self.custom_id = str(uuid.uuid4())
+            raise TypeError("You need to have a custom id to identify the select.")
 
         if not self.options:
             raise TypeError("Selects needs to have at least 1 option.")
