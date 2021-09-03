@@ -73,10 +73,14 @@ class MessageActivity:
 @attr.s(slots=True)
 class MessageReference(DictSerializationMixin):
     # Add pointers to actual message, channel, guild objects
-    message_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    message_id: int = attr.ib(default=None, converter=to_snowflake)
     channel_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
     guild_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
     fail_if_not_exists: bool = attr.ib(default=True)
+
+    @classmethod
+    def for_message(cls, message: "Message", fail_if_not_exists: bool = True):
+        return cls(message_id=message.id, channel_id=message.channel_id, guild_id=message.guild_id, fail_if_not_exists=fail_if_not_exists)
 
 
 @define
@@ -397,17 +401,17 @@ def process_message_reference(message_reference: Optional[Union[MessageReference
     if not message_reference:
         return
 
-    if isinstance(message_reference, (str, int)):
-        return MessageReference(message_reference).to_dict()
-
     if isinstance(message_reference, dict):
         return message_reference
 
-    if isinstance(message_reference, MessageReference):
-        return message_reference.to_dict()
+    if isinstance(message_reference, (str, int)):
+        message_reference = MessageReference(message_id=message_reference)
 
     if isinstance(message_reference, Message):
-        return MessageReference(message_reference.id, message_reference.channel_id).to_dict()
+        message_reference = MessageReference.for_message(message_reference)
+
+    if isinstance(message_reference, MessageReference):
+        return message_reference.to_dict()
 
     raise ValueError(f"Invalid message reference: {message_reference}")
 
