@@ -6,11 +6,13 @@ import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.converters import list_converter
 from dis_snek.utils.proxy import CacheProxy, CacheView
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.snowflake import Snowflake_Type
@@ -68,10 +70,10 @@ class CustomEmoji(Emoji):
     require_colons: bool = attr.ib(default=False)
     managed: bool = attr.ib(default=False)
     available: bool = attr.ib(default=False)
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
     _creator_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
-    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list, converter=optional(list_converter(to_snowflake)))
+    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -96,6 +98,10 @@ class CustomEmoji(Emoji):
     @property
     def roles(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
         return CacheView(id=self._role_ids, method=self._client.cache.get_role)
+
+    @property
+    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
+        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
     def is_usable(self) -> bool:
