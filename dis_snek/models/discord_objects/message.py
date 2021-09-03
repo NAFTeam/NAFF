@@ -24,6 +24,7 @@ from dis_snek.models.enums import (
     MessageFlags,
     MessageTypes,
 )
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.proxy import CacheView, CacheProxy
@@ -38,7 +39,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
-    from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 @define()

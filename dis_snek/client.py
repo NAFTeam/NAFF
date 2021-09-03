@@ -21,10 +21,11 @@ from dis_snek.models.discord_objects.interactions import (
 )
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 
 if TYPE_CHECKING:
-    from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
+    from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
 
