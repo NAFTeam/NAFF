@@ -92,9 +92,15 @@ class CustomEmoji(Emoji, DictSerializationMixin):
         name: Optional[str] = None,
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,
-    ):
+    ) -> "CustomEmoji":
         """
         Modify the custom emoji information.
+
+        :param name: The name of the emoji.
+        :param roles: The roles allowed to use this emoji.
+        :param reason: Attach a reason to this action, used for audit logs.
+
+        :return: The newly modified custom emoji.
         """
         data_payload = dict_filter_none(
             dict(
@@ -103,17 +109,17 @@ class CustomEmoji(Emoji, DictSerializationMixin):
             )
         )
 
-        print(data_payload)
         updated_data = await self._client.http.modify_guild_emoji(data_payload, self.guild_id, self.id, reason=reason)
-        print(updated_data)
         self.update_from_dict(updated_data)
         return self
 
     async def delete(self, reason: Optional[str] = None) -> None:
         """
         Deletes the custom emoji from the guild.
+
+        :param reason: Attach a reason to this action, used for audit logs.
         """
         if not self.guild_id:
-            raise ValueError("Cannot delete emoji, no guild_id set")
+            raise ValueError("Cannot delete emoji, no guild id set.")
 
         await self._client.http.delete_guild_emoji(self.guild_id, self.id, reason=reason)
