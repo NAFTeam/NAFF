@@ -27,7 +27,7 @@ class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
 
     @classmethod
-    def from_dict_factory(cls, data, client) -> "TYPE_ALL_CHANNEL":
+    def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
         """
         Creates a channel object of the appropriate type
 
@@ -36,8 +36,12 @@ class BaseChannel(DiscordObject):
 
         :return:
         """
-        channel_type = ChannelTypes(data["type"])
-        return TYPE_MAPPING[channel_type].from_dict(data, client)
+        channel_type = data.pop("type", None)
+        channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
+        if not channel_class:
+            raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
+
+        return channel_class.from_dict(data, client)
 
 
 @define()
@@ -197,7 +201,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
 
 
-TYPE_MAPPING = {
+TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_TEXT: GuildText,
     ChannelTypes.GUILD_NEWS: GuildNews,
     ChannelTypes.GUILD_VOICE: GuildVoice,

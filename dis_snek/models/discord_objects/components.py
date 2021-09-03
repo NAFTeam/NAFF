@@ -23,11 +23,11 @@ class BaseComponent(DictSerializationMixin):
         raise NotImplementedError
 
     @classmethod
-    def from_dict_factory(cls, data) -> "TYPE_ALL_COMPONENT":
+    def from_dict_factory(cls, data: dict) -> "TYPE_ALL_COMPONENT":
         data.pop("hash", None)  # TODO Zero clue why discord sometimes include a hash attribute...
 
         component_type = data.pop("type", None)
-        component_class = TYPE_COMPONENT_MAPPING.get(component_type)
+        component_class = TYPE_COMPONENT_MAPPING.get(component_type, None)
         if not component_class:
             raise TypeError(f"Unsupported component type for {data} ({component_type}), please consult the docs.")
 
