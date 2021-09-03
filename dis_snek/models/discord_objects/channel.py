@@ -36,7 +36,7 @@ class BaseChannel(DiscordObject):
 
         :return:
         """
-        channel_type = data.pop("type", None)
+        channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
         if not channel_class:
             raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
