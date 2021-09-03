@@ -1,4 +1,7 @@
 import base64
+
+from dis_snek.models.enums import NSFWLevels, SystemChannelFlags, VerificationLevels, DefaultNotificationLevels, \
+    ExplicitContentFilterLevels, MFALevels
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
@@ -35,14 +38,14 @@ class Guild(DiscordObject):
     afk_timeout: Optional[int] = attr.ib(default=None)
     widget_enabled: bool = attr.ib(default=False)
     widget_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    verification_level: int = attr.ib(default=0)  # todo enum
-    default_message_notifications: int = attr.ib(default=0)  # todo enum
-    explicit_content_filter: int = attr.ib(default=0)  # todo enum
+    verification_level: Union[VerificationLevels, int] = attr.ib(default=VerificationLevels.NONE)
+    default_message_notifications: Union[DefaultNotificationLevels, int] = attr.ib(default=DefaultNotificationLevels.ALL_MESSAGES)
+    explicit_content_filter: Union[ExplicitContentFilterLevels, int] = attr.ib(default=ExplicitContentFilterLevels.DISABLED)
     _emojis: List[dict] = attr.ib(factory=list)
     _features: List[str] = attr.ib(factory=list)
-    mfa_level: int = attr.ib(default=0)
+    mfa_level: Union[MFALevels, int] = attr.ib(default=MFALevels.NONE)
     system_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    system_channel_flags: int = attr.ib(default=0)  # todo enum
+    system_channel_flags: Union[SystemChannelFlags, int] = attr.ib(default=SystemChannelFlags.NONE)
     rules_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     joined_at: str = attr.ib(default=None, converter=optional(timestamp_converter))
     large: bool = attr.ib(default=False)
@@ -60,7 +63,7 @@ class Guild(DiscordObject):
     public_updates_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     max_video_channel_users: int = attr.ib(default=0)
     welcome_screen: Optional[dict] = attr.ib(factory=list)
-    nsfw_level: int = attr.ib(default=0)  # todo enum
+    nsfw_level: Union[NSFWLevels, int] = attr.ib(default=NSFWLevels.DEFAULT)
     stage_instances: List[dict] = attr.ib(factory=list)
     stickers: List[dict] = attr.ib(factory=list)
 

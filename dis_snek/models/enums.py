@@ -373,3 +373,51 @@ class MentionTypes(str, Enum):
 class OverwriteTypes(IntEnum):
     ROLE = 0
     MEMBER = 1
+
+
+class DefaultNotificationLevels(IntEnum):
+    ALL_MESSAGES = 0
+    ONLY_MENTIONS = 1
+
+
+class ExplicitContentFilterLevels(IntEnum):  # TODO this is a very long enum class name...
+    DISABLED = 0
+    MEMBERS_WITHOUT_ROLES = 1
+    ALL_MEMBERS = 2
+
+
+class MFALevels(IntEnum):
+    NONE = 0
+    ELEVATED = 1
+
+
+class VerificationLevels(IntEnum):
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    VERY_HIGH = 4
+
+
+class NSFWLevels(IntEnum):
+    DEFAULT = 0
+    EXPLICIT = 1
+    SAFE = 2
+    AGE_RESTRICTED = 3
+
+
+class PremiumTiers(IntEnum):
+    NONE = 0
+    TIER_1 = 1
+    TIER_2 = 2
+    TIER_3 = 3
+
+
+class SystemChannelFlags(DiscordIntFlag):
+    SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
+    SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
+    SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
+
+    # Special members
+    NONE = 0
+    ALL = AntiFlag()
