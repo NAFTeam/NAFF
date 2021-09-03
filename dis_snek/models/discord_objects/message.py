@@ -34,7 +34,7 @@ from dis_snek.utils.serializer import dict_filter_none
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
-    from dis_snek.models.discord_objects.components import ComponentTypes
+    from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.interactions import CommandTypes
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
@@ -171,8 +171,8 @@ class Message(DiscordObject):
         default=None, converter=optional_c(MessageReference.from_dict)
     )
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
-    interaction: Optional["CommandTypes"] = attr.ib(default=None)  # TODO: This should be a message interaction object
-    components: Optional[List["ComponentTypes"]] = attr.ib(default=None)  # TODO: This should be a component object
+    interaction: Optional["MessageInteraction"] = attr.ib(default=None)
+    components: Optional[List["ActionRow"]] = attr.ib(default=None)
     sticker_items: Optional[List[PartialSticker]] = attr.ib(
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
