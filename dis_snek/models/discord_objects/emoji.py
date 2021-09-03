@@ -1,12 +1,13 @@
 from attr.converters import optional
 
 from dis_snek.models.base_object import SnowflakeObject
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Awaitable
 
 import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.proxy import CacheProxy, CacheView
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
@@ -59,23 +60,37 @@ class CustomEmoji(Emoji, DictSerializationMixin):
 
     _client: "Snake" = field()
 
-    roles: List["Snowflake_Type"] = attr.ib(factory=list)
-    creator: Optional["User"] = attr.ib(default=None)  # TODO Dont store this.
     require_colons: bool = attr.ib(default=False)
     managed: bool = attr.ib(default=False)
     available: bool = attr.ib(default=False)
     guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
+    _creator_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         creator_dict = data.pop("user", None)
-        data["creator"] = client.cache.place_user_data(creator_dict) if creator_dict else None
+        data["creator_id"] = client.cache.place_user_data(creator_dict).id if creator_dict else None
+
+        if "roles" in data:
+            data["role_ids"] = data.pop("roles")
+
         return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake") -> "CustomEmoji":
         data = cls.process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+
+    @property
+    def creator(self) -> Optional[Union[CacheProxy, Awaitable["User"], "User"]]:
+        if self._creator_id:
+            return CacheProxy(id=self._creator_id, method=self._client.cache.get_user)
+
+    @property
+    def roles(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
+        return CacheView(id=self._role_ids, method=self._client.cache.get_role)
 
     @property
     def is_usable(self) -> bool:
