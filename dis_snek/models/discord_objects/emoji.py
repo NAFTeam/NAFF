@@ -27,7 +27,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
     """
 
     id: Optional["Snowflake_Type"] = attr.ib(
-        default=None, converter=to_snowflake
+        default=None, converter=optional(to_snowflake)
     )  # can be None for Standard Emoji
     name: Optional[str] = attr.ib(default=None)
     animated: bool = attr.ib(default=False)
