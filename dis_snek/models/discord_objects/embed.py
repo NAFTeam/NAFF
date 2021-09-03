@@ -220,15 +220,15 @@ class Embed(DictSerializationMixin):
         self._fields_validation("fields", self.fields)
 
 
-def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> List[dict]:
+def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> Optional[List[dict]]:
     """
     Process the passed embeds into a format discord will understand.
 
-    :param components: List of dict / embeds to process
+    :param embeds: List of dict / embeds to process
     """
     if not embeds:
         # Its just empty, so nothing to process.
-        return
+        return embeds
 
     if isinstance(embeds, Embed):
         # Single embed, convert it to dict and wrap it into a list for discord.

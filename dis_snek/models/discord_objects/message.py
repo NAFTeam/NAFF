@@ -387,9 +387,9 @@ class Message(DiscordObject):
             await self._client.http.delete_message(self.channel_id, self.id)
 
 
-def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, Dict]]) -> Dict:
+def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, dict]]) -> Optional[dict]:
     if not allowed_mentions:
-        return
+        return allowed_mentions
 
     if isinstance(allowed_mentions, dict):
         return allowed_mentions
@@ -402,7 +402,7 @@ def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, D
 
 def process_message_reference(message_reference: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]]):
     if not message_reference:
-        return
+        return message_reference
 
     if isinstance(message_reference, dict):
         return message_reference
