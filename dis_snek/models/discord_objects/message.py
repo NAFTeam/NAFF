@@ -89,10 +89,11 @@ class MessageReference(DictSerializationMixin):
 
 
 @define
-class MesssageInteraction(DiscordObject):
-    _user_id: "Snowflake_Type" = attr.ib()
+class MessageInteraction(DiscordObject):
     type: InteractionTypes = attr.ib(converter=InteractionTypes)
     name: str = attr.ib()
+
+    _user_id: "Snowflake_Type" = attr.ib()
 
     @classmethod
     def process_dict(cls, data, client):
@@ -230,7 +231,7 @@ class Message(DiscordObject):
             data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
 
         if "interaction" in data:
-            data["interaction"] = MesssageInteraction.from_dict(data["interaction"], client)
+            data["interaction"] = MessageInteraction.from_dict(data["interaction"], client)
 
         thread_data = data.pop("thread", None)
         if thread_data:
