@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class Emoji(SnowflakeObject):
+class Emoji(SnowflakeObject, DictSerializationMixin):
     """
     Represent a basic emoji used in discord.
 
@@ -30,6 +30,10 @@ class Emoji(SnowflakeObject):
     id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_snowflake)  # can be None for Standard Emoji
     name: Optional[str] = attr.ib(default=None)
     animated: bool = attr.ib(default=False)
+
+    @classmethod
+    def unicode(cls, emoji: str):
+        return cls(name=emoji)
 
     def __str__(self) -> str:
         return f"<{'a:' if self.animated else ''}{self.name}:{self.id}>"  # <:thinksmart:623335224318754826>
@@ -46,7 +50,7 @@ class Emoji(SnowflakeObject):
 
 
 @define()
-class CustomEmoji(Emoji, DictSerializationMixin):
+class CustomEmoji(Emoji):
     """
     Represent a custom emoji in a guild with all its properties.
 
@@ -138,3 +142,35 @@ class CustomEmoji(Emoji, DictSerializationMixin):
             raise ValueError("Cannot delete emoji, no guild id set.")
 
         await self._client.http.delete_guild_emoji(self.guild_id, self.id, reason=reason)
+
+
+def process_emoji_req_format(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[str]:
+    if not emoji:
+        return emoji
+
+    if isinstance(emoji, str):
+        return emoji
+
+    if isinstance(emoji, dict):
+        emoji = Emoji.from_dict(emoji)
+
+    if isinstance(emoji, Emoji):
+        return emoji.req_format
+
+    raise ValueError(f"Invalid emoji: {emoji}")
+
+
+def process_emoji(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[dict]:
+    if not emoji:
+        return emoji
+
+    if isinstance(emoji, dict):
+        return emoji
+
+    if isinstance(emoji, str):
+        emoji = Emoji.unicode(emoji)
+
+    if isinstance(emoji, Emoji):
+        return emoji.to_dict()
+
+    raise ValueError(f"Invalid emoji: {emoji}")

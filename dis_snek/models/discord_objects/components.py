@@ -103,7 +103,7 @@ class SelectOption(BaseComponent):
     label: str = attr.ib(validator=str_validator)
     value: str = attr.ib(validator=str_validator)
     description: Optional[str] = attr.ib(default=None)
-    emoji: Optional[dict] = attr.ib(default=None)  # TODO Partial emoji
+    emoji: Optional[Union["Emoji", dict]] = attr.ib(default=None)
     default: bool = attr.ib(default=False)
 
     @label.validator

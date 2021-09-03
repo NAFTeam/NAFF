@@ -13,7 +13,7 @@ from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.base_object import DiscordObject
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
-from dis_snek.models.discord_objects.emoji import Emoji
+from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.sticker import PartialSticker
 from dis_snek.models.enums import (
@@ -275,40 +275,34 @@ class Message(DiscordObject):
             )
         # TODO should we return an awaitable None, or just None.
 
-    async def add_reaction(self, emoji: Union["Emoji", str]):
+    async def add_reaction(self, emoji: Union["Emoji", dict, str]):
         """
         Add a reaction to this message.
 
         :param emoji: the emoji to react with
         """
-        if issubclass(type(emoji), Emoji):
-            emoji = emoji.req_format
-
+        emoji = process_emoji_req_format(emoji)
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
 
-    async def clear_reaction(self, emoji: Union["Emoji", str]):
+    async def clear_reaction(self, emoji: Union["Emoji", dict, str]):
         """
         Clear a specific reaction from message
 
         :param emoji: The emoji to clear
         """
-        if issubclass(type(emoji), Emoji):
-            emoji = emoji.req_format
-
+        emoji = process_emoji_req_format(emoji)
         await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union["Emoji", str], member: Union["Member", "Snowflake_Type"]):
+    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
         """
         Remove a specific reaction that a user reacted with
 
         :param emoji: Emoji to remove
         :param member: Member to remove reaction of.
         """
-        if issubclass(type(emoji), Emoji):
-            emoji = emoji.req_format
+        emoji = process_emoji_req_format(emoji)
         if not isinstance(member, (str, int)):
             member = member.id
-
         await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
 
     async def clear_reactions(self):
