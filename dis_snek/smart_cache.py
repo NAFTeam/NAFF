@@ -190,7 +190,7 @@ class GlobalCache:
 
     async def get_dm_channel(self, user_id) -> "DM":
         user_id = to_snowflake(user_id)
-        channel_id = self.get_dm_channel_id(user_id)
+        channel_id = await self.get_dm_channel_id(user_id)
         channel = await self.get_channel(channel_id)
         return channel
 
