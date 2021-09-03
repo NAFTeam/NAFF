@@ -6,6 +6,8 @@ import attr
 from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
+from dis_snek.utils.serializer import export_converter
+from dis_snek.models.discord_objects.emoji import process_emoji
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.emoji import Emoji
@@ -68,7 +70,7 @@ class Button(InteractiveComponent):
 
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["Emoji", dict]] = attr.ib(default=None)  # TODO Allow str for standard unicode emoji
+    emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
     custom_id: Optional[str] = attr.ib(default=None, validator=str_validator)
     url: Optional[str] = attr.ib(default=None)
     disabled: bool = attr.ib(default=False)
@@ -103,7 +105,7 @@ class SelectOption(BaseComponent):
     label: str = attr.ib(validator=str_validator)
     value: str = attr.ib(validator=str_validator)
     description: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["Emoji", dict]] = attr.ib(default=None)
+    emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
     default: bool = attr.ib(default=False)
 
     @label.validator

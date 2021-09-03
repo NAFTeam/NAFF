@@ -1,12 +1,14 @@
-from base64 import b64encode, encode
+from base64 import b64encode
 from datetime import datetime, timezone
 from io import IOBase
-from typing import Union
 
 from attr import fields, has
 
-
 no_export_meta = dict(no_export=True)
+
+
+def export_converter(converter) -> dict:
+    return dict(export_converter=converter)
 
 
 def to_dict(inst):
@@ -21,7 +23,11 @@ def to_dict(inst):
             continue
 
         raw_value = getattr(inst, a.name)
-        value = _to_dict_any(raw_value)
+        if (c := a.metadata.get("export_converter", None)) is not None:
+            value = c(raw_value)
+        else:
+            value = _to_dict_any(raw_value)
+
         if isinstance(value, bool) or value:
             d[a.name] = value
 
