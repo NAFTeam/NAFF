@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
     from dis_snek.models.discord_objects.components import ActionRow
-    from dis_snek.models.discord_objects.interactions import CommandTypes
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
@@ -281,6 +280,10 @@ class Message(DiscordObject):
             )
         # TODO should we return an awaitable None, or just None.
 
+    async def get_reactions(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
+        reaction_data = await self._client.http.get_reactions(self.channel_id, self.id, emoji)
+        return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
+
     async def add_reaction(self, emoji: Union["Emoji", dict, str]):
         """
         Add a reaction to this message.
@@ -289,15 +292,6 @@ class Message(DiscordObject):
         """
         emoji = process_emoji_req_format(emoji)
         await self._client.http.create_reaction(self.channel_id, self.id, emoji)
-
-    async def clear_reaction(self, emoji: Union["Emoji", dict, str]):
-        """
-        Clear a specific reaction from message
-
-        :param emoji: The emoji to clear
-        """
-        emoji = process_emoji_req_format(emoji)
-        await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
 
     async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
         """
@@ -311,7 +305,16 @@ class Message(DiscordObject):
             member = member.id
         await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
 
-    async def clear_reactions(self):
+    async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
+        """
+        Clear a specific reaction from message
+
+        :param emoji: The emoji to clear
+        """
+        emoji = process_emoji_req_format(emoji)
+        await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
+
+    async def clear_all_reactions(self):
         """Clear all emojis from a message."""
         await self._client.http.clear_reactions(self.channel.id, self.id)
 
