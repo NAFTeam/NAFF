@@ -135,7 +135,7 @@ class CustomEmoji(Emoji):
             )
         )
 
-        updated_data = await self._client.http.modify_guild_emoji(data_payload, self.guild_id, self.id, reason=reason)
+        updated_data = await self._client.http.modify_guild_emoji(data_payload, self._guild_id, self.id, reason=reason)
         self.update_from_dict(updated_data)
         return self
 
@@ -148,7 +148,7 @@ class CustomEmoji(Emoji):
         if not self.guild_id:
             raise ValueError("Cannot delete emoji, no guild id set.")
 
-        await self._client.http.delete_guild_emoji(self.guild_id, self.id, reason=reason)
+        await self._client.http.delete_guild_emoji(self._guild_id, self.id, reason=reason)
 
 
 def process_emoji_req_format(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[str]:
