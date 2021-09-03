@@ -101,10 +101,11 @@ class CallProxy(_BaseProxy):
 
     async def _call_proxy_method(self):
         method = await self._proxy
-        if iscoroutinefunction(method):
-            return await method(*self._args, **self._kwargs)
-        else:
-            return method(*self._args, **self._kwargs)
+        value = method(*self._args, **self._kwargs)
+        # for coroutines and sync methods returning awaitables (methods decorated with @return_proxy)
+        if isawaitable(value):
+            value = await value
+        return value
 
 
 @attr.define(init=False)
