@@ -4,11 +4,10 @@ from typing import TYPE_CHECKING, Union, Awaitable, Callable, Coroutine, Any, Li
 
 import attr
 
-from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import copy_converter
 
 if TYPE_CHECKING:
-    from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 
 @attr.define()

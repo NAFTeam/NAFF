@@ -10,7 +10,7 @@ from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
@@ -24,7 +24,6 @@ from dis_snek.models.enums import (
     MessageFlags,
     MessageTypes,
 )
-from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.proxy import CacheView, CacheProxy
@@ -39,7 +38,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
-    from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 
 @define()
@@ -80,7 +79,12 @@ class MessageReference(DictSerializationMixin):
 
     @classmethod
     def for_message(cls, message: "Message", fail_if_not_exists: bool = True):
-        return cls(message_id=message.id, channel_id=message.channel_id, guild_id=message.guild_id, fail_if_not_exists=fail_if_not_exists)
+        return cls(
+            message_id=message.id,
+            channel_id=message.channel_id,
+            guild_id=message.guild_id,
+            fail_if_not_exists=fail_if_not_exists,
+        )
 
 
 @define

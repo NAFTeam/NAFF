@@ -7,14 +7,13 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
-from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.cache import TTLCache
 from dis_snek.errors import NotFound
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM
-    from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 
 @attr.define()

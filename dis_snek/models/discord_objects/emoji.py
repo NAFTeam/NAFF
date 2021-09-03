@@ -1,11 +1,10 @@
 from attr.converters import optional
 
-from dis_snek.models.base_object import SnowflakeObject
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Awaitable
 
 import attr
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.proxy import CacheProxy, CacheView
 from dis_snek.utils.serializer import dict_filter_none
@@ -27,7 +26,9 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
     :param animated: Whether this emoji is animated.
     """
 
-    id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_snowflake)  # can be None for Standard Emoji
+    id: Optional["Snowflake_Type"] = attr.ib(
+        default=None, converter=to_snowflake
+    )  # can be None for Standard Emoji
     name: Optional[str] = attr.ib(default=None)
     animated: bool = attr.ib(default=False)
 

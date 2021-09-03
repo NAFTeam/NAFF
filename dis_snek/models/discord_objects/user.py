@@ -4,7 +4,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.color import Color
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags

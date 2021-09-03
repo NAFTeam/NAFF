@@ -2,7 +2,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, Awaitable, Dict, Optional, Union
 
 import attr
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.color import Color
 from dis_snek.models.enums import Permissions
 from dis_snek.utils.attr_utils import define, field

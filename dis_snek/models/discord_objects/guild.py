@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 
 import attr
 from attr.converters import optional
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.proxy import CacheView, CacheProxy

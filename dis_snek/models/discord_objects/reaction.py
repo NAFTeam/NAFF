@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import attr
-from dis_snek.models.base_object import DiscordObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:

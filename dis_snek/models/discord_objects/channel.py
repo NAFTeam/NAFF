@@ -4,9 +4,9 @@ import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.base_object import DiscordObject, SnowflakeObject
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.proxy import CacheView, CacheProxy
