@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class EmojiRequests:
     request: "HTTPClient.request"
 
-    async def list_guild_emojis(self, guild_id: "Snowflake_Type") -> List[dict]:
+    async def get_all_guild_emoji(self, guild_id: "Snowflake_Type") -> List[dict]:
         """ """
         return await self.request(Route("GET", f"/guilds/{guild_id}/emojis"))
 

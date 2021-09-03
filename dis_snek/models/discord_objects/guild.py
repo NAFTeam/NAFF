@@ -125,10 +125,6 @@ class Guild(DiscordObject):
     # if not self.member_count and "approximate_member_count" in data:
     #     self.member_count = data.get("approximate_member_count", 0)
 
-    @property
-    def emojis(self):
-        pass  # TODO Possibility get from cache
-
     async def create_custom_emoji(
         self,
         name: str,
@@ -147,3 +143,11 @@ class Guild(DiscordObject):
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
         return CustomEmoji.from_dict(emoji_data, self._client)  # TODO Probably cache it
+
+    async def get_all_custom_emojis(self) -> List[CustomEmoji]:
+        emojis_data = await self._client.http.get_all_guild_emoji(self.id)
+        return [CustomEmoji.from_dict(emoji_data, self._client) for emoji_data in emojis_data]
+
+    async def get_custom_emoji(self, emoji_id: "Snowflake_Type") -> CustomEmoji:
+        emoji_data = await self._client.http.get_guild_emoji(self.id, emoji_id)
+        return CustomEmoji.from_dict(emoji_data, self._client)
