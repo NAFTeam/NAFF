@@ -142,7 +142,10 @@ class ValueProxy(_BaseProxy):
 
     async def _get_value(self, await_last=False):
         instance = await self._proxy._resolve_proxies()
-        value = self._getter(instance, self._item)
+        try:
+            value = self._getter(instance, self._item)
+        except (AttributeError, KeyError):
+            return None
 
         if await_last and isawaitable(value):  # for deeply nested async properties
             value = await value
@@ -162,6 +165,8 @@ class MethodCallProxy(_BaseProxy):
 
     async def _call_proxy_method(self):
         method = await self._proxy
+        if method is None:
+            return None
         # for coroutines and sync methods returning awaitables (methods decorated with @return_proxy)
         return await maybe_await(method, *self._args, **self._kwargs)
 
@@ -214,13 +219,28 @@ class MultiCallProxy(_BaseProxy):
 
     async def __aiter__(self):
         instance = await self._proxy
-        if self.parallel:
+        if instance is None:
+            for _ in self._callables:
+                yield None
+        elif self.parallel:
             tasks = [maybe_await(func, instance) for func in self._callables]
             for result in asyncio.as_completed(tasks):
                 yield await result
         else:
             for func in self._callables:
                 yield await maybe_await(func, instance)
+
+
+@attr.define()
+class AsyncNone(_BaseProxy):
+    def __await__(self):
+        return self._none().__await__()
+
+    async def _none(self):
+        return None
+
+    def __bool__(self):
+        return False
 
 
 TYPE_ALL_PROXY = Union[CacheProxy, ValueProxy, MethodCallProxy, AsyncPartial, SingleCallProxy, MultiCallProxy]
