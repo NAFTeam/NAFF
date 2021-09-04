@@ -5,7 +5,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions
+from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -89,7 +89,7 @@ class VoiceChannel(BaseChannel):
     bitrate: int = attr.ib()
     user_limit: int = attr.ib()
     rtc_region: str = attr.ib(default="auto")
-    video_quality_mode: int = attr.ib(default=1)  # todo convert to enum
+    video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
 
 
 @attr.s(slots=True, kw_only=True)

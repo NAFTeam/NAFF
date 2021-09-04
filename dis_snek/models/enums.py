@@ -421,3 +421,8 @@ class SystemChannelFlags(DiscordIntFlag):
     # Special members
     NONE = 0
     ALL = AntiFlag()
+
+
+class VideoQualityModes(IntEnum):
+    AUTO = 1
+    FULL = 2
