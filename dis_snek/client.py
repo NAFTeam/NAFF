@@ -21,7 +21,7 @@ from dis_snek.models.discord_objects.interactions import (
     SlashCommand,
 )
 from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import SnakeBotUser
+from dis_snek.models.discord_objects.user import SnakeBotUser, User
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
@@ -67,6 +67,7 @@ class Snake:
         # caches
         self.cache: GlobalCache = GlobalCache(self)
         self._user: SnakeBotUser = None
+        self._app: dict = None
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         self.commands: Dict[str, MessageCommand] = {}
         self.__extensions = {}
@@ -94,6 +95,15 @@ class Snake:
     def user(self) -> SnakeBotUser:
         return self._user
 
+    @property
+    def app(self) -> dict:
+        # todo: create app object
+        return self._app
+
+    @property
+    def owner(self) -> Coroutine[Any, Any, User]:
+        return self.cache.get_user(self.app["owner"]["id"])
+
     def get_prefix(self):
         """A method to get the bot's prefix, can be overridden to add dynamic prefixes."""
         return self.prefix
@@ -111,6 +121,7 @@ class Snake:
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
+        self._app = await self.http.get_current_bot_information()
         self.dispatch("login")
         await self._ws_connect()
 
@@ -365,7 +376,6 @@ class Snake:
             cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
             cls.guild = await self.cache.get_guild(data.get("guild_id"))
             if cls.guild:
-                # this channel line is a placeholder
                 cls.channel = await self.cache.get_channel(data["channel_id"])
                 cls.author = data["member"]
             else:

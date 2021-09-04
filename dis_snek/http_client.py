@@ -34,6 +34,7 @@ from multidict import CIMultiDictProxy  # type: ignore
 from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name
 from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPError, NotFound
 from dis_snek.http_requests import (
+    BotRequests,
     ChannelRequests,
     EmojiRequests,
     GuildRequests,
@@ -73,6 +74,7 @@ class DiscordClientWebSocketResponse(ClientWebSocketResponse):
 
 
 class HTTPClient(
+    BotRequests,
     ChannelRequests,
     EmojiRequests,
     GuildRequests,

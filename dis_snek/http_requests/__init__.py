@@ -1,3 +1,4 @@
+from dis_snek.http_requests.bot import BotRequests
 from dis_snek.http_requests.channels import ChannelRequests
 from dis_snek.http_requests.emojis import EmojiRequests
 from dis_snek.http_requests.guild import GuildRequests
