@@ -87,28 +87,28 @@ class Intents(DiscordIntFlag):  # type: ignore
     @classmethod
     def new(
         cls,
-        GUILDS=False,
-        GUILD_MEMBERS=False,
-        GUILD_BANS=False,
-        GUILD_EMOJIS_AND_STICKERS=False,
-        GUILD_INTEGRATIONS=False,
-        GUILD_WEBHOOKS=False,
-        GUILD_INVITES=False,
-        GUILD_VOICE_STATES=False,
-        GUILD_PRESENCES=False,
-        GUILD_MESSAGES=False,
-        GUILD_MESSAGE_REACTIONS=False,
-        GUILD_MESSAGE_TYPING=False,
-        DIRECT_MESSAGES=False,
-        DIRECT_MESSAGE_REACTIONS=False,
-        DIRECT_MESSAGE_TYPING=False,
-        MESSAGES=False,
-        REACTIONS=False,
-        TYPING=False,
-        PRIVILEGED=False,
-        NON_PRIVILEGED=False,
-        DEFAULT=True,
-        ALL=False,
+        guilds=False,
+        guild_members=False,
+        guild_bans=False,
+        guild_emojis_and_stickers=False,
+        guild_integrations=False,
+        guild_webhooks=False,
+        guild_invites=False,
+        guild_voice_states=False,
+        guild_presences=False,
+        guild_messages=False,
+        guild_message_reactions=False,
+        guild_message_typing=False,
+        direct_messages=False,
+        direct_message_reactions=False,
+        direct_message_typing=False,
+        messages=False,
+        reactions=False,
+        typing=False,
+        privileged=False,
+        non_privileged=False,
+        default=True,
+        all=False,
     ):
         """
         Set your desired intents
@@ -116,11 +116,11 @@ class Intents(DiscordIntFlag):  # type: ignore
         kwargs = locals()
         del kwargs["cls"]
 
-        base = cls.NONE
+        intents = cls.NONE
         for key in kwargs:
             if kwargs[key]:
-                base = base | getattr(cls, key)
-        return base
+                intents |= getattr(cls, key.upper())
+        return intents
 
 
 class UserFlags(DiscordIntFlag):  # type: ignore
