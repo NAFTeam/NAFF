@@ -34,7 +34,9 @@ from dis_snek.utils.serializer import dict_filter_none
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
+    from dis_snek.models.discord_objects.channel import TextChannel, Thread
     from dis_snek.models.discord_objects.components import ActionRow
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
@@ -148,8 +150,6 @@ class AllowedMentions:
 
 @define()
 class Message(DiscordObject):
-    channel_id: "Snowflake_Type" = attr.ib()
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     content: str = attr.ib()
     timestamp: Timestamp = attr.ib(converter=timestamp_converter)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
@@ -176,6 +176,8 @@ class Message(DiscordObject):
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
+    _channel_id: "Snowflake_Type" = attr.ib()
+    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     _author_id: "Snowflake_Type" = attr.ib()  # TODO: create override for detecting PartialMember
     _mention_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _mention_roles: List["Snowflake_Type"] = attr.ib(factory=list)
@@ -251,6 +253,15 @@ class Message(DiscordObject):
         return data
 
     @property
+    def channel(self) -> Union[CacheProxy, Awaitable["TextChannel"], "TextChannel"]:
+        return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
+
+    @property
+    def guild(self) -> Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]]:
+        if self._guild_id:
+            return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+
+    @property
     def author(self) -> Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]]:
         if self.guild_id:
             return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self.guild_id))
@@ -279,6 +290,11 @@ class Message(DiscordObject):
                 id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id)
             )
         # TODO should we return an awaitable None, or just None.
+
+    @property
+    def thread(self) -> Optional[Union[CacheProxy, Awaitable["Thread"], "Thread"]]:
+        if self._thread_channel_id:
+            return CacheProxy(id=self._thread_channel_id, method=self._client.cache.get_channel)
 
     async def get_reactions(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
         reaction_data = await self._client.http.get_reactions(self.channel_id, self.id, emoji)
