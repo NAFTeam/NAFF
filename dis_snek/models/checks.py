@@ -14,3 +14,19 @@ def has_role(role_id):
         return False
 
     return check
+
+
+def has_id(user_id):
+    """
+    Checks if the author has the desired ID.
+    :param coro: the function to check
+    :return:
+    """
+
+    async def check(ctx: Context) -> bool:
+        author = await ctx.author
+        if ctx.author.id == user_id:
+            return True
+        return False
+
+    return check
