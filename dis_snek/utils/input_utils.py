@@ -19,10 +19,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+import re
 from typing import Any, Dict, Union
 
 import aiohttp  # type: ignore
 import orjson
+
+_quotes = {
+    '"': '"',
+    "‘": "’",
+    "‚": "‛",
+    "“": "”",
+    "„": "‟",
+    "⹂": "⹂",
+    "「": "」",
+    "『": "』",
+    "〝": "〞",
+    "﹁": "﹂",
+    "﹃": "﹄",
+    "＂": "＂",
+    "｢": "｣",
+    "«": "»",
+    "‹": "›",
+    "《": "》",
+    "〈": "〉",
+}
+_pending_regex = r"(1.*2|[^\s]+)"
+_pending_regex = _pending_regex.replace("1", f"[{''.join([k for k in _quotes.keys()])}]")
+_pending_regex = _pending_regex.replace("2", f"[{''.join([k for k in _quotes.values()])}]")
+
+arg_parse = re.compile(_pending_regex)
+white_space = re.compile(r"\s+")
+initial_word = re.compile(r"^([^\s]+)\s*?")
 
 
 async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, Any], str]:
@@ -37,3 +65,22 @@ async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, A
     if response.headers.get("content-type") == "application/json":
         return orjson.loads(text)
     return text
+
+
+def get_args(text: str):
+    """
+    Get arguments from an input text.
+
+    :param text: The text to process
+    :return: A list of words
+    """
+    return arg_parse.findall(text)
+
+
+def get_first_word(text: str):
+    """
+    Get a the first word in a string, regardless of whitespace type.
+    :param text: The text to process
+    :return: The requested word
+    """
+    return initial_word.findall(text)[0]

@@ -3,12 +3,21 @@ import logging
 from typing import List
 
 from dis_snek.const import logger_name
-from dis_snek.models.command import BaseCommand
+from dis_snek.models.command import BaseCommand, MessageCommand
+from dis_snek.models.discord_objects.interactions import InteractionCommand
 
 log = logging.getLogger(logger_name)
 
 
 class Skin:
+    """
+    A class that allows you to separate your commands and listeners into separate files.
+    Skins require an entrypoint in the same file called `setup`, this function allows
+    client to load the Skin.
+
+    :param bot: A reference to the client
+    """
+
     _commands: List
     description: str
 
@@ -21,16 +30,16 @@ class Skin:
         cls._commands = []
 
         for name, val in cls.__dict__.items():
-            if isinstance(val, BaseCommand):
+            if isinstance(val, InteractionCommand):
                 val.skin = cls
                 cls._commands.append(val)
                 bot.add_interaction(val)
+            if isinstance(val, MessageCommand):
+                val.skin = cls
+                cls._commands.append(val)
+                # todo add message commands to client
 
         log.debug(f"{len(cls._commands)} application commands have been loaded from `{cls.__name__}`")
-
-    def __init__(self, bot):
-        # forces a user to have some sort of bot attribute
-        self.bot = bot
 
     @property
     def commands(self):

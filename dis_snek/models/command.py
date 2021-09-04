@@ -84,3 +84,31 @@ class BaseCommand(DictSerializationMixin):
             raise TypeError("post_run must be coroutine")
         self.post_run_callback = call
         return call
+
+
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class MessageCommand(BaseCommand):
+    """
+    Represents a command triggered by standard message.
+    """
+
+    name: str = attr.ib()
+
+
+def message_command(
+    name: str = None,
+):
+    """
+    A decorator to declare a coroutine as a message command.
+
+    :param name: The name of the command, defaults to the name of the coroutine
+    :return: MessageCommand Object
+    """
+
+    def wrapper(func):
+        if not asyncio.iscoroutinefunction(func):
+            raise ValueError("Commands must be coroutines")
+        cmd = MessageCommand(name=name or func.__name__, callback=func)
+        return cmd
+
+    return wrapper

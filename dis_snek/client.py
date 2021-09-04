@@ -13,16 +13,19 @@ from dis_snek.const import logger_name, GLOBAL_SCOPE
 from dis_snek.errors import GatewayNotFound, SnakeException, WebSocketClosed, WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models.discord_objects.context import ComponentContext, Context, InteractionContext
+from dis_snek.models.command import MessageCommand, BaseCommand
+from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     InteractionCommand,
     SlashCommand,
 )
+from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.utils.input_utils import get_first_word, get_args
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -35,6 +38,7 @@ class Snake:
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
+        prefix: str = ".",
         sync_interactions: bool = False,
         asyncio_debug: bool = False,
     ):
@@ -48,6 +52,7 @@ class Snake:
 
         self.intents = intents
         self.sync_interactions = sync_interactions
+        self.prefix = prefix
 
         # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
@@ -63,6 +68,7 @@ class Snake:
         self.cache: GlobalCache = GlobalCache(self)
         self._user: SnakeBotUser = None
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
+        self.commands: Dict[str, MessageCommand] = {}
         self.__extensions = {}
 
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
@@ -74,6 +80,7 @@ class Snake:
         self.add_listener(self._on_raw_message_create, "raw_message_create")
         self.add_listener(self._on_raw_guild_create, "raw_guild_create")
         self.add_listener(self._dispatch_interaction, "raw_interaction_create")
+        self.add_listener(self._dispatch_msg_commands, "message_create")
 
     @property
     def is_closed(self) -> bool:
@@ -87,11 +94,20 @@ class Snake:
     def user(self) -> SnakeBotUser:
         return self._user
 
+    def get_prefix(self):
+        """A method to get the bot's prefix, can be overridden to add dynamic prefixes."""
+        return self.prefix
+
     async def login(self, token):
         """
         Login to discord
         :param token: Your bots token
         """
+        # i needed somewhere to put this call,
+        # login will always run after initialisation
+        # so im gathering commands here
+        self._gather_commands()
+
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
@@ -219,10 +235,6 @@ class Snake:
         Otherwise, it will get the list of interactions and cache their scopes.
         """
         # allow for cogs and main to share the same decorator
-        cmds = [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, InteractionCommand)]
-        for cmd in cmds:
-            self.add_interaction(cmd)
-        log.debug(f"{len(cmds)} application commands have been loaded from `__main__`")
 
         if self.sync_interactions:
             await self.synchronise_interactions()
@@ -242,16 +254,36 @@ class Snake:
                 except KeyError:
                     pass
 
+    def _gather_commands(self):
+        """Gathers commands from __main__"""
+        cmds = [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, BaseCommand)]
+        for cmd in cmds:
+            if isinstance(cmd, InteractionCommand):
+                self.add_interaction(cmd)
+            if isinstance(cmd, MessageCommand):
+                self.add_message_command(cmd)
+        log.debug(f"{len(cmds)} commands have been loaded from `__main__`")
+
     def add_interaction(self, command: InteractionCommand):
         """
         Add a slash command to the client.
 
         :param command: The command to add
-        :return:
         """
         if command.scope not in self.interactions:
             self.interactions[command.scope] = {}
         self.interactions[command.scope][command.name] = command
+
+    def add_message_command(self, command: MessageCommand):
+        """
+        Add a message command to the client.
+
+        :param command: The command to add
+        """
+        if command.name not in self.commands:
+            self.commands[command.name] = command
+            return
+        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
     async def synchronise_interactions(self) -> None:
         """Synchronise registered interactions with discord
@@ -316,8 +348,8 @@ class Snake:
                 )
 
     async def get_context(
-        self, data: Dict, interaction: bool = False
-    ) -> Union[Context, InteractionContext, ComponentContext]:
+        self, data: Union[dict, Message], interaction: bool = False
+    ) -> Union[MessageContext, InteractionContext, ComponentContext]:
         """
         Return a context object based on data passed
 
@@ -326,9 +358,10 @@ class Snake:
         :param interaction: Is this an interaction or not?
         :return: A context object
         """
-        cls = ComponentContext if data["type"] == InteractionTypes.MESSAGE_COMPONENT else InteractionContext
 
         if interaction:
+            cls = ComponentContext if data["type"] == InteractionTypes.MESSAGE_COMPONENT else InteractionContext
+
             cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
             cls.guild = await self.cache.get_guild(data.get("guild_id"))
             if cls.guild:
@@ -366,9 +399,14 @@ class Snake:
                         # todo: convert to role object
                         cls.resolved["roles"][key] = _role
         else:
-            # todo: non-interaction context
-            raise NotImplementedError
-
+            cls = MessageContext(
+                self,
+                data,
+                author=data.author,
+                channel=await data.channel,
+                guild=await data.guild,
+            )
+            cls.arguments = get_args(data.content)[1:]
         return cls
 
     async def _dispatch_interaction(self, interaction_data: dict) -> None:
@@ -415,6 +453,19 @@ class Snake:
 
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
+
+    async def _dispatch_msg_commands(self, message: Message):
+        """Determine if a command is being triggered, and dispatch it."""
+        if not await message.author.bot:
+            prefix = self.get_prefix()
+
+            if message.content.startswith(prefix):
+                invoked_name = get_first_word(message.content.removeprefix(prefix))
+                command = self.commands.get(invoked_name)
+                if command and command.enabled:
+                    context = await self.get_context(message)
+                    context.invoked_name = invoked_name
+                    await command(context)
 
     async def _on_raw_message_create(self, data: dict) -> None:
         """

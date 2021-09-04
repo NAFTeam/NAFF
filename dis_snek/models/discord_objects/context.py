@@ -6,18 +6,19 @@ from aiohttp import FormData
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord_objects.interactions import CallbackTypes
-from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import BaseChannel
-    from dis_snek.models.discord_objects.components import ActionRow
+    from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.message import AllowedMentions, Message
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.discord_objects.message import process_message_payload, MessageReference
+    from dis_snek.models.discord_objects.sticker import Sticker
 
 
 @attr.s
@@ -190,3 +191,12 @@ class ComponentContext(InteractionContext):
         if message_data:
             self.message = self._client.cache.place_message_data(message_data)
             return self.message
+
+
+@attr.s
+class MessageContext(Context, SendMixin):
+    invoked_name: str = attr.ib(default=None)
+    arguments: list = attr.ib(factory=list)
+
+    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+        return await self._client.http.create_message(message_payload, self.channel.id)
