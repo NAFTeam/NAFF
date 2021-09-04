@@ -271,6 +271,7 @@ class WebsocketClient:
 
             if op in (OPCODE.INVALIDATE_SESSION, OPCODE.RECONNECT):
                 # session invalidated, restart
+                log.debug(f"Reconnecting to discord due to opcode {op}::{OPCODE(op).name}")
                 if data is True or op == OPCODE.RECONNECT:
                     await self.close()
                     raise WebSocketRestart(True)
