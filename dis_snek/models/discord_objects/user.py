@@ -10,7 +10,7 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.proxy import CacheView, CacheProxy, PartialCallableProxy
+from dis_snek.utils.proxy import CacheView, CacheProxy, AsyncPartial, return_proxy, get_id
 
 if TYPE_CHECKING:
     from aiohttp import FormData
