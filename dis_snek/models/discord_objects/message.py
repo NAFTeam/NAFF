@@ -271,16 +271,6 @@ class Message(DiscordObject):
             return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
 
     @property
-    def channel(self) -> Union[CacheProxy, Awaitable["BaseChannel"], "BaseChannel"]:
-        return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
-
-    @property
-    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild", None]:
-        if self._guild_id:
-            return CacheProxy(id=self._guild_id, method=self._client.get_guild)
-        return None
-
-    @property
     def mentions(
         self,
     ) -> Union[
