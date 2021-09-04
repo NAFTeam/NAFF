@@ -35,6 +35,10 @@ class Context:
     channel: "BaseChannel" = attr.ib(default=None)
     guild: "Guild" = attr.ib(default=None)
 
+    @property
+    def bot(self):
+        return self._client
+
 
 @attr.s
 class InteractionContext(Context, SendMixin):
