@@ -22,6 +22,7 @@ class Skin:
     description: str
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
+        cls.bot = bot
         cls.description = kwargs.get("Description", None)
         if not cls.description:
             cls.description = inspect.cleandoc(cls.__doc__) if cls.__doc__ else None
