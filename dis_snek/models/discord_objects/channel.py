@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Opt
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.errors import SnakeException
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes
@@ -52,7 +53,7 @@ class PermissionOverwrite(SnowflakeObject):
 
 
 @define(slots=False)  # can we make some workaround?
-class _GuildMixin:
+class _GuildChannelMixin:
     guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
@@ -66,6 +67,11 @@ class _GuildMixin:
             obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
         }
         return data
+
+
+class _ReadOnlyChannelMixin:
+    def send(self, *_, **__):
+        raise SnakeException("This channel is readonly. You cannot send messages to it.")
 
 
 @attr.s(slots=True, kw_only=True)
@@ -93,7 +99,7 @@ class VoiceChannel(BaseChannel):
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildVoice(_GuildMixin, VoiceChannel):
+class GuildVoice(VoiceChannel, _GuildChannelMixin):
     pass
 
 
@@ -139,7 +145,7 @@ class DM(DMGroup):
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildText(_GuildMixin, TextChannel):
+class GuildText(TextChannel, _GuildChannelMixin):
     topic: Optional[str] = attr.ib(default=None)
 
 
@@ -149,12 +155,12 @@ class GuildNews(GuildText):
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildCategory(GuildText):
+class GuildCategory(GuildText, _ReadOnlyChannelMixin):
     pass  # todo forbid send() and getting messages. Anti-send-mixin?
 
 
 @attr.s(slots=True, kw_only=True)
-class GuildStore(GuildText):
+class GuildStore(GuildText, _ReadOnlyChannelMixin):
     pass  # todo forbid send() and getting messages
 
 
