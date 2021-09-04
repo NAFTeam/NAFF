@@ -1,24 +1,24 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, Awaitable
 
 import attr
 from aiohttp import FormData
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord_objects.interactions import CallbackTypes
+from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
+from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import BaseChannel
-    from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
+    from dis_snek.models.discord_objects.channel import TextChannel
+    from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.message import AllowedMentions, Message
-    from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.message import process_message_payload, MessageReference
-    from dis_snek.models.discord_objects.sticker import Sticker
 
 
 @attr.s
@@ -31,9 +31,9 @@ class Context:
     args: List = attr.ib(factory=list)
     kwargs: Dict = attr.ib(factory=dict)
 
-    author: "User" = attr.ib(default=None)
-    channel: "BaseChannel" = attr.ib(default=None)
-    guild: "Guild" = attr.ib(default=None)
+    author: Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]] = attr.ib(default=None)
+    channel: Union[CacheProxy, Awaitable["TextChannel"], "TextChannel"] = attr.ib(default=None)
+    guild: Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]] = attr.ib(default=None)
 
     @property
     def bot(self):
@@ -60,6 +60,32 @@ class InteractionContext(Context, SendMixin):
     def from_dict(cls, data: Dict, client: "Snake") -> "InteractionContext":
         """Create a context object from a dictionary"""
         return cls(client=client, token=data["token"], interaction_id=data["id"], data=data)
+
+    async def process_resolved(self, res_data):
+        # todo: maybe a resolved dataclass instead of this?
+        if channels := res_data.get("channels"):
+            self.resolved["channels"] = {}
+            for key, _channel in channels.items():
+                self.bot.cache.place_channel_data(_channel)
+                self.resolved["channels"][key] = CacheProxy(id=key, method=self.bot.cache.get_channel)
+
+        if members := res_data.get("members"):
+            self.resolved["members"] = {}
+            for key, _member in members.items():
+                self.bot.cache.place_member_data(self.guild.id, {**_member, "user": {**res_data["users"][key]}})
+                self.resolved["members"][key] = CacheProxy(id=key, method=self.bot.cache.get_member)
+
+        elif users := res_data.get("users"):
+            self.resolved["users"] = {}
+            for key, _user in users.items():
+                self.bot.cache.place_user_data(_user)
+                self.resolved["users"][key] = CacheProxy(id=key, method=self.bot.cache.get_user)
+
+        if roles := res_data.get("roles"):
+            self.resolved["roles"] = {}
+            for key, _role in roles.items():
+                self.bot.cache.place_role_data(self.guild.id, _role)
+                self.resolved["roles"][key] = CacheProxy(id=key, method=self.bot.cache.get_role)
 
     async def defer(self, ephemeral=False) -> None:
         """

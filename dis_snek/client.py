@@ -26,6 +26,7 @@ from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
+from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -369,52 +370,38 @@ class Snake:
         :param interaction: Is this an interaction or not?
         :return: A context object
         """
+        # this line shuts up IDE warnings
+        cls: Union[MessageContext, ComponentContext, InteractionContext]
 
         if interaction:
-            cls = ComponentContext if data["type"] == InteractionTypes.MESSAGE_COMPONENT else InteractionContext
-
-            cls = cls(client=self, token=data.get("token"), interaction_id=data.get("id"))
-            cls.guild = await self.cache.get_guild(data.get("guild_id"))
-            if cls.guild:
-                cls.channel = await self.cache.get_channel(data["channel_id"])
-                cls.author = data["member"]
+            if data["type"] == InteractionTypes.MESSAGE_COMPONENT:
+                cls = ComponentContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
             else:
-                cls.author = data["user"]
+                cls = InteractionContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
+
+            cls.guild = CacheProxy(id=str(data.get("guild_id")), method=self.cache.get_guild)
+
+            if data.get("guild_id"):
+                self.cache.place_member_data(data.get("guild_id"), data["member"].copy())
+                cls.channel = CacheProxy(id=data["channel_id"], method=self.cache.get_channel)
+                cls.author = CacheProxy(id=data["member"]["user"]["id"], method=self.cache.get_member)
+            else:
+                self.cache.place_user_data(data["user"])
+                cls.author = CacheProxy(id=data["user"]["id"], method=self.cache.get_user)
+
+            if res_data := data["data"].get("resolved"):
+                await cls.process_resolved(res_data)
+
             cls.data = data
             cls.target_id = data["data"].get("target_id")
 
-            if res_data := data["data"].get("resolved"):
-                # todo: maybe a resolved dataclass instead of this?
-                if channels := res_data.get("channels"):
-                    cls.resolved["channels"] = {}
-                    for key, _channel in channels.items():
-                        cls.resolved["channels"][key] = self.cache.place_channel_data(_channel)
-
-                if members := res_data.get("members"):
-                    cls.resolved["members"] = {}
-                    for key, _member in members.items():
-                        user_obj = res_data["users"][key]
-                        cls.resolved["members"][key] = self.cache.place_member_data(
-                            cls.guild.id, {**_member, **user_obj}
-                        )
-
-                elif users := res_data.get("users"):
-                    cls.resolved["users"] = {}
-                    for key, _user in users.items():
-                        cls.resolved["users"][key] = self.cache.place_user_data(_user)
-
-                if roles := res_data.get("roles"):
-                    cls.resolved["roles"] = {}
-                    for key, _role in roles.items():
-                        # todo: convert to role object
-                        cls.resolved["roles"][key] = _role
         else:
             cls = MessageContext(
                 self,
                 data,
                 author=data.author,
-                channel=await data.channel,
-                guild=await data.guild,
+                channel=data.channel,
+                guild=data.guild,
             )
             cls.arguments = get_args(data.content)[1:]
         return cls
