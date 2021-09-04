@@ -53,7 +53,7 @@ class BaseUser(DiscordObject, SendMixin):
     @property
     def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
         # Warning! mutual_guilds.ids should be awaited!
-        ids = PartialCallableProxy(self._client.cache.get_user_guild_ids, self.id)
+        ids = AsyncPartial(self._client.cache.get_user_guild_ids, self.id)
         return CacheView(ids=ids, method=self._client.cache.get_guild)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
