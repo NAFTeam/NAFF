@@ -21,8 +21,8 @@ class BaseCommand(DictSerializationMixin):
 
     def __attrs_post_init__(self):
         if self.callback is not None:
-            # todo load checks here
-            pass
+            if hasattr(self.callback, "checks"):
+                self.checks += self.callback.checks
 
     async def _call_callback(self, callback_object, *args, **kwargs):
         if self.skin is not None:
@@ -62,9 +62,11 @@ class BaseCommand(DictSerializationMixin):
         :param context:
         :return: boolean if this command can be run.
         """
-        # todo checks.
         if not self.enabled:
             return False
+        for _c in self.checks:
+            if not await _c(context):
+                return False
         return True
 
     def error(self, call: Callable[..., Coroutine]):
@@ -110,5 +112,24 @@ def message_command(
             raise ValueError("Commands must be coroutines")
         cmd = MessageCommand(name=name or func.__name__, callback=func)
         return cmd
+
+    return wrapper
+
+
+def check(check):
+    """
+    Add a check to a command.
+
+    :param check: The check to add
+    """
+
+    def wrapper(coro):
+        if isinstance(coro, BaseCommand):
+            coro.checks.append(check)
+            return
+        if not hasattr(coro, "checks"):
+            coro.checks = []
+        coro.checks.append(check)
+        return coro
 
     return wrapper
