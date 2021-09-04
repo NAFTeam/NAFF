@@ -37,7 +37,7 @@ class Skin:
             if isinstance(val, MessageCommand):
                 val.skin = cls
                 cls._commands.append(val)
-                # todo add message commands to client
+                bot.add_message_command(val)
 
         log.debug(f"{len(cls._commands)} application commands have been loaded from `{cls.__name__}`")
 
