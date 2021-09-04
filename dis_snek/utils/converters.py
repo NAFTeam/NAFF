@@ -16,7 +16,6 @@ def timestamp_converter(value: Union[datetime, int, float, str]) -> Timestamp:
 
 def list_converter(converter):
     def convert_action(value):
-        print(converter, value)
         return [
             converter(**element) if not hasattr(element, "to_dict") else converter(**element.to_dict())
             for element in value
