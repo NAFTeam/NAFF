@@ -24,7 +24,6 @@ def has_id(user_id):
     """
 
     async def check(ctx: Context) -> bool:
-        author = await ctx.author
         if ctx.author.id == user_id:
             return True
         return False
