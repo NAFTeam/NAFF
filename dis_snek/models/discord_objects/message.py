@@ -41,6 +41,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.discord_objects.channel import BaseChannel
+    from dis_snek.models.discord_objects.guild import Guild
 
 
 @define()
@@ -267,6 +269,16 @@ class Message(DiscordObject):
             return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self._guild_id))
         else:
             return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
+
+    @property
+    def channel(self) -> Union[CacheProxy, Awaitable["BaseChannel"], "BaseChannel"]:
+        return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
+
+    @property
+    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild", None]:
+        if self._guild_id:
+            return CacheProxy(id=self._guild_id, method=self._client.get_guild)
+        return None
 
     @property
     def mentions(
