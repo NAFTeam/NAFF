@@ -83,8 +83,8 @@ class MessageReference(DictSerializationMixin):
     def for_message(cls, message: "Message", fail_if_not_exists: bool = True):
         return cls(
             message_id=message.id,
-            channel_id=message.channel_id,
-            guild_id=message.guild_id,
+            channel_id=message.channel.id,
+            guild_id=message.guild.id,
             fail_if_not_exists=fail_if_not_exists,
         )
 
@@ -287,7 +287,7 @@ class Message(DiscordObject):
     def referenced_message(self) -> Optional[Union[CacheProxy, Awaitable["Message"], "Message"]]:
         if self._referenced_message_id:
             return CacheProxy(
-                id=self._referenced_message_id, method=partial(self._client.cache.get_message, self.channel_id)
+                id=self._referenced_message_id, method=partial(self._client.cache.get_message, self._channel_id)
             )
         # TODO should we return an awaitable None, or just None.
 
@@ -297,7 +297,7 @@ class Message(DiscordObject):
             return CacheProxy(id=self._thread_channel_id, method=self._client.cache.get_channel)
 
     async def get_reactions(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
-        reaction_data = await self._client.http.get_reactions(self.channel_id, self.id, emoji)
+        reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
 
     async def add_reaction(self, emoji: Union["Emoji", dict, str]):
@@ -307,7 +307,7 @@ class Message(DiscordObject):
         :param emoji: the emoji to react with
         """
         emoji = process_emoji_req_format(emoji)
-        await self._client.http.create_reaction(self.channel_id, self.id, emoji)
+        await self._client.http.create_reaction(self._channel_id, self.id, emoji)
 
     async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
         """
@@ -319,7 +319,7 @@ class Message(DiscordObject):
         emoji = process_emoji_req_format(emoji)
         if not isinstance(member, (str, int)):
             member = member.id
-        await self._client.http.remove_user_reaction(self.channel_id, self.id, emoji, member)
+        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji, member)
 
     async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
         """
@@ -328,7 +328,7 @@ class Message(DiscordObject):
         :param emoji: The emoji to clear
         """
         emoji = process_emoji_req_format(emoji)
-        await self._client.http.clear_reaction(self.channel_id, self.id, emoji)
+        await self._client.http.clear_reaction(self._channel_id, self.id, emoji)
 
     async def clear_all_reactions(self):
         """Clear all emojis from a message."""
@@ -336,11 +336,11 @@ class Message(DiscordObject):
 
     async def pin(self):
         """Pin message"""
-        await self._client.http.pin_message(self.channel_id, self.id)
+        await self._client.http.pin_message(self._channel_id, self.id)
 
     async def unpin(self):
         """Unpin message"""
-        await self._client.http.unpin_message(self.channel_id, self.id)
+        await self._client.http.unpin_message(self._channel_id, self.id)
 
     async def edit(
         self,
@@ -378,7 +378,7 @@ class Message(DiscordObject):
             flags=flags,
         )
 
-        message_data = await self._client.http.edit_message(message_payload, self.channel_id, self.id)
+        message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id)
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
@@ -393,14 +393,14 @@ class Message(DiscordObject):
             async def delayed_delete():
                 await asyncio.sleep(delay)
                 try:
-                    await self._client.http.delete_message(self.channel_id, self.id)
+                    await self._client.http.delete_message(self._channel_id, self.id)
                 except Exception:
                     pass  # No real way to handle this
 
             asyncio.ensure_future(delayed_delete())
 
         else:
-            await self._client.http.delete_message(self.channel_id, self.id)
+            await self._client.http.delete_message(self._channel_id, self.id)
 
 
 def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, dict]]) -> Optional[dict]:
