@@ -1,3 +1,4 @@
+from dis_snek.const import kwarg_spam
 from dis_snek.utils.serializer import to_dict
 from typing import Any, Dict
 import attr
@@ -21,7 +22,7 @@ class DictSerializationMixin:
     @classmethod
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset):
         unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-        if unused:
+        if unused and kwarg_spam:
             print("Unused kwargs:", cls.__name__, unused)  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
