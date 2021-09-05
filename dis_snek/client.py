@@ -365,7 +365,6 @@ class Snake:
         """
         Return a context object based on data passed
 
-        :param client: The bot itself
         :param data: The data of the event
         :param interaction: Is this an interaction or not?
         :return: A context object
