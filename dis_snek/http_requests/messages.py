@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List
 
 from dis_snek.models.route import Route
 
@@ -18,6 +18,20 @@ class MessageRequests:
     ) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
+
+    async def bulk_delete_messages(
+        self, channel_id: "Snowflake_Type", message_ids: List["Snowflake_Type"], reason: str = None
+    ) -> None:
+        """
+        Delete multiple messages in a single request.
+
+        :param channel_id: The id of the channel these messages are in
+        :param message_ids: A list of message ids to delete
+        :param reason: The reason for this action
+        """
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/messages/bulk-delete"), data={"messages": message_ids}, reason=reason
+        )
 
     async def get_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> dict:
         """
@@ -60,3 +74,13 @@ class MessageRequests:
         :return: Message object of edited message
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), data=payload)
+
+    async def crosspost_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> dict:
+        """
+        Crosspost a message in a News Channel to following channels.
+
+        :param channel_id: Channel the message is in
+        :param message_id: The id of the message to crosspost
+        :return: message object
+        """
+        return await self.request(Route("POST", f"/channels/{channel_id}/messages/{message_id}/crosspost"))

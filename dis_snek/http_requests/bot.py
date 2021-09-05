@@ -1,9 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import Any
 
 from dis_snek.models.route import Route
-
-if TYPE_CHECKING:
-    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class BotRequests:
