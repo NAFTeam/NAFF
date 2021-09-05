@@ -145,7 +145,7 @@ class CustomEmoji(Emoji):
 
         :param reason: Attach a reason to this action, used for audit logs.
         """
-        if not self.guild_id:
+        if not self._guild_id:
             raise ValueError("Cannot delete emoji, no guild id set.")
 
         await self._client.http.delete_guild_emoji(self._guild_id, self.id, reason=reason)
