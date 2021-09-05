@@ -172,7 +172,6 @@ class HTTPClient(
                             f"{route.method}::{route.url}: Has exhausted its ratelimit! Locking route for {r_limit_data['delta']} seconds"
                         )
                         self.loop.call_later(r_limit_data["delta"], lock.release)
-                        return result
 
                     elif response.status in {500, 502, 504}:
                         # server issues, retry
@@ -182,13 +181,17 @@ class HTTPClient(
                         await asyncio.sleep(1 + tries * 2)
                         continue
 
-                    elif 300 > response.status >= 200:
-                        # Success!
-                        log.debug(f"{route.method}::{route.url}: Received {response.status}, releasing")
-                        lock.release()
-                        return result
+                    if not 300 > response.status >= 200:
+                        if not r_limit_data["remaining"] == 0:
+                            lock.release()
+                        await self._raise_exception(response, route)
 
-                    await self._raise_exception(response, route)
+                    # Success!
+                    log.debug(f"{route.method}::{route.url}: Received {response.status}, releasing")
+                    if not r_limit_data["remaining"] == 0:
+                        lock.release()
+                    return result
+
             except OSError as e:
                 if tries < self._retries - 1 and e.errno in (54, 10054):
                     await asyncio.sleep(1 + tries * 2)
@@ -196,7 +199,6 @@ class HTTPClient(
                 lock.release()
                 raise
             except (Forbidden, NotFound, DiscordError, HTTPError):
-                lock.release()
                 raise
             except Exception as e:
                 lock.release()
