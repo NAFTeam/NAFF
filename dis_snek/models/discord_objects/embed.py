@@ -155,6 +155,12 @@ class Embed(DictSerializationMixin):
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
 
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        if "color" in data:
+            data["color"] = data["color"]["value"]
+        return data
+
     def __len__(self):
         # yes i know there are far more optimal ways to write this
         # its written like this for readability
