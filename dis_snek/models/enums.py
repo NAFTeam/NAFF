@@ -312,6 +312,11 @@ class ChannelTypes(IntEnum):
         return self.value in {2, 13}
 
 
+class InviteTarget(IntEnum):
+    STREAM = 1
+    EMBEDDED_APPLICATION = 2
+
+
 class ComponentTypes(IntEnum):
     """
     The types of components supported by discord

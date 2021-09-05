@@ -4,6 +4,7 @@ from dis_snek.models.route import Route
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.channels import PermissionOverwrite
 
 
 class ChannelRequests:
@@ -217,7 +218,43 @@ class ChannelRequests:
     async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> List[dict]:
         """
         Get all pinned messages from a channel.
+
         :param channel_id: The ID of the channel to get pins from
         :return: A list of pinned message objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
+
+    async def bulk_delete(
+        self, channel_id: "Snowflake_Type", messages: List["Snowflake_Type"], reason: str = None
+    ) -> None:
+        """
+        Bulk delete messages from a channel.
+
+        :param channel_id: ID of channel to delete messages from
+        :param messages: List of message IDs to delete, min `2`, max `100`
+        """
+        if not 2 <= len(messages) <= 100:
+            raise ValueError("Number of messages must be between 2 and 100")
+
+        payload = {"messages": messages}  # TODO: Verify that messages doesn't require conversions
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/messages/bulk-delete"), data=payload, reason=reason
+        )
+
+    async def edit_channel_permissions(
+        self,
+        channel_id: "Snowflake_Type",
+        overwrite: "PermissionOverwrite",
+        reason: Optional[str] = None,
+    ) -> None:
+        """
+        Edit the channel permission overwrites for a user or role in a channel.
+
+        :param channel_id: Channel to modify
+        :param overwrite: Permission overwrite
+        :param reason: Audit log reason
+        """
+        payload = dict(allow=overwrite.allow, deny=overwrite.deny, type=overwrite.type)
+        return await self.request(
+            Route("PUT", f"/channels/{channel_id}/permissions/{overwrite.id}"), data=payload, reason=reason
+        )
