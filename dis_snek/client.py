@@ -375,9 +375,9 @@ class Snake:
 
         if interaction:
             if data["type"] == InteractionTypes.MESSAGE_COMPONENT:
-                cls = ComponentContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
+                cls = ComponentContext.from_dict(data, self)
             else:
-                cls = InteractionContext(client=self, token=data.get("token"), interaction_id=data.get("id"))
+                cls = InteractionContext.from_dict(data, self)
 
             cls.guild = CacheProxy(id=str(data.get("guild_id")), method=self.cache.get_guild)
 
