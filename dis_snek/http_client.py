@@ -114,8 +114,8 @@ class HTTPClient(
         """
         return {
             "bucket": header.get("x-ratelimit-bucket"),
-            "limit": header.get("x-ratelimit-limit"),
-            "remaining": header.get("x-ratelimit-remaining"),
+            "limit": int(header.get("x-ratelimit-limit") or -1),
+            "remaining": int(header.get("x-ratelimit-remaining") or -1),
             "delta": float(header.get("x-ratelimit-reset-after", 0)),  # type: ignore
             "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset", 0))),  # type: ignore
         }
@@ -155,34 +155,40 @@ class HTTPClient(
         for tries in range(self._retries):
             try:
                 async with self.__session.request(route.method, route.url, **kwargs) as response:
-                    log.debug(
-                        f"{route.method} {route.url}{f' with {result}' if result else ''} returned {response.status}"
-                    )
                     result = await response_decode(response)
+                    r_limit_data = self._parse_ratelimit(response.headers)
 
-                    remaining = response.headers.get("X-Ratelimit-Remaining")
-                    if remaining == "0" and response.status != 429:
-                        r_limit = self._parse_ratelimit(response.headers)
-                        log.debug(
-                            f"{route.method}::{route.url} has reached a rate limit... "
-                            f"retrying in {r_limit['delta']} seconds"
+                    if response.status == 429:
+                        # ratelimit exceeded
+                        log.error(
+                            f"{route.method}::{route.url}: Has exceeded ratelimit! Reset in {r_limit_data['delta']} seconds"
                         )
-                        self.loop.call_later(r_limit["delta"], lock.release)
+                        await asyncio.sleep(r_limit_data["delta"])
+                        continue
+
+                    elif r_limit_data["remaining"] == 0:
+                        # ratelimit about to be exceeded, stop calls
+                        log.debug(
+                            f"{route.method}::{route.url}: Has exhausted its ratelimit! Locking route for {r_limit_data['delta']} seconds"
+                        )
+                        self.loop.call_later(r_limit_data["delta"], lock.release)
                         return result
 
-                    if 300 > response.status >= 200:
-                        lock.release()
-                        return result
-
-                    if response.status in {500, 502, 504}:
+                    elif response.status in {500, 502, 504}:
+                        # server issues, retry
                         log.warning(
-                            f"{route.method}::{route.url} received {response.status}... retrying in {1 + tries * 2} seconds"
+                            f"{route.method}::{route.url}: Received {response.status}... retrying in {1 + tries * 2} seconds"
                         )
                         await asyncio.sleep(1 + tries * 2)
                         continue
 
-                    await self._raise_exception(response, route)
+                    elif 300 > response.status >= 200:
+                        # Success!
+                        log.debug(f"{route.method}::{route.url}: Received {response.status}, releasing")
+                        lock.release()
+                        return result
 
+                    await self._raise_exception(response, route)
             except OSError as e:
                 if tries < self._retries - 1 and e.errno in (54, 10054):
                     await asyncio.sleep(1 + tries * 2)
@@ -195,7 +201,9 @@ class HTTPClient(
             except Exception as e:
                 lock.release()
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        lock.release()  # shouldn't get called, but here just to be clean
+        if lock.locked():
+            # be clean and make sure we unlock
+            lock.release()
 
     async def _raise_exception(self, response, route):
         resp_text = await response.read()
