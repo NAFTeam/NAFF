@@ -3,15 +3,14 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Opt
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.errors import SnakeException
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.proxy import CacheView, CacheProxy
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -23,60 +22,14 @@ if TYPE_CHECKING:
 
 
 @define()
-class BaseChannel(DiscordObject):
-    _type: ChannelTypes = field(converter=ChannelTypes)
-    name: Optional[str] = field(default=None)
-
-    @classmethod
-    def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
-        """
-        Creates a channel object of the appropriate type
-
-        :param data:
-        :param client:
-
-        :return:
-        """
-        channel_type = data.get("type", None)
-        channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
-        if not channel_class:
-            raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
-
-        return channel_class.from_dict(data, client)
-
-
-@define()
 class PermissionOverwrite(SnowflakeObject):
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
     allow: "Permissions" = field(repr=True, converter=Permissions)
     deny: "Permissions" = field(repr=True, converter=Permissions)
 
 
-@define(slots=False)  # can we make some workaround?
-class _GuildChannelMixin:
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    position: Optional[int] = attr.ib(default=0)
-    nsfw: bool = attr.ib(default=False)
-    parent_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
-
-    @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        permission_overwrites = data.get("permission_overwrites", [])
-        data["permission_overwrites"] = {
-            obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
-        }
-        return data
-
-
-class _ReadOnlyChannelMixin:
-    def send(self, *_, **__):
-        raise SnakeException("This channel is readonly. You cannot send messages to it.")
-
-
-@attr.s(slots=True, kw_only=True)
-class TextChannel(BaseChannel, SendMixin):
-    rate_limit_per_user: int = attr.ib(default=0)
+@define(slots=False)
+class MessageableChannelMixin(SendMixin):
     last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     default_auto_archive_duration: int = attr.ib(default=60)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
@@ -90,26 +43,33 @@ class TextChannel(BaseChannel, SendMixin):
         return message
 
 
-@attr.s(slots=True, kw_only=True)
-class VoiceChannel(BaseChannel):
-    bitrate: int = attr.ib()
-    user_limit: int = attr.ib()
-    rtc_region: str = attr.ib(default="auto")
-    video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
+@define(slots=False)
+class BaseChannel(DiscordObject):
+    _type: ChannelTypes = field(converter=ChannelTypes)
+    name: Optional[str] = field(default=None)
+
+    @classmethod
+    def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
+        """
+        Creates a channel object of the appropriate type
+        :param data:
+        :param client:
+        :return:
+        """
+        channel_type = data.get("type", None)
+        channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
+        if not channel_class:
+            raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
+
+        return channel_class.from_dict(data, client)
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildVoice(VoiceChannel, _GuildChannelMixin):
-    pass
+################################################################
+# DMs
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildStageVoice(GuildVoice):
-    pass
-
-
-@attr.s(slots=True, kw_only=True)
-class DMGroup(TextChannel):
+@define()
+class DMGroup(BaseChannel, MessageableChannelMixin):
     owner_id: "Snowflake_Type" = attr.ib(default=None)
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     _recipients_ids: List["Snowflake_Type"] = attr.ib(factory=list)
@@ -130,7 +90,7 @@ class DMGroup(TextChannel):
         return CacheView(ids=self._recipients_ids, method=self._client.cache.get_user)
 
 
-@attr.s(slots=True, kw_only=True)
+@define()
 class DM(DMGroup):
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -144,31 +104,59 @@ class DM(DMGroup):
         return CacheProxy(id=self._recipients_ids[0], method=self._client.cache.get_user)
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildText(TextChannel, _GuildChannelMixin):
-    topic: Optional[str] = attr.ib(default=None)
+################################################################
+# Guild
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildNews(GuildText):
+@define()
+class GuildChannel(BaseChannel):
+    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    position: Optional[int] = attr.ib(default=0)
+    nsfw: bool = attr.ib(default=False)
+    parent_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
+
+    @classmethod
+    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        permission_overwrites = data.get("permission_overwrites", [])
+        data["permission_overwrites"] = {
+            obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
+        }
+        return data
+
+
+@define()
+class GuildCategory(GuildChannel):
     pass
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildCategory(GuildText, _ReadOnlyChannelMixin):
-    pass  # todo forbid send() and getting messages. Anti-send-mixin?
+@define()
+class GuildText(GuildChannel, MessageableChannelMixin):
+    topic: Optional[str] = attr.ib(default=None)
+    rate_limit_per_user: int = attr.ib(default=0)
 
 
-@attr.s(slots=True, kw_only=True)
-class GuildStore(GuildText, _ReadOnlyChannelMixin):
-    pass  # todo forbid send() and getting messages
+@define()
+class GuildNews(GuildText):
+    rate_limit_per_user: int = attr.ib(default=0, init=False, on_setattr=attr.setters.frozen)
+    pass
 
 
-@attr.s(slots=True, kw_only=True)
-class Thread(GuildText):
+@define()
+class GuildStore(GuildChannel):
+    pass
+
+
+################################################################
+# Guild Threads
+
+
+@define()
+class ThreadChannel(GuildChannel, MessageableChannelMixin):
+    owner_id: "Snowflake_Type" = attr.ib(default=None)
+    topic: Optional[str] = attr.ib(default=None)
     message_count: int = attr.ib(default=0)
     member_count: int = attr.ib(default=0)
-
     archived: bool = attr.ib(default=False)
     auto_archive_duration: int = attr.ib(
         default=attr.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
@@ -188,19 +176,55 @@ class Thread(GuildText):
         return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
 
 
+@define()
+class GuildNewsThread(ThreadChannel):
+    pass
+
+
+@define()
+class GuildPublicThread(ThreadChannel):
+    pass
+
+
+@define()
+class GuildPrivateThread(ThreadChannel):
+    pass
+
+
+################################################################
+# Guild Voices
+
+
+@define()
+class VoiceChannel(GuildChannel):  # TODO May not be needed
+    bitrate: int = attr.ib()
+    user_limit: int = attr.ib()
+    rtc_region: str = attr.ib(default="auto")
+    video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
+
+
+@define()
+class GuildVoice(VoiceChannel):
+    pass
+
+
+@define()
+class GuildStageVoice(GuildVoice):
+    pass
+
+
 TYPE_ALL_CHANNEL = Union[
-    BaseChannel,
-    GuildCategory,
-    GuildStore,
-    TextChannel,
-    VoiceChannel,
-    DMGroup,
-    DM,
     GuildText,
-    Thread,
     GuildNews,
     GuildVoice,
     GuildStageVoice,
+    GuildCategory,
+    GuildStore,
+    GuildPublicThread,
+    GuildPrivateThread,
+    GuildNewsThread,
+    DM,
+    DMGroup,
 ]
 
 
@@ -214,9 +238,9 @@ TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
     ChannelTypes.GUILD_CATEGORY: GuildCategory,
     ChannelTypes.GUILD_STORE: GuildStore,
-    ChannelTypes.GUILD_PUBLIC_THREAD: Thread,
-    ChannelTypes.GUILD_PRIVATE_THREAD: Thread,
-    ChannelTypes.GUILD_NEWS_THREAD: Thread,
+    ChannelTypes.GUILD_PUBLIC_THREAD: GuildPublicThread,
+    ChannelTypes.GUILD_PRIVATE_THREAD: GuildPrivateThread,
+    ChannelTypes.GUILD_NEWS_THREAD: GuildNewsThread,
     ChannelTypes.DM: DM,
     ChannelTypes.GROUP_DM: DMGroup,
 }
