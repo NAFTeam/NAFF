@@ -58,7 +58,9 @@ class StickerRequests:
         """
         return await self.request(Route("POST", f"/guild/{guild_id}/stickers"), data=payload, reason=reason)
 
-    async def modify_guild_sticker(self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None):
+    async def modify_guild_sticker(
+        self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None
+    ):
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
@@ -69,9 +71,13 @@ class StickerRequests:
 
         :return: The updated sticker data on success.
         """
-        return await self.request(Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), data=payload, reason=reason)
+        return await self.request(
+            Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), data=payload, reason=reason
+        )
 
-    async def delete_guild_sticker(self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None) -> None:
+    async def delete_guild_sticker(
+        self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None
+    ) -> None:
         """
         Delete the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 

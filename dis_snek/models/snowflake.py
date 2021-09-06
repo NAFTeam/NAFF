@@ -12,7 +12,9 @@ def to_snowflake(snowflake: Union[Snowflake_Type, "SnowflakeObject"]) -> int:
         snowflake = snowflake.id
 
     if not isinstance(snowflake, (int, str)):
-        raise TypeError(f"ID (snowflake) should be instance of int or str, got '{snowflake}' ({type(snowflake)}) instead")
+        raise TypeError(
+            f"ID (snowflake) should be instance of int or str, got '{snowflake}' ({type(snowflake)}) instead"
+        )
 
     with suppress(ValueError):
         snowflake = int(snowflake)

@@ -130,6 +130,7 @@ class CacheProxy(_BaseProxy):
 @attr.define()
 class ValueProxy(_BaseProxy):
     """Proxy that is used for name resolution"""
+
     _proxy: "TYPE_ALL_PROXY" = attr.field()
     _item: Any = attr.field()
     _getter: Callable = attr.field()
@@ -156,6 +157,7 @@ class ValueProxy(_BaseProxy):
 @attr.define()
 class MethodCallProxy(_BaseProxy):
     """Proxy for method calls"""
+
     _proxy: "TYPE_ALL_PROXY" = attr.field()
     _args: Any = attr.field(factory=tuple)
     _kwargs: Any = attr.field(factory=dict)

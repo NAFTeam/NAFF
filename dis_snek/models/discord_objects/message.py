@@ -22,7 +22,8 @@ from dis_snek.models.enums import (
     MentionTypes,
     MessageActivityTypes,
     MessageFlags,
-    MessageTypes, AutoArchiveDuration,
+    MessageTypes,
+    AutoArchiveDuration,
 )
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -302,7 +303,7 @@ class Message(DiscordObject):
         self,
         name: str,
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None
+        reason: Optional[str] = None,
     ):
         thread_data = await self._client.http.create_thread(
             channel_id=self._channel_id,

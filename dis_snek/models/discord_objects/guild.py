@@ -1,7 +1,13 @@
 import base64
 
-from dis_snek.models.enums import NSFWLevels, SystemChannelFlags, VerificationLevels, DefaultNotificationLevels, \
-    ExplicitContentFilterLevels, MFALevels
+from dis_snek.models.enums import (
+    NSFWLevels,
+    SystemChannelFlags,
+    VerificationLevels,
+    DefaultNotificationLevels,
+    ExplicitContentFilterLevels,
+    MFALevels,
+)
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 from dis_snek.utils.converters import timestamp_converter
 from functools import partial
@@ -39,8 +45,12 @@ class Guild(DiscordObject):
     widget_enabled: bool = attr.ib(default=False)
     widget_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     verification_level: Union[VerificationLevels, int] = attr.ib(default=VerificationLevels.NONE)
-    default_message_notifications: Union[DefaultNotificationLevels, int] = attr.ib(default=DefaultNotificationLevels.ALL_MESSAGES)
-    explicit_content_filter: Union[ExplicitContentFilterLevels, int] = attr.ib(default=ExplicitContentFilterLevels.DISABLED)
+    default_message_notifications: Union[DefaultNotificationLevels, int] = attr.ib(
+        default=DefaultNotificationLevels.ALL_MESSAGES
+    )
+    explicit_content_filter: Union[ExplicitContentFilterLevels, int] = attr.ib(
+        default=ExplicitContentFilterLevels.DISABLED
+    )
     _emojis: List[dict] = attr.ib(factory=list)
     _features: List[str] = attr.ib(factory=list)
     mfa_level: Union[MFALevels, int] = attr.ib(default=MFALevels.NONE)
