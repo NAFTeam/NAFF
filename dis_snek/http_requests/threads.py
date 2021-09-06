@@ -121,8 +121,9 @@ class ThreadRequests:
         self,
         channel_id: "Snowflake_Type",
         name: str,
-        auto_archive_duration: int = 60,
-        thread_type: int = 11,
+        auto_archive_duration: int,
+        thread_type: int = None,
+        invitable: Optional[bool] = None,
         message_id: Optional["Snowflake_Type"] = None,
         reason: str = None,
     ) -> dict:
@@ -135,6 +136,7 @@ class ThreadRequests:
         :param auto_archive_duration: duration in minutes to automatically archive the thread after recent activity,
             can be set to: 60, 1440, 4320, 10080
         :param thread_type: The type of thread, defaults to public. ignored if creating thread from a message
+        :param invitable:
         :param message_id: An optional message to create a thread from.
         :param reason: An optional reason for the audit log
         :return: The created thread
@@ -146,4 +148,5 @@ class ThreadRequests:
             )
         else:
             payload["type"] = thread_type
+            payload["invitable"] = invitable
             return await self.request(Route("POST", f"/channels/{channel_id}/threads"), data=payload, reason=reason)

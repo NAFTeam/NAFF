@@ -22,7 +22,7 @@ from dis_snek.models.enums import (
     MentionTypes,
     MessageActivityTypes,
     MessageFlags,
-    MessageTypes,
+    MessageTypes, AutoArchiveDuration,
 )
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -297,6 +297,21 @@ class Message(DiscordObject):
     def thread(self) -> Optional[Union[CacheProxy, Awaitable["Thread"], "Thread"]]:
         if self._thread_channel_id:
             return CacheProxy(id=self._thread_channel_id, method=self._client.cache.get_channel)
+
+    async def create_thread(
+        self,
+        name: str,
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
+        reason: Optional[str] = None
+    ):
+        thread_data = await self._client.http.create_thread(
+            channel_id=self._channel_id,
+            name=name,
+            auto_archive_duration=auto_archive_duration,
+            message_id=self.id,
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
 
     async def get_reactions(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
         reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)

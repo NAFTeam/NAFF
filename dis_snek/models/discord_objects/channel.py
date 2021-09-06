@@ -5,7 +5,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes
+from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes, AutoArchiveDuration
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -134,6 +134,38 @@ class GuildCategory(GuildChannel):
 class GuildText(GuildChannel, MessageableChannelMixin):
     topic: Optional[str] = attr.ib(default=None)
     rate_limit_per_user: int = attr.ib(default=0)
+
+    async def create_thread_with_message(
+        self,
+        name: str,
+        auto_archive_duration: Union[AutoArchiveDuration, int],
+        message: Union["Snowflake_Type", "Message"],
+        reason: Optional[str] = None,
+    ) -> Union["GuildNewsThread", "GuildPublicThread"]:
+        thread_data = await self._client.http.create_thread(
+            channel_id=self.id,
+            name=name,
+            auto_archive_duration=auto_archive_duration,
+            message_id=to_snowflake(message),
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
+
+    async def create_thread_without_message(
+        self,
+        name: str,
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
+        invitable: Optional[bool] = None,
+        reason: Optional[str] = None,
+    ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
+        thread_data = await self._client.http.create_thread(
+            channel_id=self.id,
+            name=name,
+            auto_archive_duration=auto_archive_duration,
+            invitable=invitable,
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
 
 
 @define()

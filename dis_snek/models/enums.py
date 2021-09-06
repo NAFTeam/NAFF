@@ -426,3 +426,11 @@ class SystemChannelFlags(DiscordIntFlag):
 class VideoQualityModes(IntEnum):
     AUTO = 1
     FULL = 2
+
+
+class AutoArchiveDuration(IntEnum):
+    # In minutes
+    ONE_HOUR = 60
+    ONE_DAY = 1440
+    THREE_DAY = 4320
+    ONE_WEEK = 10080

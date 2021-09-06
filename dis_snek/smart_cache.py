@@ -13,7 +13,7 @@ from dis_snek.errors import NotFound
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import DM
+    from dis_snek.models.discord_objects.channel import DM, TYPE_ALL_CHANNEL
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -158,7 +158,7 @@ class GlobalCache:
 
     # Channel cache methods
 
-    async def get_channel(self, channel_id: "Snowflake_Type", request_fallback=True) -> BaseChannel:
+    async def get_channel(self, channel_id: "Snowflake_Type", request_fallback=True) -> "TYPE_ALL_CHANNEL":
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
@@ -166,7 +166,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def place_channel_data(self, data) -> BaseChannel:
+    def place_channel_data(self, data) -> "TYPE_ALL_CHANNEL":
         channel_id = to_snowflake(data["id"])
         channel = self.channel_cache.get(channel_id)
         if channel is None:
