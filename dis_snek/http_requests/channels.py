@@ -127,7 +127,7 @@ class ChannelRequests:
         :param reason: An optional reason for the audit log
         :return: Channel object on success
         """
-        return await self.request(Route("PATCH", f"channels/{channel_id}"), data=data, reason=reason)
+        return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
 
     async def delete_channel(self, channel_id: "Snowflake_Type", reason: str = None):
         """
@@ -135,7 +135,7 @@ class ChannelRequests:
         :param channel_id: The ID of the channel to delete
         :param reason: An optional reason for the audit log
         """
-        return await self.request(Route("DELETE", f"channels/{channel_id}"), reason=reason)
+        return await self.request(Route("DELETE", f"/channels/{channel_id}"), reason=reason)
 
     async def get_channel_invites(self, channel_id: "Snowflake_Type") -> List[dict]:
         """
@@ -180,7 +180,7 @@ class ChannelRequests:
         if target_application_id:
             payload["target_application_id"] = target_application_id
 
-        return await self.request(Route("POST", f"channels/{channel_id}/invites"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
 
     async def delete_channel_permission(
         self, channel_id: "Snowflake_Type", overwrite_id: int, reason: str = None
