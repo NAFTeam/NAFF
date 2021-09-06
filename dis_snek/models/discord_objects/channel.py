@@ -63,6 +63,14 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
+    async def delete(self, reason: str = None):
+        """
+        Delete this channel.
+
+        :param reason: The reason for deleting this channel
+        """
+        await self._client.http.delete_channel(self.id, reason)
+
 
 ################################################################
 # DMs
