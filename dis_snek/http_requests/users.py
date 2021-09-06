@@ -67,3 +67,28 @@ class UserRequests:
         Returns a list of connection objects. Requires the connections OAuth2 scope.
         """
         return await self.request(Route("GET", f"/users/@me/connections"))
+
+    async def group_dm_add_recipient(
+        self, channel_id: "Snowflake_Type", user_id: "Snowflake_Type", access_token: str, nick: str = None
+    ) -> None:
+        """
+        Adds a recipient to a Group DM using their access token.
+
+        :param channel_id: The ID of the group dm
+        :param user_id: The ID of the user to add
+        :param access_token: Access token of a user that has granted your app the gdm.join scope
+        :param nick: Nickname of the user being added
+        """
+        return await self.request(
+            Route("PUT", f"/channels/{channel_id}/recipients/{user_id}"),
+            data={"access_token": access_token, "nick": nick},
+        )
+
+    async def group_dm_remove_recipient(self, channel_id: "Snowflake_Type", user_id: "Snowflake_Type") -> None:
+        """
+        Remove a recipient from the group dm.
+
+        :param channel_id: The ID of the group dm
+        :param user_id: The ID of the user to remove
+        """
+        return await self.request(Route("DELETE", f"/channels/{channel_id}/recipients/{user_id}"))
