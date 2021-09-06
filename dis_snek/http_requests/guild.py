@@ -143,3 +143,15 @@ class GuildRequests:
                 {"access_token": access_token, "nick": nick, "roles": roles, "mute": mute, "deaf": deaf}
             ),
         )
+
+    async def remove_guild_member(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = None
+    ) -> None:
+        """
+        Remove a member from a guild.
+
+        :param guild_id: The ID of the guild
+        :param user_id: The ID of the user to remove
+        :param reason: The reason for this action
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reaosn=reason)
