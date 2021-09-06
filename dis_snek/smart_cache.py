@@ -9,7 +9,7 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.cache import TTLCache
-from dis_snek.errors import NotFound
+from dis_snek.errors import NotFound, Forbidden
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -113,7 +113,7 @@ class GlobalCache:
         # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
         try:
             member = await self.get_member(guild_id, user_id, request_fallback)
-        except NotFound:  # there is no such member in the guild (as per request)
+        except (NotFound, Forbidden):  # there is no such member in the guild (as per request)
             pass
         else:
             if member:
