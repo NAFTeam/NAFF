@@ -155,3 +155,50 @@ class GuildRequests:
         :param reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reaosn=reason)
+
+    async def get_guild_bans(self, guild_id: "Snowflake_Type") -> List[dict]:
+        """
+        Return a list of ban objects for the users banned from this guild.
+
+        :param guild_id: The ID of the guild to query
+        :return: List of ban objects
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/bans"))
+
+    async def get_guild_ban(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Optional[dict]:
+        """
+        Returns a ban object for the given user or a 404 not found if the ban cannot be found
+
+        :param guild_id: The ID of the guild to query
+        :param user_id: The ID of the user to query
+        :return: Ban object if exists
+        :raises: Not found error if no ban exists
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/bans/{user_id}"))
+
+    async def create_guild_ban(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", delete_message_days: int = 0, reason: str = None
+    ) -> None:
+        """
+        Create a guild ban, and optionally delete previous messages sent by the banned user.
+
+        :param guild_id: The ID of the guild to create the ban in
+        :param user_id: The ID of the user to ban
+        :param delete_message_days: number of days to delete messages for (0-7)
+        :param reason: The reason for this action
+        """
+        return await self.request(
+            Route("PUT", f"/guilds/{guild_id}/bans/{user_id}"),
+            data={"delete_message_days": delete_message_days},
+            reason=reason,
+        )
+
+    async def remove_guild_ban(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = None) -> None:
+        """
+        Remove a guild ban.
+
+        :param guild_id: The ID of the guild to remove the ban in
+        :param user_id: The ID of the user to unban
+        :param reason: The reason for this action
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/bans/{user_id}"), reason=reason)
