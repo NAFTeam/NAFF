@@ -10,6 +10,8 @@ from dis_snek.models.discord_objects.user import Member, User
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.cache import TTLCache
 from dis_snek.errors import NotFound, Forbidden
+from dis_snek.utils.attr_utils import define, field
+
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -19,19 +21,19 @@ if TYPE_CHECKING:
 
 @attr.define()
 class GlobalCache:
-    _client: "Snake" = attr.field()
+    _client: "Snake" = field()
 
     # Expiring discord objects cache
-    user_cache: TTLCache = attr.field(factory=TTLCache)  # key: user_id
-    member_cache: TTLCache = attr.field(factory=TTLCache)  # key: (guild_id, user_id)
-    message_cache: TTLCache = attr.field(factory=TTLCache)  # key: (channel_id, message_id)
-    channel_cache: TTLCache = attr.field(factory=TTLCache)  # key: channel_id
-    guild_cache: TTLCache = attr.field(factory=TTLCache)  # key: guild_id
-    role_cache: TTLCache = attr.field(factory=TTLCache)  # key: role_id
+    user_cache: TTLCache = field(factory=TTLCache)  # key: user_id
+    member_cache: TTLCache = field(factory=TTLCache)  # key: (guild_id, user_id)
+    message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
+    channel_cache: TTLCache = field(factory=TTLCache)  # key: channel_id
+    guild_cache: TTLCache = field(factory=TTLCache)  # key: guild_id
+    role_cache: TTLCache = field(factory=TTLCache)  # key: role_id
 
     # Expiring id reference cache
-    dm_channels: TTLCache = attr.field(factory=TTLCache)  # key: user_id
-    user_guilds: TTLCache = attr.field(factory=TTLCache)  # key: user_id; value: set[guild_id]
+    dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
+    user_guilds: TTLCache = field(factory=TTLCache)  # key: user_id; value: set[guild_id]
 
     # User cache methods
 
