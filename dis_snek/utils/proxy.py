@@ -1,248 +1,346 @@
-from inspect import isawaitable, iscoroutinefunction
-from functools import wraps
-from operator import getitem
-from typing import TYPE_CHECKING, Union, Awaitable, Callable, Coroutine, Any, List
+from inspect import isawaitable, isasyncgen
+from operator import getitem, methodcaller
+from typing import TYPE_CHECKING, Union, Awaitable, Callable, Any, List
 
 import attr
 import asyncio
 
-from dis_snek.models.snowflake import to_snowflake
+# from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import copy_converter
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
-def get_id(obj):
-    try:
-        return obj.id
-    except AttributeError:
-        return to_snowflake(obj)
+def proxy_partial(func, *args, **kwargs):
+    """Use this instead as partial where you need to return proxy of async function or method"""
+    return Proxy().call(func, *args, **kwargs)
 
 
-def return_proxy(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        return AsyncPartial(func, self, *args, **kwargs)
-
-    return wrapper
+def proxy_none():
+    """Just a shortcut"""
+    return Proxy(attr.NOTHING)
 
 
-async def maybe_await(func, *args, **kwargs):
-    value = func(*args, **kwargs)
-    if isawaitable(value):
+def call(func, *args, **kwargs):
+    return func(*args, **kwargs)
+
+
+# async def maybe_await(func, *args, **kwargs):
+#     value = func(*args, **kwargs)
+#     if isawaitable(value):
+#         value = await value
+#     return value
+
+
+async def _resolve_action(action, value, *args, **kwargs):
+    # resolve dud (when it's Dud-created Proxy instead of proper function eg dud.add_reaction("🤖"))
+    if getattr(action, "_is_dud", False):
+        # noinspection PyProtectedMember
+        return await action._resolve_from(value)
+
+    if value is Ellipsis:  # Ellipsis won't be passed to functions as argument
+        value = action(*args, **kwargs)
+    else:
+        value = action(value, *args, **kwargs)
+
+    if isinstance(value, CacheView):
+        pass
+    elif isasyncgen(value):
+        value = [item async for item in value]
+    elif isawaitable(value):
         value = await value
+
     return value
 
-
-# @attr.define()
-# class PartialHolder:
-#     args: tuple = attr.field()
-#     kwargs: dict = attr.field()
-#
-#
-# def partial_holder(*args, **kwargs):
-#     return PartialHolder(args, kwargs)
+# ---
+# Functions for internal usage in proxies
 
 
-class _ProxyViewCalls:
-    def map(self, func):
-        pass
-
-    def reduce(self, func):
-        pass
-
-    def filter(self, func):
-        pass
+async def iterate(tasks: List[Awaitable], sequential=False):
+    if sequential:
+        for task in tasks:
+            yield await task
+    else:
+        for task in asyncio.as_completed(tasks):
+            yield await task
 
 
-@attr.define()
-class CacheView(_ProxyViewCalls):
-    ids: Union[Awaitable, Callable[..., Coroutine[Any, Any, Any]], List["Snowflake_Type"]] = attr.field(
-        converter=copy_converter
-    )
-    _method: Callable = attr.field(repr=False)
+async def parallel_iterator(value, *funcs, sequential=False):
+    # one initial value, iterates several functions over it
+    tasks = [_resolve_action(func, value) for func in funcs]
+    async for result in iterate(tasks, sequential):
+        yield result
 
-    async def get_dict(self):
-        return {instance.id: instance async for instance in self}
 
-    async def get_list(self):
-        return [instance async for instance in self]
+async def map_iterator(items: list, func, sequential=False):
+    # several initial values (list), iterates one function over it, returns results
+    tasks = [_resolve_action(func, value) for value in items]
+    async for result in iterate(tasks, sequential):
+        yield result
 
-    def get(self, item):
-        item = to_snowflake(item)
-        return CacheProxy(id=item, method=self._method)
 
-    def __await__(self):
-        return self.get_list().__await__()
+async def _filter_caller(func, value):
+    return await _resolve_action(func, value), value
 
-    def __getitem__(self, item):
-        return self.get(item)
 
-    async def __aiter__(self):
-        ids = self.ids
-        if isawaitable(ids):
-            ids = await ids
-        elif iscoroutinefunction(ids):
-            ids = await ids()
-
-        for instance_id in ids:
-            yield await self._method(to_snowflake(instance_id))
+async def filter_iterator(items: list, func, sequential=False):
+    # several initial values (list), iterates one function over it, returns initial values if result
+    tasks = [_filter_caller(func, value) for value in items]
+    async for success, value in iterate(tasks, sequential):
+        if success:
+            yield value
 
 
 @attr.define()
-class _BaseProxy:
-    def __getattr__(self, item):
-        return ValueProxy(self, item, getter=getattr)
+class Proxy:
+    """Base proxy class with all the cool stuff"""
+    _initial_value = attr.field(default=...)
+    _sequence = attr.field(factory=list, kw_only=True)
+    _is_dud = attr.field(default=False, kw_only=True)
 
-    def __getitem__(self, item):
-        return ValueProxy(self, item, getter=getitem)
+    @classmethod
+    def _prototype(cls, proxy: "Proxy") -> "Proxy":
+        # noinspection PyArgumentList
+        return cls(initial_value=proxy._initial_value, sequence=proxy._sequence, is_dud=proxy._is_dud)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return MethodCallProxy(self, args, kwargs)
+    def call(self, func, *args, **kwargs) -> "Proxy":
+        """
+        Runs a function with specified args and kwargs on previous chain result value
 
-    async def _resolve_proxies(self):
-        return await self
+        one value goes in -> one comes out
 
-    def chain(self, *func_chain):
-        proxy = self
-        for func in func_chain:
-            proxy = SingleCallProxy(proxy, func)
+        Functions should have signature func(value, *args, **kwargs)
+        sync/async functions, partials, duds can be used
+        """
+        return Proxy._prototype(self)._add_action(func, *args, **kwargs)
+
+    def chain(self, *funcs) -> "Proxy":
+        """
+        Runs several functions in sequence on previous chain result value
+
+        one value goes in -> one comes out
+
+        Return value of each function is fed to the next one)
+        Functions should accept only one argument
+        sync/async functions, partials, duds can be used
+        """
+        proxy = Proxy._prototype(self)
+        for func in funcs:
+            proxy._add_action(func)
         return proxy
 
-    def parallel(self, *funcs, parallel=True):
-        """parallel=False -> funcs run independently but in sequence"""
-        return MultiCallProxy(self, funcs, parallel=parallel)
+    def parallel(self, *funcs, sequential=False) -> "IterableProxy":
+        """
+        Runs independently several functions on previous chain result value
+        Produces list (in middle of the chain) or can be used as async iterator (in the end of the chain)
 
-    # def map(self, func):
-    #     pass
+        one value goes in -> iterable comes out
 
+        Functions should accept only one argument
+        sync/async functions, partials, duds can be used
 
-@attr.define()
-class CacheProxy(_BaseProxy):
-    id: "Snowflake_Type" = attr.field(converter=to_snowflake)
-    _method: Callable = attr.field(repr=False)
-
-    def __await__(self):
-        return self._method(self.id).__await__()
-
-
-@attr.define()
-class ValueProxy(_BaseProxy):
-    """Proxy that is used for name resolution"""
-
-    _proxy: "TYPE_ALL_PROXY" = attr.field()
-    _item: Any = attr.field()
-    _getter: Callable = attr.field()
+        sequential=True -> funcs run independently but in sequence
+        sequential=False -> funcs run independently and start at the same time. Order is not preserved
+        """
+        return IterableProxy._prototype(self)._add_action(parallel_iterator, *funcs, sequential=sequential)
 
     def __await__(self):
-        return self._get_value(await_last=True).__await__()
-
-    async def _resolve_proxies(self):
-        return await self._get_value(await_last=False)
-
-    async def _get_value(self, await_last=False):
-        instance = await self._proxy._resolve_proxies()
-        try:
-            value = self._getter(instance, self._item)
-        except (AttributeError, KeyError):
+        result = self._resolve_from(self._initial_value).__await__()
+        if result is attr.NOTHING:
             return None
+        return result
 
-        if await_last and isawaitable(value):  # for deeply nested async properties
+    def __getattr__(self, item) -> "Proxy":
+        return Proxy._prototype(self)._add_action(getattr, item)
+
+    def __getitem__(self, item) -> "Proxy":
+        return Proxy._prototype(self)._add_action(getitem, item)
+
+    def __call__(self, *args, **kwargs) -> "Proxy":
+        return Proxy._prototype(self)._add_action(call, *args, **kwargs)
+
+    def _add_action(self, action, *args, **kwargs):
+        self._sequence.append((action, args, kwargs))
+        return self
+
+    def _resolve_from(self, initial_value):
+        return self._resolve(initial_value, self._sequence)
+
+    @classmethod
+    async def _resolve(cls, initial_value, sequence):
+        value = initial_value
+
+        if isawaitable(value):
+            value = await value
+
+        for action, args, kwargs in sequence:
+            # NOTHING is used internally to indicate that the value is missing and no further actions will be performed on it
+            # unlike None, which could be a legit return value of some functions
+            if value is attr.NOTHING:
+                return attr.NOTHING
+
+            # print("value", str(value)[:100])
+            # print(str(action)[:100], str(args)[:100], str(kwargs)[:100])
+            value = await _resolve_action(action, value, *args, **kwargs)
+            # print("new", value)
+
+        if isawaitable(value):
             value = await value
 
         return value
 
 
 @attr.define()
-class MethodCallProxy(_BaseProxy):
-    """Proxy for method calls"""
+class IterableProxy(Proxy):
+    @classmethod
+    def _prototype(cls, proxy: "Proxy") -> "IterableProxy":  # just so pycharm won't scream at me
+        # noinspection PyTypeChecker
+        return super()._prototype(proxy)  # just to retype
 
-    _proxy: "TYPE_ALL_PROXY" = attr.field()
-    _args: Any = attr.field(factory=tuple)
-    _kwargs: Any = attr.field(factory=dict)
+    async def get_list(self) -> list:
+        """Returns list. What's more to this?"""
+        return [item async for item in self]
 
-    def __await__(self):
-        return self._call_proxy_method().__await__()
+    def map(self, func, sequential=False) -> "IterableProxy":
+        """
+        Runs independently several functions on previous chain result values (list of values)
+        Produces list (in middle of the chain) or can be used as async iterator (in the end of the chain)
 
-    async def _call_proxy_method(self):
-        method = await self._proxy
-        if method is None:
-            return None
-        # for coroutines and sync methods returning awaitables (methods decorated with @return_proxy)
-        return await maybe_await(method, *self._args, **self._kwargs)
+        list of values from previous steps goes in -> iterable comes out
 
+        Functions should accept only one argument
+        sync/async functions, partials, duds can be used
 
-@attr.define(init=False)
-class AsyncPartial(_BaseProxy):
-    _callable: Callable[..., Coroutine[Any, Any, Any]] = attr.field()
-    _args: Any = attr.field()
-    _kwargs: Any = attr.field()
+        sequential=True -> funcs run independently but in sequence
+        sequential=False -> funcs run independently and start at the same time. Order is not preserved
+        """
+        return IterableProxy._prototype(self)._add_action(map_iterator, func, sequential=sequential)
 
-    def __init__(self, func, *args, **kwargs):
-        self._callable = func
-        self._args = args
-        self._kwargs = kwargs
+    def filter(self, func, sequential=False) -> "IterableProxy":
+        """
+        Runs independently several functions on previous chain result values (list of values)
+        Only values for which func returned True go into output
+        Original values preserved
+        Produces list (in middle of the chain) or can be used as async iterator (in the end of the chain)
 
-    def __await__(self):
-        return self.__call__().__await__()
+        list of values from previous steps goes in -> iterable comes out. It may be empty
 
-    async def __call__(self) -> Any:
-        return await self._callable(*self._args, **self._kwargs)
+        Functions should accept only one argument
+        sync/async functions, partials, duds can be used
 
+        sequential=True -> funcs run independently but in sequence
+        sequential=False -> funcs run independently and start at the same time. Order is not preserved
+        """
+        return IterableProxy._prototype(self)._add_action(filter_iterator, func, sequential=sequential)
 
-@attr.define()
-class SingleCallProxy(_BaseProxy):
-    _proxy: "TYPE_ALL_PROXY" = attr.field()
-    _callable: Callable[..., Coroutine[Any, Any, Any]] = attr.field()
-
-    def __await__(self):
-        return self.__call__().__await__()
-
-    async def __call__(self) -> Any:
-        instance = await self._proxy
-        return await maybe_await(self._callable, instance)
-
-
-@attr.define()
-class MultiCallProxy(_BaseProxy):
-    _proxy: "TYPE_ALL_PROXY" = attr.field()
-    _callables: List[Callable[..., Coroutine[Any, Any, Any]]] = attr.field()
-    parallel: bool = attr.field()
-
-    def __await__(self):
-        return self.get_list().__await__()
-
-    async def __call__(self) -> Any:
-        return await self.get_list()
-
-    async def get_list(self):
-        return [instance async for instance in self]
+    # def reduce(self):  # todo maybe
+    #     pass
 
     async def __aiter__(self):
-        instance = await self._proxy
-        if instance is None:
-            for _ in self._callables:
-                yield None
-        elif self.parallel:
-            tasks = [maybe_await(func, instance) for func in self._callables]
-            for result in asyncio.as_completed(tasks):
-                yield await result
-        else:
-            for func in self._callables:
-                yield await maybe_await(func, instance)
+        """
+        Rules of aiter: (async gens = parallel, map, filter, etc)
+        1. async gen on sequence tail allows to use __aiter__. Or you get error, BAM
+        2. async gens in the middle of sequence are resolved/converted to lists and passed on to the next steps
+        3. want advanced crazy shit? use duds
+        """
+        value = await self._resolve(self._initial_value, self._sequence[:-1])
+        if value is attr.NOTHING:
+            return
+
+        action, args, kwargs = self._sequence[-1]
+        generator = action(value, *args, **kwargs)  # complex _resolve_action is not needed here
+        async for item in generator:
+            yield item
+
+
+class AsyncInt(int):
+    """Yes this is wrapper of int to allow awaiting it. Syntax consistency idk idk"""
+    def __await__(self):
+        return self._return_self().__await__()
+
+    async def _return_self(self):
+        return self
 
 
 @attr.define()
-class AsyncNone(_BaseProxy):
-    def __await__(self):
-        return self._none().__await__()
+class CacheProxy(Proxy):
+    """
+    Use this class internally in async properties of discord objects that should return single object by it's id
 
-    async def _none(self):
-        return None
+    """
+    def __init__(self, id: "Snowflake_Type", method: Callable):
+        super().__init__(id if id is not None else attr.NOTHING)
+        self._add_action(method)
 
-    def __bool__(self):
-        return False
+    @property
+    def id(self) -> "Snowflake_Type":
+        return AsyncInt(self._initial_value)
 
 
-TYPE_ALL_PROXY = Union[CacheProxy, ValueProxy, MethodCallProxy, AsyncPartial, SingleCallProxy, MultiCallProxy]
+@attr.define(kw_only=True)
+class CacheView(IterableProxy):
+    """
+    Use this class internally in async properties of discord objects that should return a number of objects by list of ids
+    and can fetch a single object by it's id
+
+    """
+    _method: Callable = attr.field(repr=False)  # store to use in get()
+
+    def __init__(self, ids: Union[Awaitable, List["Snowflake_Type"]], method: Callable):
+        super().__init__(copy_converter(ids))  # if ids is not None else attr.NOTHING
+        self._method = method
+        self._add_action(map_iterator, method, sequential=True)
+
+    @property
+    def ids(self):
+        return self._initial_value
+
+    async def get_dict(self):
+        return {instance.id: instance async for instance in self}
+
+    def get(self, item):
+        return CacheProxy(id=item, method=self._method)
+
+    def __getitem__(self, item):
+        return self.get(item)
+
+
+class DudSingleton:
+    dud_marker = object()
+
+    """Do not instantiate directly. Don't touch. Don't look at"""
+    @staticmethod
+    def _init_proxy():
+        return IterableProxy(is_dud=True)
+
+    def __getattr__(self, item):
+        return getattr(self._init_proxy(), item)
+
+    def __getitem__(self, item):
+        return methodcaller("__getitem__", item)(self._init_proxy())
+
+    def __call__(self, *args, **kwargs):
+        return methodcaller("__call__", *args, **kwargs)(self._init_proxy())
+
+
+# noinspection PyTypeChecker
+dud: "IterableProxy" = DudSingleton()
+
+# what is dud?
+# dud is a pseudo-function-placeholder that you can pass into some Proxy methods like .call, .chain, .parallel
+# you can think about it like lambda:
+# lambda msg: msg.add_reaction("👍🏻") ~ dud.add_reaction("👍🏻")
+# but you can generate distinct duds in generator expressions unlike lambdas
+
+# example:
+# this:
+# await user.send("Hello").add_reaction("👍🏻")
+# can be replaced with this:
+# user.send("Hello").call(dud.add_reaction("👍🏻"))
+# Doesnt' seem useful yet? But duds can be used in Proxy.parallel to facilitate fairly complex expressions
+# await member.user.dm.send("Hello").parallel(dud.add_reaction("👍🏻"), dud.add_reaction("🤖"))
+# await member.user.dm.send("Hello").parallel(*(dud.add_reaction(e) for e in ("👍🏻", "🤖")), sequential=True)
+# await member.user.dm.send("Hello").parallel(*(dud.add_reaction(e) for e in ("👍🏻", "🤖")), sequential=True).call(print)
+
+TYPE_ALL_PROXY = Union[Proxy, CacheView]

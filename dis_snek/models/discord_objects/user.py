@@ -8,9 +8,10 @@ from dis_snek.models.discord import DiscordObject
 from dis_snek.models.color import Color
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.proxy import CacheView, CacheProxy, AsyncPartial, return_proxy, get_id
+from dis_snek.utils.proxy import Proxy, CacheView, CacheProxy, proxy_partial
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -53,7 +54,7 @@ class BaseUser(DiscordObject, SendMixin):
     @property
     def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
         # Warning! mutual_guilds.ids should be awaited!
-        ids = AsyncPartial(self._client.cache.get_user_guild_ids, self.id)
+        ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
         return CacheView(ids=ids, method=self._client.cache.get_guild)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
