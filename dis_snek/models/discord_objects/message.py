@@ -261,8 +261,7 @@ class Message(DiscordObject):
 
     @property
     def guild(self) -> Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]]:
-        if self._guild_id:
-            return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
     def author(self) -> Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]]:
