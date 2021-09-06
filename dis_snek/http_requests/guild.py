@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
+from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -111,4 +112,34 @@ class GuildRequests:
 
         :param guild_id: The ID of the guild that we want to delete
         """
-        await self.request(Route("DELETE", f"/guilds/{guild_id}"))
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}"))
+
+    async def add_guild_member(
+        self,
+        guild_id: "Snowflake_Type",
+        user_id: "Snowflake_Type",
+        access_token: str,
+        nick: str = None,
+        roles: List["Snowflake_Type"] = None,
+        mute: bool = False,
+        deaf: bool = False,
+    ) -> dict:
+        """
+        Add a user to the guild.
+        All parameters to this endpoint except for `access_token`, `guild_id` and `user_id` are optional.
+
+        :param guild_id: The ID of the guild
+        :param user_id: The ID of the user to add
+        :param access_token: The access token of the user
+        :param nick: value to set users nickname to
+        :param roles: array of role ids the member is assigned
+        :param mute: whether the user is muted in voice channels
+        :param deaf: whether the user is deafened in voice channels
+        :return: Guild Member Object
+        """
+        return await self.request(
+            Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
+            data=dict_filter_none(
+                {"access_token": access_token, "nick": nick, "roles": roles, "mute": mute, "deaf": deaf}
+            ),
+        )
