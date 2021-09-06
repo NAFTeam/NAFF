@@ -59,13 +59,13 @@ class ChannelRequests:
         self,
         guild_id: "Snowflake_Type",
         name: str,
-        type: int,
+        channel_type: int,
         topic: str = "",
         position=0,
         permission_overwrites=List,
         parent_id: "Snowflake_Type" = None,
         nsfw: bool = False,
-        bitrate=64,
+        bitrate=64000,
         user_limit: int = 0,
         rate_limit_per_user=0,
         reason: str = None,
@@ -73,7 +73,7 @@ class ChannelRequests:
         """"""
         payload = dict(
             name=name,
-            type=type,
+            type=channel_type,
             topic=topic,
             position=position,
             rate_limit_per_user=rate_limit_per_user,
@@ -82,7 +82,7 @@ class ChannelRequests:
             permission_overwrites=permission_overwrites,
         )
 
-        if type in (2, 13):
+        if channel_type in (2, 13):
             payload.update(
                 bitrate=bitrate,
                 user_limit=user_limit,
