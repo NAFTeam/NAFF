@@ -7,6 +7,7 @@ from dis_snek.models.enums import (
     DefaultNotificationLevels,
     ExplicitContentFilterLevels,
     MFALevels,
+    ChannelTypes,
 )
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 from dis_snek.utils.converters import timestamp_converter
@@ -14,17 +15,19 @@ from functools import partial
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
+import inspect
 from attr.converters import optional
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.proxy import CacheView, CacheProxy
+from dis_snek.models.discord_objects.channel import BaseChannel
 
 if TYPE_CHECKING:
     from io import IOBase
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, Thread
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, Thread, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.snowflake import Snowflake_Type
@@ -161,3 +164,182 @@ class Guild(DiscordObject):
     async def get_custom_emoji(self, emoji_id: "Snowflake_Type") -> CustomEmoji:
         emoji_data = await self._client.http.get_guild_emoji(self.id, emoji_id)
         return CustomEmoji.from_dict(emoji_data, self._client)
+
+    async def create_channel(
+        self,
+        channel_type: ChannelTypes,
+        name: str,
+        topic: str = "",
+        position=0,
+        permission_overwrites: dict = None,
+        category: Union["Snowflake_Type", "GuildCategory"] = None,
+        nsfw: bool = False,
+        bitrate=64000,
+        user_limit: int = 0,
+        slowmode_delay=0,
+        reason: str = None,
+    ) -> "BaseChannel":
+        """
+        Create a guild channel, allows for explicit channel type setting.
+
+        :param channel_type: The type of channel to create
+        :param name: The name of the channel
+        :param topic: The topic of the channel
+        :param position: The position of the channel in the channel list
+        :param permission_overwrites: Permission overwrites to apply to the channel
+        :param category: The category this channel should be within
+        :param nsfw: Should this channel be marked nsfw
+        :param bitrate: The bitrate of this channel, only for voice
+        :param user_limit: The max users that can be in this channel, only for voice
+        :param slowmode_delay: The time users must wait between sending messages
+        :param reason: The reason for creating this channel
+        """
+        if category and hasattr(category, "id"):
+            category = category.id
+
+        _channel = await self._client.http.create_guild_channel(
+            self.id,
+            name,
+            channel_type,
+            topic,
+            position,
+            permission_overwrites,
+            category,
+            nsfw,
+            bitrate,
+            user_limit,
+            slowmode_delay,
+            reason,
+        )
+        return BaseChannel.from_dict_factory(_channel, self._client)
+
+    async def create_text_channel(
+        self,
+        name: str,
+        topic: str = "",
+        position=0,
+        permission_overwrites: dict = None,
+        category: Union["Snowflake_Type", "GuildCategory"] = None,
+        nsfw: bool = False,
+        slowmode_delay=0,
+        reason: str = None,
+    ):
+        """
+        Create a text channel in this guild.
+
+        :param name: The name of the channel
+        :param topic: The topic of the channel
+        :param position: The position of the channel in the channel list
+        :param permission_overwrites: Permission overwrites to apply to the channel
+        :param category: The category this channel should be within
+        :param nsfw: Should this channel be marked nsfw
+        :param slowmode_delay: The time users must wait between sending messages
+        :param reason: The reason for creating this channel
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_TEXT,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            nsfw=nsfw,
+            slowmode_delay=slowmode_delay,
+            reason=reason,
+        )
+
+    async def create_voice_channel(
+        self,
+        name: str,
+        topic: str = "",
+        position=0,
+        permission_overwrites: dict = None,
+        category: Union["Snowflake_Type", "GuildCategory"] = None,
+        nsfw: bool = False,
+        bitrate=64000,
+        user_limit: int = 0,
+        reason: str = None,
+    ):
+        """
+        Create a guild voice channel
+
+        :param name: The name of the channel
+        :param topic: The topic of the channel
+        :param position: The position of the channel in the channel list
+        :param permission_overwrites: Permission overwrites to apply to the channel
+        :param category: The category this channel should be within
+        :param nsfw: Should this channel be marked nsfw
+        :param bitrate: The bitrate of this channel, only for voice
+        :param user_limit: The max users that can be in this channel, only for voice
+        :param reason: The reason for creating this channel
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_VOICE,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            reason=reason,
+        )
+
+    async def create_stage_channel(
+        self,
+        name: str,
+        topic: str = "",
+        position=0,
+        permission_overwrites: dict = None,
+        category: Union["Snowflake_Type", "GuildCategory"] = None,
+        bitrate=64000,
+        user_limit: int = 0,
+        reason: str = None,
+    ):
+        """
+        Create a guild stage channel
+
+        :param name: The name of the channel
+        :param topic: The topic of the channel
+        :param position: The position of the channel in the channel list
+        :param permission_overwrites: Permission overwrites to apply to the channel
+        :param category: The category this channel should be within
+        :param bitrate: The bitrate of this channel, only for voice
+        :param user_limit: The max users that can be in this channel, only for voice
+        :param reason: The reason for creating this channel
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_STAGE_VOICE,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            reason=reason,
+        )
+
+    async def create_category(
+        self,
+        name: str,
+        position=0,
+        permission_overwrites: dict = None,
+        reason: str = None,
+    ):
+        """
+        Create a category within this guild
+
+        :param name: The name of the channel
+        :param position: The position of the channel in the channel list
+        :param permission_overwrites: Permission overwrites to apply to the channel
+        :param reason: The reason for creating this channel
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_CATEGORY,
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            reason=reason,
+        )
