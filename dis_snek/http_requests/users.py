@@ -92,3 +92,12 @@ class UserRequests:
         :param user_id: The ID of the user to remove
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/recipients/{user_id}"))
+
+    async def modify_current_user_nick(self, guild_id: "Snowflake_Type", nickname: str = None) -> None:
+        """
+        Modifies the nickname of the current user in a guild
+
+        :param guild_id: The ID of the guild
+        :param nickname: The new nickname to use
+        """
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/@me/nick"), data={"nick": nickname})
