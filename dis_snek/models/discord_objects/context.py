@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union, Awaitable
 
@@ -73,7 +74,7 @@ class InteractionContext(Context, SendMixin):
             self.resolved["members"] = {}
             for key, _member in members.items():
                 self.bot.cache.place_member_data(self.guild.id, {**_member, "user": {**res_data["users"][key]}})
-                self.resolved["members"][key] = CacheProxy(id=key, method=self.bot.cache.get_member)
+                self.resolved["members"][key] = CacheProxy(id=key, method=partial(self.bot.cache.get_member, self.guild.id))
 
         elif users := res_data.get("users"):
             self.resolved["users"] = {}

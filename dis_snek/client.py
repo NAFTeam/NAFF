@@ -4,6 +4,7 @@ import inspect
 import logging
 import sys
 import traceback
+from functools import partial
 from random import randint
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Union
 
@@ -380,10 +381,10 @@ class Snake:
 
             cls.guild = CacheProxy(id=str(data.get("guild_id")), method=self.cache.get_guild)
 
-            if data.get("guild_id"):
+            if guild_id := data.get("guild_id"):
                 self.cache.place_member_data(data.get("guild_id"), data["member"].copy())
                 cls.channel = CacheProxy(id=data["channel_id"], method=self.cache.get_channel)
-                cls.author = CacheProxy(id=data["member"]["user"]["id"], method=self.cache.get_member)
+                cls.author = CacheProxy(id=data["member"]["user"]["id"], method=partial(self.cache.get_member, guild_id))
             else:
                 self.cache.place_user_data(data["user"])
                 cls.author = CacheProxy(id=data["user"]["id"], method=self.cache.get_user)
