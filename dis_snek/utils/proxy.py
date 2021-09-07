@@ -271,7 +271,7 @@ class CacheProxy(Proxy):
     """
     def __init__(self, id: "Snowflake_Type", method: Callable):
         super().__init__(id if id is not None else attr.NOTHING)
-        self._add_action(method)
+        self._add_action(method, id)
 
     @property
     def id(self) -> "Snowflake_Type":
