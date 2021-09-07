@@ -243,3 +243,12 @@ class GuildRequests:
             payload["include_roles"] = ", ".join(include_roles)
 
         return await self.request(Route("POST", f"/guilds/{guild_id}/prune"), data=payload, reason=reason)
+
+    async def get_guild_invites(self, guild_id: "Snowflake_Type") -> List[dict]:
+        """
+        Returns a list of invite objects (with invite metadata) for the guild
+
+        :param guild_id: The ID of the guild to query
+        :return: List of invite objects
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/invites"))
