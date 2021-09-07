@@ -182,6 +182,30 @@ class ChannelRequests:
 
         return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
 
+    async def edit_channel_permission(
+        self,
+        channel_id: "Snowflake_Type",
+        overwrite_id: "Snowflake_Type",
+        allow: str,
+        deny: str,
+        perm_type: int,
+        reason: str = None,
+    ) -> None:
+        """
+        Edit the channel permission overwrites for a user or role in a channel.
+
+        :param channel_id: The id of the channel
+        :param overwrite_id: The id of the object to override
+        :param allow: the bitwise value of all allowed permissions
+        :param deny: the bitwise value of all disallowed permissions
+        :param perm_type: 0 for a role or 1 for a member
+        :param reason: The reason for this action
+        """
+        return await self.request(
+            Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
+            data={"allow": allow, "deny": deny, "type": perm_type},
+        )
+
     async def delete_channel_permission(
         self, channel_id: "Snowflake_Type", overwrite_id: int, reason: str = None
     ) -> None:
