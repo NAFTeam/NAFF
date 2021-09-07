@@ -68,7 +68,7 @@ class ThreadRequests:
             payload["limit"] = limit
         if before:
             payload["before"] = before
-        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), data=payload)
+        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), params=payload)
 
     async def list_private_archived_threads(
         self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
@@ -86,7 +86,7 @@ class ThreadRequests:
             payload["limit"] = limit
         if before:
             payload["before"] = before
-        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), data=payload)
+        return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), params=payload)
 
     async def list_joined_private_archived_threads(
         self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
@@ -105,7 +105,7 @@ class ThreadRequests:
         if before:
             payload["before"] = before
         return await self.request(
-            Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), data=payload
+            Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), params=payload
         )
 
     async def list_active_threads(self, guild_id: "Snowflake_Type") -> List[dict]:

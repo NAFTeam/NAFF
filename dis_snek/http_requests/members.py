@@ -34,7 +34,7 @@ class MemberRequests:
         if after:
             payload["after"] = after
 
-        return await self.request(Route("GET", f"/guilds/{guild_id}/members"), data=payload)
+        return await self.request(Route("GET", f"/guilds/{guild_id}/members"), params=payload)
 
     async def search_guild_members(self, guild_id: "Snowflake_Type", query: str, limit: int = 1) -> List[Dict]:
         """
@@ -47,7 +47,7 @@ class MemberRequests:
         """
 
         return await self.request(
-            Route("GET", f"/guilds/{guild_id}/members/search"), data=dict(query=query, limit=limit)
+            Route("GET", f"/guilds/{guild_id}/members/search"), params=dict(query=query, limit=limit)
         )
 
     async def modify_guild_member(
