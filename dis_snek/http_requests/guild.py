@@ -202,3 +202,44 @@ class GuildRequests:
         :param reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/bans/{user_id}"), reason=reason)
+
+    async def get_guild_prune_count(
+        self, guild_id: "Snowflake_Type", days: int = 7, include_roles: List["Snowflake_Type"] = None
+    ) -> dict:
+        """
+        Returns an object with one 'pruned' key indicating the number of members that would be removed in a prune operation.
+
+        :param guild_id: The ID of the guild to query
+        :param days: number of days to count prune for (1-30)
+        :param include_roles: role(s) to include
+        :return: {"pruned": int}
+        """
+        payload = {"days": days}
+        if include_roles:
+            payload["include_roles"] = ", ".join(include_roles)
+
+        return await self.request(Route("GET", f"/guilds/{guild_id}/prune"), data=payload)
+
+    async def begin_guild_prune(
+        self,
+        guild_id: "Snowflake_Type",
+        days: int = 7,
+        include_roles: List["Snowflake_Type"] = None,
+        compute_prune_count: bool = True,
+        reason: str = None,
+    ) -> dict:
+        """
+        Begin a prune operation.
+
+        :param guild_id: The ID of the guild to query
+        :param days: number of days to count prune for (1-30)
+        :param include_roles: role(s) to include
+        :param compute_prune_count: whether 'pruned' is returned, discouraged for large guilds
+        :param reason: The reason for this action
+        :return: {"pruned": int}
+        """
+        payload = {"days": days, "compute_prune_count": compute_prune_count}
+        if include_roles:
+            payload["include_roles"] = ", ".join(include_roles)
+
+        return await self.request(Route("POST", f"/guilds/{guild_id}/prune"), data=payload, reason=reason)
