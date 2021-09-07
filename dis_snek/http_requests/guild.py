@@ -252,3 +252,54 @@ class GuildRequests:
         :return: List of invite objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/invites"))
+
+    async def create_guild_role(self, guild_id: "Snowflake_Type", payload: dict, reason: str = None) -> dict:
+        """
+        Create a new role for the guild.
+
+        :param guild_id: The ID of the guild
+        :param payload: A dict representing the role to add
+        :param reason: The reason for this action
+        :return: Role object
+        """
+        return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), data=payload, reason=reason)
+
+    async def modify_guild_role_positions(
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", position: int, reason: str = None
+    ) -> List[dict]:
+        """
+        Modify the position of a role in the guild.
+
+        :param guild_id: The ID of the guild
+        :param role_id: The ID of the role to move
+        :param position: The new position of this role in the hierachy
+        :param reason: The reason for this action
+        :return: List of guild roles
+        """
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/roles"), data={"id": role_id, "position": position}, reason=reason
+        )
+
+    async def modify_guild_role(
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", payload: dict, reason: str = None
+    ) -> dict:
+        """
+        Modify an existing role for the guild.
+
+        :param guild_id: The ID of the guild
+        :param role_id: The ID of the role to move
+        :param payload: A dict representing the role to add
+        :param reason: The reason for this action
+        :return: Role object
+        """
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), data=payload, reason=reason)
+
+    async def delete_guild_role(self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = None):
+        """
+        Delete a guild role.
+
+        :param guild_id: The ID of the guild
+        :param role_id: The ID of the role to delete
+        :param reason: The reason for this action
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"))
