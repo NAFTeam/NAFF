@@ -218,7 +218,7 @@ class GuildRequests:
         if include_roles:
             payload["include_roles"] = ", ".join(include_roles)
 
-        return await self.request(Route("GET", f"/guilds/{guild_id}/prune"), data=payload)
+        return await self.request(Route("GET", f"/guilds/{guild_id}/prune"), params=payload)
 
     async def begin_guild_prune(
         self,
