@@ -78,3 +78,29 @@ class MemberRequests:
         # clean up payload
         payload = {key: value for key, value in payload.items() if value is not None}
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"), data=payload, reason=reason)
+
+    async def add_guild_member_role(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = None
+    ) -> None:
+        """
+        Adds a role to a guild member.
+
+        :param guild_id: The ID of the guild
+        :param user_id: The ID of the user
+        :param role_id: The ID of the role to add
+        :param reason: The reason for this action
+        """
+        return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
+
+    async def remove_guild_member_role(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = None
+    ) -> None:
+        """
+        Remove a role from a guild member.
+
+        :param guild_id: The ID of the guild
+        :param user_id: The ID of the user
+        :param role_id: The ID of the role to remove
+        :param reason: The reason for this action
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
