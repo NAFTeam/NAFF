@@ -8,10 +8,9 @@ from dis_snek.models.discord import DiscordObject
 from dis_snek.models.color import Color
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
-from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.proxy import Proxy, CacheView, CacheProxy, proxy_partial
+from dis_snek.utils.proxy import CacheView, CacheProxy, proxy_partial
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -23,8 +22,14 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
+class _SendDMMixin(SendMixin):
+    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+        dm_id = await self._client.cache.get_dm_channel_id(self.id)
+        return await self._client.http.create_message(message_payload, dm_id)
+
+
 @define()
-class BaseUser(DiscordObject, SendMixin):
+class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model"""
 
     username: str = field(repr=True)
@@ -56,10 +61,6 @@ class BaseUser(DiscordObject, SendMixin):
         # Warning! mutual_guilds.ids should be awaited!
         ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
         return CacheView(ids=ids, method=self._client.cache.get_guild)
-
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = await self._client.cache.get_dm_channel_id(self.id)
-        return await self._client.http.create_message(message_payload, dm_id)
 
 
 @define()
@@ -102,7 +103,7 @@ class SnakeBotUser(User):
 
 
 @define()
-class Member(DiscordObject):
+class Member(DiscordObject, _SendDMMixin):
     bot: bool = field(repr=True, default=False)
     nick: Optional[str] = field(repr=True, default=None)
     deaf: bool = field(default=False)
