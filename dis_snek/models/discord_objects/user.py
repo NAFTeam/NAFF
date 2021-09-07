@@ -103,6 +103,7 @@ class SnakeBotUser(User):
 
 @define()
 class Member(DiscordObject):
+    bot: bool = field(repr=True, default=False)
     nick: Optional[str] = field(repr=True, default=None)
     deaf: bool = field(default=False)
     mute: bool = field(default=False)
@@ -120,10 +121,12 @@ class Member(DiscordObject):
             user_data = data.pop("user")
             client.cache.place_user_data(user_data)
             data["id"] = user_data["id"]
+            data["bot"] = user_data.get("bot", False)
         elif "member" in data:
             member_data = data.pop("member")
             client.cache.place_user_data(data)
             member_data["id"] = data["id"]
+            member_data["bot"] = data.get("bot", False)
             data = member_data
 
         data["role_ids"] = data.pop("roles", [])
