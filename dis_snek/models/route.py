@@ -18,8 +18,7 @@ class Route:
 
         url = f"{self.BASE}{self.path}"
         if parameters:
-            if parameters:
-                url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
+            url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
         self.url: str = url
 
         self.channel_id: Optional["Snowflake_Type"] = parameters.get("channel_id")
