@@ -303,3 +303,79 @@ class GuildRequests:
         :param reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"))
+
+    async def get_guild_voice_regions(self, guild_id: "Snowflake_Type") -> List[dict]:
+        """
+        Returns a list of voice region objects for the guild.
+        Unlike the similar /voice route, this returns VIP servers when the guild is VIP-enabled.
+
+        :param guild_id: The ID of the guild to query
+        :return: List of voice region objects
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/regions"))
+
+    async def get_guild_integrations(self, guild_id: "Snowflake_Type") -> List[dict]:
+        """
+        Returns a list of integration objects for the guild.
+
+        :param guild_id: The ID of the guild to query
+        :return: list of integration objects
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/integrations"))
+
+    async def delete_guild_integration(self, guild_id: "Snowflake_Type", integration_id: "Snowflake_Type") -> None:
+        """
+        Delete an integration from the guild.
+
+        :param guild_id: The ID of the guild
+        :param integration_id: The ID of the integration to remove
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/integrations/{integration_id}"))
+
+    async def get_guild_widget_settings(self, guild_id: "Snowflake_Type") -> dict:
+        """
+        Get guild widget settings.
+
+        :param guild_id: The ID of the guild to query
+        :return: guild widget object
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/widget"))
+
+    async def get_guild_widget(self, guild_id: "Snowflake_Type") -> dict:
+        """
+        Returns the widget for the guild.
+        :param guild_id: The ID of the guild to query
+        :return:Guild widget
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/widget.json"))
+
+    async def get_guild_widget_image(self, guild_id: "Snowflake_Type", style: str = None) -> str:
+        """
+        Get a url representing a png image widget for the guild.
+
+        For styles see: https://discord.com/developers/docs/resources/guild#get-guild-widget-image
+
+        :param guild_id: The guild to query
+        :param style: The style of widget required.
+        :return: A url pointing to this image
+        """
+        route = Route("GET", f"/guilds/{guild_id}/widget.png{f'?style={style}' if style else ''}")
+        return route.url
+
+    async def get_guild_welcome_screen(self, guild_id: "Snowflake_Type") -> dict:
+        """
+        Get the welcome screen for this guild.
+
+        :param guild_id: The ID of the guild to query
+        :return:Welcome screen object
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/welcome-screen"))
+
+    async def get_guild_vanity_url(self, guild_id: "Snowflake_Type") -> dict:
+        """
+        Get a partial invite object for the guilds vanity invite url.
+
+        :param guild_id: The ID of the guild to query
+        :return: `{"code": "abc", "uses": 420}` or `None`
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
