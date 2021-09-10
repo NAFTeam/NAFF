@@ -29,6 +29,8 @@ class Context:
     _client: "Snake" = attr.ib(default=None)
     message: "Message" = attr.ib(default=None)
 
+    invoked_name: str = attr.ib(default=None)
+
     args: List = attr.ib(factory=list)
     kwargs: Dict = attr.ib(factory=dict)
 
@@ -60,7 +62,9 @@ class InteractionContext(Context, SendMixin):
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "InteractionContext":
         """Create a context object from a dictionary"""
-        return cls(client=client, token=data["token"], interaction_id=data["id"], data=data)
+        return cls(
+            client=client, token=data["token"], interaction_id=data["id"], data=data, invoked_name=data["data"]["name"]
+        )
 
     async def process_resolved(self, res_data):
         # todo: maybe a resolved dataclass instead of this?
@@ -74,7 +78,9 @@ class InteractionContext(Context, SendMixin):
             self.resolved["members"] = {}
             for key, _member in members.items():
                 self.bot.cache.place_member_data(self.guild.id, {**_member, "user": {**res_data["users"][key]}})
-                self.resolved["members"][key] = CacheProxy(id=key, method=partial(self.bot.cache.get_member, self.guild.id))
+                self.resolved["members"][key] = CacheProxy(
+                    id=key, method=partial(self.bot.cache.get_member, self.guild.id)
+                )
 
         elif users := res_data.get("users"):
             self.resolved["users"] = {}

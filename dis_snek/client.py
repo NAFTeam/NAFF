@@ -20,6 +20,8 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.interactions import (
     InteractionCommand,
     SlashCommand,
+    OptionTypes,
+    SubCommand,
 )
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User
@@ -275,6 +277,7 @@ class Snake:
                 self.add_interaction(cmd)
             if isinstance(cmd, MessageCommand):
                 self.add_message_command(cmd)
+
         log.debug(f"{len(cmds)} commands have been loaded from `__main__`")
 
     def add_interaction(self, command: InteractionCommand):
@@ -285,6 +288,37 @@ class Snake:
         """
         if command.scope not in self.interactions:
             self.interactions[command.scope] = {}
+        elif command.resolved_name in self.interactions[command.scope]:
+            old_cmd = self.interactions[command.scope][command.name]
+            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
+
+        if isinstance(command, SubCommand):
+            if existing_sub := self.interactions[command.scope].get(command.name):
+                if command.group_name:
+                    existing_index = next(
+                        (
+                            index
+                            for (index, val) in enumerate(existing_sub.options)
+                            if val["name"] == command.group_name and val["type"] == 2
+                        ),
+                        None,
+                    )
+                    if existing_index is not None:
+                        data = command.child_to_dict()
+                        existing_sub.options[existing_index]["options"] += data["options"]
+                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                        self.interactions[command.scope][command.name] = existing_sub
+                        return
+
+                existing_sub.options += [command.child_to_dict()]
+                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                command = existing_sub
+
+            else:
+                command.options = [command.child_to_dict()]
+                command.subcommand_callbacks[command.resolved_name] = command.callback
+                command.callback = command.subcommand_call
+
         self.interactions[command.scope][command.name] = command
 
     def add_message_command(self, command: MessageCommand):
@@ -338,7 +372,6 @@ class Snake:
                 )
                 # cache cmd_ids and their scopes
                 for cmd_data in cmd_sync_resp:
-                    self._interaction_scopes[str(cmd_data["id"])] = cmd_scope
                     self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
             else:
                 log.debug(f"{cmd_scope} is already up-to-date")
@@ -384,7 +417,9 @@ class Snake:
             if guild_id := data.get("guild_id"):
                 self.cache.place_member_data(data.get("guild_id"), data["member"].copy())
                 cls.channel = CacheProxy(id=data["channel_id"], method=self.cache.get_channel)
-                cls.author = CacheProxy(id=data["member"]["user"]["id"], method=partial(self.cache.get_member, guild_id))
+                cls.author = CacheProxy(
+                    id=data["member"]["user"]["id"], method=partial(self.cache.get_member, guild_id)
+                )
             else:
                 self.cache.place_user_data(data["user"])
                 cls.author = CacheProxy(id=data["user"]["id"], method=self.cache.get_user)
@@ -418,18 +453,33 @@ class Snake:
             # Slash Commands
             interaction_id = interaction_data["data"]["id"]
             name = interaction_data["data"]["name"]
+            invoked_name = name
             scope = self._interaction_scopes.get(str(interaction_id))
 
             kwargs = {}
-            if "options" in interaction_data["data"]:
-                for option in interaction_data["data"]["options"]:
-                    kwargs[option["name"]] = option["value"]
+            # todo: redo this logic properly. This is a mess and you know it, Polls
+            if options := interaction_data["data"].get("options"):
+                if options[0]["type"] in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
+                    # subcommand, process accordingly
+                    if options[0]["type"] == OptionTypes.SUB_COMMAND:
+                        invoked_name = f"{name} {options[0]['name']}"
+                    else:
+                        invoked_name = (
+                            f"{name} {options[0]['name']} "
+                            f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
+                        )
+                        options = options[0]["options"][0].get("options")
+
+                for option in options:
+                    if option["type"] not in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
+                        kwargs[option["name"]] = option.get("value")
 
             if scope in self.interactions:
                 command: SlashCommand = self.interactions[scope][name]
                 print(f"{command.scope} :: {command.name} should be called")
 
                 ctx = await self.get_context(interaction_data, True)
+                ctx.invoked_name = invoked_name
                 ctx.kwargs = kwargs
                 ctx.args = kwargs.values()
 
