@@ -272,7 +272,7 @@ class GuildRequests:
 
         :param guild_id: The ID of the guild
         :param role_id: The ID of the role to move
-        :param position: The new position of this role in the hierachy
+        :param position: The new position of this role in the hierarchy
         :param reason: The reason for this action
         :return: List of guild roles
         """
@@ -379,3 +379,147 @@ class GuildRequests:
         :return: `{"code": "abc", "uses": 420}` or `None`
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
+
+    async def modify_guild_widget(self, guild_id: "Snowflake_Type", **kwargs) -> dict:
+        """
+        Modify a guild widget.
+
+        :param guild_id: The ID of the guild to modify.
+        :return: Updated guild widget.
+        """
+        # todo: find out if this endpoint works, and what params it expects.
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/widget"), data=kwargs)
+
+    async def modify_guild_welcome_screen(
+        self, guild_id: "Snowflake_Type", enabled: bool, welcome_channels: List["Snowflake_Type"], description: str
+    ) -> dict:
+        """
+        Modify the guild's welcome screen.
+
+        :param guild_id: The ID of the guild.
+        :param enabled: Whether the welcome screen is enabled
+        :param welcome_channels: Channels linked in the welcome screen and their display options
+        :param description: The server description to show in the welcome screen
+        :return:
+        """
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/welcome-screen"),
+            data={"enabled": enabled, "welcome_channels": welcome_channels, "description": description},
+        )
+
+    async def modify_current_user_voice_state(
+        self,
+        guild_id: "Snowflake_Type",
+        channel_id: "Snowflake_Type",
+        suppress: bool = None,
+        request_to_speak_timestamp: str = None,
+    ) -> None:
+        """
+        Update the current user voice state.
+
+        :param guild_id: The ID of the guild to update.
+        :param channel_id: The id of the channel the user is currently in
+        :param suppress: Toggle the user's suppress state.
+        :param request_to_speak_timestamp: Sets the user's request to speak
+        :return:
+        """
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/voice-states/@me"),
+            data=dict_filter_none(
+                {
+                    "channel_id": channel_id,
+                    "suppress": suppress,
+                    "request_to_speak_timestamp": request_to_speak_timestamp,
+                }
+            ),
+        )
+
+    async def modify_user_voice_state(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", channel_id: "Snowflake_Type", suppress: bool = None
+    ) -> None:
+        """
+        Modify the voice state of a user.
+
+        :param guild_id: The ID of the guild.
+        :param user_id: The ID of the user to modify.
+        :param channel_id: The ID of the channel the user is currently in.
+        :param suppress: Toggles the user's suppress state.
+        """
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/voice-states/{user_id}"),
+            data=dict_filter_none({"channel_id": channel_id, "suppress": suppress}),
+        )
+
+    async def create_guild_from_guild_template(self, template_code: str, name: str) -> dict:
+        """
+        Create a a new guild based on a template.
+
+        ..note: This endpoint can only be used by bots in less than 10 guilds.
+
+        :param template_code: The code of the template to use.
+        :param name: The name o the guild (2-100 characters)
+        :return: The newly created guild object
+        """
+        # todo: add icon support
+        return await self.request(Route("POST", f"/guilds/templates/{template_code}", data={"name": name}))
+
+    async def get_guild_templates(self, guild_id: "Snowflake_Type") -> List[dict]:
+        """
+        Returns an array of guild templates.
+
+        :param guild_id: The ID of the guild to query.
+        :return: An array of guild templates
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/templates"))
+
+    async def create_guild_template(self, guild_id: "Snowflake_Type", name: str, description: str = None) -> dict:
+        """
+        Create a guild template for the guild.
+
+        :param guild_id: The ID of the guild to create a template for.
+        :param name: The name of the template
+        :param description: The description of the template
+        :return: The created guild template
+        """
+        return await self.request(
+            Route("POST", f"/guilds/{guild_id}/templates"),
+            data=dict_filter_none({"name": name, "description": description}),
+        )
+
+    async def sync_guild_template(self, guild_id: "Snowflake_Type", template_code: str) -> dict:
+        """
+        Sync the template to the guild's current state.
+
+        :param guild_id: The ID of the guild
+        :param template_code: The code for the template to sync
+        :return: The updated guild template
+        """
+        return await self.request(Route("PUT", f"/guilds/{guild_id}/templates/{template_code}"))
+
+    async def modify_guild_template(
+        self, guild_id: "Snowflake_Type", template_code: str, name: str = None, description: str = None
+    ) -> dict:
+        """
+        Modifies the template's metadata
+
+        :param guild_id: The ID of the guild
+        :param template_code: The template code
+        :param name: The name of the template
+        :param description: The description of the template
+        :return: The updated guild template
+        """
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/templates/{template_code}"),
+            data=dict_filter_none({"name": name, "description": description}),
+        )
+
+    async def delete_guild_template(self, guild_id: "Snowflake_Type", template_code: str) -> dict:
+        """
+        Delete the guild template.
+
+        :param guild_id: The ID of the guild
+        :param template_code: The ID of the template
+        :return: The deleted template object
+        """
+        # why on earth does this return the deleted template object?
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))
