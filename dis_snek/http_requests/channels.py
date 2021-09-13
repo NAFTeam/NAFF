@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.models.route import Route
+from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -182,6 +183,16 @@ class ChannelRequests:
 
         return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
 
+    async def delete_invite(self, invite_code: str, reason: str = None) -> dict:
+        """
+        Delete an invite.
+
+        :param invite_code: The code of the invite to delete
+        :param reason: The reason to delete the invite
+        :return: The deleted invite object
+        """
+        return await self.request(Route("DELETE", f"/invites/{invite_code}"))
+
     async def edit_channel_permission(
         self,
         channel_id: "Snowflake_Type",
@@ -245,3 +256,61 @@ class ChannelRequests:
         :return: A list of pinned message objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
+
+    async def create_stage_instance(
+        self, channel_id: "Snowflake_Type", topic: str, privacy_level: int = 1, reason: str = None
+    ) -> dict:
+        """
+        Create a new stage instance.
+
+        :param channel_id: The ID of the stage channel
+        :param topic: The topic of the stage instance (1-120 characters)
+        :param privacy_level: Them privacy_level of the stage instance (default guild only)
+        :param reason: The reason for the creating the stage instance
+        :return: The stage instance
+        """
+        # todo: convert privacy_level to int-enum
+        return await self.request(
+            Route("POST", "/stage-instances"),
+            data={
+                "channel_id": channel_id,
+                "topic": topic,
+                "privacy_level": privacy_level,
+            },
+            reason=reason,
+        )
+
+    async def get_stage_instance(self, channel_id: "Snowflake_Type") -> dict:
+        """
+        Get the stage instance associated with a given channel, if it exists.
+
+        :param channel_id: The ID of the channel to retrieve the instance for.
+        :return: A stage instance.
+        """
+        return await self.request(Route("GET", f"/stage-instances/{channel_id}"))
+
+    async def modify_stage_instance(
+        self, channel_id: "Snowflake_Type", topic: str = None, privacy_level: int = None, reason: str = None
+    ) -> dict:
+        """
+        Update the fields of a given stage instance.
+        :param channel_id: The id of the stage channel.
+        :param topic: The new topic for the stage instance
+        :param privacy_level: The privacy level for the stage instance
+        :param reason: The reason for the change
+        :return: The updated stage instance.
+        """
+        return await self.request(
+            Route("PATCH", f"/stage-instances/{channel_id}"),
+            data=dict_filter_none({"topic": topic, "privacy_level": privacy_level}),
+            reason=reason,
+        )
+
+    async def delete_stage_instance(self, channel_id: "Snowflake_Type", reason: str = None) -> None:
+        """
+        Delete a stage instance.
+
+        :param channel_id: The ID of the channel to delete the stage instance for.
+        :param reason: The reason for the deletion
+        """
+        return await self.request(Route("DELETE", f"/stage-instances/{channel_id}"), reason=reason)
