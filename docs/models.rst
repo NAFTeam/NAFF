@@ -1,14 +1,14 @@
-Models
-======
+Internal Objects
+================
 
 .. toctree::
 
-    models.checks.rst
-    models.color.rst
-    models.command.rst
-    models.discord.rst
-    models.enums.rst
-    models.route.rst
-    models.scale.rst
-    models.snowflake.rst
-    models.timestamp.rst
+    models/models.checks.rst
+    models/models.color.rst
+    models/models.command.rst
+    models/models.discord.rst
+    models/models.enums.rst
+    models/models.route.rst
+    models/models.scale.rst
+    models/models.snowflake.rst
+    models/models.timestamp.rst

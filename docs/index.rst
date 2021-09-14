@@ -12,6 +12,7 @@ If you need help with something, don't hesitate to ask for help in the `discord`
    :caption: Contents:
 
    const.rst
+   discord_objects.rst
    Snake_Client.rst
    http_client.rst
    gateway.rst
