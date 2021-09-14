@@ -593,7 +593,7 @@ class Snake:
     async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
 
-    def grow(self, file_name: str, package: str = None):
+    def grow_scale(self, file_name: str, package: str = None):
         """
         Helper method to load a scale.
 
@@ -602,7 +602,7 @@ class Snake:
         """
         self.load_extension(file_name, package)
 
-    def shed(self, scale_name: str) -> None:
+    def shed_scale(self, scale_name: str) -> None:
         """
         Helper method to unload a scale
 
