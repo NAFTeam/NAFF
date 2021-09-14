@@ -367,7 +367,7 @@ class GuildRequests:
         Get the welcome screen for this guild.
 
         :param guild_id: The ID of the guild to query
-        :return:Welcome screen object
+        :return: Welcome screen object
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/welcome-screen"))
 

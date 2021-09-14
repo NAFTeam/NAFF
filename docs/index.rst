@@ -1,16 +1,9 @@
-.. dis-snek documentation master file, created by
-   sphinx-quickstart on Sat Aug  7 15:26:42 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Dis-Snek Documentation
+======================
 
-Welcome!
-====================================
+.. warning:: These documents are **not** complete, please do not panic if something is wrong.
 
-(TODO: Insert welcoming statement)
-
-If there's any questions that you have about the documentation
-from dis-snek that the docs do not currently cover, feel free to reach out to others
-on the `discord`_!
+If you need help with something, don't hesitate to ask for help in the `discord`_ server!
 
 .. _discord: https://discord.gg/WCtUY2CRVu
 
@@ -18,7 +11,11 @@ on the `discord`_!
    :maxdepth: 1
    :caption: Contents:
 
-   dis_snek.rst
+   const.rst
+   Snake_Client.rst
+   http_client.rst
+   gateway.rst
+   models.rst
 
 
 

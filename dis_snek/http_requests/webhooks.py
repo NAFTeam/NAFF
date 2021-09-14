@@ -26,7 +26,7 @@ class WebhookRequests:
         Return a list of channel webhook objects.
 
         :param channel_id: The id of the channel to query
-        :return:List of webhook objects
+        :return: List of webhook objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/webhooks"))
 
@@ -45,7 +45,7 @@ class WebhookRequests:
 
         :param webhook_id: The ID of the webhook to get
         :param webhook_token: The token for the webhook
-        :return:Webhook object
+        :return: Webhook object
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -81,7 +81,7 @@ class WebhookRequests:
 
         :param webhook_id: The ID of the webhook to delete
         :param webhook_token: The token for the webhook
-        :return:Webhook object
+        :return: Webhook object
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 

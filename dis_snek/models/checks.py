@@ -4,6 +4,7 @@ from dis_snek.models.discord_objects.context import Context
 def has_role(role_id):
     """
     Checks if the author has a role with a specific id.
+
     :param coro: the function to check
     """
 
@@ -16,6 +17,7 @@ def has_role(role_id):
 def has_id(user_id):
     """
     Checks if the author has the desired ID.
+
     :param coro: the function to check
     """
 
@@ -28,6 +30,7 @@ def has_id(user_id):
 def is_owner():
     """
     Is the author the owner of the bot.
+
     :param coro: the function to check
     """
 
