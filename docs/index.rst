@@ -8,17 +8,11 @@ If you need help with something, don't hesitate to ask for help in the `discord`
 .. _discord: https://discord.gg/WCtUY2CRVu
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
-   const.rst
-   discord_objects.rst
-   Snake_Client.rst
-   http_client.rst
-   gateway.rst
-   models.rst
-
-
+   api_reference.rst
+   guides.rst
 
 Indices and tables
 ==================
