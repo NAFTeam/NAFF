@@ -3,11 +3,11 @@ Constants used throughout Snek.
 
 :__version__: The version of the library.
 :__repo_url__: The URL of the repository.
-:__py_version__: The python version in use. This
+:__py_version__: The python version in use.
 :logger_name: The logger name used by Snek.
-:kwarg_spam: Should ``unused kwargs`` be logged. This
+:kwarg_spam: Should ``unused kwargs`` be logged.
 
-:GLOBAL_SCOPE: Represents a global scope. This
+:GLOBAL_SCOPE: Represents a global scope.
 :ACTION_ROW_MAX_ITEMS: The maximum number of items in an action row.
 :SELECTS_MAX_OPTIONS: The maximum number of options a select may have.
 :SELECT_MAX_NAME_LENGTH: The max length of a select's name.
