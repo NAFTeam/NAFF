@@ -26,6 +26,7 @@ from dis_snek.models.discord_objects.interactions import (
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
+from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -57,6 +58,7 @@ class Snake:
         self.intents = intents
         self.sync_interactions = sync_interactions
         self.prefix = prefix
+        self.scales = {}
 
         # "Factories"
         self.http: HTTPClient = HTTPClient(loop=self.loop)
@@ -590,6 +592,25 @@ class Snake:
     # todo remove/move this
     async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
+
+    def grow(self, file_name: str, package: str = None):
+        """
+        Helper method to load a scale.
+
+        :param file_name: The name of the file to load the scale from.
+        :param package: The package this scale is in.
+        """
+        self.load_extension(file_name, package)
+
+    def shed(self, scale_name: str) -> None:
+        """
+        Helper method to unload a scale
+
+        :param scale_name: The name of the scale"""
+        try:
+            self.scales[scale_name].shed(self.scales[scale_name])
+        except KeyError:
+            log.error(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def load_extension(self, name, package=None):
         """
