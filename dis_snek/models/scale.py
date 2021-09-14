@@ -9,11 +9,11 @@ from dis_snek.models.discord_objects.interactions import InteractionCommand
 log = logging.getLogger(logger_name)
 
 
-class Skin:
+class Scale:
     """
     A class that allows you to separate your commands and listeners into separate files.
     Skins require an entrypoint in the same file called `setup`, this function allows
-    client to load the Skin.
+    client to load the Scale.
 
     :param bot: A reference to the client
     """
