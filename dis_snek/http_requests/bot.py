@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from dis_snek.models.route import Route
 
@@ -22,7 +22,7 @@ class BotRequests:
         """
         return await self.request(Route("GET", f"/oauth2/@me"))
 
-    async def list_voice_regions(self) -> list[dict]:
+    async def list_voice_regions(self) -> List[dict]:
         """
         Returns an array of voice region objects that can be used when setting a voice or stage channel's `rtc_region`.
 
