@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 import attr
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.enums import ApplicationFlags
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.team import Team
     from dis_snek.models.discord_objects.user import User
-    from dis_snek.models.enums import ApplicationFlags
     from dis_snek.models.snowflake import Snowflake_Type
 
 
