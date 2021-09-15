@@ -7,6 +7,11 @@ theme:
   custom_dir: docs/overrides
   features:
     - header.autohide
+    - navigation.instant
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.share
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -52,3 +57,12 @@ markdown_extensions:
       linenums: true
   - pymdownx.inlinehilite
   - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.keys
+  - pymdownx.saneheaders
+  - pymdownx.smartsymbols
+  - pymdownx.tabbed
+  - pymdownx.tasklist
+  - pymdownx.tilde
