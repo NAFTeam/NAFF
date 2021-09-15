@@ -1,5 +1,7 @@
-insegel
 aiohttp
 attrs
 mypy
 orjson
+mkdocs-material
+mkdocs-autorefs
+mkdocstrings

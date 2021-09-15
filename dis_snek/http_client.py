@@ -107,6 +107,7 @@ class HTTPClient(
     ) -> Any:
         """
         Make a request to discord
+
         :param route: The route to take
         :param json: A json payload to send in the request
         :param reason: Attach a reason to this request, used for audit logs

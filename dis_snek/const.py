@@ -1,22 +1,23 @@
 """
 Constants used throughout Snek.
 
-:__version__: The version of the library.
-:__repo_url__: The URL of the repository.
-:__py_version__: The python version in use.
-:logger_name: The logger name used by Snek.
-:kwarg_spam: Should ``unused kwargs`` be logged.
+attributes:
+    __version__ str: The version of the library.
+    __repo_url__ str: The URL of the repository.
+    __py_version__ str: The python version in use.
+    logger_name str: The logger name used by Snek.
+    kwarg_spam bool: Should ``unused kwargs`` be logged.
 
-:GLOBAL_SCOPE: Represents a global scope.
-:ACTION_ROW_MAX_ITEMS: The maximum number of items in an action row.
-:SELECTS_MAX_OPTIONS: The maximum number of options a select may have.
-:SELECT_MAX_NAME_LENGTH: The max length of a select's name.
+    GLOBAL_SCOPE int: Represents a global scope.
+    ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.
+    SELECTS_MAX_OPTIONS int: The maximum number of options a select may have.
+    SELECT_MAX_NAME_LENGTH int: The max length of a select's name.
 
-:CONTEXT_MENU_NAME_LENGTH: The max length of a context menu's name.
-:SLASH_CMD_NAME_LENGTH: The max legnth of a slash command's name.
-:SLASH_CMD_MAX_DESC_LENGTH: The maximum length of a slash command's description.
-:SLASH_CMD_MAX_OPTIONS: The maximum number of options a slash command may have.
-:SLASH_OPTION_NAME_LENGTH: The maximum length of a slash option's name.
+    CONTEXT_MENU_NAME_LENGTH int: The max length of a context menu's name.
+    SLASH_CMD_NAME_LENGTH int: The max legnth of a slash command's name.
+    SLASH_CMD_MAX_DESC_LENGTH int: The maximum length of a slash command's description.
+    SLASH_CMD_MAX_OPTIONS int: The maximum number of options a slash command may have.
+    SLASH_OPTION_NAME_LENGTH int: The maximum length of a slash option's name.
 """
 
 import sys

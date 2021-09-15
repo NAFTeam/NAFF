@@ -1,0 +1,50 @@
+site_name: Dis-Snek
+repo_url: https://github.com/LordOfPolls/dis_snek
+repo_name: LordOfPolls/dis_snek
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  features:
+    - header.autohide
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: light green
+      accent: lime
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: lime
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github-alt
+    logo: material/book
+
+extra_css:
+  - extra.css
+
+plugins:
+- search
+- autorefs
+- mkdocstrings:
+    handlers:
+      python:
+        selection:
+          filters:
+            - "!^_"
+        rendering:
+          show_if_no_docstring: False
+          sort_members: source
+
+    watch:
+      - dis_snek
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight

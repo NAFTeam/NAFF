@@ -91,23 +91,28 @@ class Snake:
 
     @property
     def is_closed(self) -> bool:
+        """Is the bot closed?"""
         return self._closed
 
     @property
     def latency(self) -> float:
+        """Returns the latency of the websocket connection"""
         return self.ws.latency
 
     @property
     def user(self) -> SnakeBotUser:
+        """Returns the bot's user"""
         return self._user
 
     @property
     def app(self) -> dict:
+        """Returns the bots application"""
         # todo: create app object
         return self._app
 
     @property
     def owner(self) -> Coroutine[Any, Any, User]:
+        """Returns the bot's owner'"""
         return self.cache.get_user(self.app["owner"]["id"])
 
     def get_prefix(self):
@@ -117,7 +122,9 @@ class Snake:
     async def login(self, token):
         """
         Login to discord
-        :param token: Your bots token
+
+        Args:
+            token str: Your bot's token
         """
         # i needed somewhere to put this call,
         # login will always run after initialisation
@@ -186,6 +193,12 @@ class Snake:
             await asyncio.sleep(randint(1, 5))
 
     def start(self, token):
+        """
+        Start the bot.
+
+        Args:
+            token str: Your bot's token
+        """
         self.loop.run_until_complete(self.login(token))
 
     def _queue_task(self, coro, event_name, *args, **kwargs):
@@ -202,6 +215,14 @@ class Snake:
         return asyncio.create_task(wrapped, name=f"snake:: {event_name}")
 
     def dispatch(self, event: str, *args, **kwargs):
+        """
+        Dispatch an event.
+
+        Args:
+            event str: The name of the event to dispatch
+            args list: A list of arguments to pass to the event
+            kwargs dict: A list of keyword arguments to pass
+        """
         log.debug(f"Dispatching event: {event}")
 
         listeners = self._listeners.get(event, [])
@@ -214,9 +235,10 @@ class Snake:
     def add_listener(self, coro: Callable[..., Coroutine[Any, Any, Any]], event: Optional[str] = None):
         """
         Add a listener for an event, if no event is passed, one is determined
-        :param coro: the coroutine to run
-        :param event: the event to listen for
-        :return:
+
+        Args:
+            coro Coroutine: The coroutine to run
+            event optional[str]: The event to listen for
         """
         if not asyncio.iscoroutinefunction(coro):
             raise ValueError("Listeners must be coroutines")
@@ -238,8 +260,8 @@ class Snake:
 
         `def on_ready` will listen for `ready` events.
 
-        :param coro: The coroutine that will be a listener
-        :return:
+        Args:
+            coro Coroutine: The coroutine that will be a listener
         """
         self.add_listener(coro)
         return coro
@@ -286,7 +308,8 @@ class Snake:
         """
         Add a slash command to the client.
 
-        :param command: The command to add
+        Args:
+            command InteractionCommand: The command to add
         """
         if command.scope not in self.interactions:
             self.interactions[command.scope] = {}
@@ -327,7 +350,8 @@ class Snake:
         """
         Add a message command to the client.
 
-        :param command: The command to add
+        Args:
+            command InteractionCommand: The command to add
         """
         if command.name not in self.commands:
             self.commands[command.name] = command
@@ -401,9 +425,12 @@ class Snake:
         """
         Return a context object based on data passed
 
-        :param data: The data of the event
-        :param interaction: Is this an interaction or not?
-        :return: A context object
+        Args:
+            data: The data of the event
+            interaction: Is this an interaction or not?
+
+        returns:
+            Context object
         """
         # this line shuts up IDE warnings
         cls: Union[MessageContext, ComponentContext, InteractionContext]
@@ -447,7 +474,8 @@ class Snake:
         """
         Identify and dispatch interaction of slash commands or components.
 
-        :param interaction_data: raw interaction data
+        Args:
+            raw interaction data
         """
         # Yes this is temporary, im just blocking out the basic logic
 
@@ -520,7 +548,8 @@ class Snake:
         """
         Automatically convert MESSAGE_CREATE event data to the object.
 
-        :param data: raw message data
+        Args:
+            data: raw message data
         """
         msg = self.cache.place_message_data(data)
         self.dispatch("message_create", msg)
@@ -529,7 +558,8 @@ class Snake:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway.
 
-        :param data: raw guild data
+        Args:
+            data: raw guild data
         """
         guild = self.cache.place_guild_data(data)
         self._guild_event.set()
@@ -540,7 +570,8 @@ class Snake:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
 
-        :param data: the websocket ready packet
+        Args:
+            data: The websocket ready packet
         """
         expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
         self._user._add_guilds(expected_guilds)
@@ -566,7 +597,8 @@ class Snake:
         """
         Processes socket events and dispatches non-raw events
 
-        :param raw: raw socket data
+        Args:
+            data: raw socket data
         """
         # TODO: I think don't really need this anymore? Unless just for debugging.
         event = raw.get("t")
@@ -581,7 +613,17 @@ class Snake:
     # todo remove/move this
     async def get_guilds(
         self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
-    ):
+    ) -> List[Guild]:
+        """
+
+        Args:
+            limit: The maximum number of guilds to get
+            before: Get guilds before this snowflake
+            after: Get guilds after this snowflake
+
+        Returns:
+            List of guilds
+        """
         g_data = await self.http.get_guilds(limit, before, after)
         to_return = []
         for g in g_data:
@@ -593,12 +635,13 @@ class Snake:
     async def send_message(self, channel: "Snowflake_Type", content: str):
         await self.http.create_message(channel, content)
 
-    def grow_scale(self, file_name: str, package: str = None):
+    def grow_scale(self, file_name: str, package: str = None) -> None:
         """
-        Helper method to load a scale.
+        A helper method to load a scale
 
-        :param file_name: The name of the file to load the scale from.
-        :param package: The package this scale is in.
+        Args:
+            file_name: The name of the file to load the scale from.
+            package: The package this scale is in.
         """
         self.load_extension(file_name, package)
 
@@ -606,18 +649,21 @@ class Snake:
         """
         Helper method to unload a scale
 
-        :param scale_name: The name of the scale"""
+        Args:
+            scale_name: The name of the scale to unload.
+        """
         try:
             self.scales[scale_name].shed(self.scales[scale_name])
         except KeyError:
             log.error(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
-    def load_extension(self, name, package=None):
+    def load_extension(self, name: str, package: str = None):
         """
         Load an extension.
 
-        :param name: The name of the extension
-        :param package: The package this extension is in
+        Args:
+            name: The name of the extension.
+            package: The package the extension is in
         """
         name = importlib.util.resolve_name(name, package)
         if name in self.__extensions:
@@ -640,8 +686,9 @@ class Snake:
         """
         unload an extension.
 
-        :param name: The name of the extension
-        :param package: The package this extension is in
+        Args:
+            name: The name of the extension.
+            package: The package the extension is in
         """
         name = importlib.util.resolve_name(name, package)
         module = self.__extensions.get(name)
@@ -665,8 +712,9 @@ class Snake:
         Helper method to reload an extension.
         Simply unloads, then loads the extension.
 
-        :param name: The name of the extension
-        :param package: The package this extension is in
+        Args:
+            name: The name of the extension.
+            package: The package the extension is in
         """
         name = importlib.util.resolve_name(name, package)
         module = self.__extensions.get(name)

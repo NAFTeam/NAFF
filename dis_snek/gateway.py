@@ -29,13 +29,15 @@ class BeeGees(threading.Thread):
 
     ♫ Stayin' Alive ♫
 
-    :param ws: WebsocketClient
-    :param interval: How often to send heartbeats -- dictated by discord
+    Parameters:
+        ws WebsocketClient: WebsocketClient
+        interval int: How often to send heartbeats -- dictated by discord
 
-    :ivar behind_msg: The log message used when the heartbeat is late
-    :ivar block_msg: The log message used when the heartbeat is blocked
-    :ivar msg: The log message used when a hearbeat is sent
-    :ivar last_recv: When the last heartbeat was received
+    Attributes:
+        behind_msg: The log message used when the heartbeat is late
+        block_msg: The log message used when the heartbeat is blocked
+        msg: The log message used when a hearbeat is sent
+        last_recv: When the last heartbeat was received
     """
 
     ws: Any  # actually WebsocketClient, but these 2 classes reference each other so ¯\_(ツ)_/¯
@@ -96,7 +98,8 @@ class BeeGees(threading.Thread):
         """
         Get a payload representing a heartbeat.
 
-        :return: dict representing heartbeat
+        returns:
+            representation of the heartbeat payload
         """
         return {"op": OPCODE.HEARTBEAT, "d": self.ws.sequence}
 
@@ -121,14 +124,16 @@ class WebsocketClient:
     """
     Manages the connection to discord's websocket.
 
-    :param session_id: The session_id to use, if resuming
-    :param sequence: The sequence to use, if resuming
+    Parameters:
+        session_id: The session_id to use, if resuming
+        sequence: The sequence to use, if resuming
 
-    :ivar buffer: A buffer to hold incoming data until its complete
-    :ivar compress: Should the connection be compressed
-    :ivar intents: The intents used in this connection
-    :ivar sequence: The sequence of this connection
-    :ivar session_id: The session ID of this connection
+    Attributes:
+        buffer: A buffer to hold incoming data until its complete
+        compress: Should the connection be compressed
+        intents: The intents used in this connection
+        sequence: The sequence of this connection
+        session_id: The session ID of this connection
     """
 
     __slots__ = (
@@ -189,13 +194,13 @@ class WebsocketClient:
         """
         Connect to the discord gateway.
 
-        :param http: The HTTPClient
-        :param dispatch: A method to dispatch events
-        :param intents: The intents of this bot
-        :param resume: Are we attempting to resume?
-        :param session_id: The session id to use, if resuming
-        :param sequence: The sequence to use, if resuming
-        :return:
+        parameters:
+            http: The HTTPClient
+            dispatch: A method to dispatch events
+            intents: The intents of this bot
+            resume: Are we attempting to resume?
+            session_id: The session id to use, if resuming
+            sequence: The sequence to use, if resuming
         """
         cls.http = http
         cls._gateway = await http.get_gateway()
@@ -300,8 +305,8 @@ class WebsocketClient:
         """
         Close the connection to the gateway.
 
-        :param code: the close code to use
-        :return:
+        Parameters:
+            code: the close code to use
         """
         if self._closed:
             return
@@ -314,7 +319,8 @@ class WebsocketClient:
         """
         Send data to the gateway.
 
-        :param data: The data to send
+        Parameters:
+            data: The data to send
         """
         await self.ws.send_str(data)
 
@@ -322,7 +328,8 @@ class WebsocketClient:
         """
         Send json data to the gateway.
 
-        :param data: The data to send
+        Parameters:
+            data: The data to send
         """
         await self.send(orjson.dumps(data).decode("utf-8"))
 

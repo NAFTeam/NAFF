@@ -10,6 +10,15 @@ if TYPE_CHECKING:
 
 @attr.s(slots=True)
 class Asset:
+    """
+    Represents a discord asset.
+
+    Attributes:
+        BASE str: The `cdn` address for assets
+        url str: The URL of this asset
+        hash Optional[str]: The hash of this asset
+    """
+
     BASE = "https://cdn.discordapp.com"
 
     _client: "Snake" = attr.field()
@@ -23,6 +32,7 @@ class Asset:
 
     @property
     def animated(self) -> bool:
+        """True if this asset is animated"""
         if not self.hash:
             return None
         return self.hash.startswith("a_")
