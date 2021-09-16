@@ -4,4 +4,4 @@ mypy
 orjson
 mkdocs-material
 mkdocs-autorefs
-mkdocstrings
+git+https://github.com/mkdocstrings/mkdocstrings.git

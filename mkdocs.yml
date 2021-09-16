@@ -45,8 +45,9 @@ plugins:
           filters:
             - "!^_"
         rendering:
+          members_order: source
           show_if_no_docstring: True # temporary, this will be reverted to False once we're done with docs
-          sort_members: source
+
 
     watch:
       - dis_snek
