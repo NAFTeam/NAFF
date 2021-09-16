@@ -6,6 +6,11 @@ div.doc-contents:not(.first) {
 }
 [data-md-color-scheme="slate"] {
   --md-code-hl-constant-color: #8DBF00;
+  --md-code-hl-comment-color: #637777;
+  --md-code-hl-string-color: #ECC48D;
+  --md-code-hl-keyword-color: #C792EA;
+  --md-code-hl-function-color: #82AAFF;
+  --md-code-hl-number-color: #F68B63;
 }
 [data-md-color-scheme="default"] {
   --md-code-hl-constant-color: #628701;
