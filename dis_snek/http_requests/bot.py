@@ -10,7 +10,8 @@ class BotRequests:
         """
         Returns the bot's application object without flags.
 
-        :return: application object
+        returns:
+            application object
         """
         return await self.request(Route("GET", f"/oauth2/applications/@me"))
 
@@ -18,7 +19,8 @@ class BotRequests:
         """
         Returns info about the current authorization
 
-        :return: Authorisation information
+        returns:
+            Authorisation information
         """
         return await self.request(Route("GET", f"/oauth2/@me"))
 
@@ -26,6 +28,7 @@ class BotRequests:
         """
         Returns an array of voice region objects that can be used when setting a voice or stage channel's `rtc_region`.
 
-        :return: an array of voice region objects
+        returns:
+            an array of voice region objects
         """
         return await self.request(Route("GET", "/voice/regions"))

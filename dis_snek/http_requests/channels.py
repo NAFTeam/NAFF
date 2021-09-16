@@ -14,8 +14,10 @@ class ChannelRequests:
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.
 
-        :param channel_id: The id of the channel
-        :return: channel
+        parameters:
+            channel_id: The id of the channel
+        returns:
+            channel
         """
         return await self.request(Route("GET", f"/channels/{channel_id}"))
 
@@ -30,12 +32,15 @@ class ChannelRequests:
         """
         Get the messages for a channel.
 
-        :param channel_id: The channel to get messages from
-        :param limit: How many messages to get (default 50, max 100)
-        :param around: Get messages around this snowflake
-        :param before: Get messages before this snowflake
-        :param after: Get messages after this snowflake
-        :return: List of message dicts
+        parameters:
+            channel_id: The channel to get messages from
+            limit: How many messages to get (default 50, max 100)
+            around: Get messages around this snowflake
+            before: Get messages before this snowflake
+            after: Get messages after this snowflake
+
+        returns:
+            List of message dicts
         """
         params: Dict[str, Union[int, str]] = {"limit": limit}
 
@@ -105,13 +110,13 @@ class ChannelRequests:
         """
         Move a channel.
 
-        :param guild_id: The ID of the guild this affects
-        :param channel_id: The ID of the channel to move
-        :param new_pos: The new position of this channel
-        :param parent_id: The parent ID if needed
-        :param lock_perms: Sync permissions with the new parent
-        :param reason: An optional reason for the audit log
-        :return:
+        parameters:
+            guild_id: The ID of the guild this affects
+            channel_id: The ID of the channel to move
+            new_pos: The new position of this channel
+            parent_id: The parent ID if needed
+            lock_perms: Sync permissions with the new parent
+            reason: An optional reason for the audit log
         """
         payload = dict(id=channel_id, position=new_pos, lock_permissions=lock_perms)
         if parent_id:
@@ -123,18 +128,23 @@ class ChannelRequests:
         """
         Update a channel's settings, returns the updated channel object on success.
 
-        :param channel_id: The ID of the channel to update
-        :param data: The data to update with
-        :param reason: An optional reason for the audit log
-        :return: Channel object on success
+        parameters:
+            channel_id: The ID of the channel to update
+            data: The data to update with
+            reason: An optional reason for the audit log
+
+        returns:
+            Channel object on success
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
 
     async def delete_channel(self, channel_id: "Snowflake_Type", reason: str = None):
         """
         Delete the channel
-        :param channel_id: The ID of the channel to delete
-        :param reason: An optional reason for the audit log
+
+        parameters:
+            channel_id: The ID of the channel to delete
+            reason: An optional reason for the audit log
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}"), reason=reason)
 
@@ -142,8 +152,11 @@ class ChannelRequests:
         """
         Get the invites for the channel.
 
-        :param channel_id: The ID of the channel to retrieve from
-        :return: List of invite objects
+        parameters:
+            channel_id: The ID of the channel to retrieve from
+
+        returns:
+            List of invite objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/invites"))
 
@@ -162,16 +175,19 @@ class ChannelRequests:
         """
         Create an invite for the given channel.
 
-        :param channel_id: The ID of the channel to create an invite for
-        :param max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
-        :param max_uses: max number of uses or 0 for unlimited. between 0 and 100
-        :param temporary: whether this invite only grants temporary membership
-        :param unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
-        :param target_type: the type of target for this voice channel invite
-        :param target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
-        :param target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
-        :param reason: An optional reason for the audit log
-        :return: an invite object
+        parameters:
+            channel_id: The ID of the channel to create an invite for
+            max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
+            max_uses: max number of uses or 0 for unlimited. between 0 and 100
+            temporary: whether this invite only grants temporary membership
+            unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
+            target_type: the type of target for this voice channel invite
+            target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
+            target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
+            reason: An optional reason for the audit log
+
+        returns:
+            an invite object
         """
         payload = dict(max_age=max_age, max_uses=max_uses, temporary=temporary, unique=unique)
         if target_type:
@@ -187,9 +203,13 @@ class ChannelRequests:
         """
         Delete an invite.
 
-        :param invite_code: The code of the invite to delete
-        :param reason: The reason to delete the invite
-        :return: The deleted invite object
+
+        parameters:
+            invite_code: The code of the invite to delete
+            reason: The reason to delete the invite
+
+        returns:
+            The deleted invite object
         """
         return await self.request(Route("DELETE", f"/invites/{invite_code}"))
 
@@ -205,12 +225,13 @@ class ChannelRequests:
         """
         Edit the channel permission overwrites for a user or role in a channel.
 
-        :param channel_id: The id of the channel
-        :param overwrite_id: The id of the object to override
-        :param allow: the bitwise value of all allowed permissions
-        :param deny: the bitwise value of all disallowed permissions
-        :param perm_type: 0 for a role or 1 for a member
-        :param reason: The reason for this action
+        parameters:
+            channel_id: The id of the channel
+            overwrite_id: The id of the object to override
+            allow: the bitwise value of all allowed permissions
+            deny: the bitwise value of all disallowed permissions
+            perm_type: 0 for a role or 1 for a member
+            reason: The reason for this action
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
@@ -223,9 +244,10 @@ class ChannelRequests:
         """
         Delete a channel permission overwrite for a user or role in a channel.
 
-        :param channel_id: The ID of the channel.
-        :param overwrite_id: The ID of the overwrite
-        :param reason: An optional reason for the audit log
+        parameters:
+            channel_id: The ID of the channel.
+            overwrite_id: The ID of the overwrite
+            reason: An optional reason for the audit log
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"), reason=reason)
 
@@ -233,9 +255,12 @@ class ChannelRequests:
         """
         Follow a news channel to send messages to the target channel.
 
-        :param channel_id: The channel to follow
-        :param webhook_channel_id: ID of the target channel
-        :return: Followed channel object
+        parameters:
+            channel_id: The channel to follow
+            webhook_channel_id: ID of the target channel
+
+        returns:
+            Followed channel object
         """
         return await self.request(
             Route("POST", f"/channels/{channel_id}/followers"), data={"webhook_channel_id": webhook_channel_id}
@@ -245,15 +270,20 @@ class ChannelRequests:
         """
         Post a typing indicator for the specified channel. Generally bots should not implement this route.
 
-        :param channel_id: The id of the channel to "type" in
+        parameters:
+            channel_id: The id of the channel to "type" in
         """
         return await self.request(Route("POST", f"/channels/{channel_id}/typing"))
 
     async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> List[dict]:
         """
         Get all pinned messages from a channel.
-        :param channel_id: The ID of the channel to get pins from
-        :return: A list of pinned message objects
+
+        parameters:
+            channel_id: The ID of the channel to get pins from
+
+        returns:
+            A list of pinned message objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
 
@@ -263,11 +293,14 @@ class ChannelRequests:
         """
         Create a new stage instance.
 
-        :param channel_id: The ID of the stage channel
-        :param topic: The topic of the stage instance (1-120 characters)
-        :param privacy_level: Them privacy_level of the stage instance (default guild only)
-        :param reason: The reason for the creating the stage instance
-        :return: The stage instance
+        parameters:
+            channel_id: The ID of the stage channel
+            topic: The topic of the stage instance (1-120 characters)
+            privacy_level: Them privacy_level of the stage instance (default guild only)
+            reason: The reason for the creating the stage instance
+
+        returns:
+            The stage instance
         """
         # todo: convert privacy_level to int-enum
         return await self.request(
@@ -284,8 +317,11 @@ class ChannelRequests:
         """
         Get the stage instance associated with a given channel, if it exists.
 
-        :param channel_id: The ID of the channel to retrieve the instance for.
-        :return: A stage instance.
+        parameters:
+            channel_id: The ID of the channel to retrieve the instance for.
+
+        returns:
+            A stage instance.
         """
         return await self.request(Route("GET", f"/stage-instances/{channel_id}"))
 
@@ -294,11 +330,15 @@ class ChannelRequests:
     ) -> dict:
         """
         Update the fields of a given stage instance.
-        :param channel_id: The id of the stage channel.
-        :param topic: The new topic for the stage instance
-        :param privacy_level: The privacy level for the stage instance
-        :param reason: The reason for the change
-        :return: The updated stage instance.
+
+        parameters:
+            channel_id: The id of the stage channel.
+            topic: The new topic for the stage instance
+            privacy_level: The privacy level for the stage instance
+            reason: The reason for the change
+
+        returns:
+            The updated stage instance.
         """
         return await self.request(
             Route("PATCH", f"/stage-instances/{channel_id}"),
@@ -310,7 +350,8 @@ class ChannelRequests:
         """
         Delete a stage instance.
 
-        :param channel_id: The ID of the channel to delete the stage instance for.
-        :param reason: The reason for the deletion
+        parameters:
+            channel_id: The ID of the channel to delete the stage instance for.
+            reason: The reason for the deletion
         """
         return await self.request(Route("DELETE", f"/stage-instances/{channel_id}"), reason=reason)
