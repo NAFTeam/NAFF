@@ -46,6 +46,8 @@ plugins:
             - "!^_"
         rendering:
           members_order: source
+          show_bases: True
+          group_by_category: False
           show_if_no_docstring: True # temporary, this will be reverted to False once we're done with docs
 
 

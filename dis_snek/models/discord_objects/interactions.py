@@ -114,9 +114,10 @@ class Permission:
     """
     Represents a interaction permission.
 
-    :param id: The id of the role or user.
-    :param type: The type of id (user or role)
-    :permission: The state of permission. ``True`` to allow, ``False``, to disallow.
+    parameters:
+        id: The id of the role or user.
+        type: The type of id (user or role)
+        permission: The state of permission. ``True`` to allow, ``False``, to disallow.
     """
 
     id: "Snowflake_Type" = attr.ib()
@@ -127,7 +128,8 @@ class Permission:
         """
         Convert this object into a dict ready for discord.
 
-        :return: dict
+        returns:
+            Representation of this object
         """
         return attr.asdict(self)
 
@@ -137,24 +139,32 @@ class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
 
-    :param scope: Denotes whether its global or for specific guild.
-    :param default_permission: Is this command available to all users?
-    :param permissions: Map of guild id and its respective list of permissions to apply.
-    :param cmd_id: The id of this command given by discord.
-    :param callback: The coroutine to callback when this interaction is received.
+    parameters:
+        scope: Denotes whether its global or for specific guild.
+        default_permission: Is this command available to all users?
+        permissions: Map of guild id and its respective list of permissions to apply.
+        cmd_id: The id of this command given by discord.
+        callback: The coroutine to callback when this interaction is received.
     """
 
     name: str = attr.ib()
+    """1-32 character name"""
 
     scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake, metadata=no_export_meta)
+    """The scope of this interaction. Global or guild ids"""
     default_permission: bool = attr.ib(default=True)
+    """whether the command is enabled by default when the app is added to a guild"""
     permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
+    """The permissions of this interaction"""
 
     cmd_id: "Snowflake_Type" = attr.ib(default=None, metadata=no_export_meta)
+    """The unique ID of this interaction"""
     callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
+    """The coroutine to call when this interaction is received"""
 
     @property
     def resolved_name(self):
+        """A representation of this interaction's name"""
         return self.name
 
 
@@ -163,12 +173,15 @@ class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
 
-    :param name: The name of this entry.
-    :param type: The type of entry (user or message).
+    parameters:
+        name: The name of this entry.
+        type: The type of entry (user or message).
     """
 
     name: str = attr.ib()
+    """1-32 character name"""
     type: CommandTypes = attr.ib()
+    """the type of command, defaults 1 if not set"""
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -187,8 +200,9 @@ class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
 
-    :param name: The name the user will see
-    :param value: The data sent to your code when this choice is used
+    parameters:
+        name: The name the user will see
+        value: The data sent to your code when this choice is used
     """
 
     name: str = attr.ib()
@@ -200,11 +214,12 @@ class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
 
-    :param name: The name of this option
-    :param type: The type of option
-    :param description: The description of this option
-    :param required: "This option must be filled to use the command"
-    :param choices: A list of choices the user has to pick between
+    parameters:
+        name: The name of this option
+        type: The type of option
+        description: The description of this option
+        required: "This option must be filled to use the command"
+        choices: A list of choices the user has to pick between
     """
 
     name: str = attr.ib()
@@ -231,9 +246,10 @@ class SlashCommand(InteractionCommand):
     """
     Represents a discord slash command.
 
-    :param name: The name of this command.
-    :param description: The description of this command.
-    :param options: A list of options for this command.
+    parameters:
+        name: The name of this command.
+        description: The description of this command.
+        options: A list of options for this command.
     """
 
     name: str = attr.ib()
