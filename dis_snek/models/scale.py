@@ -38,11 +38,11 @@ class Scale:
 
         for name, val in cls.__dict__.items():
             if isinstance(val, InteractionCommand):
-                val.skin = cls
+                val.scale = cls
                 cls._commands.append(val)
                 bot.add_interaction(val)
             if isinstance(val, MessageCommand):
-                val.skin = cls
+                val.scale = cls
                 cls._commands.append(val)
                 bot.add_message_command(val)
 
