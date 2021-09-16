@@ -4,3 +4,9 @@ div.doc-contents:not(.first) {
   border-left: 4px solid rgba(230, 230, 230);
   margin-bottom: 2.5em;
 }
+[data-md-color-scheme="slate"] {
+  --md-code-hl-constant-color: #8DBF00;
+}
+[data-md-color-scheme="default"] {
+  --md-code-hl-constant-color: #628701;
+}
