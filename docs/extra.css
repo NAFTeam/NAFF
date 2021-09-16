@@ -2,5 +2,5 @@ div.doc-contents:not(.first) {
   padding-left: 25px;
   padding-right: 25px;
   border-left: 4px solid rgba(230, 230, 230);
-  margin-bottom: 80px;
+  margin-bottom: 2.5em;
 }
