@@ -13,9 +13,10 @@ class ReactionRequests:
         """
         Create a reaction for a message.
 
-        :param channel_id: The channel this is taking place in
-        :param message_id: The message to create a a reaction on
-        :param emoji: The emoji to use (format: `name:id`)
+        parameters:
+            channel_id: The channel this is taking place in
+            message_id: The message to create a a reaction on
+            emoji: The emoji to use (format: `name:id`)
         """
         return await self.request(
             Route(
@@ -33,9 +34,10 @@ class ReactionRequests:
         """
         Remove client's reaction from a message
 
-        :param channel_id: The channel this is taking place in.
-        :param message_id: The message to remove the reaction on.
-        :param emoji: The emoji to remove. (format: `name:id`)
+        parameters:
+            channel_id: The channel this is taking place in.
+            message_id: The message to remove the reaction on.
+            emoji: The emoji to remove. (format: `name:id`)
         """
         return await self.request(
             Route(
@@ -53,10 +55,11 @@ class ReactionRequests:
         """
         Remove user's reaction from a message
 
-        :param channel_id: The channel this is taking place in
-        :param message_id: The message to remove the reaction on.
-        :param emoji: The emoji to remove. (format: `name:id`)
-        :param user_id: The user to remove reaction of.
+        parameters:
+            channel_id: The channel this is taking place in
+            message_id: The message to remove the reaction on.
+            emoji: The emoji to remove. (format: `name:id`)
+            user_id: The user to remove reaction of.
         """
         return await self.request(
             Route(
@@ -73,9 +76,10 @@ class ReactionRequests:
         """
         Remove specific reaction from a message
 
-        :param channel_id: The channel this is taking place in.
-        :param message_id: The message to remove the reaction on.
-        :param emoji: The emoji to remove. (format: `name:id`)
+        parameters:
+            channel_id: The channel this is taking place in.
+            message_id: The message to remove the reaction on.
+            emoji: The emoji to remove. (format: `name:id`)
         """
         return await self.request(
             Route(
@@ -91,8 +95,9 @@ class ReactionRequests:
         """
         Remove reactions from a message.
 
-        :param channel_id: The channel this is taking place in.
-        :param message_id: The message to clear reactions from.
+        parameters:
+            channel_id: The channel this is taking place in.
+            message_id: The message to clear reactions from.
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}/reactions"))
 
@@ -100,9 +105,10 @@ class ReactionRequests:
         """
         Gets specific reaction from a message
 
-        :param channel_id: The channel this is taking place in.
-        :param message_id: The message to get the reaction.
-        :param emoji: The emoji to get. (format: `name:id`)
+        parameters:
+            channel_id: The channel this is taking place in.
+            message_id: The message to get the reaction.
+            emoji: The emoji to get. (format: `name:id`)
         """
         return await self.request(
             Route(

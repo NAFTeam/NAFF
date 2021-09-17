@@ -1,24 +1,3 @@
-"""
-The MIT License (MIT).
-
-Copyright (c) 2021 - present LordOfPolls
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-"""
 import asyncio
 import re
 from enum import IntEnum
@@ -67,8 +46,11 @@ class OptionTypes(IntEnum):
         """
         Convert data types to their corresponding OptionType.
 
-        :param t: The datatype to convert
-        :return: OptionType or None
+        parameters:
+            t: The datatype to convert
+
+        returns:
+            OptionType or None
         """
         if issubclass(t, str):
             return cls.STRING
@@ -354,21 +336,25 @@ def slash_command(
     """
     A decorator to declare a coroutine as a slash command.
 
-    ..note: While the base and group descriptions arent visible in the discord client, currently.
-    We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
-    one of the future ui updates.
+    note:
+        While the base and group descriptions arent visible in the discord client, currently.
+        We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
+        one of the future ui updates.
 
-    :param name: 1-32 character name of the command
-    :param description: 1-100 character description of the command
-    :param scope: The scope this command exists within
-    :param options: The parameters for the command, max 25
-    :param default_permission: Whether the command is enabled by default when the app is added to a guild
-    :param permissions: The roles or users who can use this command
-    :param sub_cmd_name: 1-32 character name of the subcommand
-    :param sub_cmd_description: 1-100 character description of the subcommand
-    :param group_name: 1-32 character name of the group
-    :param group_description: 1-100 character description of the group
-    :return: SlashCommand Object
+    parameters:
+        name: 1-32 character name of the command
+        description: 1-100 character description of the command
+        scope: The scope this command exists within
+        options: The parameters for the command, max 25
+        default_permission: Whether the command is enabled by default when the app is added to a guild
+        permissions: The roles or users who can use this command
+        sub_cmd_name: 1-32 character name of the subcommand
+        sub_cmd_description: 1-100 character description of the subcommand
+        group_name: 1-32 character name of the group
+        group_description: 1-100 character description of the group
+
+    returns:
+        SlashCommand Object
     """
 
     def wrapper(func) -> SlashCommand:
@@ -421,21 +407,23 @@ def sub_command(
     """
     A decorator to declare a coroutine as a slash subcommand.
 
-    ..note: While the base and group descriptions arent visible in the discord client, currently.
-    We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
-    one of the future ui updates.
+    note:
+        While the base and group descriptions arent visible in the discord client, currently.
+        We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
+        one of the future ui updates.
 
-    :param base_name: The name of the base command
-    :param sub_name: The name of the subcommand
-    :param group_name: The name of the command group (optional)
-    :param base_description: The description of the base command
-    :param sub_description: The description of the subcommand
-    :param group_description: The description of the command group
-    :param scope: The scope this command exists within
-    :param options: The parameters for the command, max 25
-    :param default_permission: Whether the command is enabled by default when the app is added to a guild
-    :param permissions: The roles or users who can use this command
-    :return:
+
+    parameters:
+        base_name: The name of the base command
+        sub_name: The name of the subcommand
+        group_name: The name of the command group (optional)
+        base_description: The description of the base command
+        sub_description: The description of the subcommand
+        group_description: The description of the command group
+        scope: The scope this command exists within
+        options: The parameters for the command, max 25
+        default_permission: Whether the command is enabled by default when the app is added to a guild
+        permissions: The roles or users who can use this command
     """
 
     def wrapper(func) -> SlashCommand:
@@ -469,12 +457,15 @@ def context_menu(
     """
     A decorator to declare a coroutine as a Context Menu
 
-    :param name: 1-32 character name of the context menu
-    :param context_type: The type of context menu
-    :param scope: The scope this command exists within
-    :param default_permission: Whether the menu is enabled by default when the app is added to a guild
-    :param permissions: The roles or users who can use this menu
-    :return: ContextMenu object
+    parameters:
+        name: 1-32 character name of the context menu
+        context_type: The type of context menu
+        scope: The scope this command exists within
+        default_permission: Whether the menu is enabled by default when the app is added to a guild
+        permissions: The roles or users who can use this menu
+
+    returns:
+        ContextMenu object
     """
 
     def wrapper(func) -> ContextMenu:
@@ -511,11 +502,12 @@ def slash_option(
     """
     A decorator to add an option to a slash command.
 
-    :param name: 1-32 lowercase character name matching ^[\w-]{1,32}$
-    :param opt_type: The type of option
-    :param description: 1-100 character description of option
-    :param required: If the parameter is required or optional--default false
-    :param choices: A list of choices the user has to pick between (max 25)
+    parameters:
+        name: 1-32 lowercase character name matching ^[\w-]{1,32}$
+        opt_type: The type of option
+        description: 1-100 character description of option
+        required: If the parameter is required or optional--default false
+        choices: A list of choices the user has to pick between (max 25)
     """
 
     def wrapper(func):
@@ -538,8 +530,9 @@ def slash_permission(guild_id: "Snowflake_Type", permissions: List[Union[Permiss
     """
     A decorator to add permissions for a guild to a slash command or context menu.
 
-    :param guild_id: The target guild to apply the permissions.
-    :param permissions: A list of interaction permission rights.
+    parameters:
+        guild_id: The target guild to apply the permissions.
+        permissions: A list of interaction permission rights.
     """
 
     def wrapper(func):

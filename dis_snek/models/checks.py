@@ -5,7 +5,8 @@ def has_role(role_id):
     """
     Checks if the author has a role with a specific id.
 
-    :param coro: the function to check
+    parameters:
+        coro: the function to check
     """
 
     async def check(ctx: Context) -> bool:
@@ -18,7 +19,8 @@ def has_id(user_id):
     """
     Checks if the author has the desired ID.
 
-    :param coro: the function to check
+    parameters:
+        coro: the function to check
     """
 
     async def check(ctx: Context) -> bool:
@@ -31,7 +33,8 @@ def is_owner():
     """
     Is the author the owner of the bot.
 
-    :param coro: the function to check
+    parameters:
+        coro: the function to check
     """
 
     async def check(ctx: Context) -> bool:

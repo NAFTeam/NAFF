@@ -19,8 +19,10 @@ class UserRequests:
         """
         Get a user object for a given user ID.
 
-        :param user_id: The user to get.
-        :return: user
+        parameters:
+            user_id: The user to get.
+        returns:
+            user
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
@@ -28,7 +30,8 @@ class UserRequests:
         """
         Modify the user account settings.
 
-        :param payload: The data to send.
+        parameters:
+            payload: The data to send.
         """
         return await self.request(Route("PATCH", f"/users/@me"), data=payload)
 
@@ -42,7 +45,8 @@ class UserRequests:
         """
         Leave a guild. Returns a 204 empty response on success.
 
-        :param guild_id: The guild to leave from.
+        parameters:
+            guild_id: The guild to leave from.
         """
         return await self.request(Route("DELETE", f"/users/@me/guilds/{guild_id}"))
 
@@ -50,7 +54,8 @@ class UserRequests:
         """
         Create a new DM channel with a user. Returns a DM channel object.
 
-        :param recipient_id: The recipient to open a DM channel with.
+        parameters:
+            recipient_id: The recipient to open a DM channel with.
         """
         return await self.request(Route("POST", f"/users/@me/channels"), data=dict(recipient_id=recipient_id))
 
@@ -58,7 +63,8 @@ class UserRequests:
         """
         Create a new group DM channel with multiple users.
 
-        :param payload: The data to send.
+        parameters:
+            payload: The data to send.
         """
         return await self.request(Route("POST", f"/users/@me/channels"), data=payload)
 
@@ -74,10 +80,11 @@ class UserRequests:
         """
         Adds a recipient to a Group DM using their access token.
 
-        :param channel_id: The ID of the group dm
-        :param user_id: The ID of the user to add
-        :param access_token: Access token of a user that has granted your app the gdm.join scope
-        :param nick: Nickname of the user being added
+        parameters:
+            channel_id: The ID of the group dm
+            user_id: The ID of the user to add
+            access_token: Access token of a user that has granted your app the gdm.join scope
+            nick: Nickname of the user being added
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/recipients/{user_id}"),
@@ -88,8 +95,9 @@ class UserRequests:
         """
         Remove a recipient from the group dm.
 
-        :param channel_id: The ID of the group dm
-        :param user_id: The ID of the user to remove
+        parameters:
+            channel_id: The ID of the group dm
+            user_id: The ID of the user to remove
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/recipients/{user_id}"))
 
@@ -97,7 +105,8 @@ class UserRequests:
         """
         Modifies the nickname of the current user in a guild
 
-        :param guild_id: The ID of the guild
-        :param nickname: The new nickname to use
+        parameters:
+            guild_id: The ID of the guild
+            nickname: The new nickname to use
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/@me/nick"), data={"nick": nickname})

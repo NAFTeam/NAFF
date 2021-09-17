@@ -49,8 +49,8 @@ class DiscordClientWebSocketResponse(ClientWebSocketResponse):
         """
         Close the connection.
 
-        :param code: The close code to use
-        :param message: A message to send within the close
+            code: The close code to use
+            message: A message to send within the close
         """
         return await super().close(code=code, message=message)
 
@@ -91,7 +91,8 @@ class HTTPClient(
         """
         Parse the ratelimit data into a more usable format.
 
-        :param header: the header of the response
+        parameters:
+            header: the header of the response
         :return:
         """
         return {
@@ -108,9 +109,10 @@ class HTTPClient(
         """
         Make a request to discord
 
-        :param route: The route to take
-        :param json: A json payload to send in the request
-        :param reason: Attach a reason to this request, used for audit logs
+        parameters:
+            route: The route to take
+            json: A json payload to send in the request
+            reason: Attach a reason to this request, used for audit logs
         """
         # Assemble headers
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
@@ -213,8 +215,10 @@ class HTTPClient(
         """
         "Login" to the gateway, basically validates the token and grabs user data.
 
-        :param token: the token to use
-        :return: The currently logged in bot's data
+        parameters:
+            token: the token to use
+        returns:
+            The currently logged in bot's data
         """
         self.__session = ClientSession(connector=self.connector, ws_response_class=DiscordClientWebSocketResponse)
         self.token = token
@@ -246,7 +250,8 @@ class HTTPClient(
         """
         Connect to the websocket.
 
-        :param url: the url to connect to
+        parameters:
+            url: the url to connect to
         """
         return await self.__session.ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0

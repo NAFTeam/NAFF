@@ -49,12 +49,15 @@ class InteractiveComponent(BaseComponent):
 @attr.s(slots=True, eq=False)
 class Button(InteractiveComponent):
     """
-    :param style: Buttons come in a variety of styles to convey different types of actions.
-    :param label: The text that appears on the button, max 80 characters.
-    :param emoji: The emoji that appears on the button.
-    :param custom_id: A developer-defined identifier for the button, max 100 characters.
-    :param url: A url for link-style buttons.
-    :param disabled: Disable the button and make it not interactable, default false.
+    Represents a discord ui button
+
+    attributes:
+        style optional[ButtonStyles, int]: Buttons come in a variety of styles to convey different types of actions.
+        label optional[str]: The text that appears on the button, max 80 characters.
+        emoji optional[Union[Emoji, dict, str]]: The emoji that appears on the button.
+        custom_id Optional[str]: A developer-defined identifier for the button, max 100 characters.
+        url Optional[str]: A url for link-style buttons.
+        disabled bool: Disable the button and make it not interactable, default false.
     """
 
     style: Union[ButtonStyles, int] = attr.ib()
@@ -90,6 +93,16 @@ class Button(InteractiveComponent):
 
 @attr.s(slots=True)
 class SelectOption(BaseComponent):
+    """
+    Represents a select option.
+
+    attributes:
+        label str: The label (max 80 characters)
+        value str: The value of the select, this is whats sent to your bot
+        description Optional[str]: A description of this option
+        emoji Optional[Union[Emoji, dict, str]: An emoji to show in this select option
+        default bool: Is this option selected by default
+    """
 
     label: str = attr.ib(validator=str_validator)
     value: str = attr.ib(validator=str_validator)
@@ -116,13 +129,17 @@ class SelectOption(BaseComponent):
 @attr.s(slots=True, eq=False)
 class Select(InteractiveComponent):
     """
-    :param options: The choices in the select, max 25.
-    :param custom_id: A developer-defined identifier for the button, max 100 characters.
-    :param placeholder: The custom placeholder text to show if nothing is selected, max 100 characters.
-    :param min_values: The minimum number of items that must be chosen. (default 1, min 0, max 25)
-    :param max_values: The maximum number of items that can be chosen. (default 1, max 25)
-    :param disabled: Disable the select and make it not interactable, default false.
-    :param type: The action role type number defined by discord. This cannot be modified.
+    Represents a select component.
+
+
+    Attributes:
+        options List[dict]: The choices in the select, max 25.
+        custom_id str: A developer-defined identifier for the button, max 100 characters.
+        placeholder str: The custom placeholder text to show if nothing is selected, max 100 characters.
+        min_values Optional[int]: The minimum number of items that must be chosen. (default 1, min 0, max 25)
+        max_values Optional[int]: The maximum number of items that can be chosen. (default 1, max 25)
+        disabled bool: Disable the select and make it not intractable, default false.
+        type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
     options: List[dict] = attr.ib(factory=list)
@@ -173,8 +190,11 @@ class Select(InteractiveComponent):
 @attr.s(slots=True, init=False)
 class ActionRow(BaseComponent):
     """
-    :param components:
-    :param type: The action role type number defined by discord. This cannot be modified.
+    Represents an action row
+
+    Attributes:
+        components List[Union[dict, Select, Button]]: The components within this action row
+        type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
     _max_items = ACTION_ROW_MAX_ITEMS
@@ -216,7 +236,8 @@ class ActionRow(BaseComponent):
         """
         Add one or more component(s) to this action row
 
-        :param components:
+        parameters:
+            components: The components to add
         """
         for c in components:
             self.components.append(self._component_checks(c))
@@ -230,7 +251,11 @@ def process_components(
     """
     Process the passed components into a format discord will understand.
 
-    :param components: List of dict / components to process
+    parameters:
+        components: List of dict / components to process
+
+    returns:
+        formatted dictionary for discord
     """
     if not components:
         # Its just empty, so nothing to process.

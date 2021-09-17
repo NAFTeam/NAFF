@@ -1,24 +1,3 @@
-"""
-The MIT License (MIT).
-
-Copyright (c) 2021 - present LordOfPolls
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-"""
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
@@ -35,7 +14,7 @@ from dis_snek.utils.serializer import no_export_meta
 
 @attr.s(slots=True)
 class EmbedField(DictSerializationMixin):
-    """Represents an embed field."""
+    """Representation of an embed field."""
 
     name: str = attr.ib()
     value: str = attr.ib()
@@ -47,6 +26,8 @@ class EmbedField(DictSerializationMixin):
 
 @attr.s(slots=True)
 class EmbedAuthor:
+    """Representation of an embed author"""
+
     name: Optional[str] = attr.ib(default=None)
     url: Optional[str] = attr.ib(default=None)
     icon_url: Optional[str] = attr.ib(default=None)
@@ -58,6 +39,8 @@ class EmbedAuthor:
 
 @attr.s(slots=True)
 class EmbedAttachment:  # thumbnail or image or video
+    """Representation of an attachment"""
+
     url: Optional[str] = attr.ib(default=None)
     proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
     height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
@@ -70,6 +53,8 @@ class EmbedAttachment:  # thumbnail or image or video
 
 @attr.s(slots=True)
 class EmbedFooter:
+    """Representation of an Embed Footer"""
+
     text: str = attr.ib()
     icon_url: Optional[str] = attr.ib(default=None)
     proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
@@ -80,6 +65,13 @@ class EmbedFooter:
 
 @attr.s(slots=True)
 class EmbedProvider:
+    """
+    Represents an embed's provider.
+
+    Note:
+        Only used by system embeds, not bots
+    """
+
     name: Optional[str] = attr.ib(default=None)
     url: Optional[str] = attr.ib(default=None)
 
@@ -88,35 +80,45 @@ class EmbedProvider:
 class Embed(DictSerializationMixin):
     """Represents a discord embed object.
 
-    :param title: the title of the embed
-    :param description: the description of the embed
-    :param color: the color of the embed
+    Attributes:
+        title str: the title of the embed
+        description Optional[str]: the description of the embed
+        color Optional[str]: the color of the embed
     """
 
     title: Optional[str] = field(default=None, repr=True)
+    """The title of the embed"""
     description: Optional[str] = field(default=None, repr=True)
+    """The description of the embed"""
     color: Optional[str] = field(default=None, repr=True)
-
+    """The colour of the embed"""
     url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
-
+    """The url the embed should direct to when clicked"""
     timestamp: Optional[Timestamp] = field(
         default=None,
         converter=c_optional(timestamp_converter),
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
-
+    """Timestamp of embed content"""
     fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField), repr=True)
+    """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
+    """The author of the embed"""
     thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    """The thumbnail of the embed"""
     image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    """The image of the embed"""
     video: Optional[EmbedAttachment] = field(
         default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
     )
+    """The video of the embed, only used by system embeds"""
     footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter))
+    """The footer of the embed"""
     provider: Optional[EmbedProvider] = field(
         default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta
     )
+    """The provider of the embed, only used for system embeds"""
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -183,9 +185,10 @@ class Embed(DictSerializationMixin):
         """
         Set the author field of the embed.
 
-        :param name: The text to go in the title section
-        :param url: A url link to the author
-        :param icon_url: A url of an image to use as the icon
+        parameters:
+            name: The text to go in the title section
+            url: A url link to the author
+            icon_url: A url of an image to use as the icon
         """
         self.author = EmbedAuthor(name=name, url=url, icon_url=icon_url)
 
@@ -193,7 +196,8 @@ class Embed(DictSerializationMixin):
         """
         Set the thumbnail of the embed.
 
-        :param url: the url of the image to use
+        parameters:
+            url: the url of the image to use
         """
         self.thumbnail = EmbedAttachment(url=url)
 
@@ -201,7 +205,8 @@ class Embed(DictSerializationMixin):
         """
         Set the image of the embed.
 
-        :param url: the url of the image to use
+        parameters:
+            url: the url of the image to use
         """
         self.image = EmbedAttachment(url=url)
 
@@ -209,8 +214,9 @@ class Embed(DictSerializationMixin):
         """
         Set the footer field of the embed.
 
-        :param text: The text to go in the title section
-        :param icon_url: A url of an image to use as the icon
+        parameters:
+            text: The text to go in the title section
+            icon_url: A url of an image to use as the icon
         """
         self.footer = EmbedFooter(text=text, icon_url=icon_url)
 
@@ -218,9 +224,10 @@ class Embed(DictSerializationMixin):
         """
         Add a field to the embed.
 
-        :param name: The title of this field
-        :param value: The value in this field
-        :param inline: Should this field be inline with other fields?
+        parameters:
+            name: The title of this field
+            value: The value in this field
+            inline: Should this field be inline with other fields?
         """
         self.fields.append(EmbedField(name, value, inline))
         self._fields_validation("fields", self.fields)
@@ -230,7 +237,8 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
     """
     Process the passed embeds into a format discord will understand.
 
-    :param embeds: List of dict / embeds to process
+    parameters:
+        embeds: List of dict / embeds to process
     """
     if not embeds:
         # Its just empty, so nothing to process.

@@ -14,8 +14,10 @@ class StickerRequests:
         """
         Get a specific sticker.
 
-        :param sticker_id: The id of the sticker
-        :return: Sticker or None
+        parameters:
+            sticker_id: The id of the sticker
+        returns:
+            Sticker or None
         """
         return await self.request(Route("GET", f"/stickers/{sticker_id}"))
 
@@ -23,7 +25,8 @@ class StickerRequests:
         """
         Gets the list of sticker packs available to Nitro subscribers.
 
-        :return: List of sticker packs
+        returns:
+            List of sticker packs
         """
         return await self.request(Route("GET", "/sticker-packs"))
 
@@ -31,8 +34,10 @@ class StickerRequests:
         """
         Get the stickers for a guild.
 
-        :param guild_id: The guild to get stickers from
-        :return: List of Stickers or None
+        parameters:
+            guild_id: The guild to get stickers from
+        returns:
+            List of Stickers or None
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers"))
 
@@ -40,9 +45,11 @@ class StickerRequests:
         """
         Get a sticker from a guild.
 
-        :param guild_id: The guild to get stickers from
-        :param sticker_id: The sticker to get from the guild
-        :return: Sticker or None
+        parameters:
+            guild_id: The guild to get stickers from
+            sticker_id: The sticker to get from the guild
+        returns:
+            Sticker or None
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers/{sticker_id}"))
 
@@ -50,11 +57,13 @@ class StickerRequests:
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        :param payload: the payload to send.
-        :param guild_id: The guild to create sticker at.
-        :param reason: The reason for this action.
+        parameters:
+            payload: the payload to send.
+            guild_id: The guild to create sticker at.
+            reason: The reason for this action.
 
-        :return: The new sticker data on success.
+        returns:
+            The new sticker data on success.
         """
         return await self.request(Route("POST", f"/guild/{guild_id}/stickers"), data=payload, reason=reason)
 
@@ -64,12 +73,14 @@ class StickerRequests:
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        :param payload: the payload to send.
-        :param guild_id: The guild of the target sticker.
-        :param sticker_id:  The sticker to modify.
-        :param reason: The reason for this action.
+        parameters:
+            payload: the payload to send.
+            guild_id: The guild of the target sticker.
+            sticker_id:  The sticker to modify.
+            reason: The reason for this action.
 
-        :return: The updated sticker data on success.
+        returns:
+            The updated sticker data on success.
         """
         return await self.request(
             Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), data=payload, reason=reason
@@ -81,10 +92,12 @@ class StickerRequests:
         """
         Delete the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        :param guild_id: The guild of the target sticker.
-        :param sticker_id:  The sticker to delete.
-        :param reason: The reason for this action.
+        parameters:
+            guild_id: The guild of the target sticker.
+            sticker_id:  The sticker to delete.
+            reason: The reason for this action.
 
-        :return: Returns 204 No Content on success.
+        returns:
+            Returns 204 No Content on success.
         """
         return await self.request(Route("DELETE", f"/guild/{guild_id}/stickers/{sticker_id}"), reason=reason)

@@ -16,10 +16,13 @@ class GuildRequests:
         """
         Get a list of partial guild objects the current user is a member of req. `guilds` scope.
 
-        :param limit: max number of guilds to return (1-200)
-        :param before: get guilds before this guild ID
-        :param after: get guilds after this guild ID
-        :return: List[guilds]
+        parameters:
+            limit: max number of guilds to return (1-200)
+            before: get guilds before this guild ID
+            after: get guilds after this guild ID
+
+        returns:
+            List[guilds]
         """
         params: Dict[str, Union[int, str]] = {"limit": limit}
 
@@ -33,9 +36,11 @@ class GuildRequests:
         """
         Get the guild object for the given ID.
 
-        :param guild_id: the id of the guild
-        :param with_counts: when `true`, will return approximate member and presence counts for the guild
-        :return: a guild object
+        parameters:
+            guild_id: the id of the guild
+            with_counts: when `true`, will return approximate member and presence counts for the guild
+        returns:
+            a guild object
         """
         return await self.request(
             Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)}  # type: ignore
@@ -45,8 +50,11 @@ class GuildRequests:
         """
         Get a guild's preview
 
-        :param guild_id: the guilds ID
-        :return: guild preview object  # todo: make an object representing this
+        parameters:
+            guild_id: the guilds ID
+
+        returns:
+            guild preview object  # todo: make an object representing this
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/preview"))
 
@@ -54,9 +62,11 @@ class GuildRequests:
         """
         Get a guilds channels.
 
-        :param guild_id: the id of the guild
+        parameters:
+            guild_id: the id of the guild
 
-        :return:
+        returns:
+            List of channels
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
 
@@ -64,19 +74,21 @@ class GuildRequests:
         """
         Get a guild's roles.
 
-        :param guild_id: The ID of the guild
+        parameters:
+            guild_id: The ID of the guild
 
-        :return: List of roles
+        returns:
+            List of roles
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/roles"))
 
     async def modify_guild(self, guild_id: "Snowflake_Type", reason: str = None, **kwargs) -> None:
         """
         Modify a guild's attributes.
-
-        :param guild_id: The ID of the guild we want to modify
-        :param reason: The reason for this change
-        :param kwargs: The params to change
+        parameters:
+            guild_id: The ID of the guild we want to modify
+            reason: The reason for this change
+            kwargs: The params to change
         """
         expected = [
             "name",
@@ -110,7 +122,8 @@ class GuildRequests:
         """
         Delete the guild.
 
-        :param guild_id: The ID of the guild that we want to delete
+        parameters:
+            guild_id: The ID of the guild that we want to delete
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}"))
 
@@ -128,14 +141,16 @@ class GuildRequests:
         Add a user to the guild.
         All parameters to this endpoint except for `access_token`, `guild_id` and `user_id` are optional.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user to add
-        :param access_token: The access token of the user
-        :param nick: value to set users nickname to
-        :param roles: array of role ids the member is assigned
-        :param mute: whether the user is muted in voice channels
-        :param deaf: whether the user is deafened in voice channels
-        :return: Guild Member Object
+        parameters:
+            guild_id: The ID of the guild
+            user_id: The ID of the user to add
+            access_token: The access token of the user
+            nick: value to set users nickname to
+            roles: array of role ids the member is assigned
+            mute: whether the user is muted in voice channels
+            deaf: whether the user is deafened in voice channels
+        returns:
+            Guild Member Object
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
@@ -150,9 +165,10 @@ class GuildRequests:
         """
         Remove a member from a guild.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user to remove
-        :param reason: The reason for this action
+        parameters:
+            guild_id: The ID of the guild
+            user_id: The ID of the user to remove
+            reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reaosn=reason)
 
@@ -160,8 +176,11 @@ class GuildRequests:
         """
         Return a list of ban objects for the users banned from this guild.
 
-        :param guild_id: The ID of the guild to query
-        :return: List of ban objects
+        parameters:
+            guild_id: The ID of the guild to query
+
+        returns:
+            List of ban objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans"))
 
@@ -169,10 +188,15 @@ class GuildRequests:
         """
         Returns a ban object for the given user or a 404 not found if the ban cannot be found
 
-        :param guild_id: The ID of the guild to query
-        :param user_id: The ID of the user to query
-        :return: Ban object if exists
-        :raises: Not found error if no ban exists
+        parameters:
+            guild_id: The ID of the guild to query
+            user_id: The ID of the user to query
+
+        returns:
+            Ban object if exists
+
+        raises:
+            Not found error if no ban exists
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans/{user_id}"))
 
@@ -182,10 +206,11 @@ class GuildRequests:
         """
         Create a guild ban, and optionally delete previous messages sent by the banned user.
 
-        :param guild_id: The ID of the guild to create the ban in
-        :param user_id: The ID of the user to ban
-        :param delete_message_days: number of days to delete messages for (0-7)
-        :param reason: The reason for this action
+        parameters:
+            guild_id: The ID of the guild to create the ban in
+            user_id: The ID of the user to ban
+            delete_message_days: number of days to delete messages for (0-7)
+            reason: The reason for this action
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/bans/{user_id}"),
@@ -197,9 +222,10 @@ class GuildRequests:
         """
         Remove a guild ban.
 
-        :param guild_id: The ID of the guild to remove the ban in
-        :param user_id: The ID of the user to unban
-        :param reason: The reason for this action
+        parameters:
+            guild_id: The ID of the guild to remove the ban in
+            user_id: The ID of the user to unban
+            reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/bans/{user_id}"), reason=reason)
 
@@ -209,10 +235,12 @@ class GuildRequests:
         """
         Returns an object with one 'pruned' key indicating the number of members that would be removed in a prune operation.
 
-        :param guild_id: The ID of the guild to query
-        :param days: number of days to count prune for (1-30)
-        :param include_roles: role(s) to include
-        :return: {"pruned": int}
+        parameters:
+            guild_id: The ID of the guild to query
+            days: number of days to count prune for (1-30)
+            include_roles: role(s) to include
+        returns:
+            {"pruned": int}
         """
         payload = {"days": days}
         if include_roles:
@@ -231,12 +259,14 @@ class GuildRequests:
         """
         Begin a prune operation.
 
-        :param guild_id: The ID of the guild to query
-        :param days: number of days to count prune for (1-30)
-        :param include_roles: role(s) to include
-        :param compute_prune_count: whether 'pruned' is returned, discouraged for large guilds
-        :param reason: The reason for this action
-        :return: {"pruned": int}
+        parameters:
+            guild_id: The ID of the guild to query
+            days: number of days to count prune for (1-30)
+            include_roles: role(s) to include
+            compute_prune_count: whether 'pruned' is returned, discouraged for large guilds
+            reason: The reason for this action
+        returns:
+            {"pruned": int}
         """
         payload = {"days": days, "compute_prune_count": compute_prune_count}
         if include_roles:
@@ -248,8 +278,10 @@ class GuildRequests:
         """
         Returns a list of invite objects (with invite metadata) for the guild
 
-        :param guild_id: The ID of the guild to query
-        :return: List of invite objects
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            List of invite objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/invites"))
 
@@ -257,10 +289,12 @@ class GuildRequests:
         """
         Create a new role for the guild.
 
-        :param guild_id: The ID of the guild
-        :param payload: A dict representing the role to add
-        :param reason: The reason for this action
-        :return: Role object
+        parameters:
+            guild_id: The ID of the guild
+            payload: A dict representing the role to add
+            reason: The reason for this action
+        returns:
+            Role object
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), data=payload, reason=reason)
 
@@ -270,11 +304,13 @@ class GuildRequests:
         """
         Modify the position of a role in the guild.
 
-        :param guild_id: The ID of the guild
-        :param role_id: The ID of the role to move
-        :param position: The new position of this role in the hierarchy
-        :param reason: The reason for this action
-        :return: List of guild roles
+        parameters:
+            guild_id: The ID of the guild
+            role_id: The ID of the role to move
+            position: The new position of this role in the hierarchy
+            reason: The reason for this action
+        returns:
+            List of guild roles
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/roles"), data={"id": role_id, "position": position}, reason=reason
@@ -286,11 +322,13 @@ class GuildRequests:
         """
         Modify an existing role for the guild.
 
-        :param guild_id: The ID of the guild
-        :param role_id: The ID of the role to move
-        :param payload: A dict representing the role to add
-        :param reason: The reason for this action
-        :return: Role object
+        parameters:
+            guild_id: The ID of the guild
+            role_id: The ID of the role to move
+            payload: A dict representing the role to add
+            reason: The reason for this action
+        returns:
+            Role object
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), data=payload, reason=reason)
 
@@ -298,9 +336,10 @@ class GuildRequests:
         """
         Delete a guild role.
 
-        :param guild_id: The ID of the guild
-        :param role_id: The ID of the role to delete
-        :param reason: The reason for this action
+        parameters:
+            role_id: The ID of the role to delete
+            reason: The reason for this action
+            guild_id: The ID of the guild
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"))
 
@@ -309,8 +348,10 @@ class GuildRequests:
         Returns a list of voice region objects for the guild.
         Unlike the similar /voice route, this returns VIP servers when the guild is VIP-enabled.
 
-        :param guild_id: The ID of the guild to query
-        :return: List of voice region objects
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            List of voice region objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/regions"))
 
@@ -318,8 +359,10 @@ class GuildRequests:
         """
         Returns a list of integration objects for the guild.
 
-        :param guild_id: The ID of the guild to query
-        :return: list of integration objects
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            list of integration objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/integrations"))
 
@@ -327,8 +370,9 @@ class GuildRequests:
         """
         Delete an integration from the guild.
 
-        :param guild_id: The ID of the guild
-        :param integration_id: The ID of the integration to remove
+        parameters:
+            guild_id: The ID of the guild
+            integration_id: The ID of the integration to remove
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/integrations/{integration_id}"))
 
@@ -336,16 +380,21 @@ class GuildRequests:
         """
         Get guild widget settings.
 
-        :param guild_id: The ID of the guild to query
-        :return: guild widget object
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            guild widget object
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/widget"))
 
     async def get_guild_widget(self, guild_id: "Snowflake_Type") -> dict:
         """
         Returns the widget for the guild.
-        :param guild_id: The ID of the guild to query
-        :return:Guild widget
+
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            Guild widget
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/widget.json"))
 
@@ -355,9 +404,11 @@ class GuildRequests:
 
         For styles see: https://discord.com/developers/docs/resources/guild#get-guild-widget-image
 
-        :param guild_id: The guild to query
-        :param style: The style of widget required.
-        :return: A url pointing to this image
+        parameters:
+            guild_id: The guild to query
+            style: The style of widget required.
+        returns:
+            A url pointing to this image
         """
         route = Route("GET", f"/guilds/{guild_id}/widget.png{f'?style={style}' if style else ''}")
         return route.url
@@ -366,8 +417,10 @@ class GuildRequests:
         """
         Get the welcome screen for this guild.
 
-        :param guild_id: The ID of the guild to query
-        :return: Welcome screen object
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            Welcome screen object
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/welcome-screen"))
 
@@ -375,8 +428,10 @@ class GuildRequests:
         """
         Get a partial invite object for the guilds vanity invite url.
 
-        :param guild_id: The ID of the guild to query
-        :return: `{"code": "abc", "uses": 420}` or `None`
+        parameters:
+            guild_id: The ID of the guild to query
+        returns:
+            `{"code": "abc", "uses": 420}` or `None`
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
 
@@ -384,8 +439,10 @@ class GuildRequests:
         """
         Modify a guild widget.
 
-        :param guild_id: The ID of the guild to modify.
-        :return: Updated guild widget.
+        parameters:
+            guild_id: The ID of the guild to modify.
+        returns:
+            Updated guild widget.
         """
         # todo: find out if this endpoint works, and what params it expects.
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/widget"), data=kwargs)
@@ -396,11 +453,13 @@ class GuildRequests:
         """
         Modify the guild's welcome screen.
 
-        :param guild_id: The ID of the guild.
-        :param enabled: Whether the welcome screen is enabled
-        :param welcome_channels: Channels linked in the welcome screen and their display options
-        :param description: The server description to show in the welcome screen
-        :return:
+        parameters:
+            guild_id: The ID of the guild.
+            enabled: Whether the welcome screen is enabled
+            welcome_channels: Channels linked in the welcome screen and their display options
+            description: The server description to show in the welcome screen
+        returns:
+            Updated welcome screen object
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/welcome-screen"),
@@ -417,11 +476,11 @@ class GuildRequests:
         """
         Update the current user voice state.
 
-        :param guild_id: The ID of the guild to update.
-        :param channel_id: The id of the channel the user is currently in
-        :param suppress: Toggle the user's suppress state.
-        :param request_to_speak_timestamp: Sets the user's request to speak
-        :return:
+        parameters:
+            guild_id: The ID of the guild to update.
+            channel_id: The id of the channel the user is currently in
+            suppress: Toggle the user's suppress state.
+            request_to_speak_timestamp: Sets the user's request to speak
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/@me"),
@@ -440,10 +499,11 @@ class GuildRequests:
         """
         Modify the voice state of a user.
 
-        :param guild_id: The ID of the guild.
-        :param user_id: The ID of the user to modify.
-        :param channel_id: The ID of the channel the user is currently in.
-        :param suppress: Toggles the user's suppress state.
+        parameters:
+            guild_id: The ID of the guild.
+            user_id: The ID of the user to modify.
+            channel_id: The ID of the channel the user is currently in.
+            suppress: Toggles the user's suppress state.
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/{user_id}"),
@@ -454,11 +514,15 @@ class GuildRequests:
         """
         Create a a new guild based on a template.
 
-        ..note: This endpoint can only be used by bots in less than 10 guilds.
+        note:
+            This endpoint can only be used by bots in less than 10 guilds.
 
-        :param template_code: The code of the template to use.
-        :param name: The name o the guild (2-100 characters)
-        :return: The newly created guild object
+        parameters:
+            template_code: The code of the template to use.
+            name: The name o the guild (2-100 characters)
+
+        returns:
+            The newly created guild object
         """
         # todo: add icon support
         return await self.request(Route("POST", f"/guilds/templates/{template_code}", data={"name": name}))
@@ -467,8 +531,10 @@ class GuildRequests:
         """
         Returns an array of guild templates.
 
-        :param guild_id: The ID of the guild to query.
-        :return: An array of guild templates
+        parameters:
+            guild_id: The ID of the guild to query.
+        returns:
+            An array of guild templates
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/templates"))
 
@@ -476,10 +542,12 @@ class GuildRequests:
         """
         Create a guild template for the guild.
 
-        :param guild_id: The ID of the guild to create a template for.
-        :param name: The name of the template
-        :param description: The description of the template
-        :return: The created guild template
+        parameters:
+            guild_id: The ID of the guild to create a template for.
+            name: The name of the template
+            description: The description of the template
+        returns:
+            The created guild template
         """
         return await self.request(
             Route("POST", f"/guilds/{guild_id}/templates"),
@@ -490,9 +558,11 @@ class GuildRequests:
         """
         Sync the template to the guild's current state.
 
-        :param guild_id: The ID of the guild
-        :param template_code: The code for the template to sync
-        :return: The updated guild template
+        parameters:
+            guild_id: The ID of the guild
+            template_code: The code for the template to sync
+        returns:
+            The updated guild template
         """
         return await self.request(Route("PUT", f"/guilds/{guild_id}/templates/{template_code}"))
 
@@ -502,11 +572,13 @@ class GuildRequests:
         """
         Modifies the template's metadata
 
-        :param guild_id: The ID of the guild
-        :param template_code: The template code
-        :param name: The name of the template
-        :param description: The description of the template
-        :return: The updated guild template
+        parameters:
+            guild_id: The ID of the guild
+            template_code: The template code
+            name: The name of the template
+            description: The description of the template
+        returns:
+            The updated guild template
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/templates/{template_code}"),
@@ -517,9 +589,11 @@ class GuildRequests:
         """
         Delete the guild template.
 
-        :param guild_id: The ID of the guild
-        :param template_code: The ID of the template
-        :return: The deleted template object
+        parameters:
+            guild_id: The ID of the guild
+            template_code: The ID of the template
+        returns:
+            The deleted template object
         """
         # why on earth does this return the deleted template object?
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))

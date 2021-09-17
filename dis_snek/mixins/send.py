@@ -39,17 +39,19 @@ class SendMixin:
         """
         Send a message.
 
-        :param content: Message text content.
-        :param embeds: Embedded rich content (up to 6000 characters).
-        :param components: The components to include with the message.
-        :param stickers: IDs of up to 3 stickers in the server to send in the message.
-        :param allowed_mentions: Allowed mentions for the message.
-        :param reply_to: Message to reference, must be from the same channel.
-        :param filepath: Location of file to send, defaults to None.
-        :param tts: Should this message use Text To Speech.
-        :param flags: Message flags to apply.
+        parameters:
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            reply_to: Message to reference, must be from the same channel.
+            filepath: Location of file to send, defaults to None.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
 
-        :return: New message object that was sent.
+        returns:
+            New message object that was sent.
         """
         message_payload = process_message_payload(
             content=content,

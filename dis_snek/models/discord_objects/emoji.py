@@ -20,19 +20,16 @@ if TYPE_CHECKING:
 
 @define()
 class Emoji(SnowflakeObject, DictSerializationMixin):
-    """
-    Represent a basic emoji used in discord.
-
-    :param id: The custom emoji id. Leave empty if you are using standard unicode emoji
-    :param name: The custom emoji name. Or standard unicode emoji in string.
-    :param animated: Whether this emoji is animated.
-    """
+    """Represent a basic emoji used in discord."""
 
     id: Optional["Snowflake_Type"] = attr.ib(
         default=None, converter=optional(to_snowflake)
     )  # can be None for Standard Emoji
+    """The custom emoji id. Leave empty if you are using standard unicode emoji."""
     name: Optional[str] = attr.ib(default=None)
+    """The custom emoji name, or standard unicode emoji in string"""
     animated: bool = attr.ib(default=False)
+    """Whether this emoji is animated"""
 
     @classmethod
     def unicode(cls, emoji: str):
@@ -54,22 +51,16 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
 
 @define()
 class CustomEmoji(Emoji):
-    """
-    Represent a custom emoji in a guild with all its properties.
-
-    :param roles: Roles allowed to use this emoji
-    :param creator: User that made this emoji.
-    :param require_colons: Whether this emoji must be wrapped in colons
-    :param managed: Whether this emoji is managed.
-    :param available: Whether this emoji can be used, may be false due to loss of Server Boosts.
-    :param guild_id: The guild that this custom emoji is created in.
-    """
+    """Represent a custom emoji in a guild with all its properties."""
 
     _client: "Snake" = field()
 
     require_colons: bool = attr.ib(default=False)
+    """Whether this emoji must be wrapped in colons"""
     managed: bool = attr.ib(default=False)
+    """Whether this emoji is managed"""
     available: bool = attr.ib(default=False)
+    """Whether this emoji can be used, may be false due to loss of Server Boosts."""
 
     _creator_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
     _role_ids: List["Snowflake_Type"] = attr.ib(factory=list, converter=optional(list_converter(to_snowflake)))
@@ -92,15 +83,18 @@ class CustomEmoji(Emoji):
 
     @property
     def creator(self) -> Optional[Union[CacheProxy, Awaitable["User"], "User"]]:
+        """User that made this emoji."""
         if self._creator_id:
             return CacheProxy(id=self._creator_id, method=self._client.cache.get_user)
 
     @property
     def roles(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
+        """Roles allowed to use this emoji"""
         return CacheView(id=self._role_ids, method=self._client.cache.get_role)
 
     @property
     def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
+        """The guild that this custom emoji is created in."""
         return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
@@ -122,11 +116,13 @@ class CustomEmoji(Emoji):
         """
         Modify the custom emoji information.
 
-        :param name: The name of the emoji.
-        :param roles: The roles allowed to use this emoji.
-        :param reason: Attach a reason to this action, used for audit logs.
+        parameters:
+            name: The name of the emoji.
+            roles: The roles allowed to use this emoji.
+            reason: Attach a reason to this action, used for audit logs.
 
-        :return: The newly modified custom emoji.
+        returns:
+            The newly modified custom emoji.
         """
         data_payload = dict_filter_none(
             dict(
@@ -143,7 +139,8 @@ class CustomEmoji(Emoji):
         """
         Deletes the custom emoji from the guild.
 
-        :param reason: Attach a reason to this action, used for audit logs.
+        parameters:
+            reason: Attach a reason to this action, used for audit logs.
         """
         if not self._guild_id:
             raise ValueError("Cannot delete emoji, no guild id set.")

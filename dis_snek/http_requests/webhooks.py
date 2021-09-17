@@ -13,9 +13,10 @@ class WebhookRequests:
         """
         Create a new webhook.
 
-        :param channel_id: The id of the channel to add this webhook to
-        :param name: name of the webhook (1-80 characters)
-        :param avatar: The image for the default webhook avatar
+        parameters:
+            channel_id: The id of the channel to add this webhook to
+            name: name of the webhook (1-80 characters)
+            avatar: The image for the default webhook avatar
         """
         return await self.request(
             Route("POST", f"/channels/{channel_id}/webhooks"), data={"name": name, "avatar": avatar}
@@ -25,8 +26,10 @@ class WebhookRequests:
         """
         Return a list of channel webhook objects.
 
-        :param channel_id: The id of the channel to query
-        :return: List of webhook objects
+        parameters:
+            channel_id: The id of the channel to query
+        returns:
+            List of webhook objects
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/webhooks"))
 
@@ -34,8 +37,10 @@ class WebhookRequests:
         """
         Return a list of guild webhook objects.
 
-        :param guild_id: The id of the guild to query
-        :return: List of webhook objects
+        parameters:
+            guild_id: The id of the guild to query
+        returns:
+            List of webhook objects
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/webhooks"))
 
@@ -43,9 +48,11 @@ class WebhookRequests:
         """
         Return the new webhook object for the given id.
 
-        :param webhook_id: The ID of the webhook to get
-        :param webhook_token: The token for the webhook
-        :return: Webhook object
+        parameters:
+            webhook_id: The ID of the webhook to get
+            webhook_token: The token for the webhook
+        returns:
+            Webhook object
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -62,12 +69,13 @@ class WebhookRequests:
         """
         Modify a webhook.
 
-        :param name: the default name of the webhook
-        :param avatar: image for the default webhook avatar
-        :param channel_id: the new channel id this webhook should be moved to
-        :param webhook_id: The ID of the webhook to modify
-        :param webhook_token: The token for the webhook
-        :return:
+        parameters:
+            name: the default name of the webhook
+            avatar: image for the default webhook avatar
+            channel_id: the new channel id this webhook should be moved to
+            webhook_id: The ID of the webhook to modify
+            webhook_token: The token for the webhook
+
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -79,9 +87,11 @@ class WebhookRequests:
         """
         Delete a webhook
 
-        :param webhook_id: The ID of the webhook to delete
-        :param webhook_token: The token for the webhook
-        :return: Webhook object
+        parameters:
+            webhook_id: The ID of the webhook to delete
+            webhook_token: The token for the webhook
+        returns:
+            Webhook object
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -98,13 +108,15 @@ class WebhookRequests:
         """
         Execute a webhook. Basically send a message as the webhook.
 
-        :param webhook_id: The ID of the webhook to delete
-        :param webhook_token: The token for the webhook
-        :param payload: The JSON payload for the message
-        :param wait: Waits for server confirmation of message send before response
-        :param thread_id: Send a message to the specified thread
-        :param suffix: An optional suffix to add to the end of the endpoint address
-        :return: The sent `message`, if `wait` is True else None
+        parameters:
+            webhook_id: The ID of the webhook to delete
+            webhook_token: The token for the webhook
+            payload: The JSON payload for the message
+            wait: Waits for server confirmation of message send before response
+            thread_id: Send a message to the specified thread
+            suffix: An optional suffix to add to the end of the endpoint address
+        returns:
+            The sent `message`, if `wait` is True else None
         """
         return await self.request(
             Route("POST", f"/webhooks/{webhook_id}/{webhook_token}"),
@@ -118,10 +130,12 @@ class WebhookRequests:
         """
         Returns a previously-sent webhook message from the same token. Returns a message object on success.
 
-        :param webhook_id: The ID of the webhook to delete
-        :param webhook_token: The token for the webhook
-        :param message_id: The ID of a message sent by this webhook
-        :return: A message object on success
+        parameters:
+            webhook_id: The ID of the webhook to delete
+            webhook_token: The token for the webhook
+            message_id: The ID of a message sent by this webhook
+        returns:
+            A message object on success
         """
         return await self.request(Route("GET", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"))
 
@@ -131,11 +145,13 @@ class WebhookRequests:
         """
         Edits a previously-sent webhook message from the same token.
 
-        :param webhook_id: The ID of the webhook to delete
-        :param webhook_token: The token for the webhook
-        :param message_id: The ID of a message sent by this webhook
-        :param payload: The JSON payload for the message
-        :return: The updated message on success
+        parameters:
+            webhook_id: The ID of the webhook to delete
+            webhook_token: The token for the webhook
+            message_id: The ID of a message sent by this webhook
+            payload: The JSON payload for the message
+        returns:
+            The updated message on success
         """
         return await self.request(
             Route("PATCH", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"), data=payload
@@ -147,8 +163,9 @@ class WebhookRequests:
         """
         Delete a message that was created by the same token.
 
-        :param webhook_id: The ID of the webhook to delete
-        :param webhook_token: The token for the webhook
-        :param message_id: The ID of a message sent by this webhook
+        parameters:
+            webhook_id: The ID of the webhook to delete
+            webhook_token: The token for the webhook
+            message_id: The ID of a message sent by this webhook
         """
         return await self.request(Route("DELETE", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"))

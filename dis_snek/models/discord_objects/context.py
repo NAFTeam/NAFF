@@ -24,14 +24,26 @@ if TYPE_CHECKING:
 
 @attr.s
 class Context:
-    """Represents the context of a command"""
+    """
+    Represents the context of a command
+
+    Attributes:
+        message Message: The message associated with this context
+        invoked_name str: The name of the command to be invoked
+        author User: The author of the message
+        channel Channel: The channel this was sent within
+        guild Guild: The guild this was sent within, if not a DM
+        args list: The list of arguments to be passed to the command
+        kwargs dict: The list of keyword arguments to be passed
+
+    """
 
     _client: "Snake" = attr.ib(default=None)
     message: "Message" = attr.ib(default=None)
-
     invoked_name: str = attr.ib(default=None)
 
     args: List = attr.ib(factory=list)
+
     kwargs: Dict = attr.ib(factory=dict)
 
     author: Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]] = attr.ib(default=None)
@@ -40,12 +52,24 @@ class Context:
 
     @property
     def bot(self):
+        """A reference to the bot instance"""
         return self._client
 
 
 @attr.s
 class InteractionContext(Context, SendMixin):
-    """Represents the context of an interaction"""
+    """
+    Represents the context of an interaction
+
+    Attributes:
+        interaction_id str: The id of the interaction
+        target_id Snowflake_Type: The ID of the target, used for context menus to show what was clicked on
+        deferred bool: Is this interaction deferred?
+        responded bool: Have we responded to the interaction?
+        ephemeral bool: Are responses to this interaction *hidden*
+        resolved dict: A dictionary of discord objects mentioned within this interaction
+        data dict: The raw data of this interaction
+    """
 
     _token: str = attr.ib(default=None)
     interaction_id: str = attr.ib(default=None)
@@ -98,7 +122,8 @@ class InteractionContext(Context, SendMixin):
         """
         Defers the response, showing a loading state.
 
-        :param ephemeral: Should the response be ephemeral
+        parameters:
+            ephemeral: Should the response be ephemeral
         """
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
@@ -156,8 +181,9 @@ class ComponentContext(InteractionContext):
         """
         Defers the response, showing a loading state.
 
-        :param ephemeral: Should the response be ephemeral
-        :param edit_origin: Whether we intend to edit the original message
+        parameters:
+            ephemeral: Should the response be ephemeral
+            edit_origin: Whether we intend to edit the original message
         """
         if self.deferred or self.responded:
             raise Exception("You have already responded to this interaction!")
@@ -190,15 +216,17 @@ class ComponentContext(InteractionContext):
         """
         Edits the original message of the component.
 
-        :param content: Message text content.
-        :param embeds: Embedded rich content (up to 6000 characters).
-        :param components: The components to include with the message.
-        :param allowed_mentions: Allowed mentions for the message.
-        :param reply_to: Message to reference, must be from the same channel.
-        :param filepath: Location of file to send, defaults to None.
-        :param tts: Should this message use Text To Speech.
+        parameters:
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            allowed_mentions: Allowed mentions for the message.
+            reply_to: Message to reference, must be from the same channel.
+            filepath: Location of file to send, defaults to None.
+            tts: Should this message use Text To Speech.
 
-        :return: The message after it was edited.
+        returns:
+            The message after it was edited.
         """
         if not self.responded and not self.deferred and filepath:
             # Discord doesn't allow files at initial response, so we defer then edit.

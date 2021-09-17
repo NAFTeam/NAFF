@@ -15,9 +15,11 @@ class InteractionRequests:
         """
         Get all interaction elements for this application from discord.
 
-        :param application_id: the what application to query
-        :param guild_id: specify a guild to get commands from
-        :return:
+        parameters:
+            application_id: the what application to query
+            guild_id: specify a guild to get commands from
+        returns:
+            InteractionCommand
         """
         if not guild_id:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
@@ -29,9 +31,10 @@ class InteractionRequests:
         """
         Register an interaction element.
 
-        :param app_id: The application ID of this bot
-        :param guild_id: The ID of the guild this command is for, if this is a guild command
-        :param data: List of your interaction data
+        parameters:
+            app_id: The application ID of this bot
+            guild_id: The ID of the guild this command is for, if this is a guild command
+            data: List of your interaction data
         """
 
         endpoint = f"/applications/{app_id}/commands"
@@ -44,9 +47,10 @@ class InteractionRequests:
         """
         Post an initial response to an interaction.
 
-        :param payload: the payload to send
-        :param interaction_id: the id of the interaction
-        :param token: the token of the interaction
+        parameters:
+            payload: the payload to send
+            interaction_id: the id of the interaction
+            token: the token of the interaction
         """
 
         return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), data=payload)
@@ -55,9 +59,10 @@ class InteractionRequests:
         """
         Send a followup to an interaction.
 
-        :param payload: the payload to send
-        :param application_id: the id of the application
-        :param token: the token of the interaction
+        parameters:
+            payload: the payload to send
+            application_id: the id of the application
+            token: the token of the interaction
         """
 
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), data=payload)
@@ -68,12 +73,14 @@ class InteractionRequests:
         """
         Edits an existing interaction message.
 
-        :param payload: The payload to send.
-        :param application_id: The id of the application.
-        :param token: The token of the interaction.
-        :param message_id: The target message to edit. Defaults to @original which represents the initial response message.
+        parameters:
+            payload: The payload to send.
+            application_id: The id of the application.
+            token: The token of the interaction.
+            message_id: The target message to edit. Defaults to @original which represents the initial response message.
 
-        :return: The edited message data.
+        returns:
+            The edited message data.
         """
 
         return await self.request(
@@ -84,12 +91,14 @@ class InteractionRequests:
         """
         Gets an existing interaction message.
 
-        :param payload: The payload to send.
-        :param application_id: The id of the application.
-        :param token: The token of the interaction.
-        :param message_id: The target message to get. Defaults to @original which represents the initial response message.
+        parameters:
+            payload: The payload to send.
+            application_id: The id of the application.
+            token: The token of the interaction.
+            message_id: The target message to get. Defaults to @original which represents the initial response message.
 
-        :return: The message data.
+        returns:
+            The message data.
         """
 
         return await self.request(Route("GET", f"/webhooks/{application_id}/{token}/messages/{message_id}"))
@@ -104,11 +113,13 @@ class InteractionRequests:
         """
         Edits command permissions for a specific command.
 
-        :param application_id: the id of the application
-        :param scope: The scope this command is in
-        :param cmd_id: The command id to edit
-        :param permissions: The permissions to set to this command
-        :return: Guild Application Command Permissions
+        parameters:
+            application_id: the id of the application
+            scope: The scope this command is in
+            cmd_id: The command id to edit
+            permissions: The permissions to set to this command
+        returns:
+            Guild Application Command Permissions
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions"),
@@ -121,10 +132,12 @@ class InteractionRequests:
         """
         Edit multiple command permissions within a single scope.
 
-        :param application_id: the id of the application
-        :param scope: The scope this command is in
-        :param data: The permissions to be set
-        :return: array of GuildApplicationCommandPermissions objects
+        parameters:
+            application_id: the id of the application
+            scope: The scope this command is in
+            data: The permissions to be set
+        returns:
+            array of GuildApplicationCommandPermissions objects
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
@@ -137,10 +150,12 @@ class InteractionRequests:
         """
         Get permission data for a command.
 
-        :param application_id: the id of the application
-        :param scope: The scope this command is in
-        :param cmd_id: The command id to edit
-        :return: guild application command permissions
+        parameters:
+            application_id: the id of the application
+            scope: The scope this command is in
+            cmd_id: The command id to edit
+        returns:
+            guild application command permissions
         """
         return await self.request(
             Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions")
@@ -152,8 +167,10 @@ class InteractionRequests:
         """
         Get permission data for all commands in a scope
 
-        :param application_id: the id of the application
-        :param scope: The scope this command is in
-        :return: list of guild application command permissions
+        parameters:
+            application_id: the id of the application
+            scope: The scope this command is in
+        returns:
+            list of guild application command permissions
         """
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/permissions"))

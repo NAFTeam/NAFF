@@ -15,3 +15,8 @@ div.doc-contents:not(.first) {
 [data-md-color-scheme="default"] {
   --md-code-hl-constant-color: #628701;
 }
+.md-typeset table th{
+  background-color: var(--md-primary-fg-color);
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}

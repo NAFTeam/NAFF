@@ -13,9 +13,10 @@ class MemberRequests:
         """
         Get a member of a guild by ID.
 
-        :param guild_id: The id of the guild
-        :param user_id: The user id to grab
-        :return:
+        parameters:
+            guild_id: The id of the guild
+            user_id: The user id to grab
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/members/{user_id}"))
 
@@ -25,10 +26,11 @@ class MemberRequests:
         """
         List the members of a guild.
 
-        :param guild_id: The ID of the guild
-        :param limit: How many members to get (max 1000)
-        :param after: Get IDs after this snowflake
-        :return:
+        parameters:
+            guild_id: The ID of the guild
+            limit: How many members to get (max 1000)
+            after: Get IDs after this snowflake
+
         """
         payload = dict(limit=limit)
         if after:
@@ -40,10 +42,11 @@ class MemberRequests:
         """
         Search a guild for members who's username or nickname starts with provided string.
 
-        :param guild_id: The ID of the guild to search
-        :param query: The string to search for
-        :param limit: The number of members to return
-        :return:
+        parameters:
+            guild_id: The ID of the guild to search
+            query: The string to search for
+            limit: The number of members to return
+
         """
 
         return await self.request(
@@ -64,15 +67,17 @@ class MemberRequests:
         """
         Modify attributes of a guild member.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user we're modifying
-        :param nickname: Value to set users nickname to
-        :param roles: Array of role ids the member is assigned
-        :param mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
-        :param deaf: Whether the user is deafened in voice channels
-        :param channel_id: id of channel to move user to (if they are connected to voice)
-        :param reason: An optional reason for the audit log
-        :return: The updated member object
+        parameters:
+            guild_id: The ID of the guild
+            user_id: The ID of the user we're modifying
+            nickname: Value to set users nickname to
+            roles: Array of role ids the member is assigned
+            mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
+            deaf: Whether the user is deafened in voice channels
+            channel_id: id of channel to move user to (if they are connected to voice)
+            reason: An optional reason for the audit log
+        returns:
+            The updated member object
         """
         payload = dict(nick=nickname, roles=roles, mute=mute, deaf=deaf, channel_id=channel_id)
         # clean up payload
@@ -85,10 +90,11 @@ class MemberRequests:
         """
         Adds a role to a guild member.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user
-        :param role_id: The ID of the role to add
-        :param reason: The reason for this action
+        parameters:
+            guild_id: The ID of the guild
+            user_id: The ID of the user
+            role_id: The ID of the role to add
+            reason: The reason for this action
         """
         return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
 
@@ -98,9 +104,10 @@ class MemberRequests:
         """
         Remove a role from a guild member.
 
-        :param guild_id: The ID of the guild
-        :param user_id: The ID of the user
-        :param role_id: The ID of the role to remove
-        :param reason: The reason for this action
+        parameters:
+            guild_id: The ID of the guild
+            user_id: The ID of the user
+            role_id: The ID of the role to remove
+            reason: The reason for this action
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))

@@ -18,7 +18,8 @@ class Scale:
     Skins require an entrypoint in the same file called `setup`, this function allows
     client to load the Scale.
 
-    :param bot: A reference to the client
+    parameters:
+        bot: A reference to the client
     """
 
     bot: "Snake"
