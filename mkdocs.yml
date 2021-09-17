@@ -18,14 +18,14 @@ theme:
       primary: light green
       accent: lime
       toggle:
-        icon: material/lightbulb-outline
+        icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: green
       accent: lime
       toggle:
-        icon: material/lightbulb
+        icon: material/weather-sunny
         name: Switch to light mode
   icon:
     repo: fontawesome/brands/github-alt
