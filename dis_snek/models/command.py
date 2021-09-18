@@ -86,9 +86,16 @@ class BaseCommand(DictSerializationMixin):
         """
         if not self.enabled:
             return False
+
         for _c in self.checks:
             if not await _c(context):
                 return False
+
+        if self.scale and self.scale.scale_checks:
+            for _c in self.scale.scale_checks:
+                if not await _c(context):
+                    return False
+
         return True
 
     def error(self, call: Callable[..., Coroutine]):

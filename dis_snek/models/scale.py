@@ -1,6 +1,7 @@
+import asyncio
 import inspect
 import logging
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Callable, Coroutine
 
 from dis_snek.const import logger_name
 from dis_snek.models.command import MessageCommand
@@ -20,15 +21,24 @@ class Scale:
 
     parameters:
         bot: A reference to the client
+
+    Attributes:
+        bot Snake: A reference to the client
+        description: A description of this Skin
+        scale_checks: A list of checks to be ran on any command in this scale
     """
 
     bot: "Snake"
     _commands: List
+    name: str
     description: str
+    scale_checks: List
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
-        cls.bot.scales[cls.__name__] = cls
+        cls.name = cls.__name__
+        cls.bot.scales[cls.name] = cls
+        cls.scale_checks = []
 
         cls.description = kwargs.get("Description", None)
         if not cls.description:
@@ -37,21 +47,21 @@ class Scale:
         # load commands from class
         cls._commands = []
 
+        new_cls = super().__new__(cls)
+
         for name, val in cls.__dict__.items():
             if isinstance(val, InteractionCommand):
-                val.scale = cls
-                cls._commands.append(val)
+                val.scale = new_cls
+                new_cls._commands.append(val)
                 bot.add_interaction(val)
             if isinstance(val, MessageCommand):
-                val.scale = cls
-                cls._commands.append(val)
+                val.scale = new_cls
+                new_cls._commands.append(val)
                 bot.add_message_command(val)
 
-        log.debug(f"{len(cls._commands)} application commands have been loaded from `{cls.__name__}`")
-        return cls
+        log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 
-    def __del__(self):
-        self.shed()
+        return new_cls
 
     def shed(self):
         """
@@ -67,6 +77,33 @@ class Scale:
 
         self.bot.scales.pop(self.__name__)
         log.debug(f"{self.__name__} has been shed")
+
+    def add_scale_check(self, coroutine: Callable[..., Coroutine]) -> None:
+        """
+        Add a coroutine as a check for all commands in this scale to run. This coroutine must take **only** the parameter `context`.
+
+        ??? Hint "Example Usage:"
+            ```python
+            def __init__(self, bot):
+                self.bot = bot
+                self.add_scale_check(self.example)
+
+            @staticmethod
+            async def example(context: Context):
+                if context.author.id == 123456789:
+                    return True
+                return False
+            ```
+        Args:
+            coroutine: The coroutine to use as a check
+        """
+        if not asyncio.iscoroutinefunction(coroutine):
+            raise TypeError("Check must be a coroutine")
+
+        if not self.scale_checks:
+            self.scale_checks = []
+
+        self.scale_checks.append(coroutine)
 
     @property
     def commands(self):
