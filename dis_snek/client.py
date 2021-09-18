@@ -39,6 +39,20 @@ log = logging.getLogger(logger_name)
 
 
 class Snake:
+    """
+    The bot client.
+
+    note:
+        By default, all non-privileged intents will be enabled
+
+    Attributes:
+        intents Union[int, Intents]: The intents to use
+        loop: An event loop to use, normally leave this blank
+        prefix str: The prefix to use for message commands, defaults to `.`
+        sync_interactions bool: Should application commands be synced with discord?
+        asyncio_debug bool: Enable asyncio debug features
+    """
+
     def __init__(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
@@ -47,6 +61,7 @@ class Snake:
         sync_interactions: bool = False,
         asyncio_debug: bool = False,
     ):
+
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
         if asyncio_debug:
             log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
@@ -195,6 +210,9 @@ class Snake:
     def start(self, token):
         """
         Start the bot.
+
+        info:
+            This is the recommended method to start the bot
 
         Args:
             token str: Your bot's token
