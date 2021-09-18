@@ -19,13 +19,27 @@ class Scale:
     Skins require an entrypoint in the same file called `setup`, this function allows
     client to load the Scale.
 
+    ??? Hint "Example Usage:"
+        ```python
+        class ExampleScale(Scale):
+            def __init__(self, bot):
+                print("Scale Created")
+
+            @message_command
+            async def some_command(self, context):
+                await ctx.send(f"I was sent from a scale called {self.name}")
+        ```
+
     parameters:
         bot: A reference to the client
 
     Attributes:
         bot Snake: A reference to the client
-        description: A description of this Skin
-        scale_checks: A list of checks to be ran on any command in this scale
+        name str: The name of this Scale
+        description str: A description of this Scale
+        scale_checks str: A list of checks to be ran on any command in this scale
+        scale_prerun List: A list of coroutines to be run before any command in this scale
+        scale_postrun List: A list of coroutines to be run after any command in this scale
     """
 
     bot: "Snake"
@@ -33,6 +47,8 @@ class Scale:
     name: str
     description: str
     scale_checks: List
+    scale_prerun: List
+    scale_postrun: List
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
@@ -62,6 +78,11 @@ class Scale:
         log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 
         return new_cls
+
+    @property
+    def commands(self):
+        """Get the commands from this Scale"""
+        return self._commands
 
     def shed(self):
         """
@@ -105,6 +126,33 @@ class Scale:
 
         self.scale_checks.append(coroutine)
 
-    @property
-    def commands(self):
-        return self._commands
+    def add_scale_prerun(self, coroutine: Callable[..., Coroutine]):
+        """
+        Add a coroutine to be run **before** all commands in this Scale.
+
+        Note:
+            Pre-runs will **only** be run if the commands checks pass
+
+        Args:
+            coroutine: The coroutine to run
+        """
+        if not asyncio.iscoroutinefunction(coroutine):
+            raise TypeError("Callback must be a coroutine")
+
+        if not self.scale_prerun:
+            self.scale_prerun = []
+        self.scale_prerun.append(coroutine)
+
+    def add_scale_postrun(self, coroutine: Callable[..., Coroutine]):
+        """
+        Add a coroutine to be run **after** all commands in this Scale.
+
+        Args:
+            coroutine: The coroutine to run
+        """
+        if not asyncio.iscoroutinefunction(coroutine):
+            raise TypeError("Callback must be a coroutine")
+
+        if not self.scale_postrun:
+            self.scale_postrun = []
+        self.scale_postrun.append(coroutine)
