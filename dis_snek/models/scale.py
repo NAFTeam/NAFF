@@ -35,7 +35,7 @@ class Scale:
 
     Attributes:
         bot Snake: A reference to the client
-        name str: The name of this Scale
+        name str: The name of this Scale (`read-only`)
         description str: A description of this Scale
         scale_checks str: A list of checks to be ran on any command in this scale
         scale_prerun List: A list of coroutines to be run before any command in this scale
@@ -44,7 +44,7 @@ class Scale:
 
     bot: "Snake"
     _commands: List
-    name: str
+    __name: str
     description: str
     scale_checks: List
     scale_prerun: List
@@ -52,9 +52,11 @@ class Scale:
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
-        cls.name = cls.__name__
-        cls.bot.scales[cls.name] = cls
+        cls.__name = cls.__name__
+        cls.bot.scales[cls.__name] = cls
         cls.scale_checks = []
+        cls.scale_prerun = []
+        cls.scale_postrun = []
 
         cls.description = kwargs.get("Description", None)
         if not cls.description:
@@ -83,6 +85,10 @@ class Scale:
     def commands(self):
         """Get the commands from this Scale"""
         return self._commands
+
+    @property
+    def name(self):
+        return self.__name
 
     def shed(self):
         """
