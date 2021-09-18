@@ -38,6 +38,7 @@ plugins:
 - search
 - autorefs
 - mkdocstrings:
+    custom_templates: docs/templates
     handlers:
       python:
         selection:
