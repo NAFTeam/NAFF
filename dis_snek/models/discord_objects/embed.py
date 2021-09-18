@@ -78,13 +78,7 @@ class EmbedProvider:
 
 @attr.s(slots=True)
 class Embed(DictSerializationMixin):
-    """Represents a discord embed object.
-
-    Attributes:
-        title str: the title of the embed
-        description Optional[str]: the description of the embed
-        color Optional[str]: the color of the embed
-    """
+    """Represents a discord embed object."""
 
     title: Optional[str] = field(default=None, repr=True)
     """The title of the embed"""

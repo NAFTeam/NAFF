@@ -6,7 +6,7 @@ from typing import Tuple
 
 from dis_snek.const import logger_name
 
-log = logging.getLogger(logger_name)
+_log = logging.getLogger(logger_name)
 
 
 class AntiFlag:
@@ -38,23 +38,40 @@ class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
 
 
 class WebSocketOPCodes(IntEnum):
+    """Codes used by the Gateway to signify events"""
+
     DISPATCH = 0
+    """An event was dispatched"""
     HEARTBEAT = 1
+    """Fired periodically by the client to keep the connection alive"""
     IDENTIFY = 2
+    """Starts a new session during the initial handshake."""
     PRESENCE = 3
+    """Update the client's presence."""
     VOICE_STATE = 4
+    """Used to join/leave or move between voice channels."""
     VOICE_PING = 5
     RESUME = 6
+    """Resume a previous session that was disconnected."""
     RECONNECT = 7
+    """You should attempt to reconnect and resume immediately."""
     REQUEST_MEMBERS = 8
+    """Request information about offline guild members in a large guild."""
     INVALIDATE_SESSION = 9
+    """The session has been invalidated. You should reconnect and identify/resume accordingly."""
     HELLO = 10
+    """Sent immediately after connecting, contains the `heartbeat_interval` to use."""
     HEARTBEAT_ACK = 11
+    """Sent in response to receiving a heartbeat to acknowledge that it has been received."""
     GUILD_SYNC = 12
 
 
 class Intents(DiscordIntFlag):  # type: ignore
-    # Intents defined by Discord API
+    """When identifying to the gateway, you can specify an intents parameter which allows you to conditionally subscribe to pre-defined "intents", groups of events defined by Discord.
+
+    info:
+        For details about what intents do, or which intents you'll want, please read the [Discord API Documentation](https://discord.com/developers/docs/topics/gateway#gateway-intents)"""
+
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1
     GUILD_BANS = 1 << 2
@@ -124,23 +141,38 @@ class Intents(DiscordIntFlag):  # type: ignore
 
 
 class UserFlags(DiscordIntFlag):  # type: ignore
-    # Flags defined by Discord API
+    """Flags a user can have"""
+
     DISCORD_EMPLOYEE = 1 << 0
+    """This person works for Discord"""
     PARTNERED_SERVER_OWNER = 1 << 1
+    """User owns a partnered server"""
     HYPESQUAD_EVENTS = 1 << 2
+    """User has helped with a hypesquad event"""
     BUG_HUNTER_LEVEL_1 = 1 << 3
+    """User has passed the bug hunters quiz"""
 
     HOUSE_BRAVERY = 1 << 6
+    """User belongs to the `bravery` house"""
     HOUSE_BRILLIANCE = 1 << 7
+    """User belongs to the `brilliance` house"""
     HOUSE_BALANCE = 1 << 8
+    """User belongs to the `balance` house"""
     EARLY_SUPPORTER = 1 << 9
+    """This person had Nitro prior to prior to Wednesday, October 10th, 2018"""
+
     TEAM_USER = 1 << 10
+    """A team user"""
 
     BUG_HUNTER_LEVEL_2 = 1 << 14
+    """User is a bug hunter level 2"""
 
     VERIFIED_BOT = 1 << 16
+    """This bot has been verified by Discord"""
     EARLY_VERIFIED_BOT_DEVELOPER = 1 << 17
+    """This user was one of the first to be verified"""
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
+    """This user is a certified moderator"""
 
     # Shortcuts/grouping/aliases
     HYPESQUAD = HOUSE_BRAVERY | HOUSE_BRILLIANCE | HOUSE_BALANCE
@@ -152,27 +184,44 @@ class UserFlags(DiscordIntFlag):  # type: ignore
 
 
 class ApplicationFlags(DiscordIntFlag):  # type: ignore
+    """Flags an application can have"""
+
     # Flags defined by the Discord API
     GATEWAY_PRESENCE = 1 << 12
+    """Verified to use presence intent"""
     GATEWAY_PRESENCE_LIMITED = 1 << 13
+    """Using presence intent, without verification"""
     GATEWAY_GUILD_MEMBERS = 1 << 14
+    """Verified to use guild members intent"""
     GATEWAY_GUILD_MEMBERS_LIMITED = 1 << 15
+    """Using members intent, without verification"""
     VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
+    """Bot has hit guild limit, and has not been successfully verified"""
     EMBEDDED = 1 << 17
+    """Application is a voice channel activity (ie YouTube Together)"""
 
 
 class TeamMembershipState(IntEnum):
+    """Self explanatory"""
+
     INVITED = 1
     ACCEPTED = 2
 
 
 class PremiumTypes(IntEnum):
+    """Types of premium membership"""
+
     NONE = 0
+    """No premium membership"""
     NITRO_CLASSIC = 1
+    """Using Nitro Classic"""
     NITRO = 2
+    """Full Nitro membership"""
 
 
 class MessageTypes(IntEnum):
+    """Types of message"""
+
     DEFAULT = 0
     RECIPIENT_ADD = 1
     RECIPIENT_REMOVE = 2
@@ -198,14 +247,21 @@ class MessageTypes(IntEnum):
 
 
 class MessageActivityTypes(IntEnum):
+    """An activity object, similar to an embed"""
+
     JOIN = 1
+    """Join the event"""
     SPECTATE = 2
+    """Watch the event"""
     LISTEN = 3
+    """Listen along to the event"""
     JOIN_REQUEST = 5
+    """Asking a user to join the activity"""
 
 
 class MessageFlags(DiscordIntFlag):  # type: ignore
-    # Flags defined by Discord API
+    """Message flags"""
+
     CROSSPOSTED = 1 << 0
     IS_CROSSPOST = 1 << 1
     SUPPRESS_EMBEDS = 1 << 2
@@ -221,17 +277,23 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
 
 
 class StickerTypes(IntEnum):
+    """Types of sticker"""
+
     STANDARD = 1
     GUILD = 2
 
 
 class StickerFormatTypes(IntEnum):
+    """File formats for stickers"""
+
     PNG = 1
     APNG = 2
     LOTTIE = 3
 
 
 class Permissions(DiscordIntFlag):  # type: ignore
+    """Permissions a user or role may have"""
+
     # Permissions defined by Discord API
     CREATE_INSTANT_INVITE = 1 << 0
     KICK_MEMBERS = 1 << 1
@@ -291,6 +353,8 @@ class Permissions(DiscordIntFlag):  # type: ignore
 
 
 class ChannelTypes(IntEnum):
+    """Types of channel"""
+
     GUILD_TEXT = 0
     DM = 1
     GUILD_VOICE = 2
@@ -349,10 +413,15 @@ class ButtonStyles(IntEnum):
 
     # Based on discord api
     PRIMARY = 1
+    """blurple"""
     SECONDARY = 2
+    """grey"""
     SUCCESS = 3
+    """green"""
     DANGER = 4
+    """red"""
     LINK = 5
+    """url button"""
 
     # Aliases
     BLUE = 1
@@ -365,41 +434,60 @@ class ButtonStyles(IntEnum):
 
 
 class MentionTypes(str, Enum):
+    """Types of mention"""
+
     EVERYONE = "everyone"
     ROLES = "roles"
     USERS = "users"
 
 
 class OverwriteTypes(IntEnum):
+    """Types of permission overwrite"""
+
     ROLE = 0
     MEMBER = 1
 
 
 class DefaultNotificationLevels(IntEnum):
+    """Default Notification levels for dms and guilds"""
+
     ALL_MESSAGES = 0
     ONLY_MENTIONS = 1
 
 
 class ExplicitContentFilterLevels(IntEnum):  # TODO this is a very long enum class name...
+    """Automatic filtering of explicit content"""
+
     DISABLED = 0
     MEMBERS_WITHOUT_ROLES = 1
     ALL_MEMBERS = 2
 
 
 class MFALevels(IntEnum):
+    """Does the user use 2FA"""
+
     NONE = 0
     ELEVATED = 1
 
 
 class VerificationLevels(IntEnum):
+    """Levels of verification needed by a guild"""
+
     NONE = 0
+    """No verification needed"""
     LOW = 1
+    """Must have a verified email on their Discord Account"""
     MEDIUM = 2
+    """Must also be registered on Discord for longer than 5 minutes"""
     HIGH = 3
+    """Must also be a member of this server for longer than 10 minutes"""
     VERY_HIGH = 4
+    """Must have a verified phone number on their Discord Account"""
 
 
 class NSFWLevels(IntEnum):
+    """A guilds NSFW Level"""
+
     DEFAULT = 0
     EXPLICIT = 1
     SAFE = 2
@@ -407,6 +495,8 @@ class NSFWLevels(IntEnum):
 
 
 class PremiumTiers(IntEnum):
+    """The boost level of a server"""
+
     NONE = 0
     TIER_1 = 1
     TIER_2 = 2
@@ -414,6 +504,8 @@ class PremiumTiers(IntEnum):
 
 
 class SystemChannelFlags(DiscordIntFlag):
+    """System channel settings"""
+
     SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
     SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
     SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
@@ -424,12 +516,15 @@ class SystemChannelFlags(DiscordIntFlag):
 
 
 class VideoQualityModes(IntEnum):
+    """Video quality settings"""
+
     AUTO = 1
     FULL = 2
 
 
 class AutoArchiveDuration(IntEnum):
-    # In minutes
+    """Thread archive duration, in minutes"""
+
     ONE_HOUR = 60
     ONE_DAY = 1440
     THREE_DAY = 4320
