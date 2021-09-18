@@ -31,7 +31,7 @@ class Scale:
         ```
 
     parameters:
-        bot: A reference to the client
+        bot Snake: A reference to the client
 
     Attributes:
         bot Snake: A reference to the client
@@ -133,6 +133,16 @@ class Scale:
         Note:
             Pre-runs will **only** be run if the commands checks pass
 
+        ??? Hint "Example Usage:"
+            ```python
+            def __init__(self, bot):
+                self.bot = bot
+                self.add_scale_prerun(self.example)
+
+            async def example(self, context: Context):
+                await ctx.send("I ran first")
+            ```
+
         Args:
             coroutine: The coroutine to run
         """
@@ -146,6 +156,16 @@ class Scale:
     def add_scale_postrun(self, coroutine: Callable[..., Coroutine]):
         """
         Add a coroutine to be run **after** all commands in this Scale.
+
+        ??? Hint "Example Usage:"
+            ```python
+            def __init__(self, bot):
+                self.bot = bot
+                self.add_scale_postrun(self.example)
+
+            async def example(self, context: Context):
+                await ctx.send("I ran first")
+            ```
 
         Args:
             coroutine: The coroutine to run
