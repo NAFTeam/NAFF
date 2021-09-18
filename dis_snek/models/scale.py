@@ -3,8 +3,8 @@ import logging
 from typing import List, TYPE_CHECKING
 
 from dis_snek.const import logger_name
-from dis_snek.models.command import BaseCommand, MessageCommand
-from dis_snek.models.discord_objects.interactions import InteractionCommand
+from dis_snek.models.command import MessageCommand
+from dis_snek.models.application_commands import InteractionCommand
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

@@ -17,7 +17,7 @@ from dis_snek.http_client import HTTPClient
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.interactions import (
+from dis_snek.models.application_commands import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
@@ -26,7 +26,6 @@ from dis_snek.models.discord_objects.interactions import (
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
-from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -274,9 +273,12 @@ class Snake:
         """
         A decorator to add a coroutine as a listener for an event.
 
-        The coroutines name is used to determine which event it should be listening for. Ie:
+        The coroutines name is used to determine which event it should be listening for.
 
-        `def on_ready` will listen for `ready` events.
+        hint:
+            For example:
+                `def on_ready`
+            will listen for `ready` events.
 
         Args:
             coro Coroutine: The coroutine that will be a listener

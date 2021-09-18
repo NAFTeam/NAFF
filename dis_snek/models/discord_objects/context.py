@@ -6,7 +6,7 @@ import attr
 from aiohttp import FormData
 
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.discord_objects.interactions import CallbackTypes
+from dis_snek.models.application_commands import CallbackTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 from dis_snek.utils.proxy import CacheProxy

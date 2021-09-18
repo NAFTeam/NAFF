@@ -43,17 +43,18 @@ bot.start("Token")
 ```
 
 ## `test_components.py`
+
 ```python
 
 from dis_snek.models.command import message_command
 from dis_snek.models.discord_objects.components import Button, ActionRow
 from dis_snek.models.discord_objects.context import MessageContext
-from dis_snek.models.discord_objects.interactions import slash_command
+from dis_snek.models.application_commands import slash_command
 from dis_snek.models.enums import ButtonStyles
-from dis_snek.models.skin import Skin
+from dis_snek.models.scale import Scale
 
 
-class ButtonExampleSkin(Skin):
+class ButtonExampleSkin(Scale):
     @message_command()
     async def blurple_button(self, ctx):
         await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
@@ -88,17 +89,18 @@ def setup(bot):
 ```
 
 ## `test_application_commands.py`
+
 ```python
 
 from dis_snek.models.command import message_command
 from dis_snek.models.discord_objects.components import Button, ActionRow
 from dis_snek.models.discord_objects.context import MessageContext, InteractionContext
-from dis_snek.models.discord_objects.interactions import slash_command, slash_option, context_menu
+from dis_snek.models.application_commands import slash_command, slash_option, context_menu
 from dis_snek.models.enums import ButtonStyles, CommandTypes
-from dis_snek.models.skin import Skin
+from dis_snek.models.scale import Scale
 
 
-class CommandsExampleSkin(Skin):
+class CommandsExampleSkin(Scale):
     @slash_command("command", description="This is a test", scope=701347683591389185)
     @slash_option("another", "str option", 3, required=True)
     @slash_option("option", "int option", 4, required=True)
