@@ -694,7 +694,7 @@ class Snake:
             setup = getattr(module, "setup")
             setup(self)
         except Exception as e:
-            log.error(f"Error loading {name}: {e}")
+            log.error(f"Error loading {name}: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
         else:
             log.debug(f"Loaded Extension: {name}")
             self.__extensions[name] = module
