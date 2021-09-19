@@ -1,8 +1,28 @@
+"""
+These are events dispatched by Discord. This is intended as a reference so you know what data to expect for each event
+
+!!! Hint "Example Usage:"
+    The event classes outlined here are in `CamalCase` to comply with Class naming convention, however the event names
+    are actually in `lower_case_with_underscores` so your listeners should be named as following:
+
+    ```python
+    @bot.event
+    def on_ready():
+        # ready events pass no data, so dont have params
+        print("Im ready!")
+
+    @bot.event
+    def on_guild_create(event):
+        # guild_create events pass a guild object, expect a single param
+        print(f"{event.guild.name} created")
+    ```
+"""
+
 from typing import TYPE_CHECKING, Any, List, Union
 
 import attr
 
-from dis_snek.models.events.internal import BaseEvent, _GuildEvent
+from dis_snek.models.events.internal import BaseEvent, GuildEvent
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.guild import Guild
@@ -11,13 +31,12 @@ if TYPE_CHECKING:
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.context import ComponentContext
     from dis_snek.models.discord_objects.emoji import Emoji
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
 
 
-@attr.s()
+@attr.s(slots=True)
 class RawGatewayEvent(BaseEvent):
     """An event dispatched from the gateway. Holds the raw dict that the gateway dispatches"""
 
@@ -25,24 +44,24 @@ class RawGatewayEvent(BaseEvent):
     """Raw Data from the gateway"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ChannelCreate(BaseEvent):
     """Dispatched when a channel is created."""
 
     channel: "BaseChannel" = attr.ib(metadata={"docs": "The channel this event is dispatched from"})
 
 
-@attr.s()
+@attr.s(slots=True)
 class ChannelUpdate(ChannelCreate):
     """Dispatched when a channel is updated"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ChannelDelete(ChannelCreate):
     """Dispatched when a channel is deleted"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ChannelPinsUpdate(ChannelCreate):
     """Dispatched when a channel's pins are updated"""
 
@@ -50,7 +69,7 @@ class ChannelPinsUpdate(ChannelCreate):
     """The time at which the most recent pinned message was pinned"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created."""
 
@@ -59,17 +78,17 @@ class ThreadCreate(BaseEvent):
     )  # TODO: Replace this with a thread object type
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadUpdate(ThreadCreate):
     """Dispatched when a thread is updated"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadDelete(ThreadCreate):
     """Dispatched when a thread is deleted"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadListSync(BaseEvent):
     """Dispatched when gaining access to a channel, contains all active threads in that channel"""
 
@@ -81,7 +100,7 @@ class ThreadListSync(BaseEvent):
     """all thread member objects from the synced threads for the current user, indicating which threads the current user has been added to"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadMemberUpdate(ThreadCreate):
     """Dispatched when the thread member object for the current user is updated.
 
@@ -93,7 +112,7 @@ class ThreadMemberUpdate(ThreadCreate):
     """The member who was added"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class ThreadMembersUpdate(BaseEvent):
     """Dispatched when anyone is added or removed from a thread."""
 
@@ -107,7 +126,7 @@ class ThreadMembersUpdate(BaseEvent):
     """Users removed from the thread"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class GuildCreate(BaseEvent):
     """Dispatched when a guild is created."""
 
@@ -115,7 +134,7 @@ class GuildCreate(BaseEvent):
     """The guild that was created"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class GuildUpdate(BaseEvent):
     """Dispatched when a guild is updated."""
 
@@ -125,28 +144,28 @@ class GuildUpdate(BaseEvent):
     """Guild after this event"""
 
 
-@attr.s()
-class GuildDelete(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild becomes unavailable or user left/removed."""
 
     unavailable: bool = attr.ib(default=False)
     """If this event was triggered due to an outage"""
 
 
-@attr.s()
-class GuildBanAdd(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildBanAdd(BaseEvent, GuildEvent):
     """Dispatched when someone was banned from a guild"""
 
     user: "BaseUser" = attr.ib(metadata={"docs": "The user"})
 
 
-@attr.s()
+@attr.s(slots=True)
 class GuildBanRemove(GuildBanAdd):
     """Dispatched when a users ban is removed"""
 
 
-@attr.s()
-class GuildEmojisUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
     before: List["Emoji"] = attr.ib(factory=list)
@@ -155,8 +174,8 @@ class GuildEmojisUpdate(BaseEvent, _GuildEvent):
     """List of emoji after this event"""
 
 
-@attr.s()
-class GuildStickersUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildStickersUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
     before: List["Sticker"] = attr.ib(factory=list)
@@ -165,20 +184,20 @@ class GuildStickersUpdate(BaseEvent, _GuildEvent):
     """List of stickers from after this event"""
 
 
-@attr.s()
-class MemberAdd(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class MemberAdd(BaseEvent, GuildEvent):
     """Dispatched when a member is added to a guild."""
 
     member: "Member" = attr.ib(metadata={"docs": "The member who was added"})
 
 
-@attr.s()
+@attr.s(slots=True)
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
 
-@attr.s()
-class MemberUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class MemberUpdate(BaseEvent, GuildEvent):
     """Dispatched when a member is updated."""
 
     # todo: It would be better to just have a member, before, and after field. but for now im mirroring the api
@@ -189,16 +208,16 @@ class MemberUpdate(BaseEvent, _GuildEvent):
     """The state of the member after this event"""
 
 
-@attr.s()
-class GuildRoleCreate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildRoleCreate(BaseEvent, GuildEvent):
     """Dispatched when a role is created."""
 
     role: "Role" = attr.ib()
     """The created role"""
 
 
-@attr.s()
-class GuildRoleUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildRoleUpdate(BaseEvent, GuildEvent):
     """Dispatched when a role is updated."""
 
     before: "Role" = attr.ib()
@@ -207,16 +226,16 @@ class GuildRoleUpdate(BaseEvent, _GuildEvent):
     """The role after this event"""
 
 
-@attr.s()
-class GuildRoleDelete(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildRoleDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild role is deleted"""
 
     role_id: "Snowflake_Type" = attr.ib()
     """The ID of the deleted role"""
 
 
-@attr.s()
-class GuildMembersChunk(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildMembersChunk(BaseEvent, GuildEvent):
     """Sent in response to Guild Request Members. You can use the `chunk_index` and `chunk_count` to calculate how many chunks are left for your request."""
 
     chunk_index: int = attr.ib()
@@ -231,15 +250,15 @@ class GuildMembersChunk(BaseEvent, _GuildEvent):
     """A list of members"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class IntegrationCreate(BaseEvent):
     """Dispatched when a guild integration is created"""
 
     integration: Any = attr.ib()  # TODO: Replace this with a integration object type
 
 
-@attr.s()
-class IntegrationUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class IntegrationUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild integration is updated"""
 
     before: Any = attr.ib()  # TODO: Replace this with a integration object type
@@ -248,8 +267,8 @@ class IntegrationUpdate(BaseEvent, _GuildEvent):
     """The integration after this event"""
 
 
-@attr.s()
-class IntegrationDelete(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class IntegrationDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild integration is deleted"""
 
     id: "Snowflake_Type" = attr.ib()
@@ -258,26 +277,26 @@ class IntegrationDelete(BaseEvent, _GuildEvent):
     """The ID of the bot/application for this integration"""
 
 
-@attr.s()
-class GuildIntegrationsUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class GuildIntegrationsUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild integration is updated"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created"""
 
     invite: Any = attr.ib()  # TODO: Replace this with a invite object type
 
 
-@attr.s()
+@attr.s(slots=True)
 class MessageCreate(BaseEvent):
     """Dispatched when a message is created"""
 
     message: "Message" = attr.ib()
 
 
-@attr.s()
+@attr.s(slots=True)
 class MessageUpdate(BaseEvent):
     """Dispatched when a message is edited"""
 
@@ -287,15 +306,15 @@ class MessageUpdate(BaseEvent):
     """The message after this event was created"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class MessageDelete(BaseEvent):
     """Dispatched when a message is deleted."""
 
     message: "Message" = attr.ib()
 
 
-@attr.s()
-class MessageDeleteBulk(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class MessageDeleteBulk(BaseEvent, GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
 
     channel_id: "Snowflake_Type" = attr.ib()
@@ -304,7 +323,7 @@ class MessageDeleteBulk(BaseEvent, _GuildEvent):
     """A list of message snowflakes"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
@@ -313,20 +332,20 @@ class MessageReactionAdd(BaseEvent):
     author: Union["Member", "User"] = attr.ib(metadata={"docs": "The user who added the reaction"})
 
 
-@attr.s()
+@attr.s(slots=True)
 class MessageReactionRemove(MessageReactionAdd):
     """Dispatched when a reaction is removed"""
 
 
-@attr.s()
-class MessageReactionRemoveAll(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class MessageReactionRemoveAll(BaseEvent, GuildEvent):
     """Dispatched when all reactions are removed from a message"""
 
     message: "Message" = attr.ib()
     """The message that was reacted to"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class PresenceUpdate(BaseEvent):
     """A user's presence has changed"""
 
@@ -340,7 +359,7 @@ class PresenceUpdate(BaseEvent):
     """What platform the user is reported as being on"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created"""
 
@@ -349,12 +368,12 @@ class StageInstanceCreate(BaseEvent):
     )  # TODO: Replace this with a stage instance object type.
 
 
-@attr.s()
+@attr.s(slots=True)
 class StageInstanceDelete(StageInstanceCreate):
     """Dispatched when a stage instance is deleted"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class StageInstanceUpdate(BaseEvent):
     """Dispatched when a stage instance is updated"""
 
@@ -364,7 +383,7 @@ class StageInstanceUpdate(BaseEvent):
     """The stage instance after this event was created"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class TypingStart(BaseEvent):
     """Dispatched when a user starts typing"""
 
@@ -380,8 +399,8 @@ class TypingStart(BaseEvent):
     """The member who started typing, if this is in a guild"""
 
 
-@attr.s()
-class WebhooksUpdate(BaseEvent, _GuildEvent):
+@attr.s(slots=True)
+class WebhooksUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted"""
 
     # Discord doesnt sent the webhook object for this event, for some reason
@@ -389,7 +408,7 @@ class WebhooksUpdate(BaseEvent, _GuildEvent):
     """The ID of the webhook was updated"""
 
 
-@attr.s()
+@attr.s(slots=True)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command"""
 
