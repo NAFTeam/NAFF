@@ -220,9 +220,12 @@ class Snake:
         self.loop.run_until_complete(self.login(token))
 
     def _queue_task(self, coro, event, *args, **kwargs):
-        async def _async_wrap(_coro, _event_name, *_args, **_kwargs):
+        async def _async_wrap(_coro, _event, *_args, **_kwargs):
             try:
-                await coro(event, *_args, **_kwargs)
+                if len(_event.__attrs_attrs__) == 1:
+                    await _coro()
+                else:
+                    await _coro(_event, *_args, **_kwargs)
             except asyncio.CancelledError:
                 pass
             except Exception as e:
@@ -580,14 +583,14 @@ class Snake:
                     context.invoked_name = invoked_name
                     await command(context)
 
-    async def _on_raw_message_create(self, data: dict) -> None:
+    async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically convert MESSAGE_CREATE event data to the object.
 
         Args:
-            data: raw message data
+            event: raw message event
         """
-        msg = self.cache.place_message_data(data)
+        msg = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageCreate(msg))
 
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
