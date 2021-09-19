@@ -1,4 +1,5 @@
 ## `main.py`
+
 ```python
 
 import logging
@@ -22,13 +23,13 @@ async def on_ready():
 
 
 @bot.event
-async def on_guild_create(guild):
-    print(f"guild created : {guild.name}")
+async def on_guild_create(event):
+    print(f"guild created : {event.guild.name}")
 
 
 @bot.event
-async def on_message_create(message):
-    print(f"message received: {message.content}")
+async def on_message_create(event):
+    print(f"message received: {event.message.content}")
 
 
 @bot.event
@@ -48,8 +49,6 @@ bot.start("Token")
 
 from dis_snek.models.command import message_command
 from dis_snek.models.discord_objects.components import Button, ActionRow
-from dis_snek.models.discord_objects.context import MessageContext
-from dis_snek.models.application_commands import slash_command
 from dis_snek.models.enums import ButtonStyles
 from dis_snek.models.scale import Scale
 
@@ -92,11 +91,10 @@ def setup(bot):
 
 ```python
 
-from dis_snek.models.command import message_command
-from dis_snek.models.discord_objects.components import Button, ActionRow
-from dis_snek.models.discord_objects.context import MessageContext, InteractionContext
 from dis_snek.models.application_commands import slash_command, slash_option, context_menu
-from dis_snek.models.enums import ButtonStyles, CommandTypes
+from dis_snek.models.discord_objects.components import Button, ActionRow
+from dis_snek.models.discord_objects.context import InteractionContext
+from dis_snek.models.enums import CommandTypes
 from dis_snek.models.scale import Scale
 
 
