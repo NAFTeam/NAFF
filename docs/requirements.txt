@@ -4,4 +4,5 @@ mypy
 orjson
 mkdocs-material
 mkdocs-autorefs
+git+https://github.com/LordOfPolls/pytkdocs.git
 git+https://github.com/mkdocstrings/mkdocstrings.git
