@@ -13,7 +13,7 @@ from typing import Any, Callable, Coroutine, List, Optional
 import orjson
 from aiohttp import WSMsgType
 
-from dis_snek.const import logger_name
+from dis_snek.const import logger_name, events
 from dis_snek.errors import WebSocketClosed, WebSocketRestart
 from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
 from dis_snek.models.enums import Intents
@@ -207,7 +207,7 @@ class WebsocketClient:
         cls.intents = intents
         cls.dispatch = dispatch
         cls.ws = await cls.http.websock_connect(cls._gateway)
-        dispatch("connect")
+        dispatch(events.Connect())
         if resume:
             return cls(session_id, sequence)
         return cls()
@@ -286,11 +286,11 @@ class WebsocketClient:
                 self.sequence = msg["s"]
                 self.session_id = data["session_id"]
                 log.info(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
-                self.dispatch("websocket_ready", data)
+                self.dispatch(events.RawGatewayEvent(data, override_name="websocket_ready"))
                 return
             else:
-                self.dispatch("raw_socket_receive", msg)
-            self.dispatch(f"raw_{msg.get('t').lower()}", data)
+                self.dispatch(events.RawGatewayEvent(msg, override_name="raw_socket_receive"))
+            self.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{msg.get('t').lower()}"))
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
@@ -355,7 +355,7 @@ class WebsocketClient:
             "d": {"token": self.http.token, "seq": self.sequence, "session_id": self.session_id},
         }
         await self.send_json(data)
-        self.dispatch("resume")
+        self.dispatch(events.Resume())
         log.debug("Client is attempting to resume a connection")
 
     async def send_heartbeat(self, data: dict) -> None:

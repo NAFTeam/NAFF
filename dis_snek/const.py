@@ -21,6 +21,7 @@ attributes:
 """
 
 import sys
+import dis_snek.models.events as events
 
 
 _ver_info = sys.version_info

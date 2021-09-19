@@ -10,22 +10,23 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE
+from dis_snek.const import logger_name, GLOBAL_SCOPE, events
 from dis_snek.errors import GatewayNotFound, SnakeException, WebSocketClosed, WebSocketRestart
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models.command import MessageCommand, BaseCommand
-from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
-from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.application_commands import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
     SubCommand,
 )
+from dis_snek.models.command import MessageCommand, BaseCommand
+from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
+from dis_snek.models.events import RawGatewayEvent
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -149,7 +150,7 @@ class Snake:
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
         self._app = await self.http.get_current_bot_information()
-        self.dispatch("login")
+        self.dispatch(events.Login())
         await self._ws_connect()
 
     async def _ws_connect(self):
@@ -170,14 +171,14 @@ class Snake:
                 await self.ws.run()
             except WebSocketRestart as ex:
                 # internally requested restart
-                self.dispatch("disconnect")
+                self.dispatch(events.Disconnect())
                 if ex.resume:
                     params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
                     continue
                 params.update(resume=False, session_id=None, sequence=None)
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
-                self.dispatch("disconnect")
+                self.dispatch(events.Disconnect())
 
                 if isinstance(ex, WebSocketClosed):
                     if ex.code == 1000:
@@ -200,7 +201,7 @@ class Snake:
                 params.update(resume=False, session_id=None, sequence=None)
 
             except Exception as e:
-                self.dispatch("disconnect")
+                self.dispatch(events.Disconnect())
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
                 params.update(resume=False, session_id=None, sequence=None)
 
@@ -218,36 +219,51 @@ class Snake:
         """
         self.loop.run_until_complete(self.login(token))
 
-    def _queue_task(self, coro, event_name, *args, **kwargs):
+    def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event_name, *_args, **_kwargs):
             try:
-                await coro(*_args, **_kwargs)
+                await coro(event, *_args, **_kwargs)
             except asyncio.CancelledError:
                 pass
             except Exception as e:
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
-        wrapped = _async_wrap(coro, event_name, *args, **kwargs)
+        wrapped = _async_wrap(coro, event, *args, **kwargs)
 
-        return asyncio.create_task(wrapped, name=f"snake:: {event_name}")
+        return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
 
-    def dispatch(self, event: str, *args, **kwargs):
+    def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """
         Dispatch an event.
 
         Args:
-            event str: The name of the event to dispatch
-            args list: A list of arguments to pass to the event
-            kwargs dict: A list of keyword arguments to pass
+            event: The event to be dispatched.
         """
-        log.debug(f"Dispatching event: {event}")
-
-        listeners = self._listeners.get(event, [])
+        log.debug(f"Dispatching Event: {event.resolved_name}")
+        listeners = self._listeners.get(event.resolved_name, [])
         for _listen in listeners:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
             except Exception as e:
-                log.error(f"Error running listener: {e}")
+                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+    # def dispatch(self, event: str, *args, **kwargs):
+    #     """
+    #     Dispatch an event.
+    #
+    #     Args:
+    #         event str: The name of the event to dispatch
+    #         args list: A list of arguments to pass to the event
+    #         kwargs dict: A list of keyword arguments to pass
+    #     """
+    #     log.debug(f"Dispatching event: {event}")
+    #
+    #     listeners = self._listeners.get(event, [])
+    #     for _listen in listeners:
+    #         try:
+    #             self._queue_task(_listen, event, *args, **kwargs)
+    #         except Exception as e:
+    #             log.error(f"Error running listener: {e}")
 
     def add_listener(self, coro: Callable[..., Coroutine[Any, Any, Any]], event: Optional[str] = None):
         """
@@ -542,11 +558,11 @@ class Snake:
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            self.dispatch("component", ctx)
+            self.dispatch(events.Component(ctx))
             if component_type == ComponentTypes.BUTTON:
-                self.dispatch("button", ctx)
+                self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
-                self.dispatch("select", ctx)
+                self.dispatch(events.Select(ctx))
 
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
@@ -572,27 +588,28 @@ class Snake:
             data: raw message data
         """
         msg = self.cache.place_message_data(data)
-        self.dispatch("message_create", msg)
+        self.dispatch(events.MessageCreate(msg))
 
-    async def _on_raw_guild_create(self, data: dict) -> None:
+    async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway.
 
         Args:
             data: raw guild data
         """
-        guild = self.cache.place_guild_data(data)
+        guild = self.cache.place_guild_data(event.data)
         self._guild_event.set()
 
-        self.dispatch("guild_create", guild)
+        self.dispatch(events.GuildCreate(guild))
 
-    async def _on_websocket_ready(self, data: dict) -> None:
+    async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
 
         Args:
-            data: The websocket ready packet
+            event: The websocket ready packet
         """
+        data = event.data
         expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
         self._user._add_guilds(expected_guilds)
 
@@ -611,19 +628,20 @@ class Snake:
         # cache slash commands
         await self._init_interactions()
 
-        self.dispatch("ready")
+        self.dispatch(events.Ready())
 
-    async def _on_raw_socket_receive(self, raw: dict):
+    async def _on_raw_socket_receive(self, event: events.RawGatewayEvent):
         """
         Processes socket events and dispatches non-raw events
 
         Args:
-            data: raw socket data
+            event: raw socket data
         """
         # TODO: I think don't really need this anymore? Unless just for debugging.
-        event = raw.get("t")
+        raw = event.data
+        e = raw.get("t")
         data = raw.get("d")
-        log.debug(f"EVENT: {event}: {data}")
+        log.debug(f"EVENT: {e}: {data}")
 
     # todo remove/move this
     async def get_guild(self, guild_id: "Snowflake_Type", with_counts: bool = False) -> Guild:
