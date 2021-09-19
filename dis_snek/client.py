@@ -21,10 +21,11 @@ from dis_snek.models.application_commands import (
     SubCommand,
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
+from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.user import SnakeBotUser, User
+from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.events import RawGatewayEvent
 from dis_snek.models.snowflake import to_snowflake
@@ -646,36 +647,6 @@ class Snake:
         data = raw.get("d")
         log.debug(f"EVENT: {e}: {data}")
 
-    # todo remove/move this
-    async def get_guild(self, guild_id: "Snowflake_Type", with_counts: bool = False) -> Guild:
-        g_data = await self.http.get_guild(guild_id, with_counts)
-        return Guild.from_dict(g_data, self)
-
-    # todo remove/move this
-    async def get_guilds(
-        self, limit: int = 200, before: Optional["Snowflake_Type"] = None, after: Optional["Snowflake_Type"] = None
-    ) -> List[Guild]:
-        """
-
-        Args:
-            limit: The maximum number of guilds to get
-            before: Get guilds before this snowflake
-            after: Get guilds after this snowflake
-
-        Returns:
-            List of guilds
-        """
-        g_data = await self.http.get_guilds(limit, before, after)
-        to_return = []
-        for g in g_data:
-            to_return.append(Guild(g, self))
-
-        return to_return
-
-    # todo remove/move this
-    async def send_message(self, channel: "Snowflake_Type", content: str):
-        await self.http.create_message(channel, content)
-
     def grow_scale(self, file_name: str, package: str = None) -> None:
         """
         A helper method to load a scale
@@ -695,6 +666,7 @@ class Snake:
         """
         try:
             self.scales[scale_name].shed(self.scales[scale_name])
+            self.unload_extension()
         except KeyError:
             log.error(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
@@ -768,3 +740,68 @@ class Snake:
         self.load_extension(name, package)
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
+
+    async def get_guild(self, guild_id: "Snowflake_Type") -> Guild:
+        """
+        Get a guild
+
+        Note:
+            This method is an alias for the cache which will either return a cached object, or query discord for the object
+            if its not already cached.
+
+        Args:
+            guild_id: The ID of the guild to get
+
+        Returns:
+            Guild Object
+        """
+        return await self.cache.get_guild(guild_id)
+
+    async def get_channel(self, channel_id: "Snowflake_Type") -> BaseChannel:
+        """
+        Get a channel
+
+        Note:
+            This method is an alias for the cache which will either return a cached object, or query discord for the object
+            if its not already cached.
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel Object
+        """
+        return await self.cache.get_channel(channel_id)
+
+    async def get_user(self, user_id: "Snowflake_Type") -> User:
+        """
+        Get a user
+
+        Note:
+            This method is an alias for the cache which will either return a cached object, or query discord for the object
+            if its not already cached.
+
+        Args:
+            user_id: The ID of the user to get
+
+        Returns:
+            User Object
+        """
+        return await self.cache.get_user(user_id)
+
+    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Member:
+        """
+        Get a member from a guild
+
+        Note:
+            This method is an alias for the cache which will either return a cached object, or query discord for the object
+            if its not already cached.
+
+        Args:
+            user_id: The ID of the member
+            guild_id: The ID of the guild to get the member from
+
+        Returns:
+            Member object
+        """
+        return await self.cache.get_member(guild_id, user_id)
