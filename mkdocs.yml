@@ -9,7 +9,8 @@ theme:
     - header.autohide
     - navigation.instant
     - navigation.top
-    - toc.integrate
+#    - toc.integrate
+    - navigation.tabs
     - search.suggest
     - search.share
   palette:
@@ -72,3 +73,6 @@ markdown_extensions:
   - pymdownx.tabbed
   - pymdownx.tasklist
   - pymdownx.tilde
+  - toc:
+      permalink: true
+      toc_depth: 3
