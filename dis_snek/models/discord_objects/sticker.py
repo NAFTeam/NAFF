@@ -27,6 +27,8 @@ class Sticker(PartialSticker):
     user: Optional["User"] = attr.ib(default=None)  # TODO user should be cached.
     sort_value: Optional[int] = attr.ib(default=None)
 
+    # todo: Create, modify, delete methods
+
 
 @define()
 class StickerPack(DiscordObject):
