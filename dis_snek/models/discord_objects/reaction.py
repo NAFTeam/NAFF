@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import attr
+
 from dis_snek.models.discord import DiscordObject
 from dis_snek.utils.attr_utils import define
 
@@ -15,3 +16,4 @@ class Reaction(DiscordObject):
     emoji: "Emoji" = attr.ib()
 
     # TODO: clear, remove, users
+    # TODO: http endpoints for reactions require both a channel and message ID parameter, this object lacks both
