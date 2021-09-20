@@ -62,7 +62,8 @@ class OptionTypes(IntEnum):
             return cls.USER
         if issubclass(t, BaseChannel):
             return cls.CHANNEL
-        # todo role
+        if issubclass(t, Role):
+            return cls.ROLE
         if issubclass(t, float):
             return cls.NUMBER
 
