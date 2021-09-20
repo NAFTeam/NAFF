@@ -455,7 +455,7 @@ class DefaultNotificationLevels(IntEnum):
     ONLY_MENTIONS = 1
 
 
-class ExplicitContentFilterLevels(IntEnum):  # TODO this is a very long enum class name...
+class ExplicitContentFilterLevels(IntEnum):
     """Automatic filtering of explicit content"""
 
     DISABLED = 0
