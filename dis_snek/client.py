@@ -27,7 +27,7 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
-from dis_snek.models.events import RawGatewayEvent
+from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -574,8 +574,9 @@ class Snake:
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    async def _dispatch_msg_commands(self, message: Message):
+    async def _dispatch_msg_commands(self, event: MessageCreate):
         """Determine if a command is being triggered, and dispatch it."""
+        message = event.message
         if not await message.author.bot:
             prefix = self.get_prefix()
 
