@@ -287,17 +287,3 @@ class Member(DiscordObject, _SendDMMixin):
         return permissions
 
 
-@define()
-class ThreadMember(DiscordObject, _SendDMMixin):
-    join_timestamp: Timestamp = field(converter=timestamp_converter)
-    flags: int = field()
-
-    _thread_id: "Snowflake_Type" = field(repr=True)
-
-    @property
-    def thread(self):
-        return CacheProxy(id=self._thread_id, method=self._client.cache.get_channel)
-
-    @property
-    def user(self):
-        return CacheProxy(id=self.id, method=self._client.cache.get_user)

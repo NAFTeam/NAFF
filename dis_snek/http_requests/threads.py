@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
 from dis_snek.models.route import Route
+from dis_snek.utils.converters import timestamp_converter
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -60,7 +61,7 @@ class ThreadRequests:
 
     async def list_public_archived_threads(
         self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
-    ) -> List[dict]:
+    ) -> dict:
         """
         Get a list of archived public threads in a channel.
 
@@ -75,12 +76,12 @@ class ThreadRequests:
         if limit:
             payload["limit"] = limit
         if before:
-            payload["before"] = before
+            payload["before"] = timestamp_converter(before)
         return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), params=payload)
 
     async def list_private_archived_threads(
         self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
-    ) -> List[dict]:
+    ) -> dict:
         """
         Get a list of archived private threads in a channel.
 
@@ -100,7 +101,7 @@ class ThreadRequests:
 
     async def list_joined_private_archived_threads(
         self, channel_id: "Snowflake_Type", limit: int = None, before: Optional["Snowflake_Type"] = None
-    ) -> List[dict]:
+    ) -> dict:
         """
         Get a list of archived private threads in a channel that you have joined.
 

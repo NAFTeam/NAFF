@@ -5,7 +5,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.discord_objects.user import ThreadMember
+from dis_snek.models.discord_objects.thread import ThreadMember, ThreadList
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes, AutoArchiveDuration
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -31,7 +31,7 @@ class PermissionOverwrite(SnowflakeObject):
 
 @define(slots=False)
 class MessageableChannelMixin(SendMixin):
-    last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)  # TODO May need to think of dynamically updating this.
     default_auto_archive_duration: int = attr.ib(default=60)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
@@ -177,6 +177,21 @@ class GuildText(GuildChannel, MessageableChannelMixin):
             reason=reason,
         )
         return self._client.cache.place_channel_data(thread_data)
+
+    async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        threads_data = await self._client.http.list_public_archived_threads(channel_id=self.id, limit=limit, before=before)
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        threads_data = await self._client.http.list_private_archived_threads(channel_id=self.id, limit=limit, before=before)
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_joined_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        threads_data = await self._client.http.list_joined_private_archived_threads(channel_id=self.id, limit=limit, before=before)
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
 
 
 @define()
