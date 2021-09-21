@@ -304,6 +304,7 @@ class Message(DiscordObject):
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
     ):
+        # TODO What if message is not from GuildText.
         thread_data = await self._client.http.create_thread(
             channel_id=self._channel_id,
             name=name,

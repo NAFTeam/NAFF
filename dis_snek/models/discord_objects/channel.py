@@ -180,7 +180,7 @@ class GuildText(GuildChannel, MessageableChannelMixin):
 
 @define()
 class GuildNews(GuildText):
-    rate_limit_per_user: int = attr.ib(default=0, init=False, on_setattr=attr.setters.frozen)
+    rate_limit_per_user: int = attr.ib(default=0, init=False, on_setattr=attr.setters.frozen)  # TODO Not sure overriding like this is the best method.
     pass
 
 
