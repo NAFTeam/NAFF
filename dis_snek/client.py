@@ -465,6 +465,9 @@ class Snake:
         """
         Return a context object based on data passed
 
+        note:
+            If you want to use custom context objects, this is the method to override. Your replacement must take the same arguments as this, and return a Context-like object.
+
         Args:
             data: The data of the event
             interaction: Is this an interaction or not?
