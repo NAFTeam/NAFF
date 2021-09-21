@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 
 class _SendDMMixin(SendMixin):
+    id: "Snowflake_Type"
+
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         dm_id = await self._client.cache.get_dm_channel_id(self.id)
         return await self._client.http.create_message(message_payload, dm_id)
@@ -283,3 +285,19 @@ class Member(DiscordObject, _SendDMMixin):
             permissions |= overwrite_member.allow
 
         return permissions
+
+
+@define()
+class ThreadMember(DiscordObject, _SendDMMixin):
+    join_timestamp: Timestamp = field(converter=timestamp_converter)
+    flags: int = field()
+
+    _thread_id: "Snowflake_Type" = field(repr=True)
+
+    @property
+    def thread(self):
+        return CacheProxy(id=self._thread_id, method=self._client.cache.get_channel)
+
+    @property
+    def user(self):
+        return CacheProxy(id=self.id, method=self._client.cache.get_user)

@@ -5,6 +5,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.user import ThreadMember
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes, AutoArchiveDuration
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.message import Message
-    from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -146,8 +147,8 @@ class GuildText(GuildChannel, MessageableChannelMixin):
     async def create_thread_with_message(
         self,
         name: str,
-        auto_archive_duration: Union[AutoArchiveDuration, int],
         message: Union["Snowflake_Type", "Message"],
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
     ) -> Union["GuildNewsThread", "GuildPublicThread"]:
         thread_data = await self._client.http.create_thread(
@@ -163,8 +164,8 @@ class GuildText(GuildChannel, MessageableChannelMixin):
         self,
         name: str,
         thread_type: Union[ChannelTypes, int],
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         invitable: Optional[bool] = None,
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
     ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
         thread_data = await self._client.http.create_thread(
@@ -214,8 +215,21 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
         return data
 
     @property
-    def private(self) -> bool:
+    def is_private(self) -> bool:
         return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
+
+    async def get_members(self) -> List["ThreadMember"]:
+        members_data = await self._client.http.list_thread_members(self.id)
+        members = []
+        for member_data in members_data:
+            members.append(ThreadMember.from_dict(member_data, self._client))
+        return members
+
+    async def add_member(self, member: Union["Member", "Snowflake_Type"]) -> None:
+        await self._client.http.add_thread_member(self.id, to_snowflake(member))
+
+    async def remove_member(self, member: Union["Member", "Snowflake_Type"]) -> None:
+        await self._client.http.remove_thread_member(self.id, to_snowflake(member))
 
 
 @define()
