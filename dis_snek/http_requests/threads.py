@@ -35,7 +35,7 @@ class ThreadRequests:
             thread_id: The ID of the thread
             user_id: The ID of the user to add
         """
-        return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/@{user_id}"))
+        return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/{user_id}"))
 
     async def remove_thread_member(self, thread_id: "Snowflake_Type", user_id: "Snowflake_Type") -> None:
         """
@@ -45,7 +45,7 @@ class ThreadRequests:
             thread_id: The ID of the thread
             user_id: The ID of the user to remove
         """
-        return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/@{user_id}"))
+        return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/{user_id}"))
 
     async def list_thread_members(self, thread_id: "Snowflake_Type") -> List[dict]:
         """
