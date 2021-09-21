@@ -32,9 +32,9 @@ class _SendDMMixin(SendMixin):
 class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model"""
 
-    username: str = field(repr=True)
-    discriminator: int = field(repr=True)
-    avatar: "Asset" = field()
+    username: str = field(repr=True, metadata={"docs": "The user's username, not unique across the platform"})
+    discriminator: int = field(repr=True, metadata={"docs": "The user's 4-digit discord-tag"})
+    avatar: "Asset" = field(metadata={"docs": "The user's default avatar"})
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
@@ -46,18 +46,30 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @property
     def mention(self) -> str:
+        """Returns a string that would mention the user"""
         return f"<@{self.id}>"
 
     @property
     def display_name(self) -> str:
+        """The users display name, will return nickname if one is set, otherwise will return nickname"""
         return self.username  # for duck-typing compatibility with Member
 
     @property
     def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
+        """Returns the dm channel associated with the user"""
         return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
 
     @property
     def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+        """
+        Get the guilds this user shares with the client
+
+        !!! warning "Awaitable Warning:"
+            This property must be awaited.
+
+        Returns:
+            Collection of shared guilds
+        """
         # Warning! mutual_guilds.ids should be awaited!
         ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
         return CacheView(ids=ids, method=self._client.cache.get_guild)
@@ -65,14 +77,24 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
 @define()
 class User(BaseUser):
-    bot: bool = field(repr=True, default=False)
-    system: bool = field(default=False)
-    public_flags: "UserFlags" = field(repr=True, default=0, converter=UserFlags)
-    premium_type: "PremiumTypes" = field(default=0, converter=PremiumTypes)
+    bot: bool = field(repr=True, default=False, metadata={"docs": "Is this user a bot?"})
+    system: bool = field(
+        default=False,
+        metadata={"docs": "whether the user is an Official Discord System user (part of the urgent message system)"},
+    )
+    public_flags: "UserFlags" = field(
+        repr=True, default=0, converter=UserFlags, metadata={"docs": "The flags associated with this user"}
+    )
+    premium_type: "PremiumTypes" = field(
+        default=0, converter=PremiumTypes, metadata={"docs": "The type of nitro subscription on a user's account"}
+    )
 
-    banner: Optional["Asset"] = field(default=None)
-    # _banner_color: Any = attr.ib(default=None)  # probably deprecated in api?
-    accent_color: Optional["Color"] = field(default=None, converter=optional_c(Color))
+    banner: Optional["Asset"] = field(default=None, metadata={"docs": "The user's banner"})
+    accent_color: Optional["Color"] = field(
+        default=None,
+        converter=optional_c(Color),
+        metadata={"docs": "The user's banner color"},
+    )
 
     @classmethod
     def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -85,35 +107,42 @@ class User(BaseUser):
 
 @define()
 class SnakeBotUser(User):
-    verified: bool = field(repr=True)
-    mfa_enabled: bool = field(default=False)
-    email: Optional[str] = field(default=None)  # needs special permissions?
-    locale: Optional[str] = field(default=None)
-    bio: Optional[str] = field(default=None)
-    flags: "UserFlags" = field(default=0, converter=UserFlags)
+    verified: bool = field(repr=True, metadata={"docs": ""})
+    mfa_enabled: bool = field(default=False, metadata={"docs": ""})
+    email: Optional[str] = field(default=None, metadata={"docs": ""})  # needs special permissions?
+    locale: Optional[str] = field(default=None, metadata={"docs": ""})
+    bio: Optional[str] = field(default=None, metadata={"docs": ""})
+    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": ""})
 
-    _guild_ids: Set[str] = field(factory=set)
+    _guild_ids: Set[str] = field(factory=set, metadata={"docs": ""})
 
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
 
     @property
     def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+        """The guilds this user belongs to"""
         return CacheView(ids=self._guild_ids, method=self._client.cache.get_guild)
 
 
 @define()
 class Member(DiscordObject, _SendDMMixin):
-    bot: bool = field(repr=True, default=False)
-    nick: Optional[str] = field(repr=True, default=None)
-    deaf: bool = field(default=False)
-    mute: bool = field(default=False)
-    joined_at: "Timestamp" = field(converter=timestamp_converter)
-    premium_since: Optional["Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
-    pending: Optional[bool] = field(default=None)
+    bot: bool = field(repr=True, default=False, metadata={"docs": "Is this user a bot?"})
+    nick: Optional[str] = field(repr=True, default=None, metadata={"docs": "The user's nickname in this guild'"})
+    deaf: bool = field(default=False, metadata={"docs": "Has this user been deafened in voice channels?"})
+    mute: bool = field(default=False, metadata={"docs": "Has this user been muted in voice channels?"})
+    joined_at: "Timestamp" = field(converter=timestamp_converter, metadata={"docs": "When the user joined this guild"})
+    premium_since: Optional["Timestamp"] = field(
+        default=None,
+        converter=optional_c(timestamp_converter),
+        metadata={"docs": "When the user started boosting the guild"},
+    )
+    pending: Optional[bool] = field(
+        default=None, metadata={"docs": "Whether the user has **not** passed guild's membership screening requirements"}
+    )
 
-    _guild_id: "Snowflake_Type" = field(repr=True)
-    _role_ids: List["Snowflake_Type"] = field(factory=list)
+    _guild_id: "Snowflake_Type" = field(repr=True, metadata={"docs": "The ID of the guild"})
+    _role_ids: List["Snowflake_Type"] = field(factory=list, metadata={"docs": "The roles IDs this user has"})
     # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod
@@ -136,29 +165,72 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
+        """Returns this member's user object
+
+        !!! warning "Awaitable Warning:"
+            This property must be awaited.
+
+        Returns:
+            The user object
+        """
         return CacheProxy(id=self.id, method=self._client.cache.get_user)
 
     @property
     def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
+        """
+        Returns the guild object associated with this member.
+
+        !!! warning "Awaitable Warning:"
+            This property must be awaited.
+
+        Returns:
+            The guild object
+        """
         return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
     def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
+        """
+        Returns the roles this member has
+
+        !!! warning "Awaitable Warning:"
+            This property must be awaited.
+
+        Returns:
+            An async iterator of roles this member has
+        """
         return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
     def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
+        """
+        Returns the highest role in the hierarchy this member has
+
+        !!! warning "Awaitable Warning:"
+            This property must be awaited.
+
+        Returns:
+            A role object
+        """
         return CacheProxy(id=self._role_ids[-1], method=partial(self._client.cache.get_role, self._guild_id))
 
     @property
-    async def display_name(self) -> str:
+    def display_name(self) -> str:
+        """The users display name, will return nickname if one is set, otherwise will return nickname"""
         return self.nickname  # or self.username  # todo
 
     @property
     def premium(self) -> bool:
+        """Is this member a server booster?"""
         return self.premium_since is not None
 
     async def guild_permissions(self) -> Permissions:
+        """
+        Returns the permissions this member has in the guild
+
+        Returns:
+            Permission data
+        """
         guild = await self.guild
         if guild.is_owner(self):
             return Permissions.ALL
@@ -175,6 +247,15 @@ class Member(DiscordObject, _SendDMMixin):
         return permissions
 
     async def channel_permissions(self, channel: "TYPE_GUILD_CHANNEL") -> Permissions:
+        """
+        Returns the permissions this member has in a channel.
+
+        Args:
+            channel: The channel in question
+
+        Returns:
+            Permissions data
+        """
         permissions = await self.guild_permissions()
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
