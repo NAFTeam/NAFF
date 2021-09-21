@@ -162,6 +162,7 @@ class GuildText(GuildChannel, MessageableChannelMixin):
     async def create_thread_without_message(
         self,
         name: str,
+        thread_type: Union[ChannelTypes, int],
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         invitable: Optional[bool] = None,
         reason: Optional[str] = None,
@@ -169,6 +170,7 @@ class GuildText(GuildChannel, MessageableChannelMixin):
         thread_data = await self._client.http.create_thread(
             channel_id=self.id,
             name=name,
+            thread_type=thread_type,
             auto_archive_duration=auto_archive_duration,
             invitable=invitable,
             reason=reason,
