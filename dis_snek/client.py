@@ -504,14 +504,15 @@ class Snake:
             cls.arguments = get_args(data.content)[1:]
         return cls
 
-    async def _dispatch_interaction(self, interaction_data: dict) -> None:
+    async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
         """
         Identify and dispatch interaction of slash commands or components.
 
         Args:
-            raw interaction data
+            raw interaction event
         """
         # Yes this is temporary, im just blocking out the basic logic
+        interaction_data = event.data
 
         if interaction_data["type"] in (InteractionTypes.PING, InteractionTypes.APPLICATION_COMMAND):
             # Slash Commands
