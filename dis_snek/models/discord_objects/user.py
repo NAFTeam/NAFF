@@ -53,7 +53,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @property
     def display_name(self) -> str:
-        """The users display name, will return nickname if one is set, otherwise will return nickname"""
+        """The users display name, will return nickname if one is set, otherwise will return username"""
         return self.username  # for duck-typing compatibility with Member
 
     @property
@@ -218,7 +218,7 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def display_name(self) -> str:
-        """The users display name, will return nickname if one is set, otherwise will return nickname"""
+        """The users display name, will return nickname if one is set, otherwise will return username"""
         return self.nickname  # or self.username  # todo
 
     @property
@@ -285,5 +285,3 @@ class Member(DiscordObject, _SendDMMixin):
             permissions |= overwrite_member.allow
 
         return permissions
-
-
