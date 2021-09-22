@@ -1,15 +1,19 @@
-from dis_snek.mixins.send import SendMixin
-from dis_snek.utils.converters import timestamp_converter
 from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
-from dis_snek.models.discord import DiscordObject
+
+from dis_snek.const import MISSING
+from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.asset import Asset
+from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.proxy import CacheView, CacheProxy, proxy_partial
 
 if TYPE_CHECKING:
@@ -18,8 +22,6 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord_objects.guild import Guild
-    from dis_snek.models.discord_objects.role import Role
-    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class _SendDMMixin(SendMixin):
@@ -293,4 +295,43 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             new_nickname: The new nickname to apply.
         """
-        return await self._client.http.modify_guild_member(self._guild_id, self.id, new_nickname)
+        return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
+
+    async def add_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+        """
+        Add a role to this member.
+        Args:
+            role: The role to add
+            reason: The reason for adding this role
+        """
+        if isinstance(role, Role):
+            role = role.id
+        return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
+
+    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+        """
+        Remove a role from this user.
+        Args:
+            role: The role to remove
+            reason: The reason for this removal
+        """
+        if isinstance(role, Role):
+            role = role.id
+        return await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
+
+    async def kick(self, reason: str = MISSING):
+        """
+        Remove a member from the guild.
+        Args:
+            reason: The reason for this removal
+        """
+        return await self._client.http.remove_guild_member(self._guild_id, self.id)
+
+    async def ban(self, delete_message_days=0, reason: str = MISSING):
+        """
+        Ban a member from the guild.
+        Args:
+            delete_message_days: The number of days of messages to delete
+            reason: The reason for this ban
+        """
+        return await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)
