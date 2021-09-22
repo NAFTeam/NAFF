@@ -1,10 +1,15 @@
 import asyncio
+import logging
 from typing import Callable, Coroutine, Any
 
 import attr
 
+from dis_snek.const import MISSING, logger_name
 from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.cooldowns import Cooldown, Buckets
 from dis_snek.utils.serializer import no_export_meta
+
+log = logging.getLogger(logger_name)
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -31,6 +36,8 @@ class BaseCommand(DictSerializationMixin):
 
     checks: list = attr.ib(factory=list)
     """Any checks that must be *checked* before the command can run"""
+    cooldown: Cooldown = attr.ib(default=MISSING)
+    """An optional cooldown to apply to the command"""
 
     callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
     """The coroutine to be called for this command"""
@@ -45,6 +52,8 @@ class BaseCommand(DictSerializationMixin):
         if self.callback is not None:
             if hasattr(self.callback, "checks"):
                 self.checks += self.callback.checks
+            if hasattr(self.callback, "cooldown"):
+                self.cooldown = self.callback.cooldown
 
     async def _call_callback(self, callback_object, *args, **kwargs):
         if self.scale is not None:
@@ -101,6 +110,14 @@ class BaseCommand(DictSerializationMixin):
             for _c in self.scale.scale_checks:
                 if not await _c(context):
                     return False
+
+        # cooldown tokens are only acquired should checks pass
+        if self.cooldown is not MISSING:
+            if not await self.cooldown.acquire_token(context):
+                log.error(
+                    f"Command on cooldown... Reset in {await self.cooldown.get_cooldown_time(context):.3f} seconds"
+                )
+                return False
 
         return True
 
@@ -172,6 +189,26 @@ def check(check: Callable[..., Coroutine]):
         if not hasattr(coro, "checks"):
             coro.checks = []
         coro.checks.append(check)
+        return coro
+
+    return wrapper
+
+
+def cooldown(bucket: Buckets, rate: int, interval: float):
+    """
+    Add a cooldown to a command
+
+    Args:
+        bucket: The bucket used to track cooldowns
+        rate: How many commands may be ran per interval
+        interval: How many seconds to wait for a cooldown
+    """
+
+    def wrapper(coro: Callable[..., Coroutine]):
+        cooldown_obj = Cooldown(bucket, rate, interval)
+
+        coro.cooldown = cooldown_obj
+
         return coro
 
     return wrapper
