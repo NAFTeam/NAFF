@@ -25,6 +25,9 @@ def to_dict(inst):
             continue
 
         raw_value = getattr(inst, a.name)
+        if raw_value is MISSING:
+            continue
+
         if (c := a.metadata.get("export_converter", None)) is not None:
             value = c(raw_value)
         else:
