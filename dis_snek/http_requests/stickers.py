@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 
 if TYPE_CHECKING:
@@ -53,7 +54,9 @@ class StickerRequests:
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers/{sticker_id}"))
 
-    async def create_guild_sticker(self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = None):
+    async def create_guild_sticker(
+        self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = MISSING
+    ):
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
@@ -68,7 +71,7 @@ class StickerRequests:
         return await self.request(Route("POST", f"/guild/{guild_id}/stickers"), data=payload, reason=reason)
 
     async def modify_guild_sticker(
-        self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None
+        self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = MISSING
     ):
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
@@ -87,7 +90,7 @@ class StickerRequests:
         )
 
     async def delete_guild_sticker(
-        self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = None
+        self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = MISSING
     ) -> None:
         """
         Delete the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.

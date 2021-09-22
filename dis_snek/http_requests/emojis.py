@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ class EmojiRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))
 
-    async def create_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type", reason: Optional[str] = None) -> dict:
+    async def create_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type", reason: str = MISSING) -> dict:
         """
         Create a guild emoji.
 
@@ -50,7 +51,7 @@ class EmojiRequests:
         return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), data=payload, reason=reason)
 
     async def modify_guild_emoji(
-        self, payload: dict, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Optional[str] = None
+        self, payload: dict, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: str = MISSING
     ) -> dict:
         """
         Modify an existing guild emoji.
@@ -67,7 +68,7 @@ class EmojiRequests:
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/emojis/{emoji_id}"), data=payload, reason=reason)
 
     async def delete_guild_emoji(
-        self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Optional[str] = None
+        self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: str = MISSING
     ) -> None:
         """
         Delete a guild emoji.

@@ -4,6 +4,8 @@ from io import IOBase
 
 from attr import fields, has
 
+from dis_snek.const import MISSING
+
 no_export_meta = dict(no_export=True)
 
 
@@ -52,6 +54,10 @@ def _to_dict_any(inst):
 
 def dict_filter_none(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not None}
+
+
+def dict_filter_missing(data: dict) -> dict:
+    return {k: v for k, v in data.items() if v is not MISSING}
 
 
 def to_image_data(imagefile):

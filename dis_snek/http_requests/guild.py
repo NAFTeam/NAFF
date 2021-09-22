@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_none
 
@@ -82,7 +83,7 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/roles"))
 
-    async def modify_guild(self, guild_id: "Snowflake_Type", reason: str = None, **kwargs) -> None:
+    async def modify_guild(self, guild_id: "Snowflake_Type", reason: str = MISSING, **kwargs) -> None:
         """
         Modify a guild's attributes.
         parameters:
@@ -160,7 +161,7 @@ class GuildRequests:
         )
 
     async def remove_guild_member(
-        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = None
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = MISSING
     ) -> None:
         """
         Remove a member from a guild.
@@ -201,7 +202,7 @@ class GuildRequests:
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans/{user_id}"))
 
     async def create_guild_ban(
-        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", delete_message_days: int = 0, reason: str = None
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", delete_message_days: int = 0, reason: str = MISSING
     ) -> None:
         """
         Create a guild ban, and optionally delete previous messages sent by the banned user.
@@ -218,7 +219,9 @@ class GuildRequests:
             reason=reason,
         )
 
-    async def remove_guild_ban(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = None) -> None:
+    async def remove_guild_ban(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", reason: str = MISSING
+    ) -> None:
         """
         Remove a guild ban.
 
@@ -254,7 +257,7 @@ class GuildRequests:
         days: int = 7,
         include_roles: List["Snowflake_Type"] = None,
         compute_prune_count: bool = True,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> dict:
         """
         Begin a prune operation.
@@ -285,7 +288,7 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/invites"))
 
-    async def create_guild_role(self, guild_id: "Snowflake_Type", payload: dict, reason: str = None) -> dict:
+    async def create_guild_role(self, guild_id: "Snowflake_Type", payload: dict, reason: str = MISSING) -> dict:
         """
         Create a new role for the guild.
 
@@ -299,7 +302,7 @@ class GuildRequests:
         return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), data=payload, reason=reason)
 
     async def modify_guild_role_positions(
-        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", position: int, reason: str = None
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", position: int, reason: str = MISSING
     ) -> List[dict]:
         """
         Modify the position of a role in the guild.
@@ -317,7 +320,7 @@ class GuildRequests:
         )
 
     async def modify_guild_role(
-        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", payload: dict, reason: str = None
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", payload: dict, reason: str = MISSING
     ) -> dict:
         """
         Modify an existing role for the guild.
@@ -332,7 +335,7 @@ class GuildRequests:
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), data=payload, reason=reason)
 
-    async def delete_guild_role(self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = None):
+    async def delete_guild_role(self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = MISSING):
         """
         Delete a guild role.
 

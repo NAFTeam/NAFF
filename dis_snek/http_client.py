@@ -13,7 +13,7 @@ import aiohttp  # type: ignore
 from aiohttp import BaseConnector, ClientResponse, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy  # type: ignore
 
-from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name
+from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name, MISSING
 from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPError, NotFound
 from dis_snek.http_requests import (
     BotRequests,
@@ -74,7 +74,7 @@ class HTTPClient(
     def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
         self.connector: Optional[BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
-        self.__session: Optional[ClientSession] = None
+        self.__session: Optional[ClientSession] = MISSING
         self._retries: int = 5
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
@@ -104,7 +104,7 @@ class HTTPClient(
         }
 
     async def request(
-        self, route: Route, data: Union[dict, FormData] = None, reason: str = None, **kwargs: Dict[str, Any]
+        self, route: Route, data: Union[dict, FormData] = MISSING, reason: str = MISSING, **kwargs: Dict[str, Any]
     ) -> Any:
         """
         Make a request to discord
@@ -116,14 +116,14 @@ class HTTPClient(
         """
         # Assemble headers
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
-        if self.token is not None:
+        if self.token not in (None, MISSING):
             headers["Authorization"] = "Bot " + self.token
         if isinstance(data, (list, dict)):
             headers["Content-Type"] = "application/json"
             kwargs["json"] = data
         elif isinstance(data, FormData):
             kwargs["data"] = data
-        if reason:
+        if reason not in (None, MISSING):
             headers["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
         kwargs["headers"] = headers

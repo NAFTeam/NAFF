@@ -285,3 +285,12 @@ class Member(DiscordObject, _SendDMMixin):
             permissions |= overwrite_member.allow
 
         return permissions
+
+    async def edit_nickname(self, new_nickname: str):
+        """
+        Change the user's nickname.
+
+        Args:
+            new_nickname: The new nickname to apply.
+        """
+        return await self._client.http.modify_guild_member(self._guild_id, self.id, new_nickname)

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 from dis_snek.utils.converters import timestamp_converter
 
@@ -140,7 +141,7 @@ class ThreadRequests:
         thread_type: int = None,
         invitable: Optional[bool] = None,
         message_id: Optional["Snowflake_Type"] = None,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> dict:
         """
         Create a thread in the given channel.

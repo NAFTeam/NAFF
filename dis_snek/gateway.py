@@ -13,7 +13,7 @@ from typing import Any, Callable, Coroutine, List, Optional
 import orjson
 from aiohttp import WSMsgType
 
-from dis_snek.const import logger_name, events
+from dis_snek.const import logger_name, events, MISSING
 from dis_snek.errors import WebSocketClosed, WebSocketRestart
 from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
 from dis_snek.models.enums import Intents
@@ -173,7 +173,7 @@ class WebsocketClient:
 
         self.buffer = bytearray()
         self._zlib = zlib.decompressobj()
-        self._keep_alive = None
+        self._keep_alive = MISSING
 
         self._max_heartbeat_timeout = 120
         self.thread_id = threading.get_ident()

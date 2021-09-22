@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_none
 
@@ -74,7 +75,7 @@ class ChannelRequests:
         bitrate=64000,
         user_limit: int = 0,
         rate_limit_per_user=0,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> Dict:
         """"""
         payload = dict(
@@ -105,7 +106,7 @@ class ChannelRequests:
         new_pos: int,
         parent_id: "Snowflake_Type" = None,
         lock_perms: bool = False,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> None:
         """
         Move a channel.
@@ -124,7 +125,7 @@ class ChannelRequests:
 
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
-    async def modify_channel(self, channel_id: "Snowflake_Type", data: dict, reason: str = None) -> dict:
+    async def modify_channel(self, channel_id: "Snowflake_Type", data: dict, reason: str = MISSING) -> dict:
         """
         Update a channel's settings, returns the updated channel object on success.
 
@@ -138,7 +139,7 @@ class ChannelRequests:
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
 
-    async def delete_channel(self, channel_id: "Snowflake_Type", reason: str = None):
+    async def delete_channel(self, channel_id: "Snowflake_Type", reason: str = MISSING):
         """
         Delete the channel
 
@@ -170,7 +171,7 @@ class ChannelRequests:
         target_type: int = None,
         target_user_id: "Snowflake_Type" = None,
         target_application_id: "Snowflake_Type" = None,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> dict:
         """
         Create an invite for the given channel.
@@ -199,7 +200,7 @@ class ChannelRequests:
 
         return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
 
-    async def delete_invite(self, invite_code: str, reason: str = None) -> dict:
+    async def delete_invite(self, invite_code: str, reason: str = MISSING) -> dict:
         """
         Delete an invite.
 
@@ -220,7 +221,7 @@ class ChannelRequests:
         allow: str,
         deny: str,
         perm_type: int,
-        reason: str = None,
+        reason: str = MISSING,
     ) -> None:
         """
         Edit the channel permission overwrites for a user or role in a channel.
@@ -239,7 +240,7 @@ class ChannelRequests:
         )
 
     async def delete_channel_permission(
-        self, channel_id: "Snowflake_Type", overwrite_id: int, reason: str = None
+        self, channel_id: "Snowflake_Type", overwrite_id: int, reason: str = MISSING
     ) -> None:
         """
         Delete a channel permission overwrite for a user or role in a channel.
@@ -288,7 +289,7 @@ class ChannelRequests:
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
 
     async def create_stage_instance(
-        self, channel_id: "Snowflake_Type", topic: str, privacy_level: int = 1, reason: str = None
+        self, channel_id: "Snowflake_Type", topic: str, privacy_level: int = 1, reason: str = MISSING
     ) -> dict:
         """
         Create a new stage instance.
@@ -326,7 +327,7 @@ class ChannelRequests:
         return await self.request(Route("GET", f"/stage-instances/{channel_id}"))
 
     async def modify_stage_instance(
-        self, channel_id: "Snowflake_Type", topic: str = None, privacy_level: int = None, reason: str = None
+        self, channel_id: "Snowflake_Type", topic: str = None, privacy_level: int = None, reason: str = MISSING
     ) -> dict:
         """
         Update the fields of a given stage instance.
@@ -346,7 +347,7 @@ class ChannelRequests:
             reason=reason,
         )
 
-    async def delete_stage_instance(self, channel_id: "Snowflake_Type", reason: str = None) -> None:
+    async def delete_stage_instance(self, channel_id: "Snowflake_Type", reason: str = MISSING) -> None:
         """
         Delete a stage instance.
 

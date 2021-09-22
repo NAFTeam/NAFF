@@ -21,6 +21,7 @@ attributes:
 """
 
 import sys
+import sentinel
 import dis_snek.models.events as events
 
 
@@ -43,3 +44,10 @@ SLASH_CMD_NAME_LENGTH = 32
 SLASH_CMD_MAX_DESC_LENGTH = 100
 SLASH_CMD_MAX_OPTIONS = 25
 SLASH_OPTION_NAME_LENGTH = 100
+
+MISSING = sentinel.create(
+    cls_dict={
+        "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
+        "__name__": "MISSING",
+    }
+)
