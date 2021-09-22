@@ -14,7 +14,7 @@ from aiohttp import BaseConnector, ClientResponse, ClientSession, ClientWebSocke
 from multidict import CIMultiDictProxy  # type: ignore
 
 from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name, MISSING
-from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPError, NotFound
+from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from dis_snek.http_requests import (
     BotRequests,
     ChannelRequests,
@@ -31,7 +31,6 @@ from dis_snek.http_requests import (
 )
 from dis_snek.models.route import Route
 from dis_snek.utils.input_utils import response_decode
-
 
 log = logging.getLogger(logger_name)
 
@@ -169,7 +168,7 @@ class HTTPClient(
                     if not 300 > response.status >= 200:
                         if not r_limit_data["remaining"] == 0:
                             lock.release()
-                        await self._raise_exception(response, route)
+                        await self._raise_exception(response, route, result)
 
                     # Success!
                     log.debug(f"{route.method}::{route.url}: Received {response.status}, releasing")
@@ -183,7 +182,7 @@ class HTTPClient(
                     continue
                 lock.release()
                 raise
-            except (Forbidden, NotFound, DiscordError, HTTPError):
+            except (Forbidden, NotFound, DiscordError, HTTPException):
                 raise
             except Exception as e:
                 lock.release()
@@ -192,24 +191,23 @@ class HTTPClient(
             # be clean and make sure we unlock
             lock.release()
 
-    async def _raise_exception(self, response, route):
-        resp_text = await response.read()
-        resp_text = resp_text.decode("utf-8")
+    async def _raise_exception(self, response, route, result):
+
         if response.status == 403:
-            raise Forbidden(resp_text, route, response.status, response)
+            raise Forbidden(response, response_data=result, route=route)
         elif response.status == 404:
-            raise NotFound(resp_text, route, response.status, response)
+            raise NotFound(response, response_data=result, route=route)
         elif response.status >= 500:
-            raise DiscordError(resp_text, route, response.status, response)
+            raise DiscordError(response, response_data=result, route=route)
         else:
-            raise HTTPError(resp_text, route, response.status, response)
+            raise HTTPException(response, response_data=result, route=route)
 
     async def request_cdn(self, url, asset) -> bytes:
         log.debug(f"{asset} requests {url} from CDN")
         async with self.__session.get(url) as response:
             if response.status == 200:
                 return await response.read()
-            await self._raise_exception(response, asset)
+            await self._raise_exception(response, asset, await response_decode(response))
 
     async def login(self, token: str) -> dict:
         """
@@ -224,9 +222,9 @@ class HTTPClient(
         self.token = token
         try:
             return await self.request(Route("GET", "/users/@me"))
-        except HTTPError as e:
-            if e.status_code == 401:
-                raise HTTPError("An improper token was passed", e.route, e.status_code, e.response) from e
+        except HTTPException as e:
+            if e.status == 401:
+                raise LoginError("An improper token was passed") from e
             raise
 
     async def close(self) -> None:
@@ -242,7 +240,7 @@ class HTTPClient(
         """Get the gateway url."""
         try:
             data: dict = await self.request(Route("GET", "/gateway"))
-        except HTTPError as exc:
+        except HTTPException as exc:
             raise GatewayNotFound from exc
         return "{0}?encoding={1}&v=9&compress=zlib-stream".format(data["url"], "json")
 

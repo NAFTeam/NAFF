@@ -11,7 +11,16 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 import aiohttp
 
 from dis_snek.const import logger_name, GLOBAL_SCOPE, events
-from dis_snek.errors import GatewayNotFound, SnakeException, WebSocketClosed, WebSocketRestart
+from dis_snek.errors import (
+    GatewayNotFound,
+    SnakeException,
+    WebSocketClosed,
+    WebSocketRestart,
+    BotException,
+    ScaleLoadException,
+    ExtensionLoadException,
+    ExtensionNotFound,
+)
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models.application_commands import (
@@ -230,7 +239,7 @@ class Snake:
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing") from e
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
@@ -249,25 +258,7 @@ class Snake:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
             except Exception as e:
-                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-
-    # def dispatch(self, event: str, *args, **kwargs):
-    #     """
-    #     Dispatch an event.
-    #
-    #     Args:
-    #         event str: The name of the event to dispatch
-    #         args list: A list of arguments to pass to the event
-    #         kwargs dict: A list of keyword arguments to pass
-    #     """
-    #     log.debug(f"Dispatching event: {event}")
-    #
-    #     listeners = self._listeners.get(event, [])
-    #     for _listen in listeners:
-    #         try:
-    #             self._queue_task(_listen, event, *args, **kwargs)
-    #         except Exception as e:
-    #             log.error(f"Error running listener: {e}")
+                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing") from e
 
     def add_listener(self, coro: Callable[..., Coroutine[Any, Any, Any]], event: Optional[str] = None):
         """
@@ -672,7 +663,7 @@ class Snake:
             self.scales[scale_name].shed(self.scales[scale_name])
             self.unload_extension()
         except KeyError:
-            log.error(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def load_extension(self, name: str, package: str = None):
         """
@@ -691,7 +682,7 @@ class Snake:
             setup = getattr(module, "setup")
             setup(self)
         except Exception as e:
-            log.error(f"Error loading {name}: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
+            raise ExtensionLoadException(f"Error loading {name}") from e
         else:
             log.debug(f"Loaded Extension: {name}")
             self.__extensions[name] = module
@@ -711,7 +702,7 @@ class Snake:
         module = self.__extensions.get(name)
 
         if module is None:
-            raise Exception(f"No extension called {name} is loaded")
+            raise ExtensionNotFound(f"No extension called {name} is loaded")
 
         try:
             teardown = getattr(module, "teardown")
