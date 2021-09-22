@@ -65,7 +65,7 @@ class Cooldown:
         self.rate: int = rate
         self.interval: float = interval
 
-    async def _get_cooldown(self, context: "Context") -> "CooldownSystem":
+    async def get_cooldown(self, context: "Context") -> "CooldownSystem":
         key = await self.bucket(context)
 
         if key not in self.cooldown_repositories:
@@ -85,7 +85,7 @@ class Cooldown:
         Returns:
             True if a token was acquired, False if not
         """
-        cooldown = await self._get_cooldown(context)
+        cooldown = await self.get_cooldown(context)
 
         return cooldown.acquire_token()
 
@@ -99,7 +99,7 @@ class Cooldown:
         Returns:
             remaining cooldown time, will return 0 if the cooldown has not been reached
         """
-        cooldown = await self._get_cooldown(context)
+        cooldown = await self.get_cooldown(context)
         return cooldown.get_cooldown_time()
 
     async def on_cooldown(self, context: "Context") -> bool:
@@ -112,7 +112,7 @@ class Cooldown:
         Returns:
             boolean state if the command is on cooldown or not
         """
-        cooldown = await self._get_cooldown(context)
+        cooldown = await self.get_cooldown(context)
         return cooldown.on_cooldown()
 
     async def reset_all(self) -> None:
@@ -132,7 +132,7 @@ class Cooldown:
         Args:
             context: The context of the command
         """
-        cooldown = await self._get_cooldown(context)
+        cooldown = await self.get_cooldown(context)
         cooldown.reset()
 
 

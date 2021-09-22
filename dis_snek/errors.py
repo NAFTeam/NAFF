@@ -1,8 +1,12 @@
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine
 
 import aiohttp
 
 from dis_snek.const import MISSING
+
+if TYPE_CHECKING:
+    from dis_snek.models.command import BaseCommand
+    from dis_snek.models.cooldowns import CooldownSystem
 
 
 class SnakeException(Exception):
@@ -108,7 +112,7 @@ class WebSocketRestart(SnakeException):
         super().__init__("Websocket connection closed... reconnecting")
 
 
-class ExtensionException(SnakeException):
+class ExtensionException(BotException):
     """An error occurred with an extension"""
 
 
@@ -122,3 +126,35 @@ class ExtensionLoadException(ExtensionException):
 
 class ScaleLoadException(ExtensionLoadException):
     """A scale failed to load"""
+
+
+class CommandException(BotException):
+    """An error occurred trying to execute a command"""
+
+
+class CommandOnCooldown(CommandException):
+    """A command is on cooldown, and was attempted to be executed
+
+    Attributes:
+        command BaseCommand: The command that is on cooldown
+        cooldown CooldownSystem: The cooldown system
+    """
+
+    def __init__(self, command: "BaseCommand", cooldown: "CooldownSystem"):
+        self.command: "BaseCommand" = command
+        self.cooldown: "CooldownSystem" = cooldown
+
+        super().__init__(f"Command on cooldown... {cooldown.get_cooldown_time():.2f} seconds until reset")
+
+
+class CommandCheckFailure(CommandException):
+    """A command check failed
+
+    Attributes:
+        command BaseCommand: The command that's check failed
+        check Callable[..., Coroutine]: The check that failed
+    """
+
+    def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine]):
+        self.command: "BaseCommand" = command
+        self.check: Callable[..., Coroutine] = check

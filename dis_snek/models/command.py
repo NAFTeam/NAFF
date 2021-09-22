@@ -5,6 +5,7 @@ from typing import Callable, Coroutine, Any
 import attr
 
 from dis_snek.const import MISSING, logger_name
+from dis_snek.errors import CommandOnCooldown, CommandCheckFailure
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.cooldowns import Cooldown, Buckets
 from dis_snek.utils.serializer import no_export_meta
@@ -104,20 +105,17 @@ class BaseCommand(DictSerializationMixin):
 
         for _c in self.checks:
             if not await _c(context):
-                return False
+                raise CommandCheckFailure(self, _c)
 
         if self.scale and self.scale.scale_checks:
             for _c in self.scale.scale_checks:
                 if not await _c(context):
-                    return False
+                    raise CommandCheckFailure(self, _c)
 
         # cooldown tokens are only acquired should checks pass
         if self.cooldown is not MISSING:
             if not await self.cooldown.acquire_token(context):
-                log.error(
-                    f"Command on cooldown... Reset in {await self.cooldown.get_cooldown_time(context):.3f} seconds"
-                )
-                return False
+                raise CommandOnCooldown(self, await self.cooldown.get_cooldown(context))
 
         return True
 

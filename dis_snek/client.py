@@ -239,7 +239,7 @@ class Snake:
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing") from e
+                raise
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
