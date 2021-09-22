@@ -1,8 +1,10 @@
+import asyncio
 import time
 from enum import Enum, IntEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 from dis_snek.const import MISSING
+from dis_snek.errors import MaxConcurrencyReached
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.context import Context
@@ -215,3 +217,64 @@ class CooldownSystem:
         if c_time > self.opened + self.interval:
             # cooldown has expired, reset the cooldown
             self.reset()
+
+
+class MaxConcurrency:
+    """
+    Limits how many instances of a command may be running concurrently
+
+    Attributes:
+        bucket Buckets: The bucket this concurrency applies to
+        concurrent int: The maximum number of concurrent instances permitted to
+        wait bool: Should we wait until a instance is available
+    """
+
+    def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait=False):
+        self.bucket: Buckets = concurrency_bucket
+        self.concurrency_repository: Dict = {}
+        self.concurrent: int = concurrent
+        self.wait = wait
+
+    async def get_semaphore(self, context: "Context") -> asyncio.Semaphore:
+        """
+        Get the semaphore associated with the given context.
+        Args:
+            context: The commands context
+
+        Returns:
+            A semaphore object
+        """
+        key = await self.bucket(context)
+
+        if key not in self.concurrency_repository:
+            semaphore = asyncio.Semaphore(self.concurrent)
+            self.concurrency_repository[key] = semaphore
+            return semaphore
+        return self.concurrency_repository.get(key)
+
+    async def acquire(self, context: "Context") -> bool:
+        """
+        Acquire an instance of the semaphore
+
+        Args:
+            context:The context of the command
+        returns:
+            If the semaphore was successfully acquired
+        """
+        semaphore = await self.get_semaphore(context)
+
+        if not self.wait and semaphore.locked():
+            return False
+        acquired = await semaphore.acquire()
+        return acquired
+
+    async def release(self, context: "Context") -> None:
+        """
+        Release the semaphore.
+
+        Args:
+            context: The context of the command
+        """
+        semaphore = await self.get_semaphore(context)
+
+        semaphore.release()

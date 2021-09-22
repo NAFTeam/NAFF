@@ -6,7 +6,7 @@ from dis_snek.const import MISSING
 
 if TYPE_CHECKING:
     from dis_snek.models.command import BaseCommand
-    from dis_snek.models.cooldowns import CooldownSystem
+    from dis_snek.models.cooldowns import CooldownSystem, MaxConcurrency
 
 
 class SnakeException(Exception):
@@ -145,6 +145,16 @@ class CommandOnCooldown(CommandException):
         self.cooldown: "CooldownSystem" = cooldown
 
         super().__init__(f"Command on cooldown... {cooldown.get_cooldown_time():.2f} seconds until reset")
+
+
+class MaxConcurrencyReached(CommandException):
+    """A command has exhausted the max concurrent requests."""
+
+    def __init__(self, command: "BaseCommand", max_conc: "MaxConcurrency"):
+        self.command: "BaseCommand" = command
+        self.max_conc: "MaxConcurrency" = max_conc
+
+        super().__init__(f"Command has exhausted the max concurrent requests. ({max_conc.concurrent} simultaneously)")
 
 
 class CommandCheckFailure(CommandException):

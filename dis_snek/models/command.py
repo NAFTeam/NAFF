@@ -5,9 +5,9 @@ from typing import Callable, Coroutine, Any
 import attr
 
 from dis_snek.const import MISSING, logger_name
-from dis_snek.errors import CommandOnCooldown, CommandCheckFailure
+from dis_snek.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.cooldowns import Cooldown, Buckets
+from dis_snek.models.cooldowns import Cooldown, Buckets, MaxConcurrency
 from dis_snek.utils.serializer import no_export_meta
 
 log = logging.getLogger(logger_name)
@@ -39,6 +39,8 @@ class BaseCommand(DictSerializationMixin):
     """Any checks that must be *checked* before the command can run"""
     cooldown: Cooldown = attr.ib(default=MISSING)
     """An optional cooldown to apply to the command"""
+    max_concurrency: MaxConcurrency = attr.ib(default=MISSING)
+    """An optional maximum number of concurrent instances to apply to the command"""
 
     callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
     """The coroutine to be called for this command"""
@@ -55,6 +57,8 @@ class BaseCommand(DictSerializationMixin):
                 self.checks += self.callback.checks
             if hasattr(self.callback, "cooldown"):
                 self.cooldown = self.callback.cooldown
+            if hasattr(self.callback, "max_concurrency"):
+                self.max_concurrency = self.callback.max_concurrency
 
     async def _call_callback(self, callback_object, *args, **kwargs):
         if self.scale is not None:
@@ -92,6 +96,9 @@ class BaseCommand(DictSerializationMixin):
                 await self._call_callback(self.error_callback, e, context, *args, **kwargs)
             else:
                 raise
+        finally:
+            if self.max_concurrency is not MISSING:
+                await self.max_concurrency.release(context)
 
     async def _can_run(self, context):
         """
@@ -100,24 +107,35 @@ class BaseCommand(DictSerializationMixin):
         parameters:
             context: The context of the command
         """
-        if not self.enabled:
-            return False
+        max_conc_acquired = False  # signals if a semaphore has been acquired, for exception handling
 
-        for _c in self.checks:
-            if not await _c(context):
-                raise CommandCheckFailure(self, _c)
+        try:
+            if not self.enabled:
+                return False
 
-        if self.scale and self.scale.scale_checks:
-            for _c in self.scale.scale_checks:
+            for _c in self.checks:
                 if not await _c(context):
                     raise CommandCheckFailure(self, _c)
 
-        # cooldown tokens are only acquired should checks pass
-        if self.cooldown is not MISSING:
-            if not await self.cooldown.acquire_token(context):
-                raise CommandOnCooldown(self, await self.cooldown.get_cooldown(context))
+            if self.scale and self.scale.scale_checks:
+                for _c in self.scale.scale_checks:
+                    if not await _c(context):
+                        raise CommandCheckFailure(self, _c)
 
-        return True
+            if self.max_concurrency is not MISSING:
+                if not await self.max_concurrency.acquire(context):
+                    raise MaxConcurrencyReached(self, self.max_concurrency)
+
+            if self.cooldown is not MISSING:
+                if not await self.cooldown.acquire_token(context):
+                    raise CommandOnCooldown(self, await self.cooldown.get_cooldown(context))
+
+            return True
+
+        except:
+            if max_conc_acquired:
+                await self.max_concurrency.release(context)
+            raise
 
     def error(self, call: Callable[..., Coroutine]):
         """A decorator to declare a coroutine as one that will be run upon an error."""
@@ -206,6 +224,25 @@ def cooldown(bucket: Buckets, rate: int, interval: float):
         cooldown_obj = Cooldown(bucket, rate, interval)
 
         coro.cooldown = cooldown_obj
+
+        return coro
+
+    return wrapper
+
+
+def max_concurrency(bucket: Buckets, concurrent: int):
+    """
+    Add a maximum number of concurrent instances to the command.
+
+    Args:
+        bucket: The bucket to enforce the maximum within
+        concurrent: The maximum number of concurrent instances to allow
+    """
+
+    def wrapper(coro: Callable[..., Coroutine]):
+        max_conc = MaxConcurrency(concurrent, bucket)
+
+        coro.max_concurrency = max_conc
 
         return coro
 
