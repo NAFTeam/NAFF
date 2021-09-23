@@ -8,6 +8,8 @@ import dis_snek.const
 from dis_snek.client import Snake
 from dis_snek.models.discord_objects.context import ComponentContext
 from dis_snek.models.enums import Intents
+from dis_snek.models.events import Component
+
 
 logging.basicConfig()
 cls_log = logging.getLogger(dis_snek.const.logger_name)
@@ -33,8 +35,8 @@ async def on_message_create(event):
 
 
 @bot.event
-async def on_component(ctx: ComponentContext):
-    print(ctx)
+async def on_component(event: Component):
+    ctx = event.context
     await ctx.edit_origin("test")
 
 
