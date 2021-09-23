@@ -196,7 +196,7 @@ class InteractionContext(Context, SendMixin):
             New message object that was sent.
         """
         if ephemeral:
-            flags = 1 << 6
+            flags = MessageFlags.EPHEMERAL
 
         return await super().send(
             content, embeds, components, stickers, allowed_mentions, reply_to, filepath, tts, flags
