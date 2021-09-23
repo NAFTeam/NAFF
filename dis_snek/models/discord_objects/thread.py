@@ -44,7 +44,7 @@ class ThreadList(DiscordObject):
     has_more: bool = field(default=False)
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         threads = []
         for thread_data in data["threads"]:
             threads.append(client.cache.place_channel_data(thread_data))

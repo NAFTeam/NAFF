@@ -101,7 +101,7 @@ class MessageInteraction(DiscordObject):
     _user_id: "Snowflake_Type" = attr.ib()
 
     @classmethod
-    def process_dict(cls, data, client):
+    def _process_dict(cls, data, client):
         user_data = data["user"]
         data["user_id"] = client.cache.place_user_data(user_data).id
         return data
@@ -189,7 +189,7 @@ class Message(DiscordObject):
     _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
 
     @classmethod
-    def process_dict(cls, data: dict, client: "Snake") -> dict:
+    def _process_dict(cls, data: dict, client: "Snake") -> dict:
         # TODO: Is there a way to dynamically do this instead of hard coding?
 
         author_data = data.pop("author")

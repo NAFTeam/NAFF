@@ -67,7 +67,7 @@ class CustomEmoji(Emoji):
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         creator_dict = data.pop("user", None)
         data["creator_id"] = client.cache.place_user_data(creator_dict).id if creator_dict else None
 
@@ -78,7 +78,7 @@ class CustomEmoji(Emoji):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake") -> "CustomEmoji":
-        data = cls.process_dict(data, client)
+        data = cls._process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property

@@ -28,22 +28,22 @@ class DictSerializationMixin:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
-        data = cls.process_dict(data)
+        data = cls._process_dict(data)
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         return data
 
     def update_from_dict(self, data):
-        data = self.process_dict(data, self._client)
+        data = self._process_dict(data, self._client)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
             setattr(self, key, value)
 
-    def check_object(self):
+    def _check_object(self):
         pass
 
     def to_dict(self) -> Dict[str, Any]:
-        self.check_object()
+        self._check_object()
         return to_dict(self)

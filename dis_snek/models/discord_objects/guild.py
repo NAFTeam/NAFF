@@ -124,7 +124,7 @@ class Guild(DiscordObject):
     _icon_hash: Optional[str] = attr.ib(default=None)
 
     @classmethod
-    def process_dict(cls, data, client):
+    def _process_dict(cls, data, client):
         guild_id = data["id"]
 
         channels_data = data.pop("channels", [])

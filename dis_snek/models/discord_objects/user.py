@@ -44,7 +44,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return f"{self.username}#{self.discriminator}"
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
         return data
 
@@ -101,8 +101,8 @@ class User(BaseUser):
     )
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data = super().process_dict(data, client)
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         if "banner" in data:
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
@@ -150,7 +150,7 @@ class Member(DiscordObject, _SendDMMixin):
     # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if "user" in data:
             user_data = data.pop("user")
             client.cache.place_user_data(user_data)

@@ -44,7 +44,7 @@ class Role(DiscordObject):
     integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data.update(data.pop("tags", {}))
         return data
 

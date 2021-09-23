@@ -81,7 +81,7 @@ class Button(InteractiveComponent):
             if self.custom_id is MISSING:
                 self.custom_id = str(uuid.uuid4())
 
-    def check_object(self):
+    def _check_object(self):
         if self.style == ButtonStyles.URL:
             if self.custom_id not in (None, MISSING):
                 raise TypeError("A link button cannot have a `custom_id`!")
@@ -174,7 +174,7 @@ class Select(InteractiveComponent):
         if value < 0:
             raise ValueError("Select max value cannot be a negative number.")
 
-    def check_object(self):
+    def _check_object(self):
         if not self.custom_id:
             raise TypeError("You need to have a custom id to identify the select.")
 
@@ -226,10 +226,10 @@ class ActionRow(BaseComponent):
         if not issubclass(type(component), InteractiveComponent):
             raise TypeError("You can only add select or button to the action row.")
 
-        component.check_object()
+        component._check_object()
         return component
 
-    def check_object(self):
+    def _check_object(self):
         if not (0 < len(self.components) <= ActionRow._max_items):
             raise TypeError(f"Number of components in one row should be between 1 and {ActionRow._max_items}.")
 

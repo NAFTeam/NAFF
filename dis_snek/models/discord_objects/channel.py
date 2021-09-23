@@ -84,7 +84,7 @@ class DMGroup(BaseChannel, MessageableChannelMixin):
     _recipients_ids: List["Snowflake_Type"] = attr.ib(factory=list)
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         recipients_data = data.pop("recipients", [])
         recipients_ids = []
         for recipient_data in recipients_data:
@@ -102,8 +102,8 @@ class DMGroup(BaseChannel, MessageableChannelMixin):
 @define()
 class DM(DMGroup):
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data = super().process_dict(data, client)
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         user_id = data["recipients_ids"][0]
         client.cache.place_dm_channel_id(user_id, data["id"])
         return data
@@ -126,7 +126,7 @@ class GuildChannel(BaseChannel):
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         permission_overwrites = data.get("permission_overwrites", [])
         data["permission_overwrites"] = {
             obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
@@ -223,8 +223,8 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
     archive_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data = super().process_dict(data, client)
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         thread_metadata: dict = data.get("thread_metadata", {})
         data.update(thread_metadata)
         return data

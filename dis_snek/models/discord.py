@@ -16,9 +16,9 @@ class DiscordObject(SnowflakeObject, DictSerializationMixin):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake"):
-        data = cls.process_dict(data, client)
+        data = cls._process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        return super().process_dict(data)
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        return super()._process_dict(data)
