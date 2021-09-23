@@ -1,5 +1,13 @@
-import base64
+from functools import partial
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
+import attr
+from attr.converters import optional
+
+from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.channel import BaseChannel, TYPE_ALL_CHANNEL, GuildText, GuildVoice, \
+    GuildStageVoice
+from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.enums import (
     NSFWLevels,
     SystemChannelFlags,
@@ -9,19 +17,11 @@ from dis_snek.models.enums import (
     MFALevels,
     ChannelTypes,
 )
-from dis_snek.utils.serializer import to_image_data, dict_filter_none
-from dis_snek.utils.converters import timestamp_converter
-from functools import partial
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
-
-import attr
-import inspect
-from attr.converters import optional
-from dis_snek.models.discord import DiscordObject
-from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.utils.attr_utils import define
+from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.proxy import CacheView, CacheProxy
-from dis_snek.models.discord_objects.channel import BaseChannel
+from dis_snek.utils.serializer import to_image_data, dict_filter_none
+from dis_snek.models.snowflake import to_snowflake
 
 if TYPE_CHECKING:
     from io import IOBase
@@ -35,56 +35,93 @@ if TYPE_CHECKING:
 
 @define()
 class Guild(DiscordObject):
+    """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
+
     unavailable: bool = attr.ib(default=False)
+    """True if this guild is unavailable due to an outage."""
     name: str = attr.ib()
-    _icon: Optional[str] = attr.ib(default=None)  # todo merge, convert to asset
-    _icon_hash: Optional[str] = attr.ib(default=None)
+    """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
     splash: Optional[str] = attr.ib(default=None)
+    """Hash for splash image."""
     discovery_splash: Optional[str] = attr.ib(default=None)
+    """Hash for discovery splash image. Only present for guilds with the "DISCOVERABLE" feature."""
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
     permissions: Optional[str] = attr.ib(default=None)  # todo convert to permissions obj
+    """Total permissions for the user in the guild. (excludes overwrites)"""
     afk_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    """The channel id for afk."""
     afk_timeout: Optional[int] = attr.ib(default=None)
+    """afk timeout in seconds."""
     widget_enabled: bool = attr.ib(default=False)
+    """True if the server widget is enabled."""
     widget_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    """The channel id that the widget will generate an invite to, or None if set to no invite."""
     verification_level: Union[VerificationLevels, int] = attr.ib(default=VerificationLevels.NONE)
+    """The verification level required for the guild."""
     default_message_notifications: Union[DefaultNotificationLevels, int] = attr.ib(
         default=DefaultNotificationLevels.ALL_MESSAGES
     )
+    """The default message notifications level."""
     explicit_content_filter: Union[ExplicitContentFilterLevels, int] = attr.ib(
         default=ExplicitContentFilterLevels.DISABLED
     )
-    _emojis: List[dict] = attr.ib(factory=list)
-    _features: List[str] = attr.ib(factory=list)
+    """The explicit content filter level."""
     mfa_level: Union[MFALevels, int] = attr.ib(default=MFALevels.NONE)
+    """The required MFA (Multi Factor Authentication) level for the guild."""
     system_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    """The id of the channel where guild notices such as welcome messages and boost events are posted."""
     system_channel_flags: Union[SystemChannelFlags, int] = attr.ib(default=SystemChannelFlags.NONE)
+    """The system channel flags."""
     rules_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    """The id of the channel where Community guilds can display rules and/or guidelines."""
     joined_at: str = attr.ib(default=None, converter=optional(timestamp_converter))
+    """When this guild was joined at."""
     large: bool = attr.ib(default=False)
+    """True if this is considered a large guild."""
     member_count: int = attr.ib(default=0)
+    """The total number of members in this guild."""
     voice_states: List[dict] = attr.ib(factory=list)
+    """The states of members currently in voice channels. Lacks the guild_id key."""
     presences: List[dict] = attr.ib(factory=list)
+    """The presences of the members in the guild, will only include non-offline members if the size is greater than large threshold."""
     max_presences: Optional[int] = attr.ib(default=None)
+    """The maximum number of presences for the guild. (None is always returned, apart from the largest of guilds)"""
     max_members: Optional[int] = attr.ib(default=None)
+    """The maximum number of members for the guild."""
     vanity_url_code: Optional[str] = attr.ib(default=None)
+    """The vanity url code for the guild."""
     description: Optional[str] = attr.ib(default=None)
+    """The description of a Community guild."""
     banner: Optional[str] = attr.ib(default=None)
+    """Hash for banner image."""
     premium_tier: Optional[str] = attr.ib(default=None)
+    """The premium tier level. (Server Boost level)"""
     premium_subscription_count: int = attr.ib(default=0)
+    """The number of boosts this guild currently has."""
     preferred_locale: str = attr.ib()
+    """The preferred locale of a Community guild. Used in server discovery and notices from Discord. Defaults to \"en-US\""""
     public_updates_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    """The id of the channel where admins and moderators of Community guilds receive notices from Discord."""
     max_video_channel_users: int = attr.ib(default=0)
-    welcome_screen: Optional[dict] = attr.ib(factory=list)
+    """The maximum amount of users in a video channel."""
+    welcome_screen: Optional[dict] = attr.ib(factory=list)  # TODO 	welcome screen object.
+    """The welcome screen of a Community guild, shown to new members, returned in an Invite's guild object."""
     nsfw_level: Union[NSFWLevels, int] = attr.ib(default=NSFWLevels.DEFAULT)
-    stage_instances: List[dict] = attr.ib(factory=list)
-    stickers: List[dict] = attr.ib(factory=list)
+    """The guild NSFW level."""
+    stage_instances: List[dict] = attr.ib(factory=list)  # TODO stage instance objects
+    """Stage instances in the guild."""
+    stickers: List[dict] = attr.ib(factory=list)  # TODO  sticker objects
+    """The custom guild stickers."""
 
     _owner_id: "Snowflake_Type" = attr.ib()
     _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _emojis: List[dict] = attr.ib(factory=list)
+    _features: List[str] = attr.ib(factory=list)
+    _icon: Optional[str] = attr.ib(default=None)  # todo merge, convert to asset
+    _icon_hash: Optional[str] = attr.ib(default=None)
 
     @classmethod
     def process_dict(cls, data, client):
@@ -133,6 +170,7 @@ class Guild(DiscordObject):
     def is_owner(self, member: "Member") -> bool:
         return self._owner_id == member.id
 
+    # TODO What is this commented code for?
     # @property
     # def
     # if not self.member_count and "approximate_member_count" in data:
@@ -145,6 +183,18 @@ class Guild(DiscordObject):
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,
     ) -> "CustomEmoji":
+        """
+        Create a new custom emoji for the guild.
+
+        parameters:
+            name: Name of the emoji
+            imagefile: The emoji image. (Supports PNG, JPEG, WebP, GIF)
+            roles: Roles allowed to use this emoji.
+            reason: An optional reason for the audit log.
+
+        returns:
+            The new custom emoji created.
+        """
         data_payload = dict_filter_none(
             dict(
                 name=name,
@@ -158,10 +208,25 @@ class Guild(DiscordObject):
         return CustomEmoji.from_dict(emoji_data, self._client)  # TODO Probably cache it
 
     async def get_all_custom_emojis(self) -> List[CustomEmoji]:
+        """
+        Gets all the custom emoji present for this guild.
+
+        returns:
+            A list of custom emoji objects.
+        """
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
         return [CustomEmoji.from_dict(emoji_data, self._client) for emoji_data in emojis_data]
 
     async def get_custom_emoji(self, emoji_id: "Snowflake_Type") -> CustomEmoji:
+        """
+        Gets the custom emoji present for this guild, based on the emoji id.
+
+        parameters:
+            emoji_id: The target emoji to get data of.
+
+        returns:
+            The custom emoji object.
+        """
         emoji_data = await self._client.http.get_guild_emoji(self.id, emoji_id)
         return CustomEmoji.from_dict(emoji_data, self._client)
 
@@ -178,26 +243,30 @@ class Guild(DiscordObject):
         user_limit: int = 0,
         slowmode_delay=0,
         reason: str = None,
-    ) -> "BaseChannel":
+    ) -> "TYPE_ALL_CHANNEL":  # TODO Guild channels typing
         """
         Create a guild channel, allows for explicit channel type setting.
 
-        :param channel_type: The type of channel to create
-        :param name: The name of the channel
-        :param topic: The topic of the channel
-        :param position: The position of the channel in the channel list
-        :param permission_overwrites: Permission overwrites to apply to the channel
-        :param category: The category this channel should be within
-        :param nsfw: Should this channel be marked nsfw
-        :param bitrate: The bitrate of this channel, only for voice
-        :param user_limit: The max users that can be in this channel, only for voice
-        :param slowmode_delay: The time users must wait between sending messages
-        :param reason: The reason for creating this channel
-        """
-        if category and hasattr(category, "id"):
-            category = category.id
+        parameters:
+            channel_type: The type of channel to create
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            category: The category this channel should be within
+            nsfw: Should this channel be marked nsfw
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            slowmode_delay: The time users must wait between sending messages
+            reason: The reason for creating this channel
 
-        _channel = await self._client.http.create_guild_channel(
+        returns:
+            The newly created channel.
+        """
+        if category:
+            category = to_snowflake(category)
+
+        channel_data = await self._client.http.create_guild_channel(
             self.id,
             name,
             channel_type,
@@ -211,7 +280,7 @@ class Guild(DiscordObject):
             slowmode_delay,
             reason,
         )
-        return BaseChannel.from_dict_factory(_channel, self._client)
+        return BaseChannel.from_dict_factory(channel_data, self._client)
 
     async def create_text_channel(
         self,
@@ -223,18 +292,22 @@ class Guild(DiscordObject):
         nsfw: bool = False,
         slowmode_delay=0,
         reason: str = None,
-    ):
+    ) -> "GuildText":
         """
         Create a text channel in this guild.
 
-        :param name: The name of the channel
-        :param topic: The topic of the channel
-        :param position: The position of the channel in the channel list
-        :param permission_overwrites: Permission overwrites to apply to the channel
-        :param category: The category this channel should be within
-        :param nsfw: Should this channel be marked nsfw
-        :param slowmode_delay: The time users must wait between sending messages
-        :param reason: The reason for creating this channel
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            category: The category this channel should be within
+            nsfw: Should this channel be marked nsfw
+            slowmode_delay: The time users must wait between sending messages
+            reason: The reason for creating this channel
+
+        returns:
+           The newly created text channel.
         """
         return await self.create_channel(
             channel_type=ChannelTypes.GUILD_TEXT,
@@ -259,19 +332,23 @@ class Guild(DiscordObject):
         bitrate=64000,
         user_limit: int = 0,
         reason: str = None,
-    ):
+    ) -> "GuildVoice":
         """
-        Create a guild voice channel
+        Create a guild voice channel.
 
-        :param name: The name of the channel
-        :param topic: The topic of the channel
-        :param position: The position of the channel in the channel list
-        :param permission_overwrites: Permission overwrites to apply to the channel
-        :param category: The category this channel should be within
-        :param nsfw: Should this channel be marked nsfw
-        :param bitrate: The bitrate of this channel, only for voice
-        :param user_limit: The max users that can be in this channel, only for voice
-        :param reason: The reason for creating this channel
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            category: The category this channel should be within
+            nsfw: Should this channel be marked nsfw
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            reason: The reason for creating this channel
+
+        returns:
+           The newly created voice channel.
         """
         return await self.create_channel(
             channel_type=ChannelTypes.GUILD_VOICE,
@@ -296,18 +373,22 @@ class Guild(DiscordObject):
         bitrate=64000,
         user_limit: int = 0,
         reason: str = None,
-    ):
+    ) -> "GuildStageVoice":
         """
-        Create a guild stage channel
+        Create a guild stage channel.
 
-        :param name: The name of the channel
-        :param topic: The topic of the channel
-        :param position: The position of the channel in the channel list
-        :param permission_overwrites: Permission overwrites to apply to the channel
-        :param category: The category this channel should be within
-        :param bitrate: The bitrate of this channel, only for voice
-        :param user_limit: The max users that can be in this channel, only for voice
-        :param reason: The reason for creating this channel
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            category: The category this channel should be within
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            reason: The reason for creating this channel
+
+        returns:
+            The newly created stage channel.
         """
         return await self.create_channel(
             channel_type=ChannelTypes.GUILD_STAGE_VOICE,
@@ -324,17 +405,21 @@ class Guild(DiscordObject):
     async def create_category(
         self,
         name: str,
-        position=0,
+        position: int = 0,
         permission_overwrites: dict = None,
         reason: str = None,
-    ):
+    ) -> "GuildCategory":
         """
-        Create a category within this guild
+        Create a category within this guild.
 
-        :param name: The name of the channel
-        :param position: The position of the channel in the channel list
-        :param permission_overwrites: Permission overwrites to apply to the channel
-        :param reason: The reason for creating this channel
+        parameters:
+            name: The name of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            reason: The reason for creating this channel
+
+        returns:
+            The newly created category.
         """
         return await self.create_channel(
             channel_type=ChannelTypes.GUILD_CATEGORY,
