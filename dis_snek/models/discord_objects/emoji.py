@@ -8,7 +8,7 @@ from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.proxy import CacheProxy, CacheView
-from dis_snek.utils.serializer import dict_filter_none
+from dis_snek.utils.serializer import dict_filter_none, no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -53,7 +53,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
 class CustomEmoji(Emoji):
     """Represent a custom emoji in a guild with all its properties."""
 
-    _client: "Snake" = field()
+    _client: "Snake" = field(metadata=no_export_meta)
 
     require_colons: bool = attr.ib(default=False)
     """Whether this emoji must be wrapped in colons"""

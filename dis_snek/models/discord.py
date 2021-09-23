@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict
 
+from dis_snek.utils.serializer import no_export_meta
+
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject
 from dis_snek.utils.attr_utils import define, field
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 
 @define()
 class DiscordObject(SnowflakeObject, DictSerializationMixin):
-    _client: "Snake" = field()
+    _client: "Snake" = field(metadata=no_export_meta)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake"):
