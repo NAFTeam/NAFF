@@ -23,6 +23,8 @@ attributes:
     EMBED_MAX_DESC_LENGTH int: The maximum length for an embed description
     EMBED_MAX_FIELDS int: The maximum number of fields for an embed
     EMBED_TOTAL_MAX int: The total combined number of characters for an embed
+
+    MISSING _sentinel: A sentinel value that indicates something has not been set
 """
 
 import sys
