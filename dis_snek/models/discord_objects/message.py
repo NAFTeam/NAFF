@@ -78,7 +78,7 @@ class MessageActivity:
 @attr.s(slots=True)
 class MessageReference(DictSerializationMixin):
     # Add pointers to actual message, channel, guild objects
-    message_id: int = attr.ib(default=None, converter=to_snowflake)
+    message_id: int = attr.ib(default=None, converter=optional_c(to_snowflake))
     channel_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
     guild_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
     fail_if_not_exists: bool = attr.ib(default=True)
