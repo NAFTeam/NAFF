@@ -121,7 +121,7 @@ class Cooldown:
         """
         Resets this cooldown system to its initial state.
 
-        !!! warning:
+        !!! warning
             To be clear, this will reset **all** cooldowns for this command to their initial states
         """
         # this doesnt need to be async, but for consistency, it is
