@@ -108,6 +108,8 @@ class WebSocketClosed(SnakeException):
 class WebSocketRestart(SnakeException):
     """The websocket closed, and is safe to restart"""
 
+    resume: bool = False
+
     def __int__(self, resume: bool = False):
         self.resume = resume
         super().__init__("Websocket connection closed... reconnecting")
