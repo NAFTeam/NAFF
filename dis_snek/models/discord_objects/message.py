@@ -9,7 +9,7 @@ import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
-from dis_snek.errors import EphemeralEditException
+from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
@@ -36,7 +36,7 @@ from dis_snek.utils.serializer import dict_filter_none
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
-    from dis_snek.models.discord_objects.channel import TextChannel, Thread
+    from dis_snek.models.discord_objects.channel import TextChannel, Thread, GuildText
     from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
@@ -258,14 +258,37 @@ class Message(DiscordObject):
 
     @property
     def channel(self) -> Union[CacheProxy, Awaitable["TextChannel"], "TextChannel"]:
+        """Get the channel associated with this message.
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        returns:
+            A channel object
+        """
         return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
 
     @property
     def guild(self) -> Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]]:
+        """Get the guild associated with this message, if any
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        returns:
+            A guild object
+        """
         return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
 
     @property
     def author(self) -> Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]]:
+        """Get the author of this message
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        returns:
+            A user or member object, depending on if this message was sent in a guild"""
         if self._guild_id:
             return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self._guild_id))
         else:
@@ -277,6 +300,14 @@ class Message(DiscordObject):
     ) -> Union[
         CacheView, Awaitable[Dict["Snowflake_Type", Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]
     ]:
+        """Get the users who were mentioned in this message
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        Returns:
+            An async iterator containing the users
+        """
         if self.guild_id:
             return CacheView(ids=self._mention_ids, method=partial(self._client.cache.get_member, self.guild_id))
         else:
@@ -284,10 +315,27 @@ class Message(DiscordObject):
 
     @property
     def mention_roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
+        """Get the roles that were mentioned in this message
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        Returns:
+            An async iterator containing the roles
+        """
         return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)
 
     @property
     def referenced_message(self) -> Optional[Union[CacheProxy, Awaitable["Message"], "Message"]]:
+        """
+        Get the message this message is referencing, if any
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        Returns:
+            The referenced message, or None
+        """
         if self._referenced_message_id:
             return CacheProxy(
                 id=self._referenced_message_id, method=partial(self._client.cache.get_message, self._channel_id)
@@ -296,70 +344,22 @@ class Message(DiscordObject):
 
     @property
     def thread(self) -> Optional[Union[CacheProxy, Awaitable["Thread"], "Thread"]]:
+        """
+        Get the thread associated with message, if any
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        Returns:
+            A thread object or None
+        """
         if self._thread_channel_id:
             return CacheProxy(id=self._thread_channel_id, method=self._client.cache.get_channel)
 
-    async def create_thread(
-        self,
-        name: str,
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ):
-        # TODO What if message is not from GuildText.
-        thread_data = await self._client.http.create_thread(
-            channel_id=self._channel_id,
-            name=name,
-            auto_archive_duration=auto_archive_duration,
-            message_id=self.id,
-            reason=reason,
-        )
-        return self._client.cache.place_channel_data(thread_data)
-
-    async def get_reactions(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
-        reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
-        return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
-
-    async def add_reaction(self, emoji: Union["Emoji", dict, str]):
-        """
-        Add a reaction to this message.
-
-        :param emoji: the emoji to react with
-        """
-        emoji = process_emoji_req_format(emoji)
-        await self._client.http.create_reaction(self._channel_id, self.id, emoji)
-
-    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
-        """
-        Remove a specific reaction that a user reacted with
-
-        :param emoji: Emoji to remove
-        :param member: Member to remove reaction of.
-        """
-        emoji = process_emoji_req_format(emoji)
-        if not isinstance(member, (str, int)):
-            member = member.id
-        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji, member)
-
-    async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
-        """
-        Clear a specific reaction from message
-
-        :param emoji: The emoji to clear
-        """
-        emoji = process_emoji_req_format(emoji)
-        await self._client.http.clear_reaction(self._channel_id, self.id, emoji)
-
-    async def clear_all_reactions(self):
-        """Clear all emojis from a message."""
-        await self._client.http.clear_reactions(self.channel.id, self.id)
-
-    async def pin(self):
-        """Pin message"""
-        await self._client.http.pin_message(self._channel_id, self.id)
-
-    async def unpin(self):
-        """Unpin message"""
-        await self._client.http.unpin_message(self._channel_id, self.id)
+    @property
+    def jump_url(self) -> str:
+        """A url that allows the client to *jump* to this message"""
+        return f"https://discord.com/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     async def edit(
         self,
@@ -377,14 +377,15 @@ class Message(DiscordObject):
         """
         Edits the message.
 
-        :param content: Message text content.
-        :param embeds: Embedded rich content (up to 6000 characters).
-        :param components: The components to include with the message.
-        :param allowed_mentions: Allowed mentions for the message.
-        :param attachments: The attachments to keep, only used when editing message.
-        :param filepath: Location of file to send, defaults to None.
-        :param tts: Should this message use Text To Speech.
-        :param flags: Message flags to apply.
+        parameters:
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            allowed_mentions: Allowed mentions for the message.
+            attachments: The attachments to keep, only used when editing message.
+            filepath: Location of file to send, defaults to None.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
         """
         message_payload = process_message_payload(
             content=content,
@@ -408,7 +409,8 @@ class Message(DiscordObject):
         """
         Delete message.
 
-        :param delay: Seconds to wait before deleting message
+        parameters:
+            delay: Seconds to wait before deleting message
         """
         if delay is not None and delay > 0:
 
@@ -423,6 +425,101 @@ class Message(DiscordObject):
 
         else:
             await self._client.http.delete_message(self._channel_id, self.id)
+
+    async def create_thread(
+        self,
+        name: str,
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
+        reason: Optional[str] = None,
+    ):
+        """
+        Create a thread from this message
+
+        Args:
+            name: The name of this thread
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity,
+            can be set to: 60, 1440, 4320, 10080
+            reason: The optional reason for creating this thread
+
+        Returns:
+            The created thread object
+
+        Raises:
+            ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
+        """
+
+        if not isinstance(await self.channel, GuildText):
+            raise ThreadOutsideOfGuild()
+
+        thread_data = await self._client.http.create_thread(
+            channel_id=self._channel_id,
+            name=name,
+            auto_archive_duration=auto_archive_duration,
+            message_id=self.id,
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
+
+    async def get_reaction(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
+        """
+        Get reactions of a specific emoji from this message
+        Args:
+            emoji: The emoji to get
+
+        Returns:
+            list of users who have reacted with that emoji
+        """
+        reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
+        return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
+
+    async def add_reaction(self, emoji: Union["Emoji", dict, str]):
+        """
+        Add a reaction to this message.
+
+        parameters:
+            emoji: the emoji to react with
+        """
+        emoji = process_emoji_req_format(emoji)
+        await self._client.http.create_reaction(self._channel_id, self.id, emoji)
+
+    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
+        """
+        Remove a specific reaction that a user reacted with
+
+        parameters:
+            emoji: Emoji to remove
+            member: Member to remove reaction of.
+        """
+        emoji = process_emoji_req_format(emoji)
+        if not isinstance(member, (str, int)):
+            member = member.id
+        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji, member)
+
+    async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
+        """
+        Clear a specific reaction from message
+
+        parameters:
+            emoji: The emoji to clear
+        """
+        emoji = process_emoji_req_format(emoji)
+        await self._client.http.clear_reaction(self._channel_id, self.id, emoji)
+
+    async def clear_all_reactions(self):
+        """Clear all emojis from a message."""
+        await self._client.http.clear_reactions(self.channel.id, self.id)
+
+    async def pin(self):
+        """Pin message"""
+        await self._client.http.pin_message(self._channel_id, self.id)
+
+    async def unpin(self):
+        """Unpin message"""
+        await self._client.http.unpin_message(self._channel_id, self.id)
+
+    async def publish(self):
+        """Publish this message"""
+        await self._client.http.crosspost_message(self._channel_id, self.id)
 
 
 def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, dict]]) -> Optional[dict]:

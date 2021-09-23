@@ -184,6 +184,17 @@ class EphemeralEditException(MessageException):
         super().__init__("Ephemeral messages cannot be edited.")
 
 
+class ThreadException(BotException):
+    """A thread operation encountered an exception."""
+
+
+class ThreadOutsideOfGuild(ThreadException):
+    """A thread was attempted to be created outside of a guild."""
+
+    def __init__(self):
+        super().__init__("Threads cannot be created outside of guilds")
+
+
 class InteractionException(BotException):
     """An error occurred with an interaction"""
 
