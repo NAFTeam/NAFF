@@ -68,7 +68,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """
         Get the guilds this user shares with the client
 
-        !!! warning "Awaitable Warning:"
+        ??? warning "Awaitable Property:"
             This property must be awaited.
 
         Returns:
