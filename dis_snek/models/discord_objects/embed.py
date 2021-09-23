@@ -5,6 +5,8 @@ import attr
 from attr.converters import optional as c_optional
 from attr.validators import instance_of
 from attr.validators import optional as v_optional
+
+from dis_snek.const import EMBED_MAX_NAME_LENGTH, EMBED_MAX_FIELDS, EMBED_MAX_DESC_LENGTH, EMBED_TOTAL_MAX
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import field
@@ -119,8 +121,8 @@ class Embed(DictSerializationMixin):
         """Validate the embed title."""
         if value is not None:
             if isinstance(value, str):
-                if len(value) > 256:
-                    raise ValueError("Title cannot exceed 256 characters")
+                if len(value) > EMBED_MAX_NAME_LENGTH:
+                    raise ValueError(f"Title cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
                 return
             raise TypeError("Title must be of type String")
 
@@ -129,8 +131,8 @@ class Embed(DictSerializationMixin):
         """Validate the description."""
         if value is not None:
             if isinstance(value, str):
-                if len(value) > 4096:
-                    raise ValueError("Description cannot exceed 4096 characters")
+                if len(value) > EMBED_MAX_DESC_LENGTH:
+                    raise ValueError(f"Description cannot exceed {EMBED_MAX_DESC_LENGTH} characters")
                 return
             raise TypeError("Description must be of type String")
 
@@ -138,15 +140,15 @@ class Embed(DictSerializationMixin):
     def _fields_validation(self, attribute: str, value: Any) -> None:
         """Validate the fields."""
         if isinstance(value, list):
-            if len(value) > 25:
-                raise ValueError("Embeds can only hold 25 fields")
+            if len(value) > EMBED_MAX_FIELDS:
+                raise ValueError(f"Embeds can only hold {EMBED_MAX_FIELDS} fields")
 
     def check_object(self):
         self._name_validation("title", self.title)
         self._description_validation("description", self.description)
         self._fields_validation("fields", self.fields)
 
-        if len(self) > 6000:
+        if len(self) > EMBED_TOTAL_MAX:
             raise ValueError(
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
