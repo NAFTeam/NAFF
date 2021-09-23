@@ -9,6 +9,7 @@ import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
+from dis_snek.errors import EphemeralEditException
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
@@ -395,6 +396,9 @@ class Message(DiscordObject):
             tts=tts,
             flags=flags,
         )
+
+        if self.flags == MessageFlags.EPHEMERAL:
+            raise EphemeralEditException()
 
         message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id)
         if message_data:

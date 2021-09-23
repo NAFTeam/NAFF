@@ -168,3 +168,12 @@ class CommandCheckFailure(CommandException):
     def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine]):
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
+
+
+class MessageException(BotException):
+    """A message operation encountered an exception."""
+
+
+class EphemeralEditException(MessageException):
+    def __init__(self):
+        super().__init__("Ephemeral messages cannot be edited.")
