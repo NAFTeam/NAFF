@@ -20,6 +20,8 @@ from dis_snek.errors import (
     ScaleLoadException,
     ExtensionLoadException,
     ExtensionNotFound,
+    Forbidden,
+    InteractionMissingAccess,
 )
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
@@ -401,54 +403,57 @@ class Snake:
         guild_perms = {}
 
         for cmd_scope in cmd_scopes:
-            cmds_resp_data = await self.http.get_interaction_element(
-                self.user.id, cmd_scope if cmd_scope != GLOBAL_SCOPE else None
-            )
-            need_to_sync = False
-            cmds_to_sync = []
-
-            for local_cmd in self.interactions[cmd_scope].values():
-                # try and find remote equiv of this command
-                remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
-                local_cmd = local_cmd.to_dict()
-                cmds_to_sync.append(local_cmd)
-
-                if (
-                    not remote_cmd
-                    or local_cmd["name"] != remote_cmd["name"]
-                    or local_cmd.get("description", "") != remote_cmd.get("description", "")
-                    or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
-                    or local_cmd.get("options") != remote_cmd.get("options")
-                ):  # if command local data doesnt match remote, a change has been made, sync it
-                    need_to_sync = True
-
-            if need_to_sync:
-                log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
-                cmd_sync_resp = await self.http.post_interaction_element(
-                    self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != GLOBAL_SCOPE else None
+            try:
+                cmds_resp_data = await self.http.get_interaction_element(
+                    self.user.id, cmd_scope if cmd_scope != GLOBAL_SCOPE else None
                 )
-                # cache cmd_ids and their scopes
-                for cmd_data in cmd_sync_resp:
-                    self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
-            else:
-                log.debug(f"{cmd_scope} is already up-to-date")
+                need_to_sync = False
+                cmds_to_sync = []
 
-            for local_cmd in self.interactions[cmd_scope].values():
-                if not local_cmd.permissions:
-                    continue
+                for local_cmd in self.interactions[cmd_scope].values():
+                    # try and find remote equiv of this command
+                    remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
+                    local_cmd = local_cmd.to_dict()
+                    cmds_to_sync.append(local_cmd)
 
-                for perm_scope, perms in local_cmd.permissions.items():
-                    if perm_scope not in guild_perms:
-                        guild_perms[perm_scope] = []
-                    guild_perms[perm_scope].append(
-                        {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in perms]}
+                    if (
+                        not remote_cmd
+                        or local_cmd["name"] != remote_cmd["name"]
+                        or local_cmd.get("description", "") != remote_cmd.get("description", "")
+                        or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
+                        or local_cmd.get("options") != remote_cmd.get("options")
+                    ):  # if command local data doesnt match remote, a change has been made, sync it
+                        need_to_sync = True
+
+                if need_to_sync:
+                    log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
+                    cmd_sync_resp = await self.http.post_interaction_element(
+                        self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != GLOBAL_SCOPE else None
                     )
+                    # cache cmd_ids and their scopes
+                    for cmd_data in cmd_sync_resp:
+                        self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                else:
+                    log.debug(f"{cmd_scope} is already up-to-date")
 
-            for perm_scope in guild_perms:
-                log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                perm_sync_resp = await self.http.batch_edit_application_command_permissions(
-                    application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
-                )
+                for local_cmd in self.interactions[cmd_scope].values():
+                    if not local_cmd.permissions:
+                        continue
+
+                    for perm_scope, perms in local_cmd.permissions.items():
+                        if perm_scope not in guild_perms:
+                            guild_perms[perm_scope] = []
+                        guild_perms[perm_scope].append(
+                            {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in perms]}
+                        )
+
+                for perm_scope in guild_perms:
+                    log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
+                    perm_sync_resp = await self.http.batch_edit_application_command_permissions(
+                        application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
+                    )
+            except Forbidden as e:
+                raise InteractionMissingAccess(cmd_scope) from e
 
     async def get_context(
         self, data: Union[dict, Message], interaction: bool = False

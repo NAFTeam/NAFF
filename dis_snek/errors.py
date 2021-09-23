@@ -7,6 +7,7 @@ from dis_snek.const import MISSING
 if TYPE_CHECKING:
     from dis_snek.models.command import BaseCommand
     from dis_snek.models.cooldowns import CooldownSystem, MaxConcurrency
+    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class SnakeException(Exception):
@@ -181,3 +182,16 @@ class EphemeralEditException(MessageException):
 
     def __init__(self):
         super().__init__("Ephemeral messages cannot be edited.")
+
+
+class InteractionException(BotException):
+    """An error occurred with an interaction"""
+
+
+class InteractionMissingAccess(InteractionException):
+    """The bot does not have access to the specified scope"""
+
+    def __init__(self, scope: "Snowflake_Type"):
+        self.scope: "Snowflake_Type" = scope
+
+        super().__init__(f"Unable to sync commands in `{scope}` -- The bot lacks access to the specified scope")
