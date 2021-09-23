@@ -302,6 +302,9 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
 
 
+TYPE_MESSAGEABLE_CHANNEL = Union[DM, DMGroup, GuildNews, GuildText]
+
+
 TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_TEXT: GuildText,
     ChannelTypes.GUILD_NEWS: GuildNews,

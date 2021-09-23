@@ -13,7 +13,7 @@ from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import TextChannel
+    from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
@@ -47,7 +47,7 @@ class Context:
     kwargs: Dict = attr.ib(factory=dict)
 
     author: Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]] = attr.ib(default=None)
-    channel: Union[CacheProxy, Awaitable["TextChannel"], "TextChannel"] = attr.ib(default=None)
+    channel: Union[CacheProxy, Awaitable["TYPE_MESSAGEABLE_CHANNEL"], "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(default=None)
     guild: Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]] = attr.ib(default=None)
 
     @property
