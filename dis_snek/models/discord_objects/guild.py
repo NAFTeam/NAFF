@@ -243,7 +243,7 @@ class Guild(DiscordObject):
         user_limit: int = 0,
         slowmode_delay=0,
         reason: str = None,
-    ) -> "TYPE_ALL_CHANNEL":  # TODO Guild channels typing
+    ) -> "TYPE_GUILD_CHANNEL":
         """
         Create a guild channel, allows for explicit channel type setting.
 
