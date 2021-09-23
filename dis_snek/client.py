@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE, events
+from dis_snek.const import logger_name, GLOBAL_SCOPE, events, MISSING
 from dis_snek.errors import (
     GatewayNotFound,
     SnakeException,
@@ -33,7 +33,7 @@ from dis_snek.models.application_commands import (
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext, Context
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
@@ -60,21 +60,27 @@ class Snake:
     Attributes:
         intents Union[int, Intents]: The intents to use
         loop: An event loop to use, normally leave this blank
-        prefix str: The prefix to use for message commands, defaults to `.`
+        default_prefix str: The default_prefix to use for message commands, defaults to `.`
+        get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
         asyncio_debug bool: Enable asyncio debug features
+
     """
 
     def __init__(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        prefix: str = ".",
+        default_prefix: str = ".",
+        get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         asyncio_debug: bool = False,
     ):
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
+
+        # Configuration
+
         if asyncio_debug:
             log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
             import tracemalloc
@@ -83,33 +89,47 @@ class Snake:
             self.loop.set_debug(True)
 
         self.intents = intents
+        """The intents in use"""
         self.sync_interactions = sync_interactions
-        self.prefix = prefix
-        self.scales = {}
+        """Should application commands be synced"""
+        self.default_prefix = default_prefix
+        """The default prefix to be used for message commands"""
+        self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
+        """A coroutine that returns a prefix, for dynamic prefixes"""
 
-        # "Factories"
+        # resources
+
         self.http: HTTPClient = HTTPClient(loop=self.loop)
-        self.ws: WebsocketClient = WebsocketClient
+        """The HTTP client to use when interacting with discord endpoints"""
+        self.ws: WebsocketClient = MISSING
+        """The websocket collection for the Discord Gateway."""
 
-        self._connection = None
+        # flags
         self._closed = False
-
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
+        """How long to wait for guilds to be cached"""
 
         # caches
+
         self.cache: GlobalCache = GlobalCache(self)
-        self._user: SnakeBotUser = None
-        self._app: dict = None
-        self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
+        self._user: SnakeBotUser = MISSING
+        self._app: dict = MISSING
+
+        # collections
+
         self.commands: Dict[str, MessageCommand] = {}
-        self.__extensions = {}
-
+        """A dicitonary of registered commands: `{name: command}`"""
+        self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
+        """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
-
+        self.__extensions = {}
+        self.scales = {}
+        """A dictionary of mounted Scales"""
         self._listeners: Dict[str, List] = {}
 
-        self.add_listener(self._on_raw_socket_receive, "raw_socket_receive")
+        # default listeners
+
         self.add_listener(self._on_websocket_ready, "websocket_ready")
         self.add_listener(self._on_raw_message_create, "raw_message_create")
         self.add_listener(self._on_raw_guild_create, "raw_guild_create")
@@ -142,9 +162,19 @@ class Snake:
         """Returns the bot's owner'"""
         return self.cache.get_user(self.app["owner"]["id"])
 
-    def get_prefix(self):
-        """A method to get the bot's prefix, can be overridden to add dynamic prefixes."""
-        return self.prefix
+    async def get_prefix(self, message: Message) -> str:
+        """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
+
+        !!! note
+            To easily override this method, simply use the `get_prefix` parameter when instantiating the client
+
+        Args:
+            message: A message to determine the prefix from.
+
+        Returns:
+            A string to use as a prefix, by default will return `client.default_prefix`
+        """
+        return self.default_prefix
 
     async def login(self, token):
         """
@@ -178,7 +208,7 @@ class Snake:
             log.info(f"Attempting to {'re' if params['resume'] else ''}connect to gateway...")
 
             try:
-                self.ws = await self.ws.connect(**params)
+                self.ws = await WebsocketClient.connect(**params)
 
                 await self.ws.run()
             except WebSocketRestart as ex:
@@ -219,18 +249,6 @@ class Snake:
 
             await asyncio.sleep(randint(1, 5))
 
-    def start(self, token):
-        """
-        Start the bot.
-
-        info:
-            This is the recommended method to start the bot
-
-        Args:
-            token str: Your bot's token
-        """
-        self.loop.run_until_complete(self.login(token))
-
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):
             try:
@@ -246,6 +264,18 @@ class Snake:
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
         return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
+
+    def start(self, token):
+        """
+        Start the bot.
+
+        info:
+            This is the recommended method to start the bot
+
+        Args:
+            token str: Your bot's token
+        """
+        self.loop.run_until_complete(self.login(token))
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """
@@ -574,8 +604,9 @@ class Snake:
     async def _dispatch_msg_commands(self, event: MessageCreate):
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
+
         if not await message.author.bot:
-            prefix = self.get_prefix()
+            prefix = await self.get_prefix(message)
 
             if message.content.startswith(prefix):
                 invoked_name = get_first_word(message.content.removeprefix(prefix))
@@ -634,19 +665,6 @@ class Snake:
         await self._init_interactions()
 
         self.dispatch(events.Ready())
-
-    async def _on_raw_socket_receive(self, event: events.RawGatewayEvent):
-        """
-        Processes socket events and dispatches non-raw events
-
-        Args:
-            event: raw socket data
-        """
-        # TODO: I think don't really need this anymore? Unless just for debugging.
-        raw = event.data
-        e = raw.get("t")
-        data = raw.get("d")
-        log.debug(f"EVENT: {e}: {data}")
 
     def grow_scale(self, file_name: str, package: str = None) -> None:
         """
