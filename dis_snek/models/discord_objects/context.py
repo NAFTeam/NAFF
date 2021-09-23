@@ -61,6 +61,13 @@ class InteractionContext(Context, SendMixin):
     """
     Represents the context of an interaction
 
+    !!! info "Ephemeral messages:"
+        Ephemeral messages allow you to send messages that only the author of the interaction can see.
+        They are best considered as `fire-and-forget`, in the sense that you cannot edit them once they have been sent.
+
+        Should you attach a component (ie. button) to the ephemeral message,
+        you will be able to edit it when responding to a button interaction.
+
     Attributes:
         interaction_id str: The id of the interaction
         target_id Snowflake_Type: The ID of the target, used for context menus to show what was clicked on
@@ -154,6 +161,46 @@ class InteractionContext(Context, SendMixin):
             self.responded = True
 
         return message_data
+
+    async def send(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        filepath: Optional[Union[str, "Path"]] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
+        ephemeral: bool = False,
+    ) -> "Message":
+        """
+        Send a message.
+
+        parameters:
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            reply_to: Message to reference, must be from the same channel.
+            filepath: Location of file to send, defaults to None.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
+            ephemeral bool: Should this message be sent as ephemeral (hidden)
+
+        returns:
+            New message object that was sent.
+        """
+        if ephemeral:
+            flags = 1 << 6
+
+        return await super().send(
+            content, embeds, components, stickers, allowed_mentions, reply_to, filepath, tts, flags
+        )
 
 
 @attr.s
