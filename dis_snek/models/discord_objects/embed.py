@@ -8,6 +8,7 @@ from attr.validators import optional as v_optional
 
 from dis_snek.const import EMBED_MAX_NAME_LENGTH, EMBED_MAX_FIELDS, EMBED_MAX_DESC_LENGTH, EMBED_TOTAL_MAX
 from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.color import Color
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import field
 from dis_snek.utils.converters import list_converter, timestamp_converter
@@ -86,7 +87,7 @@ class Embed(DictSerializationMixin):
     """The title of the embed"""
     description: Optional[str] = field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[str] = field(default=None, repr=True)
+    color: Optional[Union[str, int, Color]] = field(default=None, repr=True)
     """The colour of the embed"""
     url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
     """The url the embed should direct to when clicked"""
@@ -155,8 +156,12 @@ class Embed(DictSerializationMixin):
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
-        if "color" in data:
-            data["color"] = data["color"]["value"]
+        if color := data.get("color"):
+            if isinstance(color, dict):
+                color = color["value"]
+            elif not isinstance(color, int):
+                color = Color(color).value
+            data["color"] = color
         return data
 
     def __len__(self):
