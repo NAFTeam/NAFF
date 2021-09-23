@@ -175,5 +175,9 @@ class MessageException(BotException):
 
 
 class EphemeralEditException(MessageException):
+    """Your bot attempted to edit an ephemeral message. This is not possible.
+
+    Its worth noting you can edit an ephemeral message with component's `edit_origin` method"""
+
     def __init__(self):
         super().__init__("Ephemeral messages cannot be edited.")
