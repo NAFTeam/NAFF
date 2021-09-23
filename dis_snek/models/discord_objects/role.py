@@ -1,12 +1,15 @@
 from functools import partial
-from typing import TYPE_CHECKING, Any, Awaitable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Dict, Optional, Union, List
 
 import attr
-from dis_snek.models.discord import DiscordObject
+
+from dis_snek.const import MISSING
 from dis_snek.models.color import Color
+from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import Permissions
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.proxy import CacheProxy
+from dis_snek.utils.serializer import dict_filter_missing
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -57,12 +60,64 @@ class Role(DiscordObject):
 
     @property
     def default(self) -> bool:
+        """Is this the `@everyone` role"""
         return self.id == self._guild_id
 
     @property
     def bot_managed(self) -> bool:
+        """Is this role owned/managed by a bot"""
         return self.bot_id is not None
 
     @property
     def integration(self) -> bool:
+        """Is this role owned/managed by a integration"""
         return self.tags.integration_id is not None
+
+    async def is_assignable(self) -> bool:
+        """Can this role be assigned or removed by this bot?
+        !!! note:
+            This does not account for permissions, only the role hierarchy"""
+        me = await self.guild.me
+
+        if (self.default or await me.top_role.position > self.position) and not self.managed:
+            return True
+        return False
+
+    async def delete(self, reason: str = None):
+        """
+        Delete this role
+
+        Args:
+            reason: An optional reason for this deletion
+        """
+        await self._client.http.delete_guild_role(self._guild_id, self.id, reason)
+
+    async def edit(
+        self,
+        name: str = MISSING,
+        permissions: str = MISSING,
+        color: Union[int, Color] = MISSING,
+        hoist: bool = MISSING,
+        mentionable: bool = MISSING,
+    ):
+        """
+        Edit this role, all arguments are optional.
+
+        Args:
+            name: name of the role
+            permissions: New permissions to use
+            color: The color of the role
+            hoist: whether the role should be displayed separately in the sidebar
+            mentionable: whether the role should be mentionable
+        """
+
+        if isinstance(color, Color):
+            color = color.value
+
+        payload = dict_filter_missing(
+            dict(name=name, permissions=permissions, color=color, hoist=hoist, mentionable=mentionable)
+        )
+
+        r_data = await self._client.http.modify_guild_role(self._guild_id, self.id, payload)
+        r_data["guild_id"] = self._guild_id
+        return self.from_dict(r_data, self._client)
