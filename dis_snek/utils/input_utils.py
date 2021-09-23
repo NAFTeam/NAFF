@@ -83,4 +83,7 @@ def get_first_word(text: str):
     :param text: The text to process
     :return: The requested word
     """
-    return initial_word.findall(text)[0]
+    found = initial_word.findall(text)
+    if len(found) == 0:
+        return None
+    return found[0]
