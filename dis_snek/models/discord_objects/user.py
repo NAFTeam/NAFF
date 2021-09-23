@@ -180,6 +180,15 @@ class Member(DiscordObject, _SendDMMixin):
         return CacheProxy(id=self.id, method=self._client.cache.get_user)
 
     @property
+    def nickname(self):
+        """alias for nick"""
+        return self.nick
+
+    @nickname.setter
+    def nickname(self, nickname):
+        self.nick = nickname
+
+    @property
     def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
         """
         Returns the guild object associated with this member.
