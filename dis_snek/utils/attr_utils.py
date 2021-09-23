@@ -3,8 +3,7 @@ from functools import partial
 from typing import Any
 
 import attr
-from dis_snek.const import logger_name
-
+from dis_snek.const import logger_name, MISSING
 
 log = logging.getLogger(logger_name)
 
@@ -40,6 +39,8 @@ def copy_converter(value):
 
 def str_validator(self, attribute: attr.Attribute, value: Any):
     if not isinstance(value, str):
+        if value is MISSING:
+            return
         setattr(self, attribute.name, str(value))
         log.warning(
             f"Value of {attribute.name} has been automatically converted to a string. Please use strings in future.\n"

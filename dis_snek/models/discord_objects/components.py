@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
 
-from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS
+from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
@@ -63,7 +63,7 @@ class Button(InteractiveComponent):
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
     emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
-    custom_id: Optional[str] = attr.ib(factory=uuid.uuid4, validator=str_validator)
+    custom_id: Optional[str] = attr.ib(default=MISSING, validator=str_validator)
     url: Optional[str] = attr.ib(default=None)
     disabled: bool = attr.ib(default=False)
     type: Union[ComponentTypes, int] = attr.ib(
@@ -75,17 +75,21 @@ class Button(InteractiveComponent):
         if not isinstance(value, ButtonStyles) and not value in ButtonStyles.__members__.values():
             raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
+    def __attrs_post_init__(self):
+        if self.style != ButtonStyles.URL:
+            # handle adding a custom id to any button that requires a custom id
+            if self.custom_id is MISSING:
+                self.custom_id = str(uuid.uuid4())
+
     def check_object(self):
         if self.style == ButtonStyles.URL:
-            if self.custom_id:
+            if self.custom_id not in (None, MISSING):
                 raise TypeError("A link button cannot have a `custom_id`!")
             if not self.url:
                 raise TypeError("A link button must have a `url`!")
         else:
             if self.url:
                 raise TypeError("You can't have a URL on a non-link button!")
-            if not self.custom_id:
-                raise TypeError("You need to have a custom id to identify the button.")
 
         if not self.label and not self.emoji:
             raise TypeError("You must have at least a label or emoji on a button.")
