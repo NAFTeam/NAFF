@@ -18,6 +18,11 @@ attributes:
     SLASH_CMD_MAX_DESC_LENGTH int: The maximum length of a slash command's description.
     SLASH_CMD_MAX_OPTIONS int: The maximum number of options a slash command may have.
     SLASH_OPTION_NAME_LENGTH int: The maximum length of a slash option's name.
+
+    EMBED_MAX_NAME_LENGTH int: The maximum length for an embed title
+    EMBED_MAX_DESC_LENGTH int: The maximum length for an embed description
+    EMBED_MAX_FIELDS int: The maximum number of fields for an embed
+    EMBED_TOTAL_MAX int: The total combined number of characters for an embed
 """
 
 import sys
