@@ -36,6 +36,7 @@ from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext, Context
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
+from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
 from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -824,3 +825,14 @@ class Snake:
             Member object
         """
         return await self.cache.get_member(guild_id, user_id)
+
+    async def get_sticker(self, sticker_id: "Snowflake_Type"):
+        sticker_data = await self.http.get_sticker(sticker_id)
+        return Sticker.from_dict(sticker_data, self)
+
+    async def get_nitro_packs(self) -> List["StickerPack"]:
+        packs_data = await self.http.list_nitro_sticker_packs()
+        packs = []
+        for pack_data in packs_data:
+            packs.append(StickerPack.from_dict(pack_data, self))
+        return packs

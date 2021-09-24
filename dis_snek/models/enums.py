@@ -276,21 +276,6 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
     ALL = AntiFlag()
 
 
-class StickerTypes(IntEnum):
-    """Types of sticker"""
-
-    STANDARD = 1
-    GUILD = 2
-
-
-class StickerFormatTypes(IntEnum):
-    """File formats for stickers"""
-
-    PNG = 1
-    APNG = 2
-    LOTTIE = 3
-
-
 class Permissions(DiscordIntFlag):  # type: ignore
     """Permissions a user or role may have"""
 

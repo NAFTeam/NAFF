@@ -1,13 +1,17 @@
 from functools import partial
+from io import IOBase
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
 import attr
+from aiohttp import FormData
 from attr.converters import optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.discord_objects.channel import BaseChannel, TYPE_ALL_CHANNEL, GuildText, GuildVoice, \
-    GuildStageVoice
+from dis_snek.models.discord_objects.channel import BaseChannel, GuildText, GuildVoice, \
+    GuildStageVoice, PermissionOverwrite
 from dis_snek.models.discord_objects.emoji import CustomEmoji
+from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.enums import (
     NSFWLevels,
     SystemChannelFlags,
@@ -17,14 +21,13 @@ from dis_snek.models.enums import (
     MFALevels,
     ChannelTypes,
 )
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
-from dis_snek.models.snowflake import to_snowflake
 
 if TYPE_CHECKING:
-    from io import IOBase
     from pathlib import Path
 
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, Thread, GuildCategory
@@ -110,18 +113,19 @@ class Guild(DiscordObject):
     """The guild NSFW level."""
     stage_instances: List[dict] = attr.ib(factory=list)  # TODO stage instance objects
     """Stage instances in the guild."""
-    stickers: List[dict] = attr.ib(factory=list)  # TODO  sticker objects
-    """The custom guild stickers."""
 
     _owner_id: "Snowflake_Type" = attr.ib()
     _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _emojis: List[dict] = attr.ib(factory=list)
     _features: List[str] = attr.ib(factory=list)
     _icon: Optional[str] = attr.ib(default=None)  # todo merge, convert to asset
     _icon_hash: Optional[str] = attr.ib(default=None)
+
+    # TODO Not storing these for now, get accurate data from api when needed instead.
+    # _emojis: List[dict] = attr.ib(factory=list)
+    # _stickers: List[Sticker] = attr.ib(factory=list)
 
     @classmethod
     def _process_dict(cls, data, client):
@@ -428,3 +432,46 @@ class Guild(DiscordObject):
             permission_overwrites=permission_overwrites,
             reason=reason,
         )
+
+    async def create_custom_sticker(
+        self,
+        name: str,
+        imagefile: Union[str, "Path", "IOBase"],
+        description: Optional[str] = MISSING,
+        tags: Optional[str] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
+        """
+        # TODO
+        """
+        payload = FormData()
+        payload.add_field("name", name)
+
+        # TODO Validate image type?
+        if isinstance(imagefile, IOBase):
+            payload.add_field("file", name)
+        else:
+            payload.add_field("file", open(str(imagefile)))
+
+        if description:
+            payload.add_field("description", description)
+
+        if tags:
+            payload.add_field("tags", tags)
+
+        sticker_data = await self._client.http.create_guild_sticker(payload, self.id, reason)
+        return Sticker.from_dict(sticker_data, self._client)
+
+    async def get_all_custom_stickers(self) -> List[Sticker]:
+        """
+        # TODO
+        """
+        stickers_data = await self._client.http.list_guild_stickers(self.id)
+        return Sticker.from_list(stickers_data, self._client)
+
+    async def get_custom_sticker(self, sticker_id: "Snowflake_Type"):
+        """
+        # TODO
+        """
+        sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
+        return Sticker.from_dict(sticker_data, self._client)

@@ -16,7 +16,7 @@ from dis_snek.models.discord_objects.components import BaseComponent, process_co
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
 from dis_snek.models.discord_objects.reaction import Reaction
-from dis_snek.models.discord_objects.sticker import PartialSticker
+from dis_snek.models.discord_objects.sticker import StickerItem
 from dis_snek.models.enums import (
     ChannelTypes,
     InteractionTypes,
@@ -179,7 +179,7 @@ class Message(DiscordObject):
     flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
     interaction: Optional["MessageInteraction"] = attr.ib(default=None)
     components: Optional[List["ActionRow"]] = attr.ib(default=None)
-    sticker_items: Optional[List[PartialSticker]] = attr.ib(
+    sticker_items: Optional[List[StickerItem]] = attr.ib(
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
@@ -254,7 +254,7 @@ class Message(DiscordObject):
         if "sticker_items" in data:
             stickers = []
             for sticker_data in data["sticker_items"]:
-                stickers.append(PartialSticker.from_dict(sticker_data, client))
+                stickers.append(StickerItem.from_dict(sticker_data, client))
             data["sticker_items"] = stickers
 
         return data
