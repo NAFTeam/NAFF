@@ -29,8 +29,8 @@ from dis_snek.models.enums import (
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.channel import BaseChannel
     from dis_snek.models.discord_objects.guild import Guild
 
 
@@ -77,14 +76,19 @@ class MessageActivity:
 
 @attr.s(slots=True)
 class MessageReference(DictSerializationMixin):
-    # Add pointers to actual message, channel, guild objects
+    """Reference to an originating message. Can be used for replies."""
+
     message_id: int = attr.ib(default=None, converter=optional_c(to_snowflake))
+    """id of the originating message."""
     channel_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    """id of the originating message's channel."""
     guild_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    """id of the originating message's guild."""
     fail_if_not_exists: bool = attr.ib(default=True)
+    """When sending a message, whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message, default true."""
 
     @classmethod
-    def for_message(cls, message: "Message", fail_if_not_exists: bool = True):
+    def for_message(cls, message: "Message", fail_if_not_exists: bool = True) -> "MessageReference":
         return cls(
             message_id=message.id,
             channel_id=message.channel.id,
@@ -116,17 +120,16 @@ class AllowedMentions:
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
     This will always validate against message content to avoid phantom pings, and check against user/bot permissions.
-
-    :param parse: An array of allowed mention types to parse from the content.
-    :param roles: Array of role_ids to mention. (Max size of 100)
-    :param users: Array of user_ids to mention. (Max size of 100)
-    :param replied_user: For replies, whether to mention the author of the message being replied to. (default false)
     """
 
     parse: Optional[List[str]] = attr.ib(factory=list)
+    """An array of allowed mention types to parse from the content."""
     roles: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
+    """Array of role_ids to mention. (Max size of 100)"""
     users: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
+    """Array of user_ids to mention. (Max size of 100)"""
     replied_user = attr.ib(default=False)
+    """For replies, whether to mention the author of the message being replied to. (default false)"""
 
     def add_roles(self, *roles: Union["Role", "Snowflake_Type"]):
         for role in roles:
@@ -571,18 +574,20 @@ def process_message_payload(
     """
     Format message content for it to be ready to send discord.
 
-    :param content: Message text content.
-    :param embeds: Embedded rich content (up to 6000 characters).
-    :param components: The components to include with the message.
-    :param stickers: IDs of up to 3 stickers in the server to send in the message.
-    :param allowed_mentions: Allowed mentions for the message.
-    :param reply_to: Message to reference, must be from the same channel.
-    :param attachments: The attachments to keep, only used when editing message.
-    :param filepath: Location of file to send, defaults to None.
-    :param tts: Should this message use Text To Speech.
-    :param flags: Message flags to apply.
+    parameters:
+        content: Message text content.
+        embeds: Embedded rich content (up to 6000 characters).
+        components: The components to include with the message.
+        stickers: IDs of up to 3 stickers in the server to send in the message.
+        allowed_mentions: Allowed mentions for the message.
+        reply_to: Message to reference, must be from the same channel.
+        attachments: The attachments to keep, only used when editing message.
+        filepath: Location of file to send, defaults to None.
+        tts: Should this message use Text To Speech.
+        flags: Message flags to apply.
 
-    :return: Dictionary or multipart data form.
+    returns:
+        Dictionary or multipart data form.
     """
     content = content
     embeds = process_embeds(embeds)
