@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from dis_snek.utils.serializer import no_export_meta
 
@@ -15,10 +15,17 @@ class DiscordObject(SnowflakeObject, DictSerializationMixin):
     _client: "Snake" = field(metadata=no_export_meta)
 
     @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        return super()._process_dict(data)
+
+    @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake"):
         data = cls._process_dict(data, client)
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        return super()._process_dict(data)
+    def from_list(cls, datas: List[Dict[str, Any]], client: "Snake"):
+        objects = []
+        for data in datas:
+            objects.append(cls.from_dict(data, client))
+        return objects

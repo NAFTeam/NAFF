@@ -1,6 +1,6 @@
 from dis_snek.const import kwarg_spam
 from dis_snek.utils.serializer import to_dict
-from typing import Any, Dict
+from typing import Any, Dict, List
 import attr
 
 
@@ -28,17 +28,6 @@ class DictSerializationMixin:
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
-        """
-        Process and converts dictionary data received from discord api to object class instance.
-
-        parameters:
-            data: The json data received from discord api.
-        """
-        data = cls._process_dict(data)
-        return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
-
-    @classmethod
     def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process dictionary data received from discord api. Does cleanup and other checks to data.
@@ -51,6 +40,30 @@ class DictSerializationMixin:
         """
         return data
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]):
+        """
+        Process and converts dictionary data received from discord api to object class instance.
+
+        parameters:
+            data: The json data received from discord api.
+        """
+        data = cls._process_dict(data)
+        return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
+
+    @classmethod
+    def from_list(cls, datas: List[Dict[str, Any]]):
+        """
+        Process and converts list data received from discord api to object class instances.
+
+        parameters:
+            data: The json data received from discord api.
+        """
+        objects = []
+        for data in datas:
+            objects.append(cls.from_dict(data))
+        return objects
+
     def update_from_dict(self, data):
         """
         Updates object attribute(s) with new json data received from discord api.
@@ -59,6 +72,8 @@ class DictSerializationMixin:
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
             setattr(self, key, value)
+
+        return self
 
     def _check_object(self):
         """
