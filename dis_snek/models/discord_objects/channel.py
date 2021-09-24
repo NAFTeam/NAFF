@@ -5,6 +5,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
 from dis_snek.models.discord_objects.thread import ThreadMember, ThreadList
 from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes, AutoArchiveDuration
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
@@ -132,6 +133,49 @@ class GuildChannel(BaseChannel):
             obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
         }
         return data
+
+    async def create_invite(
+        self,
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        target_type: Optional["InviteTargetTypes"] = None,
+        target_user_id: Optional["Snowflake_Type"] = None,
+        target_application_id: Optional["Snowflake_Type"] = None,
+        reason: Optional[str] = None,
+    ) -> "Invite":
+        """
+        Create channel invite.
+
+        parameters:
+            max_age: Max age of invite in seconds, default 86400 (24 hours).
+            max_uses: Max uses of invite, default 0.
+            temporary: Grants temporary membership, default False.
+            unique: Invite is unique, default false.
+            target_type: Target type for streams and embedded applications.
+            target_user_id: Target User ID for Stream target type.
+            target_application_id: Target Application ID for Embedded App target type.
+
+        returns:
+            Newly created Invite object.
+        """
+        if target_type:
+            if target_type == InviteTargetTypes.STREAM and not target_user_id:
+                raise ValueError("Stream target must include target user ID")
+            elif target_type == InviteTargetTypes.EMBEDDED_APPLICATION and not target_application_id:
+                raise ValueError("Embedded Application target must include target application ID")
+        elif target_user_id and target_application_id:
+            raise ValueError("Invite target must be either User or Embedded Application, not both")
+        elif target_user_id:
+            target_user_id = to_snowflake(target_user_id)
+            target_type = InviteTargetTypes.STREAM
+        elif target_application_id:
+            target_application_id = to_snowflake(target_application_id)
+            target_type = InviteTargetTypes.EMBEDDED_APPLICATION
+
+        invite_data = await self._client.http.create_channel_invite(self.id, max_age, max_uses, temporary, unique, target_type, target_user_id, target_application_id, reason)
+        return Invite.from_dict(invite_data)
 
 
 @define()
