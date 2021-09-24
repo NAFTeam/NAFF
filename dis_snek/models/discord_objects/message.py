@@ -608,8 +608,6 @@ def process_message_payload(
 
     if filepath:
         # Some special checks when sending file.
-        if embeds or allowed_mentions:
-            raise ValueError("Embeds and allow mentions is not supported when sending a file.")
         if flags and flags & MessageFlags.EPHEMERAL == flags:
             raise ValueError("Ephemeral messages does not support sending of files.")
 
