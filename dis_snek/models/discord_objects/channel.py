@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from aiohttp import FormData
 
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
@@ -39,10 +40,79 @@ class MessageableChannelMixin(SendMixin):
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.id)
 
-    async def fetch_message(self, message_id: "Snowflake_Type") -> "Message":
+    async def get_message(self, message_id: "Snowflake_Type") -> "Message":
+        """
+        Fetch a message from the channel.
+
+        parameters:
+            message_id: ID of message to retrieve.
+
+        returns:
+            The message object fetched.
+        """
         message_id = to_snowflake(message_id)
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
+
+    async def get_messages(
+        self,
+        limit: int = 50,
+        around: "Snowflake_Type" = None,
+        before: "Snowflake_Type" = None,
+        after: "Snowflake_Type" = None,
+    ) -> Optional[List["Message"]]:
+        """
+        Fetch multiple messages from the channel.
+
+        parameters:
+            limit: Max number of messages to return, default `50`, max `100`
+            around: Message to get messages around
+            before: Message to get messages before
+            after: Message to get messages after
+
+        returns:
+            A list of messages fetched.
+        """
+        # TODO Check max limit.
+        if around:
+            around = to_snowflake(around)
+        elif before:
+            before = to_snowflake(before)
+        elif after:
+            after = to_snowflake(after)
+
+        messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
+        messages = []
+        for message_data in messages_data:
+            messages.append(self._client.cache.place_message_data(message_data))
+        return messages
+
+    async def get_pinned_messages(self):
+        """
+        Fetch pinned messages from the channel.
+
+        returns:
+            A list of messages fetched.
+        """
+        messages_data = await self._client.http.get_pinned_messages(self.id)
+        messages = []
+        for message_data in messages_data:
+            messages.append(self._client.cache.place_message_data(message_data))
+        return messages
+
+    async def delete_messages(self, messages: List[Union["Snowflake_Type", "Message"]], reason: str = None) -> None:
+        """
+        Bulk delete messages from channel.
+
+        parameters:
+            messages: List of messages or message IDs to delete.
+            reason: The reason for this action. Used for audit logs.
+        """
+        message_ids = []
+        for message in messages:
+            message_ids.append(to_snowflake(message))
+
+        await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
 
 
 @define(slots=False)
@@ -120,10 +190,11 @@ class DM(DMGroup):
 
 @define()
 class GuildChannel(BaseChannel):
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
-    parent_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    parent_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
+
+    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
 
     @classmethod
@@ -133,6 +204,28 @@ class GuildChannel(BaseChannel):
             obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
         }
         return data
+
+    @property
+    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
+        """Get the guild associated with this channel.
+
+        ??? warning "Awaitable Property:"
+            This property must be awaited.
+
+        returns:
+            A guild object.
+        """
+        return CacheProxy(id=self.guild_id, method=self._client.cache.get_guild)
+
+    async def set_permissions(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
+        await self._client.http.edit_channel_permission(
+            self.id,
+            overwrite.id,
+            overwrite.allow,  # TODO Convert to str...?
+            overwrite.deny,
+            overwrite.type,
+            reason
+        )
 
     async def create_invite(
         self,

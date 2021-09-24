@@ -275,7 +275,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         # Find (@everyone) role overwrite and apply it.
         overwrites = channel._permission_overwrites
-        if overwrite_everyone := overwrites.get(channel.guild_id):
+        if overwrite_everyone := overwrites.get(channel._guild_id):
             permissions &= ~overwrite_everyone.deny
             permissions |= overwrite_everyone.allow
 

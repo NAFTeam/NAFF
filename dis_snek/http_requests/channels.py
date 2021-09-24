@@ -237,6 +237,7 @@ class ChannelRequests:
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
             data={"allow": allow, "deny": deny, "type": perm_type},
+            reason=reason
         )
 
     async def delete_channel_permission(
