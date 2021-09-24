@@ -107,7 +107,7 @@ class CustomEmoji(Emoji):
         # todo: check roles
         return True
 
-    async def modify(
+    async def edit(
         self,
         name: Optional[str] = None,
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
