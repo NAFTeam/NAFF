@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
+    from dis_snek.models.discord_objects.channel import PermissionOverwrite
+    from dis_snek.models.enums import ChannelTypes
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -66,15 +69,15 @@ class ChannelRequests:
         self,
         guild_id: "Snowflake_Type",
         name: str,
-        channel_type: int,
-        topic: str = "",
-        position=0,
-        permission_overwrites=List,
-        parent_id: "Snowflake_Type" = None,
+        channel_type: Union["ChannelTypes", int],
+        topic: Optional[str] = MISSING,
+        position: int = 0,
+        permission_overwrites: List[Union["PermissionOverwrite", dict]] = MISSING,
+        parent_id: "Snowflake_Type" = MISSING,
         nsfw: bool = False,
-        bitrate=64000,
+        bitrate: int = 64000,
         user_limit: int = 0,
-        rate_limit_per_user=0,
+        rate_limit_per_user: int = 0,
         reason: str = MISSING,
     ) -> Dict:
         """"""

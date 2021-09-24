@@ -185,7 +185,7 @@ class Guild(DiscordObject):
         name: str,
         imagefile: Union[str, "Path", "IOBase"],
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
-        reason: Optional[str] = None,
+        reason: Optional[str] = MISSING,
     ) -> "CustomEmoji":
         """
         Create a new custom emoji for the guild.
@@ -236,17 +236,17 @@ class Guild(DiscordObject):
 
     async def create_channel(
         self,
-        channel_type: ChannelTypes,
+        channel_type: Union[ChannelTypes, int],
         name: str,
-        topic: str = "",
-        position=0,
-        permission_overwrites: dict = None,
+        topic: Optional[str] = MISSING,
+        position: int = 0,
+        permission_overwrites: Optional["PermissionOverwrite", dict] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        bitrate=64000,
+        bitrate: int = 64000,
         user_limit: int = 0,
-        slowmode_delay=0,
-        reason: str = None,
+        slowmode_delay: int = 0,
+        reason: Optional[str] = MISSING,
     ) -> "TYPE_GUILD_CHANNEL":
         """
         Create a guild channel, allows for explicit channel type setting.
@@ -289,13 +289,13 @@ class Guild(DiscordObject):
     async def create_text_channel(
         self,
         name: str,
-        topic: str = "",
-        position=0,
-        permission_overwrites: dict = None,
+        topic: Optional[str] = MISSING,
+        position: int = 0,
+        permission_overwrites: Optional["PermissionOverwrite", dict] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        slowmode_delay=0,
-        reason: str = None,
+        slowmode_delay: int = 0,
+        reason: Optional[str] = MISSING,
     ) -> "GuildText":
         """
         Create a text channel in this guild.
@@ -328,14 +328,14 @@ class Guild(DiscordObject):
     async def create_voice_channel(
         self,
         name: str,
-        topic: str = "",
-        position=0,
-        permission_overwrites: dict = None,
+        topic: Optional[str] = MISSING,
+        position: int = 0,
+        permission_overwrites: Optional["PermissionOverwrite", dict] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        bitrate=64000,
+        bitrate: int = 64000,
         user_limit: int = 0,
-        reason: str = None,
+        reason: Optional[str] = MISSING,
     ) -> "GuildVoice":
         """
         Create a guild voice channel.
@@ -370,13 +370,13 @@ class Guild(DiscordObject):
     async def create_stage_channel(
         self,
         name: str,
-        topic: str = "",
-        position=0,
-        permission_overwrites: dict = None,
-        category: Union["Snowflake_Type", "GuildCategory"] = None,
-        bitrate=64000,
+        topic: Optional[str] = MISSING,
+        position: int = 0,
+        permission_overwrites: Optional["PermissionOverwrite", dict] = MISSING,
+        category: Union["Snowflake_Type", "GuildCategory"] = MISSING,
+        bitrate: int = 64000,
         user_limit: int = 0,
-        reason: str = None,
+        reason: Optional[str] = MISSING,
     ) -> "GuildStageVoice":
         """
         Create a guild stage channel.
@@ -410,8 +410,8 @@ class Guild(DiscordObject):
         self,
         name: str,
         position: int = 0,
-        permission_overwrites: dict = None,
-        reason: str = None,
+        permission_overwrites: Optional["PermissionOverwrite", dict] = MISSING,
+        reason: Optional[str] = MISSING,
     ) -> "GuildCategory":
         """
         Create a category within this guild.
