@@ -302,6 +302,9 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
 
 
+TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
+
+
 TYPE_MESSAGEABLE_CHANNEL = Union[DM, DMGroup, GuildNews, GuildText]
 
 
