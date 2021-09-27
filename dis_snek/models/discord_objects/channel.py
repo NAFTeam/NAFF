@@ -33,7 +33,9 @@ class PermissionOverwrite(SnowflakeObject):
 
 @define(slots=False)
 class MessageableChannelMixin(SendMixin):
-    last_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)  # TODO May need to think of dynamically updating this.
+    last_message_id: Optional["Snowflake_Type"] = attr.ib(
+        default=None
+    )  # TODO May need to think of dynamically updating this.
     default_auto_archive_duration: int = attr.ib(default=60)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
@@ -219,12 +221,7 @@ class GuildChannel(BaseChannel):
 
     async def set_permissions(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         await self._client.http.edit_channel_permission(
-            self.id,
-            overwrite.id,
-            overwrite.allow,  # TODO Convert to str...?
-            overwrite.deny,
-            overwrite.type,
-            reason
+            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
         )
 
     async def create_invite(
@@ -267,7 +264,9 @@ class GuildChannel(BaseChannel):
             target_application_id = to_snowflake(target_application_id)
             target_type = InviteTargetTypes.EMBEDDED_APPLICATION
 
-        invite_data = await self._client.http.create_channel_invite(self.id, max_age, max_uses, temporary, unique, target_type, target_user_id, target_application_id, reason)
+        invite_data = await self._client.http.create_channel_invite(
+            self.id, max_age, max_uses, temporary, unique, target_type, target_user_id, target_application_id, reason
+        )
         return Invite.from_dict(invite_data)
 
 
@@ -316,24 +315,34 @@ class GuildText(GuildChannel, MessageableChannelMixin):
         return self._client.cache.place_channel_data(thread_data)
 
     async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
-        threads_data = await self._client.http.list_public_archived_threads(channel_id=self.id, limit=limit, before=before)
+        threads_data = await self._client.http.list_public_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
     async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
-        threads_data = await self._client.http.list_private_archived_threads(channel_id=self.id, limit=limit, before=before)
+        threads_data = await self._client.http.list_private_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
-    async def get_joined_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
-        threads_data = await self._client.http.list_joined_private_archived_threads(channel_id=self.id, limit=limit, before=before)
+    async def get_joined_private_archived_threads(
+        self, limit: int = None, before: Union["Timestamp"] = None
+    ) -> ThreadList:
+        threads_data = await self._client.http.list_joined_private_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
 
 @define()
 class GuildNews(GuildText):
-    rate_limit_per_user: int = attr.ib(default=0, init=False, on_setattr=attr.setters.frozen)  # TODO Not sure overriding like this is the best method.
+    rate_limit_per_user: int = attr.ib(
+        default=0, init=False, on_setattr=attr.setters.frozen
+    )  # TODO Not sure overriding like this is the best method.
     pass
 
 

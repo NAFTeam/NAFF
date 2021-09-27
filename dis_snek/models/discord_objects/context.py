@@ -47,7 +47,9 @@ class Context:
     kwargs: Dict = attr.ib(factory=dict)
 
     author: Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]] = attr.ib(default=None)
-    channel: Union[CacheProxy, Awaitable["TYPE_MESSAGEABLE_CHANNEL"], "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(default=None)
+    channel: Union[CacheProxy, Awaitable["TYPE_MESSAGEABLE_CHANNEL"], "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
+        default=None
+    )
     guild: Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]] = attr.ib(default=None)
 
     @property

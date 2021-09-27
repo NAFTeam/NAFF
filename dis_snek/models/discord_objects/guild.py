@@ -8,8 +8,13 @@ from attr.converters import optional
 
 from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.discord_objects.channel import BaseChannel, GuildText, GuildVoice, \
-    GuildStageVoice, PermissionOverwrite
+from dis_snek.models.discord_objects.channel import (
+    BaseChannel,
+    GuildText,
+    GuildVoice,
+    GuildStageVoice,
+    PermissionOverwrite,
+)
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
@@ -153,7 +158,9 @@ class Guild(DiscordObject):
         return CacheView(ids=self._channel_ids, method=self._client.cache.get_channel)
 
     @property
-    def threads(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "ThreadChannel"]], AsyncIterator["ThreadChannel"]]:
+    def threads(
+        self,
+    ) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "ThreadChannel"]], AsyncIterator["ThreadChannel"]]:
         return CacheView(ids=self._thread_ids, method=self._client.cache.get_channel)
 
     @property

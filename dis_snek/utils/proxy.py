@@ -53,6 +53,7 @@ async def _resolve_action(action, value, *args, **kwargs):
 
     return value
 
+
 # ---
 # Functions for internal usage in proxies
 
@@ -95,6 +96,7 @@ async def filter_iterator(items: list, func, sequential=False):
 @attr.define()
 class Proxy:
     """Base proxy class with all the cool stuff"""
+
     _initial_value = attr.field(default=...)
     _sequence = attr.field(factory=list, kw_only=True)
     _is_dud = attr.field(default=False, kw_only=True)
@@ -256,6 +258,7 @@ class IterableProxy(Proxy):
 
 class AsyncInt(int):
     """Yes this is wrapper of int to allow awaiting it. Syntax consistency idk idk"""
+
     def __await__(self):
         return self._return_self().__await__()
 
@@ -269,6 +272,7 @@ class CacheProxy(Proxy):
     Use this class internally in async properties of discord objects that should return single object by it's id
 
     """
+
     def __init__(self, id: "Snowflake_Type", method: Callable):
         super().__init__(id if id is not None else attr.NOTHING)
         self._add_action(method)
@@ -285,6 +289,7 @@ class CacheView(IterableProxy):
     and can fetch a single object by it's id
 
     """
+
     _method: Callable = attr.field(repr=False)  # store to use in get()
 
     def __init__(self, ids: Union[Awaitable, List["Snowflake_Type"]], method: Callable):
@@ -310,6 +315,7 @@ class DudSingleton:
     dud_marker = object()
 
     """Do not instantiate directly. Don't touch. Don't look at"""
+
     @staticmethod
     def _init_proxy():
         return IterableProxy(is_dud=True)
