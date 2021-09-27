@@ -612,10 +612,6 @@ def process_message_payload(
     )
 
     if filepath:
-        # Some special checks when sending file.
-        if flags and flags & MessageFlags.EPHEMERAL == flags:
-            raise ValueError("Ephemeral messages does not support sending of files.")
-
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", json.dumps(message_data))
