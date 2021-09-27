@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 import attr
 from aiohttp import FormData
 from attr.converters import optional
-from dis_snek.models.discord_objects.thread import ThreadList
 
 from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
@@ -13,6 +12,7 @@ from dis_snek.models.discord_objects.channel import BaseChannel, GuildText, Guil
     GuildStageVoice, PermissionOverwrite
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
+from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
     NSFWLevels,
     SystemChannelFlags,
@@ -441,7 +441,7 @@ class Guild(DiscordObject):
         description: Optional[str] = MISSING,
         tags: Optional[str] = MISSING,
         reason: Optional[str] = MISSING,
-    ):
+    ) -> "Sticker":
         """
         # TODO
         """
@@ -463,21 +463,21 @@ class Guild(DiscordObject):
         sticker_data = await self._client.http.create_guild_sticker(payload, self.id, reason)
         return Sticker.from_dict(sticker_data, self._client)
 
-    async def get_all_custom_stickers(self) -> List[Sticker]:
+    async def get_all_custom_stickers(self) -> List["Sticker"]:
         """
         # TODO
         """
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return Sticker.from_list(stickers_data, self._client)
 
-    async def get_custom_sticker(self, sticker_id: "Snowflake_Type"):
+    async def get_custom_sticker(self, sticker_id: "Snowflake_Type") -> "Sticker":
         """
         # TODO
         """
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return Sticker.from_dict(sticker_data, self._client)
 
-    async def get_active_threads(self):
+    async def get_active_threads(self) -> "ThreadList":
         """
         Gets all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
 
