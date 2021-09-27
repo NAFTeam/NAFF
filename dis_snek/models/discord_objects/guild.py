@@ -30,7 +30,7 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, Thread, GuildCategory
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.snowflake import Snowflake_Type
@@ -152,7 +152,7 @@ class Guild(DiscordObject):
         return CacheView(ids=self._channel_ids, method=self._client.cache.get_channel)
 
     @property
-    def threads(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Thread"]], AsyncIterator["Thread"]]:
+    def threads(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "ThreadChannel"]], AsyncIterator["ThreadChannel"]]:
         return CacheView(ids=self._thread_ids, method=self._client.cache.get_channel)
 
     @property
