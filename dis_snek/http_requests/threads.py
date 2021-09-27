@@ -122,7 +122,7 @@ class ThreadRequests:
             Route("GET", f"/channels/{channel_id}/users/@me/threads/archived/private"), params=payload
         )
 
-    async def list_active_threads(self, guild_id: "Snowflake_Type") -> List[dict]:
+    async def list_active_threads(self, guild_id: "Snowflake_Type") -> dict:
         """
         List active threads within a guild.
 

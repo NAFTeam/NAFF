@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional
 import attr
 from aiohttp import FormData
 from attr.converters import optional
+from dis_snek.models.discord_objects.thread import ThreadList
 
 from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
@@ -475,3 +476,13 @@ class Guild(DiscordObject):
         """
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return Sticker.from_dict(sticker_data, self._client)
+
+    async def get_active_threads(self):
+        """
+        Gets all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
+
+        returns:
+            List of active threads and thread member object for each returned thread the bot user has joined.
+        """
+        threads_data = await self._client.http.list_active_threads(self.id)
+        return ThreadList.from_dict(threads_data, self._client)
