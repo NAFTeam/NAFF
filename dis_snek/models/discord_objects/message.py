@@ -373,7 +373,7 @@ class Message(DiscordObject):
             Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        attachments: Optional[Union[Attachment, dict]] = None,
+        attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
         filepath: Optional[Union[str, Path]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -567,7 +567,7 @@ def process_message_payload(
     stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
-    attachments: Optional[Union[Attachment, dict]] = None,
+    attachments: Optional[List[Union[Attachment, dict]]] = None,
     file: Optional[Union["IOBase", "Path", str]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
@@ -593,17 +593,19 @@ def process_message_payload(
     content = content
     embeds = process_embeds(embeds)
     components = process_components(components)
-    sticker_ids = stickers  # TODO Process stickers into ids.
+    if stickers:
+        stickers = [to_snowflake(sticker) for sticker in stickers]
     allowed_mentions = process_allowed_mentions(allowed_mentions)
     message_reference = process_message_reference(reply_to)
-    attachments = attachments  # TODO Process attachments into dict.
+    if attachments:
+        attachments = [attachment.to_dict() for attachment in attachments]
 
     message_data = dict_filter_none(
         dict(
             content=content,
             embeds=embeds,
             components=components,
-            sticker_ids=sticker_ids,
+            sticker_ids=stickers,
             allowed_mentions=allowed_mentions,
             message_reference=message_reference,
             attachments=attachments,
