@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route
-from dis_snek.utils.serializer import dict_filter_none
+from dis_snek.utils.serializer import dict_filter_none, dict_filter_missing
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import PermissionOverwrite
@@ -99,7 +99,7 @@ class ChannelRequests:
             )
 
         # clean up payload
-        payload = {key: value for key, value in payload.items() if value is not None}
+        payload = dict_filter_missing(payload)
         return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
     async def move_channel(
