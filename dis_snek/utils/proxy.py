@@ -1,11 +1,11 @@
+import asyncio
 from inspect import isawaitable, isasyncgen
 from operator import getitem, methodcaller
-from typing import TYPE_CHECKING, Union, Awaitable, Callable, Any, List
+from typing import TYPE_CHECKING, Union, Awaitable, Callable, List
 
 import attr
-import asyncio
 
-# from dis_snek.models.snowflake import to_snowflake
+from dis_snek.const import MISSING
 from dis_snek.utils.attr_utils import copy_converter
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ def proxy_partial(func, *args, **kwargs):
 
 def proxy_none():
     """Just a shortcut"""
-    return Proxy(attr.NOTHING)
+    return Proxy(MISSING)
 
 
 def call(func, *args, **kwargs):
@@ -149,7 +149,7 @@ class Proxy:
 
     def __await__(self):
         result = self._resolve_from(self._initial_value).__await__()
-        if result is attr.NOTHING:
+        if result is MISSING:
             return None
         return result
 
@@ -179,8 +179,8 @@ class Proxy:
         for action, args, kwargs in sequence:
             # NOTHING is used internally to indicate that the value is missing and no further actions will be performed on it
             # unlike None, which could be a legit return value of some functions
-            if value is attr.NOTHING:
-                return attr.NOTHING
+            if value is MISSING:
+                return MISSING
 
             # print("value", str(value)[:100])
             # print(str(action)[:100], str(args)[:100], str(kwargs)[:100])
@@ -247,7 +247,7 @@ class IterableProxy(Proxy):
         3. want advanced crazy shit? use duds
         """
         value = await self._resolve(self._initial_value, self._sequence[:-1])
-        if value is attr.NOTHING:
+        if value is MISSING:
             return
 
         action, args, kwargs = self._sequence[-1]
@@ -274,7 +274,7 @@ class CacheProxy(Proxy):
     """
 
     def __init__(self, id: "Snowflake_Type", method: Callable):
-        super().__init__(id if id is not None else attr.NOTHING)
+        super().__init__(id if id is not None else MISSING)
         self._add_action(method)
 
     @property
@@ -293,7 +293,7 @@ class CacheView(IterableProxy):
     _method: Callable = attr.field(repr=False)  # store to use in get()
 
     def __init__(self, ids: Union[Awaitable, List["Snowflake_Type"]], method: Callable):
-        super().__init__(copy_converter(ids))  # if ids is not None else attr.NOTHING
+        super().__init__(copy_converter(ids))  # if ids is not None else MISSING
         self._method = method
         self._add_action(map_iterator, method, sequential=True)
 
