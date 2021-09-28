@@ -104,7 +104,7 @@ class Proxy:
     @classmethod
     def _prototype(cls, proxy: "Proxy") -> "Proxy":
         # noinspection PyArgumentList
-        return cls(initial_value=proxy._initial_value, sequence=proxy._sequence, is_dud=proxy._is_dud)
+        return cls(initial_value=proxy._initial_value, sequence=proxy._sequence.copy(), is_dud=proxy._is_dud)
 
     def call(self, func, *args, **kwargs) -> "Proxy":
         """
