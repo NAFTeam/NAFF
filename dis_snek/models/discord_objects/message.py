@@ -2,6 +2,7 @@ import asyncio
 import json
 from dataclasses import dataclass
 from functools import partial
+from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
 
@@ -396,7 +397,7 @@ class Message(DiscordObject):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            filepath=filepath,
+            file=filepath,
             tts=tts,
             flags=flags,
         )
@@ -567,7 +568,7 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[Union[Attachment, dict]] = None,
-    filepath: Optional[Union[str, Path]] = None,
+    file: Optional[Union["IOBase", "Path", str]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
 ) -> Union[Dict, FormData]:
@@ -611,11 +612,14 @@ def process_message_payload(
         )
     )
 
-    if filepath:
+    if file:
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", json.dumps(message_data))
-        form.add_field("file", open(str(filepath), "rb"))
+        if isinstance(file, IOBase):
+            form.add_field("file", file)
+        else:
+            form.add_field("file", open(str(file), "rb"))
         return form
     else:
         return message_data

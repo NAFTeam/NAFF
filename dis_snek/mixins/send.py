@@ -4,6 +4,7 @@ from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 
 if TYPE_CHECKING:
+    from io import IOBase
     from pathlib import Path
 
     from aiohttp.formdata import FormData
@@ -32,7 +33,7 @@ class SendMixin:
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        filepath: Optional[Union[str, "Path"]] = None,
+        file: Optional[Union["IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
     ) -> "Message":
@@ -60,7 +61,7 @@ class SendMixin:
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
-            filepath=filepath,
+            file=file,
             tts=tts,
             flags=flags,
         )

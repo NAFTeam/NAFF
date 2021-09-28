@@ -174,7 +174,7 @@ class InteractionContext(Context, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        filepath: Optional[Union[str, "Path"]] = None,
+        file: Optional[Union[str, "Path"]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         ephemeral: bool = False,
@@ -201,7 +201,7 @@ class InteractionContext(Context, SendMixin):
             flags = MessageFlags.EPHEMERAL
 
         return await super().send(
-            content, embeds, components, stickers, allowed_mentions, reply_to, filepath, tts, flags
+            content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags
         )
 
 
@@ -286,7 +286,7 @@ class ComponentContext(InteractionContext):
             embeds=embeds,
             components=components,
             allowed_mentions=allowed_mentions,
-            filepath=filepath,
+            file=filepath,
             tts=tts,
         )
 
