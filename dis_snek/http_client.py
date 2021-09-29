@@ -31,6 +31,7 @@ from dis_snek.http_requests import (
 )
 from dis_snek.models.route import Route
 from dis_snek.utils.input_utils import response_decode
+from dis_snek.utils.serializer import dict_filter_missing
 
 log = logging.getLogger(logger_name)
 
@@ -117,11 +118,16 @@ class HTTPClient(
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
         if self.token not in (None, MISSING):
             headers["Authorization"] = "Bot " + self.token
-        if isinstance(data, (list, dict)):
+
+        if isinstance(data, list):
             headers["Content-Type"] = "application/json"
-            kwargs["json"] = data
+            kwargs["json"] = [dict_filter_missing(x) if isinstance(x, dict) else x for x in data]
+        elif isinstance(data, dict):
+            headers["Content-Type"] = "application/json"
+            kwargs["json"] = dict_filter_missing(data)
         elif isinstance(data, FormData):
             kwargs["data"] = data
+
         if reason not in (None, MISSING):
             headers["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
