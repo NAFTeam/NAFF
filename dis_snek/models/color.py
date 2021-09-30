@@ -105,10 +105,13 @@ class Color:
         self.rgb = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(*value))
 
 
-# maybe should be just a dict but not sure
-# or just str enum but no so sure again
 class BrandColors(Color, Enum):
-    # https://discord.com/branding
+    """
+    A collection of colors complying to the Discord Brand specification
+
+    https://discord.com/branding
+    """
+
     BLURPLE = "#5865F2"
     GREEN = "#57F287"
     YELLOW = "#FEE75C"
@@ -116,3 +119,69 @@ class BrandColors(Color, Enum):
     RED = "#ED4245"
     WHITE = "#FFFFFF"
     BLACK = "#000000"
+
+
+class MaterialColors(Color, Enum):
+    """
+    A collection of material ui colors.
+
+    https://www.materialpalette.com/
+    """
+
+    RED = "#F44336"
+    PINK = "#E91E63"
+    LAVENDER = "#EDB9F5"
+    PURPLE = "#9C27B0"
+    DEEP_PURPLE = "#673AB7"
+    INDIGO = "#3F51B5"
+    BLUE = "#2196F3"
+    LIGHT_BLUE = "#03A9F4"
+    CYAN = "#00BCD4"
+    TEAL = "#009688"
+    GREEN = "#4CAF50"
+    LIGHT_GREEN = "#8BC34A"
+    LIME = "#CDDC39"
+    YELLOW = "#FFEB3B"
+    AMBER = "#FFC107"
+    ORANGE = "#FF9800"
+    DEEP_ORANGE = "#FF5722"
+    BROWN = "#795548"
+    GREY = "#9E9E9E"
+    BLUE_GREY = "#607D8B"
+
+
+class FlatUIColors(Color, Enum):
+    """
+    A collection of flat ui colours.
+
+    https://materialui.co/flatuicolors
+    """
+
+    TURQUOISE = "#1ABC9C"
+    EMERLAND = "#2ECC71"
+    PETERRIVER = "#3498DB"
+    AMETHYST = "#9B59B6"
+    WETASPHALT = "#34495E"
+    GREENSEA = "#16A085"
+    NEPHRITIS = "#27AE60"
+    BELIZEHOLE = "#2980B9"
+    WISTERIA = "#8E44AD"
+    MIDNIGHTBLUE = "#2C3E50"
+    SUNFLOWER = "#F1C40F"
+    CARROT = "#E67E22"
+    ALIZARIN = "#E74C3C"
+    CLOUDS = "#ECF0F1"
+    CONCRETE = "#95A5A6"
+    ORANGE = "#F39C12"
+    PUMPKIN = "#D35400"
+    POMEGRANATE = "#C0392B"
+    SILVER = "#BDC3C7"
+    ASBESTOS = "#7F8C8D"
+
+
+# aliases
+Colour = Color
+BrandColours = BrandColors
+MaterialColours = MaterialColors
+FlatUIColours = FlatUIColors
+breakpoint()
