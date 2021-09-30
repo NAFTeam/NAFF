@@ -290,7 +290,7 @@ class Message(DiscordObject):
 
         returns:
             A user or member object, depending on if this message was sent in a guild"""
-        if self._guild_id:
+        if self._guild_id and not self.webhook_id:
             return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self._guild_id))
         else:
             return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
