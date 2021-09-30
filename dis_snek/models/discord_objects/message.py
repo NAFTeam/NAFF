@@ -169,7 +169,7 @@ class Message(DiscordObject):
     reactions: List[Reaction] = attr.ib(factory=list)
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
-    webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
     type: MessageTypes = attr.ib(converter=MessageTypes)
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional["Application"] = attr.ib(default=None)  # TODO: partial application
@@ -253,10 +253,7 @@ class Message(DiscordObject):
             data["components"] = components
 
         if "sticker_items" in data:
-            stickers = []
-            for sticker_data in data["sticker_items"]:
-                stickers.append(StickerItem.from_dict(sticker_data, client))
-            data["sticker_items"] = stickers
+            data["sticker_items"] = StickerItem.from_list(data["sticker_items"], client)
 
         return data
 
