@@ -267,7 +267,7 @@ class GuildChannel(BaseChannel):
         invite_data = await self._client.http.create_channel_invite(
             self.id, max_age, max_uses, temporary, unique, target_type, target_user_id, target_application_id, reason
         )
-        return Invite.from_dict(invite_data)
+        return Invite.from_dict(invite_data, self._client)
 
 
 @define()
