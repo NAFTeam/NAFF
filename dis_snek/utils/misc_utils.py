@@ -1,3 +1,5 @@
+import functools
+import inspect
 import re
 from typing import Callable, Iterable, Optional, Any
 
@@ -39,3 +41,29 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
         if predicate(el):
             return el
     return None
+
+
+def wrap_partial(obj, cls):
+    """
+    🎁 Wraps a commands callback objects into partials
+
+    !!! note
+        This is used internally, you shouldn't need to use this function
+
+    Args:
+        obj: The command object to process
+        cls: The class to use in partials
+
+    Returns:
+        The original command object with its callback methods wrapped
+    """
+    obj.callback = functools.partial(obj.callback, cls)
+
+    if inspect.ismethod(obj.error_callback):
+        obj.error_callback = functools.partial(obj.error_callback, cls)
+    if inspect.ismethod(obj.pre_run_callback):
+        obj.pre_run_callback = functools.partial(obj.pre_run_callback, cls)
+    if inspect.ismethod(obj.post_run_callback):
+        obj.post_run_callback = functools.partial(obj.post_run_callback, cls)
+
+    return obj

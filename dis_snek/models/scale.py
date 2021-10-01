@@ -4,8 +4,9 @@ import logging
 from typing import List, TYPE_CHECKING, Callable, Coroutine
 
 from dis_snek.const import logger_name
-from dis_snek.models.command import MessageCommand
 from dis_snek.models.application_commands import InteractionCommand
+from dis_snek.models.command import MessageCommand
+from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -68,14 +69,16 @@ class Scale:
         new_cls = super().__new__(cls)
 
         for name, val in cls.__dict__.items():
-            if isinstance(val, InteractionCommand):
+            if isinstance(val, (InteractionCommand, MessageCommand)):
                 val.scale = new_cls
+                val = wrap_partial(val, new_cls)
+
                 new_cls._commands.append(val)
-                bot.add_interaction(val)
-            if isinstance(val, MessageCommand):
-                val.scale = new_cls
-                new_cls._commands.append(val)
-                bot.add_message_command(val)
+
+                if isinstance(val, InteractionCommand):
+                    bot.add_interaction(val)
+                else:
+                    bot.add_message_command(val)
 
         log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 

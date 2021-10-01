@@ -60,12 +60,6 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
-    async def _call_callback(self, callback_object, *args, **kwargs):
-        if self.scale is not None:
-            return await callback_object(self.scale, *args, **kwargs)
-        else:
-            return await callback_object(*args, **kwargs)
-
     async def __call__(self, context, *args, **kwargs):
         """
         Calls this command.
@@ -78,22 +72,22 @@ class BaseCommand(DictSerializationMixin):
         try:
             if await self._can_run(context):
                 if self.pre_run_callback is not None:
-                    await self._call_callback(self.pre_run_callback, context, *args, **kwargs)
+                    await self.pre_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_prerun:
-                    await self._call_callback(self.scale.scale_prerun, context, *args, **kwargs)
+                    await self.scale.scale_prerun(context, *args, **kwargs)
 
-                await self._call_callback(self.callback, context, *args, **kwargs)
+                await self.callback(context, *args, **kwargs)
 
                 if self.post_run_callback is not None:
-                    await self._call_callback(self.post_run_callback, context, *args, **kwargs)
+                    await self.post_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_postrun:
-                    await self._call_callback(self.scale.scale_postrun, context, *args, **kwargs)
+                    await self.scale.scale_postrun(context, *args, **kwargs)
 
         except Exception as e:
             if self.error_callback:
-                await self._call_callback(self.error_callback, e, context, *args, **kwargs)
+                await self.error_callback(e, context, *args, **kwargs)
             else:
                 raise
         finally:

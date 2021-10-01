@@ -33,7 +33,7 @@ from dis_snek.models.application_commands import (
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext, Context
+from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
@@ -43,6 +43,7 @@ from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
+from dis_snek.utils.misc_utils import wrap_partial
 from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
@@ -161,7 +162,10 @@ class Snake:
     @property
     def owner(self) -> Coroutine[Any, Any, User]:
         """Returns the bot's owner'"""
-        return self.cache.get_user(self.app["owner"]["id"])
+        try:
+            return self.cache.get_user(self.app["owner"]["id"])
+        except TypeError:
+            return MISSING
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -358,15 +362,20 @@ class Snake:
                     pass
 
     def _gather_commands(self):
-        """Gathers commands from __main__"""
-        cmds = [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, BaseCommand)]
-        for cmd in cmds:
-            if isinstance(cmd, InteractionCommand):
-                self.add_interaction(cmd)
-            if isinstance(cmd, MessageCommand):
-                self.add_message_command(cmd)
+        """Gathers commands from __main__ and self"""
 
-        log.debug(f"{len(cmds)} commands have been loaded from `__main__`")
+        def process(_cmds):
+
+            for cmd in _cmds:
+                if isinstance(cmd, InteractionCommand):
+                    self.add_interaction(cmd)
+                if isinstance(cmd, MessageCommand):
+                    self.add_message_command(cmd)
+
+            log.debug(f"{len(_cmds)} commands have been loaded")
+
+        process([obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, BaseCommand)])
+        process([wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, BaseCommand)])
 
     def add_interaction(self, command: InteractionCommand):
         """
