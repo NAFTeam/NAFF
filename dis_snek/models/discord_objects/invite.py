@@ -45,6 +45,7 @@ class Invite(DiscordObject):
     target_type: Optional[Union[InviteTargetTypes, int]] = field(converter=optional_c(InviteTargetTypes))
     approximate_presence_count: Optional[int] = field(default=-1)
     approximate_member_count: Optional[int] = field(default=-1)
+    target_application: Optional[dict] = field(default=None)  # TODO Partical application
     expires_at: Optional[Timestamp] = field(converter=optional_c(timestamp_converter))
     stage_instance: Optional[InviteStageInstance] = field(default=None)
 
@@ -55,8 +56,16 @@ class Invite(DiscordObject):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        # TODO InviteStageInstance conversion
-        return super()._process_dict(data, client)
+        if "stage_instance" in data:
+            data["stage_instance"] = InviteStageInstance.from_dict(data)
+
+        # TODO Convert target_application
+
+        return data
+
+    @property
+    def link(self):
+        return f"https://discord.gg/{code}"
 
     @property
     def guild(self):
