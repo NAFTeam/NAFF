@@ -301,23 +301,6 @@ class Snake:
             self._listeners[listener.event] = []
         self._listeners[listener.event].append(listener)
 
-    def event(self, coro: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
-        """
-        A decorator to add a coroutine as a listener for an event.
-
-        The coroutines name is used to determine which event it should be listening for.
-
-        hint:
-            For example:
-                `def on_ready`
-            will listen for `ready` events.
-
-        Args:
-            coro Coroutine: The coroutine that will be a listener
-        """
-        self.add_listener(coro)
-        return coro
-
     async def _init_interactions(self) -> None:
         """
         Initialise slash commands.
