@@ -10,6 +10,7 @@ aiohttp = "^3.7.4"
 orjson = "^3.6.0"
 attrs = "^21.2.0"
 mypy = "^0.910"
+sentinel = {version = "^0.3.0", extras=["varname"]}
 
 [tool.poetry.dev-dependencies]
 
