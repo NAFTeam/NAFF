@@ -51,6 +51,7 @@ class Scale:
     scale_checks: List
     scale_prerun: List
     scale_postrun: List
+    listeners: List
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
@@ -66,6 +67,7 @@ class Scale:
 
         # load commands from class
         cls._commands = []
+        cls._listeners = []
 
         new_cls = super().__new__(cls)
 
@@ -83,6 +85,7 @@ class Scale:
             elif isinstance(val, Listener):
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
+                new_cls.listeners.append(val)
 
         log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 
