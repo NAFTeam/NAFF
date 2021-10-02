@@ -59,11 +59,11 @@ def wrap_partial(obj, cls):
     """
     obj.callback = functools.partial(obj.callback, cls)
 
-    if inspect.ismethod(obj.error_callback):
+    if hasattr(obj, "error_callback") and inspect.ismethod(obj.error_callback):
         obj.error_callback = functools.partial(obj.error_callback, cls)
-    if inspect.ismethod(obj.pre_run_callback):
+    if hasattr(obj, "pre_run_callback") and inspect.ismethod(obj.pre_run_callback):
         obj.pre_run_callback = functools.partial(obj.pre_run_callback, cls)
-    if inspect.ismethod(obj.post_run_callback):
+    if hasattr(obj, "post_run_callback") and inspect.ismethod(obj.post_run_callback):
         obj.post_run_callback = functools.partial(obj.post_run_callback, cls)
 
     return obj
