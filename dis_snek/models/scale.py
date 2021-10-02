@@ -6,6 +6,7 @@ from typing import List, TYPE_CHECKING, Callable, Coroutine
 from dis_snek.const import logger_name
 from dis_snek.models.application_commands import InteractionCommand
 from dis_snek.models.command import MessageCommand
+from dis_snek.models.listener import Listener
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
@@ -79,6 +80,9 @@ class Scale:
                     bot.add_interaction(val)
                 else:
                     bot.add_message_command(val)
+            elif isinstance(val, Listener):
+                val = wrap_partial(val, new_cls)
+                bot.add_listener(val)
 
         log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 

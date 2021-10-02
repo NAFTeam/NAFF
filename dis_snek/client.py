@@ -40,6 +40,7 @@ from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
 from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
+from dis_snek.models.listener import Listener, listen
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -129,14 +130,6 @@ class Snake:
         self.scales = {}
         """A dictionary of mounted Scales"""
         self._listeners: Dict[str, List] = {}
-
-        # default listeners
-
-        self.add_listener(self._on_websocket_ready, "websocket_ready")
-        self.add_listener(self._on_raw_message_create, "raw_message_create")
-        self.add_listener(self._on_raw_guild_create, "raw_guild_create")
-        self.add_listener(self._dispatch_interaction, "raw_interaction_create")
-        self.add_listener(self._dispatch_msg_commands, "message_create")
 
     @property
     def is_closed(self) -> bool:
@@ -297,25 +290,16 @@ class Snake:
             except Exception as e:
                 raise BotException(f"An error occurred attempting during {event.resolved_name} event processing") from e
 
-    def add_listener(self, coro: Callable[..., Coroutine[Any, Any, Any]], event: Optional[str] = None):
+    def add_listener(self, listener: Listener):
         """
         Add a listener for an event, if no event is passed, one is determined
 
         Args:
-            coro Coroutine: The coroutine to run
-            event optional[str]: The event to listen for
+            coro Listener: The listener to add to the client
         """
-        if not asyncio.iscoroutinefunction(coro):
-            raise ValueError("Listeners must be coroutines")
-
-        if not event:
-            event = coro.__name__
-
-        event = event.removeprefix("on_")
-
-        if event not in self._listeners:
-            self._listeners[event] = []
-        self._listeners[event].append(coro)
+        if listener.event not in self._listeners:
+            self._listeners[listener.event] = []
+        self._listeners[listener.event].append(listener)
 
     def event(self, coro: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
         """
@@ -366,16 +350,22 @@ class Snake:
 
         def process(_cmds):
 
-            for cmd in _cmds:
-                if isinstance(cmd, InteractionCommand):
-                    self.add_interaction(cmd)
-                if isinstance(cmd, MessageCommand):
-                    self.add_message_command(cmd)
+            for func in _cmds:
+                if isinstance(func, InteractionCommand):
+                    self.add_interaction(func)
+                if isinstance(func, MessageCommand):
+                    self.add_message_command(func)
+                if isinstance(func, Listener):
+                    self.add_listener(func)
 
             log.debug(f"{len(_cmds)} commands have been loaded")
 
-        process([obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, BaseCommand)])
-        process([wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, BaseCommand)])
+        process(
+            [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
+        )
+        process(
+            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
+        )
 
     def add_interaction(self, command: InteractionCommand):
         """
@@ -549,6 +539,7 @@ class Snake:
             cls.arguments = get_args(data.content)[1:]
         return cls
 
+    @listen("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
         """
         Identify and dispatch interaction of slash commands or components.
@@ -611,6 +602,7 @@ class Snake:
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
+    @listen("message_create")
     async def _dispatch_msg_commands(self, event: MessageCreate):
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
@@ -626,6 +618,7 @@ class Snake:
                     context.invoked_name = invoked_name
                     await command(context)
 
+    @listen()
     async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically convert MESSAGE_CREATE event data to the object.
@@ -636,6 +629,7 @@ class Snake:
         msg = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageCreate(msg))
 
+    @listen()
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway.
@@ -648,6 +642,7 @@ class Snake:
 
         self.dispatch(events.GuildCreate(guild))
 
+    @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
