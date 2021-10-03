@@ -256,7 +256,7 @@ class Snake:
                     await _coro(_event, *_args, **_kwargs)
             except asyncio.CancelledError:
                 pass
-            except Exception as e:
+            except Exception:
                 raise
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
@@ -462,7 +462,7 @@ class Snake:
 
                 for perm_scope in guild_perms:
                     log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                    perm_sync_resp = await self.http.batch_edit_application_command_permissions(
+                    await self.http.batch_edit_application_command_permissions(
                         application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
                     )
             except Forbidden as e:
