@@ -13,7 +13,7 @@ class BotRequests:
         returns:
             application object
         """
-        return await self.request(Route("GET", f"/oauth2/applications/@me"))
+        return await self.request(Route("GET", "/oauth2/applications/@me"))
 
     async def get_current_authorisation_information(self) -> dict:
         """
@@ -22,7 +22,7 @@ class BotRequests:
         returns:
             Authorisation information
         """
-        return await self.request(Route("GET", f"/oauth2/@me"))
+        return await self.request(Route("GET", "/oauth2/@me"))
 
     async def list_voice_regions(self) -> List[dict]:
         """
