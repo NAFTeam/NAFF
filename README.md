@@ -14,7 +14,7 @@ While this library shares some features or styles with discord.py, its completel
 ## "Can I contribute to this project?"
 Of course, you can contribute to this project by submitting a pull-request here. We also have a [Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards, feel free to do anything there.
 
-# Links:
+## Links:
 
 - Support Server: https://discord.gg/NTSHu97tHg
 - Documentation:  https://dis-snek.rtfd.io/
