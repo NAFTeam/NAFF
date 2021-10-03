@@ -221,7 +221,7 @@ class WebsocketClient:
         resp = await self.ws.receive()
         msg = resp.data
 
-        if type(resp.data) is bytes:
+        if isinstance(resp.data, bytes):
             self.buffer.extend(msg)
 
             if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
