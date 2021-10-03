@@ -337,7 +337,7 @@ class Member(DiscordObject, _SendDMMixin):
         for role in roles:
             if isinstance(role, Role):
                 role = role.id
-            if role not in self._role_ids:
+            if str(role) not in self._role_ids:
                 return False
         return True
 
