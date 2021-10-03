@@ -1,17 +1,16 @@
-from typing import TYPE_CHECKING, List, Dict, Any
+from typing import TYPE_CHECKING, List, Dict, Any, Optional
 
 import attr
 
+from dis_snek.errors import NotFound, Forbidden
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.utils.attr_utils import field
 from dis_snek.utils.cache import TTLCache
-from dis_snek.errors import NotFound, Forbidden
-from dis_snek.utils.attr_utils import define, field
-
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -218,13 +217,18 @@ class GlobalCache:
 
     # Roles cache methods
 
-    async def get_role(self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", request_fallback=True) -> Role:
+    async def get_role(
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", request_fallback=True
+    ) -> Optional[Role]:
         guild_id = to_snowflake(guild_id)
         role_id = to_snowflake(role_id)
         role = self.role_cache.get(role_id)
         if request_fallback and role is None:
             data = await self._client.http.get_roles(guild_id)
-            role = self.place_role_data(guild_id, data)[role_id]
+            try:
+                role = self.place_role_data(guild_id, data)[role_id]
+            except KeyError:
+                return None
         return role
 
     def place_role_data(
