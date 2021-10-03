@@ -1,0 +1,28 @@
+inputs:
+  github_token:
+    description: 'GITHUB_TOKEN'
+    default: '${{ github.token }}'
+  ### Flags for reviewdog ###
+  tool_name:
+    description: 'Tool name to use for reviewdog reporter'
+    default: 'reviewdog-suggester'
+  level:
+    description: 'Report level for reviewdog [info,warning,error]'
+    default: 'warning'
+  filter_mode:
+    description: |
+      Filtering mode for the reviewdog command [added,diff_context,file,nofilter].
+      Default is diff_context. GitHub suggestions only support added and diff_context.
+    default: 'diff_context'
+  fail_on_error:
+    description: |
+      Exit code for reviewdog when errors are found [true,false]
+      Default is `false`.
+    default: 'false'
+  reviewdog_flags:
+    description: 'Additional reviewdog flags'
+    default: ''
+  ### Flags for reviewdog suggester ###
+  cleanup:
+    description: 'Clean up non-committed changes after the action'
+    default: 'true'
