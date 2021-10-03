@@ -147,7 +147,9 @@ class Member(DiscordObject, _SendDMMixin):
     )
 
     _guild_id: "Snowflake_Type" = field(repr=True, metadata={"docs": "The ID of the guild"})
-    _role_ids: List["Snowflake_Type"] = field(factory=list, converter=list_converter(to_snowflake), metadata={"docs": "The roles IDs this user has"})
+    _role_ids: List["Snowflake_Type"] = field(
+        factory=list, converter=list_converter(to_snowflake), metadata={"docs": "The roles IDs this user has"}
+    )
     # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod

@@ -200,9 +200,7 @@ class InteractionContext(Context, SendMixin):
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
 
-        return await super().send(
-            content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags
-        )
+        return await super().send(content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags)
 
 
 @attr.s
