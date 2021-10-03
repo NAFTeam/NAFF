@@ -98,7 +98,7 @@ class Embed(DictSerializationMixin):
         repr=True,
     )
     """Timestamp of embed content"""
-    fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField), repr=True)
+    fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField.from_dict), repr=True)
     """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
     """The author of the embed"""
