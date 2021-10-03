@@ -314,8 +314,7 @@ class Member(DiscordObject, _SendDMMixin):
             role: The role to add
             reason: The reason for adding this role
         """
-        if isinstance(role, Role):
-            role = role.id
+        role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
