@@ -1,4 +1,3 @@
-from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
@@ -10,12 +9,15 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
+
 from dis_snek.utils.proxy import CacheView, CacheProxy, proxy_partial
+from dis_snek.utils.model_proxy import proxy_dm_channel, proxy_guild, proxy_user, proxy_role
+
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -62,7 +64,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
     @property
     def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
         """Returns the dm channel associated with the user"""
-        return CacheProxy(id=self.id, method=self._client.cache.get_dm_channel)
+        return proxy_dm_channel(self._client, self.id)
 
     @property
     def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
@@ -127,7 +129,7 @@ class SnakeBotUser(User):
     @property
     def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
         """The guilds this user belongs to"""
-        return CacheView(ids=self._guild_ids, method=self._client.cache.get_guild)
+        return proxy_guild(self._client, self._guild_ids)
 
 
 @define()
@@ -180,7 +182,7 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             The user object
         """
-        return CacheProxy(id=self.id, method=self._client.cache.get_user)
+        return proxy_user(self._client, self.id)
 
     @property
     def nickname(self):
@@ -202,7 +204,7 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             The guild object
         """
-        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+        return proxy_guild(self._client, self._guild_id)
 
     @property
     def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
@@ -215,7 +217,7 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             An async iterator of roles this member has
         """
-        return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self._guild_id))
+        return proxy_role(self._client, self._guild_id, self._role_ids)
 
     @property
     def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
@@ -228,7 +230,7 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             A role object
         """
-        return CacheProxy(id=self._role_ids[-1], method=partial(self._client.cache.get_role, self._guild_id))
+        return proxy_role(self._client, self._guild_id, self._role_ids[-1])
 
     @property
     def display_name(self) -> str:
