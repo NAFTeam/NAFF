@@ -41,6 +41,7 @@ from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.listener import Listener, listen
+from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
@@ -654,6 +655,22 @@ class Snake:
 
         self.dispatch(events.Ready())
 
+    def get_scale(self, name) -> Optional[Scale]:
+        """
+        Get a scale
+        Args:
+            name: The name of the scale, or the name of it's extension
+
+        Returns:
+            Scale or None if no scale is found
+        """
+        if name not in self.scales.keys():
+            for scale in self.scales.values():
+                if scale.extension_name == name:
+                    return scale
+
+        return self.scales.get(name, None)
+
     def grow_scale(self, file_name: str, package: str = None) -> None:
         """
         A helper method to load a scale
@@ -671,20 +688,10 @@ class Snake:
         Args:
             scale_name: The name of the scale to unload.
         """
-        try:
-            if scale_name not in self.scales.keys():
-                for scale in self.scales.values():
-                    if scale.extension_name == scale_name:
-                        scale_name = scale.name
-                        break
-                else:
-                    raise KeyError
+        if scale := self.get_scale(scale_name):
+            return self.unload_extension(inspect.getmodule(scale).__name__)
 
-            scale = self.scales.pop(scale_name)
-            scale.shed()
-            self.unload_extension(inspect.getmodule(scale).__name__)
-        except KeyError:
-            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+        raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def regrow_scale(self, scale_name: str) -> None:
         """
@@ -713,13 +720,13 @@ class Snake:
             setup = getattr(module, "setup")
             setup(self)
         except Exception as e:
+            del sys.modules[name]
             raise ExtensionLoadException(f"Error loading {name}") from e
+
         else:
             log.debug(f"Loaded Extension: {name}")
             self.__extensions[name] = module
             return
-
-        del sys.modules[name]
 
     def unload_extension(self, name, package=None):
         """
@@ -741,7 +748,8 @@ class Snake:
         except AttributeError:
             pass
 
-        # todo: remove any events / commands / utils from this extension
+        if scale := self.get_scale(name):
+            scale.shed()
 
         del sys.modules[name]
         del self.__extensions[name]
