@@ -109,6 +109,7 @@ class Snake:
         """The websocket collection for the Discord Gateway."""
 
         # flags
+        self._ready = False
         self._closed = False
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
@@ -136,6 +137,10 @@ class Snake:
     def is_closed(self) -> bool:
         """Is the bot closed?"""
         return self._closed
+
+    @property
+    def is_ready(self):
+        return self._ready
 
     @property
     def latency(self) -> float:
@@ -653,6 +658,7 @@ class Snake:
         # cache slash commands
         await self._init_interactions()
 
+        self._ready = True
         self.dispatch(events.Ready())
 
     def get_scale(self, name) -> Optional[Scale]:
