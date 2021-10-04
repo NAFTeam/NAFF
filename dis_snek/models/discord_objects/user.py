@@ -337,9 +337,8 @@ class Member(DiscordObject, _SendDMMixin):
             roles: The role(s) to check whether the user has it.
         """
         for role in roles:
-            if isinstance(role, Role):
-                role = role.id
-            if str(role) not in self._role_ids:
+            role_id = to_snowflake(role)
+            if role_id not in self._role_ids:
                 return False
         return True
 
