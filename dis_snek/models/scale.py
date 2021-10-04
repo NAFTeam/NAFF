@@ -47,6 +47,7 @@ class Scale:
     bot: "Snake"
     _commands: List
     __name: str
+    extension_name: str
     description: str
     scale_checks: List
     scale_prerun: List
@@ -56,7 +57,6 @@ class Scale:
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
         cls.__name = cls.__name__
-        cls.bot.scales[cls.__name] = cls
         cls.scale_checks = []
         cls.scale_prerun = []
         cls.scale_postrun = []
@@ -90,7 +90,13 @@ class Scale:
 
         log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
 
+        new_cls.extension_name = inspect.getmodule(new_cls).__name__
+        new_cls.bot.scales[new_cls.name] = new_cls
         return new_cls
+
+    @property
+    def __name__(self):
+        return self.name
 
     @property
     def commands(self):
@@ -105,16 +111,18 @@ class Scale:
         """
         Called when this Scale is being removed.
         """
-        for cmd in self._commands:
-            if isinstance(cmd, InteractionCommand):
-                if self.bot.interactions.get(cmd.scope) and self.bot.interactions[cmd.scope].get(cmd.name):
-                    self.bot.interactions[cmd.scope].pop(cmd.name)
-            if isinstance(cmd, MessageCommand):
-                if self.bot.commands[cmd.name]:
-                    self.bot.commands.pop(cmd.name)
+        for func in self._commands:
+            if isinstance(func, InteractionCommand):
+                if self.bot.interactions.get(func.scope) and self.bot.interactions[func.scope].get(func.name):
+                    self.bot.interactions[func.scope].pop(func.name)
+            if isinstance(func, MessageCommand):
+                if self.bot.commands[func.name]:
+                    self.bot.commands.pop(func.name)
+        for func in self.listeners:
+            self.bot.listeners[func.event].remove(func)
 
-        self.bot.scales.pop(self.__name__)
-        log.debug(f"{self.__name__} has been shed")
+        self.bot.scales.pop(self.name, None)
+        log.debug(f"{self.name} has been shed")
 
     def add_scale_check(self, coroutine: Callable[..., Coroutine]) -> None:
         """

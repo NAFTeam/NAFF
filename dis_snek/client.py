@@ -129,7 +129,7 @@ class Snake:
         self.__extensions = {}
         self.scales = {}
         """A dictionary of mounted Scales"""
-        self._listeners: Dict[str, List] = {}
+        self.listeners: Dict[str, List] = {}
 
     @property
     def is_closed(self) -> bool:
@@ -283,7 +283,7 @@ class Snake:
             event: The event to be dispatched.
         """
         log.debug(f"Dispatching Event: {event.resolved_name}")
-        listeners = self._listeners.get(event.resolved_name, [])
+        listeners = self.listeners.get(event.resolved_name, [])
         for _listen in listeners:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
@@ -297,9 +297,9 @@ class Snake:
         Args:
             coro Listener: The listener to add to the client
         """
-        if listener.event not in self._listeners:
-            self._listeners[listener.event] = []
-        self._listeners[listener.event].append(listener)
+        if listener.event not in self.listeners:
+            self.listeners[listener.event] = []
+        self.listeners[listener.event].append(listener)
 
     async def _init_interactions(self) -> None:
         """
@@ -672,10 +672,29 @@ class Snake:
             scale_name: The name of the scale to unload.
         """
         try:
-            self.scales[scale_name].shed(self.scales[scale_name])
-            self.unload_extension()
+            if scale_name not in self.scales.keys():
+                for scale in self.scales.values():
+                    if scale.extension_name == scale_name:
+                        scale_name = scale.name
+                        break
+                else:
+                    raise KeyError
+
+            scale = self.scales.pop(scale_name)
+            scale.shed()
+            self.unload_extension(inspect.getmodule(scale).__name__)
         except KeyError:
             raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+
+    def regrow_scale(self, scale_name: str) -> None:
+        """
+        Helper method to reload a scale.
+
+        Args:
+            scale_name: The name of the scale to reload
+        """
+        self.shed_scale(scale_name)
+        self.grow_scale(scale_name)
 
     def load_extension(self, name: str, package: str = None):
         """
