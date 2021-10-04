@@ -33,13 +33,13 @@ class UserRequests:
         parameters:
             payload: The data to send.
         """
-        return await self.request(Route("PATCH", f"/users/@me"), data=payload)
+        return await self.request(Route("PATCH", "/users/@me"), data=payload)
 
     async def get_user_guilds(self) -> list:
         """
         Returns a list of partial guild objects the current user is a member of. Requires the guilds OAuth2 scope.
         """
-        return await self.request(Route("GET", f"/users/@me/guilds"))
+        return await self.request(Route("GET", "/users/@me/guilds"))
 
     async def leave_guild(self, guild_id) -> dict:
         """
@@ -66,13 +66,13 @@ class UserRequests:
         parameters:
             payload: The data to send.
         """
-        return await self.request(Route("POST", f"/users/@me/channels"), data=payload)
+        return await self.request(Route("POST", "/users/@me/channels"), data=payload)
 
     async def get_user_connections(self) -> list:
         """
         Returns a list of connection objects. Requires the connections OAuth2 scope.
         """
-        return await self.request(Route("GET", f"/users/@me/connections"))
+        return await self.request(Route("GET", "/users/@me/connections"))
 
     async def group_dm_add_recipient(
         self, channel_id: "Snowflake_Type", user_id: "Snowflake_Type", access_token: str, nick: str = None

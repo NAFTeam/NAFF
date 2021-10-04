@@ -60,6 +60,7 @@ class Scale:
         cls.scale_checks = []
         cls.scale_prerun = []
         cls.scale_postrun = []
+        cls.listeners = []
 
         cls.description = kwargs.get("Description", None)
         if not cls.description:

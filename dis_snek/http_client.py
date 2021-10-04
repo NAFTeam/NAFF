@@ -87,7 +87,8 @@ class HTTPClient(
         if self.__session and not self.__session.closed:
             self.loop.run_until_complete(self.__session.close())
 
-    def _parse_ratelimit(self, header: CIMultiDictProxy[str]) -> dict:
+    @staticmethod
+    def _parse_ratelimit(header: CIMultiDictProxy[str]) -> dict:
         """
         Parse the ratelimit data into a more usable format.
 

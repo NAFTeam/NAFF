@@ -1,7 +1,8 @@
-![Discord](https://img.shields.io/discord/870046872864165888?color=%23768EDC&logo=discord&logoColor=%23768EDC&style=plastic)
+[![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/hpfNhH8BsY)
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
-[![CodeQL](https://github.com/LordOfPolls/dis_snek/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/LordOfPolls/dis_snek/actions/workflows/codeql-analysis.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![CodeQL](https://img.shields.io/github/workflow/status/LordOfPolls/dis-snek/CodeQL/master?label=CodeQL&logo=Github)](https://github.com/LordOfPolls/dis_snek/actions/workflows/codeql-analysis.yml)
+[![black-formatted](https://img.shields.io/github/workflow/status/LordOfPolls/dis-snek/black-action/master?label=Black%20Formatted&logo=Github)](https://github.com/LordOfPolls/dis_snek/actions/workflows/black.yml)
 
 # Dis-Snek
 

@@ -493,3 +493,15 @@ class Guild(DiscordObject):
         """
         threads_data = await self._client.http.list_active_threads(self.id)
         return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_role(self, role_id: "Snowflake_Type") -> Optional["Role"]:
+        """
+        Get the specified role by ID.
+
+        Args:
+            role_id: The ID of the role to get
+
+        Returns:
+            A role object or None if the role is not found.
+        """
+        return await self._client.cache.get_role(self.id, role_id)

@@ -2,7 +2,6 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
-
 from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
@@ -11,8 +10,10 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.proxy import CacheView, CacheProxy, proxy_partial
 
@@ -146,7 +147,9 @@ class Member(DiscordObject, _SendDMMixin):
     )
 
     _guild_id: "Snowflake_Type" = field(repr=True, metadata={"docs": "The ID of the guild"})
-    _role_ids: List["Snowflake_Type"] = field(factory=list, metadata={"docs": "The roles IDs this user has"})
+    _role_ids: List["Snowflake_Type"] = field(
+        factory=list, converter=list_converter(to_snowflake), metadata={"docs": "The roles IDs this user has"}
+    )
     # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod
@@ -313,8 +316,7 @@ class Member(DiscordObject, _SendDMMixin):
             role: The role to add
             reason: The reason for adding this role
         """
-        if isinstance(role, Role):
-            role = role.id
+        role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
