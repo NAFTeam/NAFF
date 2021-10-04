@@ -1,7 +1,7 @@
 """These are events dispatched by the client. This is intended as a reference so you know what data to expect for each event
 
 !!! Hint "Example Usage:"
-    The event classes outlined here are in `CamalCase` to comply with Class naming convention, however the event names
+    The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
     are actually in `lower_case_with_underscores` so your listeners should be named as following:
 
     ```python

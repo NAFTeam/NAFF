@@ -65,7 +65,7 @@ class Invite(DiscordObject):
 
     @property
     def link(self):
-        return f"https://discord.gg/{code}"
+        return f"https://discord.gg/{self.code}"
 
     @property
     def guild(self):

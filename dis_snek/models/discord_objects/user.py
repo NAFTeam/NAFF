@@ -330,6 +330,18 @@ class Member(DiscordObject, _SendDMMixin):
             role = role.id
         return await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
+    async def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
+        """
+        Checks if the user has the given role(s)
+        Args:
+            roles: The role(s) to check whether the user has it.
+        """
+        for role in roles:
+            role_id = to_snowflake(role)
+            if role_id not in self._role_ids:
+                return False
+        return True
+
     async def kick(self, reason: str = MISSING):
         """
         Remove a member from the guild.

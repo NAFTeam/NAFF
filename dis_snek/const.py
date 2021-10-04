@@ -14,7 +14,7 @@ attributes:
     SELECT_MAX_NAME_LENGTH int: The max length of a select's name.
 
     CONTEXT_MENU_NAME_LENGTH int: The max length of a context menu's name.
-    SLASH_CMD_NAME_LENGTH int: The max legnth of a slash command's name.
+    SLASH_CMD_NAME_LENGTH int: The max length of a slash command's name.
     SLASH_CMD_MAX_DESC_LENGTH int: The maximum length of a slash command's description.
     SLASH_CMD_MAX_OPTIONS int: The maximum number of options a slash command may have.
     SLASH_OPTION_NAME_LENGTH int: The maximum length of a slash option's name.
