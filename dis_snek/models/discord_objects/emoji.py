@@ -7,7 +7,6 @@ from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import list_converter
-from dis_snek.utils.proxy import CacheProxy, CacheView
 from dis_snek.utils.serializer import dict_filter_none, no_export_meta
 
 if TYPE_CHECKING:
@@ -82,22 +81,6 @@ class CustomEmoji(Emoji):
         return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property
-    def creator(self) -> Optional[Union[CacheProxy, Awaitable["User"], "User"]]:
-        """User that made this emoji."""
-        if self._creator_id:
-            return CacheProxy(id=self._creator_id, method=self._client.cache.get_user)
-
-    @property
-    def roles(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
-        """Roles allowed to use this emoji"""
-        return CacheView(id=self._role_ids, method=self._client.cache.get_role)
-
-    @property
-    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-        """The guild that this custom emoji is created in."""
-        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
-
-    @property
     def is_usable(self) -> bool:
         """
         Determines if this emoji is usable by the current user.
@@ -106,6 +89,33 @@ class CustomEmoji(Emoji):
             return False
         # todo: check roles
         return True
+
+    async def get_creator(self) -> "User":
+        """
+        Get the user who created this emoji
+
+        Returns:
+            User object
+        """
+        return await self._client.cache.get_user(self._creator_id)
+
+    async def get_roles(self) -> List["Roles"]:
+        """
+        Gets the roles allowed to use this emoji
+
+        Returns:
+            List of roles
+        """
+        return [await self._client.cache.get_role(self._guild_id, r_id) for r_id in self._role_ids]
+
+    async def get_guild(self) -> "Guild":
+        """
+        Get the guild associated with this emoji
+
+        Returns:
+            Guild object
+        """
+        return await self._client.cache.get_guild(self._guild_id)
 
     async def edit(
         self,

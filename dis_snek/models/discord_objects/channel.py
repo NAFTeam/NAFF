@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from attr.converters import optional as optional_c
@@ -12,7 +12,6 @@ from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.proxy import CacheView, CacheProxy
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -168,8 +167,9 @@ class DMGroup(BaseChannel, MessageableChannelMixin):
         return data
 
     @property
-    def recipients(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "User"]], AsyncIterator["User"]]:
-        return CacheView(ids=self._recipients_ids, method=self._client.cache.get_user)
+    async def recipients(self) -> AsyncGenerator["User", None]:
+        for u_id in self.recipients_ids:
+            yield await self._client.cache.get_user(u_id)
 
 
 @define()
@@ -181,9 +181,8 @@ class DM(DMGroup):
         client.cache.place_dm_channel_id(user_id, data["id"])
         return data
 
-    @property
-    def recipient(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
-        return CacheProxy(id=self._recipients_ids[0], method=self._client.cache.get_user)
+    async def get_recipient(self) -> "User":
+        return await self._client.cache.get_user(self.user_id)
 
 
 ################################################################
@@ -195,6 +194,7 @@ class GuildChannel(BaseChannel):
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    guild: "Guild" = attr.ib(default=None)
 
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
@@ -206,18 +206,6 @@ class GuildChannel(BaseChannel):
             obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
         }
         return data
-
-    @property
-    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-        """Get the guild associated with this channel.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            A guild object.
-        """
-        return CacheProxy(id=self.guild_id, method=self._client.cache.get_guild)
 
     async def set_permissions(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         await self._client.http.edit_channel_permission(

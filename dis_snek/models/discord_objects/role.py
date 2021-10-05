@@ -8,7 +8,6 @@ from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import Permissions
 from dis_snek.utils.attr_utils import define, field
-from dis_snek.utils.proxy import CacheProxy
 from dis_snek.utils.serializer import dict_filter_missing
 
 if TYPE_CHECKING:
@@ -38,6 +37,7 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
+    guild: "Guild" = field(default=None)
 
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
@@ -48,15 +48,16 @@ class Role(DiscordObject):
         data.update(data.pop("tags", {}))
         return data
 
-    @property
-    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+    async def get_bot(self) -> Optional["Member"]:
+        """
+        Get the bot associated with this role if any.
 
-    @property
-    def bot(self) -> Optional[Union[CacheProxy, Awaitable["Member"], "Member"]]:
+        Returns:
+            Member object if any
+        """
         if self._bot_id is None:
             return None
-        return CacheProxy(id=self._bot_id, method=partial(self._client.cache.get_member, self._guild_id))
+        return await self._client.cache.get_member(self._guild_id, self._bot_id)
 
     @property
     def default(self) -> bool:

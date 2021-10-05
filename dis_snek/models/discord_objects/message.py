@@ -1,10 +1,9 @@
 import asyncio
 import json
 from dataclasses import dataclass
-from functools import partial
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from aiohttp.formdata import FormData
@@ -31,7 +30,6 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
@@ -111,9 +109,11 @@ class MessageInteraction(DiscordObject):
         data["user_id"] = client.cache.place_user_data(user_data).id
         return data
 
-    @property
-    def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
-        return CacheProxy(id=self._user_id, method=self._client.cache.get_user)
+    async def user(self) -> "User":
+        """
+        Get the user associated with this interaction.
+        """
+        return await self.get_user(self._user_id)
 
 
 @attr.s(slots=True)
@@ -184,13 +184,38 @@ class Message(DiscordObject):
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
-    _channel_id: "Snowflake_Type" = attr.ib()
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    _author_id: "Snowflake_Type" = attr.ib()  # TODO: create override for detecting PartialMember
+    _channel_id: "Snowflake_Type" = attr.ib(converter=optional_c(to_snowflake))
+    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    _author_id: "Snowflake_Type" = attr.ib(
+        converter=optional_c(to_snowflake)
+    )  # TODO: create override for detecting PartialMember
     _mention_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _mention_roles: List["Snowflake_Type"] = attr.ib(factory=list)
     _referenced_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
+
+    channel: "TextChannel" = attr.ib(default=None)
+    thread: "Thread" = attr.ib(default=None)
+    guild: "Guild" = attr.ib(default=None)
+    author: Union["Member", "User"] = attr.ib(default=None)
+
+    @property
+    async def mention_users(self) -> AsyncGenerator["Member", None]:
+        for u_id in self._mention_ids:
+            yield await self._client.cache.get_member(self._guild_id, u_id)
+
+    @property
+    async def mention_roles(self) -> AsyncGenerator["Role", None]:
+        for r_id in self._mention_roles:
+            yield await self._client.cache.get_role(self._guild_id, r_id)
+
+    async def get_referenced_message(self) -> Optional["Message"]:
+        """
+        Get the message this message is referencing, if any
+        Returns:
+            The referenced message, if found
+        """
+        return await self._client.cache.get_message(self._channel, self._referenced_message_id)
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
@@ -254,112 +279,12 @@ class Message(DiscordObject):
 
         if "sticker_items" in data:
             data["sticker_items"] = StickerItem.from_list(data["sticker_items"], client)
-
         return data
-
-    @property
-    def channel(self) -> Union[CacheProxy, Awaitable["TextChannel"], "TextChannel"]:
-        """Get the channel associated with this message.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            A channel object
-        """
-        return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
-
-    @property
-    def guild(self) -> Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]]:
-        """Get the guild associated with this message, if any
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            A guild object
-        """
-        return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
-
-    @property
-    def author(self) -> Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]]:
-        """Get the author of this message
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            A user or member object, depending on if this message was sent in a guild"""
-        if self._guild_id and not self.webhook_id:
-            return CacheProxy(id=self._author_id, method=partial(self._client.cache.get_member, self._guild_id))
-        else:
-            return CacheProxy(id=self._author_id, method=self._client.cache.get_user)
-
-    @property
-    def mentions(
-        self,
-    ) -> Union[
-        CacheView, Awaitable[Dict["Snowflake_Type", Union["Member", "User"]]], AsyncIterator[Union["Member", "User"]]
-    ]:
-        """Get the users who were mentioned in this message
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        Returns:
-            An async iterator containing the users
-        """
-        if self.guild_id:
-            return CacheView(ids=self._mention_ids, method=partial(self._client.cache.get_member, self.guild_id))
-        else:
-            return CacheView(ids=self._mention_ids, method=self._client.cache.get_user)
-
-    @property
-    def mention_roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
-        """Get the roles that were mentioned in this message
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        Returns:
-            An async iterator containing the roles
-        """
-        return CacheView(ids=self._mention_roles, method=self._client.cache.get_role)
-
-    @property
-    def referenced_message(self) -> Optional[Union[CacheProxy, Awaitable["Message"], "Message"]]:
-        """
-        Get the message this message is referencing, if any
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        Returns:
-            The referenced message, or None
-        """
-        if self._referenced_message_id:
-            return CacheProxy(
-                id=self._referenced_message_id, method=partial(self._client.cache.get_message, self._channel_id)
-            )
-        # TODO should we return an awaitable None, or just None.
-
-    @property
-    def thread(self) -> Optional[Union[CacheProxy, Awaitable["Thread"], "Thread"]]:
-        """
-        Get the thread associated with message, if any
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        Returns:
-            A thread object or None
-        """
-        if self._thread_channel_id:
-            return CacheProxy(id=self._thread_channel_id, method=self._client.cache.get_channel)
 
     @property
     def jump_url(self) -> str:
         """A url that allows the client to *jump* to this message"""
+        # todo: Add a `discord://` version of this
         return f"https://discord.com/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     async def edit(

@@ -5,16 +5,18 @@ from attr.converters import optional as optional_c
 
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
+
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.discord_objects.channel import BaseChannel
+    from dis_snek.models.discord_objects.guild import Guild
 
 
 class InviteTargetTypes(IntEnum):
@@ -54,6 +56,12 @@ class Invite(DiscordObject):
     _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
 
+    # todo have these attributes populated on creation of this class
+    guild: "Guild" = field(default=None)
+    channel: "BaseChannel" = field(default=None)
+    inviter: "User" = field(default=None)
+    target_user: "User" = field(default=None)
+
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if "stage_instance" in data:
@@ -66,22 +74,3 @@ class Invite(DiscordObject):
     @property
     def link(self):
         return f"https://discord.gg/{self.code}"
-
-    @property
-    def guild(self):
-        if self._guild_id:
-            return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
-
-    @property
-    def channel(self):
-        return CacheProxy(id=self._channel_id, method=self._client.cache.get_channel)
-
-    @property
-    def inviter(self):
-        if self._inviter_id:
-            return CacheProxy(id=self._inviter_id, method=self._client.cache.get_user)
-
-    @property
-    def target_user(self):
-        if self._target_user_id:
-            return CacheProxy(id=self._target_user_id, method=self._client.cache.get_user)
