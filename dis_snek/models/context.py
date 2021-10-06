@@ -9,7 +9,6 @@ from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
-from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -46,11 +45,9 @@ class Context:
 
     kwargs: Dict = attr.ib(factory=dict)
 
-    author: Union[CacheProxy, Awaitable[Union["Member", "User"]], Union["Member", "User"]] = attr.ib(default=None)
-    channel: Union[CacheProxy, Awaitable["TYPE_MESSAGEABLE_CHANNEL"], "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
-        default=None
-    )
-    guild: Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]] = attr.ib(default=None)
+    author: Union["Member", "User"] = attr.ib(default=None)
+    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None)
+    guild: "Guild" = attr.ib(default=None)
 
     @property
     def bot(self):
@@ -104,28 +101,24 @@ class InteractionContext(Context, SendMixin):
         if channels := res_data.get("channels"):
             self.resolved["channels"] = {}
             for key, _channel in channels.items():
-                self.bot.cache.place_channel_data(_channel)
-                self.resolved["channels"][key] = CacheProxy(id=key, method=self.bot.cache.get_channel)
+                self.resolved["channels"][key] = self.bot.cache.place_channel_data(_channel)
 
         if members := res_data.get("members"):
             self.resolved["members"] = {}
             for key, _member in members.items():
-                self.bot.cache.place_member_data(self.guild.id, {**_member, "user": {**res_data["users"][key]}})
-                self.resolved["members"][key] = CacheProxy(
-                    id=key, method=partial(self.bot.cache.get_member, self.guild.id)
+                self.resolved["members"][key] = self.bot.cache.place_member_data(
+                    self.guild.id, {**_member, "user": {**res_data["users"][key]}}
                 )
 
         elif users := res_data.get("users"):
             self.resolved["users"] = {}
             for key, _user in users.items():
-                self.bot.cache.place_user_data(_user)
-                self.resolved["users"][key] = CacheProxy(id=key, method=self.bot.cache.get_user)
+                self.resolved["users"][key] = self.bot.cache.place_user_data(_user)
 
         if roles := res_data.get("roles"):
             self.resolved["roles"] = {}
             for key, _role in roles.items():
-                self.bot.cache.place_role_data(self.guild.id, _role)
-                self.resolved["roles"][key] = CacheProxy(id=key, method=self.bot.cache.get_role)
+                self.resolved["roles"][key] = self.bot.cache.place_role_data(self.guild.id, _role)
 
     async def defer(self, ephemeral=False) -> None:
         """

@@ -15,9 +15,6 @@ from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
 
-from dis_snek.utils.proxy import CacheView, CacheProxy, proxy_partial
-from dis_snek.utils.model_proxy import proxy_dm_channel, proxy_guild, proxy_user, proxy_role
-
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -61,25 +58,25 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """The users display name, will return nickname if one is set, otherwise will return username"""
         return self.username  # for duck-typing compatibility with Member
 
-    @property
-    def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
-        """Returns the dm channel associated with the user"""
-        return proxy_dm_channel(self._client, self.id)
+    # @property
+    # def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
+    #     """Returns the dm channel associated with the user"""
+    #     return proxy_dm_channel(self._client, self.id)
 
-    @property
-    def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-        """
-        Get the guilds this user shares with the client
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        Returns:
-            Collection of shared guilds
-        """
-        # Warning! mutual_guilds.ids should be awaited!
-        ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
-        return CacheView(ids=ids, method=self._client.cache.get_guild)
+    # @property
+    # def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+    #     """
+    #     Get the guilds this user shares with the client
+    #
+    #     ??? warning "Awaitable Property:"
+    #         This property must be awaited.
+    #
+    #     Returns:
+    #         Collection of shared guilds
+    #     """
+    #     # Warning! mutual_guilds.ids should be awaited!
+    #     ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
+    #     return CacheView(ids=ids, method=self._client.cache.get_guild)
 
 
 @define()
@@ -126,10 +123,10 @@ class SnakeBotUser(User):
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
 
-    @property
-    def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-        """The guilds this user belongs to"""
-        return proxy_guild(self._client, self._guild_ids)
+    # @property
+    # def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
+    #     """The guilds this user belongs to"""
+    #     return proxy_guild(self._client, self._guild_ids)
 
 
 @define()
@@ -172,17 +169,17 @@ class Member(DiscordObject, _SendDMMixin):
 
         return data
 
-    @property
-    def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
-        """Returns this member's user object
-
-        !!! warning "Awaitable Warning:"
-            This property must be awaited.
-
-        Returns:
-            The user object
-        """
-        return proxy_user(self._client, self.id)
+    # @property
+    # def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
+    #     """Returns this member's user object
+    #
+    #     !!! warning "Awaitable Warning:"
+    #         This property must be awaited.
+    #
+    #     Returns:
+    #         The user object
+    #     """
+    #     return proxy_user(self._client, self.id)
 
     @property
     def nickname(self):
@@ -193,44 +190,44 @@ class Member(DiscordObject, _SendDMMixin):
     def nickname(self, nickname):
         self.nick = nickname
 
-    @property
-    def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-        """
-        Returns the guild object associated with this member.
+    # @property
+    # def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
+    #     """
+    #     Returns the guild object associated with this member.
+    #
+    #     !!! warning "Awaitable Warning:"
+    #         This property must be awaited.
+    #
+    #     Returns:
+    #         The guild object
+    #     """
+    #     return proxy_guild(self._client, self._guild_id)
 
-        !!! warning "Awaitable Warning:"
-            This property must be awaited.
-
-        Returns:
-            The guild object
-        """
-        return proxy_guild(self._client, self._guild_id)
-
-    @property
-    def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
-        """
-        Returns the roles this member has
-
-        !!! warning "Awaitable Warning:"
-            This property must be awaited.
-
-        Returns:
-            An async iterator of roles this member has
-        """
-        return proxy_role(self._client, self._guild_id, self._role_ids)
-
-    @property
-    def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
-        """
-        Returns the highest role in the hierarchy this member has
-
-        !!! warning "Awaitable Warning:"
-            This property must be awaited.
-
-        Returns:
-            A role object
-        """
-        return proxy_role(self._client, self._guild_id, self._role_ids[-1])
+    # @property
+    # def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
+    #     """
+    #     Returns the roles this member has
+    #
+    #     !!! warning "Awaitable Warning:"
+    #         This property must be awaited.
+    #
+    #     Returns:
+    #         An async iterator of roles this member has
+    #     """
+    #     return proxy_role(self._client, self._guild_id, self._role_ids)
+    #
+    # @property
+    # def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
+    #     """
+    #     Returns the highest role in the hierarchy this member has
+    #
+    #     !!! warning "Awaitable Warning:"
+    #         This property must be awaited.
+    #
+    #     Returns:
+    #         A role object
+    #     """
+    #     return proxy_role(self._client, self._guild_id, self._role_ids[-1])
 
     @property
     def display_name(self) -> str:

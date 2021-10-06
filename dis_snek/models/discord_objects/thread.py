@@ -8,7 +8,6 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -30,30 +29,23 @@ class ThreadMember(DiscordObject, SendMixin):
 
     _user_id: "Snowflake_Type" = field(converter=optional(to_snowflake))
 
-    @property
-    def thread(self) -> Union[CacheProxy, Awaitable["TYPE_THREAD_CHANNEL"], "TYPE_THREAD_CHANNEL"]:
-        """Get the thread associated with this thread member.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            The user object.
+    async def get_thread(self) -> "TYPE_THREAD_CHANNEL":
         """
-        return CacheProxy(id=self.id, method=self._client.cache.get_channel)
+        Gets the thread associated with with this member.
 
-    @property
-    def user(self) -> Optional[Union[CacheProxy, Awaitable["User"], "User"]]:
-        """Get the user associated with this thread member.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            The user object.
+        Returns:
+            The thread in question
         """
-        if self._user_id:
-            return CacheProxy(id=self.user_id, method=self._client.cache.get_user)
+        return await self._client.get_channel(self.id)
+
+    async def get_user(self) -> "User":
+        """
+        Get the user associated with this thread member.
+
+        Returns:
+            The user object
+        """
+        return await self._client.get_user(self._user_id)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         dm_id = await self._client.cache.get_dm_channel_id(self._user_id)

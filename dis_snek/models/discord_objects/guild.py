@@ -1,6 +1,6 @@
 from functools import partial
 from io import IOBase
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from aiohttp import FormData
@@ -30,7 +30,6 @@ from dis_snek.models.enums import (
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.proxy import CacheView, CacheProxy
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 
 if TYPE_CHECKING:
@@ -138,6 +137,8 @@ class Guild(DiscordObject):
         guild_id = data["id"]
 
         channels_data = data.pop("channels", [])
+        for c in channels_data:
+            c["guild_id"] = guild_id
         data["channel_ids"] = [client.cache.place_channel_data(channel_data).id for channel_data in channels_data]
 
         threads_data = data.pop("threads", [])
@@ -152,41 +153,32 @@ class Guild(DiscordObject):
         return data
 
     @property
-    def channels(
-        self,
-    ) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "TYPE_GUILD_CHANNEL"]], AsyncIterator["TYPE_GUILD_CHANNEL"]]:
-        return CacheView(ids=self._channel_ids, method=self._client.cache.get_channel)
+    def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
+        return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
 
     @property
-    def threads(
-        self,
-    ) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "ThreadChannel"]], AsyncIterator["ThreadChannel"]]:
-        return CacheView(ids=self._thread_ids, method=self._client.cache.get_channel)
+    def threads(self) -> List["ThreadChannel"]:
+        return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
     @property
-    def members(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Member"]], AsyncIterator["Member"]]:
-        return CacheView(ids=self._member_ids, method=partial(self._client.cache.get_member, self.id))
+    async def members(self) -> AsyncGenerator["Member", None]:
+        for m_id in self._member_ids:
+            yield await self._client.cache.get_member(self.id, m_id)
 
     @property
-    def roles(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "Role"]], AsyncIterator["Role"]]:
-        return CacheView(ids=self._role_ids, method=partial(self._client.cache.get_role, self.id))
+    def roles(self) -> List["Role"]:
+        return [self._client.cache.role_cache.get(self.id, r_id) for r_id in self._role_ids]
 
     @property
-    def me(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
-        return CacheProxy(id=self._client.user.id, method=partial(self._client.cache.get_member, self.id))
+    def me(self) -> "Member":
+        return self._client.cache.member_cache.get((self.id, self._client.user.id))
 
-    @property
-    def owner(self) -> Union[CacheProxy, Awaitable["Member"], "Member"]:
-        return CacheProxy(id=self._owner_id, method=partial(self._client.cache.get_member, self.id))
+    async def get_owner(self) -> "Member":
+        # maybe precache owner instead of using `get_owner`
+        return await self._client.cache.get_member(self.id, self._owner_id)
 
     def is_owner(self, member: "Member") -> bool:
         return self._owner_id == member.id
-
-    # TODO What is this commented code for?
-    # @property
-    # def
-    # if not self.member_count and "approximate_member_count" in data:
-    #     self.member_count = data.get("approximate_member_count", 0)
 
     async def create_custom_emoji(
         self,
@@ -505,3 +497,57 @@ class Guild(DiscordObject):
             A role object or None if the role is not found.
         """
         return await self._client.cache.get_role(self.id, role_id)
+
+    async def prune_members(
+        self,
+        days: int = 7,
+        roles: List[Union["Snowflake_Type", "Role"]] = MISSING,
+        compute_prune_count: bool = True,
+        reason: str = MISSING,
+    ) -> Optional[int]:
+        """
+        Begin a guild prune. Removes members from the guild who who have not interacted for the last `days` days.
+        By default, members with roles are excluded from pruning, to include them, pass their role (or role id) in `roles`
+        Requires `kick members` permission.
+
+        Args:
+            days: number of days to prune (1-30)
+            roles: list of roles to include in the prune
+            compute_prune_count: Whether the number of members pruned should be calculated (disable this for large guilds)
+            reason: The reason for this prune
+
+        Returns:
+            The total number of members pruned, if `compute_prune_count` is set to True, otherwise None
+        """
+        if roles is not MISSING:
+            roles = [r.id if isinstance(r, Role) else r for r in roles]
+        else:
+            roles = []
+
+        resp = await self._client.http.begin_guild_prune(
+            self.id, days, include_roles=roles, compute_prune_count=compute_prune_count, reason=reason
+        )
+        return resp["pruned"]
+
+    async def estimate_prune_members(
+        self, days: int = 7, roles: List[Union["Snowflake_Type", "Role"]] = MISSING
+    ) -> int:
+        """
+        Calculate how many members would be pruned, should `guild.prune_members` be used.
+        By default, members with roles are excluded from pruning, to include them, pass their role (or role id) in `roles`
+
+        Args:
+            days: number of days to prune (1-30)
+            roles: list of roles to include in the prune
+
+        Returns:
+            Total number of members that would be pruned
+        """
+
+        if roles is not MISSING:
+            roles = [r.id if isinstance(r, Role) else r for r in roles]
+        else:
+            roles = []
+
+        resp = await self._client.http.get_guild_prune_count(self.id, days=days, include_roles=roles)
+        return resp["pruned"]

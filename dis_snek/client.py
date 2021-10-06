@@ -33,7 +33,7 @@ from dis_snek.models.application_commands import (
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
@@ -46,7 +46,6 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
-from dis_snek.utils.proxy import CacheProxy
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -499,17 +498,13 @@ class Snake:
             else:
                 cls = InteractionContext.from_dict(data, self)
 
-            cls.guild = CacheProxy(id=str(data.get("guild_id")), method=self.cache.get_guild)
+            cls.guild = await self.cache.get_guild(data["guild_id"])
 
             if guild_id := data.get("guild_id"):
-                self.cache.place_member_data(data.get("guild_id"), data["member"].copy())
-                cls.channel = CacheProxy(id=data["channel_id"], method=self.cache.get_channel)
-                cls.author = CacheProxy(
-                    id=data["member"]["user"]["id"], method=partial(self.cache.get_member, guild_id)
-                )
+                cls.author = self.cache.place_member_data(guild_id, data["member"].copy())
+                cls.channel = await self.cache.get_channel(data["channel_id"])
             else:
-                self.cache.place_user_data(data["user"])
-                cls.author = CacheProxy(id=data["user"]["id"], method=self.cache.get_user)
+                cls.author = self.cache.place_user_data(data["user"])
 
             if res_data := data["data"].get("resolved"):
                 await cls.process_resolved(res_data)
@@ -596,7 +591,7 @@ class Snake:
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
 
-        if not await message.author.bot:
+        if not message.author.bot:
             prefix = await self.get_prefix(message)
 
             if message.content.startswith(prefix):
