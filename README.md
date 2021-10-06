@@ -8,12 +8,12 @@
 
 This is `Dis-Snek`, an API wrapper for Discord, written in Python. This wrapper is designed to be easy to use, and easily modified to suit your needs. 
 
-## "Is this just another discord.py fork"?
+## "Is this just another discord.py fork?"
 
-While this library shares some features or styles with discord.py, its completely separate from them. We think discord.py is a fantastic library, but we disagree with the direction and design decisions made by it.
+While this library shares some features or styles with discord.py, it's completely separate from them. We think discord.py is a fantastic library, but we disagree with the direction and design decisions made by it.
 
 ## "Can I contribute to this project?"
-Of course, you can contribute to this project by submitting a pull-request here. We also have a [Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards, feel free to do anything there.
+Of course! You can contribute to this project by submitting a Pull Request here. We also have a [Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards - feel free to do anything there.
 
 ## Links:
 
