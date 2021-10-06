@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional, Union, Dict, Any
 from attr.converters import optional as optional_c
 
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord import ClientObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -22,7 +22,7 @@ class InviteTargetTypes(IntEnum):
     EMBEDDED_APPLICATION = 2
 
 
-@define(slots=True, kw_only=True)
+@define()
 class InviteStageInstance(DictSerializationMixin):
     members: List["Member"] = field()  # TODO Get from cache
     participant_count: int = field()
@@ -30,7 +30,7 @@ class InviteStageInstance(DictSerializationMixin):
     topic: str = field()
 
 
-@define(slots=True, kw_only=True)
+@define()
 class InviteMetadata(DictSerializationMixin):
     uses: int = field()
     max_uses: int = field()
@@ -39,13 +39,13 @@ class InviteMetadata(DictSerializationMixin):
     created_at: Timestamp = field(converter=timestamp_converter)
 
 
-@define(slots=True, kw_only=True)
-class Invite(DiscordObject):
+@define()
+class Invite(ClientObject):
     code: str = field()
     target_type: Optional[Union[InviteTargetTypes, int]] = field(converter=optional_c(InviteTargetTypes))
     approximate_presence_count: Optional[int] = field(default=-1)
     approximate_member_count: Optional[int] = field(default=-1)
-    target_application: Optional[dict] = field(default=None)  # TODO Partical application
+    target_application: Optional[dict] = field(default=None)  # TODO Partial application
     expires_at: Optional[Timestamp] = field(converter=optional_c(timestamp_converter))
     stage_instance: Optional[InviteStageInstance] = field(default=None)
 
