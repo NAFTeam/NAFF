@@ -2,6 +2,8 @@ import asyncio
 import traceback
 from typing import TYPE_CHECKING, Any, Dict, List
 
+import attr
+
 from dis_snek.utils.serializer import no_export_meta
 
 from dis_snek.mixins.serialization import DictSerializationMixin
@@ -12,8 +14,8 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
 
 
-@define()
-class DiscordObject(SnowflakeObject, DictSerializationMixin):
+@attr.s()
+class ClientObject(DictSerializationMixin):
     _client: "Snake" = field(metadata=no_export_meta)
 
     def __attrs_post_init__(self):
@@ -45,7 +47,15 @@ class DiscordObject(SnowflakeObject, DictSerializationMixin):
 
     @classmethod
     def from_list(cls, datas: List[Dict[str, Any]], client: "Snake"):
-        objects = []
-        for data in datas:
-            objects.append(cls.from_dict(data, client))
-        return objects
+        return [cls.from_dict(data, client) for data in datas]
+
+    def update_from_dict(self, data):
+        data = self._process_dict(data, self._client)
+        for key, value in self._filter_kwargs(data, self._get_keys()).items():
+            # todo improve
+            setattr(self, key, value)
+
+
+@attr.s()
+class DiscordObject(SnowflakeObject, ClientObject):
+    pass
