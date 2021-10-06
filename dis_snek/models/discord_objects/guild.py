@@ -174,6 +174,18 @@ class Guild(DiscordObject):
     def me(self) -> "Member":
         return self._client.cache.member_cache.get((self.id, self._client.user.id))
 
+    @property
+    def system_channel(self) -> Optional["GuildText"]:
+        return self._client.cache.channel_cache.get(self.system_channel_id)
+
+    @property
+    def rules_channel(self) -> Optional["GuildText"]:
+        return self._client.cache.channel_cache.get(self.rules_channel_id)
+
+    @property
+    def public_updates_channel(self) -> Optional["GuildText"]:
+        return self._client.cache.channel_cache.get(self.public_updates_channel_id)
+
     async def get_owner(self) -> "Member":
         # maybe precache owner instead of using `get_owner`
         return await self._client.cache.get_member(self.id, self._owner_id)
