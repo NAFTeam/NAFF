@@ -169,11 +169,12 @@ class InvitableMixin:
         )
         return Invite.from_dict(invite_data, self._client)
 
-    def get_invites(self):
+    async def get_invites(self) -> List["Invite"]:
         """
         Gets all invites (with invite metadata) for the channel.
         """
-        raise NotImplementedError
+        invites_data = await self._client.http.get_channel_invites(self.id)
+        return Invite.from_list(invites_data, self._client)
 
 
 @define(slots=False)
