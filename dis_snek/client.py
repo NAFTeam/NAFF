@@ -33,7 +33,7 @@ from dis_snek.models.application_commands import (
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
