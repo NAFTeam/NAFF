@@ -179,7 +179,7 @@ class InvitableMixin:
 @define(slots=False)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
-    _type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
+    type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
 
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
@@ -431,7 +431,7 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
 
     @property
     def is_private(self) -> bool:
-        return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
+        return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
 
     async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user):
         raise NotImplementedError
