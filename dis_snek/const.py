@@ -29,6 +29,7 @@ attributes:
 
 import sys
 import sentinel
+from collections import defaultdict
 import dis_snek.models.events as events
 
 
@@ -65,3 +66,13 @@ MISSING = sentinel.create(
         "__bool__": lambda _: False,
     }
 )
+
+PREMIUM_GUILD_LIMITS = defaultdict(
+    lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
+    {
+        1: {"emoji": 100, "stickers": 15, "bitrate": 128000, "filesize": 8388608},
+        2: {"emoji": 150, "stickers": 30, "bitrate": 256000, "filesize": 52428800},
+        3: {"emoji": 250, "stickers": 60, "bitrate": 384000, "filesize": 104857600},
+    },
+)
+"""Limits granted per premium level of a guild"""

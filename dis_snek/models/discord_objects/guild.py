@@ -6,7 +6,7 @@ import attr
 from aiohttp import FormData
 from attr.converters import optional
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.channel import (
     BaseChannel,
@@ -185,6 +185,44 @@ class Guild(DiscordObject):
     @property
     def public_updates_channel(self) -> Optional["GuildText"]:
         return self._client.cache.channel_cache.get(self.public_updates_channel_id)
+
+    @property
+    def emoji_limit(self) -> int:
+        base = 200 if "MORE_EMOJI" in self._features else 50
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["emoji"])
+
+    @property
+    def sticker_limit(self) -> int:
+        base = 60 if "MORE_sTICKERS" in self._features else 0
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["stickers"])
+
+    @property
+    def bitrate_limit(self) -> int:
+        base = 128000 if "VIP_REGIONS" in self._features else 96000
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
+
+    @property
+    def filesize_limit(self) -> int:
+        return PREMIUM_GUILD_LIMITS[self.premium_tier]["filesize"]
+
+    @property
+    def default_role(self) -> "Role":
+        return self._client.cache.get_role(self.id, self.id)  # type: ignore
+
+    @property
+    def premium_subscriber_role(self) -> Optional["Role"]:
+        for role in self.roles:
+            if role.premium_subscriber:
+                return role
+        return None
+
+    @property
+    def my_role(self) -> Optional["Role"]:
+        m_r_id = self._client.user.id
+        for role in self.roles:
+            if role._bot_id == m_r_id:
+                return role
+        return None
 
     async def get_owner(self) -> "Member":
         # maybe precache owner instead of using `get_owner`
