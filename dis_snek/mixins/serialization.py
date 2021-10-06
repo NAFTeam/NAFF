@@ -59,16 +59,13 @@ class DictSerializationMixin:
         parameters:
             data: The json data received from discord api.
         """
-        objects = []
-        for data in datas:
-            objects.append(cls.from_dict(data))
-        return objects
+        return [cls.from_dict(data) for data in datas]
 
     def update_from_dict(self, data):
         """
         Updates object attribute(s) with new json data received from discord api.
         """
-        data = self._process_dict(data, self._client)  # TODO client cannot be here
+        data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
             setattr(self, key, value)
