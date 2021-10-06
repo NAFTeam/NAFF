@@ -497,3 +497,57 @@ class Guild(DiscordObject):
             A role object or None if the role is not found.
         """
         return await self._client.cache.get_role(self.id, role_id)
+
+    async def prune_members(
+        self,
+        days: int = 7,
+        roles: List[Union["Snowflake_Type", "Role"]] = MISSING,
+        compute_prune_count: bool = True,
+        reason: str = MISSING,
+    ) -> Optional[int]:
+        """
+        Begin a guild prune. Removes members from the guild who who have not interacted for the last `days` days.
+        By default, members with roles are excluded from pruning, to include them, pass their role (or role id) in `roles`
+        Requires `kick members` permission.
+
+        Args:
+            days: number of days to prune (1-30)
+            roles: list of roles to include in the prune
+            compute_prune_count: Whether the number of members pruned should be calculated (disable this for large guilds)
+            reason: The reason for this prune
+
+        Returns:
+            The total number of members pruned, if `compute_prune_count` is set to True, otherwise None
+        """
+        if roles is not MISSING:
+            roles = [r.id if isinstance(r, Role) else r for r in roles]
+        else:
+            roles = []
+
+        resp = await self._client.http.begin_guild_prune(
+            self.id, days, include_roles=roles, compute_prune_count=compute_prune_count, reason=reason
+        )
+        return resp["pruned"]
+
+    async def estimate_prune_members(
+        self, days: int = 7, roles: List[Union["Snowflake_Type", "Role"]] = MISSING
+    ) -> int:
+        """
+        Calculate how many members would be pruned, should `guild.prune_members` be used.
+        By default, members with roles are excluded from pruning, to include them, pass their role (or role id) in `roles`
+
+        Args:
+            days: number of days to prune (1-30)
+            roles: list of roles to include in the prune
+
+        Returns:
+            Total number of members that would be pruned
+        """
+
+        if roles is not MISSING:
+            roles = [r.id if isinstance(r, Role) else r for r in roles]
+        else:
+            roles = []
+
+        resp = await self._client.http.get_guild_prune_count(self.id, days=days, include_roles=roles)
+        return resp["pruned"]
