@@ -164,10 +164,9 @@ class Guild(DiscordObject):
         return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
     @property
-    async def members(self) -> AsyncGenerator["Member", None]:
+    def members(self) -> List["Member"]:
         """A generator that yields all members of this guild."""
-        for m_id in self._member_ids:
-            yield await self._client.cache.get_member(self.id, m_id)
+        return [self._client.cache.member_cache.get(m_id) for m_id in self._member_ids]
 
     @property
     def roles(self) -> List["Role"]:
