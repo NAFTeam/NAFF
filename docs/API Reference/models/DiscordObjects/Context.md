@@ -1,1 +1,1 @@
-::: dis_snek.models.discord_objects.context
+::: dis_snek.models.context
