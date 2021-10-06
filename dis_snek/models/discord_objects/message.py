@@ -10,6 +10,7 @@ import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
+from dis_snek.const import MISSING
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
@@ -406,14 +407,14 @@ class Message(DiscordObject):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: int = None):
+    async def delete(self, delay: Optional[int] = MISSING):
         """
         Delete message.
 
         parameters:
-            delay: Seconds to wait before deleting message
+            delay: Seconds to wait before deleting message.
         """
-        if delay is not None and delay > 0:
+        if delay and delay > 0:
 
             async def delayed_delete():
                 await asyncio.sleep(delay)
@@ -483,20 +484,22 @@ class Message(DiscordObject):
         emoji = process_emoji_req_format(emoji)
         await self._client.http.create_reaction(self._channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Union["Member", "Snowflake_Type"]):
+    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING):
         """
         Remove a specific reaction that a user reacted with
 
         parameters:
             emoji: Emoji to remove
-            member: Member to remove reaction of.
+            member: Member to remove reaction of. Default's to snake bot user.
         """
-        emoji = process_emoji_req_format(emoji)
-        if not isinstance(member, (str, int)):
-            member = member.id
-        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji, member)
+        emoji_str = process_emoji_req_format(emoji)
+        if not member:
+            member = self._client.user
+        user_id = to_snowflake(member)
+        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
+        # TODO Should we combine this with clear_all_reactions?
         """
         Clear a specific reaction from message
 
@@ -513,13 +516,15 @@ class Message(DiscordObject):
     async def pin(self):
         """Pin message"""
         await self._client.http.pin_message(self._channel_id, self.id)
+        self.pinned = True
 
     async def unpin(self):
         """Unpin message"""
         await self._client.http.unpin_message(self._channel_id, self.id)
+        self.pinned = False
 
     async def publish(self):
-        """Publish this message"""
+        """Publish this message. (Discord api calls it "crosspost")"""
         await self._client.http.crosspost_message(self._channel_id, self.id)
 
 

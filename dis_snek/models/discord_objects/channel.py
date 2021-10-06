@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Opt
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
@@ -18,7 +19,9 @@ if TYPE_CHECKING:
     from aiohttp import FormData
 
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.application import Application
     from dis_snek.models.discord_objects.guild import Guild
+    from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
@@ -36,7 +39,7 @@ class MessageableChannelMixin(SendMixin):
     last_message_id: Optional["Snowflake_Type"] = attr.ib(
         default=None
     )  # TODO May need to think of dynamically updating this.
-    default_auto_archive_duration: int = attr.ib(default=60)
+    default_auto_archive_duration: int = attr.ib(default=AutoArchiveDuration.ONE_DAY)
     last_pin_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
@@ -59,9 +62,9 @@ class MessageableChannelMixin(SendMixin):
     async def get_messages(
         self,
         limit: int = 50,
-        around: "Snowflake_Type" = None,
-        before: "Snowflake_Type" = None,
-        after: "Snowflake_Type" = None,
+        around: "Snowflake_Type" = MISSING,
+        before: "Snowflake_Type" = MISSING,
+        after: "Snowflake_Type" = MISSING,
     ) -> Optional[List["Message"]]:
         """
         Fetch multiple messages from the channel.
@@ -75,7 +78,9 @@ class MessageableChannelMixin(SendMixin):
         returns:
             A list of messages fetched.
         """
-        # TODO Check max limit.
+        if limit > 100:
+            raise ValueError("You cannot fetch more than 100 messages at once.")
+
         if around:
             around = to_snowflake(around)
         elif before:
@@ -102,7 +107,7 @@ class MessageableChannelMixin(SendMixin):
             messages.append(self._client.cache.place_message_data(message_data))
         return messages
 
-    async def delete_messages(self, messages: List[Union["Snowflake_Type", "Message"]], reason: str = None) -> None:
+    async def delete_messages(self, messages: List[Union["Snowflake_Type", "Message"]], reason: Optional[str] = MISSING) -> None:
         """
         Bulk delete messages from channel.
 
@@ -110,11 +115,68 @@ class MessageableChannelMixin(SendMixin):
             messages: List of messages or message IDs to delete.
             reason: The reason for this action. Used for audit logs.
         """
-        message_ids = []
-        for message in messages:
-            message_ids.append(to_snowflake(message))
-
+        message_ids = [to_snowflake(message) for message in messages]
+        # TODO Add check for min/max and duplicates.
         await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
+
+    async def trigger_typing(self):
+        raise NotImplementedError
+
+
+@define(slots=False)
+class InvitableMixin:
+    async def create_invite(
+        self,
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        target_type: Optional["InviteTargetTypes"] = None,
+        target_user: Optional["Snowflake_Type", "User"] = None,
+        target_application: Optional["Snowflake_Type", "Application"] = None,
+        reason: Optional[str] = None,
+    ) -> "Invite":
+        """
+        Create channel invite.
+
+        parameters:
+            max_age: Max age of invite in seconds, default 86400 (24 hours).
+            max_uses: Max uses of invite, default 0.
+            temporary: Grants temporary membership, default False.
+            unique: Invite is unique, default false.
+            target_type: Target type for streams and embedded applications.
+            target_user_id: Target User ID for Stream target type.
+            target_application_id: Target Application ID for Embedded App target type.
+            reason: The reason for creating this invite.
+
+        returns:
+            Newly created Invite object.
+        """
+        if target_type:
+            if target_type == InviteTargetTypes.STREAM and not target_user:
+                raise ValueError("Stream target must include target user id.")
+            elif target_type == InviteTargetTypes.EMBEDDED_APPLICATION and not target_application:
+                raise ValueError("Embedded Application target must include target application id.")
+
+        if target_user and target_application:
+            raise ValueError("Invite target must be either User or Embedded Application, not both.")
+        elif target_user:
+            target_user = to_snowflake(target_user)
+            target_type = InviteTargetTypes.STREAM
+        elif target_application:
+            target_application = to_snowflake(target_application)
+            target_type = InviteTargetTypes.EMBEDDED_APPLICATION
+
+        invite_data = await self._client.http.create_channel_invite(
+            self.id, max_age, max_uses, temporary, unique, target_type, target_user, target_application, reason
+        )
+        return Invite.from_dict(invite_data, self._client)
+
+    def get_invites(self):
+        """
+        Gets all invites (with invite metadata) for the channel.
+        """
+        raise NotImplementedError
 
 
 @define(slots=False)
@@ -126,9 +188,13 @@ class BaseChannel(DiscordObject):
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
         """
         Creates a channel object of the appropriate type
-        :param data:
-        :param client:
-        :return:
+
+        parameters:
+            data: The channel data.
+            client: The bot.
+
+        returns:
+            The new channel object.
         """
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
@@ -137,11 +203,12 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
-    async def delete(self, reason: str = None):
+    async def delete(self, reason: Optional[str] = MISSING):
         """
         Delete this channel.
 
-        :param reason: The reason for deleting this channel
+        parameters:
+            reason: The reason for deleting this channel
         """
         await self._client.http.delete_channel(self.id, reason)
 
@@ -170,6 +237,15 @@ class DMGroup(BaseChannel, MessageableChannelMixin):
     @property
     def recipients(self) -> Union[CacheView, Awaitable[Dict["Snowflake_Type", "User"]], AsyncIterator["User"]]:
         return CacheView(ids=self._recipients_ids, method=self._client.cache.get_user)
+
+    async def edit(self, name, icon):
+        raise NotImplementedError
+
+    async def add_recipient(self, user: Union["User", "Snowflake_Type"]):
+        raise NotImplementedError
+
+    async def remove_recipient(self, user: Union["User", "Snowflake_Type"]):
+        raise NotImplementedError
 
 
 @define()
@@ -219,66 +295,45 @@ class GuildChannel(BaseChannel):
         """
         return CacheProxy(id=self.guild_id, method=self._client.cache.get_guild)
 
-    async def set_permissions(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
+    async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         await self._client.http.edit_channel_permission(
             self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
         )
 
-    async def create_invite(
-        self,
-        max_age: int = 86400,
-        max_uses: int = 0,
-        temporary: bool = False,
-        unique: bool = False,
-        target_type: Optional["InviteTargetTypes"] = None,
-        target_user_id: Optional["Snowflake_Type"] = None,
-        target_application_id: Optional["Snowflake_Type"] = None,
-        reason: Optional[str] = None,
-    ) -> "Invite":
-        """
-        Create channel invite.
-
-        parameters:
-            max_age: Max age of invite in seconds, default 86400 (24 hours).
-            max_uses: Max uses of invite, default 0.
-            temporary: Grants temporary membership, default False.
-            unique: Invite is unique, default false.
-            target_type: Target type for streams and embedded applications.
-            target_user_id: Target User ID for Stream target type.
-            target_application_id: Target Application ID for Embedded App target type.
-
-        returns:
-            Newly created Invite object.
-        """
-        if target_type:
-            if target_type == InviteTargetTypes.STREAM and not target_user_id:
-                raise ValueError("Stream target must include target user ID")
-            elif target_type == InviteTargetTypes.EMBEDDED_APPLICATION and not target_application_id:
-                raise ValueError("Embedded Application target must include target application ID")
-        elif target_user_id and target_application_id:
-            raise ValueError("Invite target must be either User or Embedded Application, not both")
-        elif target_user_id:
-            target_user_id = to_snowflake(target_user_id)
-            target_type = InviteTargetTypes.STREAM
-        elif target_application_id:
-            target_application_id = to_snowflake(target_application_id)
-            target_type = InviteTargetTypes.EMBEDDED_APPLICATION
-
-        invite_data = await self._client.http.create_channel_invite(
-            self.id, max_age, max_uses, temporary, unique, target_type, target_user_id, target_application_id, reason
-        )
-        return Invite.from_dict(invite_data, self._client)
+    async def delete_permission(self, target: Union["PermissionOverwrite", "Role", "User"]):
+        raise NotImplementedError
 
 
 @define()
 class GuildCategory(GuildChannel):
-    pass
+    async def edit(self, name, position, permission_overwrites):
+        raise NotImplementedError
 
 
 @define()
-class GuildText(GuildChannel, MessageableChannelMixin):
+class GuildStore(GuildChannel):
+    async def edit(self, name, position, permission_overwrites, parent_id, nsfw):
+        raise NotImplementedError
+
+
+@define()
+class GuildText(GuildChannel, MessageableChannelMixin, InvitableMixin):
     topic: Optional[str] = attr.ib(default=None)
     rate_limit_per_user: int = attr.ib(default=0)
+
+    async def edit(
+        self,
+        name,
+        position,
+        permission_overwrites,
+        parent_id,
+        nsfw,
+        topic,
+        channel_type,
+        default_auto_archive_duration,
+        rate_limit_per_user,
+    ):
+        raise NotImplementedError
 
     async def create_thread_with_message(
         self,
@@ -342,12 +397,20 @@ class GuildText(GuildChannel, MessageableChannelMixin):
 class GuildNews(GuildText):
     rate_limit_per_user: int = attr.ib(
         default=0, init=False, on_setattr=attr.setters.frozen
-    )  # TODO Not sure overriding like this is the best method.
+    )  # TODO Not sure overriding like this is the best way to "disable" a property.
 
-
-@define()
-class GuildStore(GuildChannel):
-    pass
+    async def edit(
+        self,
+        name,
+        position,
+        permission_overwrites,
+        parent_id,
+        nsfw,
+        topic,
+        channel_type,
+        default_auto_archive_duration,
+    ):
+        raise NotImplementedError
 
 
 ################################################################
@@ -378,6 +441,9 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
     def is_private(self) -> bool:
         return self._type == ChannelTypes.GUILD_PRIVATE_THREAD
 
+    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user):
+        raise NotImplementedError
+
     async def get_members(self) -> List["ThreadMember"]:
         members_data = await self._client.http.list_thread_members(self.id)
         members = []
@@ -390,6 +456,12 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
 
     async def remove_member(self, member: Union["Member", "Snowflake_Type"]) -> None:
         await self._client.http.remove_thread_member(self.id, to_snowflake(member))
+
+    async def join(self):
+        raise NotImplementedError
+
+    async def leave(self):
+        raise NotImplementedError
 
 
 @define()
@@ -404,7 +476,10 @@ class GuildPublicThread(ThreadChannel):
 
 @define()
 class GuildPrivateThread(ThreadChannel):
-    pass
+    invitable: bool = field(default=False)
+
+    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, invitable):
+        raise NotImplementedError
 
 
 ################################################################
@@ -412,15 +487,28 @@ class GuildPrivateThread(ThreadChannel):
 
 
 @define()
-class VoiceChannel(GuildChannel):  # TODO May not be needed
+class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly just GuildVoice.
     bitrate: int = attr.ib()
     user_limit: int = attr.ib()
     rtc_region: str = attr.ib(default="auto")
     video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
 
+    async def edit(
+        self,
+        name,
+        position,
+        permission_overwrites,
+        parent_id,
+        bitrate,
+        user_limit,
+        rtc_region,
+        video_quality_mode,
+    ):
+        raise NotImplementedError
+
 
 @define()
-class GuildVoice(VoiceChannel):
+class GuildVoice(VoiceChannel, InvitableMixin):
     pass
 
 
@@ -450,7 +538,10 @@ TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, Guil
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
 
 
-TYPE_MESSAGEABLE_CHANNEL = Union[DM, DMGroup, GuildNews, GuildText]
+TYPE_VOICE_CHANNEL = Union[GuildVoice, GuildStageVoice]
+
+
+TYPE_MESSAGEABLE_CHANNEL = Union[DM, DMGroup, GuildNews, GuildText, ThreadChannel]
 
 
 TYPE_CHANNEL_MAPPING = {

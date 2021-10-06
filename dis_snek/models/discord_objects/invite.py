@@ -31,7 +31,7 @@ class InviteStageInstance(DictSerializationMixin):
 
 
 @define()
-class InviteMetadata(DictSerializationMixin):
+class InviteMetadata(DictSerializationMixin):  # TODO This should be part of invite.
     uses: int = field()
     max_uses: int = field()
     max_age: int = field()
