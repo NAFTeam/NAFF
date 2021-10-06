@@ -219,7 +219,7 @@ class Guild(DiscordObject):
     @property
     def default_role(self) -> "Role":
         """The `@everyone` role in this guild"""
-        return self._client.cache.get_role(self.id, self.id)  # type: ignore
+        return self._client.cache.role_cache.get(self.id)  # type: ignore
 
     @property
     def premium_subscriber_role(self) -> Optional["Role"]:
