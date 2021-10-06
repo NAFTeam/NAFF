@@ -123,7 +123,7 @@ class MessageableChannelMixin(SendMixin):
         await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
 
     async def trigger_typing(self):
-        raise NotImplementedError
+        await self._client.http.trigger_typing_indicator(self.id)
 
 
 @define(slots=False)
