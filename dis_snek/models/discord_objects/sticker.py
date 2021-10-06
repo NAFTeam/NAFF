@@ -8,7 +8,6 @@ from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.proxy import CacheProxy
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
@@ -62,31 +61,23 @@ class Sticker(StickerItem):
     _user_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
-    @property
-    def user(self) -> Optional[Union[CacheProxy, Awaitable["User"], "User"]]:
-        """Get the user that uploaded this sticker. This will not be present for standard type.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            The user object.
+    async def get_creator(self) -> "User":
         """
-        if self._user_id:
-            return CacheProxy(id=self._user_id, method=self._client.cache.get_user)
+        Get the user who created this emoji
 
-    @property
-    def guild(self) -> Optional[Union[CacheProxy, Awaitable["Guild"], "Guild"]]:
-        """Get the guild this sticker belongs to. This will not be present for standard type.
-
-        ??? warning "Awaitable Property:"
-            This property must be awaited.
-
-        returns:
-            The guild object.
+        Returns:
+            User object
         """
-        if self._guild_id:
-            return CacheProxy(id=self._guild_id, method=self._client.cache.get_guild)
+        return await self._client.cache.get_user(self._user_id)
+
+    async def get_guild(self) -> "Guild":
+        """
+        Get the guild associated with this emoji
+
+        Returns:
+            Guild object
+        """
+        return await self._client.cache.get_guild(self._guild_id)
 
     async def edit(
         self,
