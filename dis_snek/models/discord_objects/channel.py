@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
@@ -13,8 +13,12 @@ from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.serializer import to_image_data
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
+
     from aiohttp import FormData
 
     from dis_snek.client import Snake
@@ -131,8 +135,8 @@ class InvitableMixin:
         temporary: bool = False,
         unique: bool = False,
         target_type: Optional["InviteTargetTypes"] = None,
-        target_user: Optional["Snowflake_Type", "User"] = None,
-        target_application: Optional["Snowflake_Type", "Application"] = None,
+        target_user: Optional[Union["Snowflake_Type", "User"]] = None,
+        target_application: Optional[Union["Snowflake_Type", "Application"]] = None,
         reason: Optional[str] = None,
     ) -> "Invite":
         """
@@ -217,48 +221,54 @@ class BaseChannel(DiscordObject):
 
 
 @define()
-class DMGroup(BaseChannel, MessageableChannelMixin):
-    owner_id: "Snowflake_Type" = attr.ib(default=None)
-    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    _recipients_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-
-    @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        recipients_data = data.pop("recipients", [])
-        recipients_ids = []
-        for recipient_data in recipients_data:
-            recipient_id = recipient_data["id"]
-            recipients_ids.append(recipient_id)
-        data["recipients_ids"] = recipients_ids
-
-        return data
-
-    @property
-    async def recipients(self) -> AsyncGenerator["User", None]:
-        for u_id in self.recipients_ids:
-            yield await self._client.cache.get_user(u_id)
-
-    async def edit(self, name, icon):
-        raise NotImplementedError
-
-    async def add_recipient(self, user: Union["User", "Snowflake_Type"]):
-        raise NotImplementedError
-
-    async def remove_recipient(self, user: Union["User", "Snowflake_Type"]):
-        raise NotImplementedError
-
-
-@define()
-class DM(DMGroup):
+class DMChannel(BaseChannel, MessageableChannelMixin):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
-        user_id = data["recipients_ids"][0]
-        client.cache.place_dm_channel_id(user_id, data["id"])
+        data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
         return data
 
-    async def get_recipient(self) -> "User":
-        return await self._client.cache.get_user(self.user_id)
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
+        payload = dict(name=name, icon=to_image_data(icon))
+        channel_data = self._client.http.modify_channel(self.id, payload, reason)
+        self.update_from_dict(channel_data)
+
+
+@define()
+class DM(DMChannel):
+    recipient: "User" = field()
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
+        data["recipient"] = data.pop("recipients")[0]
+        client.cache.place_dm_channel_id(data["recipient"], data["id"])
+        return data
+
+
+@define()
+class DMGroup(DMChannel):
+    owner_id: "Snowflake_Type" = attr.ib()
+    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    recipients: List["User"] = field(factory=list)
+
+    async def get_owner(self) -> "User":
+        return await self._client.cache.get_user(self.owner_id)
+
+    async def add_recipient(self, user: Union["User", "Snowflake_Type"], access_token: str, nickname: Optional[str] = MISSING):
+        user = await self._client.cache.get_user(user)
+        await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
+        self.recipients.append(user)
+
+    async def remove_recipient(self, user: Union["User", "Snowflake_Type"]):
+        user = await self._client.cache.get_user(user)
+        await self._client.http.group_dm_remove_recipient(self.id, user.id)
+        self.recipients.remove(user)
 
 
 ################################################################
@@ -515,9 +525,12 @@ TYPE_ALL_CHANNEL = Union[
     GuildPublicThread,
     GuildPrivateThread,
     GuildNewsThread,
-    DM,
+    DMChannel,
     DMGroup,
 ]
+
+
+TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
 TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]

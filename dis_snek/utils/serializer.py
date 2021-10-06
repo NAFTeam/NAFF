@@ -1,10 +1,14 @@
 from base64 import b64encode
+from ctypes import Union
 from datetime import datetime, timezone
 from io import IOBase
+from pathlib import Path
+from typing import Optional
 
 from attr import fields, has
 
 from dis_snek.const import MISSING
+
 
 no_export_meta = dict(no_export=True)
 
@@ -63,12 +67,14 @@ def dict_filter_missing(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not MISSING}
 
 
-def to_image_data(imagefile):
-    if issubclass(type(imagefile), IOBase):
+def to_image_data(imagefile) -> Optional[str]:
+    if isinstance(imagefile, IOBase):
         image_data = imagefile.read()
+    elif isinstance(imagefile, (str, Path)):
+        with open(imagefile, "rb") as image_buffer:
+            image_data = image_buffer.read()
     else:
-        with open(imagefile, "rb") as opened_image:
-            image_data = opened_image.read()
+        return imagefile
 
     mimetype = _get_file_mimetype(image_data)
     encoded_image = b64encode(image_data).decode("ascii")

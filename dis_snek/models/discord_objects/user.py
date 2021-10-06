@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Set, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 from attr.converters import optional as optional_c
+
 from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
@@ -9,19 +10,17 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.models.timestamp import Timestamp
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
-
 
 if TYPE_CHECKING:
     from aiohttp import FormData
 
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import DM, TYPE_GUILD_CHANNEL
-    from dis_snek.models.discord_objects.guild import Guild
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
 
 
 class _SendDMMixin(SendMixin):
