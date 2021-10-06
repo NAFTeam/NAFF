@@ -68,7 +68,7 @@ class MessageableChannelMixin(SendMixin):
         around: "Snowflake_Type" = MISSING,
         before: "Snowflake_Type" = MISSING,
         after: "Snowflake_Type" = MISSING,
-    ) -> Optional[List["Message"]]:
+    ) -> List["Message"]:
         """
         Fetch multiple messages from the channel.
 
@@ -92,12 +92,9 @@ class MessageableChannelMixin(SendMixin):
             after = to_snowflake(after)
 
         messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
-        messages = []
-        for message_data in messages_data:
-            messages.append(self._client.cache.place_message_data(message_data))
-        return messages
+        return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
-    async def get_pinned_messages(self):
+    async def get_pinned_messages(self) -> List["Message"]:
         """
         Fetch pinned messages from the channel.
 
@@ -105,10 +102,7 @@ class MessageableChannelMixin(SendMixin):
             A list of messages fetched.
         """
         messages_data = await self._client.http.get_pinned_messages(self.id)
-        messages = []
-        for message_data in messages_data:
-            messages.append(self._client.cache.place_message_data(message_data))
-        return messages
+        return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
     async def delete_messages(self, messages: List[Union["Snowflake_Type", "Message"]], reason: Optional[str] = MISSING) -> None:
         """
@@ -122,7 +116,7 @@ class MessageableChannelMixin(SendMixin):
         # TODO Add check for min/max and duplicates.
         await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
 
-    async def trigger_typing(self):
+    async def trigger_typing(self) -> None:
         await self._client.http.trigger_typing_indicator(self.id)
 
 
@@ -184,8 +178,8 @@ class InvitableMixin:
 
 @define(slots=False)
 class BaseChannel(DiscordObject):
-    _type: ChannelTypes = field(converter=ChannelTypes)
     name: Optional[str] = field(default=None)
+    _type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
 
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
