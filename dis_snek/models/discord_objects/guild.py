@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
     from dis_snek.models.discord_objects.role import Role
-    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -649,3 +649,44 @@ class Guild(DiscordObject):
 
         resp = await self._client.http.get_guild_prune_count(self.id, days=days, include_roles=roles)
         return resp["pruned"]
+
+    async def leave(self) -> None:
+        """Leave this guild"""
+        await self._client.http.leave_guild(self.id)
+
+    async def delete(self) -> None:
+        """Delete the guild. You must own this guild to do this."""
+        await self._client.http.delete_guild(self.id)
+
+    async def kick(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+        """
+        Kick a user from the guild.
+        You must have the `kick members` permission
+        Args:
+            user: The user to kick
+            reason: The reason for the kick
+        """
+        await self._client.http.remove_guild_member(self.id, to_snowflake(user), reason=reason)
+
+    async def ban(
+        self, user: Union["User", "Member", "Snowflake_Type"], delete_message_days: int = 0, reason: str = MISSING
+    ) -> None:
+        """
+        Ban a user from the guild.
+        You must have the `ban members` permission
+        Args:
+            user: The user to ban
+            delete_message_days: How many days worth of messages to remove
+            reason: The reason for the ban
+        """
+        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+
+    async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+        """
+        Unban a user from the guild.
+        You must have the `ban members` permission
+        Args:
+            user: The user to unban
+            reason: The reason for the ban
+        """
+        await self._client.http.remove_guild_ban(self.id, to_snowflake(user), reason=reason)
