@@ -14,6 +14,7 @@ from dis_snek.models.discord_objects.channel import (
     GuildVoice,
     GuildStageVoice,
     PermissionOverwrite,
+    GuildChannel,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -497,6 +498,38 @@ class Guild(DiscordObject):
             A role object or None if the role is not found.
         """
         return await self._client.cache.get_role(self.id, role_id)
+
+    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
+        """
+        Returns a channel with the given `channel_id`
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+            # theoretically, this could get any channel the client can see,
+            # but to make it less confusing to new programmers,
+            # i intentionally check that the guild contains the channel first
+            return await self._client.cache.get_channel(channel_id)
+        return None
+
+    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["ThreadChannel"]:
+        """
+        Returns a Thread with the given `thread_id`
+
+        Args:
+            thread_id: The ID of the thread to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
+        if thread_id in self._thread_ids:
+            return await self.get_channel(thread_id)
+        return None
 
     async def prune_members(
         self,
