@@ -451,10 +451,10 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
         await self._client.http.remove_thread_member(self.id, to_snowflake(member))
 
     async def join(self):
-        raise NotImplementedError
+        await self._client.http.join_thread(self.id)
 
     async def leave(self):
-        raise NotImplementedError
+        await self._client.http.leave_thread(self.id)
 
 
 @define()
