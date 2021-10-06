@@ -155,62 +155,76 @@ class Guild(DiscordObject):
 
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
+        """Returns a list of channels associated with this guild."""
         return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
 
     @property
     def threads(self) -> List["ThreadChannel"]:
+        """Returns a list of threads associated with this guild."""
         return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
     @property
-    async def members(self) -> AsyncGenerator["Member", None]:
+    async def member_generator(self) -> AsyncGenerator["Member", None]:
+        """A generator that yields all members of this guild."""
         for m_id in self._member_ids:
             yield await self._client.cache.get_member(self.id, m_id)
 
     @property
     def roles(self) -> List["Role"]:
+        """Returns a list of roles associated with this guild"""
         return [self._client.cache.role_cache.get(self.id, r_id) for r_id in self._role_ids]
 
     @property
     def me(self) -> "Member":
+        """Returns this bots member object within this guild."""
         return self._client.cache.member_cache.get((self.id, self._client.user.id))
 
     @property
     def system_channel(self) -> Optional["GuildText"]:
+        """Returns the channel this guild uses for system messages."""
         return self._client.cache.channel_cache.get(self.system_channel_id)
 
     @property
     def rules_channel(self) -> Optional["GuildText"]:
+        """Returns the channel declared as a rules channel"""
         return self._client.cache.channel_cache.get(self.rules_channel_id)
 
     @property
     def public_updates_channel(self) -> Optional["GuildText"]:
+        """Returns the channel where server staff receive notices from Discord"""
         return self._client.cache.channel_cache.get(self.public_updates_channel_id)
 
     @property
     def emoji_limit(self) -> int:
+        """The maximum number of emoji this guild can have"""
         base = 200 if "MORE_EMOJI" in self._features else 50
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["emoji"])
 
     @property
     def sticker_limit(self) -> int:
+        """The maximum number of stickers this guild can have"""
         base = 60 if "MORE_sTICKERS" in self._features else 0
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["stickers"])
 
     @property
     def bitrate_limit(self) -> int:
+        """The maximum bitrate for this guild"""
         base = 128000 if "VIP_REGIONS" in self._features else 96000
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
 
     @property
     def filesize_limit(self) -> int:
+        """The maximum filesize that may be uploaded within this guild"""
         return PREMIUM_GUILD_LIMITS[self.premium_tier]["filesize"]
 
     @property
     def default_role(self) -> "Role":
+        """The `@everyone` role in this guild"""
         return self._client.cache.get_role(self.id, self.id)  # type: ignore
 
     @property
     def premium_subscriber_role(self) -> Optional["Role"]:
+        """The role given to boosters of this server, if set"""
         for role in self.roles:
             if role.premium_subscriber:
                 return role
@@ -218,6 +232,7 @@ class Guild(DiscordObject):
 
     @property
     def my_role(self) -> Optional["Role"]:
+        """The role associated with this client, if set"""
         m_r_id = self._client.user.id
         for role in self.roles:
             if role._bot_id == m_r_id:
