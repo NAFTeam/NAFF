@@ -4,6 +4,7 @@ import inspect
 import logging
 import sys
 import traceback
+from contextlib import suppress
 from functools import partial
 from random import randint
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Union
@@ -319,24 +320,52 @@ class Snake:
         if self.sync_interactions:
             await self.synchronise_interactions()
         else:
-            await self._cache_interactions()
+            await self._cache_interactions(warn_missing = True)
 
-    async def _cache_interactions(self):
+    async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
-        scopes = [g.id for g in self.cache.guild_cache.values()] + [GLOBAL_SCOPE]
-        for scope in scopes:
+        bot_scopes = set(g.id for g in self.cache.guild_cache.values())
+        bot_scopes.add(GLOBAL_SCOPE)
+
+        # Match all interaction is registered with discord's data.
+        for scope in self.interactions:
+            bot_scopes.discard(scope)
             try:
-                resp_data = await self.http.get_interaction_element(self.user.id, scope)
+                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
             except Forbidden as e:
                 raise InteractionMissingAccess(scope) from e
 
-            for cmd_data in resp_data:
+            remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
+            for cmd in self.interactions[scope].values():
+                cmd_data = remote_cmds.pop(cmd.name, MISSING)
+                if cmd_data is MISSING:
+                    if warn_missing:
+                        log.error(f"Detected yet to sync slash command \"/{cmd.name}\" for scope "
+                                  f"{'global' if scope == GLOBAL_SCOPE else scope}")
+                    continue
+
                 self._interaction_scopes[str(cmd_data["id"])] = scope
-                try:
-                    self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
-                except KeyError:
-                    log.warning(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
-                                f"{'global' if scope is GLOBAL_SCOPE else scope}")
+                cmd.cmd_id = str(cmd_data["id"])
+
+            if warn_missing:
+                for cmd_data in remote_cmds.values():
+                    log.error(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                                f"{'global' if scope == GLOBAL_SCOPE else scope}")
+
+        # Remaining guilds that bot is in but, no interaction is registered
+        for scope in bot_scopes:
+            try:
+                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
+            except Forbidden as e:
+                # We will just assume they don't want application commands in this guild.
+                log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
+                continue
+
+            for cmd_data in remote_cmds:
+                self._interaction_scopes[str(cmd_data["id"])] = scope
+                if warn_missing:
+                    log.error(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                              f"{'global' if scope == GLOBAL_SCOPE else scope}")
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""

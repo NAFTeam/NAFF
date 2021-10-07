@@ -207,7 +207,7 @@ class InteractionMissingAccess(InteractionException):
     def __init__(self, scope: "Snowflake_Type"):
         self.scope: "Snowflake_Type" = scope
 
-        if scope is GLOBAL_SCOPE:
+        if scope == GLOBAL_SCOPE:
             err_msg = f"Unable to sync commands global commands"
         else:
             err_msg = f"Unable to sync commands for guild `{scope}` -- Ensure the bot properly added to that guild " \

@@ -20,7 +20,7 @@ class InteractionRequests:
         returns:
             InteractionCommand
         """
-        if guild_id is GLOBAL_SCOPE:
+        if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
@@ -37,7 +37,7 @@ class InteractionRequests:
         """
 
         endpoint = f"/applications/{app_id}/commands"
-        if guild_id is GLOBAL_SCOPE:
+        if guild_id == GLOBAL_SCOPE:
             endpoint = f"/applications/{app_id}/guilds/{guild_id}/commands"
 
         return await self.request(Route("PUT", endpoint), data=data)
