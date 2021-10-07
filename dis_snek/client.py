@@ -50,6 +50,7 @@ from dis_snek.utils.misc_utils import wrap_partial
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
+
 log = logging.getLogger(logger_name)
 
 
