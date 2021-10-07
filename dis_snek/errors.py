@@ -210,7 +210,9 @@ class InteractionMissingAccess(InteractionException):
         if scope == GLOBAL_SCOPE:
             err_msg = f"Unable to sync commands global commands"
         else:
-            err_msg = f"Unable to sync commands for guild `{scope}` -- Ensure the bot properly added to that guild " \
-                      f"with `application.commands` scope. "
+            err_msg = (
+                f"Unable to sync commands for guild `{scope}` -- Ensure the bot properly added to that guild "
+                f"with `application.commands` scope. "
+            )
 
         super().__init__(err_msg)

@@ -177,8 +177,9 @@ class ContextMenu(InteractionCommand):
             if value not in CommandTypes.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
         elif value == CommandTypes.CHAT_INPUT:
-            raise ValueError("The CHAT_INPUT type is basically slash commands. Please use the @slash_command() "
-                             "decorator instead.")
+            raise ValueError(
+                "The CHAT_INPUT type is basically slash commands. Please use the @slash_command() " "decorator instead."
+            )
 
 
 @attr.s(slots=True)
@@ -229,8 +230,10 @@ class SlashCommandOption(DictSerializationMixin):
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
         if value == OptionTypes.SUB_COMMAND or value == OptionTypes.SUB_COMMAND_GROUP:
-            raise ValueError("Options cannot be SUB_COMMAND or SUB_COMMAND_GROUP. If you want to use subcommands, "
-                             "see the @sub_command() decorator.")
+            raise ValueError(
+                "Options cannot be SUB_COMMAND or SUB_COMMAND_GROUP. If you want to use subcommands, "
+                "see the @sub_command() decorator."
+            )
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])

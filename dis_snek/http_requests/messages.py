@@ -66,12 +66,7 @@ class MessageRequests:
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/pins/{message_id}"))
 
-    async def edit_message(
-        self,
-        payload: dict,
-        channel_id: "Snowflake_Type",
-        message_id: "Snowflake_Type",
-    ) -> dict:
+    async def edit_message(self, payload: dict, channel_id: "Snowflake_Type", message_id: "Snowflake_Type",) -> dict:
         """Edit an existing message
 
         parameters:

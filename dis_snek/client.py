@@ -320,7 +320,7 @@ class Snake:
         if self.sync_interactions:
             await self.synchronise_interactions()
         else:
-            await self._cache_interactions(warn_missing = True)
+            await self._cache_interactions(warn_missing=True)
 
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
@@ -340,8 +340,10 @@ class Snake:
                 cmd_data = remote_cmds.pop(cmd.name, MISSING)
                 if cmd_data is MISSING:
                     if warn_missing:
-                        log.error(f"Detected yet to sync slash command \"/{cmd.name}\" for scope "
-                                  f"{'global' if scope == GLOBAL_SCOPE else scope}")
+                        log.error(
+                            f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                        )
                     continue
 
                 self._interaction_scopes[str(cmd_data["id"])] = scope
@@ -349,8 +351,10 @@ class Snake:
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
-                    log.error(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
-                                f"{'global' if scope == GLOBAL_SCOPE else scope}")
+                    log.error(
+                        f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                        f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                    )
 
         # Remaining guilds that bot is in but, no interaction is registered
         for scope in bot_scopes:
@@ -364,8 +368,10 @@ class Snake:
             for cmd_data in remote_cmds:
                 self._interaction_scopes[str(cmd_data["id"])] = scope
                 if warn_missing:
-                    log.error(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
-                              f"{'global' if scope == GLOBAL_SCOPE else scope}")
+                    log.error(
+                        f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                        f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                    )
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
@@ -545,13 +551,7 @@ class Snake:
             cls.target_id = data["data"].get("target_id")
 
         else:
-            cls = MessageContext(
-                self,
-                data,
-                author=data.author,
-                channel=data.channel,
-                guild=data.guild,
-            )
+            cls = MessageContext(self, data, author=data.author, channel=data.channel, guild=data.guild,)
             cls.arguments = get_args(data.content)[1:]
         return cls
 
