@@ -643,7 +643,7 @@ class Snake:
             event: raw message event
         """
         msg = self.cache.place_message_data(event.data)
-        if not msg._guild_id and event.data["guild_id"]:
+        if not msg._guild_id and event.data.get("guild_id"):
             msg._guild_id = event.data["guild_id"]
             # todo: Determine why this isn't set *always*
 

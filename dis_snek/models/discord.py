@@ -23,7 +23,7 @@ class ClientObject(DictSerializationMixin):
 
         if hasattr(self, "channel") and self.channel is None and self._channel_id:
             self.channel = self._client.cache.channel_cache.get(int(self._channel_id))
-            if self.channel and self.channel._guild_id and not self._guild_id:
+            if self.channel and getattr(self.channel, "_guild_id", None) and not self._guild_id:
                 self._guild_id = self.channel._guild_id
 
         if hasattr(self, "guild") and self.guild is None and self._guild_id:
