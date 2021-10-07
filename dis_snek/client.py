@@ -196,6 +196,7 @@ class Snake:
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
+        self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self.dispatch(events.Login())
         await self._ws_connect()

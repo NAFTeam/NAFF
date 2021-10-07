@@ -53,10 +53,10 @@ class GlobalCache:
     def place_user_data(self, data) -> User:
         user_id = to_snowflake(data["id"])
 
-        if user_id == self._client.user.id:
-            user = self._client.user
-        else:
-            user = self.user_cache.get(user_id)
+        # if user_id == self._client.user.id:
+        #     user = self._client.user
+        # else:
+        user = self.user_cache.get(user_id)
 
         if user is None:
             user = User.from_dict(data, self._client)
