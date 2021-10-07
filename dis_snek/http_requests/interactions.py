@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from dis_snek.const import GLOBAL_SCOPE
 from dis_snek.models.route import Route
 
 if TYPE_CHECKING:
@@ -9,9 +10,7 @@ if TYPE_CHECKING:
 class InteractionRequests:
     request: Any
 
-    async def get_interaction_element(
-        self, application_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None
-    ) -> List[Dict]:
+    async def get_interaction_element(self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> List[Dict]:
         """
         Get all interaction elements for this application from discord.
 
@@ -21,7 +20,7 @@ class InteractionRequests:
         returns:
             InteractionCommand
         """
-        if not guild_id:
+        if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 

@@ -322,16 +322,20 @@ class Snake:
 
     async def _cache_interactions(self):
         """Get all interactions used by this bot and cache them."""
-        scopes = [g.id for g in self.cache.guild_cache.values()] + [None]
+        scopes = [g.id for g in self.cache.guild_cache.values()] + [GLOBAL_SCOPE]
         for scope in scopes:
-            resp_data = await self.http.get_interaction_element(self.user.id, scope)
+            try:
+                resp_data = await self.http.get_interaction_element(self.user.id, scope)
+            except Forbidden as e:
+                raise InteractionMissingAccess(scope) from e
 
             for cmd_data in resp_data:
-                self._interaction_scopes[str(cmd_data["id"])] = scope if scope else GLOBAL_SCOPE
+                self._interaction_scopes[str(cmd_data["id"])] = scope
                 try:
                     self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                 except KeyError:
-                    pass
+                    logging.warning(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                                    f"{'global' if scope == GLOBAL_SCOPE else scope}")
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
@@ -422,9 +426,7 @@ class Snake:
 
         for cmd_scope in cmd_scopes:
             try:
-                cmds_resp_data = await self.http.get_interaction_element(
-                    self.user.id, cmd_scope if cmd_scope != GLOBAL_SCOPE else None
-                )
+                cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
                 need_to_sync = False
                 cmds_to_sync = []
 
