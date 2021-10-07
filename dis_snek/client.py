@@ -33,6 +33,7 @@ from dis_snek.models.application_commands import (
     SubCommand,
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
+from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
 from dis_snek.models.discord_objects.guild import Guild
@@ -120,7 +121,7 @@ class Snake:
 
         self.cache: GlobalCache = GlobalCache(self)
         self._user: SnakeBotUser = MISSING
-        self._app: dict = MISSING
+        self._app: Application = MISSING
 
         # collections
 
@@ -154,16 +155,15 @@ class Snake:
         return self._user
 
     @property
-    def app(self) -> dict:
+    def app(self) -> Application:
         """Returns the bots application"""
-        # todo: create app object
         return self._app
 
     @property
-    def owner(self) -> Coroutine[Any, Any, User]:
+    def owner(self) -> Optional["User"]:
         """Returns the bot's owner'"""
         try:
-            return self.cache.get_user(self.app["owner"]["id"])
+            return self.app.owner
         except TypeError:
             return MISSING
 
@@ -196,7 +196,7 @@ class Snake:
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
-        self._app = await self.http.get_current_bot_information()
+        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self.dispatch(events.Login())
         await self._ws_connect()
 
