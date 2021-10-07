@@ -334,8 +334,8 @@ class Snake:
                 try:
                     self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                 except KeyError:
-                    logging.warning(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
-                                    f"{'global' if scope == GLOBAL_SCOPE else scope}")
+                    log.warning(f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                                f"{'global' if scope is GLOBAL_SCOPE else scope}")
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
@@ -448,7 +448,7 @@ class Snake:
                 if need_to_sync:
                     log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
                     cmd_sync_resp = await self.http.post_interaction_element(
-                        self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != GLOBAL_SCOPE else None
+                        self.user.id, cmds_to_sync, guild_id=cmd_scope
                     )
                     # cache cmd_ids and their scopes
                     for cmd_data in cmd_sync_resp:
