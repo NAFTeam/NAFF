@@ -349,7 +349,7 @@ class Guild(DiscordObject):
             slowmode_delay,
             reason,
         )
-        return BaseChannel.from_dict_factory(channel_data, self._client)
+        return self._client.cache.place_channel_data(channel_data)
 
     async def create_text_channel(
         self,
