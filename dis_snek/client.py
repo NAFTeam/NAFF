@@ -551,7 +551,13 @@ class Snake:
             cls.target_id = data["data"].get("target_id")
 
         else:
-            cls = MessageContext(self, data, author=data.author, channel=data.channel, guild=data.guild,)
+            cls = MessageContext(
+                self,
+                data,
+                author=data.author,
+                channel=data.channel,
+                guild=data.guild,
+            )
             cls.arguments = get_args(data.content)[1:]
         return cls
 
