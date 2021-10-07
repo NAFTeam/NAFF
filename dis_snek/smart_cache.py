@@ -22,12 +22,15 @@ if TYPE_CHECKING:
 class GlobalCache:
     _client: "Snake" = field()
 
-    # Expiring discord objects cache
+    # Non expiring discord objects cache
     user_cache: dict = field(factory=dict)  # key: user_id
     member_cache: dict = field(factory=dict)  # key: (guild_id, user_id)
+    channel_cache: dict = field(factory=dict)  # key: channel_id
+    guild_cache: dict = field(factory=dict)  # key: guild_id
+
+    # Expiring discord objects cache
+
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
-    channel_cache: TTLCache = field(factory=TTLCache)  # key: channel_id
-    guild_cache: TTLCache = field(factory=TTLCache)  # key: guild_id
     role_cache: TTLCache = field(factory=TTLCache)  # key: role_id
 
     # Expiring id reference cache

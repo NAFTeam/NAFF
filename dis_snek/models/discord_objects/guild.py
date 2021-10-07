@@ -264,7 +264,13 @@ class Guild(DiscordObject):
         returns:
             The new custom emoji created.
         """
-        data_payload = dict_filter_none(dict(name=name, image=to_image_data(imagefile), roles=roles,))
+        data_payload = dict_filter_none(
+            dict(
+                name=name,
+                image=to_image_data(imagefile),
+                roles=roles,
+            )
+        )
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id

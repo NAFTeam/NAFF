@@ -95,7 +95,9 @@ class User(BaseUser):
 
     banner: Optional["Asset"] = field(default=None, metadata={"docs": "The user's banner"})
     accent_color: Optional["Color"] = field(
-        default=None, converter=optional_c(Color), metadata={"docs": "The user's banner color"},
+        default=None,
+        converter=optional_c(Color),
+        metadata={"docs": "The user's banner color"},
     )
 
     @classmethod
