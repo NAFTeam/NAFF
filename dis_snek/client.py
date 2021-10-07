@@ -540,6 +540,7 @@ class Snake:
 
             if guild_id := data.get("guild_id"):
                 cls.author = self.cache.place_member_data(guild_id, data["member"].copy())
+                self.cache.place_user_data(data["member"]["user"])
                 cls.channel = await self.cache.get_channel(data["channel_id"])
             else:
                 cls.author = self.cache.place_user_data(data["user"])
