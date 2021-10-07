@@ -167,17 +167,10 @@ class Member(DiscordObject, _SendDMMixin):
 
         return data
 
-    # @property
-    # def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
-    #     """Returns this member's user object
-    #
-    #     !!! warning "Awaitable Warning:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         The user object
-    #     """
-    #     return proxy_user(self._client, self.id)
+    @property
+    def user(self):
+        """Returns this member's user object"""
+        return self._client.cache.user_cache.get(self.id)
 
     @property
     def nickname(self):
