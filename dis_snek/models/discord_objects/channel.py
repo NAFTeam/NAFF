@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 @define()
 class PermissionOverwrite(SnowflakeObject):
+    # Todo: Document
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
     allow: "Permissions" = field(repr=True, converter=Permissions)
     deny: "Permissions" = field(repr=True, converter=Permissions)
