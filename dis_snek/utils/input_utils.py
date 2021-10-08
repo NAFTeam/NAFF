@@ -19,14 +19,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+import logging
 import re
 from typing import Any, Dict, Union
 
 import aiohttp  # type: ignore
 
+from dis_snek.const import logger_name
+
+log = logging.getLogger(logger_name)
+
 try:
     import orjson as json
 except ImportError:
+    log.warning("orjson not installed, built-in json library will be used")
     import json
 
 
