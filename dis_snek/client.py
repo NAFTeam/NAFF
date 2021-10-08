@@ -281,7 +281,14 @@ class Snake:
         Args:
             token str: Your bot's token
         """
-        self.loop.run_until_complete(self.login(token))
+        try:
+            self.loop.run_until_complete(self.login(token))
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.stop())
+
+    async def stop(self):
+        log.debug(f"Stopping the bot.")
+        await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """

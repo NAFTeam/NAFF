@@ -251,7 +251,7 @@ class HTTPClient(
             raise GatewayNotFound from exc
         return "{0}?encoding={1}&v=9&compress=zlib-stream".format(data["url"], "json")
 
-    async def websock_connect(self, url: str) -> ClientWebSocketResponse:
+    async def websocket_connect(self, url: str) -> ClientWebSocketResponse:
         """
         Connect to the websocket.
 

@@ -206,7 +206,7 @@ class WebsocketClient:
         cls._gateway = await http.get_gateway()
         cls.intents = intents
         cls.dispatch = dispatch
-        cls.ws = await cls.http.websock_connect(cls._gateway)
+        cls.ws = await cls.http.websocket_connect(cls._gateway)
         dispatch(events.Connect())
         if resume:
             return cls(session_id, sequence)
@@ -235,7 +235,13 @@ class WebsocketClient:
 
         if resp.type == WSMsgType.CLOSE:
             await self.close(msg)
-            raise WebSocketClosed(msg)
+            return
+
+        if resp.type == WSMsgType.CLOSING:
+            return
+
+        if resp.type == WSMsgType.CLOSED:
+            raise WebSocketClosed(1000)
 
         msg = orjson.loads(msg)
         log.debug(f"Websocket Event: {msg}")
