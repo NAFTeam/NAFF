@@ -1,8 +1,13 @@
-from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
+import asyncio
+from asyncio import QueueEmpty
+from collections import namedtuple
+from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from attr.converters import optional as optional_c
 
+from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
@@ -21,6 +26,83 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
+
+
+class ChannelHistory(AsyncIterator):
+    """
+    An async iterator for searching through a channel's history
+    Args:
+        channel: The channel to search through
+        limit: The maximum number of messages to return (set to 0 for no limit)
+        before: get messages before this message ID
+        after: get messages after this message ID
+        around: get messages "around" this message ID
+    """
+
+    # todo: Maybe a async iterators baseclass, most of this behaviour is reusable
+    def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None):
+
+        self.messages = asyncio.Queue()
+        self.channel: "BaseChannel" = channel
+        self._limit: int = limit if limit else MISSING
+        self._last: "Message" = MISSING
+        self._retrieved: int = 0
+        self.before: "Snowflake_Type" = before
+        self.after: "Snowflake_Type" = after
+        self.around: "Snowflake_Type" = around
+
+    @property
+    def _continue(self):
+        if not self._limit:
+            return True
+        return not self._retrieved >= self._limit
+
+    @property
+    def _get_limit(self):
+        return min(self._limit - self._retrieved, 100) if self._limit else 100
+
+    async def _fetch_messages(self):
+        if self._continue:
+            messages = []
+
+            if self.after:
+                if not self._last:
+                    self._last = namedtuple("temp", "id")
+                    self._last.id = self.after
+                messages = await self.channel.get_messages(limit=self._get_limit, after=self._last.id)
+                messages.sort(key=lambda x: x.id)
+
+            elif self.around:
+                messages = await self.channel.get_messages(limit=self._get_limit, around=self.around)
+                # todo: decide how getting *more* messages from `around` would work
+                self._limit = 1  # stops history from getting more messages
+
+            else:
+                if self.before and not self._last:
+                    self._last = namedtuple("temp", "id")
+                    self._last.id = self.before
+
+                messages = await self.channel.get_messages(limit=self._get_limit, before=self._last.id)
+                messages.sort(key=lambda x: x.id, reverse=True)
+
+            self._retrieved += len(messages)
+            [await self.messages.put(m) for m in messages]
+
+        else:
+            raise QueueEmpty()
+
+    async def __anext__(self):
+        try:
+            if self.messages.empty():
+                await self._fetch_messages()
+            self._last = self.messages.get_nowait()
+            return self._last
+        except QueueEmpty:
+            raise StopAsyncIteration()
+
+    async def flatten(self):
+        """Flatten this iterator into a list of objects"""
+        return [elem async for elem in self]
 
 
 @define()
@@ -55,6 +137,41 @@ class MessageableChannelMixin(SendMixin):
         message_id = to_snowflake(message_id)
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
         return message
+
+    def history(
+        self,
+        limit=100,
+        before: "Snowflake_Type" = None,
+        after: "Snowflake_Type" = None,
+        around: "Snowflake_Type" = None,
+    ):
+        """
+        Get an async iterator for the history of this channel
+        Args:
+            limit: The maximum number of messages to return (set to 0 for no limit)
+            before: get messages before this message ID
+            after: get messages after this message ID
+            around: get messages "around" this message ID
+
+        ??? Hint "Example Usage:"
+            ```python
+            async for message in channel.history(limit=0):
+                if message.author.id == 174918559539920897:
+                    print("Found author's message")
+                    # ...
+                    break
+            ```
+            or
+            ```python
+            history = channel.history(limit=250)
+            # Flatten the async iterator into a list
+            messages = await history.flatten()
+            ```
+
+        Returns:
+            ChannelHistory (AsyncIterator)
+        """
+        return ChannelHistory(self, limit, before, after, around)
 
     async def get_messages(
         self,
