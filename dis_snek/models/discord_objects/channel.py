@@ -232,7 +232,22 @@ class MessageableChannelMixin(SendMixin):
         for message in messages:
             message_ids.append(to_snowflake(message))
 
-        await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
+        if len(message_ids) == 1:
+            # bulk delete messages will throw a http error if only 1 message is passed
+            await self.delete_message(message_ids[0], reason)
+        else:
+            await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
+
+    async def delete_message(self, message: Union["Snowflake_Type", "Message"], reason: str = None) -> None:
+        """
+        Delete a single message from a channel.
+
+        Args:
+            message: The message to delete
+            reason: The reason for this action
+        """
+        message = to_snowflake(message)
+        await self._client.http.delete_message(self.id, message, reason=reason)
 
     async def purge(
         self,
@@ -291,10 +306,7 @@ class MessageableChannelMixin(SendMixin):
         count = len(to_delete)
         while len(to_delete):
             iteration = [to_delete.pop() for i in range(min(100, len(to_delete)))]
-            if len(iteration) == 1:
-                await self._client.http.delete_message(self.id, iteration[0], reason=reason)
-            else:
-                await self.delete_messages(iteration, reason=reason)
+            await self.delete_messages(iteration, reason=reason)
         return count
 
 
