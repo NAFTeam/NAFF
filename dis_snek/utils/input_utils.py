@@ -23,7 +23,13 @@ import re
 from typing import Any, Dict, Union
 
 import aiohttp  # type: ignore
-import orjson
+import kwargs as kwargs
+
+try:
+    import orjson as json
+except ImportError:
+    import json
+
 
 _quotes = {
     '"': '"',
@@ -53,6 +59,19 @@ white_space = re.compile(r"\s+")
 initial_word = re.compile(r"^([^\s]+)\s*?")
 
 
+class OverriddenJson:
+    @staticmethod
+    def dumps(*args, **kwargs) -> str:
+        data = json.dumps(*args, **kwargs)
+        if isinstance(data, bytes):
+            data = data.decode("utf-8")
+        return data
+
+    @staticmethod
+    def loads(*args, **kwargs) -> dict:
+        return json.loads(*args, **kwargs)
+
+
 async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, Any], str]:
     """
     Return the response text in its correct format, be it dict, or string.
@@ -63,7 +82,7 @@ async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, A
     text = await response.text(encoding="utf-8")
 
     if response.headers.get("content-type") == "application/json":
-        return orjson.loads(text)
+        return OverriddenJson.loads(text)
     return text
 
 

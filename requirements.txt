@@ -1,5 +1,4 @@
 aiohttp
 attrs
 mypy
-orjson
 sentinel[varname]

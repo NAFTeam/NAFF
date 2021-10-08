@@ -10,7 +10,6 @@ import time
 import zlib
 from typing import Any, Callable, Coroutine, List, Optional
 
-import orjson
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name, events, MISSING
@@ -18,7 +17,7 @@ from dis_snek.errors import WebSocketClosed, WebSocketRestart
 from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
 from dis_snek.models.enums import Intents
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
-
+from dis_snek.utils.input_utils import OverriddenJson
 
 log = logging.getLogger(logger_name)
 
@@ -243,7 +242,7 @@ class WebsocketClient:
         if resp.type == WSMsgType.CLOSED:
             raise WebSocketClosed(1000)
 
-        msg = orjson.loads(msg)
+        msg = OverriddenJson.loads(msg)
         log.debug(f"Websocket Event: {msg}")
 
         op = msg.get("op")
@@ -337,7 +336,7 @@ class WebsocketClient:
         Parameters:
             data: The data to send
         """
-        await self.send(orjson.dumps(data).decode("utf-8"))
+        await self.send(OverriddenJson.dumps(data))
 
     async def identify(self) -> None:
         """Send an identify payload to the gateway."""
