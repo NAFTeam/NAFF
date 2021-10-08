@@ -43,6 +43,8 @@ __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 logger_name = "dis.snek"
 kwarg_spam = False
 
+DISCORD_EPOCH = 1420070400000
+
 ACTION_ROW_MAX_ITEMS = 5
 SELECTS_MAX_OPTIONS = 25
 SELECT_MAX_NAME_LENGTH = 100
