@@ -23,7 +23,6 @@ import re
 from typing import Any, Dict, Union
 
 import aiohttp  # type: ignore
-import kwargs as kwargs
 
 try:
     import orjson as json
