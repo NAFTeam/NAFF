@@ -275,7 +275,7 @@ class MessageableChannelMixin(SendMixin):
         # 1209600 14 days ago in seconds, 1420070400000 is used to convert to snowflake
         fourteen_days_ago = int((time.time() - 1209600) * 1000.0 - DISCORD_EPOCH) << 22
         async for message in self.history(limit=search_limit, before=before, after=after, around=around):
-            if len(to_delete) == deletion_limit:
+            if deletion_limit != 0 and len(to_delete) == deletion_limit:
                 break
 
             if not predicate(message):
