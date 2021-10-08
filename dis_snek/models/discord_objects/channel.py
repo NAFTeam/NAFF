@@ -2,7 +2,7 @@ import asyncio
 from asyncio import QueueEmpty
 from collections import namedtuple
 from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, AsyncGenerator, Callable
 
 import attr
 from attr.converters import optional as optional_c
@@ -232,6 +232,58 @@ class MessageableChannelMixin(SendMixin):
             message_ids.append(to_snowflake(message))
 
         await self._client.http.bulk_delete_messages(self.id, message_ids, reason)
+
+    async def purge(
+        self,
+        deletion_limit: int = 50,
+        search_limit: int = 100,
+        predicate: Callable[["Message"], bool] = MISSING,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        around: Optional["Snowflake_Type"] = MISSING,
+        reason: Optional[str] = MISSING,
+    ) -> int:
+        """
+        Bulk delete messages within a channel. If a `predicate` is provided, it will be used to determine which messages to delete,
+        otherwise all messages will be deleted within the `deletion_limit`
+
+        ??? Hint "Example Usage:"
+            ```python
+            # this will delete the last 20 messages sent by a user with the given ID
+            deleted = await channel.purge(deletion_limit=20, predicate=lambda m: m.author.id == 174918559539920897)
+            await channel.send(f"{deleted} messages deleted")
+            ```
+
+        Args:
+            deletion_limit: The target amount of messages to delete
+            search_limit: How many messages to search through
+            predicate: A function that returns True or False, and takes a message as an argument
+            before: Search messages before this ID
+            after: Search messages after this ID
+            around: Search messages around this ID
+            reason: The reason for this deletion
+
+        Returns:
+            The total amount of messages deleted
+        """
+        if not predicate:
+            predicate = lambda m: True
+
+        to_delete = []
+        async for message in self.history(limit=search_limit, before=before, after=after, around=around):
+            if len(to_delete) == deletion_limit:
+                break
+
+            if not predicate(message):
+                continue
+
+            to_delete.append(message.id)
+
+        count = len(to_delete)
+        while len(to_delete):
+            iteration = [to_delete.pop() for i in range(min(100, len(to_delete)))]
+            await self.delete_messages(iteration, reason=reason)
+        return count
 
 
 @define(slots=False)
