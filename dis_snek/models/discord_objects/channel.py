@@ -291,7 +291,10 @@ class MessageableChannelMixin(SendMixin):
         count = len(to_delete)
         while len(to_delete):
             iteration = [to_delete.pop() for i in range(min(100, len(to_delete)))]
-            await self.delete_messages(iteration, reason=reason)
+            if len(iteration) == 1:
+                await self._client.http.delete_message(self.id, iteration[0], reason=reason)
+            else:
+                await self.delete_messages(iteration, reason=reason)
         return count
 
 
