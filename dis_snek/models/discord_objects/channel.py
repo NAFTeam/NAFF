@@ -1,4 +1,5 @@
 import asyncio
+import time
 from asyncio import QueueEmpty
 from collections import namedtuple
 from collections.abc import AsyncIterator
@@ -7,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, AsyncGenerat
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, DISCORD_EPOCH
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
@@ -270,11 +271,19 @@ class MessageableChannelMixin(SendMixin):
             predicate = lambda m: True
 
         to_delete = []
+
+        # 1209600 14 days ago in seconds, 1420070400000 is used to convert to snowflake
+        fourteen_days_ago = int((time.time() - 1209600) * 1000.0 - DISCORD_EPOCH) << 22
         async for message in self.history(limit=search_limit, before=before, after=after, around=around):
             if len(to_delete) == deletion_limit:
                 break
 
             if not predicate(message):
+                # fails predicate
+                continue
+
+            if message.id < fourteen_days_ago:
+                # message is too old to be purged
                 continue
 
             to_delete.append(message.id)
