@@ -674,6 +674,16 @@ class Snake:
         self.dispatch(events.MessageCreate(msg))
 
     @listen()
+    async def on_raw_message_delete(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw deletions and dispatch a processed deletion event.
+        Args:
+            event: raw message deletion event
+        """
+        message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"))
+        self.dispatch(events.MessageDelete(message))
+
+    @listen()
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway.
