@@ -302,7 +302,7 @@ class Snake:
             self.loop.run_until_complete(self.stop())
 
     async def stop(self):
-        log.debug(f"Stopping the bot.")
+        log.debug("Stopping the bot.")
         await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
@@ -383,7 +383,7 @@ class Snake:
         for scope in bot_scopes:
             try:
                 remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
-            except Forbidden as e:
+            except Forbidden:
                 # We will just assume they don't want application commands in this guild.
                 log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
                 continue

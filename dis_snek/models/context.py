@@ -1,6 +1,5 @@
-from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import attr
 from aiohttp import FormData
@@ -13,12 +12,14 @@ from dis_snek.models.enums import MessageFlags
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
-    from dis_snek.models.discord_objects.components import ActionRow
+    from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.message import AllowedMentions, Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.discord_objects.message import MessageReference
+    from dis_snek.models.discord_objects.sticker import Sticker
 
 
 @attr.s

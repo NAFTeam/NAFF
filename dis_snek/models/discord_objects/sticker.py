@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import TYPE_CHECKING, List, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
 from attr.converters import optional

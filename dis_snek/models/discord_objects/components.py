@@ -5,10 +5,10 @@ import attr
 
 from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.discord_objects.emoji import process_emoji
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
-from dis_snek.utils.serializer import export_converter, to_dict
-from dis_snek.models.discord_objects.emoji import process_emoji
+from dis_snek.utils.serializer import export_converter
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.emoji import Emoji
@@ -72,7 +72,7 @@ class Button(InteractiveComponent):
 
     @style.validator
     def _style_validator(self, attribute: str, value: int):
-        if not isinstance(value, ButtonStyles) and not value in ButtonStyles.__members__.values():
+        if not isinstance(value, ButtonStyles) and value not in ButtonStyles.__members__.values():
             raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
     def __attrs_post_init__(self):
@@ -295,7 +295,6 @@ def process_components(
 
 
 TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
-
 
 TYPE_COMPONENT_MAPPING = {
     ComponentTypes.ACTION_ROW: ActionRow,

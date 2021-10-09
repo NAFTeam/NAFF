@@ -1,14 +1,11 @@
-import asyncio
-import traceback
 from typing import TYPE_CHECKING, Any, Dict, List
 
 import attr
 
-from dis_snek.utils.serializer import no_export_meta
-
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
+from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

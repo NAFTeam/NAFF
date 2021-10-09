@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route

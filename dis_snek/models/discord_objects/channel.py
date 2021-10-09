@@ -283,7 +283,7 @@ class MessageableChannelMixin(SendMixin):
             The total amount of messages deleted
         """
         if not predicate:
-            predicate = lambda m: True
+            predicate = lambda m: True  # noqa
 
         to_delete = []
 

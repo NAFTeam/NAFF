@@ -1,6 +1,5 @@
-from functools import partial
 from io import IOBase
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
 from aiohttp import FormData
@@ -9,7 +8,6 @@ from attr.converters import optional
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.channel import (
-    BaseChannel,
     GuildText,
     GuildVoice,
     GuildStageVoice,

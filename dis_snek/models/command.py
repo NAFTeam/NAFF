@@ -126,7 +126,7 @@ class BaseCommand(DictSerializationMixin):
 
             return True
 
-        except:
+        except Exception:
             if max_conc_acquired:
                 await self.max_concurrency.release(context)
             raise

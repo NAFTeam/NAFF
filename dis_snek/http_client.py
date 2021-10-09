@@ -6,7 +6,7 @@ import datetime
 import logging
 import traceback
 from collections import defaultdict
-from typing import Any, Coroutine, Dict, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, TypeVar, Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp  # type: ignore
@@ -37,9 +37,6 @@ log = logging.getLogger(logger_name)
 
 
 T = TypeVar("T")
-BE = TypeVar("BE", bound=BaseException)
-MU = TypeVar("MU", bound="CanUnlock")
-Response = Coroutine[Any, Any, T]
 
 
 class DiscordClientWebSocketResponse(ClientWebSocketResponse):

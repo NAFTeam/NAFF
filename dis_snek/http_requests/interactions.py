@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from dis_snek.const import GLOBAL_SCOPE
 from dis_snek.models.route import Route

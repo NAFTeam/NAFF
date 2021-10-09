@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from aiohttp.formdata import FormData
@@ -42,7 +42,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.guild import Guild
 
 
 @define()

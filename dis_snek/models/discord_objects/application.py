@@ -8,6 +8,7 @@ from dis_snek.models.enums import ApplicationFlags
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 if TYPE_CHECKING:
+    from dis_snek.client import Snake
     from dis_snek.models.discord_objects.team import Team
 
 

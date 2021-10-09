@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, List, Dict, Any, Union
 
 from attr.converters import optional
 
