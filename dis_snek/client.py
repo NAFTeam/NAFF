@@ -675,7 +675,7 @@ class Snake:
         self.dispatch(events.MessageCreate(msg))
 
     @listen()
-    async def on_raw_message_delete(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
         """
         Process raw deletions and dispatch a processed deletion event.
         Args:
@@ -685,7 +685,7 @@ class Snake:
         self.dispatch(events.MessageDelete(message))
 
     @listen()
-    async def on_raw_message_update(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
         """
         Process raw message update event and dispatch a processed update event.
 
