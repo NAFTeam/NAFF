@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import importlib.util
 import inspect
 import logging
@@ -682,6 +683,22 @@ class Snake:
         """
         message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"))
         self.dispatch(events.MessageDelete(message))
+
+    @listen()
+    async def on_raw_message_update(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw message update event and dispatch a processed update event.
+
+        Args:
+            event: raw message update event
+        """
+
+        # a copy is made because the cache will update the original object in memory
+        before = copy.copy(
+            await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
+        )
+        after = self.cache.place_message_data(event.data)
+        self.dispatch(events.MessageUpdate(before=before, after=after))
 
     @listen()
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
