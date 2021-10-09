@@ -387,16 +387,14 @@ class StageInstanceUpdate(BaseEvent):
 class TypingStart(BaseEvent):
     """Dispatched when a user starts typing"""
 
+    author: Union["User", "Member"] = attr.ib()
+    """The user who started typing"""
     channel: "BaseChannel" = attr.ib()
     """The channel typing is in"""
-    guild_id: "Snowflake_Type" = attr.ib()
+    guild: "Guild" = attr.ib()
     """The ID of the guild this typing is in"""
-    user_id: "Snowflake_Type" = attr.ib()
-    """The ID of the user who is typing"""
     timestamp: "Timestamp" = attr.ib()
     """unix time (in seconds) of when the user started typing"""
-    member: "Member" = attr.ib()
-    """The member who started typing, if this is in a guild"""
 
 
 @attr.s(slots=True)
