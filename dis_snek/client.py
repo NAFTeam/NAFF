@@ -44,6 +44,7 @@ from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.listener import Listener, listen
 from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
@@ -712,6 +713,59 @@ class Snake:
         self._guild_event.set()
 
         self.dispatch(events.GuildCreate(guild))
+
+    @listen()
+    async def _on_raw_channel_create(self, event: RawGatewayEvent) -> None:
+        """
+        Automatically cache a guild upon CHANNEL_CREATE event from gateway.
+
+        Args:
+            data: raw channel data
+        """
+        channel = self.cache.place_channel_data(event.data)
+        self.dispatch(events.ChannelCreate(channel))
+
+    @listen()
+    async def _on_raw_channel_delete(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw channel deletions and dispatch a processed channel deletion event.
+
+        Args:
+            event: raw channel deletion event
+        """
+        # for some reason this event returns the deleted object?
+        # so we cache it regardless
+        channel = self.cache.place_channel_data(event.data)
+        self.dispatch(events.ChannelDelete(channel))
+
+    @listen()
+    async def _on_raw_typing_start(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw typing start and dispatch a processed typing event.
+
+        Args:
+            event: raw typing start event
+        """
+        author: Union[User, Member]
+        channel: BaseChannel
+        guild = None
+
+        if member := event.data.get("member"):
+            author = self.cache.place_member_data(event.data.get("guild_id"), member)
+            guild = await self.cache.get_guild(event.data.get("guild_id"))
+        else:
+            author = await self.cache.get_user(event.data.get("user_id"))
+
+        channel = await self.cache.get_channel(event.data.get("channel_id"))
+
+        self.dispatch(
+            events.TypingStart(
+                author=author,
+                channel=channel,
+                guild=guild,
+                timestamp=Timestamp.utcfromtimestamp(event.data.get("timestamp")),
+            )
+        )
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
