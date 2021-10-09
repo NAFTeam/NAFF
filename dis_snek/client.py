@@ -46,6 +46,7 @@ from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
 
@@ -70,6 +71,11 @@ class Snake:
         get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
         asyncio_debug bool: Enable asyncio debug features
+        message_cache_ttl int: How long a message will remain in the cache, set to `None` to disable cache expiry
+        message_cache_size int: The maximum number of messages that may be stored in the cache, set to `None` to not limit cache size
+
+    !!! note
+        Setting message_cache_size to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
     """
 
@@ -81,6 +87,8 @@ class Snake:
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         asyncio_debug: bool = False,
+        message_cache_ttl: Optional[int] = 600,
+        message_cache_limit: Optional[int] = 250,
     ):
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -120,6 +128,13 @@ class Snake:
         # caches
 
         self.cache: GlobalCache = GlobalCache(self)
+
+        if message_cache_limit is None and message_cache_ttl is None:
+            log.warning("NO MESSAGE CACHE LIMITS ARE ACTIVE! This is not recommended")
+            self.cache.message_cache = dict()
+        else:
+            self.cache.message_cache = TTLCache(hard_limit=message_cache_limit, ttl=message_cache_ttl or float("inf"))
+
         self._user: SnakeBotUser = MISSING
         self._app: Application = MISSING
 
