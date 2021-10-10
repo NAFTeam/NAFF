@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from aiohttp import FormData
 
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, DM
 
 
 class _SendDMMixin(SendMixin):
@@ -59,25 +59,16 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """The users display name, will return nickname if one is set, otherwise will return username"""
         return self.username  # for duck-typing compatibility with Member
 
-    # @property
-    # def dm(self) -> Union[CacheProxy, Awaitable["DM"], "DM"]:
-    #     """Returns the dm channel associated with the user"""
-    #     return proxy_dm_channel(self._client, self.id)
+    async def get_dm(self) -> "DM":
+        """Get the DM channel associated with this user."""
+        return await self._client.cache.get_channel(self.id)  # noqa
 
-    # @property
-    # def mutual_guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-    #     """
-    #     Get the guilds this user shares with the client
-    #
-    #     ??? warning "Awaitable Property:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         Collection of shared guilds
-    #     """
-    #     # Warning! mutual_guilds.ids should be awaited!
-    #     ids = proxy_partial(self._client.cache.get_user_guild_ids, self.id)
-    #     return CacheView(ids=ids, method=self._client.cache.get_guild)
+    @property
+    def mutual_guilds(self) -> List["Guild"]:
+        """Get a list of mutual guilds shared between this user and the client."""
+
+        # should user_guilds be its own property?
+        return [g for g in self._client.guilds if g.id in self.user_guilds]
 
 
 @define()
@@ -124,10 +115,9 @@ class SnakeBotUser(User):
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
 
-    # @property
-    # def guilds(self) -> Union[CacheView, Awaitable[List["Guild"]], AsyncIterator["Guild"]]:
-    #     """The guilds this user belongs to"""
-    #     return proxy_guild(self._client, self._guild_ids)
+    @property
+    def guilds(self) -> List["guilds"]:
+        return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
 
 @attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
@@ -150,7 +140,6 @@ class Member(DiscordObject, _SendDMMixin):
     _role_ids: List["Snowflake_Type"] = field(
         factory=list, converter=list_converter(to_snowflake), metadata={"docs": "The roles IDs this user has"}
     )
-    # permissions: Optional[str] = field(default=None)  # returned when in the interaction object
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

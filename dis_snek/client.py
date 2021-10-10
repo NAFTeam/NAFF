@@ -182,6 +182,10 @@ class Snake:
         except TypeError:
             return MISSING
 
+    @property
+    def guilds(self) -> List["Guild"]:
+        return self.user.guilds
+
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
