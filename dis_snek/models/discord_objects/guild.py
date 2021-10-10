@@ -169,7 +169,7 @@ class Guild(DiscordObject):
     @property
     def roles(self) -> List["Role"]:
         """Returns a list of roles associated with this guild"""
-        return [self._client.cache.role_cache.get(self.id, r_id) for r_id in self._role_ids]
+        return [self._client.cache.role_cache.get(r_id) for r_id in self._role_ids]
 
     @property
     def me(self) -> "Member":
