@@ -211,7 +211,7 @@ class Member(DiscordObject, _SendDMMixin):
     @property
     def display_name(self) -> str:
         """The users display name, will return nickname if one is set, otherwise will return username"""
-        return self.nickname  # or self.username  # todo
+        return self.nickname or self.username
 
     @property
     def premium(self) -> bool:
