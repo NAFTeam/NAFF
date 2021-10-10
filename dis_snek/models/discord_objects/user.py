@@ -273,12 +273,12 @@ class Member(DiscordObject, _SendDMMixin):
         ??? Hint "Example Usage:"
             This returns `True`:
             ```python
-            admin.has_permission(Permissions.ADMINISTRATOR)
+            await admin.has_permission(Permissions.ADMINISTRATOR)
             ```
 
             This returns `False`:
             ```python
-            member.has_permission(Permissions.ADMINISTRATOR)
+            await member.has_permission(Permissions.ADMINISTRATOR)
             ```
 
         Args:
