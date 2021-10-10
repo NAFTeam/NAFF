@@ -176,12 +176,14 @@ class Member(DiscordObject, _SendDMMixin):
         return self._client.cache.user_cache.get(self.id)
 
     def __getattr__(self, name):
+        # this allows for transparent access to user attributes
         try:
             return getattr(self.user, name)
         except AttributeError:
             raise AttributeError(f"Neither `User` or `Member` have attribute {name}")
 
     def __setattr__(self, key, value):
+        # this allows for transparent access to user attributes
         if attrib := getattr(self.__attrs_attrs__, key):
             value = attr.setters.convert(self, attrib, value)
             value = attr.setters.validate(self, attrib, value)
