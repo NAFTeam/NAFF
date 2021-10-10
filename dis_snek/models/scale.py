@@ -88,7 +88,10 @@ class Scale:
                 bot.add_listener(val)
                 new_cls.listeners.append(val)
 
-        log.debug(f"{len(new_cls._commands)} application commands have been loaded from `{new_cls.name}`")
+        log.debug(
+            f"{len(new_cls._commands)} commands and {len(new_cls.listeners)} listeners"
+            f" have been loaded from `{new_cls.name}`"
+        )
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
         new_cls.bot.scales[new_cls.name] = new_cls
