@@ -268,18 +268,19 @@ class Member(DiscordObject, _SendDMMixin):
 
     async def has_permission(self, *permissions: Permissions) -> bool:
         """
-        Checks if the member has all the given permission(s)
+        Checks if the member has all the given permission(s).
 
         ??? Hint "Example Usage:"
-            This returns `True`:
+            Two different styles can be used to call this method.
+
             ```python
-            await admin.has_permission(Permissions.ADMINISTRATOR)
+            await member.has_permission(Permissions.KICK_MEMBERS, Permissions.BAN_MEMBERS)
+            ```
+            ```python
+            await member.has_permission(Permissions.KICK_MEMBERS | Permissions.BAN_MEMBERS)
             ```
 
-            This returns `False`:
-            ```python
-            await member.has_permission(Permissions.ADMINISTRATOR)
-            ```
+            If `member` has both permissions, `True` gets returned.
 
         Args:
             permissions: The permission(s) to check whether the user has it.
