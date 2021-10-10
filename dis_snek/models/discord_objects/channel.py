@@ -248,7 +248,9 @@ class MessageableChannelMixin(SendMixin):
         messages_data = await self._client.http.get_pinned_messages(self.id)
         return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
-    async def delete_messages(self, messages: List[Union["Snowflake_Type", "Message"]], reason: Optional[str] = MISSING) -> None:
+    async def delete_messages(
+        self, messages: List[Union["Snowflake_Type", "Message"]], reason: Optional[str] = MISSING
+    ) -> None:
         """
         Bulk delete messages from channel.
 
@@ -475,7 +477,9 @@ class DMGroup(DMChannel):
     async def get_owner(self) -> "User":
         return await self._client.cache.get_user(self.owner_id)
 
-    async def add_recipient(self, user: Union["User", "Snowflake_Type"], access_token: str, nickname: Optional[str] = MISSING):
+    async def add_recipient(
+        self, user: Union["User", "Snowflake_Type"], access_token: str, nickname: Optional[str] = MISSING
+    ):
         user = await self._client.cache.get_user(user)
         await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
         self.recipients.append(user)

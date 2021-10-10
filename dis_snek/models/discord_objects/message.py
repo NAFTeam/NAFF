@@ -408,7 +408,9 @@ class Message(DiscordObject):
         emoji = process_emoji_req_format(emoji)
         await self._client.http.create_reaction(self._channel_id, self.id, emoji)
 
-    async def remove_reaction(self, emoji: Union["Emoji", dict, str], member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING):
+    async def remove_reaction(
+        self, emoji: Union["Emoji", dict, str], member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING
+    ):
         """
         Remove a specific reaction that a user reacted with
 
