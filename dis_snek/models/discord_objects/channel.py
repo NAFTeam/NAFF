@@ -105,6 +105,21 @@ class ChannelHistory(AsyncIterator):
         """Flatten this iterator into a list of objects"""
         return [elem async for elem in self]
 
+    async def search(self, message_id: "Snowflake_Type") -> bool:
+        """
+        Check if a message_id exists in the specified history.
+
+        parameters:
+            message_id: ID of message to check.
+        """
+
+        # loop through history
+        async for message in self:
+            if message.id == message_id:
+                return True
+
+        return False
+
 
 @define()
 class PermissionOverwrite(SnowflakeObject):
