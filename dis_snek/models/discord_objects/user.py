@@ -8,6 +8,7 @@ from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.asset import Asset
+from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
@@ -135,6 +136,7 @@ class Member(DiscordObject, _SendDMMixin):
     nick: Optional[str] = field(repr=True, default=None, metadata={"docs": "The user's nickname in this guild'"})
     deaf: bool = field(default=False, metadata={"docs": "Has this user been deafened in voice channels?"})
     mute: bool = field(default=False, metadata={"docs": "Has this user been muted in voice channels?"})
+    guild: "Guild" = field(default=None)
     joined_at: "Timestamp" = field(converter=timestamp_converter, metadata={"docs": "When the user joined this guild"})
     premium_since: Optional["Timestamp"] = field(
         default=None,
@@ -195,44 +197,13 @@ class Member(DiscordObject, _SendDMMixin):
     def nickname(self, nickname):
         self.nick = nickname
 
-    # @property
-    # def guild(self) -> Union[CacheProxy, Awaitable["Guild"], "Guild"]:
-    #     """
-    #     Returns the guild object associated with this member.
-    #
-    #     !!! warning "Awaitable Warning:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         The guild object
-    #     """
-    #     return proxy_guild(self._client, self._guild_id)
+    @property
+    def roles(self) -> List["Role"]:
+        return [r for r in self.guild.roles if r.id in self._role_ids]
 
-    # @property
-    # def roles(self) -> Union[CacheView, Awaitable[List["Role"]], AsyncIterator["Role"]]:
-    #     """
-    #     Returns the roles this member has
-    #
-    #     !!! warning "Awaitable Warning:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         An async iterator of roles this member has
-    #     """
-    #     return proxy_role(self._client, self._guild_id, self._role_ids)
-    #
-    # @property
-    # def top_role(self) -> Union[CacheProxy, Awaitable["Role"], "Role"]:
-    #     """
-    #     Returns the highest role in the hierarchy this member has
-    #
-    #     !!! warning "Awaitable Warning:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         A role object
-    #     """
-    #     return proxy_role(self._client, self._guild_id, self._role_ids[-1])
+    @property
+    def top_role(self) -> "Role":
+        return self._client.cache.role_cache.get(self._role_ids[-1])
 
     @property
     def display_name(self) -> str:
@@ -251,14 +222,14 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             Permission data
         """
-        guild = await self.guild
+        guild = self.guild
         if guild.is_owner(self):
             return Permissions.ALL
 
-        role_everyone = await guild.roles.get(guild.id)  # get @everyone role
+        role_everyone = guild.default_role  # get @everyone role
         permissions = role_everyone.permissions
 
-        async for role in self.roles:
+        for role in self.roles:
             permissions |= role.permissions
 
         if Permissions.ADMINISTRATOR in permissions:
