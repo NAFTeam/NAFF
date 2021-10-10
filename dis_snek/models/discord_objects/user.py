@@ -286,7 +286,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
 
         # Get the user's permissions
-        guild_permissions = self.guild_permissions()
+        guild_permissions = await self.guild_permissions()
 
         # Check all permissions separately
         for permission in permissions:
