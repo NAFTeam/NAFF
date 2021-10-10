@@ -115,7 +115,7 @@ class ChannelHistory(AsyncIterator):
 
         # loop through history
         async for message in self:
-            if message.id == message_id:
+            if message.id == int(message_id):
                 return True
 
         return False
