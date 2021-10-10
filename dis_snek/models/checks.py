@@ -1,4 +1,4 @@
-from dis_snek.models.discord_objects.context import Context
+from dis_snek.models.context import Context
 
 
 def has_role(role_id):

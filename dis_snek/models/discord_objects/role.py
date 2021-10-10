@@ -1,5 +1,5 @@
 from functools import partial
-from typing import TYPE_CHECKING, Any, Awaitable, Dict, Optional, Union, List
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import attr
 

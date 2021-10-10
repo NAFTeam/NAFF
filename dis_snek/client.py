@@ -1,12 +1,12 @@
 import asyncio
+import copy
 import importlib.util
 import inspect
 import logging
 import sys
 import traceback
-from functools import partial
 from random import randint
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
 
@@ -32,8 +32,9 @@ from dis_snek.models.application_commands import (
     SubCommand,
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
-from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.discord_objects.application import Application
+from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
@@ -43,12 +44,15 @@ from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.listener import Listener, listen
 from dis_snek.models.scale import Scale
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
+
 
 log = logging.getLogger(logger_name)
 
@@ -67,6 +71,11 @@ class Snake:
         get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
         asyncio_debug bool: Enable asyncio debug features
+        message_cache_ttl int: How long a message will remain in the cache, set to `None` to disable cache expiry
+        message_cache_size int: The maximum number of messages that may be stored in the cache, set to `None` to not limit cache size
+
+    !!! note
+        Setting message_cache_size to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
     """
 
@@ -78,6 +87,8 @@ class Snake:
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         asyncio_debug: bool = False,
+        message_cache_ttl: Optional[int] = 600,
+        message_cache_limit: Optional[int] = 250,
     ):
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -117,8 +128,15 @@ class Snake:
         # caches
 
         self.cache: GlobalCache = GlobalCache(self)
+
+        if message_cache_limit is None and message_cache_ttl is None:
+            log.warning("NO MESSAGE CACHE LIMITS ARE ACTIVE! This is not recommended")
+            self.cache.message_cache = dict()
+        else:
+            self.cache.message_cache = TTLCache(hard_limit=message_cache_limit, ttl=message_cache_ttl or float("inf"))
+
         self._user: SnakeBotUser = MISSING
-        self._app: dict = MISSING
+        self._app: Application = MISSING
 
         # collections
 
@@ -152,16 +170,15 @@ class Snake:
         return self._user
 
     @property
-    def app(self) -> dict:
+    def app(self) -> Application:
         """Returns the bots application"""
-        # todo: create app object
         return self._app
 
     @property
-    def owner(self) -> Coroutine[Any, Any, User]:
+    def owner(self) -> Optional["User"]:
         """Returns the bot's owner'"""
         try:
-            return self.cache.get_user(self.app["owner"]["id"])
+            return self.app.owner
         except TypeError:
             return MISSING
 
@@ -194,7 +211,8 @@ class Snake:
         log.debug(f"Logging in with token: {token}")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
-        self._app = await self.http.get_current_bot_information()
+        self.cache.place_user_data(me)
+        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self.dispatch(events.Login())
         await self._ws_connect()
 
@@ -278,7 +296,14 @@ class Snake:
         Args:
             token str: Your bot's token
         """
-        self.loop.run_until_complete(self.login(token))
+        try:
+            self.loop.run_until_complete(self.login(token))
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.stop())
+
+    async def stop(self):
+        log.debug("Stopping the bot.")
+        await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """
@@ -318,20 +343,58 @@ class Snake:
         if self.sync_interactions:
             await self.synchronise_interactions()
         else:
-            await self._cache_interactions()
+            await self._cache_interactions(warn_missing=True)
 
-    async def _cache_interactions(self):
+    async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
-        scopes = [g.id for g in self.cache.guild_cache.values()] + [None]
-        for scope in scopes:
-            resp_data = await self.http.get_interaction_element(self.user.id, scope)
+        bot_scopes = set(g.id for g in self.cache.guild_cache.values())
+        bot_scopes.add(GLOBAL_SCOPE)
 
-            for cmd_data in resp_data:
-                self._interaction_scopes[str(cmd_data["id"])] = scope if scope else GLOBAL_SCOPE
-                try:
-                    self.interactions[scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
-                except KeyError:
-                    pass
+        # Match all interaction is registered with discord's data.
+        for scope in self.interactions:
+            bot_scopes.discard(scope)
+            try:
+                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
+            except Forbidden as e:
+                raise InteractionMissingAccess(scope) from e
+
+            remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
+            for cmd in self.interactions[scope].values():
+                cmd_data = remote_cmds.pop(cmd.name, MISSING)
+                if cmd_data is MISSING:
+                    if warn_missing:
+                        log.error(
+                            f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                        )
+                    continue
+
+                self._interaction_scopes[str(cmd_data["id"])] = scope
+                cmd.cmd_id = str(cmd_data["id"])
+
+            if warn_missing:
+                for cmd_data in remote_cmds.values():
+                    log.error(
+                        f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                        f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                    )
+
+        # Remaining guilds that bot is in but, no interaction is registered
+        for scope in bot_scopes:
+            try:
+                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
+            except Forbidden:
+                # We will just assume they don't want application commands in this guild.
+                log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
+                continue
+
+            for cmd_data in remote_cmds:
+                self._interaction_scopes[str(cmd_data["id"])] = scope
+                if warn_missing:
+                    log.error(
+                        f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
+                        f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                    )
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
@@ -422,9 +485,7 @@ class Snake:
 
         for cmd_scope in cmd_scopes:
             try:
-                cmds_resp_data = await self.http.get_interaction_element(
-                    self.user.id, cmd_scope if cmd_scope != GLOBAL_SCOPE else None
-                )
+                cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
                 need_to_sync = False
                 cmds_to_sync = []
 
@@ -446,7 +507,7 @@ class Snake:
                 if need_to_sync:
                     log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
                     cmd_sync_resp = await self.http.post_interaction_element(
-                        self.user.id, cmds_to_sync, guild_id=cmd_scope if cmd_scope != GLOBAL_SCOPE else None
+                        self.user.id, cmds_to_sync, guild_id=cmd_scope
                     )
                     # cache cmd_ids and their scopes
                     for cmd_data in cmd_sync_resp:
@@ -502,6 +563,7 @@ class Snake:
 
             if guild_id := data.get("guild_id"):
                 cls.author = self.cache.place_member_data(guild_id, data["member"].copy())
+                self.cache.place_user_data(data["member"]["user"])
                 cls.channel = await self.cache.get_channel(data["channel_id"])
             else:
                 cls.author = self.cache.place_user_data(data["user"])
@@ -611,7 +673,48 @@ class Snake:
             event: raw message event
         """
         msg = self.cache.place_message_data(event.data)
+        if not msg._guild_id and event.data.get("guild_id"):
+            msg._guild_id = event.data["guild_id"]
+            # todo: Determine why this isn't set *always*
+
+        if not msg.author:
+            # sometimes discord will only send an author ID, not the author. this catches that
+            msg.channel = (
+                await self.cache.get_channel(to_snowflake(msg._channel_id)) if not msg.channel else msg.channel
+            )
+            if msg._guild_id:
+                msg.guild = await self.cache.get_guild(msg._guild_id) if not msg.guild else msg.guild
+                msg.author = await self.cache.get_member(msg._guild_id, msg._author_id)
+            else:
+                msg.author = await self.cache.get_user(to_snowflake(msg._author_id))
+
         self.dispatch(events.MessageCreate(msg))
+
+    @listen()
+    async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw deletions and dispatch a processed deletion event.
+        Args:
+            event: raw message deletion event
+        """
+        message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"))
+        self.dispatch(events.MessageDelete(message))
+
+    @listen()
+    async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw message update event and dispatch a processed update event.
+
+        Args:
+            event: raw message update event
+        """
+
+        # a copy is made because the cache will update the original object in memory
+        before = copy.copy(
+            await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
+        )
+        after = self.cache.place_message_data(event.data)
+        self.dispatch(events.MessageUpdate(before=before, after=after))
 
     @listen()
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
@@ -625,6 +728,59 @@ class Snake:
         self._guild_event.set()
 
         self.dispatch(events.GuildCreate(guild))
+
+    @listen()
+    async def _on_raw_channel_create(self, event: RawGatewayEvent) -> None:
+        """
+        Automatically cache a guild upon CHANNEL_CREATE event from gateway.
+
+        Args:
+            data: raw channel data
+        """
+        channel = self.cache.place_channel_data(event.data)
+        self.dispatch(events.ChannelCreate(channel))
+
+    @listen()
+    async def _on_raw_channel_delete(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw channel deletions and dispatch a processed channel deletion event.
+
+        Args:
+            event: raw channel deletion event
+        """
+        # for some reason this event returns the deleted object?
+        # so we cache it regardless
+        channel = self.cache.place_channel_data(event.data)
+        self.dispatch(events.ChannelDelete(channel))
+
+    @listen()
+    async def _on_raw_typing_start(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw typing start and dispatch a processed typing event.
+
+        Args:
+            event: raw typing start event
+        """
+        author: Union[User, Member]
+        channel: BaseChannel
+        guild = None
+
+        if member := event.data.get("member"):
+            author = self.cache.place_member_data(event.data.get("guild_id"), member)
+            guild = await self.cache.get_guild(event.data.get("guild_id"))
+        else:
+            author = await self.cache.get_user(event.data.get("user_id"))
+
+        channel = await self.cache.get_channel(event.data.get("channel_id"))
+
+        self.dispatch(
+            events.TypingStart(
+                author=author,
+                channel=channel,
+                guild=guild,
+                timestamp=Timestamp.utcfromtimestamp(event.data.get("timestamp")),
+            )
+        )
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:

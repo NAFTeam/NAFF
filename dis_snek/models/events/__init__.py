@@ -1,2 +1,2 @@
-from dis_snek.models.events.discord import *
-from dis_snek.models.events.internal import *
+from dis_snek.models.events.discord import *  # noqa
+from dis_snek.models.events.internal import *  # noqa

@@ -24,7 +24,7 @@ from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.context import InteractionContext
+    from dis_snek.models.context import InteractionContext
 
 
 class OptionTypes(IntEnum):
@@ -103,9 +103,9 @@ class Permission:
         permission: The state of permission. ``True`` to allow, ``False``, to disallow.
     """
 
-    id: "Snowflake_Type" = attr.ib()
-    type: Union[PermissionTypes, int] = attr.ib()
-    permission: bool = attr.ib()
+    id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    type: Union[PermissionTypes, int] = attr.ib(converter=PermissionTypes)
+    permission: bool = attr.ib(default=True)
 
     def to_dict(self) -> dict:
         """
@@ -176,6 +176,10 @@ class ContextMenu(InteractionCommand):
         if not isinstance(value, CommandTypes):
             if value not in CommandTypes.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
+        elif value == CommandTypes.CHAT_INPUT:
+            raise ValueError(
+                "The CHAT_INPUT type is basically slash commands. Please use the @slash_command() " "decorator instead."
+            )
 
 
 @attr.s(slots=True)
@@ -222,6 +226,14 @@ class SlashCommandOption(DictSerializationMixin):
     def _description_validator(self, attribute: str, value: str) -> None:
         if not 1 <= len(value) <= SLASH_OPTION_NAME_LENGTH:
             raise ValueError("Options must be between 1 and 100 characters long")
+
+    @type.validator
+    def _type_validator(self, attribute: str, value: int) -> None:
+        if value == OptionTypes.SUB_COMMAND or value == OptionTypes.SUB_COMMAND_GROUP:
+            raise ValueError(
+                "Options cannot be SUB_COMMAND or SUB_COMMAND_GROUP. If you want to use subcommands, "
+                "see the @sub_command() decorator."
+            )
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -451,7 +463,7 @@ def sub_command(
 def context_menu(
     name: str,
     context_type: "CommandTypes",
-    scope: "Snowflake_Type",
+    scope: "Snowflake_Type" = GLOBAL_SCOPE,
     default_permission: bool = True,
     permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
 ):
@@ -535,6 +547,7 @@ def slash_permission(guild_id: "Snowflake_Type", permissions: List[Union[Permiss
         guild_id: The target guild to apply the permissions.
         permissions: A list of interaction permission rights.
     """
+    guild_id = to_snowflake(guild_id)
 
     def wrapper(func):
         if hasattr(func, "cmd_id"):

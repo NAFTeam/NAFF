@@ -8,7 +8,6 @@ attributes:
     logger_name str: The logger name used by Snek.
     kwarg_spam bool: Should ``unused kwargs`` be logged.
 
-    GLOBAL_SCOPE int: Represents a global scope.
     ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.
     SELECTS_MAX_OPTIONS int: The maximum number of options a select may have.
     SELECT_MAX_NAME_LENGTH int: The max length of a select's name.
@@ -24,11 +23,14 @@ attributes:
     EMBED_MAX_FIELDS int: The maximum number of fields for an embed
     EMBED_TOTAL_MAX int: The total combined number of characters for an embed
 
+    GLOBAL_SCOPE int: Represents a global scope for application commands.
+
     MISSING _sentinel: A sentinel value that indicates something has not been set
 """
 
 import sys
 import sentinel
+from collections import defaultdict
 import dis_snek.models.events as events
 
 
@@ -41,7 +43,8 @@ __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 logger_name = "dis.snek"
 kwarg_spam = False
 
-GLOBAL_SCOPE = 0
+DISCORD_EPOCH = 1420070400000
+
 ACTION_ROW_MAX_ITEMS = 5
 SELECTS_MAX_OPTIONS = 25
 SELECT_MAX_NAME_LENGTH = 100
@@ -57,10 +60,32 @@ EMBED_MAX_DESC_LENGTH = 4096
 EMBED_MAX_FIELDS = 25
 EMBED_TOTAL_MAX = 6000
 
+GLOBAL_SCOPE = sentinel.create(
+    "GLOBAL_SCOPE",
+    (int,),
+    cls_dict={
+        "__name__": "GLOBAL_SCOPE",
+        "__getattr__": lambda x, y: 0,
+        "__hash__": lambda _: hash(0),
+    },
+)
+
 MISSING = sentinel.create(
+    "MISSING",
     cls_dict={
         "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
         "__name__": "MISSING",
         "__getattr__": lambda x, y: None,
-    }
+        "__bool__": lambda _: False,
+    },
 )
+
+PREMIUM_GUILD_LIMITS = defaultdict(
+    lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
+    {
+        1: {"emoji": 100, "stickers": 15, "bitrate": 128000, "filesize": 8388608},
+        2: {"emoji": 150, "stickers": 30, "bitrate": 256000, "filesize": 52428800},
+        3: {"emoji": 250, "stickers": 60, "bitrate": 384000, "filesize": 104857600},
+    },
+)
+"""Limits granted per premium level of a guild"""

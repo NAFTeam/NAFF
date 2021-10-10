@@ -173,8 +173,8 @@ class Embed(DictSerializationMixin):
         total += len(self.footer) if self.footer else 0
         total += len(self.author) if self.author else 0
 
-        for field in self.fields:
-            total += len(field)
+        for _field in self.fields:
+            total += len(_field)
         return total
 
     def set_author(

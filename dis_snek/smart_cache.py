@@ -22,12 +22,14 @@ if TYPE_CHECKING:
 class GlobalCache:
     _client: "Snake" = field()
 
+    # Non expiring discord objects cache
+    user_cache: dict = field(factory=dict)  # key: user_id
+    member_cache: dict = field(factory=dict)  # key: (guild_id, user_id)
+    channel_cache: dict = field(factory=dict)  # key: channel_id
+    guild_cache: dict = field(factory=dict)  # key: guild_id
+
     # Expiring discord objects cache
-    user_cache: TTLCache = field(factory=TTLCache)  # key: user_id
-    member_cache: TTLCache = field(factory=TTLCache)  # key: (guild_id, user_id)
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
-    channel_cache: TTLCache = field(factory=TTLCache)  # key: channel_id
-    guild_cache: TTLCache = field(factory=TTLCache)  # key: guild_id
     role_cache: TTLCache = field(factory=TTLCache)  # key: role_id
 
     # Expiring id reference cache
@@ -38,8 +40,6 @@ class GlobalCache:
 
     async def get_user(self, user_id: "Snowflake_Type", request_fallback=True) -> User:
         user_id = to_snowflake(user_id)
-        if user_id == self._client.user.id:
-            return self._client.user
 
         user = self.user_cache.get(user_id)
         if request_fallback and user is None:
@@ -50,10 +50,7 @@ class GlobalCache:
     def place_user_data(self, data) -> User:
         user_id = to_snowflake(data["id"])
 
-        if user_id == self._client.user.id:
-            user = self._client.user
-        else:
-            user = self.user_cache.get(user_id)
+        user = self.user_cache.get(user_id)
 
         if user is None:
             user = User.from_dict(data, self._client)

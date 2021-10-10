@@ -1,9 +1,8 @@
 import asyncio
-import json
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, AsyncGenerator
 
 import attr
 from aiohttp.formdata import FormData
@@ -31,6 +30,7 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.user import BaseUser, Member, User
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.guild import Guild
 
 
 @define()
@@ -544,7 +543,7 @@ def process_message_payload(
     if file:
         # We need to use multipart/form-data for file sending here.
         form = FormData()
-        form.add_field("payload_json", json.dumps(message_data))
+        form.add_field("payload_json", OverriddenJson.dumps(message_data))
         if isinstance(file, IOBase):
             form.add_field("file", file)
         else:

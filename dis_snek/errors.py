@@ -2,7 +2,7 @@ from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine
 
 import aiohttp
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, GLOBAL_SCOPE
 
 if TYPE_CHECKING:
     from dis_snek.models.command import BaseCommand
@@ -207,4 +207,12 @@ class InteractionMissingAccess(InteractionException):
     def __init__(self, scope: "Snowflake_Type"):
         self.scope: "Snowflake_Type" = scope
 
-        super().__init__(f"Unable to sync commands in `{scope}` -- The bot lacks access to the specified scope")
+        if scope == GLOBAL_SCOPE:
+            err_msg = "Unable to sync commands global commands"
+        else:
+            err_msg = (
+                f"Unable to sync commands for guild `{scope}` -- Ensure the bot properly added to that guild "
+                f"with `application.commands` scope. "
+            )
+
+        super().__init__(err_msg)

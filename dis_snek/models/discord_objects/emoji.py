@@ -1,8 +1,8 @@
-from attr.converters import optional
-
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
+from attr.converters import optional
+
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.utils.attr_utils import define, field
@@ -99,7 +99,7 @@ class CustomEmoji(Emoji):
         """
         return await self._client.cache.get_user(self._creator_id)
 
-    async def get_roles(self) -> List["Roles"]:
+    async def get_roles(self) -> List["Role"]:
         """
         Gets the roles allowed to use this emoji
 

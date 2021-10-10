@@ -1,19 +1,18 @@
-from functools import partial
 from io import IOBase
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
 from aiohttp import FormData
 from attr.converters import optional
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.channel import (
-    BaseChannel,
     GuildText,
     GuildVoice,
     GuildStageVoice,
     PermissionOverwrite,
+    GuildChannel,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -37,7 +36,7 @@ if TYPE_CHECKING:
 
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
     from dis_snek.models.discord_objects.role import Role
-    from dis_snek.models.discord_objects.user import Member
+    from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -154,24 +153,88 @@ class Guild(DiscordObject):
 
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
+        """Returns a list of channels associated with this guild."""
         return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
 
     @property
     def threads(self) -> List["ThreadChannel"]:
+        """Returns a list of threads associated with this guild."""
         return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
     @property
-    async def members(self) -> AsyncGenerator["Member", None]:
-        for m_id in self._member_ids:
-            yield await self._client.cache.get_member(self.id, m_id)
+    def members(self) -> List["Member"]:
+        """A generator that yields all members of this guild."""
+        return [self._client.cache.member_cache.get(m_id) for m_id in self._member_ids]
 
     @property
     def roles(self) -> List["Role"]:
+        """Returns a list of roles associated with this guild"""
         return [self._client.cache.role_cache.get(self.id, r_id) for r_id in self._role_ids]
 
     @property
     def me(self) -> "Member":
+        """Returns this bots member object within this guild."""
         return self._client.cache.member_cache.get((self.id, self._client.user.id))
+
+    @property
+    def system_channel(self) -> Optional["GuildText"]:
+        """Returns the channel this guild uses for system messages."""
+        return self._client.cache.channel_cache.get(self.system_channel_id)
+
+    @property
+    def rules_channel(self) -> Optional["GuildText"]:
+        """Returns the channel declared as a rules channel"""
+        return self._client.cache.channel_cache.get(self.rules_channel_id)
+
+    @property
+    def public_updates_channel(self) -> Optional["GuildText"]:
+        """Returns the channel where server staff receive notices from Discord"""
+        return self._client.cache.channel_cache.get(self.public_updates_channel_id)
+
+    @property
+    def emoji_limit(self) -> int:
+        """The maximum number of emoji this guild can have"""
+        base = 200 if "MORE_EMOJI" in self._features else 50
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["emoji"])
+
+    @property
+    def sticker_limit(self) -> int:
+        """The maximum number of stickers this guild can have"""
+        base = 60 if "MORE_sTICKERS" in self._features else 0
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["stickers"])
+
+    @property
+    def bitrate_limit(self) -> int:
+        """The maximum bitrate for this guild"""
+        base = 128000 if "VIP_REGIONS" in self._features else 96000
+        return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
+
+    @property
+    def filesize_limit(self) -> int:
+        """The maximum filesize that may be uploaded within this guild"""
+        return PREMIUM_GUILD_LIMITS[self.premium_tier]["filesize"]
+
+    @property
+    def default_role(self) -> "Role":
+        """The `@everyone` role in this guild"""
+        return self._client.cache.role_cache.get(self.id)  # type: ignore
+
+    @property
+    def premium_subscriber_role(self) -> Optional["Role"]:
+        """The role given to boosters of this server, if set"""
+        for role in self.roles:
+            if role.premium_subscriber:
+                return role
+        return None
+
+    @property
+    def my_role(self) -> Optional["Role"]:
+        """The role associated with this client, if set"""
+        m_r_id = self._client.user.id
+        for role in self.roles:
+            if role._bot_id == m_r_id:
+                return role
+        return None
 
     async def get_owner(self) -> "Member":
         # maybe precache owner instead of using `get_owner`
@@ -284,7 +347,7 @@ class Guild(DiscordObject):
             slowmode_delay,
             reason,
         )
-        return BaseChannel.from_dict_factory(channel_data, self._client)
+        return self._client.cache.place_channel_data(channel_data)
 
     async def create_text_channel(
         self,
@@ -498,6 +561,38 @@ class Guild(DiscordObject):
         """
         return await self._client.cache.get_role(self.id, role_id)
 
+    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
+        """
+        Returns a channel with the given `channel_id`
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+            # theoretically, this could get any channel the client can see,
+            # but to make it less confusing to new programmers,
+            # i intentionally check that the guild contains the channel first
+            return await self._client.cache.get_channel(channel_id)
+        return None
+
+    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["ThreadChannel"]:
+        """
+        Returns a Thread with the given `thread_id`
+
+        Args:
+            thread_id: The ID of the thread to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
+        if thread_id in self._thread_ids:
+            return await self.get_channel(thread_id)
+        return None
+
     async def prune_members(
         self,
         days: int = 7,
@@ -551,3 +646,44 @@ class Guild(DiscordObject):
 
         resp = await self._client.http.get_guild_prune_count(self.id, days=days, include_roles=roles)
         return resp["pruned"]
+
+    async def leave(self) -> None:
+        """Leave this guild"""
+        await self._client.http.leave_guild(self.id)
+
+    async def delete(self) -> None:
+        """Delete the guild. You must own this guild to do this."""
+        await self._client.http.delete_guild(self.id)
+
+    async def kick(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+        """
+        Kick a user from the guild.
+        You must have the `kick members` permission
+        Args:
+            user: The user to kick
+            reason: The reason for the kick
+        """
+        await self._client.http.remove_guild_member(self.id, to_snowflake(user), reason=reason)
+
+    async def ban(
+        self, user: Union["User", "Member", "Snowflake_Type"], delete_message_days: int = 0, reason: str = MISSING
+    ) -> None:
+        """
+        Ban a user from the guild.
+        You must have the `ban members` permission
+        Args:
+            user: The user to ban
+            delete_message_days: How many days worth of messages to remove
+            reason: The reason for the ban
+        """
+        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+
+    async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+        """
+        Unban a user from the guild.
+        You must have the `ban members` permission
+        Args:
+            user: The user to unban
+            reason: The reason for the ban
+        """
+        await self._client.http.remove_guild_ban(self.id, to_snowflake(user), reason=reason)

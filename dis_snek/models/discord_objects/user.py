@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
+import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.const import MISSING
@@ -12,7 +13,7 @@ from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import define, field, class_defaults
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
 
@@ -128,7 +129,7 @@ class SnakeBotUser(User):
     #     return proxy_guild(self._client, self._guild_ids)
 
 
-@define()
+@attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
 class Member(DiscordObject, _SendDMMixin):
     bot: bool = field(repr=True, default=False, metadata={"docs": "Is this user a bot?"})
     nick: Optional[str] = field(repr=True, default=None, metadata={"docs": "The user's nickname in this guild'"})
@@ -168,17 +169,22 @@ class Member(DiscordObject, _SendDMMixin):
 
         return data
 
-    # @property
-    # def user(self) -> Union[CacheProxy, Awaitable["User"], "User"]:
-    #     """Returns this member's user object
-    #
-    #     !!! warning "Awaitable Warning:"
-    #         This property must be awaited.
-    #
-    #     Returns:
-    #         The user object
-    #     """
-    #     return proxy_user(self._client, self.id)
+    @property
+    def user(self):
+        """Returns this member's user object"""
+        return self._client.cache.user_cache.get(self.id)
+
+    def __getattr__(self, name):
+        try:
+            return getattr(self.user, name)
+        except AttributeError:
+            raise AttributeError(f"Neither `User` or `Member` have attribute {name}")
+
+    def __setattr__(self, key, value):
+        if attrib := getattr(self.__attrs_attrs__, key):
+            value = attr.setters.convert(self, attrib, value)
+            value = attr.setters.validate(self, attrib, value)
+        super(Member, self).__setattr__(key, value)
 
     @property
     def nickname(self):
