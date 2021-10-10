@@ -136,7 +136,6 @@ class Member(DiscordObject, _SendDMMixin):
     nick: Optional[str] = field(repr=True, default=None, metadata={"docs": "The user's nickname in this guild'"})
     deaf: bool = field(default=False, metadata={"docs": "Has this user been deafened in voice channels?"})
     mute: bool = field(default=False, metadata={"docs": "Has this user been muted in voice channels?"})
-    guild: "Guild" = field(default=None)
     joined_at: "Timestamp" = field(converter=timestamp_converter, metadata={"docs": "When the user joined this guild"})
     premium_since: Optional["Timestamp"] = field(
         default=None,
@@ -196,6 +195,10 @@ class Member(DiscordObject, _SendDMMixin):
     @nickname.setter
     def nickname(self, nickname):
         self.nick = nickname
+
+    @property
+    def guild(self) -> "Guild":
+        return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:

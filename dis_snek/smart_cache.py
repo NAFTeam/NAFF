@@ -68,9 +68,6 @@ class GlobalCache:
         if request_fallback and member is None:
             data = await self._client.http.get_member(guild_id, user_id)
             member = self.place_member_data(guild_id, data)
-
-        if not member.guild:
-            member.guild = await self.get_guild(guild_id)
         return member
 
     def place_member_data(self, guild_id, data) -> Member:
