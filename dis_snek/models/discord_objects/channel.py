@@ -48,6 +48,7 @@ class ChannelHistory(AsyncIterator):
         self._limit: int = limit if limit else MISSING
         self._last: "Message" = MISSING
         self._retrieved: int = 0
+        self._retrieved_messages: list["Message"] = []
         self.before: "Snowflake_Type" = before
         self.after: "Snowflake_Type" = after
         self.around: "Snowflake_Type" = around
@@ -97,6 +98,10 @@ class ChannelHistory(AsyncIterator):
             if self.messages.empty():
                 await self._fetch_messages()
             self._last = self.messages.get_nowait()
+
+            # add the message to the already retrieved messages, so that the search function works when calling it multiple times
+            self._retrieved_messages.append(self._last)
+
             return self._last
         except QueueEmpty:
             raise StopAsyncIteration()
@@ -113,9 +118,15 @@ class ChannelHistory(AsyncIterator):
             message_id: ID of message to check.
         """
 
-        # loop through history
+        message_id = int(message_id)
+
+        # check if in the message_id was already retrieved
+        if message_id in [message.id for message in self._retrieved_messages]:
+            return True
+
+        # loop through remaining history
         async for message in self:
-            if message.id == int(message_id):
+            if message.id == message_id:
                 return True
 
         return False
