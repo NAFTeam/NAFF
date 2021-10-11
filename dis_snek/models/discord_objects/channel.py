@@ -590,7 +590,9 @@ class GuildChannel(BaseChannel):
             self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
         )
 
-    async def delete_permission(self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING):
+    async def delete_permission(
+        self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING
+    ):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
 
