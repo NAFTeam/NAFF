@@ -1,4 +1,4 @@
 aiohttp
 attrs
 mypy
-sentinel[varname]
+sentinel
