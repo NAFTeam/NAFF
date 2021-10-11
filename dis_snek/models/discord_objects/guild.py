@@ -249,6 +249,84 @@ class Guild(DiscordObject):
     def is_owner(self, member: "Member") -> bool:
         return self._owner_id == member.id
 
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        description: Optional[str] = MISSING,
+        verification_level: Optional["VerificationLevels"] = MISSING,
+        default_message_notifications: Optional["DefaultNotificationLevels"] = MISSING,
+        explicit_content_filter: Optional["ExplicitContentFilterLevels"] = MISSING,
+        afk_channel: Optional[Union["GuildVoice", "Snowflake_Type"]] = MISSING,
+        afk_timeout: Optional[int] = MISSING,
+        system_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        system_channel_flags: Optional[SystemChannelFlags] = MISSING,
+        # ToDo: these are not tested. Mostly, since I do not have access to those features
+        owner: Optional[Union["Member", "Snowflake_Type"]] = MISSING,
+        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        discovery_splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        banner: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        rules_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        public_updates_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        preferred_locale: Optional[str] = MISSING,
+        # ToDo: validate voice region
+        region: Optional[str] = MISSING,
+        # ToDo: Fill in guild features. No idea how this works - https://discord.com/developers/docs/resources/guild#guild-object-guild-features
+        features: Optional[list[str]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
+        """
+        Edit the guild.
+
+        Parameters:
+            name: The new name of the guild.
+            description: The new description of the guild.
+            region: ToDo
+            verification_level: The new verification level for the guild.
+            default_message_notifications: The new notification level for the guild.
+            explicit_content_filter: The new explicit content filter level for the guild.
+            afk_channel: The voice channel that should be the new AFK channel.
+            afk_timeout: How many seconds does a member need to be afk before they get moved to the AFK channel. Must be either `60`, `300`, `900`, `1800` or `3600`, otherwise HTTPException will be raised.
+            icon: The new icon. Requires a bytes like object or a path to an image.
+            owner: The new owner of the guild. You, the bot, need to be owner for this to work.
+            splash: The new invite splash image. Requires a bytes like object or a path to an image.
+            discovery_splash: The new discovery image. Requires a bytes like object or a path to an image.
+            banner: The new banner image. Requires a bytes like object or a path to an image.
+            system_channel: The text channel where new system messages should appear. This includes boosts and welcome messages.
+            system_channel_flags: The new settings for the system channel.
+            rules_channel: The text channel where your rules and community guidelines are displayed.
+            public_updates_channel: The text channel where updates from discord should appear.
+            preferred_locale: The new preferred locale of the guild. Must be an ISO 639 code.
+            features: ToDo
+            reason: An optional reason for the audit log.
+        """
+
+        await self._client.http.modify_guild(
+            guild_id=self.id,
+            name=name,
+            description=description,
+            region=region,
+            verification_level=int(verification_level) if verification_level else MISSING,
+            default_message_notifications=int(default_message_notifications)
+            if default_message_notifications
+            else MISSING,
+            explicit_content_filter=int(explicit_content_filter) if explicit_content_filter else MISSING,
+            afk_channel_id=to_snowflake(afk_channel) if afk_channel else MISSING,
+            afk_timeout=afk_timeout,
+            icon=to_image_data(icon) if icon else MISSING,
+            owner_id=to_snowflake(owner) if owner else MISSING,
+            splash=to_image_data(splash) if splash else MISSING,
+            discovery_splash=to_image_data(discovery_splash) if discovery_splash else MISSING,
+            banner=to_image_data(banner) if banner else MISSING,
+            system_channel_id=to_snowflake(system_channel) if system_channel else MISSING,
+            system_channel_flags=int(system_channel_flags) if system_channel_flags else MISSING,
+            rules_channel_id=to_snowflake(rules_channel) if rules_channel else MISSING,
+            public_updates_channel_id=to_snowflake(public_updates_channel) if public_updates_channel else MISSING,
+            preferred_locale=preferred_locale,
+            features=features,
+            reason=reason,
+        )
+
     async def create_custom_emoji(
         self,
         name: str,
