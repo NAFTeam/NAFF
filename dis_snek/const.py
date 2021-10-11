@@ -63,11 +63,7 @@ EMBED_TOTAL_MAX = 6000
 GLOBAL_SCOPE = sentinel.create(
     "GLOBAL_SCOPE",
     (int,),
-    cls_dict={
-        "__name__": "GLOBAL_SCOPE",
-        "__getattr__": lambda x, y: 0,
-        "__hash__": lambda _: hash(0),
-    },
+    cls_dict={"__name__": "GLOBAL_SCOPE", "__getattr__": lambda x, y: 0, "__hash__": lambda _: hash(0),},
 )
 
 MISSING = sentinel.create(

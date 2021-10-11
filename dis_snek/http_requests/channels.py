@@ -94,8 +94,7 @@ class ChannelRequests:
 
         if channel_type in (2, 13):
             payload.update(
-                bitrate=bitrate,
-                user_limit=user_limit,
+                bitrate=bitrate, user_limit=user_limit,
             )
 
         # clean up payload
@@ -310,11 +309,7 @@ class ChannelRequests:
         # todo: convert privacy_level to int-enum
         return await self.request(
             Route("POST", "/stage-instances"),
-            data={
-                "channel_id": channel_id,
-                "topic": topic,
-                "privacy_level": privacy_level,
-            },
+            data={"channel_id": channel_id, "topic": topic, "privacy_level": privacy_level,},
             reason=reason,
         )
 

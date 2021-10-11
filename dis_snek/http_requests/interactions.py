@@ -139,8 +139,7 @@ class InteractionRequests:
             array of GuildApplicationCommandPermissions objects
         """
         return await self.request(
-            Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
-            data=data,
+            Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"), data=data,
         )
 
     async def get_application_command_permissions(
