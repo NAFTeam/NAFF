@@ -147,7 +147,7 @@ class PermissionOverwrite(SnowflakeObject):
 
 
 @define(slots=False)
-class MessageableChannelMixin(SendMixin):
+class MessageableMixin(SendMixin):
     last_message_id: Optional["Snowflake_Type"] = attr.ib(
         default=None
     )  # TODO May need to think of dynamically updating this.
@@ -400,6 +400,66 @@ class InvitableMixin:
 
 
 @define(slots=False)
+class ThreadableMixin:
+    async def create_thread_with_message(
+        self,
+        name: str,
+        message: Union["Snowflake_Type", "Message"],
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
+        reason: Optional[str] = None,
+    ) -> Union["GuildNewsThread", "GuildPublicThread"]:
+        thread_data = await self._client.http.create_thread(
+            channel_id=self.id,
+            name=name,
+            auto_archive_duration=auto_archive_duration,
+            message_id=to_snowflake(message),
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
+
+    async def create_thread_without_message(
+        self,
+        name: str,
+        thread_type: Union[ChannelTypes, int],
+        invitable: Optional[bool] = None,
+        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
+        reason: Optional[str] = None,
+    ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
+        thread_data = await self._client.http.create_thread(
+            channel_id=self.id,
+            name=name,
+            thread_type=thread_type,
+            auto_archive_duration=auto_archive_duration,
+            invitable=invitable,
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(thread_data)
+
+    async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        threads_data = await self._client.http.list_public_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        threads_data = await self._client.http.list_private_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_joined_private_archived_threads(
+        self, limit: int = None, before: Union["Timestamp"] = None
+    ) -> ThreadList:
+        threads_data = await self._client.http.list_joined_private_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+
+@define(slots=False)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
     type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
@@ -423,7 +483,21 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
-    async def delete(self, reason: Optional[str] = MISSING):
+    async def edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
+        """
+        # TODO
+
+        Args:
+            payload:
+            reason:
+
+        Returns:
+
+        """
+        channel_data = self._client.http.modify_channel(self.id, payload, reason)
+        self.update_from_dict(channel_data)
+
+    async def delete(self, reason: Optional[str] = MISSING) -> None:
         """
         Delete this channel.
 
@@ -438,7 +512,7 @@ class BaseChannel(DiscordObject):
 
 
 @define()
-class DMChannel(BaseChannel, MessageableChannelMixin):
+class DMChannel(BaseChannel, MessageableMixin):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
@@ -452,8 +526,7 @@ class DMChannel(BaseChannel, MessageableChannelMixin):
         reason: Optional[str] = MISSING,
     ):
         payload = dict(name=name, icon=to_image_data(icon))
-        channel_data = self._client.http.modify_channel(self.id, payload, reason)
-        self.update_from_dict(channel_data)
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
@@ -517,24 +590,66 @@ class GuildChannel(BaseChannel):
             self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
         )
 
-    async def delete_permission(self, target: Union["PermissionOverwrite", "Role", "User"]):
-        raise NotImplementedError
+    async def delete_permission(self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING):
+        target = to_snowflake(target)
+        await self._client.http.delete_channel_permission(self.id, target, reason)
 
 
 @define()
 class GuildCategory(GuildChannel):
-    async def edit(self, name, position, permission_overwrites):
-        raise NotImplementedError
+    async def edit(self, name, position, permission_overwrites, reason):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
 class GuildStore(GuildChannel):
-    async def edit(self, name, position, permission_overwrites, parent_id, nsfw):
-        raise NotImplementedError
+    async def edit(self, name, position, permission_overwrites, parent_id, nsfw, reason):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
-class GuildText(GuildChannel, MessageableChannelMixin, InvitableMixin):
+class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
+    topic: Optional[str] = attr.ib(default=None)
+
+    async def edit(
+        self,
+        name,
+        position,
+        permission_overwrites,
+        parent_id,
+        nsfw,
+        topic,
+        channel_type,
+        default_auto_archive_duration,
+        reason,
+    ):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+            topic=topic,
+            channel_type=channel_type,
+            default_auto_archive_duration=default_auto_archive_duration,
+        )
+        await super().edit(payload=payload, reason=reason)
+
+
+@define()
+class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
     topic: Optional[str] = attr.ib(default=None)
     rate_limit_per_user: int = attr.ib(default=0)
 
@@ -549,85 +664,20 @@ class GuildText(GuildChannel, MessageableChannelMixin, InvitableMixin):
         channel_type,
         default_auto_archive_duration,
         rate_limit_per_user,
+        reason,
     ):
-        raise NotImplementedError
-
-    async def create_thread_with_message(
-        self,
-        name: str,
-        message: Union["Snowflake_Type", "Message"],
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildNewsThread", "GuildPublicThread"]:
-        thread_data = await self._client.http.create_thread(
-            channel_id=self.id,
+        payload = dict(  # TODO Proper processing
             name=name,
-            auto_archive_duration=auto_archive_duration,
-            message_id=to_snowflake(message),
-            reason=reason,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+            topic=topic,
+            channel_type=channel_type,
+            rate_limit_per_user=rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
         )
-        return self._client.cache.place_channel_data(thread_data)
-
-    async def create_thread_without_message(
-        self,
-        name: str,
-        thread_type: Union[ChannelTypes, int],
-        invitable: Optional[bool] = None,
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
-        thread_data = await self._client.http.create_thread(
-            channel_id=self.id,
-            name=name,
-            thread_type=thread_type,
-            auto_archive_duration=auto_archive_duration,
-            invitable=invitable,
-            reason=reason,
-        )
-        return self._client.cache.place_channel_data(thread_data)
-
-    async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
-        threads_data = await self._client.http.list_public_archived_threads(
-            channel_id=self.id, limit=limit, before=before
-        )
-        threads_data["id"] = self.id
-        return ThreadList.from_dict(threads_data, self._client)
-
-    async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
-        threads_data = await self._client.http.list_private_archived_threads(
-            channel_id=self.id, limit=limit, before=before
-        )
-        threads_data["id"] = self.id
-        return ThreadList.from_dict(threads_data, self._client)
-
-    async def get_joined_private_archived_threads(
-        self, limit: int = None, before: Union["Timestamp"] = None
-    ) -> ThreadList:
-        threads_data = await self._client.http.list_joined_private_archived_threads(
-            channel_id=self.id, limit=limit, before=before
-        )
-        threads_data["id"] = self.id
-        return ThreadList.from_dict(threads_data, self._client)
-
-
-@define()
-class GuildNews(GuildText):
-    rate_limit_per_user: int = attr.ib(
-        default=0, init=False, on_setattr=attr.setters.frozen
-    )  # TODO Not sure overriding like this is the best way to "disable" a property.
-
-    async def edit(
-        self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        nsfw,
-        topic,
-        channel_type,
-        default_auto_archive_duration,
-    ):
-        raise NotImplementedError
+        await super().edit(payload=payload, reason=reason)
 
 
 ################################################################
@@ -635,7 +685,7 @@ class GuildNews(GuildText):
 
 
 @define()
-class ThreadChannel(GuildChannel, MessageableChannelMixin):
+class ThreadChannel(GuildChannel, MessageableMixin):
     owner_id: "Snowflake_Type" = attr.ib(default=None)
     topic: Optional[str] = attr.ib(default=None)
     message_count: int = attr.ib(default=0)
@@ -657,9 +707,6 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
     @property
     def is_private(self) -> bool:
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
-
-    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user):
-        raise NotImplementedError
 
     async def get_members(self) -> List["ThreadMember"]:
         members_data = await self._client.http.list_thread_members(self.id)
@@ -683,20 +730,44 @@ class ThreadChannel(GuildChannel, MessageableChannelMixin):
 
 @define()
 class GuildNewsThread(ThreadChannel):
-    pass
+    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            archived=archived,
+            auto_archive_duration=auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
 class GuildPublicThread(ThreadChannel):
-    pass
+    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            archived=archived,
+            auto_archive_duration=auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
 
-    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, invitable):
-        raise NotImplementedError
+    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, invitable, reason):
+        payload = dict(  # TODO Proper processing
+            name=name,
+            archived=archived,
+            auto_archive_duration=auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+            invitable=invitable,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 ################################################################
@@ -720,8 +791,19 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
         user_limit,
         rtc_region,
         video_quality_mode,
+        reason,
     ):
-        raise NotImplementedError
+        payload = dict(  # TODO Proper processing
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            rtc_region=rtc_region,
+            video_quality_mode=video_quality_mode,
+        )
+        await super().edit(payload=payload, reason=reason)
 
 
 @define()
