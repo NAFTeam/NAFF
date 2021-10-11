@@ -702,6 +702,21 @@ class Guild(DiscordObject):
         ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
         return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
+    async def get_bans(self) -> list[GuildBan]:
+        """
+        Get's all bans for the guild.
+        You must have the `ban members` permission
+
+        Returns:
+            A list containing all bans and information about them.
+        """
+
+        ban_infos = await self._client.http.get_guild_bans(self.id)
+        return [
+            GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
+            for ban_info in ban_infos
+        ]
+
     async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
         """
         Unban a user from the guild.
