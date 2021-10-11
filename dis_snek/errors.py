@@ -79,6 +79,10 @@ class RateLimited(HTTPException):
     """Discord is rate limiting this application"""
 
 
+class TooManyChanges(SnakeException):
+    """You have changed something too frequently"""
+
+
 class WebSocketClosed(SnakeException):
     """The websocket was closed"""
 

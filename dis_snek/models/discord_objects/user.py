@@ -4,6 +4,7 @@ import attr
 from attr.converters import optional as optional_c
 
 from dis_snek.const import MISSING
+from dis_snek.errors import HTTPException, TooManyChanges
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
@@ -17,6 +18,7 @@ from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field, class_defaults
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.input_utils import _bytes_to_base64_data
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -118,6 +120,46 @@ class SnakeBotUser(User):
     @property
     def guilds(self) -> List["guilds"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
+
+    async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING):
+        """
+        Edit the client's user.
+
+        You can either change the username, or avatar, or both at once.
+        `avatar` may be set to `None` to remove your bot's avatar
+
+        ??? Hint "Example Usage:"
+            ```python
+            f = open("path_to_file", "rb")
+            await self.user.edit(avatar=f.read())
+            ```
+            or
+            ```python
+            await self.user.edit(username="hello world")
+            ```
+        Args:
+            username: The username you want to use
+            avatar: The avatar to use, must be `bytes` (see example)
+
+        Returns:
+
+        """
+        payload = {}
+        if username:
+            payload["username"] = username
+        if avatar:
+            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa
+        elif avatar is None:
+            payload["avatar"] = None
+
+        try:
+            resp = await self._client.http.modify_client_user(payload)
+        except HTTPException:
+            raise TooManyChanges(
+                "You have changed your profile too frequently, you need to wait a while before trying again."
+            ) from None
+        if resp:
+            self._client.cache.place_user_data(resp)
 
 
 @attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
