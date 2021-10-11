@@ -41,6 +41,12 @@ if TYPE_CHECKING:
 
 
 @define()
+class GuildBan:
+    reason: Optional[str]
+    user: "User"
+
+
+@define()
 class Guild(DiscordObject):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
@@ -677,6 +683,24 @@ class Guild(DiscordObject):
             reason: The reason for the ban
         """
         await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+
+    async def get_ban(self, user: Union["User", "Member", "Snowflake_Type"]) -> Optional[GuildBan]:
+        """
+        Get's the ban information for the specified user in the guild.
+        You must have the `ban members` permission
+
+        Args:
+            user: The user to ban
+
+        Returns:
+            The ban information, if it exists
+        """
+
+        ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
+        if not ban_info:
+            return None
+
+        return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
     async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
         """
