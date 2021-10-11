@@ -1013,7 +1013,9 @@ class Snake:
             packs.append(StickerPack.from_dict(pack_data, self))
         return packs
 
-    async def change_presence(self, status: Status = None, activity: Optional[Activity] = None):
+    async def change_presence(
+        self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
+    ):
         """
         Change the bots presence.
 
@@ -1023,13 +1025,27 @@ class Snake:
 
         note::
             Bots may only be `playing` `streaming` or `listening`, other activity types are likely to fail.
-
         """
         if activity:
+            if not isinstance(activity, Activity):
+                # squash whatever the user passed into an activity
+                activity = Activity.create(name=str(activity))
+
             if activity.type == ActivityType.STREAMING:
                 if not activity.url:
                     log.warning("Streaming activity cannot be set without a valid URL attribute")
             elif activity.type not in [ActivityType.GAME, ActivityType.STREAMING, ActivityType.LISTENING]:
                 log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+
+        if status:
+            if not isinstance(status, Status):
+                try:
+                    status = Status[status.upper()]
+                except KeyError:
+                    raise ValueError(f"`{status}` is not a valid status type. Please use the Status enum") from None
+        else:
+            # in case the user set status to None
+            log.warning("Status must be set to a valid status type, defaulting to online")
+            status = Status.ONLINE
 
         await self.ws.change_presence(activity.to_dict() if activity else None, status)
