@@ -6,6 +6,7 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
+from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.channel import (
     GuildText,
@@ -19,6 +20,7 @@ from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
     NSFWLevels,
+    Permissions,
     SystemChannelFlags,
     VerificationLevels,
     DefaultNotificationLevels,
@@ -38,6 +40,12 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
+
+
+@define()
+class GuildBan:
+    reason: Optional[str]
+    user: "User"
 
 
 @define()
@@ -242,6 +250,84 @@ class Guild(DiscordObject):
 
     def is_owner(self, member: "Member") -> bool:
         return self._owner_id == member.id
+
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        description: Optional[str] = MISSING,
+        verification_level: Optional["VerificationLevels"] = MISSING,
+        default_message_notifications: Optional["DefaultNotificationLevels"] = MISSING,
+        explicit_content_filter: Optional["ExplicitContentFilterLevels"] = MISSING,
+        afk_channel: Optional[Union["GuildVoice", "Snowflake_Type"]] = MISSING,
+        afk_timeout: Optional[int] = MISSING,
+        system_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        system_channel_flags: Optional[SystemChannelFlags] = MISSING,
+        # ToDo: these are not tested. Mostly, since I do not have access to those features
+        owner: Optional[Union["Member", "Snowflake_Type"]] = MISSING,
+        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        discovery_splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        banner: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        rules_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        public_updates_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
+        preferred_locale: Optional[str] = MISSING,
+        # ToDo: validate voice region
+        region: Optional[str] = MISSING,
+        # ToDo: Fill in guild features. No idea how this works - https://discord.com/developers/docs/resources/guild#guild-object-guild-features
+        features: Optional[list[str]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
+        """
+        Edit the guild.
+
+        Parameters:
+            name: The new name of the guild.
+            description: The new description of the guild.
+            region: ToDo
+            verification_level: The new verification level for the guild.
+            default_message_notifications: The new notification level for the guild.
+            explicit_content_filter: The new explicit content filter level for the guild.
+            afk_channel: The voice channel that should be the new AFK channel.
+            afk_timeout: How many seconds does a member need to be afk before they get moved to the AFK channel. Must be either `60`, `300`, `900`, `1800` or `3600`, otherwise HTTPException will be raised.
+            icon: The new icon. Requires a bytes like object or a path to an image.
+            owner: The new owner of the guild. You, the bot, need to be owner for this to work.
+            splash: The new invite splash image. Requires a bytes like object or a path to an image.
+            discovery_splash: The new discovery image. Requires a bytes like object or a path to an image.
+            banner: The new banner image. Requires a bytes like object or a path to an image.
+            system_channel: The text channel where new system messages should appear. This includes boosts and welcome messages.
+            system_channel_flags: The new settings for the system channel.
+            rules_channel: The text channel where your rules and community guidelines are displayed.
+            public_updates_channel: The text channel where updates from discord should appear.
+            preferred_locale: The new preferred locale of the guild. Must be an ISO 639 code.
+            features: ToDo
+            reason: An optional reason for the audit log.
+        """
+
+        await self._client.http.modify_guild(
+            guild_id=self.id,
+            name=name,
+            description=description,
+            region=region,
+            verification_level=int(verification_level) if verification_level else MISSING,
+            default_message_notifications=int(default_message_notifications)
+            if default_message_notifications
+            else MISSING,
+            explicit_content_filter=int(explicit_content_filter) if explicit_content_filter else MISSING,
+            afk_channel_id=to_snowflake(afk_channel) if afk_channel else MISSING,
+            afk_timeout=afk_timeout,
+            icon=to_image_data(icon) if icon else MISSING,
+            owner_id=to_snowflake(owner) if owner else MISSING,
+            splash=to_image_data(splash) if splash else MISSING,
+            discovery_splash=to_image_data(discovery_splash) if discovery_splash else MISSING,
+            banner=to_image_data(banner) if banner else MISSING,
+            system_channel_id=to_snowflake(system_channel) if system_channel else MISSING,
+            system_channel_flags=int(system_channel_flags) if system_channel_flags else MISSING,
+            rules_channel_id=to_snowflake(rules_channel) if rules_channel else MISSING,
+            public_updates_channel_id=to_snowflake(public_updates_channel) if public_updates_channel else MISSING,
+            preferred_locale=preferred_locale,
+            features=features,
+            reason=reason,
+        )
 
     async def create_custom_emoji(
         self,
@@ -561,6 +647,65 @@ class Guild(DiscordObject):
         """
         return await self._client.cache.get_role(self.id, role_id)
 
+    async def create_role(
+        self,
+        name: Optional[str] = MISSING,
+        permissions: Optional[Permissions] = MISSING,
+        colour: Optional[Union[Color, int]] = MISSING,
+        color: Optional[Union[Color, int]] = MISSING,
+        hoist: Optional[bool] = False,
+        mentionable: Optional[bool] = False,
+        # ToDo: icon needs testing. I have to access to that
+        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ) -> "Role":
+        """
+        Create a new role for the guild.
+        You must have the `manage roles` permission.
+
+        Args:
+            name: The name the role should have. `Default: new role`
+            permissions: The permissions the role should have. `Default: @everyone permissions`
+            colour: The colour of the role. Can be either `Color` or an RGB integer. `Default: BrandColors.BLACK`
+            color: Alias for `colour`
+            icon: Can be either a bytes like object or a path to an image, or a unicode emoji which is supported by discord.
+            hoist: Whether the role is shown separately in the members list. `Default: False`
+            mentionable: Whether the role can be mentioned. `Default: False`
+            reason: An optional reason for the audit log.
+
+        Returns:
+            A role object or None if the role is not found.
+        """
+
+        payload = {}
+
+        if name:
+            payload.update({"name": name})
+
+        if permissions:
+            payload.update({"permissions": str(int(permissions))})
+
+        colour = colour or color
+        if colour:
+            payload.update({"color": colour.value})
+
+        if hoist:
+            payload.update({"hoist": True})
+
+        if mentionable:
+            payload.update({"mentionable": True})
+
+        if icon:
+            # test if the icon is probably a unicode emoji (str and len() == 1) or a path / bytes obj
+            if isinstance(icon, str) and len(icon) == 1:
+                payload.update({"unicode_emoji": icon})
+
+            else:
+                payload.update({"icon": to_image_data(icon)})
+
+        result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
+        return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
+
     async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
         """
         Returns a channel with the given `channel_id`
@@ -677,6 +822,39 @@ class Guild(DiscordObject):
             reason: The reason for the ban
         """
         await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+
+    async def get_ban(self, user: Union["User", "Member", "Snowflake_Type"]) -> GuildBan:
+        """
+        Get's the ban information for the specified user in the guild.
+        You must have the `ban members` permission
+
+        Args:
+            user: The user to look up.
+
+        Raises:
+            NotFound: If the user is not banned in the guild.
+
+        Returns:
+            The ban information.
+        """
+
+        ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
+        return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
+
+    async def get_bans(self) -> list[GuildBan]:
+        """
+        Get's all bans for the guild.
+        You must have the `ban members` permission
+
+        Returns:
+            A list containing all bans and information about them.
+        """
+
+        ban_infos = await self._client.http.get_guild_bans(self.id)
+        return [
+            GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
+            for ban_info in ban_infos
+        ]
 
     async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
         """

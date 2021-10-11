@@ -112,12 +112,14 @@ class GuildRequests:
             "features",
             "description",
         ]
+        kwargs_copy = kwargs.copy()
+        for key, value in kwargs.items():
+            if key not in expected or value is MISSING:
+                del kwargs_copy[key]
 
-        for key in kwargs:
-            if key not in expected:
-                del kwargs[key]
-
-        await self.request(Route("PATCH", f"/guilds/{guild_id}"), data=kwargs, reason=reason)
+        # only do the request if there is something to modify
+        if kwargs_copy:
+            await self.request(Route("PATCH", f"/guilds/{guild_id}"), data=kwargs_copy, reason=reason)
 
     async def delete_guild(self, guild_id: "Snowflake_Type") -> None:
         """
