@@ -15,9 +15,10 @@ from aiohttp import WSMsgType
 from dis_snek.const import logger_name, events, MISSING
 from dis_snek.errors import WebSocketClosed, WebSocketRestart
 from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
-from dis_snek.models.enums import Intents
+from dis_snek.models.enums import Intents, Status
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 from dis_snek.utils.input_utils import OverriddenJson
+from dis_snek.utils.serializer import dict_filter_none
 
 log = logging.getLogger(logger_name)
 
@@ -336,7 +337,9 @@ class WebsocketClient:
         Parameters:
             data: The data to send
         """
-        await self.send(OverriddenJson.dumps(data))
+        data = OverriddenJson.dumps(data)
+        log.debug(f"Sending data to gateway: {data}")
+        await self.send(data)
 
     async def identify(self) -> None:
         """Send an identify payload to the gateway."""
@@ -366,3 +369,14 @@ class WebsocketClient:
     async def send_heartbeat(self, data: dict) -> None:
         """Send a heartbeat to the gateway."""
         await self.send_json(data)
+
+    async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
+        payload = dict_filter_none(
+            {
+                "since": since if since else time.time(),
+                "activities": [activity] if activity else None,
+                "status": status,
+                "afk": status == Status.AFK,
+            }
+        )
+        await self.send_json({"op": OPCODE.PRESENCE, "d": payload})

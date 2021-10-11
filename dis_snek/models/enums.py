@@ -515,3 +515,33 @@ class AutoArchiveDuration(IntEnum):
     ONE_DAY = 1440
     THREE_DAY = 4320
     ONE_WEEK = 10080
+
+
+class ActivityType(IntEnum):
+    """The types of presence activity that can be used in presences
+
+    !!! note
+        Only `GAME` `STREAMING` AND `WATCHING` are usable by bots
+    """
+
+    GAME = 0  # "Playing Rocket League"
+    STREAMING = 1  # "Streaming Rocket League"
+    LISTENING = 2  # "Listening to Spotify"
+    WATCHING = 3  # "Watching YouTube Together"
+    CUSTOM = 4  # ":smiley: I am cool"
+    COMPETING = 5  # "Competing in Arena World Champions"
+
+    PLAYING = GAME
+
+
+class Status(str, Enum):
+    """Represents the statuses a user may have"""
+
+    ONLINE = "online"
+    OFFLINE = "offline"
+    DND = "dnd"
+    IDLE = "idle"
+    INVISIBLE = "invisible"
+
+    AFK = IDLE
+    DO_NOT_DISTURB = DND

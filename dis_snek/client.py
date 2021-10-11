@@ -33,13 +33,14 @@ from dis_snek.models.application_commands import (
 )
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
+from dis_snek.models.discord_objects.activity import Activity
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
 from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
-from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes
+from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.listener import Listener, listen
 from dis_snek.models.scale import Scale
@@ -1011,3 +1012,24 @@ class Snake:
         for pack_data in packs_data:
             packs.append(StickerPack.from_dict(pack_data, self))
         return packs
+
+    async def change_presence(self, status: Status = None, activity: Optional[Activity] = None):
+        """
+        Change the bots presence.
+
+        Args:
+            status: The status for the bot to be. i.e. online, afk, etc.
+            activity: The activity for the bot to be displayed as doing.
+
+        note::
+            Bots may only be `playing` `streaming` or `listening`, other activity types are likely to fail.
+
+        """
+        if activity:
+            if activity.type == ActivityType.STREAMING:
+                if not activity.url:
+                    log.warning("Streaming activity cannot be set without a valid URL attribute")
+            elif activity.type not in [ActivityType.GAME, ActivityType.STREAMING, ActivityType.LISTENING]:
+                log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+
+        await self.ws.change_presence(activity.to_dict() if activity else None, status)
