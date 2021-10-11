@@ -6,6 +6,7 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
+from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.channel import (
     GuildText,
@@ -19,6 +20,7 @@ from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
     NSFWLevels,
+    Permissions,
     SystemChannelFlags,
     VerificationLevels,
     DefaultNotificationLevels,
@@ -644,6 +646,65 @@ class Guild(DiscordObject):
             A role object or None if the role is not found.
         """
         return await self._client.cache.get_role(self.id, role_id)
+
+    async def create_role(
+        self,
+        name: Optional[str] = MISSING,
+        permissions: Optional[Permissions] = MISSING,
+        colour: Optional[Union[Color, int]] = MISSING,
+        color: Optional[Union[Color, int]] = MISSING,
+        hoist: Optional[bool] = False,
+        mentionable: Optional[bool] = False,
+        # ToDo: icon needs testing. I have to access to that
+        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ) -> "Role":
+        """
+        Create a new role for the guild.
+        You must have the `manage roles` permission.
+
+        Args:
+            name: The name the role should have. `Default: new role`
+            permissions: The permissions the role should have. `Default: @everyone permissions`
+            colour: The colour of the role. Can be either `Color` or an RGB integer. `Default: BrandColors.BLACK`
+            color: Alias for `colour`
+            icon: Can be either a bytes like object or a path to an image, or a unicode emoji which is supported by discord.
+            hoist: Whether the role is shown separately in the members list. `Default: False`
+            mentionable: Whether the role can be mentioned. `Default: False`
+            reason: An optional reason for the audit log.
+
+        Returns:
+            A role object or None if the role is not found.
+        """
+
+        payload = {}
+
+        if name:
+            payload.update({"name": name})
+
+        if permissions:
+            payload.update({"permissions": str(int(permissions))})
+
+        colour = colour or color
+        if colour:
+            payload.update({"color": colour.value})
+
+        if hoist:
+            payload.update({"hoist": True})
+
+        if mentionable:
+            payload.update({"mentionable": True})
+
+        if icon:
+            # test if the icon is probably a unicode emoji (str and len() == 1) or a path / bytes obj
+            if isinstance(icon, str) and len(icon) == 1:
+                payload.update({"unicode_emoji": icon})
+
+            else:
+                payload.update({"icon": to_image_data(icon)})
+
+        result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
+        return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
     async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
         """
