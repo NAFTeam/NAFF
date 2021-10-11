@@ -1,8 +1,7 @@
 aiohttp
 attrs
 mypy
-orjson
-sentinel[varname]
+sentinel
 mkdocs-material
 mkdocs-autorefs
 git+https://github.com/LordOfPolls/pytkdocs.git
