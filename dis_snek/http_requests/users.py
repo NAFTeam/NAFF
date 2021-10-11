@@ -26,7 +26,7 @@ class UserRequests:
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
-    async def modify_user(self, payload: dict) -> dict:
+    async def modify_client_user(self, payload: dict) -> dict:
         """
         Modify the user account settings.
 
