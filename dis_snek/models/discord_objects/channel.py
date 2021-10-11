@@ -590,9 +590,7 @@ class GuildChannel(BaseChannel):
             self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
         )
 
-    async def delete_permission(
-        self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING
-    ):
+    async def delete_permission(self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
 
@@ -601,7 +599,9 @@ class GuildChannel(BaseChannel):
 class GuildCategory(GuildChannel):
     async def edit(self, name, position, permission_overwrites, reason):
         payload = dict(  # TODO Proper processing
-            name=name, position=position, permission_overwrites=permission_overwrites,
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
         )
         await super().edit(payload=payload, reason=reason)
 
@@ -610,7 +610,11 @@ class GuildCategory(GuildChannel):
 class GuildStore(GuildChannel):
     async def edit(self, name, position, permission_overwrites, parent_id, nsfw, reason):
         payload = dict(  # TODO Proper processing
-            name=name, position=position, permission_overwrites=permission_overwrites, parent_id=parent_id, nsfw=nsfw,
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
         )
         await super().edit(payload=payload, reason=reason)
 

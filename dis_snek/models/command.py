@@ -163,7 +163,9 @@ class MessageCommand(BaseCommand):
     """The name of the command."""
 
 
-def message_command(name: str = None,):
+def message_command(
+    name: str = None,
+):
     """
     A decorator to declare a coroutine as a message command.
 

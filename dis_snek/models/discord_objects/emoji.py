@@ -134,7 +134,12 @@ class CustomEmoji(Emoji):
         returns:
             The newly modified custom emoji.
         """
-        data_payload = dict_filter_none(dict(name=name, roles=roles,))
+        data_payload = dict_filter_none(
+            dict(
+                name=name,
+                roles=roles,
+            )
+        )
 
         updated_data = await self._client.http.modify_guild_emoji(data_payload, self._guild_id, self.id, reason=reason)
         self.update_from_dict(updated_data)

@@ -177,7 +177,12 @@ class Embed(DictSerializationMixin):
             total += len(_field)
         return total
 
-    def set_author(self, name: str, url: Optional[str] = None, icon_url: Optional[str] = None,) -> None:
+    def set_author(
+        self,
+        name: str,
+        url: Optional[str] = None,
+        icon_url: Optional[str] = None,
+    ) -> None:
         """
         Set the author field of the embed.
 
