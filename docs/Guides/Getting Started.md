@@ -53,7 +53,7 @@ Now let's get the library installed.
 Now let's get a basic bot going, for your code, you'll want something like this:
 
 ```python
-import dis_snek
+from dis_snek.client import Snake
 from dis_snek.models.listener import listen
 
 bot = Snake(intents=Intents.DEFAULT)
