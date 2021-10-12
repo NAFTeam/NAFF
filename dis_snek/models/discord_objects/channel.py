@@ -3,7 +3,7 @@ import time
 from asyncio import QueueEmpty
 from collections import namedtuple
 from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, AsyncGenerator, Callable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
 import attr
 from attr.converters import optional as optional_c
@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
-    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
@@ -579,6 +578,10 @@ class GuildChannel(BaseChannel):
     @property
     def guild(self):
         return self._client.cache.guild_cache.get(self._guild_id)
+
+    @property
+    def category(self):
+        return self._client.cache.channel_cache.get(self.parent_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
