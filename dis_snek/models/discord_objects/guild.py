@@ -906,7 +906,7 @@ class Guild(DiscordObject):
         return await self._client.http.get_guild_widget(self.id)
 
     async def modify_widget(
-        self, enabled: bool = None, channel: Union[TYPE_GUILD_CHANNEL, Snowflake_Type] = None
+        self, enabled: bool = None, channel: Union["TYPE_GUILD_CHANNEL", "Snowflake_Type"] = None
     ) -> dict:
         """
         Modify the guild's widget.
