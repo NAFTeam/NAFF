@@ -649,11 +649,15 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
         )
         await self._edit(payload=payload, reason=reason)
 
+    async def follow(self, webhook_channel_id: "Snowflake_Type"):
+        await self._client.http.follow_news_channel(self.id, webhook_channel_id)
+
 
 @define()
 class GuildText(GuildNews):
     rate_limit_per_user: int = attr.ib(default=0)
 
+    # noinspection PyMethodOverriding
     async def edit(
         self,
         name,
