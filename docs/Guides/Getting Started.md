@@ -28,7 +28,7 @@ Don't worry, this isn't setting up a full-fledged virtual machine, just small py
     ```shell
     cd "[your bots directory]"
     py -3 -m venv venv
-    source venv/bin/activate
+    venv/Scripts/activate
     ```
 
 It's that simple, now you're using a virtual environment. If you want to leave the environment just type `deactivate`.
