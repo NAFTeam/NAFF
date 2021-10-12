@@ -17,9 +17,15 @@ setup(
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
     python_requires=">=3.9",
+    install_requires=(Path(__file__).parent / "requirements.txt").read_text().splitlines(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    project_urls={
+        "Discord": "https://discord.gg/WCtUY2CRVu",
+        "Documentation": "https://dis-snek.readthedocs.io",
+        "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
+    },
 )
