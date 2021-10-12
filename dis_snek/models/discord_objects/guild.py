@@ -886,3 +886,36 @@ class Guild(DiscordObject):
             reason: The reason for the ban
         """
         await self._client.http.remove_guild_ban(self.id, to_snowflake(user), reason=reason)
+
+    async def get_widget_image(self, style: str = None) -> str:
+        """
+        Get a guilds widget image
+
+        For a list of styles, look here: https://discord.com/developers/docs/resources/guild#get-guild-widget-image-widget-style-options
+
+        Args:
+            style: The style to use for the widget image
+        """
+        return await self._client.http.get_guild_widget_image(self.id, style)
+
+    async def get_widget(self) -> dict:
+        """
+        Gets the guilds widget
+        """
+        # todo: Guild widget object
+        return await self._client.http.get_guild_widget(self.id)
+
+    async def modify_widget(
+        self, enabled: bool = None, channel: Union[TYPE_GUILD_CHANNEL, Snowflake_Type] = None
+    ) -> dict:
+        """
+        Modify the guild's widget.
+
+        Args:
+            enabled: Should the widget be enabled?
+            channel: The channel to use in the widget
+        """
+        if channel:
+            if isinstance(channel, DiscordObject):
+                channel = channel.id
+        return await self._client.http.modify_guild_widget(self.id, enabled, channel)
