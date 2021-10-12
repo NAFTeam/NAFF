@@ -582,6 +582,27 @@ class Guild(DiscordObject):
             reason=reason,
         )
 
+    async def delete_channel(self, channel: Union["TYPE_GUILD_CHANNEL", "Snowflake_Type"], reason: str = None) -> None:
+        """
+        Delete the given channel, can handle either a snowflake or channel object
+
+        This is effectively just an alias for `channel.delete()`
+
+        Args:
+            channel: The channel to be deleted
+            reason: The reason for this deletion
+        """
+        if isinstance(channel, (str, int)):
+            channel = await self._client.get_channel(channel)
+
+        if not channel:
+            raise ValueError("Unable to find requested channel")
+
+        if channel.id not in self._channel_ids:
+            raise ValueError("This guild does not hold the requested channel")
+
+        await channel.delete(reason)
+
     async def create_custom_sticker(
         self,
         name: str,
