@@ -572,10 +572,13 @@ class GuildChannel(BaseChannel):
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    guild: "Guild" = attr.ib(default=None)
 
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
+
+    @property
+    def guild(self):
+        return self._client.cache.guild_cache.get(self._guild_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
