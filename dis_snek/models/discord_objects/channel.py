@@ -483,7 +483,7 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
-    async def edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
+    async def _edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
         """
         # TODO
 
@@ -526,7 +526,7 @@ class DMChannel(BaseChannel, MessageableMixin):
         reason: Optional[str] = MISSING,
     ):
         payload = dict(name=name, icon=to_image_data(icon))
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
@@ -605,7 +605,7 @@ class GuildCategory(GuildChannel):
             position=position,
             permission_overwrites=permission_overwrites,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
@@ -618,7 +618,7 @@ class GuildStore(GuildChannel):
             parent_id=parent_id,
             nsfw=nsfw,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
@@ -647,12 +647,11 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
             channel_type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
-class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
-    topic: Optional[str] = attr.ib(default=None)
+class GuildText(GuildNews):
     rate_limit_per_user: int = attr.ib(default=0)
 
     async def edit(
@@ -679,7 +678,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
             rate_limit_per_user=rate_limit_per_user,
             default_auto_archive_duration=default_auto_archive_duration,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 ################################################################
@@ -740,7 +739,7 @@ class GuildNewsThread(ThreadChannel):
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
@@ -753,7 +752,7 @@ class GuildPublicThread(ThreadChannel):
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
@@ -769,7 +768,7 @@ class GuildPrivateThread(ThreadChannel):
             rate_limit_per_user=rate_limit_per_user,
             invitable=invitable,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 ################################################################
@@ -805,7 +804,7 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
             rtc_region=rtc_region,
             video_quality_mode=video_quality_mode,
         )
-        await super().edit(payload=payload, reason=reason)
+        await self._edit(payload=payload, reason=reason)
 
 
 @define()
