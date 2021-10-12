@@ -3,5 +3,5 @@ attrs
 sentinel
 mkdocs-material
 mkdocs-autorefs
-# git+https://github.com/LordOfPolls/pytkdocs.git
-git+https://github.com/mkdocstrings/mkdocstrings.git
+git+https://github.com/LordOfPolls/pytkdocs.git
+mkdocstrings

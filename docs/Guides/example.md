@@ -6,7 +6,7 @@ import logging
 
 import dis_snek.const
 from dis_snek.client import Snake
-from dis_snek.models.discord_objects.context import ComponentContext
+from dis_snek.models.context import ComponentContext
 from dis_snek.models.enums import Intents
 from dis_snek.models.events import Component
 from dis_snek.models.listener import listen
@@ -96,7 +96,7 @@ def setup(bot):
 
 from dis_snek.models.application_commands import slash_command, slash_option, context_menu
 from dis_snek.models.discord_objects.components import Button, ActionRow
-from dis_snek.models.discord_objects.context import InteractionContext
+from dis_snek.models.context import InteractionContext
 from dis_snek.models.enums import CommandTypes
 from dis_snek.models.scale import Scale
 

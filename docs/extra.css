@@ -30,3 +30,7 @@ div.doc-contents:not(.first) {
   color: var(--md-admonition-fg-color);
   border-radius: .1rem;
 }
+
+.md-typeset input[type="checkbox"]:not(:checked) + .task-list-indicator::before {
+  background-color: #E25141;
+}
