@@ -440,17 +440,24 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
 
-    async def modify_guild_widget(self, guild_id: "Snowflake_Type", **kwargs) -> dict:
+    async def modify_guild_widget(
+        self, guild_id: "Snowflake_Type", enabled: bool = None, channel_id: "Snowflake_Type" = None
+    ) -> dict:
         """
         Modify a guild widget.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to modify.
+            enabled: Should the guild widget be enabled
+            channel_id: The widget's channel ID
         returns:
             Updated guild widget.
         """
         # todo: find out if this endpoint works, and what params it expects.
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/widget"), data=kwargs)
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/widget"),
+            data=dict_filter_none({"enabled": enabled, "channel_id": channel_id}),
+        )
 
     async def modify_guild_welcome_screen(
         self, guild_id: "Snowflake_Type", enabled: bool, welcome_channels: List["Snowflake_Type"], description: str
