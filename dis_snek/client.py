@@ -651,7 +651,7 @@ class Snake:
                 ctx = await self.get_context(interaction_data, True)
                 ctx.invoked_name = invoked_name
                 ctx.kwargs = kwargs
-                ctx.args = kwargs.values()
+                ctx.args = [v for v in kwargs.values()]
 
                 await command(ctx, **kwargs)
             else:
