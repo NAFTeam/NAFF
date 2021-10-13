@@ -54,7 +54,6 @@ from dis_snek.utils.misc_utils import wrap_partial
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
-
 log = logging.getLogger(logger_name)
 
 
@@ -621,11 +620,33 @@ class Snake:
 
                 for option in options:
                     if option["type"] not in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
-                        kwargs[option["name"]] = option.get("value")
+                        value = option.get("value")
+
+                        # todo change to match statement
+                        # this block here resolves the options using the cache
+                        if option["type"] == OptionTypes.USER:
+                            value = (
+                                self.cache.member_cache.get(
+                                    (to_snowflake(interaction_data.get("guild_id", 0)), to_snowflake(value))
+                                )
+                                or self.cache.user_cache.get(to_snowflake(value))
+                            ) or value
+                        elif option["type"] == OptionTypes.CHANNEL:
+                            value = self.cache.channel_cache.get(to_snowflake(value)) or value
+                        elif option["type"] == OptionTypes.ROLE:
+                            value = self.cache.role_cache.get(to_snowflake(value)) or value
+                        elif option["type"] == OptionTypes.MENTIONABLE:
+                            snow = to_snowflake(value)
+                            if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
+                                value = user
+                            elif role := self.cache.role_cache.get(snow):
+                                value = role
+
+                        kwargs[option["name"]] = value
 
             if scope in self.interactions:
                 command: SlashCommand = self.interactions[scope][name]
-                print(f"{command.scope} :: {command.name} should be called")
+                log.debug(f"{command.scope} :: {command.name} should be called")
 
                 ctx = await self.get_context(interaction_data, True)
                 ctx.invoked_name = invoked_name
