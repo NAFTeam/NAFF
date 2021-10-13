@@ -36,6 +36,7 @@ class SendMixin:
         file: Optional[Union["IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
+        **kwargs
     ) -> "Message":
         """
         Send a message.
@@ -65,6 +66,9 @@ class SendMixin:
             tts=tts,
             flags=flags,
         )
+        if kwargs:
+            for key, value in kwargs.items():
+                message_payload[key] = value
 
         message_data = await self._send_http_request(message_payload)
         if message_data:
