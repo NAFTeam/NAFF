@@ -87,6 +87,7 @@ class Snake:
         default_prefix: str = ".",
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
+        delete_unused_application_cmds: bool = False,
         asyncio_debug: bool = False,
         message_cache_ttl: Optional[int] = 600,
         message_cache_limit: Optional[int] = 250,
@@ -107,6 +108,8 @@ class Snake:
         """The intents in use"""
         self.sync_interactions = sync_interactions
         """Should application commands be synced"""
+        self.del_unused_app_cmd: bool = delete_unused_application_cmds
+        """Should unused application commands be deleted?"""
         self.default_prefix = default_prefix
         """The default prefix to be used for message commands"""
         self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
@@ -485,7 +488,7 @@ class Snake:
 
         # first we need to make sure our local copy of cmd_ids is up-to-date
         await self._cache_interactions()
-        cmd_scopes = [k for k in self.interactions.keys()]
+        cmd_scopes = [g.id for g in self.guilds] + [GLOBAL_SCOPE]
         guild_perms = {}
 
         for cmd_scope in cmd_scopes:
@@ -494,9 +497,12 @@ class Snake:
                 need_to_sync = False
                 cmds_to_sync = []
 
-                for local_cmd in self.interactions[cmd_scope].values():
+                for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # try and find remote equiv of this command
                     remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
+                    if remote_cmd:
+                        cmds_resp_data.remove(remote_cmd)
+
                     local_cmd = local_cmd.to_dict()
                     cmds_to_sync.append(local_cmd)
 
@@ -510,7 +516,7 @@ class Snake:
                         need_to_sync = True
 
                 if need_to_sync:
-                    log.debug(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
+                    log.info(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
                     cmd_sync_resp = await self.http.post_interaction_element(
                         self.user.id, cmds_to_sync, guild_id=cmd_scope
                     )
@@ -521,7 +527,7 @@ class Snake:
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date")
 
-                for local_cmd in self.interactions[cmd_scope].values():
+                for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     if not local_cmd.permissions:
                         continue
 
@@ -537,6 +543,17 @@ class Snake:
                     await self.http.batch_edit_application_command_permissions(
                         application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
                     )
+
+                if self.del_unused_app_cmd:
+                    for cmd in cmds_resp_data:
+                        scope = cmd.get("guild_id", GLOBAL_SCOPE)
+                        log.warning(
+                            f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
+                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                        )
+                        await self.http.delete_interaction_element(
+                            self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
+                        )
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
 
