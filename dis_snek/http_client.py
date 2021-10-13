@@ -197,6 +197,7 @@ class HTTPClient(
                 except RuntimeError:
                     pass
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                break
         if lock.locked():
             # be clean and make sure we unlock
             lock.release()
