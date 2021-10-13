@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING, Union, Dict, Any, List
 import attr
 from aiohttp import FormData
 
+from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
@@ -67,7 +68,7 @@ class Webhook(DiscordObject, SendMixin):
         client: "Snake",
         channel: Union["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"],
         name: str,
-        avatar: Optional[bytes],
+        avatar: Optional[bytes] = MISSING,
     ):
         if name.lower() == "clyde":
             raise ValueError('Webhook names cannot be "Clyde"')
