@@ -388,7 +388,7 @@ class Snake:
         for scope in bot_scopes:
             try:
                 remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
-            except Forbidden:
+            except Forbidden(None):
                 # We will just assume they don't want application commands in this guild.
                 log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
                 continue
@@ -517,6 +517,7 @@ class Snake:
                     # cache cmd_ids and their scopes
                     for cmd_data in cmd_sync_resp:
                         self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                        self._interaction_scopes[cmd_data["id"]] = cmd_scope
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date")
 
