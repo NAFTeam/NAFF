@@ -566,14 +566,7 @@ class Snake:
                 cls = InteractionContext.from_dict(data, self)
 
         else:
-            cls = MessageContext(
-                client=self,
-                message=data,
-                author=data.author,
-                channel=data.channel,
-                guild_id=data.guild.id,
-            )
-            cls.arguments = get_args(data.content)[1:]
+            cls = MessageContext.from_message(self, data)
         return cls
 
     @listen("raw_interaction_create")

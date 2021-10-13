@@ -11,6 +11,7 @@ from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 from dis_snek.utils.attr_utils import define
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.utils.input_utils import get_args
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -156,7 +157,7 @@ class InteractionContext(Context, SendMixin):
         if new_cls.guild_id:
             new_cls.author = client.cache.place_member_data(new_cls.guild_id, data["member"].copy())
             client.cache.place_user_data(data["member"]["user"])
-            new_cls.channel = client.cache.channel_cache.get(data["channel_id"])
+            new_cls.channel = client.cache.channel_cache.get(to_snowflake(data["channel_id"]))
         else:
             new_cls.author = client.cache.place_user_data(data["user"])
             new_cls.channel = client.cache.channel_cache.get(new_cls.author.id)
@@ -348,10 +349,19 @@ class ComponentContext(InteractionContext):
             return self.message
 
 
-@attr.s
+@define
 class MessageContext(Context, SendMixin):
-    invoked_name: str = attr.ib(default=None)
-    arguments: list = attr.ib(factory=list)
+    @classmethod
+    def from_message(cls, client: "Snake", message: "Message"):
+        new_cls = cls(
+            client=client,
+            message=message,
+            author=message.author,
+            channel=message.channel,
+            guild_id=message.guild.id,
+        )
+        new_cls.args = get_args(message.content)[1:]
+        return new_cls
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id)
