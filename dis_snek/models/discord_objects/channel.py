@@ -719,6 +719,10 @@ class ThreadChannel(GuildChannel, MessageableMixin):
     def is_private(self) -> bool:
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
 
+    @property
+    def mention(self) -> str:
+        return f"<#{self.id}>"
+
     async def get_members(self) -> List["ThreadMember"]:
         members_data = await self._client.http.list_thread_members(self.id)
         members = []
