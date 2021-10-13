@@ -565,28 +565,13 @@ class Snake:
             else:
                 cls = InteractionContext.from_dict(data, self)
 
-            cls.guild = await self.cache.get_guild(data["guild_id"])
-
-            if guild_id := data.get("guild_id"):
-                cls.author = self.cache.place_member_data(guild_id, data["member"].copy())
-                self.cache.place_user_data(data["member"]["user"])
-                cls.channel = await self.cache.get_channel(data["channel_id"])
-            else:
-                cls.author = self.cache.place_user_data(data["user"])
-
-            if res_data := data["data"].get("resolved"):
-                await cls.process_resolved(res_data)
-
-            cls.data = data
-            cls.target_id = data["data"].get("target_id")
-
         else:
             cls = MessageContext(
                 self,
                 data,
                 author=data.author,
                 channel=data.channel,
-                guild=data.guild,
+                guild_id=data.guild.id,
             )
             cls.arguments = get_args(data.content)[1:]
         return cls

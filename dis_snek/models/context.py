@@ -4,10 +4,13 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 import attr
 from aiohttp import FormData
 
+from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
+from dis_snek.utils.attr_utils import define
+from dis_snek.models.snowflake import to_snowflake
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -20,9 +23,51 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.discord_objects.message import MessageReference
     from dis_snek.models.discord_objects.sticker import Sticker
+    from dis_snek.models.discord_objects.role import Role
 
 
 @attr.s
+class Resolved:
+    """Represents resolved data in an interaction
+
+    Attributes:
+        channels: A dictionary of channels mentioned in the interaction
+        members: A dictionary of members mentioned in the interaction
+        users: A dictionary of users mentioned in the interaction
+        roles: A dictionary of roles mentioned in the interaction
+    """
+
+    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(factory=dict)
+    members: Dict["Snowflake_Type", "Member"] = attr.ib(factory=dict)
+    users: Dict["Snowflake_Type", "User"] = attr.ib(factory=dict)
+    roles: Dict["Snowflake_Type", "Role"] = attr.ib(factory=dict)
+
+    @classmethod
+    def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
+        new_cls = cls()
+
+        if channels := data.get("channels"):
+            for key, _channel in channels.items():
+                new_cls.channels[key] = client.cache.place_channel_data(_channel)
+
+        if members := data.get("members"):
+            for key, _member in members.items():
+                new_cls.members[key] = client.cache.place_member_data(
+                    guild_id, {**_member, "user": {**data["users"][key]}}
+                )
+
+        if users := data.get("users"):
+            for key, _user in users.items():
+                new_cls.users[key] = client.cache.place_user_data(_user)
+
+        if roles := data.get("roles"):
+            for key, _role in roles.items():
+                new_cls.roles[key] = client.cache.role_cache.get(to_snowflake(key))
+
+        return new_cls
+
+
+@define
 class Context:
     """
     Represents the context of a command
@@ -48,7 +93,11 @@ class Context:
 
     author: Union["Member", "User"] = attr.ib(default=None)
     channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None)
-    guild: "Guild" = attr.ib(default=None)
+    guild_id: "Snowflake_Type" = attr.ib(default=None, converter=to_snowflake)
+
+    @property
+    def guild(self):
+        return self._client.cache.guild_cache.get(self.guild_id)
 
     @property
     def bot(self):
@@ -56,7 +105,7 @@ class Context:
         return self._client
 
 
-@attr.s
+@define
 class InteractionContext(Context, SendMixin):
     """
     Represents the context of an interaction
@@ -86,40 +135,40 @@ class InteractionContext(Context, SendMixin):
     responded: bool = attr.ib(default=False)
     ephemeral: bool = attr.ib(default=False)
 
-    resolved: dict = attr.ib(factory=dict)
+    resolved: Resolved = attr.ib(default=Resolved())
 
     data: Dict = attr.ib(factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake") -> "InteractionContext":
+    def from_dict(cls, data: Dict, client: "Snake"):
         """Create a context object from a dictionary"""
-        return cls(
-            client=client, token=data["token"], interaction_id=data["id"], data=data, invoked_name=data["data"]["name"]
+        new_cls = cls(
+            client=client,
+            token=data["token"],
+            interaction_id=data["id"],
+            data=data,
+            invoked_name=data["data"].get("name"),
+            guild_id=data.get("guild_id"),
         )
+        if res_data := data["data"].get("resolved"):
+            new_cls.resolved = Resolved.from_dict(client, res_data, new_cls.guild_id)
 
-    async def process_resolved(self, res_data):
-        # todo: maybe a resolved dataclass instead of this?
-        if channels := res_data.get("channels"):
-            self.resolved["channels"] = {}
-            for key, _channel in channels.items():
-                self.resolved["channels"][key] = self.bot.cache.place_channel_data(_channel)
+        if new_cls.guild_id:
+            new_cls.author = client.cache.place_member_data(new_cls.guild_id, data["member"].copy())
+            client.cache.place_user_data(data["member"]["user"])
+            new_cls.channel = client.cache.channel_cache.get(data["channel_id"])
+        else:
+            new_cls.author = client.cache.place_user_data(data["user"])
+            new_cls.channel = client.cache.channel_cache.get(new_cls.author.id)
 
-        if members := res_data.get("members"):
-            self.resolved["members"] = {}
-            for key, _member in members.items():
-                self.resolved["members"][key] = self.bot.cache.place_member_data(
-                    self.guild.id, {**_member, "user": {**res_data["users"][key]}}
-                )
+        new_cls.target_id = data["data"].get("target_id")
 
-        elif users := res_data.get("users"):
-            self.resolved["users"] = {}
-            for key, _user in users.items():
-                self.resolved["users"][key] = self.bot.cache.place_user_data(_user)
+        new_cls.data = data
+        return new_cls
 
-        if roles := res_data.get("roles"):
-            self.resolved["roles"] = {}
-            for key, _role in roles.items():
-                self.resolved["roles"][key] = self.bot.cache.place_role_data(self.guild.id, _role)
+    @property
+    def guild(self):
+        return self._client.cache.guild_cache.get(self.guild_id)
 
     async def defer(self, ephemeral=False) -> None:
         """
@@ -197,7 +246,7 @@ class InteractionContext(Context, SendMixin):
         return await super().send(content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags)
 
 
-@attr.s
+@define
 class ComponentContext(InteractionContext):
     custom_id: str = attr.ib(default="")
     component_type: int = attr.ib(default=0)
@@ -209,14 +258,14 @@ class ComponentContext(InteractionContext):
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
         """Create a context object from a dictionary"""
-        return cls(
-            client=client,
-            token=data["token"],
-            interaction_id=data["id"],
-            custom_id=data["data"]["custom_id"],
-            component_type=data["data"]["component_type"],
-            data=data,
-        )
+        new_cls = super().from_dict(data, client)
+        new_cls.token = data["token"]
+        new_cls.interaction_id = data["id"]
+        new_cls.custom_id = data["data"]["custom_id"]
+        new_cls.component_type = data["data"]["component_type"]
+        new_cls.message = client.cache.place_message_data(data["message"])
+
+        return new_cls
 
     async def defer(self, ephemeral=False, edit_origin: bool = False) -> None:
         """
