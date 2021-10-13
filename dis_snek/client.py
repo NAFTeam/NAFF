@@ -681,7 +681,7 @@ class Snake:
         Args:
             event: raw message deletion event
         """
-        message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"))
+        message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
         self.dispatch(events.MessageDelete(message))
 
     @listen()
