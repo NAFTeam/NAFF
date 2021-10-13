@@ -10,6 +10,23 @@ if TYPE_CHECKING:
 class InteractionRequests:
     request: Any
 
+    async def delete_interaction_element(
+        self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type", command_id: "Snowflake_Type"
+    ) -> None:
+        """
+        Delete an existing interaction element for this application.
+
+        Attributes:
+            application_id: the what application to delete for
+            guild_id: specify a guild to delete commands from
+            command_id The command to delete
+        """
+        if guild_id == GLOBAL_SCOPE:
+            return await self.request(Route("DELETE", f"/applications/{application_id}/commands/{command_id}"))
+        return await self.request(
+            Route("DELETE", f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}")
+        )
+
     async def get_interaction_element(self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> List[Dict]:
         """
         Get all interaction elements for this application from discord.
@@ -35,12 +52,9 @@ class InteractionRequests:
             guild_id: The ID of the guild this command is for, if this is a guild command
             data: List of your interaction data
         """
-
-        endpoint = f"/applications/{app_id}/commands"
-        if guild_id != GLOBAL_SCOPE:
-            endpoint = f"/applications/{app_id}/guilds/{guild_id}/commands"
-
-        return await self.request(Route("PUT", endpoint), data=data)
+        if guild_id == GLOBAL_SCOPE:
+            return await self.request(Route("PUT", f"/applications/{app_id}/commands"), data=data)
+        return await self.request(Route("PUT", f"/applications/{app_id}/guilds/{guild_id}/commands"), data=data)
 
     async def post_initial_response(self, payload: dict, interaction_id: str, token: str) -> None:
         """
