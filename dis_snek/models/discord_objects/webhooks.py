@@ -73,7 +73,7 @@ class Webhook(DiscordObject, SendMixin):
         """
         Create a webhook.
 
-        Attributes:
+        parameters:
             client: The bot's client
             channel: The channel to create the webhook in
             name: The name of the webhook
