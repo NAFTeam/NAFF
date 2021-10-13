@@ -71,6 +71,7 @@ class Snake:
         default_prefix str: The default_prefix to use for message commands, defaults to `.`
         get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
+        delete_unused_application_cmds bool: Delete any commands from discord that arent implemented in this client
         asyncio_debug bool: Enable asyncio debug features
         message_cache_ttl int: How long a message will remain in the cache, set to `None` to disable cache expiry
         message_cache_size int: The maximum number of messages that may be stored in the cache, set to `None` to not limit cache size

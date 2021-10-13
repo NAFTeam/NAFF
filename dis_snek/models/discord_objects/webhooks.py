@@ -70,6 +70,15 @@ class Webhook(DiscordObject, SendMixin):
         name: str,
         avatar: Optional[bytes] = MISSING,
     ):
+        """
+        Create a webhook.
+
+        Attributes:
+            client: The bot's client
+            channel: The channel to create the webhook in
+            name: The name of the webhook
+            avatar: An optional default avatar to use
+        """
         if name.lower() == "clyde":
             raise ValueError('Webhook names cannot be "Clyde"')
 
