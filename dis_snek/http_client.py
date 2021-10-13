@@ -184,12 +184,18 @@ class HTTPClient(
                 if tries < self._retries - 1 and e.errno in (54, 10054):
                     await asyncio.sleep(1 + tries * 2)
                     continue
-                lock.release()
+                try:
+                    lock.release()
+                except RuntimeError:
+                    pass
                 raise
             except (Forbidden, NotFound, DiscordError, HTTPException):
                 raise
             except Exception as e:
-                lock.release()
+                try:
+                    lock.release()
+                except RuntimeError:
+                    pass
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
         if lock.locked():
             # be clean and make sure we unlock
