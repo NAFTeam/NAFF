@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, List
 
 from dis_snek.models.route import Route
+from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -120,7 +121,7 @@ class WebhookRequests:
         """
         return await self.request(
             Route("POST", f"/webhooks/{webhook_id}/{webhook_token}"),
-            params={"wait": wait, "thread_id": thread_id},
+            params=dict_filter_none({"wait": "true" if wait else "false", "thread_id": thread_id}),
             data=payload,
         )
 
