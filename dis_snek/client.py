@@ -567,8 +567,8 @@ class Snake:
 
         else:
             cls = MessageContext(
-                data,
                 client=self,
+                message=data,
                 author=data.author,
                 channel=data.channel,
                 guild_id=data.guild.id,
