@@ -7,6 +7,7 @@ repos:
       - id: check-merge-conflict
       - id: requirements-txt-fixer
       - id: end-of-file-fixer
+      - id: debug-statements
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
 
@@ -21,12 +22,6 @@ repos:
       - id: black
         args: [--line-length=120]
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: V5.9.3
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
-
   - repo: https://github.com/pycqa/flake8
     rev: 3.9.2
     hooks:
@@ -36,9 +31,3 @@ repos:
           - flake8-bandit~=2.1
           - flake8-docstrings~=1.5
         args: [--max-line-length=120, --ignore=ANN101 D107 ANN102 ANN206 D105 ANN204]
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.910
-    hooks:
-      - id: mypy
-        args: [--install-types, --non-interactive]
