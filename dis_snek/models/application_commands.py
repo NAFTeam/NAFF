@@ -297,9 +297,18 @@ class SlashCommand(InteractionCommand):
         def wrapper(call: Callable[..., Coroutine]):
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("autocomplete must be coroutine")
-            self.autocomplete_callbacks[option_name.lower()] = call
+            self.autocomplete_callbacks[option_name] = call
+
+            # automatically set the option's autocomplete attribute to True
+            for opt in self.options:
+                if isinstance(opt, dict) and opt["name"] == option_name:
+                    opt["autocomplete"] = True
+                elif isinstance(opt, SlashCommandOption) and opt.name == option_name:
+                    opt.autocomplete = True
+
             return call
 
+        option_name = option_name.lower()
         return wrapper
 
 
