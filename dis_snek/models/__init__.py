@@ -7,11 +7,15 @@ from .command import *
 from .context import *
 from .cooldowns import *
 from .discord import *
-from .enums import *
 from .listener import *
 from .route import *
+from .scale import *
 from .snowflake import *
 from .timestamp import *
+
+# these are intentionally not imported, leaving them here so people dont think its a mistake
+# from .events import *
+# from .enums import *
 
 
 from .discord_objects.activity import *
