@@ -31,10 +31,18 @@ if TYPE_CHECKING:
 class Resolved:
     """Represents resolved data in an interaction"""
 
-    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(factory=dict, metadata={"docs": "A dictionary of channels mentioned in the interaction"})
-    members: Dict["Snowflake_Type", "Member"] = attr.ib(factory=dict, metadata={"docs": "A dictionary of members mentioned in the interaction"})
-    users: Dict["Snowflake_Type", "User"] = attr.ib(factory=dict, metadata={"docs": "A dictionary of users mentioned in the interaction"})
-    roles: Dict["Snowflake_Type", "Role"] = attr.ib(factory=dict, metadata={"docs": "A dictionary of roles mentioned in the interaction"})
+    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of channels mentioned in the interaction"}
+    )
+    members: Dict["Snowflake_Type", "Member"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of members mentioned in the interaction"}
+    )
+    users: Dict["Snowflake_Type", "User"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of users mentioned in the interaction"}
+    )
+    roles: Dict["Snowflake_Type", "Role"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of roles mentioned in the interaction"}
+    )
 
     @classmethod
     def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
@@ -73,9 +81,10 @@ class Context:
 
     author: Union["Member", "User"] = attr.ib(default=None, metadata={"docs": "The author of the message"})
     channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None, metadata={"docs": "The channel this was sent within"})
-    guild_id: "Snowflake_Type" = attr.ib(default=None, converter=to_snowflake, metadata={"docs": "The guild this was sent within, if not a DM"})
+    guild_id: "Snowflake_Type" = attr.ib(
+        default=None, converter=to_snowflake, metadata={"docs": "The guild this was sent within, if not a DM"}
+    )
     message: "Message" = attr.ib(default=None, metadata={"docs": "The message associated with this context"})
-
 
     @property
     def guild(self):
@@ -93,13 +102,17 @@ class _BaseInteractionContext(Context):
 
     _token: str = attr.ib(default=None, metadata={"docs": "The token for the interaction"})
     interaction_id: str = attr.ib(default=None, metadata={"docs": "The id of the interaction"})
-    target_id: "Snowflake_Type" = attr.ib(default=None, metadata={"docs": "The ID of the target, used for context menus to show what was clicked on"})
+    target_id: "Snowflake_Type" = attr.ib(
+        default=None, metadata={"docs": "The ID of the target, used for context menus to show what was clicked on"}
+    )
 
     deferred: bool = attr.ib(default=False, metadata={"docs": "Is this interaction deferred?"})
     responded: bool = attr.ib(default=False, metadata={"docs": "Have we responded to the interaction?"})
     ephemeral: bool = attr.ib(default=False, metadata={"docs": "Are responses to this interaction *hidden*"})
 
-    resolved: Resolved = attr.ib(default=Resolved(), metadata={"docs": "Discord objects mentioned within this interaction"})
+    resolved: Resolved = attr.ib(
+        default=Resolved(), metadata={"docs": "Discord objects mentioned within this interaction"}
+    )
 
     data: Dict = attr.ib(factory=dict, metadata={"docs": "The raw data of this interaction"})
 
@@ -231,7 +244,9 @@ class ComponentContext(InteractionContext):
 
     values: List = attr.ib(factory=list, metadata={"docs": "The values set"})  # todo: Polls, check this
 
-    defer_edit_origin: bool = attr.ib(default=False, metadata={"docs": "Are we editing the message the component is on"})
+    defer_edit_origin: bool = attr.ib(
+        default=False, metadata={"docs": "Are we editing the message the component is on"}
+    )
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
