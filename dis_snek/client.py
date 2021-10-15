@@ -25,35 +25,43 @@ from dis_snek.errors import (
 )
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
-from dis_snek.models import events
-from dis_snek.models.application_commands import (
+from dis_snek.models import (
+    Activity,
+    Application,
+    BaseChannel,
+    Guild,
+    Listener,
+    listen,
+    Message,
+    Scale,
+    SnakeBotUser,
+    User,
+    Member,
+    StickerPack,
+    Sticker,
+    Timestamp,
+    events,
     InteractionCommand,
     SlashCommand,
     OptionTypes,
     SubCommand,
+    MessageCommand,
+    BaseCommand,
+    to_snowflake,
+    ComponentContext,
+    InteractionContext,
+    MessageContext,
 )
-from dis_snek.models.command import MessageCommand, BaseCommand
-from dis_snek.models.context import ComponentContext, InteractionContext, MessageContext
-from dis_snek.models.discord_objects.activity import Activity
-from dis_snek.models.discord_objects.application import Application
-from dis_snek.models.discord_objects.channel import BaseChannel
-from dis_snek.models.discord_objects.guild import Guild
-from dis_snek.models.discord_objects.message import Message
-from dis_snek.models.discord_objects.sticker import StickerPack, Sticker
-from dis_snek.models.discord_objects.user import SnakeBotUser, User, Member
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
-from dis_snek.models.listener import Listener, listen
-from dis_snek.models.scale import Scale
-from dis_snek.models.snowflake import to_snowflake
-from dis_snek.models.timestamp import Timestamp
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
 from dis_snek.utils.misc_utils import wrap_partial
 
+
 if TYPE_CHECKING:
-    from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models import Snowflake_Type
 
 log = logging.getLogger(logger_name)
 
