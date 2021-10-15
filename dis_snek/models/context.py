@@ -353,6 +353,11 @@ class AutocompleteContext(_BaseInteractionContext):
 
         return new_cls
 
+    @property
+    def input_text(self) -> str:
+        """The text the user has entered so far"""
+        return self.kwargs.get(self.focussed_option, "")
+
     async def send(self, choices: List[Union[str, Dict[str, str]]]):
         """
         Send your autocomplete choices to discord.
