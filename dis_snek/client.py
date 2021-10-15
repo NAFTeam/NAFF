@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Uni
 
 import aiohttp
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE, events, MISSING
+from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING
 from dis_snek.errors import (
     GatewayNotFound,
     SnakeException,
@@ -25,6 +25,7 @@ from dis_snek.errors import (
 )
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
+from dis_snek.models import events
 from dis_snek.models.application_commands import (
     InteractionCommand,
     SlashCommand,
@@ -48,7 +49,7 @@ from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
-from dis_snek.utils.input_utils import get_first_word, get_args
+from dis_snek.utils.input_utils import get_first_word
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
@@ -641,8 +642,7 @@ class Snake:
                                 value = user
                             elif role := self.cache.role_cache.get(snow):
                                 value = role
-
-                        kwargs[option["name"]] = value
+                        kwargs[option["name"].lower()] = value
 
             if scope in self.interactions:
                 command: SlashCommand = self.interactions[scope][name]

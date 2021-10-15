@@ -12,9 +12,10 @@ from typing import Any, Callable, Coroutine, List, Optional
 
 from aiohttp import WSMsgType
 
-from dis_snek.const import logger_name, events, MISSING
+from dis_snek.const import logger_name, MISSING
 from dis_snek.errors import WebSocketClosed, WebSocketRestart
 from dis_snek.http_client import DiscordClientWebSocketResponse, HTTPClient
+from dis_snek.models import events
 from dis_snek.models.enums import Intents, Status
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 from dis_snek.utils.input_utils import OverriddenJson

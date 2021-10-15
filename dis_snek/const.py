@@ -31,8 +31,6 @@ attributes:
 import sys
 import sentinel
 from collections import defaultdict
-import dis_snek.models.events as events
-
 
 _ver_info = sys.version_info
 
