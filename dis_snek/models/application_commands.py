@@ -90,6 +90,7 @@ class CallbackTypes(IntEnum):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
+    AUTOCOMPLETE_RESULT = 8
 
 
 @attr.s(slots=True)
@@ -213,6 +214,7 @@ class SlashCommandOption(DictSerializationMixin):
     type: Union[OptionTypes, int] = attr.ib()
     description: str = attr.ib(default="No Description Set")
     required: bool = attr.ib(default=True)
+    autocomplete: bool = attr.ib(default=False)
     choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)
 
     @name.validator
@@ -251,6 +253,7 @@ class SlashCommand(InteractionCommand):
     description: str = attr.ib(default="No Description Set")
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     subcommand_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
+    autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
 
     def __attrs_post_init__(self):
         if self.callback is not None:
@@ -287,6 +290,17 @@ class SlashCommand(InteractionCommand):
             if any(opt.type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP) for opt in value):
                 if any(opt.type not in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP) for opt in value):
                     raise ValueError("Options aren't supported when subcommands are defined")
+
+    def autocomplete(self, option_name: str):
+        """A decorator to declare a coroutine as an option autocomplete"""
+
+        def wrapper(call: Callable[..., Coroutine]):
+            if not asyncio.iscoroutinefunction(call):
+                raise TypeError("autocomplete must be coroutine")
+            self.autocomplete_callbacks[option_name.lower()] = call
+            return call
+
+        return wrapper
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -510,6 +524,7 @@ def slash_option(
     description: str,
     opt_type: Union[OptionTypes, int],
     required: bool = False,
+    autocomplete: bool = False,
     choices: List[Union[SlashCommandChoice, dict]] = None,
 ) -> Any:
     """
@@ -528,7 +543,12 @@ def slash_option(
             raise Exception("slash_option decorators must be positioned under a slash_command decorator")
 
         option = SlashCommandOption(
-            name=name, type=opt_type, description=description, required=required, choices=choices if choices else []
+            name=name,
+            type=opt_type,
+            description=description,
+            required=required,
+            autocomplete=autocomplete,
+            choices=choices if choices else [],
         )
 
         if not hasattr(func, "options"):

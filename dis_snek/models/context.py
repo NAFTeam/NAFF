@@ -107,16 +107,9 @@ class Context:
 
 
 @define
-class InteractionContext(Context, SendMixin):
+class _BaseInteractionContext(Context):
     """
-    Represents the context of an interaction
-
-    !!! info "Ephemeral messages:"
-        Ephemeral messages allow you to send messages that only the author of the interaction can see.
-        They are best considered as `fire-and-forget`, in the sense that you cannot edit them once they have been sent.
-
-        Should you attach a component (ie. button) to the ephemeral message,
-        you will be able to edit it when responding to a button interaction.
+    An internal object used to define the attributes of interaction context and its children
 
     Attributes:
         interaction_id str: The id of the interaction
@@ -166,6 +159,20 @@ class InteractionContext(Context, SendMixin):
 
         new_cls.data = data
         return new_cls
+
+
+@define
+class InteractionContext(_BaseInteractionContext, SendMixin):
+    """
+    Represents the context of an interaction
+
+    !!! info "Ephemeral messages:"
+        Ephemeral messages allow you to send messages that only the author of the interaction can see.
+        They are best considered as `fire-and-forget`, in the sense that you cannot edit them once they have been sent.
+
+        Should you attach a component (ie. button) to the ephemeral message,
+        you will be able to edit it when responding to a button interaction.
+    """
 
     @property
     def guild(self):
@@ -347,6 +354,25 @@ class ComponentContext(InteractionContext):
         if message_data:
             self.message = self._client.cache.place_message_data(message_data)
             return self.message
+
+
+@define
+class AutocompleteContext(_BaseInteractionContext):
+    focussed_option: str = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
+        """Create a context object from a dictionary"""
+        new_cls = super().from_dict(data, client)
+        new_cls.focussed_option = next((x["name"] for x in data["data"]["options"] if x.get("focused", False)), None)
+
+        return new_cls
+
+    async def send(self, choices: List[Union[str, Dict[str, str]]]):  # noqa
+        choices = [{"name": c, "value": c.replace(" ", "_")} if isinstance(c, str) else c for c in choices]
+
+        payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": choices}}
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
 @define

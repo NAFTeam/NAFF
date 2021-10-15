@@ -51,6 +51,7 @@ from dis_snek.models import (
     ComponentContext,
     InteractionContext,
     MessageContext,
+    AutocompleteContext,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -568,7 +569,7 @@ class Snake:
 
     async def get_context(
         self, data: Union[dict, Message], interaction: bool = False
-    ) -> Union[MessageContext, InteractionContext, ComponentContext]:
+    ) -> Union[MessageContext, InteractionContext, ComponentContext, AutocompleteContext]:
         """
         Return a context object based on data passed
 
@@ -583,17 +584,61 @@ class Snake:
             Context object
         """
         # this line shuts up IDE warnings
-        cls: Union[MessageContext, ComponentContext, InteractionContext]
+        cls: Union[MessageContext, ComponentContext, InteractionContext, AutocompleteContext]
 
         if interaction:
+            # todo: change to match
             if data["type"] == InteractionTypes.MESSAGE_COMPONENT:
-                cls = ComponentContext.from_dict(data, self)
+                return ComponentContext.from_dict(data, self)
+            elif data["type"] == InteractionTypes.AUTOCOMPLETE:
+                cls = AutocompleteContext.from_dict(data, self)
             else:
                 cls = InteractionContext.from_dict(data, self)
 
+            invoked_name: str = data["data"]["name"]
+            kwargs = {}
+
+            if options := data["data"].get("options"):
+                if o_type := options[0]["type"] in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
+                    # this is a subcommand, process accordingly
+                    if o_type == OptionTypes.SUB_COMMAND:
+                        invoked_name = f"{invoked_name} {options[0]['name']}"
+                    else:
+                        invoked_name = (
+                            f"{invoked_name} {options[0]['name']} "
+                            f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
+                        )
+                        options = options[0]["options"][0].get("options")
+
+            for option in options:
+                value = option.get("value")
+
+                # todo change to match statement
+                # this block here resolves the options using the cache
+                if option["type"] == OptionTypes.USER:
+                    value = (
+                        self.cache.member_cache.get((to_snowflake(data.get("guild_id", 0)), to_snowflake(value)))
+                        or self.cache.user_cache.get(to_snowflake(value))
+                    ) or value
+                elif option["type"] == OptionTypes.CHANNEL:
+                    value = self.cache.channel_cache.get(to_snowflake(value)) or value
+                elif option["type"] == OptionTypes.ROLE:
+                    value = self.cache.role_cache.get(to_snowflake(value)) or value
+                elif option["type"] == OptionTypes.MENTIONABLE:
+                    snow = to_snowflake(value)
+                    if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
+                        value = user
+                    elif role := self.cache.role_cache.get(snow):
+                        value = role
+                kwargs[option["name"].lower()] = value
+
+            cls.invoked_name = invoked_name
+            cls.kwargs = kwargs
+            cls.args = [v for v in kwargs.values()]
+
+            return cls
         else:
-            cls = MessageContext.from_message(self, data)
-        return cls
+            return MessageContext.from_message(self, data)
 
     @listen("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
@@ -606,62 +651,24 @@ class Snake:
         # Yes this is temporary, im just blocking out the basic logic
         interaction_data = event.data
 
-        if interaction_data["type"] in (InteractionTypes.PING, InteractionTypes.APPLICATION_COMMAND):
-            # Slash Commands
+        if interaction_data["type"] in (
+            InteractionTypes.PING,
+            InteractionTypes.APPLICATION_COMMAND,
+            InteractionTypes.AUTOCOMPLETE,
+        ):
             interaction_id = interaction_data["data"]["id"]
             name = interaction_data["data"]["name"]
-            invoked_name = name
             scope = self._interaction_scopes.get(str(interaction_id))
 
-            kwargs = {}
-            # todo: redo this logic properly. This is a mess and you know it, Polls
-            if options := interaction_data["data"].get("options"):
-                if options[0]["type"] in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
-                    # subcommand, process accordingly
-                    if options[0]["type"] == OptionTypes.SUB_COMMAND:
-                        invoked_name = f"{name} {options[0]['name']}"
-                    else:
-                        invoked_name = (
-                            f"{name} {options[0]['name']} "
-                            f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
-                        )
-                        options = options[0]["options"][0].get("options")
-
-                for option in options:
-                    if option["type"] not in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
-                        value = option.get("value")
-
-                        # todo change to match statement
-                        # this block here resolves the options using the cache
-                        if option["type"] == OptionTypes.USER:
-                            value = (
-                                self.cache.member_cache.get(
-                                    (to_snowflake(interaction_data.get("guild_id", 0)), to_snowflake(value))
-                                )
-                                or self.cache.user_cache.get(to_snowflake(value))
-                            ) or value
-                        elif option["type"] == OptionTypes.CHANNEL:
-                            value = self.cache.channel_cache.get(to_snowflake(value)) or value
-                        elif option["type"] == OptionTypes.ROLE:
-                            value = self.cache.role_cache.get(to_snowflake(value)) or value
-                        elif option["type"] == OptionTypes.MENTIONABLE:
-                            snow = to_snowflake(value)
-                            if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
-                                value = user
-                            elif role := self.cache.role_cache.get(snow):
-                                value = role
-                        kwargs[option["name"].lower()] = value
-
             if scope in self.interactions:
-                command: SlashCommand = self.interactions[scope][name]
+                command: SlashCommand = self.interactions[scope][name]  # type: ignore
                 log.debug(f"{command.scope} :: {command.name} should be called")
-
                 ctx = await self.get_context(interaction_data, True)
-                ctx.invoked_name = invoked_name
-                ctx.kwargs = kwargs
-                ctx.args = [v for v in kwargs.values()]
 
-                await command(ctx, **kwargs)
+                if auto_opt := getattr(ctx, "focussed_option", None):
+                    await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
+                else:
+                    await command(ctx, **ctx.kwargs)
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
