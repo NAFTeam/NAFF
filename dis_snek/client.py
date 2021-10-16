@@ -52,6 +52,7 @@ from dis_snek.models import (
     InteractionContext,
     MessageContext,
     AutocompleteContext,
+    ComponentCommand,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -158,6 +159,7 @@ class Snake:
         """A dicitonary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.__extensions = {}
         self.scales = {}
@@ -403,20 +405,33 @@ class Snake:
             return
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
+    def add_component_callback(self, command: ComponentCommand):
+        """Add a component callback to the client
+
+        Args:
+            command: The command to add
+        """
+        if command.name not in self._component_callbacks.keys():
+            self._component_callbacks[command.name] = command
+            return
+        raise ValueError(f"Duplicate Component! Multiple component callbacks for `{command.name}`")
+
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
 
         def process(_cmds):
 
             for func in _cmds:
-                if isinstance(func, InteractionCommand):
+                if isinstance(func, ComponentCommand):
+                    self.add_component_callback(func)
+                elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
-                if isinstance(func, MessageCommand):
+                elif isinstance(func, MessageCommand):
                     self.add_message_command(func)
-                if isinstance(func, Listener):
+                elif isinstance(func, Listener):
                     self.add_listener(func)
 
-            log.debug(f"{len(_cmds)} commands have been loaded")
+            log.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
 
         process(
             [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
@@ -678,6 +693,8 @@ class Snake:
             component_type = interaction_data["data"]["component_type"]
 
             self.dispatch(events.Component(ctx))
+            if callback := self._component_callbacks.get(ctx.custom_id):
+                await callback(ctx)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:

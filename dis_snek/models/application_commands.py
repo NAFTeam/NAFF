@@ -357,6 +357,12 @@ class SubCommand(SlashCommand):
         return parent
 
 
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class ComponentCommand(InteractionCommand):
+    # right now this adds no extra functionality, but for future dev ive implemented it
+    ...
+
+
 ##############
 # Decorators #
 ##############
@@ -529,6 +535,26 @@ def context_menu(
             callback=func,
         )
         return cmd
+
+    return wrapper
+
+
+def component_callback(custom_id: str):
+    """
+    Register a coroutine as a component callback.
+
+    Component callbacks work the same way as commands, just using components as a way of invoking, instead of messages.
+    Your callback will be given a single argument, `ComponentContext`
+
+    Args:
+        custom_id: The custom ID of the component to wait for
+    """
+
+    def wrapper(func) -> ComponentCommand:
+        if not asyncio.iscoroutinefunction(func):
+            raise ValueError("Commands must be coroutines")
+
+        return ComponentCommand(name=custom_id, callback=func)
 
     return wrapper
 
