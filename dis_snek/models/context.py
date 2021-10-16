@@ -9,7 +9,7 @@ from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
-from dis_snek.utils.attr_utils import define
+from dis_snek.utils.attr_utils import define, docs
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.input_utils import get_args
 
@@ -32,16 +32,16 @@ class Resolved:
     """Represents resolved data in an interaction"""
 
     channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
-        factory=dict, metadata={"docs": "A dictionary of channels mentioned in the interaction"}
+        factory=dict, metadata=docs("A dictionary of channels mentioned in the interaction")
     )
     members: Dict["Snowflake_Type", "Member"] = attr.ib(
-        factory=dict, metadata={"docs": "A dictionary of members mentioned in the interaction"}
+        factory=dict, metadata=docs("A dictionary of members mentioned in the interaction")
     )
     users: Dict["Snowflake_Type", "User"] = attr.ib(
-        factory=dict, metadata={"docs": "A dictionary of users mentioned in the interaction"}
+        factory=dict, metadata=docs("A dictionary of users mentioned in the interaction")
     )
     roles: Dict["Snowflake_Type", "Role"] = attr.ib(
-        factory=dict, metadata={"docs": "A dictionary of roles mentioned in the interaction"}
+        factory=dict, metadata=docs("A dictionary of roles mentioned in the interaction")
     )
 
     @classmethod
@@ -74,17 +74,17 @@ class Context:
     """Represents the context of a command"""
 
     _client: "Snake" = attr.ib(default=None)
-    invoked_name: str = attr.ib(default=None, metadata={"docs": "The name of the command to be invoked"})
+    invoked_name: str = attr.ib(default=None, metadata=docs("The name of the command to be invoked"))
 
-    args: List = attr.ib(factory=list, metadata={"docs": "The list of arguments to be passed to the command"})
-    kwargs: Dict = attr.ib(factory=dict, metadata={"docs": "The list of keyword arguments to be passed"})
+    args: List = attr.ib(factory=list, metadata=docs("The list of arguments to be passed to the command"))
+    kwargs: Dict = attr.ib(factory=dict, metadata=docs("The list of keyword arguments to be passed"))
 
-    author: Union["Member", "User"] = attr.ib(default=None, metadata={"docs": "The author of the message"})
-    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None, metadata={"docs": "The channel this was sent within"})
+    author: Union["Member", "User"] = attr.ib(default=None, metadata=docs("The author of the message"))
+    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None, metadata=docs("The channel this was sent within"))
     guild_id: "Snowflake_Type" = attr.ib(
-        default=None, converter=to_snowflake, metadata={"docs": "The guild this was sent within, if not a DM"}
+        default=None, converter=to_snowflake, metadata=docs("The guild this was sent within, if not a DM")
     )
-    message: "Message" = attr.ib(default=None, metadata={"docs": "The message associated with this context"})
+    message: "Message" = attr.ib(default=None, metadata=docs("The message associated with this context"))
 
     @property
     def guild(self):
@@ -100,21 +100,19 @@ class Context:
 class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children"""
 
-    _token: str = attr.ib(default=None, metadata={"docs": "The token for the interaction"})
-    interaction_id: str = attr.ib(default=None, metadata={"docs": "The id of the interaction"})
+    _token: str = attr.ib(default=None, metadata=docs("The token for the interaction"))
+    interaction_id: str = attr.ib(default=None, metadata=docs("The id of the interaction"))
     target_id: "Snowflake_Type" = attr.ib(
-        default=None, metadata={"docs": "The ID of the target, used for context menus to show what was clicked on"}
+        default=None, metadata=docs("The ID of the target, used for context menus to show what was clicked on")
     )
 
-    deferred: bool = attr.ib(default=False, metadata={"docs": "Is this interaction deferred?"})
-    responded: bool = attr.ib(default=False, metadata={"docs": "Have we responded to the interaction?"})
-    ephemeral: bool = attr.ib(default=False, metadata={"docs": "Are responses to this interaction *hidden*"})
+    deferred: bool = attr.ib(default=False, metadata=docs("Is this interaction deferred?"))
+    responded: bool = attr.ib(default=False, metadata=docs("Have we responded to the interaction?"))
+    ephemeral: bool = attr.ib(default=False, metadata=docs("Are responses to this interaction *hidden*"))
 
-    resolved: Resolved = attr.ib(
-        default=Resolved(), metadata={"docs": "Discord objects mentioned within this interaction"}
-    )
+    resolved: Resolved = attr.ib(default=Resolved(), metadata=docs("Discord objects mentioned within this interaction"))
 
-    data: Dict = attr.ib(factory=dict, metadata={"docs": "The raw data of this interaction"})
+    data: Dict = attr.ib(factory=dict, metadata=docs("The raw data of this interaction"))
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake"):
@@ -239,14 +237,12 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
 @define
 class ComponentContext(InteractionContext):
-    custom_id: str = attr.ib(default="", metadata={"docs": "The ID given to the component that has been pressed"})
-    component_type: int = attr.ib(default=0, metadata={"docs": "The type of component that has been pressed"})
+    custom_id: str = attr.ib(default="", metadata=docs("The ID given to the component that has been pressed"))
+    component_type: int = attr.ib(default=0, metadata=docs("The type of component that has been pressed"))
 
-    values: List = attr.ib(factory=list, metadata={"docs": "The values set"})  # todo: Polls, check this
+    values: List = attr.ib(factory=list, metadata=docs("The values set"))  # todo: Polls, check this
 
-    defer_edit_origin: bool = attr.ib(
-        default=False, metadata={"docs": "Are we editing the message the component is on"}
-    )
+    defer_edit_origin: bool = attr.ib(default=False, metadata=docs("Are we editing the message the component is on"))
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
@@ -343,7 +339,7 @@ class ComponentContext(InteractionContext):
 
 @define
 class AutocompleteContext(_BaseInteractionContext):
-    focussed_option: str = attr.ib(default=MISSING, metadata={"docs": "The option the user is currently filling in"})
+    focussed_option: str = attr.ib(default=MISSING, metadata=docs("The option the user is currently filling in"))
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":

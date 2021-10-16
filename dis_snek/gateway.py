@@ -191,6 +191,7 @@ class WebsocketClient:
         resume: bool = False,
         session_id: Optional[int] = None,
         sequence: Optional[int] = None,
+        presence: Optional[dict] = None,
     ):
         """
         Connect to the discord gateway.
@@ -207,6 +208,7 @@ class WebsocketClient:
         cls._gateway = await http.get_gateway()
         cls.intents = intents
         cls.dispatch = dispatch
+        cls.presence = presence
         cls.ws = await cls.http.websocket_connect(cls._gateway)
         dispatch(events.Connect())
         if resume:
@@ -235,6 +237,7 @@ class WebsocketClient:
             msg = msg.decode("utf-8")
 
         if resp.type == WSMsgType.CLOSE:
+            log.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
             await self.close(msg)
             return
 
@@ -303,6 +306,7 @@ class WebsocketClient:
         """Start receiving events from the websocket."""
         while not self._closed:
             await self._receive()
+        print("Closed")
 
     def __del__(self) -> None:
         if not self._closed:
@@ -351,6 +355,7 @@ class WebsocketClient:
                 "intents": self.intents,
                 "large_threshold": 250,
                 "properties": {"$os": sys.platform, "$browser": "dis.snek", "$device": "dis.snek"},
+                "presence": self.presence,
             },
             "compress": True,
         }
@@ -374,10 +379,10 @@ class WebsocketClient:
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
         payload = dict_filter_none(
             {
-                "since": since if since else time.time(),
-                "activities": [activity] if activity else None,
+                "since": int(since if since else time.time() * 1000),
+                "activities": [activity] if activity else [],
                 "status": status,
-                "afk": status == Status.AFK,
+                "afk": False,
             }
         )
         await self.send_json({"op": OPCODE.PRESENCE, "d": payload})

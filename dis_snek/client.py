@@ -5,7 +5,6 @@ import inspect
 import logging
 import sys
 import traceback
-from random import randint
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
@@ -52,6 +51,7 @@ from dis_snek.models import (
     InteractionContext,
     MessageContext,
     AutocompleteContext,
+    ComponentCommand,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -59,7 +59,6 @@ from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
 from dis_snek.utils.misc_utils import wrap_partial
-
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type
@@ -84,6 +83,8 @@ class Snake:
         asyncio_debug bool: Enable asyncio debug features
         message_cache_ttl int: How long a message will remain in the cache, set to `None` to disable cache expiry
         message_cache_size int: The maximum number of messages that may be stored in the cache, set to `None` to not limit cache size
+        status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
+        activity Activity: The activity the bot should login "playing"
 
     !!! note
         Setting message_cache_size to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
@@ -101,6 +102,8 @@ class Snake:
         asyncio_debug: bool = False,
         message_cache_ttl: Optional[int] = 600,
         message_cache_limit: Optional[int] = 250,
+        status: Status = Status.ONLINE,
+        activity: Union[Activity, str] = None,
     ):
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -140,8 +143,13 @@ class Snake:
         """How long to wait for guilds to be cached"""
 
         # caches
-
         self.cache: GlobalCache = GlobalCache(self)
+        # these store the last sent presence data for change_presence
+        self._status: Status = status
+        if isinstance(activity, str):
+            self._activity = Activity.create(name=str(activity))
+        else:
+            self._activity: Activity = activity
 
         if message_cache_limit is None and message_cache_ttl is None:
             log.warning("NO MESSAGE CACHE LIMITS ARE ACTIVE! This is not recommended")
@@ -158,6 +166,7 @@ class Snake:
         """A dicitonary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.__extensions = {}
         self.scales = {}
@@ -199,6 +208,16 @@ class Snake:
     @property
     def guilds(self) -> List["Guild"]:
         return self.user.guilds
+
+    @property
+    def status(self) -> Status:
+        """Get the status of the bot. IE online, afk, dnd"""
+        return self._status
+
+    @property
+    def activity(self) -> Activity:
+        """Get the activity of the bot"""
+        return self._activity
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -242,6 +261,7 @@ class Snake:
             "resume": False,
             "session_id": None,
             "sequence": None,
+            "presence": {"status": self._status, "activities": [self._activity.to_dict()] if self._activity else []},
         }
         while not self.is_closed:
             log.info(f"Attempting to {'re' if params['resume'] else ''}connect to gateway...")
@@ -286,7 +306,7 @@ class Snake:
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
                 params.update(resume=False, session_id=None, sequence=None)
 
-            await asyncio.sleep(randint(1, 5))
+            await asyncio.sleep(5)
 
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):
@@ -348,6 +368,95 @@ class Snake:
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
+
+    def add_interaction(self, command: InteractionCommand):
+        """
+        Add a slash command to the client.
+
+        Args:
+            command InteractionCommand: The command to add
+        """
+        if command.scope not in self.interactions:
+            self.interactions[command.scope] = {}
+        elif command.resolved_name in self.interactions[command.scope]:
+            old_cmd = self.interactions[command.scope][command.name]
+            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
+
+        if isinstance(command, SubCommand):
+            if existing_sub := self.interactions[command.scope].get(command.name):
+                if command.group_name:
+                    existing_index = next(
+                        (
+                            index
+                            for (index, val) in enumerate(existing_sub.options)
+                            if val["name"] == command.group_name and val["type"] == 2
+                        ),
+                        None,
+                    )
+                    if existing_index is not None:
+                        data = command.child_to_dict()
+                        existing_sub.options[existing_index]["options"] += data["options"]
+                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                        self.interactions[command.scope][command.name] = existing_sub
+                        return
+
+                existing_sub.options += [command.child_to_dict()]
+                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                command = existing_sub
+
+            else:
+                command.options = [command.child_to_dict()]
+                command.subcommand_callbacks[command.resolved_name] = command.callback
+                command.callback = command.subcommand_call
+
+        self.interactions[command.scope][command.name] = command
+
+    def add_message_command(self, command: MessageCommand):
+        """
+        Add a message command to the client.
+
+        Args:
+            command InteractionCommand: The command to add
+        """
+        if command.name not in self.commands:
+            self.commands[command.name] = command
+            return
+        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
+
+    def add_component_callback(self, command: ComponentCommand):
+        """Add a component callback to the client
+
+        Args:
+            command: The command to add
+        """
+        if command.name not in self._component_callbacks.keys():
+            self._component_callbacks[command.name] = command
+            return
+        raise ValueError(f"Duplicate Component! Multiple component callbacks for `{command.name}`")
+
+    def _gather_commands(self):
+        """Gathers commands from __main__ and self"""
+
+        def process(_cmds):
+
+            for func in _cmds:
+                if isinstance(func, ComponentCommand):
+                    self.add_component_callback(func)
+                elif isinstance(func, InteractionCommand):
+                    self.add_interaction(func)
+                elif isinstance(func, MessageCommand):
+                    self.add_message_command(func)
+                elif isinstance(func, Listener):
+                    self.add_listener(func)
+
+            log.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
+
+        process(
+            [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
+        )
+        process(
+            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
+        )
 
     async def _init_interactions(self) -> None:
         """
@@ -413,82 +522,6 @@ class Snake:
                         f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
-
-    def _gather_commands(self):
-        """Gathers commands from __main__ and self"""
-
-        def process(_cmds):
-
-            for func in _cmds:
-                if isinstance(func, InteractionCommand):
-                    self.add_interaction(func)
-                if isinstance(func, MessageCommand):
-                    self.add_message_command(func)
-                if isinstance(func, Listener):
-                    self.add_listener(func)
-
-            log.debug(f"{len(_cmds)} commands have been loaded")
-
-        process(
-            [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
-        )
-        process(
-            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
-        )
-
-    def add_interaction(self, command: InteractionCommand):
-        """
-        Add a slash command to the client.
-
-        Args:
-            command InteractionCommand: The command to add
-        """
-        if command.scope not in self.interactions:
-            self.interactions[command.scope] = {}
-        elif command.resolved_name in self.interactions[command.scope]:
-            old_cmd = self.interactions[command.scope][command.name]
-            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
-
-        if isinstance(command, SubCommand):
-            if existing_sub := self.interactions[command.scope].get(command.name):
-                if command.group_name:
-                    existing_index = next(
-                        (
-                            index
-                            for (index, val) in enumerate(existing_sub.options)
-                            if val["name"] == command.group_name and val["type"] == 2
-                        ),
-                        None,
-                    )
-                    if existing_index is not None:
-                        data = command.child_to_dict()
-                        existing_sub.options[existing_index]["options"] += data["options"]
-                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                        self.interactions[command.scope][command.name] = existing_sub
-                        return
-
-                existing_sub.options += [command.child_to_dict()]
-                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                command = existing_sub
-
-            else:
-                command.options = [command.child_to_dict()]
-                command.subcommand_callbacks[command.resolved_name] = command.callback
-                command.callback = command.subcommand_call
-
-        self.interactions[command.scope][command.name] = command
-
-    def add_message_command(self, command: MessageCommand):
-        """
-        Add a message command to the client.
-
-        Args:
-            command InteractionCommand: The command to add
-        """
-        if command.name not in self.commands:
-            self.commands[command.name] = command
-            return
-        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
     async def synchronise_interactions(self) -> None:
         """Synchronise registered interactions with discord
@@ -678,6 +711,8 @@ class Snake:
             component_type = interaction_data["data"]["component_type"]
 
             self.dispatch(events.Component(ctx))
+            if callback := self._component_callbacks.get(ctx.custom_id):
+                await callback(ctx)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -1071,6 +1106,8 @@ class Snake:
                     log.warning("Streaming activity cannot be set without a valid URL attribute")
             elif activity.type not in [ActivityType.GAME, ActivityType.STREAMING, ActivityType.LISTENING]:
                 log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+        else:
+            activity = self._activity if self._activity else []
 
         if status:
             if not isinstance(status, Status):
@@ -1080,7 +1117,12 @@ class Snake:
                     raise ValueError(f"`{status}` is not a valid status type. Please use the Status enum") from None
         else:
             # in case the user set status to None
-            log.warning("Status must be set to a valid status type, defaulting to online")
-            status = Status.ONLINE
+            if self._status:
+                status = self._status
+            else:
+                log.warning("Status must be set to a valid status type, defaulting to online")
+                status = Status.ONLINE
 
+        self._status = status
+        self._activity = activity
         await self.ws.change_presence(activity.to_dict() if activity else None, status)

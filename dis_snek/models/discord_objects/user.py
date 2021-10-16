@@ -15,7 +15,7 @@ from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field, class_defaults
+from dis_snek.utils.attr_utils import define, field, class_defaults, docs
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.input_utils import _bytes_to_base64_data
@@ -39,9 +39,9 @@ class _SendDMMixin(SendMixin):
 class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model"""
 
-    username: str = field(repr=True, metadata={"docs": "The user's username, not unique across the platform"})
-    discriminator: int = field(repr=True, metadata={"docs": "The user's 4-digit discord-tag"})
-    avatar: "Asset" = field(metadata={"docs": "The user's default avatar"})
+    username: str = field(repr=True, metadata=docs("The user's username, not unique across the platform"))
+    discriminator: int = field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
+    avatar: "Asset" = field(metadata=docs("The user's default avatar"))
 
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
@@ -75,23 +75,23 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
 @define()
 class User(BaseUser):
-    bot: bool = field(repr=True, default=False, metadata={"docs": "Is this user a bot?"})
+    bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     system: bool = field(
         default=False,
-        metadata={"docs": "whether the user is an Official Discord System user (part of the urgent message system)"},
+        metadata=docs("whether the user is an Official Discord System user (part of the urgent message system)"),
     )
     public_flags: "UserFlags" = field(
-        repr=True, default=0, converter=UserFlags, metadata={"docs": "The flags associated with this user"}
+        repr=True, default=0, converter=UserFlags, metadata=docs("The flags associated with this user")
     )
     premium_type: "PremiumTypes" = field(
-        default=0, converter=PremiumTypes, metadata={"docs": "The type of nitro subscription on a user's account"}
+        default=0, converter=PremiumTypes, metadata=docs("The type of nitro subscription on a user's account")
     )
 
-    banner: Optional["Asset"] = field(default=None, metadata={"docs": "The user's banner"})
+    banner: Optional["Asset"] = field(default=None, metadata=docs("The user's banner"))
     accent_color: Optional["Color"] = field(
         default=None,
         converter=optional_c(Color),
-        metadata={"docs": "The user's banner color"},
+        metadata=docs("The user's banner color"),
     )
 
     @classmethod
@@ -164,23 +164,23 @@ class SnakeBotUser(User):
 
 @attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
 class Member(DiscordObject, _SendDMMixin):
-    bot: bool = field(repr=True, default=False, metadata={"docs": "Is this user a bot?"})
-    nick: Optional[str] = field(repr=True, default=None, metadata={"docs": "The user's nickname in this guild'"})
-    deaf: bool = field(default=False, metadata={"docs": "Has this user been deafened in voice channels?"})
-    mute: bool = field(default=False, metadata={"docs": "Has this user been muted in voice channels?"})
-    joined_at: "Timestamp" = field(converter=timestamp_converter, metadata={"docs": "When the user joined this guild"})
+    bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
+    nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
+    deaf: bool = field(default=False, metadata=docs("Has this user been deafened in voice channels?"))
+    mute: bool = field(default=False, metadata=docs("Has this user been muted in voice channels?"))
+    joined_at: "Timestamp" = field(converter=timestamp_converter, metadata=docs("When the user joined this guild"))
     premium_since: Optional["Timestamp"] = field(
         default=None,
         converter=optional_c(timestamp_converter),
-        metadata={"docs": "When the user started boosting the guild"},
+        metadata=docs("When the user started boosting the guild"),
     )
     pending: Optional[bool] = field(
-        default=None, metadata={"docs": "Whether the user has **not** passed guild's membership screening requirements"}
+        default=None, metadata=docs("Whether the user has **not** passed guild's membership screening requirements")
     )
 
-    _guild_id: "Snowflake_Type" = field(repr=True, metadata={"docs": "The ID of the guild"})
+    _guild_id: "Snowflake_Type" = field(repr=True, metadata=docs("The ID of the guild"))
     _role_ids: List["Snowflake_Type"] = field(
-        factory=list, converter=list_converter(to_snowflake), metadata={"docs": "The roles IDs this user has"}
+        factory=list, converter=list_converter(to_snowflake), metadata=docs("The roles IDs this user has")
     )
 
     @classmethod

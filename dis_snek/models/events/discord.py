@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, List, Union
 import attr
 
 from dis_snek.models.events.internal import BaseEvent, GuildEvent
+from dis_snek.utils.attr_utils import docs
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.guild import Guild
@@ -48,7 +49,7 @@ class RawGatewayEvent(BaseEvent):
 class ChannelCreate(BaseEvent):
     """Dispatched when a channel is created."""
 
-    channel: "BaseChannel" = attr.ib(metadata={"docs": "The channel this event is dispatched from"})
+    channel: "BaseChannel" = attr.ib(metadata=docs("The channel this event is dispatched from"))
 
 
 @attr.s(slots=True)
@@ -74,7 +75,7 @@ class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created."""
 
     thread: Any = attr.ib(
-        metadata={"docs": "The thread this event is dispatched from"}
+        metadata=docs("The thread this event is dispatched from")
     )  # TODO: Replace this with a thread object type
 
 
@@ -156,7 +157,7 @@ class GuildDelete(BaseEvent, GuildEvent):
 class GuildBanAdd(BaseEvent, GuildEvent):
     """Dispatched when someone was banned from a guild"""
 
-    user: "BaseUser" = attr.ib(metadata={"docs": "The user"})
+    user: "BaseUser" = attr.ib(metadata=docs("The user"))
 
 
 @attr.s(slots=True)
@@ -188,7 +189,7 @@ class GuildStickersUpdate(BaseEvent, GuildEvent):
 class MemberAdd(BaseEvent, GuildEvent):
     """Dispatched when a member is added to a guild."""
 
-    member: "Member" = attr.ib(metadata={"docs": "The member who was added"})
+    member: "Member" = attr.ib(metadata=docs("The member who was added"))
 
 
 @attr.s(slots=True)
@@ -327,9 +328,9 @@ class MessageDeleteBulk(BaseEvent, GuildEvent):
 class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
-    message: "Message" = attr.ib(metadata={"docs": "The message that was reacted to"})
-    emoji: "emoji" = attr.ib(metadata={"docs": "The emoji that was added to the message"})
-    author: Union["Member", "User"] = attr.ib(metadata={"docs": "The user who added the reaction"})
+    message: "Message" = attr.ib(metadata=docs("The message that was reacted to"))
+    emoji: "emoji" = attr.ib(metadata=docs("The emoji that was added to the message"))
+    author: Union["Member", "User"] = attr.ib(metadata=docs("The user who added the reaction"))
 
 
 @attr.s(slots=True)
@@ -364,7 +365,7 @@ class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created"""
 
     stage_instance: Any = attr.ib(
-        metadata={"docs": "The stage instance"}
+        metadata=docs("The stage instance")
     )  # TODO: Replace this with a stage instance object type.
 
 

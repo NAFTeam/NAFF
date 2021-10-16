@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import Any
+from typing import Any, Dict
 
 import attr
 from dis_snek.const import logger_name, MISSING
@@ -27,6 +27,11 @@ def copy_converter(value):
     if isinstance(value, (list, set)):
         return value.copy()
     return value
+
+
+def docs(doc_string: str) -> Dict[str, str]:
+    """Makes it easier to quickly type attr documentation"""
+    return {"docs": doc_string}
 
 
 # def converter(attribute):
