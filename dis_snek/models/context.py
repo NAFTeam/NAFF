@@ -29,19 +29,20 @@ if TYPE_CHECKING:
 
 @attr.s
 class Resolved:
-    """Represents resolved data in an interaction
+    """Represents resolved data in an interaction"""
 
-    Attributes:
-        channels: A dictionary of channels mentioned in the interaction
-        members: A dictionary of members mentioned in the interaction
-        users: A dictionary of users mentioned in the interaction
-        roles: A dictionary of roles mentioned in the interaction
-    """
-
-    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(factory=dict)
-    members: Dict["Snowflake_Type", "Member"] = attr.ib(factory=dict)
-    users: Dict["Snowflake_Type", "User"] = attr.ib(factory=dict)
-    roles: Dict["Snowflake_Type", "Role"] = attr.ib(factory=dict)
+    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of channels mentioned in the interaction"}
+    )
+    members: Dict["Snowflake_Type", "Member"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of members mentioned in the interaction"}
+    )
+    users: Dict["Snowflake_Type", "User"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of users mentioned in the interaction"}
+    )
+    roles: Dict["Snowflake_Type", "Role"] = attr.ib(
+        factory=dict, metadata={"docs": "A dictionary of roles mentioned in the interaction"}
+    )
 
     @classmethod
     def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
@@ -70,31 +71,20 @@ class Resolved:
 
 @define
 class Context:
-    """
-    Represents the context of a command
-
-    Attributes:
-        message Message: The message associated with this context
-        invoked_name str: The name of the command to be invoked
-        author User: The author of the message
-        channel Channel: The channel this was sent within
-        guild Guild: The guild this was sent within, if not a DM
-        args list: The list of arguments to be passed to the command
-        kwargs dict: The list of keyword arguments to be passed
-
-    """
+    """Represents the context of a command"""
 
     _client: "Snake" = attr.ib(default=None)
-    message: "Message" = attr.ib(default=None)
-    invoked_name: str = attr.ib(default=None)
+    invoked_name: str = attr.ib(default=None, metadata={"docs": "The name of the command to be invoked"})
 
-    args: List = attr.ib(factory=list)
+    args: List = attr.ib(factory=list, metadata={"docs": "The list of arguments to be passed to the command"})
+    kwargs: Dict = attr.ib(factory=dict, metadata={"docs": "The list of keyword arguments to be passed"})
 
-    kwargs: Dict = attr.ib(factory=dict)
-
-    author: Union["Member", "User"] = attr.ib(default=None)
-    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None)
-    guild_id: "Snowflake_Type" = attr.ib(default=None, converter=to_snowflake)
+    author: Union["Member", "User"] = attr.ib(default=None, metadata={"docs": "The author of the message"})
+    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None, metadata={"docs": "The channel this was sent within"})
+    guild_id: "Snowflake_Type" = attr.ib(
+        default=None, converter=to_snowflake, metadata={"docs": "The guild this was sent within, if not a DM"}
+    )
+    message: "Message" = attr.ib(default=None, metadata={"docs": "The message associated with this context"})
 
     @property
     def guild(self):
@@ -107,38 +97,24 @@ class Context:
 
 
 @define
-class InteractionContext(Context, SendMixin):
-    """
-    Represents the context of an interaction
+class _BaseInteractionContext(Context):
+    """An internal object used to define the attributes of interaction context and its children"""
 
-    !!! info "Ephemeral messages:"
-        Ephemeral messages allow you to send messages that only the author of the interaction can see.
-        They are best considered as `fire-and-forget`, in the sense that you cannot edit them once they have been sent.
+    _token: str = attr.ib(default=None, metadata={"docs": "The token for the interaction"})
+    interaction_id: str = attr.ib(default=None, metadata={"docs": "The id of the interaction"})
+    target_id: "Snowflake_Type" = attr.ib(
+        default=None, metadata={"docs": "The ID of the target, used for context menus to show what was clicked on"}
+    )
 
-        Should you attach a component (ie. button) to the ephemeral message,
-        you will be able to edit it when responding to a button interaction.
+    deferred: bool = attr.ib(default=False, metadata={"docs": "Is this interaction deferred?"})
+    responded: bool = attr.ib(default=False, metadata={"docs": "Have we responded to the interaction?"})
+    ephemeral: bool = attr.ib(default=False, metadata={"docs": "Are responses to this interaction *hidden*"})
 
-    Attributes:
-        interaction_id str: The id of the interaction
-        target_id Snowflake_Type: The ID of the target, used for context menus to show what was clicked on
-        deferred bool: Is this interaction deferred?
-        responded bool: Have we responded to the interaction?
-        ephemeral bool: Are responses to this interaction *hidden*
-        resolved dict: A dictionary of discord objects mentioned within this interaction
-        data dict: The raw data of this interaction
-    """
+    resolved: Resolved = attr.ib(
+        default=Resolved(), metadata={"docs": "Discord objects mentioned within this interaction"}
+    )
 
-    _token: str = attr.ib(default=None)
-    interaction_id: str = attr.ib(default=None)
-    target_id: "Snowflake_Type" = attr.ib(default=None)
-
-    deferred: bool = attr.ib(default=False)
-    responded: bool = attr.ib(default=False)
-    ephemeral: bool = attr.ib(default=False)
-
-    resolved: Resolved = attr.ib(default=Resolved())
-
-    data: Dict = attr.ib(factory=dict)
+    data: Dict = attr.ib(factory=dict, metadata={"docs": "The raw data of this interaction"})
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake"):
@@ -166,6 +142,20 @@ class InteractionContext(Context, SendMixin):
 
         new_cls.data = data
         return new_cls
+
+
+@define
+class InteractionContext(_BaseInteractionContext, SendMixin):
+    """
+    Represents the context of an interaction
+
+    !!! info "Ephemeral messages:"
+        Ephemeral messages allow you to send messages that only the author of the interaction can see.
+        They are best considered as `fire-and-forget`, in the sense that you cannot edit them once they have been sent.
+
+        Should you attach a component (ie. button) to the ephemeral message,
+        you will be able to edit it when responding to a button interaction.
+    """
 
     @property
     def guild(self):
@@ -249,12 +239,14 @@ class InteractionContext(Context, SendMixin):
 
 @define
 class ComponentContext(InteractionContext):
-    custom_id: str = attr.ib(default="")
-    component_type: int = attr.ib(default=0)
+    custom_id: str = attr.ib(default="", metadata={"docs": "The ID given to the component that has been pressed"})
+    component_type: int = attr.ib(default=0, metadata={"docs": "The type of component that has been pressed"})
 
-    values: List = attr.ib(factory=list)
+    values: List = attr.ib(factory=list, metadata={"docs": "The values set"})  # todo: Polls, check this
 
-    defer_edit_origin: bool = attr.ib(default=False)
+    defer_edit_origin: bool = attr.ib(
+        default=False, metadata={"docs": "Are we editing the message the component is on"}
+    )
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
@@ -347,6 +339,46 @@ class ComponentContext(InteractionContext):
         if message_data:
             self.message = self._client.cache.place_message_data(message_data)
             return self.message
+
+
+@define
+class AutocompleteContext(_BaseInteractionContext):
+    focussed_option: str = attr.ib(default=MISSING, metadata={"docs": "The option the user is currently filling in"})
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
+        """Create a context object from a dictionary"""
+        new_cls = super().from_dict(data, client)
+        new_cls.focussed_option = next((x["name"] for x in data["data"]["options"] if x.get("focused", False)), None)
+
+        return new_cls
+
+    @property
+    def input_text(self) -> str:
+        """The text the user has entered so far"""
+        return self.kwargs.get(self.focussed_option, "")
+
+    async def send(self, choices: List[Union[str, Dict[str, str]]]):
+        """
+        Send your autocomplete choices to discord.
+        Choices must be either a list of strings, or a dictionary following the following format:
+
+        ```json
+            {
+              "name": str,
+              "value": str
+            }
+        ```
+        Where name is the text visible in Discord, and value is the data sent back to your client when that choice is
+        chosen.
+
+        Args:
+            choices: 25 choices the user can pick
+        """
+        choices = [{"name": c, "value": c.replace(" ", "_")} if isinstance(c, str) else c for c in choices]
+
+        payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": choices}}
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
 @define

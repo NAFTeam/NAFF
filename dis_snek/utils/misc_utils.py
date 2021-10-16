@@ -65,5 +65,7 @@ def wrap_partial(obj, cls):
         obj.pre_run_callback = functools.partial(obj.pre_run_callback, cls)
     if getattr(obj, "post_run_callback", None):
         obj.post_run_callback = functools.partial(obj.post_run_callback, cls)
+    if getattr(obj, "autocomplete_callbacks", None):
+        obj.autocomplete_callbacks = {k: functools.partial(v, cls) for k, v in obj.autocomplete_callbacks.items()}
 
     return obj
