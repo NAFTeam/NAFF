@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING
 
 import attr
 
+from dis_snek.utils.attr_utils import docs
+
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.context import ComponentContext
     from dis_snek.models.snowflake import Snowflake_Type
@@ -44,7 +46,7 @@ class BaseEvent:
 class GuildEvent:
     """A base event that adds guild_id"""
 
-    guild_id: "Snowflake_Type" = attr.ib(metadata={"docs": "The ID of the guild"})
+    guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"))
 
 
 @attr.s(slots=True)
@@ -84,7 +86,7 @@ class WebsocketReady(BaseEvent):
 class Component(BaseEvent):
     """Dispatched when a user uses a Component"""
 
-    context: "ComponentContext" = attr.ib(metadata={"docs": "The context of the interaction"})
+    context: "ComponentContext" = attr.ib(metadata=docs("The context of the interaction"))
 
 
 @attr.s(slots=True)

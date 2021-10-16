@@ -20,6 +20,7 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import CommandTypes
 from dis_snek.models.snowflake import to_snowflake
+from dis_snek.utils.attr_utils import docs
 from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
@@ -131,20 +132,26 @@ class InteractionCommand(BaseCommand):
         callback: The coroutine to callback when this interaction is received.
     """
 
-    name: str = attr.ib()
-    """1-32 character name"""
+    name: str = attr.ib(metadata=docs("1-32 character name") | no_export_meta)
+    scope: "Snowflake_Type" = attr.ib(
+        default=GLOBAL_SCOPE,
+        converter=to_snowflake,
+        metadata=docs("The scope of this interaction. Global or guild ids") | no_export_meta,
+    )
 
-    scope: "Snowflake_Type" = attr.ib(default=GLOBAL_SCOPE, converter=to_snowflake, metadata=no_export_meta)
-    """The scope of this interaction. Global or guild ids"""
-    default_permission: bool = attr.ib(default=True)
-    """whether the command is enabled by default when the app is added to a guild"""
-    permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(factory=dict)
-    """The permissions of this interaction"""
+    default_permission: bool = attr.ib(
+        default=True, metadata=docs("whether this command is enabled by default when the app is added to a guild")
+    )
+    permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(
+        factory=dict, metadata=docs("The permissions of this interaction")
+    )
 
-    cmd_id: "Snowflake_Type" = attr.ib(default=None, metadata=no_export_meta)
-    """The unique ID of this interaction"""
-    callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
-    """The coroutine to call when this interaction is received"""
+    cmd_id: "Snowflake_Type" = attr.ib(
+        default=None, metadata=docs("The unique ID of this interaction") | no_export_meta
+    )
+    callback: Callable[..., Coroutine] = attr.ib(
+        default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
+    )
 
     @property
     def resolved_name(self):
@@ -162,10 +169,8 @@ class ContextMenu(InteractionCommand):
         type: The type of entry (user or message).
     """
 
-    name: str = attr.ib()
-    """1-32 character name"""
-    type: CommandTypes = attr.ib()
-    """the type of command, defaults 1 if not set"""
+    name: str = attr.ib(metadata=docs("1-32 character name"))
+    type: CommandTypes = attr.ib(metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:

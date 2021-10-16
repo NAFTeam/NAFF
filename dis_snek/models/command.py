@@ -8,6 +8,7 @@ from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.cooldowns import Cooldown, Buckets, MaxConcurrency
+from dis_snek.utils.attr_utils import docs
 from dis_snek.utils.serializer import no_export_meta
 
 log = logging.getLogger(logger_name)
@@ -30,26 +31,29 @@ class BaseCommand(DictSerializationMixin):
 
     """
 
-    scale: Any = attr.ib(default=None, metadata=no_export_meta)
-    """The scale this command belongs to"""
-    enabled: bool = attr.ib(default=True, metadata=no_export_meta)
-    """Whether this can be run at all"""
+    scale: Any = attr.ib(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
 
-    checks: list = attr.ib(factory=list)
-    """Any checks that must be *checked* before the command can run"""
-    cooldown: Cooldown = attr.ib(default=MISSING)
-    """An optional cooldown to apply to the command"""
-    max_concurrency: MaxConcurrency = attr.ib(default=MISSING)
-    """An optional maximum number of concurrent instances to apply to the command"""
+    enabled: bool = attr.ib(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
+    checks: list = attr.ib(factory=list, metadata=docs("Any checks that must be *checked* before the command can run"))
+    cooldown: Cooldown = attr.ib(default=MISSING, metadata=docs("An optional cooldown to apply to the command"))
+    max_concurrency: MaxConcurrency = attr.ib(
+        default=MISSING, metadata=docs("An optional maximum number of concurrent instances to apply to the command")
+    )
 
-    callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
-    """The coroutine to be called for this command"""
-    error_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
-    """The coroutine to be called when an error occurs"""
-    pre_run_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
-    """The coroutine to be called before the command is executed, **but** after the checks"""
-    post_run_callback: Callable[..., Coroutine] = attr.ib(default=None, metadata=no_export_meta)
-    """The coroutine to be called after the command has executed"""
+    callback: Callable[..., Coroutine] = attr.ib(
+        default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
+    )
+    error_callback: Callable[..., Coroutine] = attr.ib(
+        default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
+    )
+    pre_run_callback: Callable[..., Coroutine] = attr.ib(
+        default=None,
+        metadata=no_export_meta
+        | docs("The coroutine to be called before the command is executed, **but** after the checks"),
+    )
+    post_run_callback: Callable[..., Coroutine] = attr.ib(
+        default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
+    )
 
     def __attrs_post_init__(self):
         if self.callback is not None:
@@ -159,8 +163,7 @@ class MessageCommand(BaseCommand):
     Represents a command triggered by standard message.
     """
 
-    name: str = attr.ib()
-    """The name of the command."""
+    name: str = attr.ib(metadata=docs("The name of the command"))
 
 
 def message_command(

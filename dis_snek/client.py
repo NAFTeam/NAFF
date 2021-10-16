@@ -349,6 +349,82 @@ class Snake:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
 
+    def add_interaction(self, command: InteractionCommand):
+        """
+        Add a slash command to the client.
+
+        Args:
+            command InteractionCommand: The command to add
+        """
+        if command.scope not in self.interactions:
+            self.interactions[command.scope] = {}
+        elif command.resolved_name in self.interactions[command.scope]:
+            old_cmd = self.interactions[command.scope][command.name]
+            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
+
+        if isinstance(command, SubCommand):
+            if existing_sub := self.interactions[command.scope].get(command.name):
+                if command.group_name:
+                    existing_index = next(
+                        (
+                            index
+                            for (index, val) in enumerate(existing_sub.options)
+                            if val["name"] == command.group_name and val["type"] == 2
+                        ),
+                        None,
+                    )
+                    if existing_index is not None:
+                        data = command.child_to_dict()
+                        existing_sub.options[existing_index]["options"] += data["options"]
+                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                        self.interactions[command.scope][command.name] = existing_sub
+                        return
+
+                existing_sub.options += [command.child_to_dict()]
+                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
+                command = existing_sub
+
+            else:
+                command.options = [command.child_to_dict()]
+                command.subcommand_callbacks[command.resolved_name] = command.callback
+                command.callback = command.subcommand_call
+
+        self.interactions[command.scope][command.name] = command
+
+    def add_message_command(self, command: MessageCommand):
+        """
+        Add a message command to the client.
+
+        Args:
+            command InteractionCommand: The command to add
+        """
+        if command.name not in self.commands:
+            self.commands[command.name] = command
+            return
+        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
+
+    def _gather_commands(self):
+        """Gathers commands from __main__ and self"""
+
+        def process(_cmds):
+
+            for func in _cmds:
+                if isinstance(func, InteractionCommand):
+                    self.add_interaction(func)
+                if isinstance(func, MessageCommand):
+                    self.add_message_command(func)
+                if isinstance(func, Listener):
+                    self.add_listener(func)
+
+            log.debug(f"{len(_cmds)} commands have been loaded")
+
+        process(
+            [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
+        )
+        process(
+            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
+        )
+
     async def _init_interactions(self) -> None:
         """
         Initialise slash commands.
@@ -413,82 +489,6 @@ class Snake:
                         f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
-
-    def _gather_commands(self):
-        """Gathers commands from __main__ and self"""
-
-        def process(_cmds):
-
-            for func in _cmds:
-                if isinstance(func, InteractionCommand):
-                    self.add_interaction(func)
-                if isinstance(func, MessageCommand):
-                    self.add_message_command(func)
-                if isinstance(func, Listener):
-                    self.add_listener(func)
-
-            log.debug(f"{len(_cmds)} commands have been loaded")
-
-        process(
-            [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
-        )
-        process(
-            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
-        )
-
-    def add_interaction(self, command: InteractionCommand):
-        """
-        Add a slash command to the client.
-
-        Args:
-            command InteractionCommand: The command to add
-        """
-        if command.scope not in self.interactions:
-            self.interactions[command.scope] = {}
-        elif command.resolved_name in self.interactions[command.scope]:
-            old_cmd = self.interactions[command.scope][command.name]
-            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
-
-        if isinstance(command, SubCommand):
-            if existing_sub := self.interactions[command.scope].get(command.name):
-                if command.group_name:
-                    existing_index = next(
-                        (
-                            index
-                            for (index, val) in enumerate(existing_sub.options)
-                            if val["name"] == command.group_name and val["type"] == 2
-                        ),
-                        None,
-                    )
-                    if existing_index is not None:
-                        data = command.child_to_dict()
-                        existing_sub.options[existing_index]["options"] += data["options"]
-                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                        self.interactions[command.scope][command.name] = existing_sub
-                        return
-
-                existing_sub.options += [command.child_to_dict()]
-                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                command = existing_sub
-
-            else:
-                command.options = [command.child_to_dict()]
-                command.subcommand_callbacks[command.resolved_name] = command.callback
-                command.callback = command.subcommand_call
-
-        self.interactions[command.scope][command.name] = command
-
-    def add_message_command(self, command: MessageCommand):
-        """
-        Add a message command to the client.
-
-        Args:
-            command InteractionCommand: The command to add
-        """
-        if command.name not in self.commands:
-            self.commands[command.name] = command
-            return
-        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
     async def synchronise_interactions(self) -> None:
         """Synchronise registered interactions with discord
