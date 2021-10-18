@@ -203,6 +203,7 @@ class HTTPClient(
             lock.release()
 
     async def _raise_exception(self, response, route, result):
+        log.error(f"{route.method}::{route.url}: {response.status}")
 
         if response.status == 403:
             raise Forbidden(response, response_data=result, route=route)

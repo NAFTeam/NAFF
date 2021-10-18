@@ -7,7 +7,7 @@ from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
 from dis_snek.models.color import Color
-from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.channel import (
     GuildText,
     GuildVoice,
@@ -29,7 +29,7 @@ from dis_snek.models.enums import (
     ChannelTypes,
 )
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define
+from dis_snek.utils.attr_utils import define, docs
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 
@@ -359,6 +359,15 @@ class Guild(DiscordObject):
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
         return CustomEmoji.from_dict(emoji_data, self._client)  # TODO Probably cache it
+
+    async def create_guild_template(self, name: str, description: str = None) -> "GuildTemplate":
+
+        template = await self._client.http.create_guild_template(self.id, name, description)
+        return GuildTemplate.from_dict(template, self._client)
+
+    async def get_guild_templates(self):
+        templates = await self._client.http.get_guild_templates(self.id)
+        return [GuildTemplate.from_dict(t, self._client) for t in templates]
 
     async def get_all_custom_emojis(self) -> List[CustomEmoji]:
         """
@@ -919,3 +928,55 @@ class Guild(DiscordObject):
             if isinstance(channel, DiscordObject):
                 channel = channel.id
         return await self._client.http.modify_guild_widget(self.id, enabled, channel)
+
+
+@define()
+class GuildTemplate(ClientObject):
+    code: str = attr.ib(metadata=docs("the template code (unique ID)"))
+    name: str = attr.ib(metadata=docs("the name"))
+    description: Optional[str] = attr.ib(default=None, metadata=docs("the description"))
+
+    usage_count: int = attr.ib(default=0, metadata=docs("number of times this template has been used"))
+
+    creator_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the user who created this template"))
+    creator: Optional["User"] = attr.ib(default=None, metadata=docs("the user who created this template"))
+
+    created_at: "Timestamp" = attr.ib(metadata=docs("When this template was created"))
+    updated_at: "Timestamp" = attr.ib(metadata=docs("When this template was last synced to the source guild"))
+
+    source_guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild this template is based on"))
+    guild_snapshot: "Guild" = attr.ib(metadata=docs("A snapshot of the guild this template contains"))
+
+    is_dirty: bool = attr.ib(default=False, metadata=docs("Whether this template has un-synced changes"))
+
+    @classmethod
+    def _process_dict(cls, data, client):
+        data["creator"] = client.cache.place_user_data(data["creator"])
+
+        # todo: partial guild obj that **isn't** cached
+        data["guild_snapshot"] = data.pop("serialized_source_guild")
+        return data
+
+    async def synchronise(self) -> "GuildTemplate":
+        """Synchronise the template to the source guild's current state"""
+        data = await self._client.http.sync_guild_template(self.source_guild_id, self.code)
+        self.update_from_dict(data)
+        return self
+
+    async def modify(self, name: Optional[str] = None, description: Optional[str] = None) -> "GuildTemplate":
+        """
+        Modify the template's metadata.
+
+        Arguments:
+            name: The name for the template
+            description: The description for the template
+        """
+        data = await self._client.http.modify_guild_template(
+            self.source_guild_id, self.code, name=name, description=description
+        )
+        self.update_from_dict(data)
+        return self
+
+    async def delete(self) -> None:
+        """Delete the guild template"""
+        await self._client.http.delete_guild_template(self.source_guild_id, self.code)
