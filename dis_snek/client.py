@@ -317,12 +317,20 @@ class Snake:
                     await _coro(_event, *_args, **_kwargs)
             except asyncio.CancelledError:
                 pass
-            except Exception:
-                raise
+            except Exception as e:
+                await self.on_error(event)
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
         return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
+
+    async def on_error(self, source: str, *args, **kwargs) -> None:
+        """
+        Catches all errors dispatched by the library and outputs them through console.
+
+        Override this to change error handling behaviour
+        """
+        print(f"Ignoring exception in {source}:\n{traceback.format_exc()}", file=sys.stderr)
 
     def start(self, token):
         """
@@ -356,7 +364,7 @@ class Snake:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
             except Exception as e:
-                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing") from e
+                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing")
 
     def add_listener(self, listener: Listener):
         """
@@ -467,10 +475,13 @@ class Snake:
         """
         # allow for cogs and main to share the same decorator
 
-        if self.sync_interactions:
-            await self.synchronise_interactions()
-        else:
-            await self._cache_interactions(warn_missing=True)
+        try:
+            if self.sync_interactions:
+                await self.synchronise_interactions()
+            else:
+                await self._cache_interactions(warn_missing=True)
+        except:
+            await self.on_error("Interaction Syncing")
 
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
@@ -483,7 +494,7 @@ class Snake:
             try:
                 remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
             except Forbidden as e:
-                raise InteractionMissingAccess(scope) from e
+                raise InteractionMissingAccess(scope) from None
 
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
             for cmd in self.interactions[scope].values():
@@ -598,7 +609,7 @@ class Snake:
                             self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
                         )
             except Forbidden as e:
-                raise InteractionMissingAccess(cmd_scope) from e
+                raise InteractionMissingAccess(cmd_scope) from None
 
     async def get_context(
         self, data: Union[dict, Message], interaction: bool = False
@@ -681,7 +692,6 @@ class Snake:
         Args:
             raw interaction event
         """
-        # Yes this is temporary, im just blocking out the basic logic
         interaction_data = event.data
 
         if interaction_data["type"] in (
@@ -701,7 +711,10 @@ class Snake:
                 if auto_opt := getattr(ctx, "focussed_option", None):
                     await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
                 else:
-                    await command(ctx, **ctx.kwargs)
+                    try:
+                        await command(ctx, **ctx.kwargs)
+                    except Exception:
+                        await self.on_error(f"cmd /`{name}`")
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -712,7 +725,10 @@ class Snake:
 
             self.dispatch(events.Component(ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
-                await callback(ctx)
+                try:
+                    await callback(ctx)
+                except Exception:
+                    await self.on_error(f"Component Callback for {ctx.custom_id}")
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -735,7 +751,10 @@ class Snake:
                 if command and command.enabled:
                     context = await self.get_context(message)
                     context.invoked_name = invoked_name
-                    await command(context)
+                    try:
+                        await command(context)
+                    except:
+                        await self.on_error(f"cmd `{invoked_name}`")
 
     @listen()
     async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
