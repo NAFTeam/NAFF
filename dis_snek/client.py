@@ -326,11 +326,23 @@ class Snake:
 
     async def on_error(self, source: str, *args, **kwargs) -> None:
         """
-        Catches all errors dispatched by the library and outputs them through console.
+        Catches all errors dispatched by the library.
+
+        By default it will format and print them to console
 
         Override this to change error handling behaviour
         """
         print(f"Ignoring exception in {source}:\n{traceback.format_exc()}", file=sys.stderr)
+
+    async def on_command_error(self, source: str, *args, **kwargs) -> None:
+        """
+        Catches all errors dispatched by commands
+
+        By default it will call `Snake.on_error`
+
+        Override this to change error handling behavior
+        """
+        return await self.on_error(source, *args, **kwargs)
 
     def start(self, token):
         """
@@ -714,7 +726,7 @@ class Snake:
                     try:
                         await command(ctx, **ctx.kwargs)
                     except Exception:
-                        await self.on_error(f"cmd /`{name}`")
+                        await self.on_command_error(f"cmd /`{name}`")
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -728,7 +740,7 @@ class Snake:
                 try:
                     await callback(ctx)
                 except Exception:
-                    await self.on_error(f"Component Callback for {ctx.custom_id}")
+                    await self.on_command_error(f"Component Callback for {ctx.custom_id}")
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -754,7 +766,7 @@ class Snake:
                     try:
                         await command(context)
                     except:
-                        await self.on_error(f"cmd `{invoked_name}`")
+                        await self.on_command_error(f"cmd `{invoked_name}`")
 
     @listen()
     async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
