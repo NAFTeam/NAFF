@@ -12,8 +12,16 @@ from dis_snek.const import MISSING, DISCORD_EPOCH
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
+from dis_snek.models.discord_objects.stage_instance import StageInstance
 from dis_snek.models.discord_objects.thread import ThreadMember, ThreadList
-from dis_snek.models.enums import ChannelTypes, OverwriteTypes, Permissions, VideoQualityModes, AutoArchiveDuration
+from dis_snek.models.enums import (
+    ChannelTypes,
+    OverwriteTypes,
+    Permissions,
+    VideoQualityModes,
+    AutoArchiveDuration,
+    StagePrivacyLevel,
+)
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -828,7 +836,33 @@ class GuildVoice(VoiceChannel, InvitableMixin):
 
 @define()
 class GuildStageVoice(GuildVoice):
-    pass
+    stage_instance: "StageInstance" = attr.ib(default=MISSING)
+
+    # todo: Listeners and speakers properties (needs voice state caching)
+
+    async def get_stage_instance(self):
+        """Gets the stage instance associated with this channel. If no stage is live, will return None."""
+        self.stage_instance = StageInstance.from_dict(await self._client.http.get_stage_instance(self.id), self._client)
+        return self.stage_instance
+
+    async def create_stage_instance(
+        self,
+        topic: str,
+        privacy_level: StagePrivacyLevel = StagePrivacyLevel.GUILD_ONLY,
+        reason: Optional[str] = MISSING,
+    ):
+        """
+        Create a stage instance in this channel.
+
+        Arguments:
+            topic: The topic of the stage (1-120 characters)
+            privacy_level: The privacy level of the stage
+            reason: The reason for creating this instance
+        """
+        self.stage_instance = StageInstance.from_dict(
+            await self._client.http.create_stage_instance(self.id, topic, privacy_level, reason), self._client
+        )
+        return self.stage_instance
 
 
 TYPE_ALL_CHANNEL = Union[
