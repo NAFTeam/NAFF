@@ -864,6 +864,21 @@ class GuildStageVoice(GuildVoice):
         )
         return self.stage_instance
 
+    async def close_stage(self, reason: Optional[str] = MISSING):
+        """
+        Closes the live stage instance
+
+        Arguments:
+            reason: The reason for closing the stage
+        """
+
+        if not self.stage_instance:
+            # we dont know of an active stage instance, so lets check for one
+            if not await self.get_stage_instance():
+                raise ValueError("No stage instance found")
+
+        await self.stage_instance.delete(reason=reason)
+
 
 TYPE_ALL_CHANNEL = Union[
     GuildText,
