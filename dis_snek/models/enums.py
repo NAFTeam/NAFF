@@ -546,3 +546,8 @@ class Status(str, Enum):
 
     AFK = IDLE
     DO_NOT_DISTURB = DND
+
+
+class StagePrivacyLevel(IntEnum):
+    PUBLIC = 1
+    GUILD_ONLY = 2
