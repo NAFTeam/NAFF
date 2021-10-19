@@ -666,27 +666,27 @@ class Snake:
                         )
                         options = options[0]["options"][0].get("options")
 
-            for option in options:
-                value = option.get("value")
+                for option in options:
+                    value = option.get("value")
 
-                # todo change to match statement
-                # this block here resolves the options using the cache
-                if option["type"] == OptionTypes.USER:
-                    value = (
-                        self.cache.member_cache.get((to_snowflake(data.get("guild_id", 0)), to_snowflake(value)))
-                        or self.cache.user_cache.get(to_snowflake(value))
-                    ) or value
-                elif option["type"] == OptionTypes.CHANNEL:
-                    value = self.cache.channel_cache.get(to_snowflake(value)) or value
-                elif option["type"] == OptionTypes.ROLE:
-                    value = self.cache.role_cache.get(to_snowflake(value)) or value
-                elif option["type"] == OptionTypes.MENTIONABLE:
-                    snow = to_snowflake(value)
-                    if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
-                        value = user
-                    elif role := self.cache.role_cache.get(snow):
-                        value = role
-                kwargs[option["name"].lower()] = value
+                    # todo change to match statement
+                    # this block here resolves the options using the cache
+                    if option["type"] == OptionTypes.USER:
+                        value = (
+                            self.cache.member_cache.get((to_snowflake(data.get("guild_id", 0)), to_snowflake(value)))
+                            or self.cache.user_cache.get(to_snowflake(value))
+                        ) or value
+                    elif option["type"] == OptionTypes.CHANNEL:
+                        value = self.cache.channel_cache.get(to_snowflake(value)) or value
+                    elif option["type"] == OptionTypes.ROLE:
+                        value = self.cache.role_cache.get(to_snowflake(value)) or value
+                    elif option["type"] == OptionTypes.MENTIONABLE:
+                        snow = to_snowflake(value)
+                        if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
+                            value = user
+                        elif role := self.cache.role_cache.get(snow):
+                            value = role
+                    kwargs[option["name"].lower()] = value
 
             cls.invoked_name = invoked_name
             cls.kwargs = kwargs
