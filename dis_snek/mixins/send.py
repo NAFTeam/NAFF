@@ -48,7 +48,7 @@ class SendMixin:
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, or the file itself.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 

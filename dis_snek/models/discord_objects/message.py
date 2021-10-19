@@ -292,11 +292,11 @@ class Message(DiscordObject):
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
         components: Optional[
-            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        filepath: Optional[Union[str, Path]] = None,
+        file: Optional[Union["IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
@@ -309,7 +309,7 @@ class Message(DiscordObject):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, or the file itself.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
         """
@@ -319,7 +319,7 @@ class Message(DiscordObject):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            file=filepath,
+            file=file,
             tts=tts,
             flags=flags,
         )
