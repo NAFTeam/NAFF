@@ -172,7 +172,7 @@ class Guild(DiscordObject):
     @property
     def members(self) -> List["Member"]:
         """A generator that yields all members of this guild."""
-        return [self._client.cache.member_cache.get(m_id) for m_id in self._member_ids]
+        return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
 
     @property
     def roles(self) -> List["Role"]:
