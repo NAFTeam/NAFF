@@ -14,7 +14,7 @@ from dis_snek.models.discord_objects.channel import (
     GuildStageVoice,
     PermissionOverwrite,
     TYPE_GUILD_CHANNEL,
-    TYPE_THREAD_CHANNEL
+    TYPE_THREAD_CHANNEL,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -737,7 +737,9 @@ class Guild(DiscordObject):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
+    async def get_channel(
+        self, channel_id: "Snowflake_Type"
+    ) -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
         """
         Returns a channel with the given `channel_id`
 
