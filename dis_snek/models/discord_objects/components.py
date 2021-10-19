@@ -146,7 +146,7 @@ class Select(InteractiveComponent):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    options: List[dict] = attr.ib(factory=list)
+    options: List[Union[SelectOption, Dict]] = attr.ib(factory=list)
     custom_id: str = attr.ib(factory=uuid.uuid4, validator=str_validator)
     placeholder: str = attr.ib(default=None)
     min_values: Optional[int] = attr.ib(default=1)
@@ -174,6 +174,11 @@ class Select(InteractiveComponent):
         if value < 0:
             raise ValueError("Select max value cannot be a negative number.")
 
+    @options.validator
+    def _options_validator(self, attribute: str, value: List[Union[SelectOption, Dict]]):
+        if not all(isinstance(x, (SelectOption, Dict)) for x in value):
+            raise ValueError(f"Select options must be of type `SelectOption`")
+
     def _check_object(self):
         if not self.custom_id:
             raise TypeError("You need to have a custom id to identify the select.")
@@ -187,7 +192,9 @@ class Select(InteractiveComponent):
         if self.max_values < self.min_values:
             raise TypeError("Selects max value cannot be less than min value.")
 
-    def add_option(self, option: Union[SelectOption, dict]):
+    def add_option(self, option: Union[SelectOption]):
+        if not isinstance(option, (SelectOption, Dict)):
+            raise ValueError(f"Select option must be of `SelectOption` type, not {type(option)}")
         self.options.append(option)
 
 
