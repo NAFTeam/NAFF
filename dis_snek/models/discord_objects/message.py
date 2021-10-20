@@ -288,8 +288,12 @@ class Message(DiscordObject):
     @property
     def jump_url(self) -> str:
         """A url that allows the client to *jump* to this message"""
-        # todo: Add a `discord://` version of this
         return f"https://discord.com/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
+
+    @property
+    def proto_url(self) -> str:
+        """A URL like `jump_url` that uses protocols"""
+        return f"discord://-/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     async def edit(
         self,
