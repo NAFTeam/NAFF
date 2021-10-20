@@ -581,11 +581,6 @@ class DMChannel(BaseChannel, MessageableMixin):
         data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
         return data
 
-    @property
-    def mention(self) -> str:
-        """Is this the `@everyone` role"""
-        return self.id == self._guild_id
-
     async def edit(
         self,
         name: Optional[str] = MISSING,
