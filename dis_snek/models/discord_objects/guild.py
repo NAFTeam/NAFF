@@ -37,10 +37,11 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
+    from dis_snek.models.discord_objects.channel import ThreadChannel, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.timestamp import Timestamp
 
 
 @define()
@@ -985,3 +986,21 @@ class GuildTemplate(ClientObject):
     async def delete(self) -> None:
         """Delete the guild template"""
         await self._client.http.delete_guild_template(self.source_guild_id, self.code)
+
+
+@define()
+class GuildWelcomeChannel(ClientObject):
+    channel_id: "Snowflake_Type" = attr.ib(metadata=docs("Welcome Channel ID"))
+    description: str = attr.ib(metadata=docs("Welcome Channel description"))
+    emoji_id: Optional["Snowflake_Type"] = attr.ib(
+        default=None, metadata=docs("Welcome Channel emoji ID if the emoji is custom")
+    )
+    emoji_name: Optional[str] = attr.ib(
+        default=None, metadata=docs("Emoji name if custom, unicode character if standard")
+    )
+
+
+@define()
+class GuildWelcome(ClientObject):
+    description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
+    welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))
