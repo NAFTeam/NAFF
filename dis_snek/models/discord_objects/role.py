@@ -70,6 +70,11 @@ class Role(DiscordObject):
         return self.bot_id is not None
 
     @property
+    def mention(self) -> str:
+        """Get the string which is used to mention the role in Discord"""
+        return f"<@&{self.id}>"
+
+    @property
     def integration(self) -> bool:
         """Is this role owned/managed by a integration"""
         return self.tags.integration_id is not None
