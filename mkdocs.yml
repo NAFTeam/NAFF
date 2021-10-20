@@ -1,9 +1,11 @@
 site_name: Dis-Snek
 repo_url: https://github.com/LordOfPolls/dis_snek
 repo_name: LordOfPolls/dis_snek
+copyright: Copyright &copy; 2021 - 2021 LordOfPolls
 
 theme:
   name: material
+  favicon: images/favicon.png
   custom_dir: docs/overrides
   features:
     - header.autohide
@@ -30,6 +32,18 @@ theme:
   icon:
     repo: fontawesome/brands/github-alt
     logo: material/book
+
+extra:
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/WCtUY2CRVu
+      name: Discord Server
+    - icon: fontawesome/brands/github
+      link: https://github.com/Discord-Snake-Pit/Dis-Snek
+      name: Github Repository
+    - icon: fontawesome/brands/trello
+      link: https://trello.com/b/LVjnmYKt/dev-board
+      name: Trello Board
 
 extra_css:
   - extra.css

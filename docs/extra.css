@@ -1,13 +1,17 @@
+/* Makes the content wider */
 .md-grid {
   max-width: initial;
 }
 
+/* Adds the bars to the left to make children more clear */
 div.doc-contents:not(.first) {
   padding-left: 25px;
   padding-right: 25px;
   border-left: 4px solid rgba(230, 230, 230);
   margin-bottom: 2.5em;
 }
+
+/* Setup theme dependent syntax highlighting */
 [data-md-color-scheme="slate"] {
   --md-code-hl-constant-color: #8DBF00;
   --md-code-hl-comment-color: #637777;
@@ -19,22 +23,25 @@ div.doc-contents:not(.first) {
 [data-md-color-scheme="default"] {
   --md-code-hl-constant-color: #628701;
 }
+
+/* Changes table colours to match theme */
 .md-typeset table th{
   background-color: var(--md-primary-fg-color);
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 }
 
+/* Adds a backdrop to doc headings */
 .doc.doc-heading{
   background-color: hsla(0,0%,62%,.1);
   color: var(--md-admonition-fg-color);
   border-radius: .1rem;
+  /* Keeps doc headings from overlapping with multiple classes in one file */
+  height: 1.4em;
+  overflow: hidden;
 }
 
+/* Makes negative checkboxes red */
 .md-typeset input[type="checkbox"]:not(:checked) + .task-list-indicator::before {
   background-color: #E25141;
-}
-.doc.doc-heading{
-    height: 1.4em;
-    overflow: hidden;
 }
