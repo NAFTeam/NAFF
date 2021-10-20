@@ -664,7 +664,9 @@ class Guild(DiscordObject):
             List of active threads and thread member object for each returned thread the bot user has joined.
         """
         threads_data = await self._client.http.list_active_threads(self.id)
-        return ThreadList.from_dict(threads_data, self._client)
+        if threads_data.get("threads", []):
+            return ThreadList.from_dict(threads_data, self._client)
+        return None
 
     async def get_role(self, role_id: "Snowflake_Type") -> Optional["Role"]:
         """

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Dict, Any, Union
 from attr.converters import optional
 
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -53,7 +53,7 @@ class ThreadMember(DiscordObject, SendMixin):
 
 
 @define
-class ThreadList(DiscordObject):
+class ThreadList(ClientObject):
     """Represents a list of one or more threads."""
 
     threads: List["TYPE_THREAD_CHANNEL"] = field(factory=list)  # TODO Reference the cache or store actual object?
