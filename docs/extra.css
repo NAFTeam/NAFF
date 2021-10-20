@@ -34,3 +34,7 @@ div.doc-contents:not(.first) {
 .md-typeset input[type="checkbox"]:not(:checked) + .task-list-indicator::before {
   background-color: #E25141;
 }
+.doc.doc-heading{
+    height: 1.4em;
+    overflow: hidden;
+}

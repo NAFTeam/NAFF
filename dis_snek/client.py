@@ -163,7 +163,7 @@ class Snake:
         # collections
 
         self.commands: Dict[str, MessageCommand] = {}
-        """A dicitonary of registered commands: `{name: command}`"""
+        """A dictionary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}

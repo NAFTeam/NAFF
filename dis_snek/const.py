@@ -22,6 +22,7 @@ attributes:
     EMBED_MAX_DESC_LENGTH int: The maximum length for an embed description
     EMBED_MAX_FIELDS int: The maximum number of fields for an embed
     EMBED_TOTAL_MAX int: The total combined number of characters for an embed
+    PREMIUM_GUILD_LIMITS dict: Limits granted per premium level of a guild
 
     GLOBAL_SCOPE int: Represents a global scope for application commands.
 
@@ -86,4 +87,3 @@ PREMIUM_GUILD_LIMITS = defaultdict(
         3: {"emoji": 250, "stickers": 60, "bitrate": 384000, "filesize": 104857600},
     },
 )
-"""Limits granted per premium level of a guild"""
