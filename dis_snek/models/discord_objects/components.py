@@ -357,6 +357,9 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
             yield component["custom_id"]
     elif c_id := getattr(component, "custom_id", None):
         yield c_id
+    elif isinstance(component, ActionRow):
+        yield from (comp_id for comp in component.components for comp_id in get_components_ids(comp))
+
     elif isinstance(component, list):
         yield from (comp_id for comp in component for comp_id in get_components_ids(comp))
     else:
