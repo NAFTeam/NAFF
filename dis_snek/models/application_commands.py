@@ -593,7 +593,7 @@ def slash_option(
 
         if not hasattr(func, "options"):
             func.options = []
-        func.options.append(option)
+        func.options.insert(0, option)
         return func
 
     return wrapper
