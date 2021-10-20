@@ -105,7 +105,7 @@ class Role(DiscordObject):
         color: Union[int, Color] = MISSING,
         hoist: bool = MISSING,
         mentionable: bool = MISSING,
-    ):
+    ) -> "Role":
         """
         Edit this role, all arguments are optional.
 
@@ -115,6 +115,9 @@ class Role(DiscordObject):
             color: The color of the role
             hoist: whether the role should be displayed separately in the sidebar
             mentionable: whether the role should be mentionable
+
+        Returns:
+            Role with updated information
         """
 
         if isinstance(color, Color):

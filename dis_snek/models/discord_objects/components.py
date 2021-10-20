@@ -51,7 +51,7 @@ class Button(InteractiveComponent):
     """
     Represents a discord ui button
 
-    attributes:
+    Attributes:
         style optional[ButtonStyles, int]: Buttons come in a variety of styles to convey different types of actions.
         label optional[str]: The text that appears on the button, max 80 characters.
         emoji optional[Union[Emoji, dict, str]]: The emoji that appears on the button.
@@ -100,7 +100,7 @@ class SelectOption(BaseComponent):
     """
     Represents a select option.
 
-    attributes:
+    Attributes:
         label str: The label (max 80 characters)
         value str: The value of the select, this is whats sent to your bot
         description Optional[str]: A description of this option
@@ -247,7 +247,7 @@ class ActionRow(BaseComponent):
         """
         Add one or more component(s) to this action row
 
-        parameters:
+        Args:
             components: The components to add
         """
         for c in components:
@@ -262,11 +262,14 @@ def process_components(
     """
     Process the passed components into a format discord will understand.
 
-    parameters:
+    Args:
         components: List of dict / components to process
 
-    returns:
+    Returns:
         formatted dictionary for discord
+
+    Raises:
+        ValueError: Invalid components
     """
     if not components:
         # Its just empty, so nothing to process.
@@ -304,9 +307,16 @@ def process_components(
 def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) -> List[ActionRow]:
     """
     A helper function that spreads your components into `ActionRow`s of a set size
+
     Args:
         *components: The components to spread, use `None` to explicit start a new row
         max_in_row: The maximum number of components in each row
+
+    Returns:
+        List[ActionRow] of components spread to rows
+
+    Raises:
+        ValueError: Too many or few components or rows
     """
     # todo: incorrect format errors
     if not components or len(components) > 25:
@@ -345,8 +355,12 @@ def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) 
 def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) -> Iterator[str]:
     """
     Returns generator with the `custom_id` of a component or list of components.
-    Args:
+
+    Paramters:
         component: Objects to get `custom_id`s from
+
+    Raises:
+        ValueError: Unknown component type
     """
     if isinstance(component, str):
         yield component

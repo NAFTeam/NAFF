@@ -127,7 +127,7 @@ class ChannelHistory(AsyncIterator):
         """
         Check if a message_id exists in the specified history.
 
-        parameters:
+        Args:
             message_id: ID of message to check.
         """
 
@@ -147,7 +147,15 @@ class ChannelHistory(AsyncIterator):
 
 @define()
 class PermissionOverwrite(SnowflakeObject):
-    # Todo: Document
+    """
+    Channel Permissions Overwrite object
+
+    Attributes:
+        type: Permission overwrite type (role or member)
+        allow: Permissions to allow
+        deny: Permissions to deny
+    """
+
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
     allow: "Permissions" = field(repr=True, converter=Permissions)
     deny: "Permissions" = field(repr=True, converter=Permissions)
@@ -168,10 +176,10 @@ class MessageableMixin(SendMixin):
         """
         Fetch a message from the channel.
 
-        parameters:
+        Args:
             message_id: ID of message to retrieve.
 
-        returns:
+        Returns:
             The message object fetched.
         """
         message_id = to_snowflake(message_id)
@@ -187,7 +195,8 @@ class MessageableMixin(SendMixin):
     ):
         """
         Get an async iterator for the history of this channel
-        Args:
+
+        Paramters:
             limit: The maximum number of messages to return (set to 0 for no limit)
             before: get messages before this message ID
             after: get messages after this message ID
@@ -223,13 +232,13 @@ class MessageableMixin(SendMixin):
         """
         Fetch multiple messages from the channel.
 
-        parameters:
+        Args:
             limit: Max number of messages to return, default `50`, max `100`
             around: Message to get messages around
             before: Message to get messages before
             after: Message to get messages after
 
-        returns:
+        Returns:
             A list of messages fetched.
         """
         if limit > 100:
@@ -249,7 +258,7 @@ class MessageableMixin(SendMixin):
         """
         Fetch pinned messages from the channel.
 
-        returns:
+        Returns:
             A list of messages fetched.
         """
         messages_data = await self._client.http.get_pinned_messages(self.id)
@@ -319,7 +328,9 @@ class MessageableMixin(SendMixin):
             The total amount of messages deleted
         """
         if not predicate:
-            predicate = lambda m: True  # noqa
+
+            def predicate(m):
+                return True  # noqa
 
         to_delete = []
 
