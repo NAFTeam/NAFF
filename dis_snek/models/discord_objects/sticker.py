@@ -87,7 +87,16 @@ class Sticker(StickerItem):
         reason: Optional[str] = MISSING,
     ) -> "Sticker":
         """
-        # TODO
+        Edit a sticker
+
+        Args:
+            name: New name of the sticker
+            description: New description of the sticker
+            tags: New tags of the sticker
+            reason: Reason for the edit
+
+        Returns:
+            The new sticker instance
         """
         if not self._guild_id:
             raise ValueError("You can only edit guild stickers.")
@@ -98,7 +107,10 @@ class Sticker(StickerItem):
 
     async def delete(self, reason: Optional[str] = MISSING):
         """
-        # TODO
+        Delete a sticker
+
+        Args:
+            reason: Reason for the deletion
         """
         if not self._guild_id:
             raise ValueError("You can only delete guild stickers.")
