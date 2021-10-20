@@ -540,6 +540,11 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
+    @property
+    def mention(self) -> str:
+        """Returns a string that would mention the channel"""
+        return f"<#{self.id}>"
+
     async def _edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
         """
         # TODO
@@ -575,6 +580,11 @@ class DMChannel(BaseChannel, MessageableMixin):
         data = super()._process_dict(data, client)
         data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
         return data
+
+    @property
+    def mention(self) -> str:
+        """Is this the `@everyone` role"""
+        return self.id == self._guild_id
 
     async def edit(
         self,
