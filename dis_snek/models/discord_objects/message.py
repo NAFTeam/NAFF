@@ -221,7 +221,11 @@ class Message(DiscordObject):
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
         # TODO: Is there a way to dynamically do this instead of hard coding?
 
-        author_data = data.pop("author")
+        try:
+            author_data = data.pop("author")
+        except KeyError:
+            # todo: properly handle message updates that change flags (ie recipient add)
+            return data
         if "guild_id" in data and "member" in data:
             author_data["member"] = data.pop("member")
             data["author_id"] = client.cache.place_member_data(data["guild_id"], author_data).id
