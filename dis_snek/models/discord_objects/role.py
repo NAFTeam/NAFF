@@ -71,7 +71,7 @@ class Role(DiscordObject):
 
     @property
     def mention(self) -> str:
-        """Get the string which is used to mention the role in Discord"""
+        """Returns a string that would mention the role"""
         return f"<@&{self.id}>"
 
     @property

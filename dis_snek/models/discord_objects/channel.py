@@ -540,6 +540,11 @@ class BaseChannel(DiscordObject):
 
         return channel_class.from_dict(data, client)
 
+    @property
+    def mention(self) -> str:
+        """Returns a string that would mention the channel"""
+        return f"<#{self.id}>"
+
     async def _edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
         """
         # TODO
