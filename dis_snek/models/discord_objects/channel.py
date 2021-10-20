@@ -415,6 +415,17 @@ class ThreadableMixin:
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
     ) -> Union["GuildNewsThread", "GuildPublicThread"]:
+        """
+        Create a thread connected to a message
+        Args:
+            name: 1-100 character thread name
+            message: The message to connect this thread to
+            auto_archive_duration: Time before the thread will be automatically archived
+            reason: The reason for creating this thread
+
+        Returns:
+            The created thread, if successful
+        """
         thread_data = await self._client.http.create_thread(
             channel_id=self.id,
             name=name,
@@ -432,6 +443,18 @@ class ThreadableMixin:
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
     ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
+        """
+        Creates a thread without a message source.
+        Args:
+            name: 	1-100 character thread name
+            thread_type: Is the thread private or public
+            invitable: whether non-moderators can add other non-moderators to a thread; only available when creating a private thread
+            auto_archive_duration: Time before the thread will be automatically archived
+            reason: The reason to create this thread
+
+        Returns:
+            The created thread, if successful
+        """
         thread_data = await self._client.http.create_thread(
             channel_id=self.id,
             name=name,
@@ -443,6 +466,13 @@ class ThreadableMixin:
         return self._client.cache.place_channel_data(thread_data)
 
     async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        """
+        Get a `ThreadList` of **public** threads available in this channel.
+
+        Args:
+            limit: optional maximum number of threads to return
+            before: returns threads before this timestamp
+        """
         threads_data = await self._client.http.list_public_archived_threads(
             channel_id=self.id, limit=limit, before=before
         )
@@ -450,6 +480,13 @@ class ThreadableMixin:
         return ThreadList.from_dict(threads_data, self._client)
 
     async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        """
+        Get a `ThreadList` of **private** threads available in this channel.
+
+        Args:
+            limit: optional maximum number of threads to return
+            before: returns threads before this timestamp
+        """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
         )
@@ -459,6 +496,12 @@ class ThreadableMixin:
     async def get_joined_private_archived_threads(
         self, limit: int = None, before: Union["Timestamp"] = None
     ) -> ThreadList:
+        """
+        Get a `ThreadList` of threads the bot is a participant of in this channel
+        Args:
+            limit: optional maximum number of threads to return
+            before: returns threads before this timestamp
+        """
         threads_data = await self._client.http.list_joined_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
         )
@@ -726,6 +769,11 @@ class ThreadChannel(GuildChannel, MessageableMixin):
     @property
     def is_private(self) -> bool:
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
+
+    @property
+    def parent_channel(self) -> GuildText:
+        """The channel this thread is a child of"""
+        return self._client.cache.channel_cache.get(self.parent_id)
 
     @property
     def mention(self) -> str:
