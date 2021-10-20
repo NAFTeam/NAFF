@@ -52,6 +52,7 @@ from dis_snek.models import (
     MessageContext,
     AutocompleteContext,
     ComponentCommand,
+    CustomEmoji,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -824,6 +825,52 @@ class Snake:
         )
         after = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageUpdate(before=before, after=after))
+
+    @listen()
+    async def _on_raw_message_reaction_add(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw reaction add event and dispatch a processed reaction add event.
+
+        Args:
+            event: raw reaction add event
+        """
+        if member := event.data.get("member"):
+            author = self.cache.place_member_data(event.data.get("guild_id"), member)
+        else:
+            author = await self.cache.get_user(event.data.get("user_id"))
+
+        emoji = CustomEmoji.from_dict(event.data.get("emoji"), self)
+
+        self.dispatch(events.MessageReactionAdd(message=None, emoji=emoji, author=author))
+
+    @listen()
+    async def _on_raw_message_reaction_remove(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw reaction remove event and dispatch a processed reaction remove event.
+
+        Args:
+            event: raw reaction remove event
+        """
+        if member := event.data.get("member"):
+            author = self.cache.place_member_data(event.data.get("guild_id"), member)
+        else:
+            author = await self.cache.get_user(event.data.get("user_id"))
+
+        emoji = CustomEmoji.from_dict(event.data.get("emoji"), self)
+
+        self.dispatch(events.MessageReactionRemove(message=None, emoji=emoji, author=author))
+
+    @listen()
+    async def _on_raw_message_reaction_remove_all(self, event: RawGatewayEvent) -> None:
+        """
+        Process raw reaction remove all event and dispatch a processed reaction remove all event.
+
+        Args:
+            event: raw reaction remove all event
+        """
+        msg = await self.cache.get_message(event.data.get("channel_id"), event.data.get("message_id"))
+
+        self.dispatch(events.MessageReactionRemoveAll(event.data.get("guild_id"), msg))
 
     @listen()
     async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
