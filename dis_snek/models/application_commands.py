@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import re
 from enum import IntEnum
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
@@ -360,7 +361,7 @@ class SubCommand(SlashCommand):
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
-    ...
+    listeners: list[str] = attr.ib(factory=list)
 
 
 ##############
@@ -539,7 +540,7 @@ def context_menu(
     return wrapper
 
 
-def component_callback(custom_id: str):
+def component_callback(*custom_id: str):
     """
     Register a coroutine as a component callback.
 
@@ -554,8 +555,16 @@ def component_callback(custom_id: str):
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        return ComponentCommand(name=custom_id, callback=func)
+        return ComponentCommand(name=f"ComponentCallback::{custom_id}", callback=func, listeners=custom_id)
 
+    # allows a mixture of generators and strings to be passed
+    unpack = []
+    for c in custom_id:
+        if inspect.isgenerator(c):
+            unpack += list(c)
+        else:
+            unpack.append(c)
+    custom_id = unpack
     return wrapper
 
 

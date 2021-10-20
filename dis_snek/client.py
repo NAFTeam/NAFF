@@ -449,10 +449,13 @@ class Snake:
         Args:
             command: The command to add
         """
-        if command.name not in self._component_callbacks.keys():
-            self._component_callbacks[command.name] = command
-            return
-        raise ValueError(f"Duplicate Component! Multiple component callbacks for `{command.name}`")
+        for listener in command.listeners:
+            # I know this isn't an ideal solution, but it means we can lookup callbacks with O(1)
+            if listener not in self._component_callbacks.keys():
+                self._component_callbacks[listener] = command
+                continue
+            else:
+                raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
     def _gather_commands(self):
         """Gathers commands from __main__ and self"""
