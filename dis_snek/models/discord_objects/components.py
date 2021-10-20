@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Iterator
 
 import attr
 
@@ -299,6 +299,68 @@ def process_components(
             return [action_row.to_dict() for action_row in components]
 
     raise ValueError(f"Invalid components: {components}")
+
+
+def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) -> List[ActionRow]:
+    """
+    A helper function that spreads your components into `ActionRow`s of a set size
+    Args:
+        *components: The components to spread, use `None` to explicit start a new row
+        max_in_row: The maximum number of components in each row
+    """
+    # todo: incorrect format errors
+    if not components or len(components) > 25:
+        raise ValueError("Number of components should be between 1 and 25.")
+    if not 1 < max_in_row < 5:
+        raise ValueError("max_in_row should be between 1 and 5.")
+
+    rows = []
+    button_row = []
+    for component in list(components):
+        if component is not None and component.type == ComponentTypes.BUTTON:
+            button_row.append(component)
+
+            if len(button_row) == max_in_row:
+                rows.append(ActionRow(*button_row))
+                button_row = []
+
+            continue
+
+        if button_row:
+            rows.append(ActionRow(*button_row))
+            button_row = []
+
+        if component is not None:
+            if component.type == ComponentTypes.ACTION_ROW:
+                rows.append(component)
+            elif component.type == ComponentTypes.SELECT:
+                rows.append(ActionRow(component))
+
+    if len(rows) > 5:
+        raise ValueError("Number of rows exceeds 5.")
+
+    return rows
+
+
+def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) -> Iterator[str]:
+    """
+    Returns generator with the `custom_id` of a component or list of components.
+    Args:
+        component: Objects to get `custom_id`s from
+    """
+    if isinstance(component, str):
+        yield component
+    elif isinstance(component, dict):
+        if component["type"] == ComponentTypes.actionrow:
+            yield from (comp["custom_id"] for comp in component["components"] if "custom_id" in comp)
+        elif "custom_id" in component:
+            yield component["custom_id"]
+    elif c_id := getattr(component, "custom_id", None):
+        yield c_id
+    elif isinstance(component, list):
+        yield from (comp_id for comp in component for comp_id in get_components_ids(comp))
+    else:
+        raise ValueError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
 
 
 TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
