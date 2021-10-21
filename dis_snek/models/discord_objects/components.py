@@ -356,7 +356,7 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
     """
     Returns generator with the `custom_id` of a component or list of components.
 
-    Paramters:
+    Args:
         component: Objects to get `custom_id`s from
 
     Raises:

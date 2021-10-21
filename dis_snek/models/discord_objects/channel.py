@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 class ChannelHistory(AsyncIterator):
     """
     An async iterator for searching through a channel's history
+
     Args:
         channel: The channel to search through
         limit: The maximum number of messages to return (set to 0 for no limit)
@@ -270,7 +271,7 @@ class MessageableMixin(SendMixin):
         """
         Bulk delete messages from channel.
 
-        parameters:
+        Args:
             messages: List of messages or message IDs to delete.
             reason: The reason for this action. Used for audit logs.
         """
@@ -318,7 +319,7 @@ class MessageableMixin(SendMixin):
         Args:
             deletion_limit: The target amount of messages to delete
             search_limit: How many messages to search through
-            predicate: A function that returns True or False, and takes a message as an argument
+            predicate: A function that Returns True or False, and takes a message as an argument
             before: Search messages before this ID
             after: Search messages after this ID
             around: Search messages around this ID
@@ -376,7 +377,7 @@ class InvitableMixin:
         """
         Create channel invite.
 
-        parameters:
+        Args:
             max_age: Max age of invite in seconds, default 86400 (24 hours).
             max_uses: Max uses of invite, default 0.
             temporary: Grants temporary membership, default False.
@@ -386,7 +387,7 @@ class InvitableMixin:
             target_application_id: Target Application ID for Embedded App target type.
             reason: The reason for creating this invite.
 
-        returns:
+        Returns:
             Newly created Invite object.
         """
         if target_type:
@@ -482,7 +483,7 @@ class ThreadableMixin:
 
         Args:
             limit: optional maximum number of threads to return
-            before: returns threads before this timestamp
+            before: Returns threads before this timestamp
         """
         threads_data = await self._client.http.list_public_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -496,7 +497,7 @@ class ThreadableMixin:
 
         Args:
             limit: optional maximum number of threads to return
-            before: returns threads before this timestamp
+            before: Returns threads before this timestamp
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -511,7 +512,7 @@ class ThreadableMixin:
         Get a `ThreadList` of threads the bot is a participant of in this channel
         Args:
             limit: optional maximum number of threads to return
-            before: returns threads before this timestamp
+            before: Returns threads before this timestamp
         """
         threads_data = await self._client.http.list_joined_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -537,11 +538,11 @@ class BaseChannel(DiscordObject):
         """
         Creates a channel object of the appropriate type
 
-        parameters:
+        Args:
             data: The channel data.
             client: The bot.
 
-        returns:
+        eturns:
             The new channel object.
         """
         channel_type = data.get("type", None)
@@ -574,7 +575,7 @@ class BaseChannel(DiscordObject):
         """
         Delete this channel.
 
-        parameters:
+        Args:
             reason: The reason for deleting this channel
         """
         await self._client.http.delete_channel(self.id, reason)
