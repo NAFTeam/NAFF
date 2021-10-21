@@ -199,6 +199,10 @@ class MemberAdd(BaseEvent, GuildEvent):
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
+    member: Union["Member", "User"] = attr.ib(
+        metadata=docs("The member who was added, can be user if the member is not cached")
+    )
+
 
 @attr.s(slots=True)
 class MemberUpdate(BaseEvent, GuildEvent):
