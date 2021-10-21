@@ -25,6 +25,7 @@ from dis_snek.event_processors.channel_events import ChannelEvents
 from dis_snek.event_processors.guild_events import GuildEvents
 from dis_snek.event_processors.member_events import MemberEvents
 from dis_snek.event_processors.message_events import MessageEvents
+from dis_snek.event_processors.reaction_events import ReactionEvents
 from dis_snek.event_processors.role_events import RoleEvents
 from dis_snek.event_processors.thread_events import ThreadEvents
 from dis_snek.gateway import WebsocketClient
@@ -70,7 +71,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(logger_name)
 
 
-class Snake(ChannelEvents, GuildEvents, MemberEvents, MessageEvents, ThreadEvents, RoleEvents):
+class Snake(ChannelEvents, GuildEvents, MemberEvents, MessageEvents, ThreadEvents, RoleEvents, ReactionEvents):
     """
     The bot client.
 
