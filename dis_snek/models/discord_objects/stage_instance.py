@@ -33,7 +33,7 @@ class StageInstance(DiscordObject):
         """
         Delete this stage instance. Effectively closes the stage
 
-        Arguments:
+        Args:
             reason: The reason for this deletion, for the audit log
         """
         await self._client.http.delete_stage_instance(self._channel_id, reason)
