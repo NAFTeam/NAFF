@@ -1,6 +1,7 @@
+import copy
 import logging
 
-from dis_snek.const import logger_name
+from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate
 from dis_snek.models import listen, events
 from dis_snek.models.events import RawGatewayEvent
@@ -24,11 +25,18 @@ class GuildEvents(EventMixinTemplate):
 
     @listen()
     async def _on_raw_guild_update(self, event: RawGatewayEvent) -> None:
-        ...
+        before = copy.copy(await self.cache.get_guild(event.data.get("id")))
+        self.dispatch(events.GuildUpdate(before or MISSING, self.cache.place_guild_data(event.data)))
 
     @listen()
     async def _on_raw_guild_delete(self, event: RawGatewayEvent) -> None:
-        ...
+        self.dispatch(
+            events.GuildDelete(
+                event.data.get("id"),
+                event.data.get("unavailable", False),
+                await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+            )
+        )
 
     @listen()
     async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:

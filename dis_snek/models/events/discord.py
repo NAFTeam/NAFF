@@ -18,10 +18,11 @@ These are events dispatched by Discord. This is intended as a reference so you k
     ```
 """
 
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Union, Optional
 
 import attr
 
+from dis_snek.const import MISSING
 from dis_snek.models.events.internal import BaseEvent, GuildEvent
 from dis_snek.utils.attr_utils import docs
 
@@ -151,6 +152,8 @@ class GuildDelete(BaseEvent, GuildEvent):
 
     unavailable: bool = attr.ib(default=False)
     """If this event was triggered due to an outage"""
+    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    """The guild, if it was cached"""
 
 
 @attr.s(slots=True)
