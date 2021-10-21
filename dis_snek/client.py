@@ -1,5 +1,4 @@
 import asyncio
-import copy
 import importlib.util
 import inspect
 import logging
@@ -22,8 +21,13 @@ from dis_snek.errors import (
     Forbidden,
     InteractionMissingAccess,
 )
+from dis_snek.event_processors.channel_events import ChannelEvents
+from dis_snek.event_processors.guild_events import GuildEvents
+from dis_snek.event_processors.member_events import MemberEvents
+from dis_snek.event_processors.message_events import MessageEvents
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
+from dis_snek.mixins.events_mixin import Events
 from dis_snek.models import (
     Activity,
     Application,
@@ -38,7 +42,6 @@ from dis_snek.models import (
     Member,
     StickerPack,
     Sticker,
-    Timestamp,
     events,
     InteractionCommand,
     SlashCommand,
@@ -66,7 +69,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(logger_name)
 
 
-class Snake:
+class Snake(ChannelEvents, GuildEvents, MemberEvents, MessageEvents):
     """
     The bot client.
 
@@ -343,6 +346,36 @@ class Snake:
         Override this to change error handling behavior
         """
         return await self.on_error(source, *args, **kwargs)
+
+    @listen()
+    async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
+        """
+        Catches websocket ready and determines when to dispatch the client `READY` signal.
+
+        Args:
+            event: The websocket ready packet
+        """
+        data = event.data
+        expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
+        self._user._add_guilds(expected_guilds)
+
+        while True:
+            try:  # wait to let guilds cache
+                await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+            except asyncio.TimeoutError:
+                log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                break
+            self._guild_event.clear()
+
+            if len(self.cache.guild_cache) == len(expected_guilds):
+                # all guilds cached
+                break
+
+        # cache slash commands
+        await self._init_interactions()
+
+        self._ready = True
+        self.dispatch(events.Ready())
 
     def start(self, token):
         """
@@ -770,156 +803,6 @@ class Snake:
                         await command(context)
                     except:
                         await self.on_command_error(f"cmd `{invoked_name}`")
-
-    @listen()
-    async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
-        """
-        Automatically convert MESSAGE_CREATE event data to the object.
-
-        Args:
-            event: raw message event
-        """
-        msg = self.cache.place_message_data(event.data)
-        if not msg._guild_id and event.data.get("guild_id"):
-            msg._guild_id = event.data["guild_id"]
-            # todo: Determine why this isn't set *always*
-
-        if not msg.author:
-            # sometimes discord will only send an author ID, not the author. this catches that
-            msg.channel = (
-                await self.cache.get_channel(to_snowflake(msg._channel_id)) if not msg.channel else msg.channel
-            )
-            if msg._guild_id:
-                msg.guild = await self.cache.get_guild(msg._guild_id) if not msg.guild else msg.guild
-                msg.author = await self.cache.get_member(msg._guild_id, msg._author_id)
-            else:
-                msg.author = await self.cache.get_user(to_snowflake(msg._author_id))
-
-        self.dispatch(events.MessageCreate(msg))
-
-    @listen()
-    async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
-        """
-        Process raw deletions and dispatch a processed deletion event.
-        Args:
-            event: raw message deletion event
-        """
-        message = await self.cache.get_message(
-            event.data.get("channel_id"), event.data.get("id"), request_fallback=False
-        )
-        self.dispatch(events.MessageDelete(message))
-
-    @listen()
-    async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
-        """
-        Process raw message update event and dispatch a processed update event.
-
-        Args:
-            event: raw message update event
-        """
-
-        # a copy is made because the cache will update the original object in memory
-        before = copy.copy(
-            await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
-        )
-        after = self.cache.place_message_data(event.data)
-        self.dispatch(events.MessageUpdate(before=before, after=after))
-
-    @listen()
-    async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
-        """
-        Automatically cache a guild upon GUILD_CREATE event from gateway.
-
-        Args:
-            data: raw guild data
-        """
-        guild = self.cache.place_guild_data(event.data)
-        self._guild_event.set()
-
-        self.dispatch(events.GuildCreate(guild))
-
-    @listen()
-    async def _on_raw_channel_create(self, event: RawGatewayEvent) -> None:
-        """
-        Automatically cache a guild upon CHANNEL_CREATE event from gateway.
-
-        Args:
-            data: raw channel data
-        """
-        channel = self.cache.place_channel_data(event.data)
-        self.dispatch(events.ChannelCreate(channel))
-
-    @listen()
-    async def _on_raw_channel_delete(self, event: RawGatewayEvent) -> None:
-        """
-        Process raw channel deletions and dispatch a processed channel deletion event.
-
-        Args:
-            event: raw channel deletion event
-        """
-        # for some reason this event returns the deleted object?
-        # so we cache it regardless
-        channel = self.cache.place_channel_data(event.data)
-        self.dispatch(events.ChannelDelete(channel))
-
-    @listen()
-    async def _on_raw_typing_start(self, event: RawGatewayEvent) -> None:
-        """
-        Process raw typing start and dispatch a processed typing event.
-
-        Args:
-            event: raw typing start event
-        """
-        author: Union[User, Member]
-        channel: BaseChannel
-        guild = None
-
-        if member := event.data.get("member"):
-            author = self.cache.place_member_data(event.data.get("guild_id"), member)
-            guild = await self.cache.get_guild(event.data.get("guild_id"))
-        else:
-            author = await self.cache.get_user(event.data.get("user_id"))
-
-        channel = await self.cache.get_channel(event.data.get("channel_id"))
-
-        self.dispatch(
-            events.TypingStart(
-                author=author,
-                channel=channel,
-                guild=guild,
-                timestamp=Timestamp.utcfromtimestamp(event.data.get("timestamp")),
-            )
-        )
-
-    @listen()
-    async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
-        """
-        Catches websocket ready and determines when to dispatch the client `READY` signal.
-
-        Args:
-            event: The websocket ready packet
-        """
-        data = event.data
-        expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
-        self._user._add_guilds(expected_guilds)
-
-        while True:
-            try:  # wait to let guilds cache
-                await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
-            except asyncio.TimeoutError:
-                log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
-                break
-            self._guild_event.clear()
-
-            if len(self.cache.guild_cache) == len(expected_guilds):
-                # all guilds cached
-                break
-
-        # cache slash commands
-        await self._init_interactions()
-
-        self._ready = True
-        self.dispatch(events.Ready())
 
     def get_scale(self, name) -> Optional[Scale]:
         """
