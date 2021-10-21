@@ -126,12 +126,12 @@ class CustomEmoji(Emoji):
         """
         Modify the custom emoji information.
 
-        parameters:
+        Args:
             name: The name of the emoji.
             roles: The roles allowed to use this emoji.
             reason: Attach a reason to this action, used for audit logs.
 
-        returns:
+        Returns:
             The newly modified custom emoji.
         """
         data_payload = dict_filter_none(
@@ -149,7 +149,7 @@ class CustomEmoji(Emoji):
         """
         Deletes the custom emoji from the guild.
 
-        parameters:
+        Args:
             reason: Attach a reason to this action, used for audit logs.
         """
         if not self._guild_id:

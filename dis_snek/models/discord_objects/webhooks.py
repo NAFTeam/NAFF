@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from dis_snek.client import Snake
+    from dis_snek.models.enums import MessageFlags
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord_objects.components import BaseComponent
@@ -69,15 +70,21 @@ class Webhook(DiscordObject, SendMixin):
         channel: Union["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"],
         name: str,
         avatar: Optional[bytes] = MISSING,
-    ):
+    ) -> "Webhook":
         """
         Create a webhook.
 
-        parameters:
+        Args:
             client: The bot's client
             channel: The channel to create the webhook in
             name: The name of the webhook
             avatar: An optional default avatar to use
+
+        Returns:
+            New webhook
+
+        Raises:
+            ValueError: If you try to name the webhook "Clyde"
         """
         if name.lower() == "clyde":
             raise ValueError('Webhook names cannot be "Clyde"')
@@ -127,7 +134,7 @@ class Webhook(DiscordObject, SendMixin):
         """
         Send a message as this webhook
 
-        parameters:
+        Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
@@ -140,7 +147,7 @@ class Webhook(DiscordObject, SendMixin):
             username: The username to use
             avatar_url: The url of an image to use as the avatar
 
-        returns:
+        Returns:
             New message object that was sent.
         """
         return await super().send(

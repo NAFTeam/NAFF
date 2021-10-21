@@ -38,6 +38,19 @@ class Asset:
         return self.hash.startswith("a_")
 
     async def get(self, extension: Optional[str] = None, size: Optional[int] = None) -> bytes:
+        """
+        Get the asset from the Discord CDN
+
+        Args:
+            extension: File extension
+            size: File size
+
+        Returns:
+            Raw byte array of the file
+
+        Raises:
+            ValueError: Incorrect file size if not power of 2 between 16 and 4096
+        """
         if not extension:
             extension = ".gif" if self.animated else ".png"
 
@@ -57,6 +70,17 @@ class Asset:
     async def save(
         self, fd: Union[str, bytes, "PathLike", int], extension: Optional[str] = None, size: Optional[int] = None
     ) -> int:
+        """
+        Save the asset to a file
+
+        Args:
+            fd: File destination
+            extention: File extension
+            size: File size
+
+        Return:
+            Status code
+        """
         content = await self.get(extension=extension, size=size)
         with open(fd, "wb") as f:
             return f.write(content)
