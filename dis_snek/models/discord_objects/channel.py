@@ -319,7 +319,7 @@ class MessageableMixin(SendMixin):
         Args:
             deletion_limit: The target amount of messages to delete
             search_limit: How many messages to search through
-            predicate: A function that Returns True or False, and takes a message as an argument
+            predicate: A function that returns True or False, and takes a message as an argument
             before: Search messages before this ID
             after: Search messages after this ID
             around: Search messages around this ID
@@ -542,7 +542,7 @@ class BaseChannel(DiscordObject):
             data: The channel data.
             client: The bot.
 
-        eturns:
+        Returns:
             The new channel object.
         """
         channel_type = data.get("type", None)
