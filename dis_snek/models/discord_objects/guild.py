@@ -622,7 +622,17 @@ class Guild(DiscordObject):
         reason: Optional[str] = MISSING,
     ) -> "Sticker":
         """
-        # TODO
+        Creates a custom sticker for a guild
+
+        Args:
+            name: Sticker name
+            imagefile: Sticker image file
+            description: Sticker description
+            tags: Sticker tags
+            reason: Reason for creating the sticker
+
+        Returns:
+            New Sticker instance
         """
         payload = FormData()
         payload.add_field("name", name)
@@ -644,14 +654,24 @@ class Guild(DiscordObject):
 
     async def get_all_custom_stickers(self) -> List["Sticker"]:
         """
-        # TODO
+        Gets all custom stickers for a guild.
+
+        Returns:
+            List of Sticker objects
+
         """
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return Sticker.from_list(stickers_data, self._client)
 
     async def get_custom_sticker(self, sticker_id: "Snowflake_Type") -> "Sticker":
         """
-        # TODO
+        Gets a specific custom sticker for a guild
+
+        Args:
+            sticker_id: ID of sticker to get
+
+        Returns:
+            Requested Sticker
         """
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return Sticker.from_dict(sticker_data, self._client)
