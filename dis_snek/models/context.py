@@ -1,3 +1,4 @@
+from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
@@ -15,6 +16,7 @@ from dis_snek.utils.input_utils import get_args
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models import File
     from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
@@ -289,7 +291,7 @@ class ComponentContext(InteractionContext):
         embeds: List["Embed"] = None,
         components: List[Union[Dict, "ActionRow"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        filepath: Optional[Union[str, Path]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
     ) -> "Message":
         """
@@ -301,13 +303,13 @@ class ComponentContext(InteractionContext):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, the bytes or the File() instance, defaults to None.
             tts: Should this message use Text To Speech.
 
         returns:
             The message after it was edited.
         """
-        if not self.responded and not self.deferred and filepath:
+        if not self.responded and not self.deferred and file:
             # Discord doesn't allow files at initial response, so we defer then edit.
             await self.defer(edit_origin=True)
 
@@ -316,7 +318,7 @@ class ComponentContext(InteractionContext):
             embeds=embeds,
             components=components,
             allowed_mentions=allowed_mentions,
-            file=filepath,
+            file=file,
             tts=tts,
         )
 
