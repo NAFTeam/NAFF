@@ -61,7 +61,7 @@ from dis_snek.utils.input_utils import get_first_word
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
-    from dis_snek.models import Snowflake_Type
+    from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
 
@@ -1057,7 +1057,7 @@ class Snake:
         """
         return await self.cache.get_guild(guild_id)
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> BaseChannel:
+    async def get_channel(self, channel_id: "Snowflake_Type") -> "TYPE_ALL_CHANNEL":
         """
         Get a channel
 
