@@ -13,7 +13,6 @@ from dis_snek.models.discord_objects.channel import (
     GuildVoice,
     GuildStageVoice,
     PermissionOverwrite,
-    GuildChannel,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -36,7 +35,7 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, TYPE_THREAD_CHANNEL, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
@@ -165,7 +164,7 @@ class Guild(DiscordObject):
         return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
 
     @property
-    def threads(self) -> List["ThreadChannel"]:
+    def threads(self) -> List["TYPE_THREAD_CHANNEL"]:
         """Returns a list of threads associated with this guild."""
         return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
@@ -736,7 +735,7 @@ class Guild(DiscordObject):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
+    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
         """
         Returns a channel with the given `channel_id`
 
@@ -753,7 +752,7 @@ class Guild(DiscordObject):
             return await self._client.cache.get_channel(channel_id)
         return None
 
-    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["ThreadChannel"]:
+    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["TYPE_THREAD_CHANNEL"]:
         """
         Returns a Thread with the given `thread_id`
 
