@@ -2,17 +2,17 @@ from typing import Optional, List
 
 import attr
 
-from dis_snek.models.discord import ClientObject
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import ActivityType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field, class_defaults
+from dis_snek.utils.attr_utils import define
 from dis_snek.utils.serializer import dict_filter_none
 
 
 @define()
-class Activity:
+class Activity(DictSerializationMixin):
     name: str = attr.ib()
     type: ActivityType = attr.ib(default=ActivityType.GAME)
     url: Optional[str] = attr.ib(default=None)

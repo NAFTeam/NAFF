@@ -365,6 +365,8 @@ class PresenceUpdate(BaseEvent):
     """The users current activities"""
     client_status: dict = attr.ib()
     """What platform the user is reported as being on"""
+    guild_id: "Snowflake_Type" = attr.ib()
+    """The guild this presence update was dispatched from"""
 
 
 @attr.s(slots=True)
