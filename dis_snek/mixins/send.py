@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from aiohttp.formdata import FormData
 
     from dis_snek.client import Snake
+    from dis_snek.models import File
     from dis_snek.models.discord_objects.components import BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference
@@ -33,7 +34,7 @@ class SendMixin:
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        file: Optional[Union["IOBase", "Path", str]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         **kwargs
@@ -48,7 +49,7 @@ class SendMixin:
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, or the file itself.
+            file: Location of file to send, the bytes or the File() instance, defaults to None.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 

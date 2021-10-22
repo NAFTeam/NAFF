@@ -7,6 +7,7 @@ from .command import *
 from .context import *
 from .cooldowns import *
 from .discord import *
+from .file import *
 from .listener import *
 from .route import *
 from .scale import *

@@ -26,6 +26,7 @@ from dis_snek.models.enums import (
     MessageTypes,
     AutoArchiveDuration,
 )
+from dis_snek.models.file import File
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
@@ -304,7 +305,7 @@ class Message(DiscordObject):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        file: Optional[Union["IOBase", "Path", str]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
@@ -317,7 +318,7 @@ class Message(DiscordObject):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            file: Location of file to send, or the file itself.
+            file: Location of file to send, the bytes or the File() instance, defaults to None.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
@@ -534,7 +535,7 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    file: Optional[Union["IOBase", "Path", str]] = None,
+    file: Optional[Union["File", "IOBase", "Path", str]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
 ) -> Union[Dict, FormData]:
@@ -549,7 +550,7 @@ def process_message_payload(
         allowed_mentions: Allowed mentions for the message.
         reply_to: Message to reference, must be from the same channel.
         attachments: The attachments to keep, only used when editing message.
-        filepath: Location of file to send, defaults to None.
+        file: Location of file to send, defaults to None.
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
@@ -584,7 +585,12 @@ def process_message_payload(
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", OverriddenJson.dumps(message_data))
-        if isinstance(file, IOBase):
+        if isinstance(file, File):
+            if isinstance(file.file, IOBase):
+                form.add_field("file", file.file, filename=file.file_name)
+            else:
+                form.add_field("file", open(str(file.file), "rb"), filename=file.file_name)
+        elif isinstance(file, IOBase):
             form.add_field("file", file)
         else:
             form.add_field("file", open(str(file), "rb"))
