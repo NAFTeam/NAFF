@@ -13,8 +13,6 @@ from dis_snek.models.discord_objects.channel import (
     GuildVoice,
     GuildStageVoice,
     PermissionOverwrite,
-    TYPE_GUILD_CHANNEL,
-    TYPE_THREAD_CHANNEL,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -37,7 +35,7 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import ThreadChannel, GuildCategory
+    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, TYPE_THREAD_CHANNEL, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
@@ -167,7 +165,7 @@ class Guild(DiscordObject):
         return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
 
     @property
-    def threads(self) -> List["ThreadChannel"]:
+    def threads(self) -> List["TYPE_THREAD_CHANNEL"]:
         """Returns a list of threads associated with this guild."""
         return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
 
@@ -685,9 +683,7 @@ class Guild(DiscordObject):
             List of active threads and thread member object for each returned thread the bot user has joined.
         """
         threads_data = await self._client.http.list_active_threads(self.id)
-        if threads_data.get("threads", []):
-            return ThreadList.from_dict(threads_data, self._client)
-        return None
+        return ThreadList.from_dict(threads_data, self._client)
 
     async def get_role(self, role_id: "Snowflake_Type") -> Optional["Role"]:
         """
