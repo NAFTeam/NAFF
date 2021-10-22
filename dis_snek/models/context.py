@@ -288,8 +288,10 @@ class ComponentContext(InteractionContext):
     async def edit_origin(
         self,
         content: str = None,
-        embeds: List["Embed"] = None,
-        components: List[Union[Dict, "ActionRow"]] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,

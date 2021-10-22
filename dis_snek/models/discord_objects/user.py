@@ -137,12 +137,13 @@ class SnakeBotUser(User):
             ```python
             await self.user.edit(username="hello world")
             ```
+
         Args:
             username: The username you want to use
             avatar: The avatar to use, must be `bytes` (see example)
 
-        Returns:
-
+        Raises:
+            TooManyChanges: If you change the profile too many times
         """
         payload = {}
         if username:
@@ -352,6 +353,7 @@ class Member(DiscordObject, _SendDMMixin):
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
         """
         Add a role to this member.
+
         Args:
             role: The role to add
             reason: The reason for adding this role
@@ -362,6 +364,7 @@ class Member(DiscordObject, _SendDMMixin):
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
         """
         Remove a role from this user.
+
         Args:
             role: The role to remove
             reason: The reason for this removal
@@ -373,6 +376,7 @@ class Member(DiscordObject, _SendDMMixin):
     async def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
         Checks if the user has the given role(s)
+
         Args:
             roles: The role(s) to check whether the user has it.
         """
@@ -385,6 +389,7 @@ class Member(DiscordObject, _SendDMMixin):
     async def kick(self, reason: str = MISSING):
         """
         Remove a member from the guild.
+
         Args:
             reason: The reason for this removal
         """
@@ -393,6 +398,7 @@ class Member(DiscordObject, _SendDMMixin):
     async def ban(self, delete_message_days=0, reason: str = MISSING):
         """
         Ban a member from the guild.
+
         Args:
             delete_message_days: The number of days of messages to delete
             reason: The reason for this ban

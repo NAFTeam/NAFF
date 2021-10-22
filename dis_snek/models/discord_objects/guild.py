@@ -13,7 +13,8 @@ from dis_snek.models.discord_objects.channel import (
     GuildVoice,
     GuildStageVoice,
     PermissionOverwrite,
-    GuildChannel,
+    TYPE_GUILD_CHANNEL,
+    TYPE_THREAD_CHANNEL,
 )
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
@@ -36,10 +37,11 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, ThreadChannel, GuildCategory
+    from dis_snek.models.discord_objects.channel import ThreadChannel, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.timestamp import Timestamp
 
 
 @define()
@@ -621,7 +623,17 @@ class Guild(DiscordObject):
         reason: Optional[str] = MISSING,
     ) -> "Sticker":
         """
-        # TODO
+        Creates a custom sticker for a guild
+
+        Args:
+            name: Sticker name
+            imagefile: Sticker image file
+            description: Sticker description
+            tags: Sticker tags
+            reason: Reason for creating the sticker
+
+        Returns:
+            New Sticker instance
         """
         payload = FormData()
         payload.add_field("name", name)
@@ -643,14 +655,24 @@ class Guild(DiscordObject):
 
     async def get_all_custom_stickers(self) -> List["Sticker"]:
         """
-        # TODO
+        Gets all custom stickers for a guild.
+
+        Returns:
+            List of Sticker objects
+
         """
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return Sticker.from_list(stickers_data, self._client)
 
     async def get_custom_sticker(self, sticker_id: "Snowflake_Type") -> "Sticker":
         """
-        # TODO
+        Gets a specific custom sticker for a guild
+
+        Args:
+            sticker_id: ID of sticker to get
+
+        Returns:
+            Requested Sticker
         """
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return Sticker.from_dict(sticker_data, self._client)
@@ -663,7 +685,9 @@ class Guild(DiscordObject):
             List of active threads and thread member object for each returned thread the bot user has joined.
         """
         threads_data = await self._client.http.list_active_threads(self.id)
-        return ThreadList.from_dict(threads_data, self._client)
+        if threads_data.get("threads", []):
+            return ThreadList.from_dict(threads_data, self._client)
+        return None
 
     async def get_role(self, role_id: "Snowflake_Type") -> Optional["Role"]:
         """
@@ -736,7 +760,9 @@ class Guild(DiscordObject):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["GuildChannel", "ThreadChannel"]]:
+    async def get_channel(
+        self, channel_id: "Snowflake_Type"
+    ) -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
         """
         Returns a channel with the given `channel_id`
 
@@ -753,7 +779,7 @@ class Guild(DiscordObject):
             return await self._client.cache.get_channel(channel_id)
         return None
 
-    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["ThreadChannel"]:
+    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["TYPE_THREAD_CHANNEL"]:
         """
         Returns a Thread with the given `thread_id`
 
@@ -980,3 +1006,21 @@ class GuildTemplate(ClientObject):
     async def delete(self) -> None:
         """Delete the guild template"""
         await self._client.http.delete_guild_template(self.source_guild_id, self.code)
+
+
+@define()
+class GuildWelcomeChannel(ClientObject):
+    channel_id: "Snowflake_Type" = attr.ib(metadata=docs("Welcome Channel ID"))
+    description: str = attr.ib(metadata=docs("Welcome Channel description"))
+    emoji_id: Optional["Snowflake_Type"] = attr.ib(
+        default=None, metadata=docs("Welcome Channel emoji ID if the emoji is custom")
+    )
+    emoji_name: Optional[str] = attr.ib(
+        default=None, metadata=docs("Emoji name if custom, unicode character if standard")
+    )
+
+
+@define()
+class GuildWelcome(ClientObject):
+    description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
+    welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))

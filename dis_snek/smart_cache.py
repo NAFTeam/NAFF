@@ -38,7 +38,17 @@ class GlobalCache:
 
     # User cache methods
 
-    async def get_user(self, user_id: "Snowflake_Type", request_fallback=True) -> User:
+    async def get_user(self, user_id: "Snowflake_Type", request_fallback: bool = True) -> Optional[User]:
+        """
+        Get a user by their ID
+
+        Args:
+            user_id: The user's ID
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            User object if found
+        """
         user_id = to_snowflake(user_id)
 
         user = self.user_cache.get(user_id)
@@ -47,7 +57,15 @@ class GlobalCache:
             user = self.place_user_data(data)
         return user
 
-    def place_user_data(self, data) -> User:
+    def place_user_data(self, data: dict) -> User:
+        """
+        Take json data representing a User, process it, and cache it
+        Args:
+            data: json representation of user
+
+        Returns:
+            The processed User data
+        """
         user_id = to_snowflake(data["id"])
 
         user = self.user_cache.get(user_id)
@@ -61,7 +79,20 @@ class GlobalCache:
 
     # Member cache methods
 
-    async def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", request_fallback=True) -> Member:
+    async def get_member(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", request_fallback: bool = True
+    ) -> Optional[Member]:
+        """
+        Get a member by their guild and user IDs.
+
+        Args:
+            guild_id: The ID of the guild this user belongs to
+            user_id: The ID of the user
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            Member object if found
+        """
         guild_id = to_snowflake(guild_id)
         user_id = to_snowflake(user_id)
         member = self.member_cache.get((guild_id, user_id))
@@ -70,7 +101,16 @@ class GlobalCache:
             member = self.place_member_data(guild_id, data)
         return member
 
-    def place_member_data(self, guild_id, data) -> Member:
+    def place_member_data(self, guild_id: "Snowflake_Type", data: dict) -> Member:
+        """
+        Take json data representing a User, process it, and cache it
+        Args:
+            guild_id: The ID of the guild this member belongs to
+            data: json representation of the member
+
+        Returns:
+            The processed member
+        """
         guild_id = to_snowflake(guild_id)
         is_user = "member" in data
         user_id = to_snowflake(data["id"] if is_user else data["user"]["id"])
@@ -89,7 +129,13 @@ class GlobalCache:
         self.place_user_guild(user_id, guild_id)
         return member
 
-    def place_user_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type"):
+    def place_user_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> None:
+        """
+        Add a guild to the list of guilds a user has joined.
+        Args:
+            user_id: The ID of the user
+            guild_id: The ID of the guild to add
+        """
         user_id = to_snowflake(user_id)
         guild_id = to_snowflake(guild_id)
         if user_id == self._client.user.id:
@@ -100,7 +146,16 @@ class GlobalCache:
             if guilds:
                 guilds.add(guild_id)
 
-    async def is_user_in_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type", request_fallback=True):
+    async def is_user_in_guild(
+        self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type", request_fallback: bool = True
+    ) -> bool:
+        """
+        Determine if a user is in a specified guild.
+        Args:
+            user_id: The ID of the user to check
+            guild_id: The ID of the guild
+            request_fallback: Should data be requested from Discord if not cached?
+        """
         user_id = to_snowflake(user_id)
         guild_id = to_snowflake(guild_id)
 
@@ -119,7 +174,19 @@ class GlobalCache:
 
         return False
 
-    async def get_user_guild_ids(self, user_id: "Snowflake_Type", calculation_fallback=True, request_fallback=True):
+    async def get_user_guild_ids(
+        self, user_id: "Snowflake_Type", calculation_fallback: bool = True, request_fallback: bool = True
+    ) -> List["Snowflake_Type"]:
+        """
+        Get a list of IDs for the guilds a user has joined
+        Args:
+            user_id: The ID of the user
+            calculation_fallback: Should we use guild caches to determine what guilds the user belongs to
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            A list of snowflakes for the guilds the client can see the user is within
+        """
         user_id = to_snowflake(user_id)
         guild_ids = self.user_guilds.get(user_id)
         if not guild_ids and calculation_fallback:
@@ -133,8 +200,18 @@ class GlobalCache:
     # Message cache methods
 
     async def get_message(
-        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", request_fallback=True
-    ) -> Message:
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", request_fallback: bool = True
+    ) -> Optional[Message]:
+        """
+        Get a message from a channel based on their IDs
+        Args:
+            channel_id: The ID of the channel the message is in
+            message_id: The ID of the message
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            The message if found
+        """
         channel_id = to_snowflake(channel_id)
         message_id = to_snowflake(message_id)
         message = self.message_cache.get((channel_id, message_id))
@@ -143,7 +220,15 @@ class GlobalCache:
             message = self.place_message_data(data)
         return message
 
-    def place_message_data(self, data) -> Message:
+    def place_message_data(self, data: dict) -> Message:
+        """
+        Take json data representing a message, process it, and cache it
+        Args:
+            data: json representation of the message
+
+        Returns:
+            The processed message
+        """
         channel_id = to_snowflake(data["channel_id"])
         message_id = to_snowflake(data["id"])
         message = self.message_cache.get((channel_id, message_id))
@@ -156,7 +241,18 @@ class GlobalCache:
 
     # Channel cache methods
 
-    async def get_channel(self, channel_id: "Snowflake_Type", request_fallback=True) -> "TYPE_ALL_CHANNEL":
+    async def get_channel(
+        self, channel_id: "Snowflake_Type", request_fallback: bool = True
+    ) -> Optional["TYPE_ALL_CHANNEL"]:
+        """
+        Get a channel based on it's ID
+        Args:
+            channel_id: The ID of the channel
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            The channel if found
+        """
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
@@ -164,7 +260,15 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def place_channel_data(self, data) -> "TYPE_ALL_CHANNEL":
+    def place_channel_data(self, data: dict) -> "TYPE_ALL_CHANNEL":
+        """
+        Take json data representing a channel, process it, and cache it
+        Args:
+            data: json representation of the channel
+
+        Returns:
+            The processed channel
+        """
         channel_id = to_snowflake(data["id"])
         channel = self.channel_cache.get(channel_id)
         if channel is None:
@@ -174,10 +278,22 @@ class GlobalCache:
             channel.update_from_dict(data)
         return channel
 
-    def place_dm_channel_id(self, user_id, channel_id):
+    def place_dm_channel_id(self, user_id, channel_id) -> None:
+        """
+        Cache that the bot is active within a DM channel.
+        Args:
+            user_id: The id of the user this DM channel belongs to
+            channel_id: The id of the DM channel
+        """
         self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
+        # todo: Shouldn't this return the object,  like the other "place" methods?
 
-    async def get_dm_channel_id(self, user_id):
+    async def get_dm_channel_id(self, user_id) -> "Snowflake_Type":
+        """
+        Get the DM channel ID for a user
+        Args:
+            user_id: The ID of the user
+        """
         user_id = to_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
@@ -187,6 +303,11 @@ class GlobalCache:
         return channel_id
 
     async def get_dm_channel(self, user_id) -> "DM":
+        """
+        Get the DM channel for a user
+        Args:
+            user_id: The ID of the user
+        """
         user_id = to_snowflake(user_id)
         channel_id = await self.get_dm_channel_id(user_id)
         channel = await self.get_channel(channel_id)
@@ -194,7 +315,16 @@ class GlobalCache:
 
     # Guild cache methods
 
-    async def get_guild(self, guild_id: "Snowflake_Type", request_fallback=True) -> Guild:
+    async def get_guild(self, guild_id: "Snowflake_Type", request_fallback: bool = True) -> Optional[Guild]:
+        """
+        Get a guild based on it's ID
+        Args:
+            guild_id: The ID of the guild
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            The guild if found
+        """
         guild_id = to_snowflake(guild_id)
         guild = self.guild_cache.get(guild_id)
         if request_fallback and guild is None:
@@ -203,6 +333,14 @@ class GlobalCache:
         return guild
 
     def place_guild_data(self, data) -> Guild:
+        """
+        Take json data representing a guild, process it, and cache it
+        Args:
+            data: json representation of the guild
+
+        Returns:
+            The processed guild
+        """
         guild_id = to_snowflake(data["id"])
         guild = self.guild_cache.get(guild_id)
         if guild is None:
@@ -215,8 +353,15 @@ class GlobalCache:
     # Roles cache methods
 
     async def get_role(
-        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", request_fallback=True
+        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", request_fallback: bool = True
     ) -> Optional[Role]:
+        """
+        Get a role based on the guild and its own ID
+        Args:
+            guild_id: The ID of the guild this role belongs to
+            role_id: The ID of the role
+            request_fallback: Should data be requested from Discord if not cached?
+        """
         guild_id = to_snowflake(guild_id)
         role_id = to_snowflake(role_id)
         role = self.role_cache.get(role_id)
@@ -231,6 +376,16 @@ class GlobalCache:
     def place_role_data(
         self, guild_id: "Snowflake_Type", data: List[Dict["Snowflake_Type", Any]]
     ) -> Dict["Snowflake_Type", Role]:
+        """
+        Take json data representing a role, process it, and cache it
+        Can handle multiple roles at once
+        Args:
+            guild_id: The ID of the guild this role belongs to
+            data: json representation of the role
+
+        Returns:
+            The processed role
+        """
         guild_id = to_snowflake(guild_id)
 
         roles = {}
