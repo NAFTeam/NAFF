@@ -1,24 +1,3 @@
-"""
-The MIT License (MIT).
-
-Copyright (c) 2021 - present LordOfPolls
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-"""
 import logging
 import re
 from base64 import b64encode
@@ -82,8 +61,10 @@ async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, A
     """
     Return the response text in its correct format, be it dict, or string.
 
-    :param response: the aiohttp response
-    :return: the response text field in its correct type
+    Args:
+        response: the aiohttp response
+    Returns:
+        the response text field in its correct type
     """
     text = await response.text(encoding="utf-8")
 
@@ -96,8 +77,10 @@ def get_args(text: str):
     """
     Get arguments from an input text.
 
-    :param text: The text to process
-    :return: A list of words
+    Args:
+        text: The text to process
+    Returns:
+        A list of words
     """
     return arg_parse.findall(text)
 
@@ -105,8 +88,11 @@ def get_args(text: str):
 def get_first_word(text: str):
     """
     Get a the first word in a string, regardless of whitespace type.
-    :param text: The text to process
-    :return: The requested word
+
+    Args:
+        text: The text to process
+    Returns:
+         The requested word
     """
     found = initial_word.findall(text)
     if len(found) == 0:

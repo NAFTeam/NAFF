@@ -221,7 +221,11 @@ class Message(DiscordObject):
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
         # TODO: Is there a way to dynamically do this instead of hard coding?
 
-        author_data = data.pop("author")
+        try:
+            author_data = data.pop("author")
+        except KeyError:
+            # todo: properly handle message updates that change flags (ie recipient add)
+            return data
         if "guild_id" in data and "member" in data:
             author_data["member"] = data.pop("member")
             data["author_id"] = client.cache.place_member_data(data["guild_id"], author_data).id
@@ -284,34 +288,41 @@ class Message(DiscordObject):
     @property
     def jump_url(self) -> str:
         """A url that allows the client to *jump* to this message"""
-        # todo: Add a `discord://` version of this
         return f"https://discord.com/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
+
+    @property
+    def proto_url(self) -> str:
+        """A URL like `jump_url` that uses protocols"""
+        return f"discord://-/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     async def edit(
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
         components: Optional[
-            Union[List[List[Union[BaseComponent, dict]]], List[Union[BaseComponent, dict]], BaseComponent, dict]
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        filepath: Optional[Union[str, Path]] = None,
+        file: Optional[Union["IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
         """
         Edits the message.
 
-        parameters:
+        Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, or the file itself.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
+
+        Returns:
+            New message object with edits applied
         """
         message_payload = process_message_payload(
             content=content,
@@ -319,7 +330,7 @@ class Message(DiscordObject):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            file=filepath,
+            file=file,
             tts=tts,
             flags=flags,
         )
@@ -335,7 +346,7 @@ class Message(DiscordObject):
         """
         Delete message.
 
-        parameters:
+        Args:
             delay: Seconds to wait before deleting message.
         """
         if delay and delay > 0:
@@ -389,6 +400,7 @@ class Message(DiscordObject):
     async def get_reaction(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
         """
         Get reactions of a specific emoji from this message
+
         Args:
             emoji: The emoji to get
 
@@ -402,7 +414,7 @@ class Message(DiscordObject):
         """
         Add a reaction to this message.
 
-        parameters:
+        Args:
             emoji: the emoji to react with
         """
         emoji = process_emoji_req_format(emoji)
@@ -414,7 +426,7 @@ class Message(DiscordObject):
         """
         Remove a specific reaction that a user reacted with
 
-        parameters:
+        Args:
             emoji: Emoji to remove
             member: Member to remove reaction of. Default's to snake bot user.
         """
@@ -429,7 +441,7 @@ class Message(DiscordObject):
         """
         Clear a specific reaction from message
 
-        parameters:
+        Args:
             emoji: The emoji to clear
         """
         emoji = process_emoji_req_format(emoji)
@@ -455,6 +467,18 @@ class Message(DiscordObject):
 
 
 def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, dict]]) -> Optional[dict]:
+    """
+    Process allowed mentions into a dictionary
+
+    Args:
+        allowed_mentions: Allowed mentions object or dictionary
+
+    Returns:
+        Dictionary of allowed mentions
+
+    Raises:
+        ValueError: Invalid allowed mentions
+    """
     if not allowed_mentions:
         return allowed_mentions
 
@@ -467,7 +491,21 @@ def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, d
     raise ValueError(f"Invalid allowed mentions: {allowed_mentions}")
 
 
-def process_message_reference(message_reference: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]]):
+def process_message_reference(
+    message_reference: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]]
+) -> Optional[dict]:
+    """
+    Process mention references into a dictionary
+
+    Args:
+        message_reference: Message reference object
+
+    Returns:
+        Message reference dictionary
+
+    Raises:
+        ValueError: Invalid message reference
+    """
     if not message_reference:
         return message_reference
 
@@ -503,7 +541,7 @@ def process_message_payload(
     """
     Format message content for it to be ready to send discord.
 
-    parameters:
+    Args:
         content: Message text content.
         embeds: Embedded rich content (up to 6000 characters).
         components: The components to include with the message.
@@ -515,7 +553,7 @@ def process_message_payload(
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
-    returns:
+    Returns:
         Dictionary or multipart data form.
     """
     content = content

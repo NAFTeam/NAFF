@@ -1,15 +1,16 @@
 site_name: Dis-Snek
 repo_url: https://github.com/LordOfPolls/dis_snek
 repo_name: LordOfPolls/dis_snek
+copyright: Copyright &copy; 2021 - 2021 LordOfPolls
 
 theme:
   name: material
+  favicon: images/favicon.png
   custom_dir: docs/overrides
   features:
     - header.autohide
     - navigation.instant
     - navigation.top
-#    - toc.integrate
     - navigation.tabs
     - search.suggest
     - search.share
@@ -32,6 +33,18 @@ theme:
     repo: fontawesome/brands/github-alt
     logo: material/book
 
+extra:
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/WCtUY2CRVu
+      name: Discord Server
+    - icon: fontawesome/brands/github
+      link: https://github.com/Discord-Snake-Pit/Dis-Snek
+      name: Github Repository
+    - icon: fontawesome/brands/trello
+      link: https://trello.com/b/LVjnmYKt/dev-board
+      name: Trello Board
+
 extra_css:
   - extra.css
 
@@ -40,6 +53,7 @@ plugins:
 - autorefs
 - mkdocstrings:
     custom_templates: docs/templates
+    enable_inventory: true
     handlers:
       python:
         selection:
@@ -49,9 +63,10 @@ plugins:
         rendering:
           members_order: source
           show_bases: True
+          show_root_toc_entry: False
           group_by_category: False
           heading_level: 2
-          show_if_no_docstring: True # temporary, this will be reverted to False once we're done with docs
+          show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
     watch:
       - dis_snek
 
@@ -73,7 +88,7 @@ markdown_extensions:
   - pymdownx.tilde
   - toc:
       permalink: true
-      toc_depth: 3
+      toc_depth: 2
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true

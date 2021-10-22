@@ -1,3 +1,4 @@
+from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
@@ -286,10 +287,12 @@ class ComponentContext(InteractionContext):
     async def edit_origin(
         self,
         content: str = None,
-        embeds: List["Embed"] = None,
-        components: List[Union[Dict, "ActionRow"]] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        filepath: Optional[Union[str, Path]] = None,
+        file: Optional[Union["IOBase", "Path", str]] = None,
         tts: bool = False,
     ) -> "Message":
         """
@@ -300,14 +303,13 @@ class ComponentContext(InteractionContext):
             embeds: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
-            reply_to: Message to reference, must be from the same channel.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, or the file itself.
             tts: Should this message use Text To Speech.
 
         returns:
             The message after it was edited.
         """
-        if not self.responded and not self.deferred and filepath:
+        if not self.responded and not self.deferred and file:
             # Discord doesn't allow files at initial response, so we defer then edit.
             await self.defer(edit_origin=True)
 
@@ -316,7 +318,7 @@ class ComponentContext(InteractionContext):
             embeds=embeds,
             components=components,
             allowed_mentions=allowed_mentions,
-            file=filepath,
+            file=file,
             tts=tts,
         )
 

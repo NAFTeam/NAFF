@@ -25,7 +25,7 @@ class Application(DiscordObject):
         bot_require_code_grant bool: when true the app's bot will only join upon completion of the full oauth2 code grant flow
         terms_of_service_url str: the url of the app's terms of service
         privacy_policy_url str: the url of the app's privacy policy
-        owner [User][dis_snek.models.discord_objects.user.BaseUser] : partial user object containing info on the owner of the application
+        owner User : partial user object containing info on the owner of the application
         summary str: if this application is a game sold on Discord, this field will be the summary field for the store page of its primary sku
         verify_key str: the hex encoded key for verification in interactions and the GameSDK's GetTicket
         team Team: if the application belongs to a team, this will be a list of the members of that team
