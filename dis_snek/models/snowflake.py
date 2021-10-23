@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Union
+from typing import Union, List
 
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -24,6 +24,10 @@ def to_snowflake(snowflake: Union[Snowflake_Type, "SnowflakeObject"]) -> int:
         raise ValueError("ID (snowflake) is not in correct discord format!")
 
     return snowflake
+
+
+def to_snowflake_list(snowflakes: List[Union[Snowflake_Type, "SnowflakeObject"]]) -> List[int]:
+    return [to_snowflake(c) for c in snowflakes]
 
 
 @define()

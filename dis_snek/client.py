@@ -27,7 +27,6 @@ from dis_snek.http_client import HTTPClient
 from dis_snek.models import (
     Activity,
     Application,
-    BaseChannel,
     Guild,
     Listener,
     listen,
@@ -42,7 +41,6 @@ from dis_snek.models import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
-    SubCommand,
     MessageCommand,
     BaseCommand,
     to_snowflake,
@@ -435,40 +433,14 @@ class Snake(
         Args:
             command InteractionCommand: The command to add
         """
-        if command.scope not in self.interactions:
-            self.interactions[command.scope] = {}
-        elif command.resolved_name in self.interactions[command.scope]:
-            old_cmd = self.interactions[command.scope][command.name]
-            raise ValueError(f"Duplicate Command! {old_cmd.scope}::{old_cmd.resolved_name}")
+        for scope in command.scopes:
+            if scope not in self.interactions:
+                self.interactions[scope] = {}
+            elif command.resolved_name in self.interactions[scope]:
+                old_cmd = self.interactions[scope][command.name]
+                raise ValueError(f"Duplicate Command! {old_cmd.scopes}::{old_cmd.resolved_name}")
 
-        if isinstance(command, SubCommand):
-            if existing_sub := self.interactions[command.scope].get(command.name):
-                if command.group_name:
-                    existing_index = next(
-                        (
-                            index
-                            for (index, val) in enumerate(existing_sub.options)
-                            if val["name"] == command.group_name and val["type"] == 2
-                        ),
-                        None,
-                    )
-                    if existing_index is not None:
-                        data = command.child_to_dict()
-                        existing_sub.options[existing_index]["options"] += data["options"]
-                        existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                        self.interactions[command.scope][command.name] = existing_sub
-                        return
-
-                existing_sub.options += [command.child_to_dict()]
-                existing_sub.subcommand_callbacks[command.resolved_name] = command.callback
-                command = existing_sub
-
-            else:
-                command.options = [command.child_to_dict()]
-                command.subcommand_callbacks[command.resolved_name] = command.callback
-                command.callback = command.subcommand_call
-
-        self.interactions[command.scope][command.name] = command
+            self.interactions[scope][command.name] = command
 
     def add_message_command(self, command: MessageCommand):
         """
@@ -504,7 +476,7 @@ class Snake(
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
-                elif isinstance(func, InteractionCommand):
+                elif isinstance(func, SlashCommand):
                     self.add_interaction(func)
                 elif isinstance(func, MessageCommand):
                     self.add_message_command(func)
@@ -528,7 +500,6 @@ class Snake(
         Otherwise, it will get the list of interactions and cache their scopes.
         """
         # allow for cogs and main to share the same decorator
-
         try:
             if self.sync_interactions:
                 await self.synchronise_interactions()
@@ -614,6 +585,7 @@ class Snake(
                     local_cmd = local_cmd.to_dict()
                     cmds_to_sync.append(local_cmd)
 
+                    # todo: prevent un-needed syncs for subcommands
                     if (
                         not remote_cmd
                         or local_cmd["name"] != remote_cmd["name"]
@@ -697,16 +669,18 @@ class Snake(
             kwargs = {}
 
             if options := data["data"].get("options"):
-                if o_type := options[0]["type"] in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
+                o_type = options[0]["type"]
+                if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
                     # this is a subcommand, process accordingly
                     if o_type == OptionTypes.SUB_COMMAND:
                         invoked_name = f"{invoked_name} {options[0]['name']}"
+                        options = options[0].get("options", [])
                     else:
                         invoked_name = (
                             f"{invoked_name} {options[0]['name']} "
                             f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                         )
-                        options = options[0]["options"][0].get("options")
+                        options = options[0]["options"][0].get("options", [])
 
                 for option in options:
                     value = option.get("value")
@@ -759,7 +733,7 @@ class Snake(
 
             if scope in self.interactions:
                 command: SlashCommand = self.interactions[scope][name]  # type: ignore
-                log.debug(f"{command.scope} :: {command.name} should be called")
+                log.debug(f"{scope} :: {command.name} should be called")
                 ctx = await self.get_context(interaction_data, True)
 
                 if auto_opt := getattr(ctx, "focussed_option", None):
