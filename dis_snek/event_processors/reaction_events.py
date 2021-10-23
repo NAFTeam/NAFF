@@ -18,9 +18,9 @@ class ReactionEvents(EventMixinTemplate):
             author = await self.cache.get_user(event.data.get("user_id"))
 
         if event.data["emoji"].get("id") is not None:
-            emoji = CustomEmoji.from_dict(event.data.get("emoji"), self)  # noqa
+            emoji = CustomEmoji.from_dict(event.data.get("emoji"), self)  # type: ignore
         else:
-            emoji = Emoji.from_dict(event.data.get("emoji"), self)  # noqa
+            emoji = Emoji.from_dict(event.data.get("emoji"), self)  # type: ignore
 
         message = await self.cache.get_message(
             event.data.get("channel_id"), event.data.get("message_id")
