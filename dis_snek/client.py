@@ -21,14 +21,7 @@ from dis_snek.errors import (
     Forbidden,
     InteractionMissingAccess,
 )
-from dis_snek.event_processors.channel_events import ChannelEvents
-from dis_snek.event_processors.guild_events import GuildEvents
-from dis_snek.event_processors.member_events import MemberEvents
-from dis_snek.event_processors.message_events import MessageEvents
-from dis_snek.event_processors.reaction_events import ReactionEvents
-from dis_snek.event_processors.role_events import RoleEvents
-from dis_snek.event_processors.thread_events import ThreadEvents
-from dis_snek.event_processors.user_events import UserEvents
+from dis_snek.event_processors import *
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models import (
@@ -73,7 +66,15 @@ log = logging.getLogger(logger_name)
 
 
 class Snake(
-    ChannelEvents, GuildEvents, MemberEvents, MessageEvents, ThreadEvents, RoleEvents, ReactionEvents, UserEvents
+    ChannelEvents,
+    GuildEvents,
+    MemberEvents,
+    MessageEvents,
+    ReactionEvents,
+    RoleEvents,
+    StageEvents,
+    ThreadEvents,
+    UserEvents,
 ):
     """
     The bot client.
