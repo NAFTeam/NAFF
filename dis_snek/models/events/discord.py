@@ -147,11 +147,17 @@ class GuildUpdate(BaseEvent):
 
 
 @attr.s(slots=True)
-class GuildDelete(BaseEvent, GuildEvent):
-    """Dispatched when a guild becomes unavailable or user left/removed."""
+class GuildLeft(BaseEvent, GuildEvent):
+    """Dispatched when a guild is left"""
 
-    unavailable: bool = attr.ib(default=False)
-    """If this event was triggered due to an outage"""
+    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    """The guild, if it was cached"""
+
+
+@attr.s(slots=True)
+class GuildUnavailable(BaseEvent, GuildEvent):
+    """Dispatched when a guild is not available."""
+
     guild: Optional["Guild"] = attr.ib(default=MISSING)
     """The guild, if it was cached"""
 

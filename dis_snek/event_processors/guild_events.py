@@ -30,13 +30,20 @@ class GuildEvents(EventMixinTemplate):
 
     @listen()
     async def _on_raw_guild_delete(self, event: RawGatewayEvent) -> None:
-        self.dispatch(
-            events.GuildDelete(
-                event.data.get("id"),
-                event.data.get("unavailable", False),
-                await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+        if event.data.get("unavailable", False):
+            self.dispatch(
+                events.GuildUnavailable(
+                    event.data.get("id"),
+                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                )
             )
-        )
+        else:
+            self.dispatch(
+                events.GuildLeft(
+                    event.data.get("id"),
+                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                )
+            )
 
     @listen()
     async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
