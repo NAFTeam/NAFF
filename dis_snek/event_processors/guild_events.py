@@ -45,10 +45,24 @@ class GuildEvents(EventMixinTemplate):
                 )
             )
 
-    @listen()
-    async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
-        ...
+    # ToDo: Waiting for guild ban objects to be made
+    # @listen()
+    # async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
+    #     ...
+    #
+    # @listen()
+    # async def _on_raw_guild_ban_remove(self, event: RawGatewayEvent) -> None:
+    #     ...
 
-    @listen()
-    async def _on_raw_guild_ban_remove(self, event: RawGatewayEvent) -> None:
-        ...
+    # ToDo: waiting for integration objects to be made
+    # @listen()
+    # async def _on_raw_integration_create(self, event: RawGatewayEvent) -> None:
+    #     ...
+    #
+    # @listen()
+    # async def _on_raw_integration_update(self, event: RawGatewayEvent) -> None:
+    #     ...
+    #
+    # @listen()
+    # async def _on_raw_integration_delete(self, event: RawGatewayEvent) -> None:
+    #     ...
