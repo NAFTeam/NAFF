@@ -1,21 +1,23 @@
 """
 These are events dispatched by Discord. This is intended as a reference so you know what data to expect for each event
 
-!!! Hint "Example Usage:"
+??? Hint "Example Usage:"
     The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
     are actually in `lower_case_with_underscores` so your listeners should be named as following:
 
     ```python
-    @bot.event
+    @listen()
     def on_ready():
         # ready events pass no data, so dont have params
         print("Im ready!")
 
-    @bot.event
-    def on_guild_create(event):
+    @listen()
+    def on_guild_join(event):
         # guild_create events pass a guild object, expect a single param
         print(f"{event.guild.name} created")
     ```
+!!! warning
+    While all of these events are documented, not all of them are used, currently.
 """
 
 from typing import TYPE_CHECKING, Any, List, Union, Optional
@@ -130,8 +132,12 @@ class ThreadMembersUpdate(BaseEvent):
 
 
 @attr.s(slots=True)
-class GuildCreate(BaseEvent):
-    """Dispatched when a guild is created."""
+class GuildJoin(BaseEvent):
+    """Dispatched when a guild is joined, created, or becomes available.
+
+    !!! note
+        This is called multiple times during startup, check the bot is ready before responding to this.
+    """
 
     guild: "Guild" = attr.ib()
     """The guild that was created"""
@@ -164,14 +170,14 @@ class GuildUnavailable(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildBanAdd(BaseEvent, GuildEvent):
+class BanCreate(BaseEvent, GuildEvent):
     """Dispatched when someone was banned from a guild"""
 
     user: "BaseUser" = attr.ib(metadata=docs("The user"))
 
 
 @attr.s(slots=True)
-class GuildBanRemove(GuildBanAdd):
+class BanRemove(BanCreate):
     """Dispatched when a users ban is removed"""
 
 
@@ -224,7 +230,7 @@ class MemberUpdate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleCreate(BaseEvent, GuildEvent):
+class RoleCreate(BaseEvent, GuildEvent):
     """Dispatched when a role is created."""
 
     role: "Role" = attr.ib()
@@ -232,7 +238,7 @@ class GuildRoleCreate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleUpdate(BaseEvent, GuildEvent):
+class RoleUpdate(BaseEvent, GuildEvent):
     """Dispatched when a role is updated."""
 
     before: "Role" = attr.ib()
@@ -242,7 +248,7 @@ class GuildRoleUpdate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleDelete(BaseEvent, GuildEvent):
+class RoleDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild role is deleted"""
 
     role_id: "Snowflake_Type" = attr.ib()

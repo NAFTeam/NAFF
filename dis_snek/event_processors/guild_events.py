@@ -21,7 +21,7 @@ class GuildEvents(EventMixinTemplate):
         guild = self.cache.place_guild_data(event.data)
         self._guild_event.set()
 
-        self.dispatch(events.GuildCreate(guild))
+        self.dispatch(events.GuildJoin(guild))
 
     @listen()
     async def _on_raw_guild_update(self, event: RawGatewayEvent) -> None:

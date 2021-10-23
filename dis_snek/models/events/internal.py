@@ -1,20 +1,22 @@
 """These are events dispatched by the client. This is intended as a reference so you know what data to expect for each event
 
-!!! Hint "Example Usage:"
+??? Hint "Example Usage:"
     The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
     are actually in `lower_case_with_underscores` so your listeners should be named as following:
 
     ```python
-    @bot.event
+    @listen()
     def on_ready():
         # ready events pass no data, so dont have params
         print("Im ready!")
 
-    @bot.event
-    def on_guild_create(event):
+    @listen()
+    def on_guild_join(event):
         # guild_create events pass a guild object, expect a single param
         print(f"{event.guild.name} created")
     ```
+!!! warning
+    While all of these events are documented, not all of them are used, currently.
 """
 import re
 from typing import TYPE_CHECKING
