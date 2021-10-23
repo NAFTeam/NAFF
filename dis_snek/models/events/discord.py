@@ -21,6 +21,7 @@ These are events dispatched by Discord. This is intended as a reference so you k
 from typing import TYPE_CHECKING, Any, List, Union, Optional
 
 import attr
+from dis_snek.models import Invite
 
 from dis_snek.const import MISSING
 from dis_snek.models.events.internal import BaseEvent, GuildEvent
@@ -300,7 +301,12 @@ class GuildIntegrationsUpdate(BaseEvent, GuildEvent):
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created"""
 
-    invite: Any = attr.ib()  # TODO: Replace this with a invite object type
+    invite: Invite = attr.ib()
+
+
+@attr.s(slots=True)
+class InviteDelete(InviteCreate):
+    """Dispatched when an invite is deleted"""
 
 
 @attr.s(slots=True)
@@ -390,13 +396,8 @@ class StageInstanceDelete(StageInstanceCreate):
 
 
 @attr.s(slots=True)
-class StageInstanceUpdate(BaseEvent):
+class StageInstanceUpdate(StageInstanceCreate):
     """Dispatched when a stage instance is updated"""
-
-    before: Any = attr.ib()  # TODO: Replace this
-    """The stage instance before this event was created"""
-    after: Any = attr.ib()  # TODO: Replace this
-    """The stage instance after this event was created"""
 
 
 @attr.s(slots=True)
