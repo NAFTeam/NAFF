@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord import ClientObject
 from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class Reaction(DiscordObject):
+class Reaction(ClientObject):
     count: int = attr.ib()
     me: bool = attr.ib(default=False)
     emoji: "Emoji" = attr.ib()

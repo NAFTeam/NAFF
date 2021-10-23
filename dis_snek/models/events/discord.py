@@ -1,27 +1,31 @@
 """
 These are events dispatched by Discord. This is intended as a reference so you know what data to expect for each event
 
-!!! Hint "Example Usage:"
+??? Hint "Example Usage:"
     The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
     are actually in `lower_case_with_underscores` so your listeners should be named as following:
 
     ```python
-    @bot.event
+    @listen()
     def on_ready():
         # ready events pass no data, so dont have params
         print("Im ready!")
 
-    @bot.event
-    def on_guild_create(event):
+    @listen()
+    def on_guild_join(event):
         # guild_create events pass a guild object, expect a single param
         print(f"{event.guild.name} created")
     ```
+!!! warning
+    While all of these events are documented, not all of them are used, currently.
 """
 
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Union, Optional
 
 import attr
+from dis_snek.models import Invite
 
+from dis_snek.const import MISSING
 from dis_snek.models.events.internal import BaseEvent, GuildEvent
 from dis_snek.utils.attr_utils import docs
 
@@ -128,8 +132,12 @@ class ThreadMembersUpdate(BaseEvent):
 
 
 @attr.s(slots=True)
-class GuildCreate(BaseEvent):
-    """Dispatched when a guild is created."""
+class GuildJoin(BaseEvent):
+    """Dispatched when a guild is joined, created, or becomes available.
+
+    !!! note
+        This is called multiple times during startup, check the bot is ready before responding to this.
+    """
 
     guild: "Guild" = attr.ib()
     """The guild that was created"""
@@ -146,22 +154,30 @@ class GuildUpdate(BaseEvent):
 
 
 @attr.s(slots=True)
-class GuildDelete(BaseEvent, GuildEvent):
-    """Dispatched when a guild becomes unavailable or user left/removed."""
+class GuildLeft(BaseEvent, GuildEvent):
+    """Dispatched when a guild is left"""
 
-    unavailable: bool = attr.ib(default=False)
-    """If this event was triggered due to an outage"""
+    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    """The guild, if it was cached"""
 
 
 @attr.s(slots=True)
-class GuildBanAdd(BaseEvent, GuildEvent):
+class GuildUnavailable(BaseEvent, GuildEvent):
+    """Dispatched when a guild is not available."""
+
+    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    """The guild, if it was cached"""
+
+
+@attr.s(slots=True)
+class BanCreate(BaseEvent, GuildEvent):
     """Dispatched when someone was banned from a guild"""
 
     user: "BaseUser" = attr.ib(metadata=docs("The user"))
 
 
 @attr.s(slots=True)
-class GuildBanRemove(GuildBanAdd):
+class BanRemove(BanCreate):
     """Dispatched when a users ban is removed"""
 
 
@@ -196,6 +212,10 @@ class MemberAdd(BaseEvent, GuildEvent):
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
+    member: Union["Member", "User"] = attr.ib(
+        metadata=docs("The member who was added, can be user if the member is not cached")
+    )
+
 
 @attr.s(slots=True)
 class MemberUpdate(BaseEvent, GuildEvent):
@@ -210,7 +230,7 @@ class MemberUpdate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleCreate(BaseEvent, GuildEvent):
+class RoleCreate(BaseEvent, GuildEvent):
     """Dispatched when a role is created."""
 
     role: "Role" = attr.ib()
@@ -218,7 +238,7 @@ class GuildRoleCreate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleUpdate(BaseEvent, GuildEvent):
+class RoleUpdate(BaseEvent, GuildEvent):
     """Dispatched when a role is updated."""
 
     before: "Role" = attr.ib()
@@ -228,7 +248,7 @@ class GuildRoleUpdate(BaseEvent, GuildEvent):
 
 
 @attr.s(slots=True)
-class GuildRoleDelete(BaseEvent, GuildEvent):
+class RoleDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild role is deleted"""
 
     role_id: "Snowflake_Type" = attr.ib()
@@ -287,7 +307,12 @@ class GuildIntegrationsUpdate(BaseEvent, GuildEvent):
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created"""
 
-    invite: Any = attr.ib()  # TODO: Replace this with a invite object type
+    invite: Invite = attr.ib()
+
+
+@attr.s(slots=True)
+class InviteDelete(InviteCreate):
+    """Dispatched when an invite is deleted"""
 
 
 @attr.s(slots=True)
@@ -358,6 +383,8 @@ class PresenceUpdate(BaseEvent):
     """The users current activities"""
     client_status: dict = attr.ib()
     """What platform the user is reported as being on"""
+    guild_id: "Snowflake_Type" = attr.ib()
+    """The guild this presence update was dispatched from"""
 
 
 @attr.s(slots=True)
@@ -375,13 +402,8 @@ class StageInstanceDelete(StageInstanceCreate):
 
 
 @attr.s(slots=True)
-class StageInstanceUpdate(BaseEvent):
+class StageInstanceUpdate(StageInstanceCreate):
     """Dispatched when a stage instance is updated"""
-
-    before: Any = attr.ib()  # TODO: Replace this
-    """The stage instance before this event was created"""
-    after: Any = attr.ib()  # TODO: Replace this
-    """The stage instance after this event was created"""
 
 
 @attr.s(slots=True)
