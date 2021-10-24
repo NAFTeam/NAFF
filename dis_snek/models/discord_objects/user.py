@@ -52,6 +52,11 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return data
 
     @property
+    def tag(self) -> str:
+        """Returns the user's Discord tag"""
+        return f"{self.username}#{self.discriminator}"
+
+    @property
     def mention(self) -> str:
         """Returns a string that would mention the user"""
         return f"<@{self.id}>"
