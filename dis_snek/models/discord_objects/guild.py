@@ -6,15 +6,9 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
-from dis_snek.models import Invite
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
-from dis_snek.models.discord_objects.channel import (
-    GuildText,
-    GuildVoice,
-    GuildStageVoice,
-    PermissionOverwrite,
-)
+from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite, Invite
 from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
