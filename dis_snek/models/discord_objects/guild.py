@@ -6,6 +6,7 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
+from dis_snek.models import Invite
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.channel import (
@@ -950,6 +951,10 @@ class Guild(DiscordObject):
             if isinstance(channel, DiscordObject):
                 channel = channel.id
         return await self._client.http.modify_guild_widget(self.id, enabled, channel)
+
+    async def get_invites(self) -> List["Invite"]:
+        invites_data = await self._client.http.get_guild_invites(self.id)
+        return Invite.from_list(invites_data, self._client)
 
 
 @define()
