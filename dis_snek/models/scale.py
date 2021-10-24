@@ -120,9 +120,10 @@ class Scale:
             if isinstance(func, ComponentCommand):
                 for listener in func.listeners:
                     self.bot._component_callbacks.pop(listener)
-            elif isinstance(func, InteractionCommand):
-                if self.bot.interactions.get(func.scopes) and self.bot.interactions[func.scopes].get(func.name):
-                    self.bot.interactions[func.scopes].pop(func.name)
+            elif isinstance(func, SlashCommand):
+                for scope in func.scopes:
+                    if self.bot.interactions.get(scope) and self.bot.interactions[scope].get(func.name):
+                        self.bot.interactions[scope].pop(func.name)
             elif isinstance(func, MessageCommand):
                 if self.bot.commands[func.name]:
                     self.bot.commands.pop(func.name)
