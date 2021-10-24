@@ -216,7 +216,7 @@ class Message(DiscordObject):
         Returns:
             The referenced message, if found
         """
-        if self._referenced_message_id is None: 
+        if self._referenced_message_id is None:
             return None
         return await self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
