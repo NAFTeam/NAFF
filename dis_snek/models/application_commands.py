@@ -13,6 +13,7 @@ from dis_snek.const import (
     SLASH_CMD_NAME_LENGTH,
     SLASH_CMD_MAX_OPTIONS,
     SLASH_CMD_MAX_DESC_LENGTH,
+    MISSING,
 )
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.command import BaseCommand
@@ -20,7 +21,7 @@ from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import CommandTypes
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.utils.attr_utils import docs
 from dis_snek.utils.serializer import no_export_meta
 
@@ -134,10 +135,10 @@ class InteractionCommand(BaseCommand):
     """
 
     name: str = attr.ib(metadata=docs("1-32 character name") | no_export_meta)
-    scope: "Snowflake_Type" = attr.ib(
-        default=GLOBAL_SCOPE,
-        converter=to_snowflake,
-        metadata=docs("The scope of this interaction. Global or guild ids") | no_export_meta,
+    scopes: List["Snowflake_Type"] = attr.ib(
+        default=[GLOBAL_SCOPE],
+        converter=to_snowflake_list,
+        metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
 
     default_permission: bool = attr.ib(
@@ -245,20 +246,11 @@ class SlashCommandOption(DictSerializationMixin):
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SlashCommand(InteractionCommand):
-    """
-    Represents a discord slash command.
-
-    parameters:
-        name: The name of this command.
-        description: The description of this command.
-        options: A list of options for this command.
-    """
-
+class _SlashCommandMeta(InteractionCommand):
     name: str = attr.ib()
-    description: str = attr.ib(default="No Description Set")
+    description: str = attr.ib("No Description Set")
+
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
-    subcommand_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
     autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
 
     def __attrs_post_init__(self):
@@ -273,29 +265,26 @@ class SlashCommand(InteractionCommand):
         super().__attrs_post_init__()
 
     @name.validator
-    def _name_validator(self, attribute: str, value: str) -> None:
-        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
-            raise ValueError(
-                f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
-            )  # noqa: W605
+    def name_validator(self, attribute: str, value: str) -> None:
+        if value:
+            if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
+                raise ValueError(
+                    f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
+                )  # noqa: W605
 
     @description.validator
-    def _description_validator(self, attribute: str, value: str) -> None:
+    def description_validator(self, attribute: str, value: str) -> None:
         if not 1 <= len(value) <= SLASH_CMD_MAX_DESC_LENGTH:
             raise ValueError(f"Description must be between 1 and {SLASH_CMD_MAX_DESC_LENGTH} characters long")
 
     @options.validator
-    def _options_validator(self, attribute: str, value: List) -> None:
+    def options_validator(self, attribute: str, value: List) -> None:
         if value:
             if isinstance(value, list):
                 if len(value) > SLASH_CMD_MAX_OPTIONS:
                     raise ValueError(f"Slash commands can only hold {SLASH_CMD_MAX_OPTIONS} options")
             else:
                 raise TypeError("Options attribute must be either None or a list of options")
-
-            if any(opt.type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP) for opt in value):
-                if any(opt.type not in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP) for opt in value):
-                    raise ValueError("Options aren't supported when subcommands are defined")
 
     def autocomplete(self, option_name: str):
         """A decorator to declare a coroutine as an option autocomplete"""
@@ -319,43 +308,110 @@ class SlashCommand(InteractionCommand):
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SubCommand(SlashCommand):
-    options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
+class SlashCommand(_SlashCommandMeta):
+    """
+    Represents a discord slash command.
 
+    parameters:
+        name: The name of this command.
+        description: The description of this command.
+        options: A list of options for this command.
+    """
+
+    subcommands: Dict[str, "SubCommand"] = attr.ib(factory=dict, metadata=no_export_meta)
+
+    def to_dict(self) -> Dict[str, Any]:
+
+        if self.subcommands:
+            # we're dealing with subcommands, behave differently
+            self.options = []
+            json = super().to_dict()
+            groups = {}
+            sub_cmds = []
+            for sc in self.subcommands.values():
+                if sc.group_name:
+                    if sc.group_name not in groups.keys():
+                        groups[sc.group_name] = {
+                            "name": sc.group_name,
+                            "description": sc.group_description,
+                            "type": OptionTypes.SUB_COMMAND_GROUP,
+                            "options": [sc.to_dict()],
+                        }
+                        continue
+                    groups[sc.group_name]["options"].append(sc.to_dict())
+                else:
+                    sub_cmds.append(sc.to_dict())
+            options = [g for g in groups.values()] + sub_cmds
+            json["options"] = options
+            return json
+        else:
+            return super().to_dict()
+
+    async def _subcommand_call_no_wrap(self, context: "InteractionContext", *args, **kwargs):
+        if call := self.subcommands.get(context.invoked_name):
+            return await call(context, *args, **kwargs)
+        breakpoint()
+        raise ValueError(f"Error {context.invoked_name} is not a known subcommand")
+
+    def subcommand(
+        self,
+        sub_cmd_name: str,
+        group_name: str = None,
+        group_description: str = "No Description Set",
+        sub_cmd_description: str = "No Description Set",
+        options: List[Union[SlashCommandOption, Dict]] = None,
+    ) -> Callable[..., "SubCommand"]:
+        def wrapper(call: Callable[..., Coroutine]) -> "SubCommand":
+            if not asyncio.iscoroutinefunction(call):
+                raise TypeError("Subcommand must be coroutine")
+
+            self.callback = self._subcommand_call_no_wrap
+
+            sub = SubCommand(
+                name=self.name,
+                description=self.description,
+                group_name=group_name,
+                group_description=group_description,
+                subcommand_name=sub_cmd_name,
+                subcommand_description=sub_cmd_description,
+                options=options,
+                scopes=self.scopes,
+                callback=call,
+            )
+            self.subcommands[sub.resolved_name] = sub
+            return sub
+
+        return wrapper
+
+
+@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+class SubCommand(_SlashCommandMeta):
     group_name: str = attr.ib(default=None, metadata=no_export_meta)
     group_description: str = attr.ib(default=None, metadata=no_export_meta)
 
     subcommand_name: str = attr.ib(default=None, metadata=no_export_meta)
     subcommand_description: str = attr.ib(default=None, metadata=no_export_meta)
 
+    @group_name.validator
+    @subcommand_name.validator
+    def _name_validator(self, attribute: str, value: str) -> None:
+        return self.name_validator(attribute, value)
+
+    @group_description.validator
+    @subcommand_description.validator
+    def _description_validator(self, attribute: str, value: str) -> None:
+        return self.description_validator(attribute, value)
+
     @property
     def resolved_name(self):
         return f"{self.name} {f'{self.group_name} ' if self.group_name else ''}{self.subcommand_name}"
 
-    async def subcommand_call(self, context: "InteractionContext", *args, **kwargs):
-        if call := self.subcommand_callbacks.get(context.invoked_name):
-            return await call(context, *args, **kwargs)
-        raise ValueError(f"Error {context.invoked_name} is not a known subcommand")
-
-    def child_to_dict(self):
-        sub_cmd = {
+    def to_dict(self) -> dict:
+        return super().to_dict() | {
             "name": self.subcommand_name,
             "description": self.subcommand_description,
             "type": OptionTypes.SUB_COMMAND,
-            "options": [opt.to_dict() if hasattr(opt, "to_dict") else opt for opt in self.options],
         }
-        if self.group_name:
-            sub_cmd = {
-                "name": self.group_name,
-                "description": self.group_description,
-                "type": OptionTypes.SUB_COMMAND_GROUP,
-                "options": [sub_cmd],
-            }
-        return sub_cmd
-
-    def to_dict(self):
-        parent = super().to_dict()
-        return parent
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -372,13 +428,13 @@ class ComponentCommand(InteractionCommand):
 def slash_command(
     name: str,
     description: str = "No description set",
-    scope: "Snowflake_Type" = GLOBAL_SCOPE,
+    scopes: List["Snowflake_Type"] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
     permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
     sub_cmd_name: str = None,
-    sub_cmd_description: str = "No description set",
     group_name: str = None,
+    sub_cmd_description: str = "No description set",
     group_description: str = "No description set",
 ):
     """
@@ -409,87 +465,26 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        if not sub_cmd_name:
-            cmd = SlashCommand(
-                name=name,
-                description=description,
-                scope=scope,
-                callback=func,
-                options=options,
-                default_permission=default_permission,
-                permissions=permissions,
-            )
-        else:
-            cmd = SubCommand(
-                name=name,
-                description=description,
-                subcommand_name=sub_cmd_name,
-                subcommand_description=sub_cmd_description,
-                group_name=group_name,
-                group_description=group_description,
-                options=options,
-                callback=func,
-                scope=scope,
-                default_permission=default_permission,
-                permissions=permissions,
-            )
-
-        func.cmd_id = f"{scope}::{name}"
-        return cmd
-
-    return wrapper
-
-
-def sub_command(
-    base_name: str,
-    sub_name: str,
-    group_name: str = None,
-    base_description: str = "No Description set",
-    sub_description: str = "No Description set",
-    group_description: str = "No Description set",
-    scope: "Snowflake_Type" = GLOBAL_SCOPE,
-    options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
-    default_permission: bool = True,
-    permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
-):
-    """
-    A decorator to declare a coroutine as a slash subcommand.
-
-    note:
-        While the base and group descriptions arent visible in the discord client, currently.
-        We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
-        one of the future ui updates.
-
-
-    parameters:
-        base_name: The name of the base command
-        sub_name: The name of the subcommand
-        group_name: The name of the command group (optional)
-        base_description: The description of the base command
-        sub_description: The description of the subcommand
-        group_description: The description of the command group
-        scope: The scope this command exists within
-        options: The parameters for the command, max 25
-        default_permission: Whether the command is enabled by default when the app is added to a guild
-        permissions: The roles or users who can use this command
-    """
-
-    def wrapper(func) -> SlashCommand:
-        cmd = SubCommand(
-            name=base_name,
-            description=base_description,
-            subcommand_name=sub_name,
-            subcommand_description=sub_description,
-            group_name=group_name,
-            group_description=group_description,
-            options=options,
-            callback=func,
-            scope=scope,
+        cmd = SlashCommand(
+            name=name,
+            description=description,
+            scopes=scopes if scopes else [GLOBAL_SCOPE],
             default_permission=default_permission,
             permissions=permissions,
         )
 
-        func.cmd_id = f"{scope}::{base_name}"
+        if not sub_cmd_name:
+            cmd.callback = func
+            cmd.options = options
+        else:
+            cmd.subcommand(
+                group_name=group_name,
+                sub_cmd_name=sub_cmd_name,
+                group_description=group_description,
+                sub_cmd_description=sub_cmd_description,
+                options=options,
+            )(func)
+
         return cmd
 
     return wrapper
@@ -498,7 +493,7 @@ def sub_command(
 def context_menu(
     name: str,
     context_type: "CommandTypes",
-    scope: "Snowflake_Type" = GLOBAL_SCOPE,
+    scopes: List["Snowflake_Type"] = MISSING,
     default_permission: bool = True,
     permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
 ):
@@ -530,7 +525,7 @@ def context_menu(
         cmd = ContextMenu(
             name=name,
             type=context_type,
-            scope=scope,
+            scopes=scopes if scopes else [GLOBAL_SCOPE],
             default_permission=default_permission,
             permissions=perm,
             callback=func,

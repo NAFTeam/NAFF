@@ -57,7 +57,8 @@ def wrap_partial(obj, cls):
     Returns:
         The original command object with its callback methods wrapped
     """
-    obj.callback = functools.partial(obj.callback, cls)
+    if "_no_wrap" not in getattr(obj.callback, "__name__", ""):
+        obj.callback = functools.partial(obj.callback, cls)
 
     if getattr(obj, "error_callback", None):
         obj.error_callback = functools.partial(obj.error_callback, cls)
@@ -67,5 +68,7 @@ def wrap_partial(obj, cls):
         obj.post_run_callback = functools.partial(obj.post_run_callback, cls)
     if getattr(obj, "autocomplete_callbacks", None):
         obj.autocomplete_callbacks = {k: functools.partial(v, cls) for k, v in obj.autocomplete_callbacks.items()}
+    if getattr(obj, "subcommands", None):
+        obj.subcommands = {k: wrap_partial(v, cls) for k, v in obj.subcommands.items()}
 
     return obj

@@ -4,7 +4,7 @@ import logging
 from typing import List, TYPE_CHECKING, Callable, Coroutine
 
 from dis_snek.const import logger_name
-from dis_snek.models.application_commands import InteractionCommand, ComponentCommand
+from dis_snek.models.application_commands import InteractionCommand, ComponentCommand, SlashCommand
 from dis_snek.models.command import MessageCommand
 from dis_snek.models.listener import Listener
 from dis_snek.utils.misc_utils import wrap_partial
@@ -73,7 +73,7 @@ class Scale:
         new_cls = super().__new__(cls)
 
         for name, val in cls.__dict__.items():
-            if isinstance(val, (InteractionCommand, MessageCommand, ComponentCommand)):
+            if isinstance(val, (SlashCommand, MessageCommand, ComponentCommand)):
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
@@ -81,7 +81,7 @@ class Scale:
 
                 if isinstance(val, ComponentCommand):
                     bot.add_component_callback(val)
-                elif isinstance(val, InteractionCommand):
+                elif isinstance(val, SlashCommand):
                     bot.add_interaction(val)
                 else:
                     bot.add_message_command(val)
@@ -121,8 +121,8 @@ class Scale:
                 for listener in func.listeners:
                     self.bot._component_callbacks.pop(listener)
             elif isinstance(func, InteractionCommand):
-                if self.bot.interactions.get(func.scope) and self.bot.interactions[func.scope].get(func.name):
-                    self.bot.interactions[func.scope].pop(func.name)
+                if self.bot.interactions.get(func.scopes) and self.bot.interactions[func.scopes].get(func.name):
+                    self.bot.interactions[func.scopes].pop(func.name)
             elif isinstance(func, MessageCommand):
                 if self.bot.commands[func.name]:
                     self.bot.commands.pop(func.name)
