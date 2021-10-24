@@ -465,18 +465,26 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        cmd = SlashCommand(
-            name=name,
-            description=description,
-            scopes=scopes if scopes else [GLOBAL_SCOPE],
-            default_permission=default_permission,
-            permissions=permissions,
-        )
-
         if not sub_cmd_name:
-            cmd.callback = func
-            cmd.options = options
+
+            cmd = SlashCommand(
+                name=name,
+                description=description,
+                scopes=scopes if scopes else [GLOBAL_SCOPE],
+                default_permission=default_permission,
+                permissions=permissions,
+                callback=func,
+                options=options,
+            )
+
         else:
+            cmd = SlashCommand(
+                name=name,
+                description=description,
+                scopes=scopes if scopes else [GLOBAL_SCOPE],
+                default_permission=default_permission,
+                permissions=permissions,
+            )
             cmd.subcommand(
                 group_name=group_name,
                 sub_cmd_name=sub_cmd_name,
@@ -594,7 +602,6 @@ def slash_option(
             autocomplete=autocomplete,
             choices=choices if choices else [],
         )
-
         if not hasattr(func, "options"):
             func.options = []
         func.options.insert(0, option)
