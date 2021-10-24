@@ -260,7 +260,11 @@ class Message(DiscordObject):
         if "reactions" in data:
             reactions = []
             for reaction_data in data["reactions"]:
-                reactions.append(Reaction.from_dict(reaction_data, client))
+                reactions.append(
+                    Reaction.from_dict(
+                        reaction_data | {"message_id": data["id"], "channel_id": data["channel_id"]}, client
+                    )
+                )
             data["reactions"] = reactions
 
         # TODO: Convert to application object
