@@ -37,6 +37,11 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
     def __str__(self) -> str:
         return f"<{'a:' if self.animated else ''}{self.name}:{self.id}>"  # <:thinksmart:623335224318754826>
 
+    def __eq__(self, other):
+        if self.id:
+            return self.id == other.id
+        return self.name == other.name
+
     @property
     def req_format(self) -> str:
         """
