@@ -236,7 +236,7 @@ class Message(DiscordObject):
             data["author_id"] = client.cache.place_user_data(author_data).id
 
         mention_ids = []
-        for user_data in data.pop("mentions"):
+        for user_data in data.pop("mentions", {}):
             if "guild_id" in data and "member" in user_data:
                 mention_ids.append(client.cache.place_member_data(data["guild_id"], user_data).id)
             else:
