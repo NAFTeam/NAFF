@@ -23,10 +23,11 @@ from typing import TYPE_CHECKING
 
 import attr
 
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import docs
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.context import ComponentContext
+    from dis_snek.models.context import ComponentContext
     from dis_snek.models.snowflake import Snowflake_Type
 
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
@@ -48,7 +49,7 @@ class BaseEvent:
 class GuildEvent:
     """A base event that adds guild_id"""
 
-    guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"))
+    guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"), converter=to_snowflake)
 
 
 @attr.s(slots=True)

@@ -1,12 +1,11 @@
 import copy
 import logging
 
-from dis_snek.models.events.discord import IntegrationCreate, IntegrationDelete
-
 from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate
 from dis_snek.models import listen, events, GuildIntegration
 from dis_snek.models.events import RawGatewayEvent
+from dis_snek.models.events.discord import IntegrationCreate, IntegrationDelete, BanCreate, BanRemove
 
 log = logging.getLogger(logger_name)
 
@@ -47,16 +46,14 @@ class GuildEvents(EventMixinTemplate):
                 )
             )
 
-    # ToDo: Waiting for guild ban objects to be made
-    # @listen()
-    # async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
-    #     ...
-    #
-    # @listen()
-    # async def _on_raw_guild_ban_remove(self, event: RawGatewayEvent) -> None:
-    #     ...
+    @listen()
+    async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
+        self.dispatch(BanCreate(event.data.get("guild_id"), self.cache.place_user_data(event.data.get("user"))))
 
-    # ToDo: waiting for integration objects to be made
+    @listen()
+    async def _on_raw_guild_ban_remove(self, event: RawGatewayEvent) -> None:
+        self.dispatch(BanRemove(event.data.get("guild_id"), self.cache.place_user_data(event.data.get("user"))))
+
     @listen()
     async def _on_raw_integration_create(self, event: RawGatewayEvent) -> None:
         self.dispatch(IntegrationCreate(GuildIntegration.from_dict(event.data, self)))  # type: ignore
