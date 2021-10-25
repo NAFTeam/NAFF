@@ -46,7 +46,14 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Attachment(DiscordObject):
     filename: str = attr.ib()
     content_type: Optional[str] = attr.ib(default=None)
@@ -61,7 +68,14 @@ class Attachment(DiscordObject):
         return self.height, self.width
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class ChannelMention(DiscordObject):
     guild_id: "Snowflake_Type" = attr.ib()
     type: ChannelTypes = attr.ib(converter=ChannelTypes)
@@ -157,7 +171,14 @@ class AllowedMentions:
         return cls()
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Message(DiscordObject):
     content: str = attr.ib()
     timestamp: Timestamp = attr.ib(converter=timestamp_converter)

@@ -24,7 +24,14 @@ class InviteTargetTypes(IntEnum):
     EMBEDDED_APPLICATION = 2
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class InviteStageInstance(DictSerializationMixin):
     members: List["Member"] = field()  # TODO Get from cache
     participant_count: int = field()
@@ -32,7 +39,14 @@ class InviteStageInstance(DictSerializationMixin):
     topic: str = field()
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class InviteMetadata(DictSerializationMixin):  # TODO This should be part of invite.
     uses: int = field()
     max_uses: int = field()
@@ -41,7 +55,14 @@ class InviteMetadata(DictSerializationMixin):  # TODO This should be part of inv
     created_at: Timestamp = field(converter=timestamp_converter)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Invite(ClientObject):
     code: str = field()
     target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes))

@@ -17,7 +17,14 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Emoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic emoji used in discord."""
 
@@ -53,7 +60,14 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
             return self.name
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class CustomEmoji(Emoji):
     """Represent a custom emoji in a guild with all its properties."""
 

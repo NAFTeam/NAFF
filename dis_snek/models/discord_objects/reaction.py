@@ -56,7 +56,14 @@ class ReactionUsers(AsyncIterator):
             raise QueueEmpty()
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Reaction(ClientObject):
     count: int = attr.ib()
     me: bool = attr.ib(default=False)

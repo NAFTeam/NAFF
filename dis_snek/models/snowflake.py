@@ -30,7 +30,14 @@ def to_snowflake_list(snowflakes: List[Union[Snowflake_Type, "SnowflakeObject"]]
     return [to_snowflake(c) for c in snowflakes]
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class SnowflakeObject:
     id: "Snowflake_Type" = field(repr=True, converter=to_snowflake)
 

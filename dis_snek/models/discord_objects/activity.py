@@ -11,7 +11,14 @@ from dis_snek.utils.attr_utils import define
 from dis_snek.utils.serializer import dict_filter_none
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Activity(DictSerializationMixin):
     name: str = attr.ib()
     type: ActivityType = attr.ib(default=ActivityType.GAME)

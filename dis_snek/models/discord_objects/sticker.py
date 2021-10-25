@@ -33,7 +33,14 @@ class StickerFormatTypes(IntEnum):
     LOTTIE = 3
 
 
-@define(kw_only=False)
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=False,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class StickerItem(DiscordObject):
     name: str = attr.ib()
     """Name of the sticker."""
@@ -41,7 +48,14 @@ class StickerItem(DiscordObject):
     """Type of sticker image format."""
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Sticker(StickerItem):
     """Represents a sticker that can be sent in messages."""
 
@@ -121,7 +135,14 @@ class Sticker(StickerItem):
         await self._client.http.delete_guild_sticker(self._guild_id, self.id, reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class StickerPack(DiscordObject):
     """Represents a pack of standard stickers."""
 

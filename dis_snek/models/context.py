@@ -71,7 +71,14 @@ class Resolved:
         return new_cls
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Context:
     """Represents the context of a command"""
 
@@ -98,7 +105,14 @@ class Context:
         return self._client
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children"""
 
@@ -144,7 +158,14 @@ class _BaseInteractionContext(Context):
         return new_cls
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class InteractionContext(_BaseInteractionContext, SendMixin):
     """
     Represents the context of an interaction
@@ -237,7 +258,14 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         return await super().send(content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags)
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class ComponentContext(InteractionContext):
     custom_id: str = attr.ib(default="", metadata=docs("The ID given to the component that has been pressed"))
     component_type: int = attr.ib(default=0, metadata=docs("The type of component that has been pressed"))
@@ -341,7 +369,14 @@ class ComponentContext(InteractionContext):
             return self.message
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class AutocompleteContext(_BaseInteractionContext):
     focussed_option: str = attr.ib(default=MISSING, metadata=docs("The option the user is currently filling in"))
 
@@ -381,7 +416,14 @@ class AutocompleteContext(_BaseInteractionContext):
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class MessageContext(Context, SendMixin):
     @classmethod
     def from_message(cls, client: "Snake", message: "Message"):

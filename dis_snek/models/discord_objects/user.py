@@ -35,7 +35,14 @@ class _SendDMMixin(SendMixin):
         return await self._client.http.create_message(message_payload, dm_id)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model"""
 
@@ -78,7 +85,14 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return [g for g in self._client.guilds if g.id in self.user_guilds]
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class User(BaseUser):
     bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     system: bool = field(
@@ -108,7 +122,14 @@ class User(BaseUser):
         return data
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class SnakeBotUser(User):
     verified: bool = field(repr=True, metadata={"docs": ""})
     mfa_enabled: bool = field(default=False, metadata={"docs": ""})

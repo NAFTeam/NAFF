@@ -11,7 +11,14 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class TeamMember:
     membership_state: TeamMembershipState = attr.ib(converter=TeamMembershipState)
     permissions: List[str] = attr.ib(default=["*"])
@@ -19,7 +26,14 @@ class TeamMember:
     user: "User" = attr.ib()  # TODO: cache partial user (avatar, discrim, id, username)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Team(DiscordObject):
     icon: Optional[str] = attr.ib(default=None)
     members: List[TeamMember] = attr.ib(factory=list)

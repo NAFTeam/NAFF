@@ -25,7 +25,14 @@ def sentinel_converter(value, sentinel=attr.NOTHING):
     return value
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Role(DiscordObject):
     _sentinel = object()
 

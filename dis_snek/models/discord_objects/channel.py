@@ -84,7 +84,14 @@ class ChannelHistory(AsyncIterator):
         return messages
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class PermissionOverwrite(SnowflakeObject):
     """
     Channel Permissions Overwrite object
@@ -100,7 +107,14 @@ class PermissionOverwrite(SnowflakeObject):
     deny: "Permissions" = field(repr=True, converter=Permissions)
 
 
-@define(slots=False)
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=False,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class MessageableMixin(SendMixin):
     last_message_id: Optional["Snowflake_Type"] = attr.ib(
         default=None
@@ -299,7 +313,14 @@ class MessageableMixin(SendMixin):
         await self._client.http.trigger_typing_indicator(self.id)
 
 
-@define(slots=False)
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=False,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class InvitableMixin:
     async def create_invite(
         self,
@@ -356,7 +377,14 @@ class InvitableMixin:
         return Invite.from_list(invites_data, self._client)
 
 
-@define(slots=False)
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=False,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class ThreadableMixin:
     async def create_thread_with_message(
         self,
@@ -466,7 +494,14 @@ class ThreadableMixin:
         return []
 
 
-@define(slots=False)
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=False,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
     type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
@@ -523,7 +558,14 @@ class BaseChannel(DiscordObject):
 # DMs
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class DMChannel(BaseChannel, MessageableMixin):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -541,7 +583,14 @@ class DMChannel(BaseChannel, MessageableMixin):
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class DM(DMChannel):
     recipient: "User" = field()
 
@@ -553,7 +602,14 @@ class DM(DMChannel):
         return data
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class DMGroup(DMChannel):
     owner_id: "Snowflake_Type" = attr.ib()
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
@@ -579,7 +635,14 @@ class DMGroup(DMChannel):
 # Guild
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildChannel(BaseChannel):
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
@@ -616,7 +679,14 @@ class GuildChannel(BaseChannel):
         await self._client.http.delete_channel_permission(self.id, target, reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildCategory(GuildChannel):
     async def edit(self, name, position, permission_overwrites, reason):
         payload = dict(  # TODO Proper processing
@@ -627,7 +697,14 @@ class GuildCategory(GuildChannel):
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildStore(GuildChannel):
     async def edit(self, name, position, permission_overwrites, parent_id, nsfw, reason):
         payload = dict(  # TODO Proper processing
@@ -640,7 +717,14 @@ class GuildStore(GuildChannel):
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
     topic: Optional[str] = attr.ib(default=None)
 
@@ -672,7 +756,14 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
         await self._client.http.follow_news_channel(self.id, webhook_channel_id)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
     topic: Optional[str] = attr.ib(default=None)
     rate_limit_per_user: int = attr.ib(default=0)
@@ -711,7 +802,14 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
 # Guild Threads
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class ThreadChannel(GuildChannel, MessageableMixin):
     owner_id: "Snowflake_Type" = attr.ib(default=None)
     topic: Optional[str] = attr.ib(default=None)
@@ -764,7 +862,14 @@ class ThreadChannel(GuildChannel, MessageableMixin):
         await self._client.http.leave_thread(self.id)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildNewsThread(ThreadChannel):
     async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason):
         payload = dict(  # TODO Proper processing
@@ -777,7 +882,14 @@ class GuildNewsThread(ThreadChannel):
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildPublicThread(ThreadChannel):
     async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason):
         payload = dict(  # TODO Proper processing
@@ -790,7 +902,14 @@ class GuildPublicThread(ThreadChannel):
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
 
@@ -810,7 +929,14 @@ class GuildPrivateThread(ThreadChannel):
 # Guild Voices
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly just GuildVoice.
     bitrate: int = attr.ib()
     user_limit: int = attr.ib()
@@ -842,12 +968,26 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
         await self._edit(payload=payload, reason=reason)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildVoice(VoiceChannel, InvitableMixin):
     pass
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildStageVoice(GuildVoice):
     stage_instance: "StageInstance" = attr.ib(default=MISSING)
 

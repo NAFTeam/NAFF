@@ -39,13 +39,27 @@ if TYPE_CHECKING:
     from dis_snek.models.timestamp import Timestamp
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildBan:
     reason: Optional[str]
     user: "User"
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Guild(DiscordObject):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
@@ -957,7 +971,14 @@ class Guild(DiscordObject):
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildTemplate(ClientObject):
     code: str = attr.ib(metadata=docs("the template code (unique ID)"))
     name: str = attr.ib(metadata=docs("the name"))
@@ -1009,7 +1030,14 @@ class GuildTemplate(ClientObject):
         await self._client.http.delete_guild_template(self.source_guild_id, self.code)
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildWelcomeChannel(ClientObject):
     channel_id: "Snowflake_Type" = attr.ib(metadata=docs("Welcome Channel ID"))
     description: str = attr.ib(metadata=docs("Welcome Channel description"))
@@ -1021,7 +1049,14 @@ class GuildWelcomeChannel(ClientObject):
     )
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class GuildWelcome(ClientObject):
     description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
     welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))

@@ -18,7 +18,14 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
 
 
-@define()
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class ThreadMember(DiscordObject, SendMixin):
     """A thread member is used to indicate whether a user has joined a thread or not."""
 
