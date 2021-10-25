@@ -6,6 +6,7 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
+from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite, Invite
@@ -21,6 +22,7 @@ from dis_snek.models.enums import (
     ExplicitContentFilterLevels,
     MFALevels,
     ChannelTypes,
+    IntegrationExpireBehaviour,
 )
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, docs
@@ -950,6 +952,10 @@ class Guild(DiscordObject):
         invites_data = await self._client.http.get_guild_invites(self.id)
         return Invite.from_list(invites_data, self._client)
 
+    async def get_guild_integrations(self) -> List["GuildIntegration"]:
+        data = await self._client.http.get_guild_integrations(self.id)
+        return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
+
 
 @define()
 class GuildTemplate(ClientObject):
@@ -1019,3 +1025,36 @@ class GuildWelcomeChannel(ClientObject):
 class GuildWelcome(ClientObject):
     description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
     welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))
+
+
+class GuildIntegration(DiscordObject):
+    name: str = attr.ib()
+    type: str = attr.ib()
+    enabled: bool = attr.ib()
+    account: dict = attr.ib()
+    application: Optional[Application] = attr.ib(default=None)
+    _guild_id: "Snowflake_Type" = attr.ib()
+
+    syncing: Optional[bool] = attr.ib(default=MISSING)
+    role_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING)
+    enable_emoticons: bool = attr.ib(default=MISSING)
+    expire_behavior: IntegrationExpireBehaviour = attr.ib(
+        default=MISSING, converter=optional(IntegrationExpireBehaviour)
+    )
+    expire_grace_period: int = attr.ib(default=MISSING)
+    user: "BaseUser" = attr.ib(default=MISSING)
+    synced_at: "Timestamp" = attr.ib(default=MISSING, converter=optional(timestamp_converter))
+    subscriber_count: int = attr.ib(default=MISSING)
+    revoked: bool = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data, client):
+        if app := data.get("application", None):
+            data["application"] = Application.from_dict(app, client)
+        if user := data.get("user", None):
+            data["user"] = client.cache.place_user_data(user)
+        return super().from_dict(data, client)
+
+    async def delete(self, reason: str = MISSING):
+        """Delete this guild integration"""
+        await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)

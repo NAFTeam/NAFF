@@ -551,3 +551,8 @@ class Status(str, Enum):
 class StagePrivacyLevel(IntEnum):
     PUBLIC = 1
     GUILD_ONLY = 2
+
+
+class IntegrationExpireBehaviour(IntEnum):
+    REMOVE_ROLE = 0
+    KICK = 1

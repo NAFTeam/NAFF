@@ -371,7 +371,9 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/integrations"))
 
-    async def delete_guild_integration(self, guild_id: "Snowflake_Type", integration_id: "Snowflake_Type") -> None:
+    async def delete_guild_integration(
+        self, guild_id: "Snowflake_Type", integration_id: "Snowflake_Type", reason: str = MISSING
+    ) -> None:
         """
         Delete an integration from the guild.
 
@@ -379,7 +381,7 @@ class GuildRequests:
             guild_id: The ID of the guild
             integration_id: The ID of the integration to remove
         """
-        return await self.request(Route("DELETE", f"/guilds/{guild_id}/integrations/{integration_id}"))
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/integrations/{integration_id}"), reason=reason)
 
     async def get_guild_widget_settings(self, guild_id: "Snowflake_Type") -> dict:
         """

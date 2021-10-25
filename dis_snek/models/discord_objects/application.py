@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Optional, Dict, Any
 import attr
 from attr.converters import optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import ApplicationFlags
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
@@ -44,9 +45,9 @@ class Application(DiscordObject):
     bot_require_code_grant: bool = attr.ib(default=False)
     terms_of_service_url: Optional[str] = attr.ib(default=None)
     privacy_policy_url: Optional[str] = attr.ib(default=None)
-    owner_id: Snowflake_Type = attr.ib(converter=to_snowflake)
+    owner_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional(to_snowflake))
     summary: str = attr.ib()
-    verify_key: str = attr.ib()
+    verify_key: Optional[str] = attr.ib(default=MISSING)
     team: Optional["Team"] = attr.ib(default=None)
     guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     primary_sku_id: Optional["Snowflake_Type"] = attr.ib(default=None)
@@ -56,8 +57,9 @@ class Application(DiscordObject):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        owner = client.cache.place_user_data(data.pop("owner"))
-        data["owner_id"] = owner.id
+        if "owner" in data:
+            owner = client.cache.place_user_data(data.pop("owner"))
+            data["owner_id"] = owner.id
         return data
 
     @property
