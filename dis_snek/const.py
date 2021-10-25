@@ -33,10 +33,14 @@ import sys
 import sentinel
 from collections import defaultdict
 
+import tomli
+
 _ver_info = sys.version_info
 
+with open("pyproject.toml", "rb") as f:
+    _pyproject = tomli.load(f)
 
-__version__ = "0.0.0"
+__version__ = _pyproject["tool"]["poetry"]["version"]
 __repo_url__ = "https://github.com/LordOfPolls/dis_snek"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 logger_name = "dis.snek"
