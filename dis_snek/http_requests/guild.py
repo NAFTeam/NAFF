@@ -455,7 +455,6 @@ class GuildRequests:
         returns:
             Updated guild widget.
         """
-        # todo: find out if this endpoint works, and what params it expects.
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/widget"),
             data=dict_filter_none({"enabled": enabled, "channel_id": channel_id}),

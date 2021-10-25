@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_none, dict_filter_missing
+from dis_snek.models.enums import ChannelTypes, StagePrivacyLevel
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import PermissionOverwrite
-    from dis_snek.models.enums import ChannelTypes
     from dis_snek.models.snowflake import Snowflake_Type
 
 
@@ -293,7 +293,7 @@ class ChannelRequests:
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
 
     async def create_stage_instance(
-        self, channel_id: "Snowflake_Type", topic: str, privacy_level: int = 1, reason: str = MISSING
+        self, channel_id: "Snowflake_Type", topic: str, privacy_level: StagePrivacyLevel = 1, reason: str = MISSING
     ) -> dict:
         """
         Create a new stage instance.
@@ -307,13 +307,12 @@ class ChannelRequests:
         returns:
             The stage instance
         """
-        # todo: convert privacy_level to int-enum
         return await self.request(
             Route("POST", "/stage-instances"),
             data={
                 "channel_id": channel_id,
                 "topic": topic,
-                "privacy_level": privacy_level,
+                "privacy_level": StagePrivacyLevel(privacy_level),
             },
             reason=reason,
         )

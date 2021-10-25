@@ -79,5 +79,3 @@ class Reaction(ClientObject):
     async def remove(self):
         """Remove all this emoji's reactions from the message"""
         await self._client.http.clear_reaction(self._channel_id, self._message_id, self.emoji.req_format)
-
-    # todo: make an async iterator to get all users who reacted

@@ -286,7 +286,6 @@ class GlobalCache:
             channel_id: The id of the DM channel
         """
         self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
-        # todo: Shouldn't this return the object,  like the other "place" methods?
 
     async def get_dm_channel_id(self, user_id) -> "Snowflake_Type":
         """

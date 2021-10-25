@@ -9,10 +9,6 @@ class Route:
     BASE: ClassVar[str] = "https://discord.com/api/v9"
 
     def __init__(self, method: str, path: str, **parameters: Any):
-        # debug code todo: remove this when no longer needed
-        if path[0] != "/":
-            print(f"Potentially incorrect path passed: {path}")
-
         self.path: str = path
         self.method: str = method
 
