@@ -7,8 +7,17 @@ from dis_snek.const import logger_name, MISSING
 
 log = logging.getLogger(logger_name)
 
-
+class_defaults = dict(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 field_defaults = dict(repr=False)
+
+
 field = partial(attr.field, **field_defaults)
 
 
