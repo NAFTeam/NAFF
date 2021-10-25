@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Any
 
+from dis_snek.const import MISSING
 from dis_snek.models.route import Route
+from dis_snek.utils.serializer import dict_filter_missing
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
@@ -101,7 +103,14 @@ class ReactionRequests:
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}/reactions"))
 
-    async def get_reactions(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> list:
+    async def get_reactions(
+        self,
+        channel_id: "Snowflake_Type",
+        message_id: "Snowflake_Type",
+        emoji: str,
+        limit: int = MISSING,
+        after: "Snowflake_Type" = MISSING,
+    ) -> list:
         """
         Gets specific reaction from a message
 
@@ -117,5 +126,6 @@ class ReactionRequests:
                 channel_id=channel_id,
                 message_id=message_id,
                 emoji=emoji,
-            )
+            ),
+            params=dict_filter_missing(dict(limit=limit, after=after)),
         )
