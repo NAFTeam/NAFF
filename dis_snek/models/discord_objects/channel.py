@@ -2,7 +2,6 @@ import asyncio
 import time
 from asyncio import QueueEmpty
 from collections import namedtuple
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
 import attr
@@ -10,6 +9,7 @@ from attr.converters import optional as optional_c
 
 from dis_snek.const import MISSING, DISCORD_EPOCH
 from dis_snek.mixins.send import SendMixin
+from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
 from dis_snek.models.discord_objects.stage_instance import StageInstance
@@ -54,96 +54,34 @@ class ChannelHistory(AsyncIterator):
         around: get messages "around" this message ID
     """
 
-    # todo: Maybe a async iterators baseclass, most of this behaviour is reusable
     def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None):
-
-        self.messages = asyncio.Queue()
         self.channel: "BaseChannel" = channel
-        self._limit: int = limit if limit else MISSING
-        self._last: "Message" = MISSING
-        self._retrieved: int = 0
-        self._retrieved_messages: list["Message"] = []
         self.before: "Snowflake_Type" = before
         self.after: "Snowflake_Type" = after
         self.around: "Snowflake_Type" = around
+        super().__init__(limit)
 
-    @property
-    def _continue(self):
-        if not self._limit:
-            return True
-        return not self._retrieved >= self._limit
+    async def fetch(self):
+        if self.after:
+            if not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.after
+            messages = await self.channel.get_messages(limit=self.get_limit, after=self.last.id)
+            messages.sort(key=lambda x: x.id)
 
-    @property
-    def _get_limit(self):
-        return min(self._limit - self._retrieved, 100) if self._limit else 100
-
-    async def _fetch_messages(self):
-        if self._continue:
-            messages = []
-
-            if self.after:
-                if not self._last:
-                    self._last = namedtuple("temp", "id")
-                    self._last.id = self.after
-                messages = await self.channel.get_messages(limit=self._get_limit, after=self._last.id)
-                messages.sort(key=lambda x: x.id)
-
-            elif self.around:
-                messages = await self.channel.get_messages(limit=self._get_limit, around=self.around)
-                # todo: decide how getting *more* messages from `around` would work
-                self._limit = 1  # stops history from getting more messages
-
-            else:
-                if self.before and not self._last:
-                    self._last = namedtuple("temp", "id")
-                    self._last.id = self.before
-
-                messages = await self.channel.get_messages(limit=self._get_limit, before=self._last.id)
-                messages.sort(key=lambda x: x.id, reverse=True)
-
-            self._retrieved += len(messages)
-            [await self.messages.put(m) for m in messages]
+        elif self.around:
+            messages = await self.channel.get_messages(limit=self.get_limit, around=self.around)
+            # todo: decide how getting *more* messages from `around` would work
+            self._limit = 1  # stops history from getting more messages
 
         else:
-            raise QueueEmpty()
+            if self.before and not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.before
 
-    async def __anext__(self):
-        try:
-            if self.messages.empty():
-                await self._fetch_messages()
-            self._last = self.messages.get_nowait()
-
-            # add the message to the already retrieved messages, so that the search function works when calling it multiple times
-            self._retrieved_messages.append(self._last)
-
-            return self._last
-        except QueueEmpty:
-            raise StopAsyncIteration()
-
-    async def flatten(self):
-        """Flatten this iterator into a list of objects"""
-        return [elem async for elem in self]
-
-    async def search(self, message_id: "Snowflake_Type") -> bool:
-        """
-        Check if a message_id exists in the specified history.
-
-        Args:
-            message_id: ID of message to check.
-        """
-
-        message_id = int(message_id)
-
-        # check if in the message_id was already retrieved
-        if message_id in [message.id for message in self._retrieved_messages]:
-            return True
-
-        # loop through remaining history
-        async for message in self:
-            if message.id == message_id:
-                return True
-
-        return False
+            messages = await self.channel.get_messages(limit=self.get_limit, before=self.last.id)
+            messages.sort(key=lambda x: x.id, reverse=True)
+        return messages
 
 
 @define()
