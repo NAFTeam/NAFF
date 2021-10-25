@@ -23,6 +23,8 @@ These are events dispatched by Discord. This is intended as a reference so you k
 from typing import TYPE_CHECKING, Any, List, Union, Optional
 
 import attr
+from dis_snek.models.discord_objects.stage_instance import StageInstance
+
 from dis_snek.models import Invite
 
 from dis_snek.const import MISSING
@@ -30,8 +32,8 @@ from dis_snek.models.events.internal import BaseEvent, GuildEvent
 from dis_snek.utils.attr_utils import docs
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.guild import Guild
-    from dis_snek.models.discord_objects.channel import BaseChannel
+    from dis_snek.models.discord_objects.guild import Guild, GuildIntegration
+    from dis_snek.models.discord_objects.channel import BaseChannel, ThreadChannel
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
@@ -78,9 +80,7 @@ class ChannelPinsUpdate(ChannelCreate):
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created."""
 
-    thread: Any = attr.ib(
-        metadata=docs("The thread this event is dispatched from")
-    )  # TODO: Replace this with a thread object type
+    thread: "ThreadChannel" = attr.ib(metadata=docs("The thread this event is dispatched from"))
 
 
 @attr.s(slots=True)
@@ -221,8 +221,6 @@ class MemberRemove(MemberAdd):
 class MemberUpdate(BaseEvent, GuildEvent):
     """Dispatched when a member is updated."""
 
-    # todo: It would be better to just have a member, before, and after field. but for now im mirroring the api
-
     before: "Member" = attr.ib()
     """The state of the member before this event"""
     after: "Member" = attr.ib()
@@ -275,17 +273,12 @@ class GuildMembersChunk(BaseEvent, GuildEvent):
 class IntegrationCreate(BaseEvent):
     """Dispatched when a guild integration is created"""
 
-    integration: Any = attr.ib()  # TODO: Replace this with a integration object type
+    integration: "GuildIntegration" = attr.ib()
 
 
 @attr.s(slots=True)
-class IntegrationUpdate(BaseEvent, GuildEvent):
+class IntegrationUpdate(IntegrationCreate):
     """Dispatched when a guild integration is updated"""
-
-    before: Any = attr.ib()  # TODO: Replace this with a integration object type
-    """The integration before this event"""
-    after: Any = attr.ib()  # TODO: Replace this with a integration object type
-    """The integration after this event"""
 
 
 @attr.s(slots=True)
@@ -296,11 +289,6 @@ class IntegrationDelete(BaseEvent, GuildEvent):
     """The ID of the integration"""
     application_id: "Snowflake_Type" = attr.ib(default=None)
     """The ID of the bot/application for this integration"""
-
-
-@attr.s(slots=True)
-class GuildIntegrationsUpdate(BaseEvent, GuildEvent):
-    """Dispatched when a guild integration is updated"""
 
 
 @attr.s(slots=True)
@@ -391,9 +379,7 @@ class PresenceUpdate(BaseEvent):
 class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created"""
 
-    stage_instance: Any = attr.ib(
-        metadata=docs("The stage instance")
-    )  # TODO: Replace this with a stage instance object type.
+    stage_instance: StageInstance = attr.ib(metadata=docs("The stage instance"))
 
 
 @attr.s(slots=True)

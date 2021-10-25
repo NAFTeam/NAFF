@@ -1,9 +1,11 @@
 import copy
 import logging
 
+from dis_snek.models.events.discord import IntegrationCreate, IntegrationDelete
+
 from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate
-from dis_snek.models import listen, events
+from dis_snek.models import listen, events, GuildIntegration
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)
@@ -55,14 +57,16 @@ class GuildEvents(EventMixinTemplate):
     #     ...
 
     # ToDo: waiting for integration objects to be made
-    # @listen()
-    # async def _on_raw_integration_create(self, event: RawGatewayEvent) -> None:
-    #     ...
-    #
-    # @listen()
-    # async def _on_raw_integration_update(self, event: RawGatewayEvent) -> None:
-    #     ...
-    #
-    # @listen()
-    # async def _on_raw_integration_delete(self, event: RawGatewayEvent) -> None:
-    #     ...
+    @listen()
+    async def _on_raw_integration_create(self, event: RawGatewayEvent) -> None:
+        self.dispatch(IntegrationCreate(GuildIntegration.from_dict(event.data, self)))  # type: ignore
+
+    @listen()
+    async def _on_raw_integration_update(self, event: RawGatewayEvent) -> None:
+        self.dispatch(IntegrationUpdate(GuildIntegration.from_dict(event.data, self)))  # type: ignore
+
+    @listen()
+    async def _on_raw_integration_delete(self, event: RawGatewayEvent) -> None:
+        self.dispatch(
+            IntegrationDelete(event.data.get("guild_id"), event.data.get("id"), event.data.get("application_id"))
+        )
