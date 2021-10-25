@@ -7,7 +7,7 @@ from dis_snek.const import MISSING
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import Permissions
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
 from dis_snek.utils.serializer import dict_filter_missing
 
 if TYPE_CHECKING:

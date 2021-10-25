@@ -10,7 +10,6 @@ from dis_snek.models.discord import ClientObject
 from dis_snek.models.discord_objects.emoji import Emoji
 from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type

@@ -24,7 +24,7 @@ from dis_snek.models.enums import (
 )
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.serializer import to_image_data
 

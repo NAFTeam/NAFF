@@ -25,7 +25,7 @@ from dis_snek.models.enums import (
     IntegrationExpireBehaviour,
 )
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define, docs
+from dis_snek.utils.attr_utils import docs
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.serializer import to_image_data, dict_filter_none
 

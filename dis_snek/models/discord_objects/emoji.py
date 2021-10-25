@@ -5,7 +5,7 @@ from attr.converters import optional
 
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.serializer import dict_filter_none, no_export_meta
 

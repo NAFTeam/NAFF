@@ -7,7 +7,6 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.enums import ActivityType
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define
 from dis_snek.utils.serializer import dict_filter_none
 
 

@@ -4,7 +4,6 @@ import attr
 
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import TeamMembershipState
-from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import User

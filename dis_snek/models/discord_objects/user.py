@@ -15,7 +15,7 @@ from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field, class_defaults, docs
+from dis_snek.utils.attr_utils import field, class_defaults, docs
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.input_utils import _bytes_to_base64_data

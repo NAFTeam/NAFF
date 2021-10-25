@@ -7,7 +7,6 @@ from attr.converters import optional
 from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:

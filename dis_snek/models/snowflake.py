@@ -2,7 +2,7 @@ from contextlib import suppress
 from typing import Union, List
 
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
 
 Snowflake_Type = Union[str, int]
 

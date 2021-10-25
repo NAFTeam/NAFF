@@ -8,7 +8,6 @@ from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.utils.attr_utils import define
 from dis_snek.utils.input_utils import _bytes_to_base64_data
 
 if TYPE_CHECKING:
@@ -34,7 +33,14 @@ class WebhookTypes(IntEnum):
     """Application webhooks are webhooks used with Interactions"""
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class Webhook(DiscordObject, SendMixin):
     type: WebhookTypes = attr.ib()
     """The type of webhook"""

@@ -29,7 +29,6 @@ from dis_snek.models.enums import (
 from dis_snek.models.file import File
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
 from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
@@ -111,7 +110,14 @@ class MessageReference(DictSerializationMixin):
         )
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class MessageInteraction(DiscordObject):
     type: InteractionTypes = attr.ib(converter=InteractionTypes)
     name: str = attr.ib()

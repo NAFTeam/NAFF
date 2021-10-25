@@ -6,13 +6,19 @@ from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.enums import StagePrivacyLevel
-from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:
     from dis_snek.models import Guild, GuildStageVoice, Snowflake_Type
 
 
-@define
+@attr.define(
+    eq=False,
+    order=False,
+    hash=False,
+    slots=True,
+    kw_only=True,
+    on_setattr=[attr.setters.convert, attr.setters.validate],
+)
 class StageInstance(DiscordObject):
     topic: str = attr.ib()
     privacy_level: StagePrivacyLevel = attr.ib()

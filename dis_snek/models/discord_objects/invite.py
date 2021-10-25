@@ -8,7 +8,7 @@ from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import ClientObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
-from dis_snek.utils.attr_utils import define, field
+from dis_snek.utils.attr_utils import field
 from dis_snek.utils.converters import timestamp_converter
 
 if TYPE_CHECKING:
