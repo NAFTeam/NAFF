@@ -123,7 +123,7 @@ class Guild(DiscordObject):
     stage_instances: List[dict] = attr.ib(factory=list)  # TODO stage instance objects
     """Stage instances in the guild."""
 
-    _owner_id: "Snowflake_Type" = attr.ib()
+    _owner_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
     _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
