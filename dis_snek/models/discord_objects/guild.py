@@ -58,7 +58,7 @@ class Guild(DiscordObject):
     discovery_splash: Optional[str] = attr.ib(default=None)
     """Hash for discovery splash image. Only present for guilds with the "DISCOVERABLE" feature."""
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
-    permissions: Optional[str] = attr.ib(default=None)  # todo convert to permissions obj
+    permissions: Optional[Permissions] = attr.ib(default=None, converter=optional(Permissions))
     """Total permissions for the user in the guild. (excludes overwrites)"""
     afk_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     """The channel id for afk."""
