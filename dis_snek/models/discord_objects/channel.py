@@ -458,7 +458,7 @@ class ThreadableMixin:
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
-    async def get_active_threads(self) -> List["ThreadChannel"]:
+    async def get_active_threads(self) -> List["TYPE_THREAD_CHANNEL"]:
         """Returns all active threads in the channel, including public and private threads"""
         raw_threads = await self.guild.get_active_threads()
         if hasattr(raw_threads, "threads"):

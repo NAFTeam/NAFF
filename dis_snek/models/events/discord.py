@@ -33,7 +33,7 @@ from dis_snek.utils.attr_utils import docs
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.guild import Guild, GuildIntegration
-    from dis_snek.models.discord_objects.channel import BaseChannel, ThreadChannel
+    from dis_snek.models.discord_objects.channel import BaseChannel, TYPE_THREAD_CHANNEL
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
@@ -80,7 +80,7 @@ class ChannelPinsUpdate(ChannelCreate):
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created."""
 
-    thread: "ThreadChannel" = attr.ib(metadata=docs("The thread this event is dispatched from"))
+    thread: "TYPE_THREAD_CHANNEL" = attr.ib(metadata=docs("The thread this event is dispatched from"))
 
 
 @attr.s(slots=True)
