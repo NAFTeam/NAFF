@@ -279,6 +279,7 @@ class Snake(
                 await self.ws.run()
             except WebSocketRestart as ex:
                 # internally requested restart
+                log.error("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
                 self.dispatch(events.Disconnect())
                 if ex.resume:
                     params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
@@ -286,6 +287,7 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
+                log.error("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
                 self.dispatch(events.Disconnect())
 
                 if isinstance(ex, WebSocketClosed):
@@ -314,6 +316,7 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             await asyncio.sleep(5)
+        log.debug(f"{self._closed=}")
 
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):

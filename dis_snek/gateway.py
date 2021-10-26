@@ -273,6 +273,7 @@ class WebsocketClient:
                     await self.send_json(self._keep_alive.get_payload())
                 return
             if op == OPCODE.HEARTBEAT_ACK:
+                log.debug("heartbeat ack.")
                 if self._keep_alive:
                     self._keep_alive.ack()
                 return
@@ -306,7 +307,7 @@ class WebsocketClient:
         """Start receiving events from the websocket."""
         while not self._closed:
             await self._receive()
-        print("Closed")
+        log.debug("closed")
 
     def __del__(self) -> None:
         if not self._closed:
