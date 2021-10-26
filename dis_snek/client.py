@@ -567,7 +567,8 @@ class Snake(
 
         # first we need to make sure our local copy of cmd_ids is up-to-date
         await self._cache_interactions()
-        cmd_scopes = [g.id for g in self.guilds] + [GLOBAL_SCOPE]
+        cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
+
         guild_perms = {}
 
         for cmd_scope in cmd_scopes:
