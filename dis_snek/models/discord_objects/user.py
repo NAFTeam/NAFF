@@ -123,7 +123,7 @@ class SnakeBotUser(User):
         self._guild_ids |= guild_ids
 
     @property
-    def guilds(self) -> List["guilds"]:
+    def guilds(self) -> List["Guild"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
     async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING):
