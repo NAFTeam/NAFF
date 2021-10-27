@@ -292,8 +292,13 @@ class Snake(
 
                 if isinstance(ex, WebSocketClosed):
                     if ex.code == 1000:
-                        # clean close
-                        return
+                        if self._ready:
+                            # the bot disconnected, attempt to reconnect to gateway
+                            log.debug("Bot disconnected with 1000, attempt to reconnect")
+                            params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                            continue
+                        else:
+                            return
                     elif ex.code == 4011:
                         raise SnakeException("Your bot is too large, you must use shards") from None
                     elif ex.code == 4013:
@@ -401,6 +406,7 @@ class Snake(
 
     async def stop(self):
         log.debug("Stopping the bot.")
+        self._ready = False
         await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
