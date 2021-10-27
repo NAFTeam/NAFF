@@ -64,7 +64,7 @@ bot = Snake(intents=Intents.DEFAULT)
 async def on_ready():
     # This event is called when the bot is ready to respond to commands
     print("Ready")
-    print(f"This bot is owned by {await bot.owner}")
+    print(f"This bot is owned by {bot.owner}")
 
 
 @listen()
