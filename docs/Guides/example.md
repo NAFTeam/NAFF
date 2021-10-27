@@ -22,7 +22,7 @@ bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 @listen()
 async def on_ready():
     print("Ready")
-    print(f"This bot is owned by {await bot.owner}")
+    print(f"This bot is owned by {bot.owner}")
 
 
 @listen()
