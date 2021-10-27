@@ -2,7 +2,7 @@
 
 Damn, your code is getting pretty messy now, huh? Wouldn't it be nice if you could organise your commands and listeners into separate files?
 
-Well let me introduce you to `Scales`
+Well let me introduce you to `Scales`<br>
 Scales allow you to split your commands and listeners into separate files to allow you to better organise your project,
 as well as that, they allow you to reload Scales without having to shut down your bot. 
 
