@@ -102,7 +102,7 @@ from dis_snek.models.scale import Scale
 
 
 class CommandsExampleSkin(Scale):
-    @slash_command("command", description="This is a test", scope=701347683591389185)
+    @slash_command("command", description="This is a test", scopes=701347683591389185)
     @slash_option("another", "str option", 3, required=True)
     @slash_option("option", "int option", 4, required=True)
     async def command(self, ctx: InteractionContext, **kwargs):
@@ -118,7 +118,7 @@ class CommandsExampleSkin(Scale):
     async def command_pre_run(self, context, *args, **kwargs):
         print("I ran before the command did!")
 
-    @context_menu(name="user menu", context_type=CommandTypes.USER, scope=701347683591389185)
+    @context_menu(name="user menu", context_type=CommandTypes.USER, scopes=701347683591389185)
     async def user_context(self, ctx):
         await ctx.send("Context menu:: user")
 
