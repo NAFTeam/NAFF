@@ -612,7 +612,7 @@ class Snake(
                         self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                         self._interaction_scopes[cmd_data["id"]] = cmd_scope
                 else:
-                    log.debug(f"{cmd_scope} is already up-to-date")
+                    log.debug(f"{cmd_scope} is already up-to-date with {len(cmds_resp_data)} commands.")
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     if not local_cmd.permissions:
