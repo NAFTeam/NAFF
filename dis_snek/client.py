@@ -409,7 +409,7 @@ class Snake(
     async def stop(self):
         log.debug("Stopping the bot.")
         self._ready = False
-        await self.ws.close()
+        await self.ws.close(1001)
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """

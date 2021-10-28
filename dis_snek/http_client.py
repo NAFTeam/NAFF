@@ -42,7 +42,7 @@ T = TypeVar("T")
 class DiscordClientWebSocketResponse(ClientWebSocketResponse):
     """Represents the websocket connection with discord."""
 
-    async def close(self, *, code: int = 4000, message: bytes = b"") -> bool:
+    async def close(self, *, code: int = 1000, message: bytes = b"") -> bool:
         """
         Close the connection.
 
@@ -243,10 +243,6 @@ class HTTPClient(
         """Close the session."""
         if self.__session:
             await self.__session.close()
-
-    async def logout(self) -> None:
-        """Logout of the session."""
-        await self.request(Route("POST", "/auth/logout"))
 
     async def get_gateway(self) -> str:
         """Get the gateway url."""
