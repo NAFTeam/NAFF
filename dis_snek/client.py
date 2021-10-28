@@ -106,6 +106,7 @@ class Snake(
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
+        debug_scope: "Snowflake_Type" = MISSING,
         asyncio_debug: bool = False,
         message_cache_ttl: Optional[int] = 600,
         message_cache_limit: Optional[int] = 250,
@@ -130,6 +131,8 @@ class Snake(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
+        self.debug_scope = to_snowflake(debug_scope)
+        """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
         """The default prefix to be used for message commands"""
         self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
@@ -434,6 +437,9 @@ class Snake(
             command InteractionCommand: The command to add
         """
         for scope in command.scopes:
+            if self.debug_scope and scope == GLOBAL_SCOPE:
+                scope = self.debug_scope
+
             if scope not in self.interactions:
                 self.interactions[scope] = {}
             elif command.resolved_name in self.interactions[scope]:

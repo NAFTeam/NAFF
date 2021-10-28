@@ -67,6 +67,7 @@ GLOBAL_SCOPE = sentinel.create(
         "__name__": "GLOBAL_SCOPE",
         "__getattr__": lambda x, y: 0,
         "__hash__": lambda _: hash(0),
+        "__bool__": lambda _: False,
     },
 )
 
