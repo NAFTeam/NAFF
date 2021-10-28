@@ -113,12 +113,12 @@ class BaseCommand(DictSerializationMixin):
 
             for _c in self.checks:
                 if not await _c(context):
-                    raise CommandCheckFailure(self, _c)
+                    raise CommandCheckFailure(self, _c, context)
 
             if self.scale and self.scale.scale_checks:
                 for _c in self.scale.scale_checks:
                     if not await _c(context):
-                        raise CommandCheckFailure(self, _c)
+                        raise CommandCheckFailure(self, _c, context)
 
             if self.max_concurrency is not MISSING:
                 if not await self.max_concurrency.acquire(context):

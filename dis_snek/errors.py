@@ -6,6 +6,7 @@ from dis_snek.const import MISSING, GLOBAL_SCOPE
 
 if TYPE_CHECKING:
     from dis_snek.models.command import BaseCommand
+    from dis_snek.models.context import Context
     from dis_snek.models.cooldowns import CooldownSystem, MaxConcurrency
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -172,9 +173,10 @@ class CommandCheckFailure(CommandException):
         check Callable[..., Coroutine]: The check that failed
     """
 
-    def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine]):
+    def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context"):
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
+        self.context = context
 
 
 class MessageException(BotException):
