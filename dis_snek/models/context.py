@@ -358,7 +358,7 @@ class AutocompleteContext(_BaseInteractionContext):
         """The text the user has entered so far"""
         return self.kwargs.get(self.focussed_option, "")
 
-    async def send(self, choices: List[Union[str, Dict[str, str]]]):
+    async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]):
         """
         Send your autocomplete choices to discord.
         Choices must be either a list of strings, or a dictionary following the following format:
@@ -375,9 +375,17 @@ class AutocompleteContext(_BaseInteractionContext):
         Args:
             choices: 25 choices the user can pick
         """
-        choices = [{"name": c, "value": c.replace(" ", "_")} if isinstance(c, str) else c for c in choices]
+        processed_choices = []
+        for choice in choices:
+            if isinstance(choice, (int, float)):
+                processed_choices.append({"name": str(choice), "value": choice})
+            elif isinstance(choice, dict):
+                processed_choices.append(choice)
+            else:
+                choice = str(choice)
+                processed_choices.append({"name": choice, "value": choice.replace(" ", "_")})
 
-        payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": choices}}
+        payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": processed_choices}}
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
