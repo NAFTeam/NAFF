@@ -279,7 +279,6 @@ class Snake(
                 await self.ws.run()
             except WebSocketRestart as ex:
                 # internally requested restart
-                log.error("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
                 self.dispatch(events.Disconnect())
                 if ex.resume:
                     params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
@@ -287,14 +286,13 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
-                log.error("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
+                log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
                 self.dispatch(events.Disconnect())
 
                 if isinstance(ex, WebSocketClosed):
                     if ex.code == 1000:
                         if self._ready:
                             # the bot disconnected, attempt to reconnect to gateway
-                            log.debug("Bot disconnected with 1000, attempt to reconnect")
                             params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
                             continue
                         else:
