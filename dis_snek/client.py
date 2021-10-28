@@ -48,7 +48,8 @@ from dis_snek.models import (
     InteractionContext,
     MessageContext,
     AutocompleteContext,
-    ComponentCommand, to_optional_snowflake,
+    ComponentCommand,
+    to_optional_snowflake,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
