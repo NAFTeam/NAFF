@@ -398,6 +398,7 @@ class Snake(
 
     async def stop(self):
         log.debug("Stopping the bot.")
+        await self.change_presence(Status.INVISIBLE)
         await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
