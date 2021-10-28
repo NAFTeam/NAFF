@@ -48,7 +48,7 @@ from dis_snek.models import (
     InteractionContext,
     MessageContext,
     AutocompleteContext,
-    ComponentCommand,
+    ComponentCommand, to_optional_snowflake,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -131,7 +131,7 @@ class Snake(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
-        self.debug_scope = to_snowflake(debug_scope)
+        self.debug_scope = to_optional_snowflake(debug_scope)
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
         """The default prefix to be used for message commands"""

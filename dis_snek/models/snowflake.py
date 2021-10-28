@@ -1,6 +1,7 @@
 from contextlib import suppress
-from typing import Union, List
+from typing import Union, List, Optional
 
+from dis_snek.const import MISSING
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 
@@ -24,6 +25,12 @@ def to_snowflake(snowflake: Union[Snowflake_Type, "SnowflakeObject"]) -> int:
         raise ValueError("ID (snowflake) is not in correct discord format!")
 
     return snowflake
+
+
+def to_optional_snowflake(snowflake: Optional[Union[Snowflake_Type, "SnowflakeObject"]] = MISSING) -> Optional[int]:
+    if snowflake is MISSING:
+        return MISSING
+    return to_snowflake(snowflake)
 
 
 def to_snowflake_list(snowflakes: List[Union[Snowflake_Type, "SnowflakeObject"]]) -> List[int]:
