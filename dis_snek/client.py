@@ -290,12 +290,17 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
+                log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
                 self.dispatch(events.Disconnect())
 
                 if isinstance(ex, WebSocketClosed):
                     if ex.code == 1000:
-                        # clean close
-                        return
+                        if self._ready:
+                            # the bot disconnected, attempt to reconnect to gateway
+                            params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                            continue
+                        else:
+                            return
                     elif ex.code == 4011:
                         raise SnakeException("Your bot is too large, you must use shards") from None
                     elif ex.code == 4013:
@@ -318,6 +323,7 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             await asyncio.sleep(5)
+        log.debug(f"{self._closed=}")
 
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):
@@ -402,6 +408,7 @@ class Snake(
 
     async def stop(self):
         log.debug("Stopping the bot.")
+        self._ready = False
         await self.ws.close()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):

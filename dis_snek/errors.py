@@ -89,6 +89,7 @@ class WebSocketClosed(SnakeException):
 
     code: int = 0
     codes: Dict[int, str] = {
+        1000: "Normal Closure",
         4000: "Unknown Error",
         4001: "Unknown OpCode",
         4002: "Decode Error",
