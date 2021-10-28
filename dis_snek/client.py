@@ -328,13 +328,13 @@ class Snake(
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                await self.on_error(event)
+                await self.on_error(event, e)
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
         return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
 
-    async def on_error(self, source: str, *args, **kwargs) -> None:
+    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by the library.
 
@@ -344,7 +344,7 @@ class Snake(
         """
         print(f"Ignoring exception in {source}:\n{traceback.format_exc()}", file=sys.stderr)
 
-    async def on_command_error(self, source: str, *args, **kwargs) -> None:
+    async def on_command_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by commands
 
@@ -352,7 +352,7 @@ class Snake(
 
         Override this to change error handling behavior
         """
-        return await self.on_error(source, *args, **kwargs)
+        return await self.on_error(source, error, *args, **kwargs)
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
@@ -511,8 +511,8 @@ class Snake(
                 await self.synchronise_interactions()
             else:
                 await self._cache_interactions(warn_missing=True)
-        except:
-            await self.on_error("Interaction Syncing")
+        except Exception as e:
+            await self.on_error("Interaction Syncing", e)
 
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
@@ -748,8 +748,8 @@ class Snake(
                 else:
                     try:
                         await command(ctx, **ctx.kwargs)
-                    except Exception:
-                        await self.on_command_error(f"cmd /`{name}`")
+                    except Exception as e:
+                        await self.on_command_error(f"cmd /`{name}`", e)
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -762,8 +762,8 @@ class Snake(
             if callback := self._component_callbacks.get(ctx.custom_id):
                 try:
                     await callback(ctx)
-                except Exception:
-                    await self.on_command_error(f"Component Callback for {ctx.custom_id}")
+                except Exception as e:
+                    await self.on_command_error(f"Component Callback for {ctx.custom_id}", e)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -788,8 +788,8 @@ class Snake(
                     context.invoked_name = invoked_name
                     try:
                         await command(context)
-                    except:
-                        await self.on_command_error(f"cmd `{invoked_name}`")
+                    except Exception as e:
+                        await self.on_command_error(f"cmd `{invoked_name}`", e)
 
     def get_scale(self, name) -> Optional[Scale]:
         """
