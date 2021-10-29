@@ -4,8 +4,8 @@ import logging
 from typing import List, TYPE_CHECKING, Callable, Coroutine
 
 from dis_snek.const import logger_name
-from dis_snek.models.application_commands import InteractionCommand, ComponentCommand, SlashCommand
-from dis_snek.models.command import MessageCommand
+from dis_snek.models.application_commands import InteractionCommand, ComponentCommand, SlashCommand, SubCommand
+from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.listener import Listener
 from dis_snek.utils.misc_utils import wrap_partial
 
@@ -73,7 +73,7 @@ class Scale:
         new_cls = super().__new__(cls)
 
         for name, val in cls.__dict__.items():
-            if isinstance(val, (SlashCommand, MessageCommand, ComponentCommand)):
+            if isinstance(val, BaseCommand) and not isinstance(val, SubCommand):
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
@@ -81,7 +81,7 @@ class Scale:
 
                 if isinstance(val, ComponentCommand):
                     bot.add_component_callback(val)
-                elif isinstance(val, SlashCommand):
+                elif isinstance(val, InteractionCommand):
                     bot.add_interaction(val)
                 else:
                     bot.add_message_command(val)

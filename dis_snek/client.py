@@ -50,6 +50,7 @@ from dis_snek.models import (
     AutocompleteContext,
     ComponentCommand,
     to_optional_snowflake,
+    SubCommand,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -522,7 +523,7 @@ class Snake(
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
-                elif isinstance(func, SlashCommand):
+                elif isinstance(func, InteractionCommand) and not isinstance(func, SubCommand):
                     self.add_interaction(func)
                 elif isinstance(func, MessageCommand):
                     self.add_message_command(func)
