@@ -321,7 +321,7 @@ def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) 
     # todo: incorrect format errors
     if not components or len(components) > 25:
         raise ValueError("Number of components should be between 1 and 25.")
-    if not 1 < max_in_row < 5:
+    if not 1 <= max_in_row <= 5:
         raise ValueError("max_in_row should be between 1 and 5.")
 
     rows = []
