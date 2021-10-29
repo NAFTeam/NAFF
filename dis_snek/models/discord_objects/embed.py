@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import attr
+from attr import setters
 from attr.converters import optional as c_optional
 from attr.validators import instance_of
 from attr.validators import optional as v_optional
@@ -124,6 +125,7 @@ class Embed(DictSerializationMixin):
     timestamp: Optional[Timestamp] = field(
         default=None,
         converter=c_optional(timestamp_converter),
+        on_setattr=setters.convert,
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
