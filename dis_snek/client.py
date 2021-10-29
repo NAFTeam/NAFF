@@ -4,7 +4,7 @@ import inspect
 import logging
 import sys
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
 
 import aiohttp
 
@@ -53,6 +53,7 @@ from dis_snek.models import (
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
+from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
@@ -183,6 +184,7 @@ class Snake(
         self.scales = {}
         """A dictionary of mounted Scales"""
         self.listeners: Dict[str, List] = {}
+        self.waits: Dict[str, List] = {}
 
     @property
     def is_closed(self) -> bool:
@@ -425,6 +427,41 @@ class Snake(
                 self._queue_task(_listen, event, *args, **kwargs)
             except Exception as e:
                 raise BotException(f"An error occurred attempting during {event.resolved_name} event processing")
+
+        _waits = self.waits.get(event.resolved_name, [])
+        index_to_remove = []
+        for i, _wait in enumerate(_waits):
+            result = _wait(event)
+            if result:
+                index_to_remove.append(i)
+
+        for idx in index_to_remove:
+            _waits.pop(idx)
+
+    def wait_for(
+        self,
+        event: str,
+        checks: Optional[Callable[..., bool]] = MISSING,
+        timeout: Optional[float] = None
+    ):
+        """
+        Waits for a WebSocket event to be dispatched.
+
+        Args:
+            event: The name of event to wait.
+            checks: A predicate to check what to wait for.
+            timeout: The number of seconds to wait before timing out.
+
+        Returns:
+            The event object.
+        """
+        if event not in self.waits:
+            self.waits[event] = []
+
+        future = self.loop.create_future()
+        self.waits[event].append(Wait(event, checks, future))
+
+        return asyncio.wait_for(future, timeout)
 
     def add_listener(self, listener: Listener):
         """
