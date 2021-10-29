@@ -438,12 +438,7 @@ class Snake(
         for idx in index_to_remove:
             _waits.pop(idx)
 
-    def wait_for(
-        self,
-        event: str,
-        checks: Optional[Callable[..., bool]] = MISSING,
-        timeout: Optional[float] = None
-    ):
+    def wait_for(self, event: str, checks: Optional[Callable[..., bool]] = MISSING, timeout: Optional[float] = None):
         """
         Waits for a WebSocket event to be dispatched.
 
