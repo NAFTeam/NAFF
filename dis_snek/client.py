@@ -470,7 +470,7 @@ class Snake(
         components: Union[str, dict, list] = None,
         check=None,
         timeout=None,
-    ) -> ComponentContext:
+    ) -> Component:
         """
         Waits for a message to be sent to the bot.
 
@@ -481,7 +481,7 @@ class Snake(
             timeout: The number of seconds to wait before timing out.
 
         Returns:
-            ComponentContext
+            `Component` that was invoked, or `None` if timed out. Use `.context` to get the `ComponentContext`.
         """
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
