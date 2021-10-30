@@ -273,7 +273,7 @@ def process_components(
     """
     if not components:
         # Its just empty, so nothing to process.
-        return
+        return components
 
     if isinstance(components, dict):
         # If a naked dictionary is passed, assume the user knows what they're doing and send it blindly
