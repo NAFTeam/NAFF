@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import importlib.util
 import inspect
 import logging
@@ -154,6 +155,8 @@ class Snake(
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
         """How long to wait for guilds to be cached"""
+        self.start_time = MISSING
+        """The DateTime the bot started at"""
 
         # caches
         self.cache: GlobalCache = GlobalCache(self)
@@ -264,6 +267,7 @@ class Snake(
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
+        self.start_time = datetime.datetime.now()
         self.dispatch(events.Login())
         await self._ws_connect()
 
