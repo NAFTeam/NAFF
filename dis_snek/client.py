@@ -56,6 +56,7 @@ from dis_snek.models import (
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.wait import Wait
+from dis_snek.models.discord_objects.components import get_components_ids, get_messages_ids
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
@@ -461,6 +462,45 @@ class Snake(
         self.waits[event].append(Wait(event, checks, future))
 
         return asyncio.wait_for(future, timeout)
+
+    async def wait_for_component(
+        self,
+        messages: Union[Message, int, list] = None,
+        components: Union[str, dict, list] = None,
+        check=None,
+        timeout=None,
+    ) -> ComponentContext:
+        """
+        Waits for a message to be sent to the bot.
+
+        Args:
+            messages: The message object to check for.
+            components: The components to wait for.
+            check: A predicate to check what to wait for.
+            timeout: The number of seconds to wait before timing out.
+
+        Returns:
+            ComponentContext
+        """
+        if not (messages or components):
+            raise ValueError("You must specify messages or components (or both)")
+
+        message_ids = list(get_messages_ids(messages)) if messages else None
+        custom_ids = list(get_components_ids(components)) if components else None
+
+        # automatically convert improper custom_ids
+        if custom_ids and not all(isinstance(x, str) for x in custom_ids):
+            custom_ids = [str(i) for i in custom_ids]
+
+        def _check(ctx: ComponentContext):
+            if check and not check(ctx):
+                return False
+            # if custom_ids is empty or there is a match
+            wanted_message = not message_ids or ctx.origin_message_id in message_ids
+            wanted_component = not custom_ids or ctx.custom_id in custom_ids
+            return wanted_message and wanted_component
+
+        return await self.wait_for("component", checks=_check, timeout=timeout)
 
     def add_listener(self, listener: Listener):
         """

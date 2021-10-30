@@ -5,6 +5,7 @@ import attr
 
 from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.emoji import process_emoji
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
@@ -380,6 +381,26 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
         yield from (comp_id for comp in component for comp_id in get_components_ids(comp))
     else:
         raise ValueError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
+
+
+def get_messages_ids(message: Union[int, Message, list]) -> Iterator[int]:
+    """
+    Returns generator with the `id` of a message or list of messages.
+
+    Args:
+        message: Objects to get `custom_id`s from
+
+    Raises:
+        ValueError: Unknown message type
+    """
+    if isinstance(message, int):
+        yield message
+    elif isinstance(message, Message):
+        yield message.id
+    elif isinstance(message, list):
+        yield from (msg_id for msg in message for msg_id in get_messages_ids(msg))
+    else:
+        raise ValueError(f"Unknown component type of {message} ({type(message)}). " f"Expected Message, int or list")
 
 
 TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
