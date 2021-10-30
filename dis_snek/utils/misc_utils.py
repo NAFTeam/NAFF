@@ -57,6 +57,8 @@ def wrap_partial(obj, cls):
     Returns:
         The original command object with its callback methods wrapped
     """
+    if isinstance(obj.callback, functools.partial):
+        return obj
     if "_no_wrap" not in getattr(obj.callback, "__name__", ""):
         obj.callback = functools.partial(obj.callback, cls)
 
