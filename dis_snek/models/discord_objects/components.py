@@ -345,6 +345,8 @@ def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) 
                 rows.append(component)
             elif component.type == ComponentTypes.SELECT:
                 rows.append(ActionRow(component))
+    if button_row:
+        rows.append(ActionRow(*button_row))
 
     if len(rows) > 5:
         raise ValueError("Number of rows exceeds 5.")
