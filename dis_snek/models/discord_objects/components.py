@@ -383,7 +383,7 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
         raise ValueError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
 
 
-def get_messages_ids(message: Union[int, Message, list]) -> Iterator[int]:
+def get_messages_ids(message: Union[int, "Message", list]) -> Iterator[int]:
     """
     Returns generator with the `id` of a message or list of messages.
 
