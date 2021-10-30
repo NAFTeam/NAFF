@@ -5,7 +5,6 @@ import attr
 
 from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from dis_snek.mixins.serialization import DictSerializationMixin
-from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.emoji import process_emoji
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
 from dis_snek.utils.attr_utils import str_validator
@@ -13,6 +12,7 @@ from dis_snek.utils.serializer import export_converter
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.emoji import Emoji
+    from dis_snek.models.discord_objects.message import Message
 
 
 class BaseComponent(DictSerializationMixin):
