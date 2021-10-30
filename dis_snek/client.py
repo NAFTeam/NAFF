@@ -259,7 +259,7 @@ class Snake(
         # so im gathering commands here
         self._gather_commands()
 
-        log.debug(f"Logging in with token: {token}")
+        log.debug(f"Attempting to login")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
@@ -326,7 +326,6 @@ class Snake(
                 params.update(resume=False, session_id=None, sequence=None)
 
             await asyncio.sleep(5)
-        log.debug(f"{self._closed=}")
 
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):

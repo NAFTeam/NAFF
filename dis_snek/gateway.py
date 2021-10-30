@@ -273,7 +273,6 @@ class WebsocketClient:
                     await self.send_json(self._keep_alive.get_payload())
                 return
             if op == OPCODE.HEARTBEAT_ACK:
-                log.debug("heartbeat ack.")
                 if self._keep_alive:
                     self._keep_alive.ack()
                 return
@@ -282,7 +281,7 @@ class WebsocketClient:
                 # session invalidated, restart
                 log.debug(f"Reconnecting to discord due to opcode {op}::{OPCODE(op).name}")
                 if data is True or op == OPCODE.RECONNECT:
-                    await self.close()
+                    await self.close(code=1001)
                     raise WebSocketRestart(True)
 
                 self.session_id = self.sequence = None
@@ -307,7 +306,6 @@ class WebsocketClient:
         """Start receiving events from the websocket."""
         while not self._closed:
             await self._receive()
-        log.debug("closed")
 
     def __del__(self) -> None:
         if not self._closed:
