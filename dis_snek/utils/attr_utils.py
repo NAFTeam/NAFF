@@ -21,7 +21,7 @@ field_defaults = dict(repr=False)
 
 # have to do some TypeVar weirdness in order to make classes defined
 # with the define decorator typehint properly in VSC
-# credit to Proxy#9876 for the fix
+# credit to artem30801 for the fix
 _T = TypeVar("_T")
 
 
