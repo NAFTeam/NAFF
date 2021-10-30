@@ -55,6 +55,7 @@ from dis_snek.models import (
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
+from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
 from dis_snek.models.discord_objects.components import get_components_ids, get_messages_ids
 from dis_snek.smart_cache import GlobalCache
@@ -492,8 +493,9 @@ class Snake(
         if custom_ids and not all(isinstance(x, str) for x in custom_ids):
             custom_ids = [str(i) for i in custom_ids]
 
-        def _check(ctx: ComponentContext):
-            if check and not check(ctx):
+        def _check(event: Component):
+            ctx: ComponentContext = event.context
+            if check and not check(event):
                 return False
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.origin_message_id in message_ids

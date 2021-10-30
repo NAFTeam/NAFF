@@ -7,6 +7,7 @@ from dis_snek.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_R
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord_objects.emoji import process_emoji
 from dis_snek.models.enums import ButtonStyles, ComponentTypes
+from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import str_validator
 from dis_snek.utils.serializer import export_converter
 
@@ -388,19 +389,15 @@ def get_messages_ids(message: Union[int, "Message", list]) -> Iterator[int]:
     Returns generator with the `id` of a message or list of messages.
 
     Args:
-        message: Objects to get `custom_id`s from
+        message: Message ID or message object or list of previous two
 
     Raises:
         ValueError: Unknown message type
     """
-    if isinstance(message, int):
-        yield message
-    elif isinstance(message, Message):
-        yield message.id
-    elif isinstance(message, list):
-        yield from (msg_id for msg in message for msg_id in get_messages_ids(msg))
+    if isinstance(message, list):
+        yield from (get_messages_ids(msg_id) for msg in message for msg_id in get_messages_ids(msg))
     else:
-        raise ValueError(f"Unknown component type of {message} ({type(message)}). " f"Expected Message, int or list")
+        yield to_snowflake(message)
 
 
 TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
