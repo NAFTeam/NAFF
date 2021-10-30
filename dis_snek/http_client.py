@@ -142,6 +142,9 @@ class HTTPClient(
         await lock.acquire()
         for tries in range(self._retries):
             try:
+                if self.__session.closed:
+                    await self.login(self.token)
+
                 async with self.__session.request(route.method, route.url, **kwargs) as response:
                     result = await response_decode(response)
                     r_limit_data = self._parse_ratelimit(response.headers)
@@ -179,7 +182,6 @@ class HTTPClient(
                     if not r_limit_data["remaining"] == 0:
                         lock.release()
                     return result
-
             except OSError as e:
                 if tries < self._retries - 1 and e.errno in (54, 10054):
                     await asyncio.sleep(1 + tries * 2)

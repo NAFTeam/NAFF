@@ -321,7 +321,6 @@ class WebsocketClient:
             code: the close code to use
         """
         await self.ws.close(code=code)
-        await self.http.close()
         if isinstance(self._keep_alive, BeeGees):
             self._keep_alive.stop()
         self._closed = True
