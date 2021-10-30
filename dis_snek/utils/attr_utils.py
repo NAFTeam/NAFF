@@ -21,8 +21,14 @@ field_defaults = dict(repr=False)
 
 # have to do some TypeVar weirdness in order to make classes defined
 # with the define decorator typehint properly in VSC
+# credit to artem30801 for the fix
 _T = TypeVar("_T")
-define: Callable[[_T], _T] = partial(attr.define, **class_defaults)
+
+
+def define(cls: _T) -> _T:
+    return attr.define(cls, **class_defaults)
+
+
 field = partial(attr.field, **field_defaults)
 
 
