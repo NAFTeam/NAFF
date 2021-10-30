@@ -349,7 +349,6 @@ class AutocompleteContext(_BaseInteractionContext):
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
         """Create a context object from a dictionary"""
         new_cls = super().from_dict(data, client)
-        new_cls.focussed_option = next((x["name"] for x in data["data"]["options"] if x.get("focused", False)), None)
 
         return new_cls
 

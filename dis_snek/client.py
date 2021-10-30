@@ -753,6 +753,8 @@ class Snake(
                             value = user
                         elif role := self.cache.role_cache.get(snow):
                             value = role
+                    if option.get("focused", False):
+                        cls.focussed_option = option.get("name")
                     kwargs[option["name"].lower()] = value
 
             cls.invoked_name = invoked_name
