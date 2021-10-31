@@ -506,8 +506,11 @@ class Snake(
             )
             print(f"{message_ids=}")
             print(f"{ctx.message.id=}")
-            print(f"{wanted_message=}")
+            print(f"{wanted_message=}\n")
             wanted_component = not custom_ids or ctx.custom_id in custom_ids
+            print(f"{custom_ids=}")
+            print(f"{ctx.custom_id=}")
+            print(f"{wanted_component=}")
             if wanted_message and wanted_component:
                 if check is None or check(event):
                     return True
