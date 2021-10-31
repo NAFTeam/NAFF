@@ -7,6 +7,7 @@ from typing import Any, TypeVar, Callable, Tuple, Union
 # doing this in the actual file itself causes the fucntion to return as a nonetype
 
 _T = TypeVar("_T")
+
 def __dataclass_transform__(
     *,
     eq_default: bool = True,
@@ -14,7 +15,5 @@ def __dataclass_transform__(
     kw_only_default: bool = False,
     field_descriptors: Tuple[Union[type, Callable[..., Any]], ...] = (()),
 ) -> Callable[[_T], _T]: ...
-
 @__dataclass_transform__(field_descriptors=(attr.attrib, attr.field))
-def define(**kwargs):
-    ...
+def define(**kwargs): ...
