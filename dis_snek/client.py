@@ -504,6 +504,9 @@ class Snake(
             wanted_message = not message_ids or ctx.message.id in (
                 [message_ids] if isinstance(message_ids, int) else message_ids
             )
+            print(f"{message_ids=}")
+            print(f"{ctx.message.id=}")
+            print(f"{wanted_message=}")
             wanted_component = not custom_ids or ctx.custom_id in custom_ids
             if wanted_message and wanted_component:
                 if check is None or check(event):
