@@ -1,5 +1,5 @@
 aiohttp
-attrs
+attrs>=21.2.0
 sentinel
 mkdocs-material
 mkdocs-autorefs
