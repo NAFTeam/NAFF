@@ -384,22 +384,6 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
         raise ValueError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
 
 
-def get_messages_ids(message: Union[int, "Message", list]) -> Iterator[int]:
-    """
-    Returns generator with the `id` of a message or list of messages.
-
-    Args:
-        message: Message ID or message object or list of previous two
-
-    Raises:
-        ValueError: Unknown message type
-    """
-    if isinstance(message, list):
-        yield from (get_messages_ids(msg_id) for msg in message for msg_id in get_messages_ids(msg))
-    else:
-        yield to_snowflake(message)
-
-
 TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
 
 TYPE_COMPONENT_MAPPING = {

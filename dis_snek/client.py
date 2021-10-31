@@ -5,7 +5,7 @@ import inspect
 import logging
 import sys
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
 
@@ -45,6 +45,7 @@ from dis_snek.models import (
     MessageCommand,
     BaseCommand,
     to_snowflake,
+    to_snowflake_list,
     ComponentContext,
     InteractionContext,
     MessageContext,
@@ -57,7 +58,7 @@ from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Sta
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
-from dis_snek.models.discord_objects.components import get_components_ids, get_messages_ids
+from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
@@ -467,10 +468,12 @@ class Snake(
     async def wait_for_component(
         self,
         messages: Union[Message, int, list] = None,
-        components: Union[str, dict, list] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
         check=None,
         timeout=None,
-    ) -> Component:
+    ):
         """
         Waits for a message to be sent to the bot.
 
@@ -486,7 +489,7 @@ class Snake(
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
 
-        message_ids = list(get_messages_ids(messages)) if messages else None
+        message_ids = to_snowflake_list(messages) if messages else None
         custom_ids = list(get_components_ids(components)) if components else None
 
         # automatically convert improper custom_ids
@@ -495,12 +498,14 @@ class Snake(
 
         def _check(event: Component):
             ctx: ComponentContext = event.context
-            if check and not check(event):
-                return False
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.origin_message_id in message_ids
             wanted_component = not custom_ids or ctx.custom_id in custom_ids
-            return wanted_message and wanted_component
+            if wanted_message and wanted_component:
+                if check is None or check(event):
+                    return True
+                return False
+            return False
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
