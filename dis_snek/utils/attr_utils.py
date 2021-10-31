@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import Any, Dict, TypeVar, Callable
+from typing import Any, Dict
 
 import attr
 from dis_snek.const import logger_name, MISSING
@@ -19,16 +19,7 @@ class_defaults = dict(
 field_defaults = dict(repr=False)
 
 
-# have to do some TypeVar weirdness in order to make classes defined
-# with the define decorator typehint properly in VSC
-# credit to artem30801 for the fix
-_T = TypeVar("_T")
-
-
-def define(cls: _T) -> _T:
-    return attr.define(cls, **class_defaults)
-
-
+define = partial(attr.define, **class_defaults)  # type: ignore
 field = partial(attr.field, **field_defaults)
 
 
