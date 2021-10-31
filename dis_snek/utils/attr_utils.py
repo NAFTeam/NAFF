@@ -25,7 +25,8 @@ field_defaults = dict(repr=False)
 _T = TypeVar("_T")
 
 
-define: Callable[[_T], _T] = partial(attr.define, **class_defaults)
+def define(cls: _T) -> _T:
+    return attr.define(cls, **class_defaults)
 
 
 field = partial(attr.field, **field_defaults)
