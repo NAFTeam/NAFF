@@ -21,7 +21,7 @@ def to_snowflake(snowflake: Union[Snowflake_Type, "SnowflakeObject"]) -> int:
     with suppress(ValueError):
         snowflake = int(snowflake)
 
-    if 22 > snowflake.bit_length() > 64:
+    if 64 > snowflake.bit_length() < 22:
         raise ValueError("ID (snowflake) is not in correct discord format!")
 
     return snowflake
