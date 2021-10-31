@@ -489,7 +489,9 @@ class Snake(
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
 
-        message_ids = to_snowflake_list(messages) if messages else None
+        message_ids = (
+            to_snowflake_list(messages) if isinstance(messages, list) else to_snowflake(messages) if messages else None
+        )
         custom_ids = list(get_components_ids(components)) if components else None
 
         # automatically convert improper custom_ids
