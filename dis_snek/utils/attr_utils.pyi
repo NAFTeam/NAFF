@@ -4,7 +4,7 @@ from typing import Any, TypeVar, Callable, Tuple, Union
 # this took way too lonk to solve
 # but this solution is based on https://www.attrs.org/en/stable/extending.html
 # or, well, more specifically, the pyright section
-# doing this in the actual file itself causes the fucntion to return as a nonetype
+# doing this in the actual file itself causes the function to return as a nonetype
 
 _T = TypeVar("_T")
 
