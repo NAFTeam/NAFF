@@ -19,7 +19,7 @@ class_defaults = dict(
 field_defaults = dict(repr=False)
 
 
-define = partial(attr.define, **class_defaults)
+define = partial(attr.define, **class_defaults)  # type: ignore
 field = partial(attr.field, **field_defaults)
 
 
