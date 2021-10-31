@@ -17,12 +17,10 @@ jobs:
         with:
           python-version: 3.9
           
-      - name: Update pip
-        run: python -m pip install --upgrade pip
-        
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REQUIREMENTS: docs/requirements.txt
+          EXTRA_PACKAGES: build-base
