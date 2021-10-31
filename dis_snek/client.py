@@ -501,7 +501,7 @@ class Snake(
         def _check(event: Component):
             ctx: ComponentContext = event.context
             # if custom_ids is empty or there is a match
-            wanted_message = not message_ids or ctx.origin_message_id in message_ids
+            wanted_message = not message_ids or ctx.message.id in message_ids
             wanted_component = not custom_ids or ctx.custom_id in custom_ids
             if wanted_message and wanted_component:
                 if check is None or check(event):
