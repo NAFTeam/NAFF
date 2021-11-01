@@ -5,7 +5,7 @@ import inspect
 import logging
 import sys
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
 
 import aiohttp
 
@@ -66,6 +66,7 @@ from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
+    from asyncio import Future
 
 log = logging.getLogger(logger_name)
 
@@ -473,7 +474,7 @@ class Snake(
         ] = None,
         check=None,
         timeout=None,
-    ):
+    ) -> Awaitable["Future"]:
         """
         Waits for a message to be sent to the bot.
 
