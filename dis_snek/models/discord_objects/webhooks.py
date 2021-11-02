@@ -125,7 +125,7 @@ class Webhook(DiscordObject, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        file: Optional[Union["IOBase", "Path", str]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         username: str = None,
@@ -141,7 +141,7 @@ class Webhook(DiscordObject, SendMixin):
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            filepath: Location of file to send, defaults to None.
+            file: Location of file to send, the bytes or the File() instance, defaults to None.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
             username: The username to use
