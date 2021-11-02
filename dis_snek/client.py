@@ -93,7 +93,7 @@ class Snake(
     Attributes:
         intents Union[int, Intents]: The intents to use
         loop: An event loop to use, normally leave this blank
-        default_prefix str: The default_prefix to use for message commands, defaults to `.`
+        default_prefix str: The default_prefix to use for message commands, defaults to your bot being mentioned
         get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
         delete_unused_application_cmds bool: Delete any commands from discord that arent implemented in this client
@@ -112,7 +112,7 @@ class Snake(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        default_prefix: str = ".",
+        default_prefix: str = MENTION_PREFIX,
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
