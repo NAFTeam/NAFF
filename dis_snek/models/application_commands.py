@@ -215,6 +215,8 @@ class SlashCommandOption(DictSerializationMixin):
         description: The description of this option
         required: "This option must be filled to use the command"
         choices: A list of choices the user has to pick between
+        min_value: The minimum value permitted. The option needs to be an integer or float
+        max_value: The maximum value permitted. The option needs to be an integer or float
     """
 
     name: str = attr.ib()
@@ -223,6 +225,8 @@ class SlashCommandOption(DictSerializationMixin):
     required: bool = attr.ib(default=True)
     autocomplete: bool = attr.ib(default=False)
     choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)
+    min_value: Optional[float] = attr.ib(default=None)
+    max_value: Optional[float] = attr.ib(default=None)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -243,6 +247,32 @@ class SlashCommandOption(DictSerializationMixin):
                 "Options cannot be SUB_COMMAND or SUB_COMMAND_GROUP. If you want to use subcommands, "
                 "see the @sub_command() decorator."
             )
+
+    @min_value.validator
+    def _min_value_validator(self, attribute: str, value: float) -> None:
+        if self.type != OptionTypes.INTEGER and self.type != OptionTypes.NUMBER:
+            raise ValueError("`min_value` can only be supplied with int or float options")
+
+        if self.type == OptionTypes.INTEGER:
+            if isinstance(value, float):
+                raise ValueError("`min_value` needs to be an int in an int option")
+
+        if self.max_value is not None and self.min_value is not None:
+            if self.max_value < self.min_value:
+                raise ValueError("`min_value` needs to be <= than `max_value`")
+
+    @max_value.validator
+    def _max_value_validator(self, attribute: str, value: float) -> None:
+        if self.type != OptionTypes.INTEGER and self.type != OptionTypes.NUMBER:
+            raise ValueError("`max_value` can only be supplied with int or float options")
+
+        if self.type == OptionTypes.INTEGER:
+            if isinstance(value, float):
+                raise ValueError("`max_value` needs to be an int in an int option")
+
+        if self.max_value and self.min_value:
+            if self.max_value < self.min_value:
+                raise ValueError("`min_value` needs to be <= than `max_value`")
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -578,6 +608,8 @@ def slash_option(
     required: bool = False,
     autocomplete: bool = False,
     choices: List[Union[SlashCommandChoice, dict]] = None,
+    min_value: Optional[float] = None,
+    max_value: Optional[float] = None,
 ) -> Any:
     """
     A decorator to add an option to a slash command.
@@ -588,6 +620,8 @@ def slash_option(
         description: 1-100 character description of option
         required: If the parameter is required or optional--default false
         choices: A list of choices the user has to pick between (max 25)
+        min_value: The minimum value permitted. The option needs to be an integer or float
+        max_value: The maximum value permitted. The option needs to be an integer or float
     """
 
     def wrapper(func):
@@ -601,6 +635,8 @@ def slash_option(
             required=required,
             autocomplete=autocomplete,
             choices=choices if choices else [],
+            min_value=min_value,
+            max_value=max_value,
         )
         if not hasattr(func, "options"):
             func.options = []
