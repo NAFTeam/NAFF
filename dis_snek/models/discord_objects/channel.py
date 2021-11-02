@@ -1,6 +1,4 @@
-import asyncio
 import time
-from asyncio import QueueEmpty
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
@@ -9,11 +7,11 @@ from attr.converters import optional as optional_c
 
 from dis_snek.const import MISSING, DISCORD_EPOCH
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
 from dis_snek.models.discord_objects.stage_instance import StageInstance
 from dis_snek.models.discord_objects.thread import ThreadMember, ThreadList
+from dis_snek.models.discord_objects.webhooks import Webhook
 from dis_snek.models.enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -22,6 +20,7 @@ from dis_snek.models.enums import (
     AutoArchiveDuration,
     StagePrivacyLevel,
 )
+from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -467,6 +466,32 @@ class ThreadableMixin:
 
 
 @define(slots=False)
+class WebhookMixin:
+    async def create_webhook(self, name: str, avatar: Optional[bytes] = MISSING) -> Webhook:
+        """
+        Create a webhook in this channel
+        Args:
+            name: The name of the webhook
+            avatar: An optional default avatar to use
+
+        Returns:
+            The created webhook
+
+        Raises:
+            ValueError: If you try to name the webhook "Clyde"
+        """
+        return await Webhook.create(self._client, self, name, avatar)  # type: ignore
+
+    async def delete_webhook(self, webhook: Webhook) -> None:
+        """
+        Delete a given webhook in this channel
+        Args:
+            webhook: The webhook to delete
+        """
+        return await webhook.delete()
+
+
+@define(slots=False)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(default=None)
     type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
@@ -641,7 +666,7 @@ class GuildStore(GuildChannel):
 
 
 @define()
-class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
+class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = attr.ib(default=None)
 
     async def edit(
@@ -673,7 +698,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
 
 
 @define()
-class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin):
+class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = attr.ib(default=None)
     rate_limit_per_user: int = attr.ib(default=0)
 
@@ -712,7 +737,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin)
 
 
 @define()
-class ThreadChannel(GuildChannel, MessageableMixin):
+class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     owner_id: "Snowflake_Type" = attr.ib(default=None)
     topic: Optional[str] = attr.ib(default=None)
     message_count: int = attr.ib(default=0)
