@@ -53,6 +53,7 @@ from dis_snek.models import (
     ComponentCommand,
     to_optional_snowflake,
     SubCommand,
+    Context,
 )
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -370,6 +371,24 @@ class Snake(
         Override this to change error handling behavior
         """
         return await self.on_error(source, error, *args, **kwargs)
+
+    async def on_command(self, ctx: Context) -> None:
+        """
+        Called *after* any command is ran
+
+        By default, it will simply log the command, override this to change that behaviour
+        Args:
+            ctx: The context of the command that was called
+        """
+        if isinstance(ctx, MessageContext):
+            symbol = "@"
+        elif isinstance(ctx, ComponentContext):
+            symbol = "¢"
+        elif isinstance(ctx, InteractionContext):
+            symbol = "/"
+        else:
+            symbol = "?"  # likely custom context
+        log.info(f"Command Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
@@ -848,6 +867,8 @@ class Snake(
                         await command(ctx, **ctx.kwargs)
                     except Exception as e:
                         await self.on_command_error(f"cmd /`{name}`", e)
+                    finally:
+                        await self.on_command(ctx)
             else:
                 log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -862,6 +883,8 @@ class Snake(
                     await callback(ctx)
                 except Exception as e:
                     await self.on_command_error(f"Component Callback for {ctx.custom_id}", e)
+                finally:
+                    await self.on_command(ctx)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -888,6 +911,8 @@ class Snake(
                         await command(context)
                     except Exception as e:
                         await self.on_command_error(f"cmd `{invoked_name}`", e)
+                    finally:
+                        await self.on_command(context)
 
     def get_scale(self, name) -> Optional[Scale]:
         """
