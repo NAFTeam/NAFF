@@ -183,6 +183,7 @@ class Member(DiscordObject, _SendDMMixin):
     pending: Optional[bool] = field(
         default=None, metadata=docs("Whether the user has **not** passed guild's membership screening requirements")
     )
+    guild_avatar: "Asset" = field(default=None, metadata=docs("The user's guild avatar"))
 
     _guild_id: "Snowflake_Type" = field(repr=True, metadata=docs("The ID of the guild"))
     _role_ids: List["Snowflake_Type"] = field(
@@ -202,6 +203,10 @@ class Member(DiscordObject, _SendDMMixin):
             member_data["id"] = data["id"]
             member_data["bot"] = data.get("bot", False)
             data = member_data
+        if data.get("avatar"):
+            data["guild_avatar"] = Asset.from_path_hash(
+                client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
+            )
 
         data["role_ids"] = data.pop("roles", [])
 
@@ -254,6 +259,11 @@ class Member(DiscordObject, _SendDMMixin):
     def display_name(self) -> str:
         """The users display name, will return nickname if one is set, otherwise will return username"""
         return self.nickname or self.username
+
+    @property
+    def display_avatar(self):
+        """The users displayed avatar, will return `guild_avatar` if one is set, otherwise will return user avatar"""
+        return self.guild_avatar or self.user.avatar
 
     @property
     def premium(self) -> bool:
