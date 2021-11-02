@@ -44,6 +44,9 @@ extra:
     - icon: fontawesome/brands/trello
       link: https://trello.com/b/LVjnmYKt/dev-board
       name: Trello Board
+  analytics:
+      provider: google
+      property: G-9R5R4B0NDT
 
 extra_css:
   - extra.css
