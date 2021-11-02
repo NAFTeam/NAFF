@@ -7,6 +7,7 @@ from aiohttp import FormData
 from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.input_utils import _bytes_to_base64_data
@@ -21,7 +22,13 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord_objects.components import BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
-    from dis_snek.models.discord_objects.message import AllowedMentions, Message, MessageReference
+    from dis_snek.models import File
+
+    from dis_snek.models.discord_objects.message import (
+        AllowedMentions,
+        Message,
+        MessageReference,
+    )
     from dis_snek.models.discord_objects.sticker import Sticker
 
 
@@ -113,7 +120,8 @@ class Webhook(DiscordObject, SendMixin):
         await self._client.http.delete_webhook(self.id, self.token)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        return await self._client.http.execute_webhook(self.id, self.token, message_payload)
+        wait = message_payload.pop("wait")
+        return await self._client.http.execute_webhook(self.id, self.token, message_payload, wait)
 
     async def send(
         self,
@@ -130,7 +138,8 @@ class Webhook(DiscordObject, SendMixin):
         flags: Optional[Union[int, "MessageFlags"]] = None,
         username: str = None,
         avatar_url: str = None,
-    ):
+        wait: bool = False,
+    ) -> Optional["Message"]:
         """
         Send a message as this webhook
 
@@ -146,9 +155,10 @@ class Webhook(DiscordObject, SendMixin):
             flags: Message flags to apply.
             username: The username to use
             avatar_url: The url of an image to use as the avatar
+            wait: Waits for confirmation of delivery. Set this to True if you intend to edit the message
 
         Returns:
-            New message object that was sent.
+            New message object that was sent if `wait` is set to True
         """
         return await super().send(
             content,
@@ -162,6 +172,37 @@ class Webhook(DiscordObject, SendMixin):
             flags,
             username=username,
             avatar_url=avatar_url,
+            wait=wait,
         )
 
-    # todo: edit webhook messaage
+    async def edit_message(
+        self,
+        message: Union["Message", "Snowflake_Type"],
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
+    ):
+        message_payload = process_message_payload(
+            content=content,
+            embeds=embeds,
+            components=components,
+            stickers=stickers,
+            allowed_mentions=allowed_mentions,
+            reply_to=reply_to,
+            file=file,
+            tts=tts,
+            flags=flags,
+        )
+        msg_data = await self._client.http.edit_webhook_message(
+            self.id, self.token, to_snowflake(message), message_payload
+        )
+        if msg_data:
+            return self._client.cache.place_message_data(msg_data)
