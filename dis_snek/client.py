@@ -3,13 +3,14 @@ import datetime
 import importlib.util
 import inspect
 import logging
+import re
 import sys
 import traceback
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
 
 import aiohttp
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING
+from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX
 from dis_snek.errors import (
     GatewayNotFound,
     SnakeException,
@@ -55,11 +56,11 @@ from dis_snek.models import (
     SubCommand,
     Context,
 )
+from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
-from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word
@@ -162,6 +163,8 @@ class Snake(
         """How long to wait for guilds to be cached"""
         self.start_time = MISSING
         """The DateTime the bot started at"""
+
+        self._mention_reg = MISSING
 
         # caches
         self.cache: GlobalCache = GlobalCache(self)
@@ -272,6 +275,7 @@ class Snake(
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
+        self._mention_reg = re.compile(f"^(<@!?{self.user.id}*>\s)")
         self.start_time = datetime.datetime.now()
         self.dispatch(events.Login())
         await self._ws_connect()
@@ -901,12 +905,20 @@ class Snake(
         if not message.author.bot:
             prefix = await self.get_prefix(message)
 
+            if prefix == MENTION_PREFIX:
+                mention = self._mention_reg.search(message.content)
+                if mention:
+                    prefix = mention.group()
+                else:
+                    return
+
             if message.content.startswith(prefix):
                 invoked_name = get_first_word(message.content.removeprefix(prefix))
                 command = self.commands.get(invoked_name)
                 if command and command.enabled:
                     context = await self.get_context(message)
                     context.invoked_name = invoked_name
+                    context.prefix = prefix
                     try:
                         await command(context)
                     except Exception as e:

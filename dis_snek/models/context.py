@@ -390,6 +390,8 @@ class AutocompleteContext(_BaseInteractionContext):
 
 @define
 class MessageContext(Context, SendMixin):
+    prefix: str = attr.ib(default=MISSING, metadata=docs("The prefix used to invoke this command"))
+
     @classmethod
     def from_message(cls, client: "Snake", message: "Message"):
         new_cls = cls(

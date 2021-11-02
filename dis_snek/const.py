@@ -24,11 +24,10 @@ attributes:
     EMBED_TOTAL_MAX int: The total combined number of characters for an embed
     PREMIUM_GUILD_LIMITS dict: Limits granted per premium level of a guild
 
-    GLOBAL_SCOPE int: Represents a global scope for application commands.
-
+    GLOBAL_SCOPE _sentinel: A sentinel that represents a global scope for application commands.
+    MENTION_PREFIX _sentinel: A sentinel representing the bot will be mentioned for a prefix
     MISSING _sentinel: A sentinel value that indicates something has not been set
 """
-
 import sys
 from collections import defaultdict
 from importlib.metadata import version as _v
@@ -83,6 +82,17 @@ MISSING = sentinel.create(
         "__bool__": lambda _: False,
     },
 )
+
+
+MENTION_PREFIX = sentinel.create(
+    "MENTION_PREFIX",
+    cls_dict={
+        "__name__": "MENTION_PREFIX",
+        "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
+        # i would love for this to have a `__str__` that returns a mention string, but thats not viable
+    },
+)
+
 
 PREMIUM_GUILD_LIMITS = defaultdict(
     lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
