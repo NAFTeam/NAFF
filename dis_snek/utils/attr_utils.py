@@ -20,7 +20,7 @@ field_defaults = dict(repr=False)
 
 
 define = partial(attr.define, **class_defaults)  # type: ignore
-field = partial(attr.field, **field_defaults)
+field = partial(attr.field, **field_defaults)  # type: ignore
 
 
 def copy_converter(value):
