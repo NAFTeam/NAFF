@@ -14,7 +14,7 @@ class RoleEvents(EventMixinTemplate):
     async def _on_raw_guild_role_create(self, event: RawGatewayEvent) -> None:
         g_id = event.data.get("guild_id")
         role = self.cache.place_role_data(g_id, [event.data.get("role")])
-        self.dispatch(events.RoleCreate(g_id, role[event.data["role"]["id"]]))
+        self.dispatch(events.RoleCreate(g_id, role[int(event.data["role"]["id"])]))
 
     @listen()
     async def _on_raw_guild_role_update(self, event: RawGatewayEvent) -> None:
