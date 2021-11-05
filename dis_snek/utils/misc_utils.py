@@ -77,7 +77,4 @@ def wrap_partial(obj, cls):
 
 
 def get_parameters(callback: Callable):
-    parameters = {}
-    for param in inspect.signature(callback).parameters.values():
-        parameters[param.name] = param
-    return parameters
+    return {p.name: p for p in inspect.signature(callback).parameters.values()}
