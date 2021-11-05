@@ -76,6 +76,9 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
+  - pymdownx.snippets:
+      base_path: docs/snippets
+      check_paths: True
   - pymdownx.highlight:
       linenums: true
   - pymdownx.inlinehilite
