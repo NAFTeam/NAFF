@@ -224,6 +224,7 @@ class Member(DiscordObject, _SendDMMixin):
     def update_from_dict(self, data):
         if "guild_id" not in data:
             data["guild_id"] = self._guild_id
+        data["_role_ids"] = data.pop("roles", [])
         return super().update_from_dict(data)
 
     @property
