@@ -1,9 +1,10 @@
+import logging
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import HTTPException, TooManyChanges
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
@@ -25,6 +26,8 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, DM
+
+log = logging.getLogger(logger_name)
 
 
 class _SendDMMixin(SendMixin):
@@ -202,15 +205,26 @@ class Member(DiscordObject, _SendDMMixin):
             client.cache.place_user_data(data)
             member_data["id"] = data["id"]
             member_data["bot"] = data.get("bot", False)
+            if "guild_id" not in member_data:
+                member_data["guild_id"] = data.get("guild_id")
             data = member_data
         if data.get("avatar"):
-            data["guild_avatar"] = Asset.from_path_hash(
-                client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
-            )
+            try:
+                data["guild_avatar"] = Asset.from_path_hash(
+                    client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
+                )
+            except Exception as e:
+                log.warning(f"[DEBUG NEEDED - REPORT THIS] Incomplete dictionary has been passed to member object: {e}")
+                raise
 
         data["role_ids"] = data.pop("roles", [])
 
         return data
+
+    def update_from_dict(self, data):
+        if "guild_id" not in data:
+            data["guild_id"] = self._guild_id
+        return super().update_from_dict(data)
 
     @property
     def user(self):
