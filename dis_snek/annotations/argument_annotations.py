@@ -27,7 +27,7 @@ def define_annotation():
         params = get_parameters(func)
         args = []
         for param in params.values():
-            if param.annotation is Context:
+            if issubclass(param.annotation, Context):
                 args.append("context")
             elif param.annotation is Scale:
                 args.append("scale")
