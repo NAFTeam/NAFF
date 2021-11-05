@@ -6,6 +6,7 @@ Hi! So you want to make a bot powered by snakes. This guide aims to get you star
 
 - [x] Python 3.9 or greater
 - [x] Know how to use `pip`
+- [x] [A bot account](Creating Your Bot.md)
 - [ ] An aversion to snakes
 
 ## Installation
@@ -77,6 +78,7 @@ bot.start("Put your token here")
 ```
 
 Congratulations! You now have a basic understanding of this library. 
-If you have any questions check out our other guides, or join the [:fontawesome-brands-discord:Discord Server](https://discord.gg/WCtUY2CRVu) 
+If you have any questions check out our other guides, or join the 
+--8<-- "discord_inv.md"
 
 For more examples, check out the [examples page](/guides/example)

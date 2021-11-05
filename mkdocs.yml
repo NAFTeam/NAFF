@@ -54,24 +54,24 @@ extra_css:
 plugins:
 - search
 - autorefs
-- mkdocstrings:
-    custom_templates: docs/templates
-    enable_inventory: true
-    handlers:
-      python:
-        selection:
-          inherited_members: true
-          filters:
-            - "!^_"
-        rendering:
-          members_order: source
-          show_bases: True
-          show_root_toc_entry: False
-          group_by_category: False
-          heading_level: 2
-          show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
-    watch:
-      - dis_snek
+#- mkdocstrings:
+#    custom_templates: docs/templates
+#    enable_inventory: true
+#    handlers:
+#      python:
+#        selection:
+#          inherited_members: true
+#          filters:
+#            - "!^_"
+#        rendering:
+#          members_order: source
+#          show_bases: True
+#          show_root_toc_entry: False
+#          group_by_category: False
+#          heading_level: 2
+#          show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
+#    watch:
+#      - dis_snek
 
 markdown_extensions:
   - admonition
