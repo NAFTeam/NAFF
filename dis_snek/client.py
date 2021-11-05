@@ -562,7 +562,7 @@ class Snake(
             if scope not in self.interactions:
                 self.interactions[scope] = {}
             elif command.resolved_name in self.interactions[scope]:
-                old_cmd = self.interactions[scope][command.name]
+                old_cmd = self.interactions[scope][command.resolved_name]
                 raise ValueError(f"Duplicate Command! {old_cmd.scopes}::{old_cmd.resolved_name}")
 
             self.interactions[scope][command.name] = command
