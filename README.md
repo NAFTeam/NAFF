@@ -6,17 +6,27 @@
 [![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/hpfNhH8BsY)
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
 
-# Dis-Snek
+# "What is this?"
+This is `Dis-Snek`, an API wrapper for Discord, written in Python. This wrapper is designed to be easy to use, and easily modified to suit your needs.
 
-This is `Dis-Snek`, an API wrapper for Discord, written in Python. This wrapper is designed to be easy to use, and easily modified to suit your needs. 
+#### Features: 
+- [x] 100% coverage of the application commands API 
+- [x] Modern and Pythonic API 
+- [x] Asynchronous operation
+- [x] Proper rate limit handling
+- [x] Dynamic cache with TTL support
 
-## "Is this just another discord.py fork?"
 
-While this library shares some features or styles with discord.py, it's completely separate from them. We think discord.py is a fantastic library, but we disagree with the direction and design decisions made by it.
+## "Is this just another discord.py fork"?
+While this library shares some features and stylistic choice with `discord.py`, its completely separate from them. We think `discord.py` is a fantastic library, but we disagree with the direction and design decisions made by it.
 
-## "Can I contribute to this project?"
+Compared to `discord.py`; `Snek` starts faster, responds faster, and is simpler to use. Especially compared to `Views`. 
 
-Of course! You can contribute to this project by submitting a Pull Request here. We also have a [Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards - feel free to do anything there.
+## "I don't understand something"
+If you need help with something, don’t hesitate to ask for help in the [Discord Server](https://discord.gg/NTSHu97tHg)!
+
+## "Can I contribute to this project?`"
+Of course, you can contribute to this project by submitting a pull-request here. We also have a [Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards, feel free to do anything there.
 
 ## Links:
 
