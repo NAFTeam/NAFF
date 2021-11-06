@@ -74,3 +74,7 @@ def wrap_partial(obj, cls):
         obj.subcommands = {k: wrap_partial(v, cls) for k, v in obj.subcommands.items()}
 
     return obj
+
+
+def get_parameters(callback: Callable):
+    return {p.name: p for p in inspect.signature(callback).parameters.values()}

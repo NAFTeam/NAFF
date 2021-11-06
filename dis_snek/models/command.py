@@ -1,6 +1,9 @@
 import asyncio
+import copy
+import functools
 import logging
-from typing import Callable, Coroutine, Any
+import re
+from typing import Callable, Coroutine, Any, TYPE_CHECKING
 
 import attr
 
@@ -9,9 +12,16 @@ from dis_snek.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurren
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.cooldowns import Cooldown, Buckets, MaxConcurrency
 from dis_snek.utils.attr_utils import docs
+from dis_snek.utils.misc_utils import get_parameters
 from dis_snek.utils.serializer import no_export_meta
 
+if TYPE_CHECKING:
+    from dis_snek.models.context import Context
+
 log = logging.getLogger(logger_name)
+
+kwargs_reg = re.compile(r"^\*\*\w")
+args_reg = re.compile(r"^\*\w")
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -81,7 +91,7 @@ class BaseCommand(DictSerializationMixin):
                 if self.scale is not None and self.scale.scale_prerun:
                     await self.scale.scale_prerun(context, *args, **kwargs)
 
-                await self.callback(context, *args, **kwargs)
+                await self.call_callback(self.callback, context)
 
                 if self.post_run_callback is not None:
                     await self.post_run_callback(context, *args, **kwargs)
@@ -97,6 +107,47 @@ class BaseCommand(DictSerializationMixin):
         finally:
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
+
+    async def call_callback(self, callback: Callable, context: "Context"):
+        callback = functools.partial(callback, context)  # first param must be ctx
+        parameters = get_parameters(callback)
+        args = []
+        kwargs = {}
+        if len(parameters) == 0:
+            # if no params, user only wants context
+            return await callback()
+
+        c_args = copy.copy(context.args)
+        for param in parameters.values():
+            if config := getattr(param.annotation, "_annotation_dat", None):
+                # if user has used an snek-annotation, run the annotation, and pass the result to the user
+                local = {"context": context, "scale": self.scale}
+                ano_args = [local[c] for c in config["args"]]
+                if param.kind != param.POSITIONAL_ONLY:
+                    kwargs[param.name] = param.annotation(*ano_args)
+                else:
+                    args.append(param.annotation(*ano_args))
+                continue
+            elif param.name in context.kwargs:
+                # if parameter is in kwargs, user obviously wants it, pass it
+                if param.kind != param.POSITIONAL_ONLY:
+                    kwargs[param.name] = context.kwargs[param.name]
+                else:
+                    args.append(context.kwargs[param.name])
+            else:
+                if not str(param).startswith("*"):
+                    if param.kind != param.KEYWORD_ONLY:
+                        args.append(c_args.pop(0))
+                    else:
+                        raise ValueError(f"Unable to resolve argument: {param.name}")
+
+        if any(kwargs_reg.match(str(param)) for param in parameters.values()):
+            # if user has `**kwargs` pass all remaining kwargs
+            kwargs = kwargs | {k: v for k, v in context.kwargs.items() if k not in kwargs}
+        if any(args_reg.match(str(param)) for param in parameters.values()):
+            # user has `*args` pass all remaining args
+            args = args + c_args
+        return await callback(*args, **kwargs)
 
     async def _can_run(self, context):
         """

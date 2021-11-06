@@ -401,8 +401,11 @@ class MessageContext(Context, SendMixin):
             channel=message.channel,
             guild_id=message.guild.id,
         )
-        new_cls.args = get_args(message.content)[1:]
         return new_cls
+
+    @property
+    def content_parameters(self):
+        return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id)

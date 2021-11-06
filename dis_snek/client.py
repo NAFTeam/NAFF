@@ -63,7 +63,7 @@ from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.utils.cache import TTLCache
-from dis_snek.utils.input_utils import get_first_word
+from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
@@ -919,6 +919,7 @@ class Snake(
                     context = await self.get_context(message)
                     context.invoked_name = invoked_name
                     context.prefix = prefix
+                    context.args = get_args(context.content_parameters)
                     try:
                         await command(context)
                     except Exception as e:
