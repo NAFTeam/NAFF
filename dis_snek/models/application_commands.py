@@ -349,6 +349,13 @@ class SlashCommand(InteractionCommand):
             if isinstance(value, list):
                 if len(value) > SLASH_CMD_MAX_OPTIONS:
                     raise ValueError(f"Slash commands can only hold {SLASH_CMD_MAX_OPTIONS} options")
+                if value != sorted(
+                    value,
+                    key=lambda x: x.required if isinstance(x, SlashCommandOption) else x["required"],
+                    reverse=True,
+                ):
+                    raise ValueError("Required options must go before optional options")
+
             else:
                 raise TypeError("Options attribute must be either None or a list of options")
 
