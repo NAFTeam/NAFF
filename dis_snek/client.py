@@ -53,7 +53,6 @@ from dis_snek.models import (
     AutocompleteContext,
     ComponentCommand,
     to_optional_snowflake,
-    SubCommand,
     Context,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
@@ -565,7 +564,7 @@ class Snake(
                 old_cmd = self.interactions[scope][command.resolved_name]
                 raise ValueError(f"Duplicate Command! {old_cmd.scopes}::{old_cmd.resolved_name}")
 
-            self.interactions[scope][command.name] = command
+            self.interactions[scope][command.resolved_name] = command
 
     def add_message_command(self, command: MessageCommand):
         """
@@ -601,7 +600,7 @@ class Snake(
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
-                elif isinstance(func, InteractionCommand) and not isinstance(func, SubCommand):
+                elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
                 elif isinstance(func, MessageCommand):
                     self.add_message_command(func)
@@ -633,6 +632,79 @@ class Snake(
         except Exception as e:
             await self.on_error("Interaction Syncing", e)
 
+    def application_commands_to_dict(self) -> dict:
+        """Convert the command list into a format that would be accepted by discord"""
+        cmd_bases: dict[str, List[InteractionCommand]] = {}  # {cmd_base: [commands]}
+        """A store of commands organised by their base command"""
+        output: dict = {}
+        """The output dictionary"""
+
+        def squash_subcommand(sub_cmds: List) -> Dict:
+            output_data = {}
+            groups = {}
+            sub_cmds = []
+
+            for subcommand in sub_cmds:
+                if not output_data:
+                    output_data = {
+                        "name": subcommand.name,
+                        "description": subcommand.description,
+                        "options": [],
+                        "permissions": subcommand.permissions,
+                        "default_permission": subcommand.default_permission,
+                    }
+                if subcommand.group_name:
+                    if subcommand.group_name not in groups:
+                        groups[subcommand.group_name] = {
+                            "name": subcommand.group_name,
+                            "description": subcommand.group_description,
+                            "type": OptionTypes.SUB_COMMAND_GROUP,
+                            "options": [subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAN}],
+                        }
+                        continue
+                    groups[subcommand.group_name]["options"].append(
+                        subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}
+                    )
+                else:
+                    sub_cmds.append(subcommand.to_dict())
+            options = [g for g in groups.values()] + sub_cmds
+            output_data["options"] = options
+            return output_data
+
+        for scope, cmds in self.interactions.items():
+            for cmd in cmds.values():
+                if cmd.name not in cmd_bases:
+                    cmd_bases[cmd.name] = [cmd]
+                    continue
+                if cmd not in cmd_bases[cmd.name]:
+                    cmd_bases[cmd.name].append(cmd)
+
+        for cmd_list in cmd_bases.values():
+            if len(cmd_list) > 1:
+                # ensure all subcommands share the same scopes (discord req)
+                scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
+                permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
+
+                if not all(c.description == cmd_list[0].description for c in cmd_list):
+                    log.warning(f"Conflicting descriptions found in {cmd_list[0].name} subcommands")
+                if not all(c.default_permission == cmd_list[0].default_permission for c in cmd_list):
+                    raise ValueError(f"Subcommands of {cmd_list[0].name} have conflicting `default_permission` values")
+
+                for cmd in cmd_list:
+                    cmd.scopes = list(scopes)
+                    cmd.permissions = permissions
+                cmd_data = squash_subcommand(cmd_list)
+            else:
+                scopes = cmd_list[0].scopes
+                cmd_data = cmd_list[0].to_dict()
+            for s in scopes:
+                if s not in output:
+                    output[s] = [cmd_data]
+                    continue
+                output[s].append(cmd_data)
+
+        return output
+
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
         bot_scopes = set(g.id for g in self.cache.guild_cache.values())
@@ -647,15 +719,19 @@ class Snake(
                 raise InteractionMissingAccess(scope) from None
 
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
+            found = set()  # this is a temporary hack to fix subcommand detection
             for cmd in self.interactions[scope].values():
                 cmd_data = remote_cmds.pop(cmd.name, MISSING)
                 if cmd_data is MISSING:
-                    if warn_missing:
-                        log.error(
-                            f'Detected yet to sync slash command "/{cmd.name}" for scope '
-                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                        )
+                    if cmd.name not in found:
+                        if warn_missing:
+                            log.error(
+                                f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                                f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                            )
                     continue
+                else:
+                    found.add(cmd.name)
 
                 self._interaction_scopes[str(cmd_data["id"])] = scope
                 cmd.cmd_id = str(cmd_data["id"])
@@ -696,6 +772,8 @@ class Snake(
 
         guild_perms = {}
 
+        cmds_json = self.application_commands_to_dict()
+
         for cmd_scope in cmd_scopes:
             try:
                 cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
@@ -708,7 +786,7 @@ class Snake(
                     if remote_cmd:
                         cmds_resp_data.remove(remote_cmd)
 
-                    local_cmd = local_cmd.to_dict()
+                    local_cmd = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
                     cmds_to_sync.append(local_cmd)
 
                     # todo: prevent un-needed syncs for subcommands
@@ -860,9 +938,10 @@ class Snake(
             scope = self._interaction_scopes.get(str(interaction_id))
 
             if scope in self.interactions:
-                command: SlashCommand = self.interactions[scope][name]  # type: ignore
-                log.debug(f"{scope} :: {command.name} should be called")
                 ctx = await self.get_context(interaction_data, True)
+
+                command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                log.debug(f"{scope} :: {command.name} should be called")
 
                 if auto_opt := getattr(ctx, "focussed_option", None):
                     await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)

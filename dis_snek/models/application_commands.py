@@ -27,7 +27,6 @@ from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.context import InteractionContext
 
 
 class OptionTypes(IntEnum):
@@ -160,6 +159,10 @@ class InteractionCommand(BaseCommand):
         """A representation of this interaction's name"""
         return self.name
 
+    @property
+    def is_subcommand(self) -> bool:
+        return False
+
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class ContextMenu(InteractionCommand):
@@ -291,12 +294,26 @@ class SlashCommandOption(DictSerializationMixin):
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class _SlashCommandMeta(InteractionCommand):
+class SlashCommand(InteractionCommand):
     name: str = attr.ib()
     description: str = attr.ib("No Description Set")
 
+    group_name: str = attr.ib(default=None, metadata=no_export_meta)
+    group_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+
+    sub_cmd_name: str = attr.ib(default=None, metadata=no_export_meta)
+    sub_cmd_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+
     options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
     autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
+
+    @property
+    def resolved_name(self):
+        return f"{self.name}{f' {self.group_name}' if self.group_name else ''}{f' {self.sub_cmd_name}' if self.sub_cmd_name else ''}"
+
+    @property
+    def is_subcommand(self) -> bool:
+        return self.sub_cmd_name is None
 
     def __attrs_post_init__(self):
         if self.callback is not None:
@@ -310,6 +327,8 @@ class _SlashCommandMeta(InteractionCommand):
         super().__attrs_post_init__()
 
     @name.validator
+    @group_name.validator
+    @sub_cmd_name.validator
     def name_validator(self, attribute: str, value: str) -> None:
         if value:
             if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
@@ -318,6 +337,8 @@ class _SlashCommandMeta(InteractionCommand):
                 )  # noqa: W605
 
     @description.validator
+    @group_description.validator
+    @sub_cmd_description.validator
     def description_validator(self, attribute: str, value: str) -> None:
         if not 1 <= len(value) <= SLASH_CMD_MAX_DESC_LENGTH:
             raise ValueError(f"Description must be between 1 and {SLASH_CMD_MAX_DESC_LENGTH} characters long")
@@ -351,53 +372,6 @@ class _SlashCommandMeta(InteractionCommand):
         option_name = option_name.lower()
         return wrapper
 
-
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SlashCommand(_SlashCommandMeta):
-    """
-    Represents a discord slash command.
-
-    parameters:
-        name: The name of this command.
-        description: The description of this command.
-        options: A list of options for this command.
-    """
-
-    subcommands: Dict[str, "SubCommand"] = attr.ib(factory=dict, metadata=no_export_meta)
-
-    def to_dict(self) -> Dict[str, Any]:
-
-        if self.subcommands:
-            # we're dealing with subcommands, behave differently
-            self.options = []
-            json = super().to_dict()
-            groups = {}
-            sub_cmds = []
-            for sc in self.subcommands.values():
-                if sc.group_name:
-                    if sc.group_name not in groups.keys():
-                        groups[sc.group_name] = {
-                            "name": sc.group_name,
-                            "description": sc.group_description,
-                            "type": OptionTypes.SUB_COMMAND_GROUP,
-                            "options": [sc.to_dict()],
-                        }
-                        continue
-                    groups[sc.group_name]["options"].append(sc.to_dict())
-                else:
-                    sub_cmds.append(sc.to_dict())
-            options = [g for g in groups.values()] + sub_cmds
-            json["options"] = options
-            return json
-        else:
-            return super().to_dict()
-
-    async def _subcommand_call_no_wrap(self, context: "InteractionContext", *args, **kwargs):
-        if call := self.subcommands.get(context.invoked_name):
-            return await call(context, *args, **kwargs)
-        breakpoint()
-        raise ValueError(f"Error {context.invoked_name} is not a known subcommand")
-
     def subcommand(
         self,
         sub_cmd_name: str,
@@ -405,58 +379,22 @@ class SlashCommand(_SlashCommandMeta):
         group_description: str = "No Description Set",
         sub_cmd_description: str = "No Description Set",
         options: List[Union[SlashCommandOption, Dict]] = None,
-    ) -> Callable[..., "SubCommand"]:
-        def wrapper(call: Callable[..., Coroutine]) -> "SubCommand":
+    ) -> Callable[..., "SlashCommand"]:
+        def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("Subcommand must be coroutine")
-
-            self.callback = self._subcommand_call_no_wrap
-
-            sub = SubCommand(
+            return SlashCommand(
                 name=self.name,
                 description=self.description,
                 group_name=group_name,
                 group_description=group_description,
-                subcommand_name=sub_cmd_name,
-                subcommand_description=sub_cmd_description,
+                sub_cmd_name=sub_cmd_name,
+                sub_cmd_description=sub_cmd_description,
                 options=options,
-                scopes=self.scopes,
                 callback=call,
             )
-            self.subcommands[sub.resolved_name] = sub
-            return sub
 
         return wrapper
-
-
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
-class SubCommand(_SlashCommandMeta):
-    group_name: str = attr.ib(default=None, metadata=no_export_meta)
-    group_description: str = attr.ib(default=None, metadata=no_export_meta)
-
-    subcommand_name: str = attr.ib(default=None, metadata=no_export_meta)
-    subcommand_description: str = attr.ib(default=None, metadata=no_export_meta)
-
-    @group_name.validator
-    @subcommand_name.validator
-    def _name_validator(self, attribute: str, value: str) -> None:
-        return self.name_validator(attribute, value)
-
-    @group_description.validator
-    @subcommand_description.validator
-    def _description_validator(self, attribute: str, value: str) -> None:
-        return self.description_validator(attribute, value)
-
-    @property
-    def resolved_name(self):
-        return f"{self.name} {f'{self.group_name} ' if self.group_name else ''}{self.subcommand_name}"
-
-    def to_dict(self) -> dict:
-        return super().to_dict() | {
-            "name": self.subcommand_name,
-            "description": self.subcommand_description,
-            "type": OptionTypes.SUB_COMMAND,
-        }
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -530,7 +468,7 @@ def slash_command(
                 default_permission=default_permission,
                 permissions=permissions,
             )
-            cmd.subcommand(
+            cmd = cmd.subcommand(
                 group_name=group_name,
                 sub_cmd_name=sub_cmd_name,
                 group_description=group_description,
