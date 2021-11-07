@@ -109,6 +109,11 @@ class Scale:
         return self._commands
 
     @property
+    def listeners(self):
+        """Get the listeners from this Scale"""
+        return self._listeners
+
+    @property
     def name(self):
         return self.__name
 
@@ -122,8 +127,8 @@ class Scale:
                     self.bot._component_callbacks.pop(listener)
             elif isinstance(func, InteractionCommand):
                 for scope in func.scopes:
-                    if self.bot.interactions.get(scope) and self.bot.interactions[scope].get(func.name):
-                        self.bot.interactions[scope].pop(func.name)
+                    if self.bot.interactions.get(scope):
+                        self.bot.interactions[scope].pop(func.resolved_name, [])
             elif isinstance(func, MessageCommand):
                 if self.bot.commands[func.name]:
                     self.bot.commands.pop(func.name)
