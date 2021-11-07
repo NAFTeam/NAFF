@@ -313,7 +313,7 @@ class SlashCommand(InteractionCommand):
 
     @property
     def is_subcommand(self) -> bool:
-        return self.sub_cmd_name is None
+        return not self.sub_cmd_name is None
 
     def __attrs_post_init__(self):
         if self.callback is not None:
@@ -325,6 +325,13 @@ class SlashCommand(InteractionCommand):
             if hasattr(self.callback, "permissions"):
                 self.permissions = self.callback.permissions
         super().__attrs_post_init__()
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        if self.is_subcommand:
+            data["name"] = self.sub_cmd_name
+            data["description"] = self.sub_cmd_description
+        return data
 
     @name.validator
     @group_name.validator
@@ -455,33 +462,19 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        if not sub_cmd_name:
-
-            cmd = SlashCommand(
-                name=name,
-                description=description,
-                scopes=scopes if scopes else [GLOBAL_SCOPE],
-                default_permission=default_permission,
-                permissions=permissions,
-                callback=func,
-                options=options,
-            )
-
-        else:
-            cmd = SlashCommand(
-                name=name,
-                description=description,
-                scopes=scopes if scopes else [GLOBAL_SCOPE],
-                default_permission=default_permission,
-                permissions=permissions,
-            )
-            cmd = cmd.subcommand(
-                group_name=group_name,
-                sub_cmd_name=sub_cmd_name,
-                group_description=group_description,
-                sub_cmd_description=sub_cmd_description,
-                options=options,
-            )(func)
+        cmd = SlashCommand(
+            name=name,
+            group_name=group_name,
+            group_description=group_description,
+            sub_cmd_name=sub_cmd_name,
+            sub_cmd_description=sub_cmd_description,
+            description=description,
+            scopes=scopes if scopes else [GLOBAL_SCOPE],
+            default_permission=default_permission,
+            permissions=permissions or {},
+            callback=func,
+            options=options,
+        )
 
         return cmd
 

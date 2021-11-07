@@ -565,15 +565,15 @@ class Snake(
         Args:
             command InteractionCommand: The command to add
         """
+        if self.debug_scope:
+            command.scopes = [self.debug_scope]
         for scope in command.scopes:
-            if self.debug_scope and scope == GLOBAL_SCOPE:
-                scope = self.debug_scope
 
             if scope not in self.interactions:
                 self.interactions[scope] = {}
             elif command.resolved_name in self.interactions[scope]:
                 old_cmd = self.interactions[scope][command.resolved_name]
-                raise ValueError(f"Duplicate Command! {old_cmd.scopes}::{old_cmd.resolved_name}")
+                raise ValueError(f"Duplicate Command! {scope}::{old_cmd.resolved_name}")
 
             self.interactions[scope][command.resolved_name] = command
 
@@ -645,17 +645,16 @@ class Snake(
 
     def application_commands_to_dict(self) -> dict:
         """Convert the command list into a format that would be accepted by discord"""
-        cmd_bases: dict[str, List[InteractionCommand]] = {}  # {cmd_base: [commands]}
+        cmd_bases = {}  # {cmd_base: [commands]}
         """A store of commands organised by their base command"""
-        output: dict = {}
+        output = {}
         """The output dictionary"""
 
-        def squash_subcommand(sub_cmds: List) -> Dict:
+        def squash_subcommand(subcommands: List) -> Dict:
             output_data = {}
             groups = {}
             sub_cmds = []
-
-            for subcommand in sub_cmds:
+            for subcommand in subcommands:
                 if not output_data:
                     output_data = {
                         "name": subcommand.name,
@@ -670,14 +669,14 @@ class Snake(
                             "name": subcommand.group_name,
                             "description": subcommand.group_description,
                             "type": OptionTypes.SUB_COMMAND_GROUP,
-                            "options": [subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAN}],
+                            "options": [subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}],
                         }
                         continue
                     groups[subcommand.group_name]["options"].append(
                         subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}
                     )
                 else:
-                    sub_cmds.append(subcommand.to_dict())
+                    sub_cmds.append(subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND})
             options = [g for g in groups.values()] + sub_cmds
             output_data["options"] = options
             return output_data
@@ -691,7 +690,7 @@ class Snake(
                     cmd_bases[cmd.name].append(cmd)
 
         for cmd_list in cmd_bases.values():
-            if len(cmd_list) > 1:
+            if any(c.is_subcommand for c in cmd_list):
                 # ensure all subcommands share the same scopes (discord req)
                 scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
                 permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
@@ -798,7 +797,9 @@ class Snake(
                         cmds_resp_data.remove(remote_cmd)
 
                     local_cmd = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
-                    cmds_to_sync.append(local_cmd)
+
+                    if local_cmd not in cmds_to_sync:
+                        cmds_to_sync.append(local_cmd)
 
                     # todo: prevent un-needed syncs for subcommands
                     if (
@@ -817,8 +818,27 @@ class Snake(
                     )
                     # cache cmd_ids and their scopes
                     for cmd_data in cmd_sync_resp:
-                        self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                         self._interaction_scopes[cmd_data["id"]] = cmd_scope
+                        if cmd_data["name"] in self.interactions[cmd_scope]:
+                            self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                        else:
+                            # sub_cmd
+                            for sc in cmd_data["options"]:
+                                if sc["type"] == OptionTypes.SUB_COMMAND:
+                                    if f"{cmd_data['name']} {sc['name']}" in self.interactions[cmd_scope]:
+                                        self.interactions[cmd_scope][f"{cmd_data['name']} {sc['name']}"].cmd_id = str(
+                                            cmd_data["id"]
+                                        )
+                                elif sc["type"] == OptionTypes.SUB_COMMAND_GROUP:
+                                    for _sc in sc["options"]:
+                                        if (
+                                            f"{cmd_data['name']} {sc['name']} {_sc['name']}"
+                                            in self.interactions[cmd_scope]
+                                        ):
+                                            self.interactions[cmd_scope][
+                                                f"{cmd_data['name']} {sc['name']} {_sc['name']}"
+                                            ].cmd_id = str(cmd_data["id"])
+
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date with {len(cmds_resp_data)} commands.")
 
