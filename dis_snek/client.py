@@ -243,6 +243,17 @@ class Snake(
         """Get the activity of the bot"""
         return self._activity
 
+    @property
+    def application_commands(self):
+        """a list of all application commands registered within the bot"""
+        commands = []
+        for scope in self.interactions.keys():
+            for cmd in self.interactions[scope].values():
+                if cmd not in commands:
+                    commands.append(cmd)
+
+        return commands
+
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
