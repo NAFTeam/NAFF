@@ -55,6 +55,7 @@ from dis_snek.models import (
     to_optional_snowflake,
     Context,
     application_commands_to_dict,
+    sync_needed,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
@@ -660,7 +661,7 @@ class Snake(
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
             found = set()  # this is a temporary hack to fix subcommand detection
             for cmd in self.interactions[scope].values():
-                cmd_data = remote_cmds.pop(cmd.name, MISSING)
+                cmd_data = remote_cmds.get(cmd.name, MISSING)
                 if cmd_data is MISSING:
                     if cmd.name not in found:
                         if warn_missing:
@@ -722,8 +723,6 @@ class Snake(
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # try and find remote equiv of this command
                     remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
-                    if remote_cmd:
-                        cmds_resp_data.remove(remote_cmd)
 
                     local_cmd = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
 
@@ -731,13 +730,8 @@ class Snake(
                         cmds_to_sync.append(local_cmd)
 
                     # todo: prevent un-needed syncs for subcommands
-                    if (
-                        not remote_cmd
-                        or local_cmd["name"] != remote_cmd["name"]
-                        or local_cmd.get("description", "") != remote_cmd.get("description", "")
-                        or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
-                        or local_cmd.get("options") != remote_cmd.get("options")
-                    ):  # if command local data doesnt match remote, a change has been made, sync it
+                    if sync_needed(local_cmd, remote_cmd):
+                        # if command local data doesnt match remote, a change has been made, sync it
                         need_to_sync = True
 
                 if need_to_sync:

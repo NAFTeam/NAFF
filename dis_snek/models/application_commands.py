@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import inspect
 import logging
 import re
@@ -6,6 +7,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
 
 import attr
+import deepdiff
 
 from dis_snek.const import (
     GLOBAL_SCOPE,
@@ -335,6 +337,7 @@ class SlashCommand(InteractionCommand):
         if self.is_subcommand:
             data["name"] = self.sub_cmd_name
             data["description"] = self.sub_cmd_description
+            data.pop("default_permission", None)
         return data
 
     @name.validator
@@ -658,14 +661,14 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     groups[subcommand.group_name] = {
                         "name": subcommand.group_name,
                         "description": subcommand.group_description,
-                        "type": OptionTypes.SUB_COMMAND_GROUP,
+                        "type": int(OptionTypes.SUB_COMMAND_GROUP),
                         "options": [],
                     }
                 groups[subcommand.group_name]["options"].append(
-                    subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}
+                    subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)}
                 )
             else:
-                sub_cmds.append(subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND})
+                sub_cmds.append(subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)})
         options = [g for g in groups.values()] + sub_cmds
         output_data["options"] = options
         return output_data
@@ -710,3 +713,56 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             output[s].append(cmd_data)
 
     return output
+
+
+def _compare_options(local_opt_list: dict, remote_opt_list: dict):
+    if local_opt_list != remote_opt_list:
+        if len(local_opt_list) != len(remote_opt_list):
+            return False
+        for i in range(len(local_opt_list)):
+            local_option = local_opt_list[i]
+            remote_option = remote_opt_list[i]
+            if local_option["type"] == remote_option["type"]:
+                if local_option["type"] in (OptionTypes.SUB_COMMAND_GROUP, OptionTypes.SUB_COMMAND):
+                    if not _compare_options(local_option["options"], remote_option["options"]):
+                        return False
+                else:
+                    if (
+                        local_option["name"] != remote_option["name"]
+                        or local_option["description"] != remote_option["description"]
+                        or local_option["required"] != remote_option.get("required", False)
+                        or local_option["autocomplete"] != remote_option.get("autocomplete", False)
+                    ):
+                        return False
+    return True
+
+
+def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
+    """
+    Compares a local application command to its remote counterpart to determine if a sync is required.
+
+    Args:
+        local_cmd: The local json representation of the command
+        remote_cmd: The json representation of the command from Discord
+
+    Returns:
+        Boolean indicating if a sync is needed
+    """
+    if not remote_cmd:
+        # No remote version, command must be new
+        return True
+
+    if (
+        local_cmd["name"] != remote_cmd["name"]
+        or local_cmd.get("description", "") != remote_cmd.get("description", "")
+        or local_cmd["default_permission"] != remote_cmd["default_permission"]
+    ):
+        # basic comparison of attributes
+        return True
+
+    if remote_cmd["type"] == CommandTypes.CHAT_INPUT:
+        if not _compare_options(local_cmd["options"], remote_cmd["options"]):
+            # options are not the same, sync needed
+            return True
+
+    return False
