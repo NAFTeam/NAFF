@@ -703,10 +703,10 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         else:
             scopes = cmd_list[0].scopes
             cmd_data = cmd_list[0].to_dict()
-            for s in scopes:
-                if s not in output:
-                    output[s] = [cmd_data]
-                    continue
-                output[s].append(cmd_data)
+        for s in scopes:
+            if s not in output:
+                output[s] = [cmd_data]
+                continue
+            output[s].append(cmd_data)
 
     return output
