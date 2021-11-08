@@ -1,5 +1,4 @@
 import asyncio
-import copy
 import inspect
 import logging
 import re
@@ -7,7 +6,6 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
 
 import attr
-import deepdiff
 
 from dis_snek.const import (
     GLOBAL_SCOPE,
