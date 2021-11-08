@@ -54,6 +54,7 @@ from dis_snek.models import (
     ComponentCommand,
     to_optional_snowflake,
     Context,
+    application_commands_to_dict,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
@@ -643,78 +644,6 @@ class Snake(
         except Exception as e:
             await self.on_error("Interaction Syncing", e)
 
-    def application_commands_to_dict(self) -> dict:
-        """Convert the command list into a format that would be accepted by discord"""
-        cmd_bases = {}  # {cmd_base: [commands]}
-        """A store of commands organised by their base command"""
-        output = {}
-        """The output dictionary"""
-
-        def squash_subcommand(subcommands: List) -> Dict:
-            output_data = {}
-            groups = {}
-            sub_cmds = []
-            for subcommand in subcommands:
-                if not output_data:
-                    output_data = {
-                        "name": subcommand.name,
-                        "description": subcommand.description,
-                        "options": [],
-                        "permissions": subcommand.permissions,
-                        "default_permission": subcommand.default_permission,
-                    }
-                if subcommand.group_name:
-                    if subcommand.group_name not in groups:
-                        groups[subcommand.group_name] = {
-                            "name": subcommand.group_name,
-                            "description": subcommand.group_description,
-                            "type": OptionTypes.SUB_COMMAND_GROUP,
-                            "options": [subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}],
-                        }
-                        continue
-                    groups[subcommand.group_name]["options"].append(
-                        subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}
-                    )
-                else:
-                    sub_cmds.append(subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND})
-            options = [g for g in groups.values()] + sub_cmds
-            output_data["options"] = options
-            return output_data
-
-        for scope, cmds in self.interactions.items():
-            for cmd in cmds.values():
-                if cmd.name not in cmd_bases:
-                    cmd_bases[cmd.name] = [cmd]
-                    continue
-                if cmd not in cmd_bases[cmd.name]:
-                    cmd_bases[cmd.name].append(cmd)
-
-        for cmd_list in cmd_bases.values():
-            if any(c.is_subcommand for c in cmd_list):
-                # ensure all subcommands share the same scopes (discord req)
-                scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
-                permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
-
-                if not all(c.description == cmd_list[0].description for c in cmd_list):
-                    log.warning(f"Conflicting descriptions found in {cmd_list[0].name} subcommands")
-                if not all(c.default_permission == cmd_list[0].default_permission for c in cmd_list):
-                    raise ValueError(f"Subcommands of {cmd_list[0].name} have conflicting `default_permission` values")
-
-                for cmd in cmd_list:
-                    cmd.scopes = list(scopes)
-                    cmd.permissions = permissions
-                cmd_data = squash_subcommand(cmd_list)
-            else:
-                scopes = cmd_list[0].scopes
-                cmd_data = cmd_list[0].to_dict()
-            for s in scopes:
-                if s not in output:
-                    output[s] = [cmd_data]
-                    continue
-                output[s].append(cmd_data)
-
-        return output
-
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
         bot_scopes = set(g.id for g in self.cache.guild_cache.values())
@@ -782,7 +711,7 @@ class Snake(
 
         guild_perms = {}
 
-        cmds_json = self.application_commands_to_dict()
+        cmds_json = application_commands_to_dict(self.interactions)
 
         for cmd_scope in cmd_scopes:
             try:
