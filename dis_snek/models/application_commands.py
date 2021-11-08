@@ -659,9 +659,8 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                         "name": subcommand.group_name,
                         "description": subcommand.group_description,
                         "type": OptionTypes.SUB_COMMAND_GROUP,
-                        "options": [subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}],
+                        "options": [],
                     }
-                    continue
                 groups[subcommand.group_name]["options"].append(
                     subcommand.to_dict() | {"type": OptionTypes.SUB_COMMAND}
                 )
@@ -681,7 +680,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
 
     for cmd_list in cmd_bases.values():
         if any(c.is_subcommand for c in cmd_list):
-            # ensure all subcommands share the same scopes (discord req)
+            # validate all commands share required attributes
             scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
             permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
             base_description = next(
@@ -699,6 +698,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 cmd.scopes = list(scopes)
                 cmd.permissions = permissions
                 cmd.description = base_description
+            # end validation of attributes
             cmd_data = squash_subcommand(cmd_list)
         else:
             scopes = cmd_list[0].scopes
