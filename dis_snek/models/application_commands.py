@@ -428,15 +428,15 @@ class ComponentCommand(InteractionCommand):
 
 def slash_command(
     name: str,
-    description: str = "No description set",
+    description: str = "No Description Set",
     scopes: List["Snowflake_Type"] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
     permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
     sub_cmd_name: str = None,
     group_name: str = None,
-    sub_cmd_description: str = "No description set",
-    group_description: str = "No description set",
+    sub_cmd_description: str = "No Description Set",
+    group_description: str = "No Description Set",
 ):
     """
     A decorator to declare a coroutine as a slash command.
@@ -684,15 +684,21 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             # ensure all subcommands share the same scopes (discord req)
             scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
             permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
+            base_description = next(
+                (c.description for c in cmd_list if c.description is not None), "No Description Set"
+            )
 
-            if not all(c.description == cmd_list[0].description for c in cmd_list):
-                log.warning(f"Conflicting descriptions found in {cmd_list[0].name} subcommands")
+            if not all(c.description in (base_description, "No Description Set") for c in cmd_list):
+                log.warning(
+                    f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{base_description}` will be used"
+                )
             if not all(c.default_permission == cmd_list[0].default_permission for c in cmd_list):
-                raise ValueError(f"Subcommands of {cmd_list[0].name} have conflicting `default_permission` values")
+                raise ValueError(f"Conflicting `default_permission` values found in `{cmd_list[0].name}`")
 
             for cmd in cmd_list:
                 cmd.scopes = list(scopes)
                 cmd.permissions = permissions
+                cmd.description = base_description
             cmd_data = squash_subcommand(cmd_list)
         else:
             scopes = cmd_list[0].scopes
@@ -703,4 +709,4 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     continue
                 output[s].append(cmd_data)
 
-        return output
+    return output
