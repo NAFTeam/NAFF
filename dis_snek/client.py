@@ -53,8 +53,9 @@ from dis_snek.models import (
     AutocompleteContext,
     ComponentCommand,
     to_optional_snowflake,
-    SubCommand,
     Context,
+    application_commands_to_dict,
+    sync_needed,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
@@ -243,6 +244,17 @@ class Snake(
     def activity(self) -> Activity:
         """Get the activity of the bot"""
         return self._activity
+
+    @property
+    def application_commands(self):
+        """a list of all application commands registered within the bot"""
+        commands = []
+        for scope in self.interactions.keys():
+            for cmd in self.interactions[scope].values():
+                if cmd not in commands:
+                    commands.append(cmd)
+
+        return commands
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -555,17 +567,17 @@ class Snake(
         Args:
             command InteractionCommand: The command to add
         """
+        if self.debug_scope:
+            command.scopes = [self.debug_scope]
         for scope in command.scopes:
-            if self.debug_scope and scope == GLOBAL_SCOPE:
-                scope = self.debug_scope
 
             if scope not in self.interactions:
                 self.interactions[scope] = {}
             elif command.resolved_name in self.interactions[scope]:
                 old_cmd = self.interactions[scope][command.resolved_name]
-                raise ValueError(f"Duplicate Command! {old_cmd.scopes}::{old_cmd.resolved_name}")
+                raise ValueError(f"Duplicate Command! {scope}::{old_cmd.resolved_name}")
 
-            self.interactions[scope][command.name] = command
+            self.interactions[scope][command.resolved_name] = command
 
     def add_message_command(self, command: MessageCommand):
         """
@@ -601,7 +613,7 @@ class Snake(
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
-                elif isinstance(func, InteractionCommand) and not isinstance(func, SubCommand):
+                elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
                 elif isinstance(func, MessageCommand):
                     self.add_message_command(func)
@@ -647,15 +659,19 @@ class Snake(
                 raise InteractionMissingAccess(scope) from None
 
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
+            found = set()  # this is a temporary hack to fix subcommand detection
             for cmd in self.interactions[scope].values():
-                cmd_data = remote_cmds.pop(cmd.name, MISSING)
+                cmd_data = remote_cmds.get(cmd.name, MISSING)
                 if cmd_data is MISSING:
-                    if warn_missing:
-                        log.error(
-                            f'Detected yet to sync slash command "/{cmd.name}" for scope '
-                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                        )
+                    if cmd.name not in found:
+                        if warn_missing:
+                            log.error(
+                                f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                                f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                            )
                     continue
+                else:
+                    found.add(cmd.name)
 
                 self._interaction_scopes[str(cmd_data["id"])] = scope
                 cmd.cmd_id = str(cmd_data["id"])
@@ -696,6 +712,8 @@ class Snake(
 
         guild_perms = {}
 
+        cmds_json = application_commands_to_dict(self.interactions)
+
         for cmd_scope in cmd_scopes:
             try:
                 cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
@@ -705,20 +723,15 @@ class Snake(
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # try and find remote equiv of this command
                     remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
-                    if remote_cmd:
-                        cmds_resp_data.remove(remote_cmd)
 
-                    local_cmd = local_cmd.to_dict()
-                    cmds_to_sync.append(local_cmd)
+                    local_cmd = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
+
+                    if local_cmd not in cmds_to_sync:
+                        cmds_to_sync.append(local_cmd)
 
                     # todo: prevent un-needed syncs for subcommands
-                    if (
-                        not remote_cmd
-                        or local_cmd["name"] != remote_cmd["name"]
-                        or local_cmd.get("description", "") != remote_cmd.get("description", "")
-                        or local_cmd.get("default_permission", True) != remote_cmd.get("default_permission", True)
-                        or local_cmd.get("options") != remote_cmd.get("options")
-                    ):  # if command local data doesnt match remote, a change has been made, sync it
+                    if sync_needed(local_cmd, remote_cmd):
+                        # if command local data doesnt match remote, a change has been made, sync it
                         need_to_sync = True
 
                 if need_to_sync:
@@ -728,8 +741,27 @@ class Snake(
                     )
                     # cache cmd_ids and their scopes
                     for cmd_data in cmd_sync_resp:
-                        self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
                         self._interaction_scopes[cmd_data["id"]] = cmd_scope
+                        if cmd_data["name"] in self.interactions[cmd_scope]:
+                            self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
+                        else:
+                            # sub_cmd
+                            for sc in cmd_data["options"]:
+                                if sc["type"] == OptionTypes.SUB_COMMAND:
+                                    if f"{cmd_data['name']} {sc['name']}" in self.interactions[cmd_scope]:
+                                        self.interactions[cmd_scope][f"{cmd_data['name']} {sc['name']}"].cmd_id = str(
+                                            cmd_data["id"]
+                                        )
+                                elif sc["type"] == OptionTypes.SUB_COMMAND_GROUP:
+                                    for _sc in sc["options"]:
+                                        if (
+                                            f"{cmd_data['name']} {sc['name']} {_sc['name']}"
+                                            in self.interactions[cmd_scope]
+                                        ):
+                                            self.interactions[cmd_scope][
+                                                f"{cmd_data['name']} {sc['name']} {_sc['name']}"
+                                            ].cmd_id = str(cmd_data["id"])
+
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date with {len(cmds_resp_data)} commands.")
 
@@ -860,9 +892,10 @@ class Snake(
             scope = self._interaction_scopes.get(str(interaction_id))
 
             if scope in self.interactions:
-                command: SlashCommand = self.interactions[scope][name]  # type: ignore
-                log.debug(f"{scope} :: {command.name} should be called")
                 ctx = await self.get_context(interaction_data, True)
+
+                command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                log.debug(f"{scope} :: {command.name} should be called")
 
                 if auto_opt := getattr(ctx, "focussed_option", None):
                     await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
