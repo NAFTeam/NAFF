@@ -719,6 +719,7 @@ class Snake(
                 cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
                 need_to_sync = False
                 cmds_to_sync = []
+                found = []
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # try and find remote equiv of this command
@@ -728,6 +729,8 @@ class Snake(
 
                     if local_cmd not in cmds_to_sync:
                         cmds_to_sync.append(local_cmd)
+                    if remote_cmd not in found:
+                        found.append(remote_cmd)
 
                     # todo: prevent un-needed syncs for subcommands
                     if sync_needed(local_cmd, remote_cmd):
@@ -783,7 +786,7 @@ class Snake(
                     )
 
                 if self.del_unused_app_cmd:
-                    for cmd in cmds_resp_data:
+                    for cmd in [c for c in cmds_resp_data if c not in found]:
                         scope = cmd.get("guild_id", GLOBAL_SCOPE)
                         log.warning(
                             f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
