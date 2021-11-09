@@ -287,7 +287,7 @@ class Snake(
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
-        self._mention_reg = re.compile(f"^(<@!?{self.user.id}*>\s)")
+        self._mention_reg = re.compile(fr"^(<@!?{self.user.id}*>\s)")
         self.start_time = datetime.datetime.now()
         self.dispatch(events.Login())
         await self._ws_connect()

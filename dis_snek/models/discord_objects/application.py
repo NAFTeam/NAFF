@@ -5,12 +5,12 @@ from attr.converters import optional
 
 from dis_snek.const import MISSING
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.enums import ApplicationFlags
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models.discord_objects.team import Team
 
 
 @attr.s(slots=True, kw_only=True)
@@ -57,9 +57,13 @@ class Application(DiscordObject):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        if "owner" in data:
-            owner = client.cache.place_user_data(data.pop("owner"))
-            data["owner_id"] = owner.id
+        if data.get("team"):
+            data["team"] = Team.from_dict(data["team"], client)
+            data["owner_id"] = data["team"].owner_user_id
+        else:
+            if "owner" in data:
+                owner = client.cache.place_user_data(data.pop("owner"))
+                data["owner_id"] = owner.id
         return data
 
     @property
