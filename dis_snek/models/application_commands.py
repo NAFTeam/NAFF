@@ -25,6 +25,7 @@ from dis_snek.models.discord_objects.user import BaseUser
 from dis_snek.models.enums import ChannelTypes, CommandTypes
 from dis_snek.models.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.utils.attr_utils import docs
+from dis_snek.utils.misc_utils import get_parameters
 from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
@@ -320,6 +321,15 @@ class SlashCommand(InteractionCommand):
         return not self.sub_cmd_name is None
 
     def __attrs_post_init__(self):
+        params = get_parameters(self.callback)
+        for name, val in params.items():
+            if val.annotation and isinstance(val.annotation, SlashCommandOption):
+
+                if not self.options:
+                    self.options = []
+                val.annotation.name = name
+                self.options.append(val.annotation)
+
         if self.callback is not None:
             if hasattr(self.callback, "options"):
                 if not self.options:
