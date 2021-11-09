@@ -4,6 +4,7 @@ This file outlines the interaction between snek and Discord's Gateway API.
 import asyncio
 import concurrent.futures
 import logging
+import random
 import sys
 import threading
 import time
@@ -35,9 +36,6 @@ class BeeGees(threading.Thread):
         interval int: How often to send heartbeats -- dictated by discord
 
     Attributes:
-        behind_msg: The log message used when the heartbeat is late
-        block_msg: The log message used when the heartbeat is blocked
-        msg: The log message used when a hearbeat is sent
         last_recv: When the last heartbeat was received
     """
 
@@ -45,9 +43,6 @@ class BeeGees(threading.Thread):
     _main_thread_id: int
     _interval: int
     daemon: bool
-    msg: str
-    block_msg: str
-    behind_msg: str
     _stop_ev: threading.Event
     _last_ack: float
     _last_send: float
@@ -61,14 +56,10 @@ class BeeGees(threading.Thread):
         super().__init__()
         self.daemon = True
 
-        self.msg = "Keeping shard ID %s websocket alive with sequence %s."
-        self.block_msg = "Shard ID %s heartbeat blocked for more than %s seconds."
-        self.behind_msg = "Can't keep up, shard ID %s websocket is %.1fs behind."
-
         self._stop_ev = threading.Event()
-        self._last_ack = time.perf_counter()
-        self._last_send = time.perf_counter()
-        self._last_recv = time.perf_counter()
+        self._last_ack = 0
+        self._last_send = 0
+        self._last_recv = 0
         self.latency = float("inf")
         self.heartbeat_timeout = ws._max_heartbeat_timeout
 
@@ -77,7 +68,6 @@ class BeeGees(threading.Thread):
         while not self._stop_ev.wait(self.interval):
 
             data = self.get_payload()
-            log.debug(self.msg, 0, data["d"])
             f = asyncio.run_coroutine_threadsafe(self.ws.send_heartbeat(data), loop=self.ws.http.loop)
             duration = 0
             try:
@@ -117,8 +107,8 @@ class BeeGees(threading.Thread):
         ack_time = time.perf_counter()
         self._last_ack = time.perf_counter()
         self.latency = ack_time - self._last_send
-        if self.latency > 10:
-            log.warning(self.behind_msg, 0, self.latency)
+        if self._last_send != 0 and self.latency > 10:
+            log.warning(f"Can't keep up! shard ID {0} websocket is {self.latency:.1f}s behind.")
 
 
 class WebsocketClient:
@@ -181,6 +171,10 @@ class WebsocketClient:
         self._trace = []
 
         self._closed = False
+
+    @property
+    def _loop(self):
+        return asyncio.get_running_loop()
 
     @classmethod
     async def connect(
@@ -260,7 +254,11 @@ class WebsocketClient:
             if op == OPCODE.HELLO:
                 interval = data["heartbeat_interval"] / 1000
                 self._keep_alive = BeeGees(ws=self, interval=interval)
-                await self.send_json(self._keep_alive.get_payload())
+                self._loop.call_later(
+                    interval * random.uniform(0, 0.5),
+                    asyncio.ensure_future,
+                    self.send_heartbeat(self._keep_alive.get_payload()),
+                )
                 self._keep_alive.start()
                 if not self.session_id:
                     await self.identify()
@@ -372,6 +370,7 @@ class WebsocketClient:
     async def send_heartbeat(self, data: dict) -> None:
         """Send a heartbeat to the gateway."""
         await self.send_json(data)
+        log.debug(f"Keeping Shard ID {0} alive with sequence {self.sequence}")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
         payload = dict_filter_none(
