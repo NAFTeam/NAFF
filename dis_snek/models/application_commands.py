@@ -769,8 +769,12 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
         return True
 
     if remote_cmd["type"] == CommandTypes.CHAT_INPUT:
-        if not _compare_options(local_cmd["options"], remote_cmd["options"]):
-            # options are not the same, sync needed
+
+        try:
+            if not _compare_options(local_cmd["options"], remote_cmd["options"]):
+                # options are not the same, sync needed
+                return True
+        except KeyError:
             return True
 
     return False
