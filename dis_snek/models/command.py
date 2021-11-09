@@ -134,6 +134,8 @@ class BaseCommand(DictSerializationMixin):
                     kwargs[param.name] = context.kwargs[param.name]
                 else:
                     args.append(context.kwargs[param.name])
+                if context.kwargs[param.name] in c_args:
+                    c_args.remove(context.kwargs[param.name])
             elif param.default is not param.empty:
                 kwargs[param.name] = param.default
             else:
@@ -144,7 +146,7 @@ class BaseCommand(DictSerializationMixin):
                         except IndexError:
                             raise ValueError(
                                 f"{context.invoked_name} expects {len([p for p in parameters.values() if p.default is p.empty])+len(callback.args)}"
-                                f" arguments but received {len(args)}"
+                                f" arguments but received {len(context.args)} instead"
                             ) from None
                     else:
                         raise ValueError(f"Unable to resolve argument: {param.name}")
