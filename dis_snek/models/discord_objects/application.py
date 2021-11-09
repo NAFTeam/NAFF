@@ -4,6 +4,7 @@ import attr
 from attr.converters import optional
 
 from dis_snek.const import MISSING
+from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.team import Team
 from dis_snek.models.enums import ApplicationFlags
@@ -38,7 +39,7 @@ class Application(DiscordObject):
     """
 
     name: str = attr.ib()
-    icon: Optional[str] = attr.ib(default=None)
+    icon: Optional[Asset] = attr.ib(default=None)
     description: Optional[str] = attr.ib()
     rpc_origins: Optional[List[str]] = attr.ib(default=None)
     bot_public: bool = attr.ib(default=True)
@@ -64,6 +65,9 @@ class Application(DiscordObject):
             if "owner" in data:
                 owner = client.cache.place_user_data(data.pop("owner"))
                 data["owner_id"] = owner.id
+
+        if data["icon"]:
+            data["icon"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}.png", data["icon"])
         return data
 
     @property
