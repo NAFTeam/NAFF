@@ -1,8 +1,9 @@
+import logging
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import attr
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import NotFound, Forbidden
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_ALL_CHANNEL
     from dis_snek.models.snowflake import Snowflake_Type
+
+log = logging.getLogger(logger_name)
 
 
 def create_cache(
@@ -35,6 +38,7 @@ def create_cache(
         dict or TTLCache based on parameters passed
     """ ""
     if ttl is None and hard_limit is None:
+        print("set to dict")
         return dict()
     else:
         if not soft_limit:
@@ -60,7 +64,11 @@ class GlobalCache:
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
     user_guilds: TTLCache = field(factory=TTLCache)  # key: user_id; value: set[guild_id]
 
-    # User cache methods
+    def __attrs_post_init__(self):
+        if isinstance(self.message_cache, dict):
+            log.warning(
+                "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
+            )
 
     async def get_user(self, user_id: "Snowflake_Type", request_fallback: bool = True) -> Optional[User]:
         """
