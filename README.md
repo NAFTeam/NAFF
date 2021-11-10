@@ -10,11 +10,11 @@
 This is `Dis-Snek`, an API wrapper for Discord, written in Python. This wrapper is designed to be easy to use, and easily modified to suit your needs.
 
 #### Features: 
-- [x] 100% coverage of the application commands API 
-- [x] Modern and Pythonic API 
-- [x] Asynchronous operation
-- [x] Proper rate limit handling
-- [x] Dynamic cache with TTL support
+- ✅ 100% coverage of the application commands API 
+- ✅ Modern and Pythonic API 
+- ✅ Asynchronous operation
+- ✅ Proper rate limit handling
+- ✅ Dynamic cache with TTL support
 
 
 ## "Is this just another discord.py fork"?
