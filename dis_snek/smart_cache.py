@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, List, Dict, Any, Optional
+from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import attr
 
+from dis_snek.const import MISSING
 from dis_snek.errors import NotFound, Forbidden
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
@@ -16,6 +17,29 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_ALL_CHANNEL
     from dis_snek.models.snowflake import Snowflake_Type
+
+
+def create_cache(
+    ttl: Optional[int] = 60, hard_limit: Optional[int] = 250, soft_limit: Optional[int] = MISSING
+) -> Union[dict, TTLCache]:
+    """
+    Create a cache object based on the parameters passed.
+    
+    If `ttl` and `max_values` are set to None, the cache will just be a regular dict, with no culling.
+    Args:
+        ttl: The time to live of an object in the cache
+        hard_limit: The hard limit of values allowed to be within the cache
+        soft_limit: The amount of values allowed before objects expire due to ttl
+
+    Returns:
+        dict or TTLCache based on parameters passed
+    """ ""
+    if ttl is None and hard_limit is None:
+        return dict()
+    else:
+        if not soft_limit:
+            soft_limit = int(hard_limit / 4) if hard_limit else 50
+        return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
 @attr.define()

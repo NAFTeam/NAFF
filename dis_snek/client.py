@@ -63,7 +63,6 @@ from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
-from dis_snek.utils.cache import TTLCache
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
 
@@ -99,13 +98,15 @@ class Snake(
         sync_interactions bool: Should application commands be synced with discord?
         delete_unused_application_cmds bool: Delete any commands from discord that arent implemented in this client
         asyncio_debug bool: Enable asyncio debug features
-        message_cache_ttl int: How long a message will remain in the cache, set to `None` to disable cache expiry
-        message_cache_size int: The maximum number of messages that may be stored in the cache, set to `None` to not limit cache size
         status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
         activity Activity: The activity the bot should login "playing"
 
+    Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
+    It is recommended to use `smart_cache.create_cache` to configure the cache here.
+    as an example, this is a recommended attribute `message_cache=create_cache(250, 50)`,
+
     !!! note
-        Setting message_cache_size to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
+        Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
     """
 
@@ -119,10 +120,9 @@ class Snake(
         delete_unused_application_cmds: bool = False,
         debug_scope: "Snowflake_Type" = MISSING,
         asyncio_debug: bool = False,
-        message_cache_ttl: Optional[int] = 600,
-        message_cache_limit: Optional[int] = 250,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
+        **kwargs,
     ):
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -168,19 +168,13 @@ class Snake(
         self._mention_reg = MISSING
 
         # caches
-        self.cache: GlobalCache = GlobalCache(self)
+        self.cache: GlobalCache = GlobalCache(self, **{k: v for k, v in kwargs.items() if hasattr(GlobalCache, k)})
         # these store the last sent presence data for change_presence
         self._status: Status = status
         if isinstance(activity, str):
             self._activity = Activity.create(name=str(activity))
         else:
             self._activity: Activity = activity
-
-        if message_cache_limit is None and message_cache_ttl is None:
-            log.warning("NO MESSAGE CACHE LIMITS ARE ACTIVE! This is not recommended")
-            self.cache.message_cache = dict()
-        else:
-            self.cache.message_cache = TTLCache(hard_limit=message_cache_limit, ttl=message_cache_ttl or float("inf"))
 
         self._user: SnakeBotUser = MISSING
         self._app: Application = MISSING
