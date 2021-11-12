@@ -765,12 +765,11 @@ class Snake(
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     if not local_cmd.permissions:
                         continue
-
-                    for perm_scope, perms in local_cmd.permissions.items():
-                        if perm_scope not in guild_perms:
-                            guild_perms[perm_scope] = []
-                        guild_perms[perm_scope].append(
-                            {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in perms]}
+                    for perm in local_cmd.permissions:
+                        if perm.guild_id not in guild_perms:
+                            guild_perms[perm.guild_id] = []
+                        guild_perms[perm.guild_id].append(
+                            {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in local_cmd.permissions]}
                         )
 
                 for perm_scope in guild_perms:

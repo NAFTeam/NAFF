@@ -107,11 +107,13 @@ class Permission:
 
     parameters:
         id: The id of the role or user.
+        guild_id: The guild this permission belongs to
         type: The type of id (user or role)
         permission: The state of permission. ``True`` to allow, ``False``, to disallow.
     """
 
     id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake, metadata=no_export_meta)
     type: Union[PermissionTypes, int] = attr.ib(converter=PermissionTypes)
     permission: bool = attr.ib(default=True)
 
@@ -122,7 +124,9 @@ class Permission:
         returns:
             Representation of this object
         """
-        return attr.asdict(self)
+        data = attr.asdict(self)
+        data.pop("guild_id", None)
+        return data
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
@@ -148,7 +152,7 @@ class InteractionCommand(BaseCommand):
     default_permission: bool = attr.ib(
         default=True, metadata=docs("whether this command is enabled by default when the app is added to a guild")
     )
-    permissions: Dict["Snowflake_Type", Union[Permission, Dict]] = attr.ib(
+    permissions: Optional[List[Union[Permission, Dict]]] = attr.ib(
         factory=dict, metadata=docs("The permissions of this interaction")
     )
 
@@ -242,7 +246,7 @@ class SlashCommandOption(DictSerializationMixin):
     def _name_validator(self, attribute: str, value: str) -> None:
         if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
             raise ValueError(
-                f"Options names must be lower case and match this regex: ^[\w-]{1,{SLASH_CMD_NAME_LENGTH}}$"
+                f"Options names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
             )  # noqa: W605
 
     @description.validator
@@ -318,7 +322,7 @@ class SlashCommand(InteractionCommand):
 
     @property
     def is_subcommand(self) -> bool:
-        return not self.sub_cmd_name is None
+        return self.sub_cmd_name is not None
 
     def __attrs_post_init__(self):
         params = get_parameters(self.callback)
@@ -443,7 +447,7 @@ def slash_command(
     scopes: List["Snowflake_Type"] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
-    permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
+    permissions: Optional[List[Union[Permission, Dict]]] = None,
     sub_cmd_name: str = None,
     group_name: str = None,
     sub_cmd_description: str = "No Description Set",
@@ -501,7 +505,7 @@ def context_menu(
     context_type: "CommandTypes",
     scopes: List["Snowflake_Type"] = MISSING,
     default_permission: bool = True,
-    permissions: Optional[Dict["Snowflake_Type", Union[Permission, Dict]]] = None,
+    permissions: Optional[List[Union[Permission, Dict]]] = None,
 ):
     """
     A decorator to declare a coroutine as a Context Menu
