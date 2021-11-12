@@ -38,7 +38,6 @@ def create_cache(
         dict or TTLCache based on parameters passed
     """ ""
     if ttl is None and hard_limit is None:
-        print("set to dict")
         return dict()
     else:
         if not soft_limit:
