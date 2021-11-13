@@ -644,6 +644,16 @@ class GuildChannel(BaseChannel):
 
 @define()
 class GuildCategory(GuildChannel):
+    @property
+    def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
+        """
+        Get all channels within the category.
+
+        Returns:
+            The list of channels
+        """
+        return [channel for channel in self.guild.channels if channel.parent_id == self.id]
+
     async def edit(self, name, position, permission_overwrites, reason):
         payload = dict(  # TODO Proper processing
             name=name,
