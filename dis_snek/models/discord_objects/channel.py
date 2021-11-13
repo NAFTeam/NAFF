@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
@@ -614,7 +615,7 @@ class GuildChannel(BaseChannel):
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
 
     @property
-    def guild(self):
+    def guild(self) -> "Guild":
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
