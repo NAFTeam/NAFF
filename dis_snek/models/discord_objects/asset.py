@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import attr
 
+from dis_snek.utils.serializer import no_export_meta
+
 if TYPE_CHECKING:
     from os import PathLike
 
@@ -21,7 +23,7 @@ class Asset:
 
     BASE = "https://cdn.discordapp.com"
 
-    _client: "Snake" = attr.field()
+    _client: "Snake" = attr.field(metadata=no_export_meta)
     url: str = attr.field()
     hash: Optional[str] = attr.field(default=None)
 
