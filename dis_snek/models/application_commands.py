@@ -621,26 +621,21 @@ def slash_option(
     return wrapper
 
 
-def slash_permission(guild_id: "Snowflake_Type", permissions: List[Union[Permission, Dict]]) -> Any:
+def slash_permission(*permission: Union[Permission, Dict]) -> Any:
     """
     A decorator to add permissions for a guild to a slash command or context menu.
 
     parameters:
-        guild_id: The target guild to apply the permissions.
-        permissions: A list of interaction permission rights.
+        *permission: The permissions to apply to this command
     """
-    guild_id = to_snowflake(guild_id)
 
     def wrapper(func):
         if hasattr(func, "cmd_id"):
             raise Exception("slash_option decorators must be positioned under a slash_command decorator")
 
         if not hasattr(func, "permissions"):
-            func.permissions = {}
-
-        if guild_id not in func.permissions:
-            func.permissions[guild_id] = []
-        func.permissions[guild_id] += permissions
+            func.permissions = []
+        func.permissions += list(permission)
         return func
 
     return wrapper
