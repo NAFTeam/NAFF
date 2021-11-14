@@ -6,11 +6,18 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
-from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
-from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite, Invite
-from dis_snek.models.discord_objects.emoji import CustomEmoji
+from dis_snek.models.discord_objects.application import Application
+from dis_snek.models.discord_objects.asset import Asset
+from dis_snek.models.discord_objects.channel import (
+    GuildText,
+    GuildVoice,
+    GuildStageVoice,
+    PermissionOverwrite,
+    Invite,
+)
+from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
@@ -46,17 +53,54 @@ class GuildBan:
 
 
 @define()
-class Guild(DiscordObject):
+class BaseGuild(DiscordObject):
+    name: str = attr.ib()
+    """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
+    description: Optional[str] = attr.ib(default=None)
+    """The description for the guild, if the guild is discoverable"""
+
+    icon: Optional[Asset] = attr.ib(default=None)
+    """Icon image asset"""
+    splash: Optional[Asset] = attr.ib(default=None)
+    """Splash image asset"""
+    discovery_splash: Optional[Asset] = attr.ib(default=None)
+    """Discovery splash image. Only present for guilds with the "DISCOVERABLE" feature."""
+    features: List[str] = attr.ib(factory=list)
+    """The features of this guild"""
+
+    @classmethod
+    def _process_dict(cls, data, client):
+        if icon_hash := data.pop("icon", None):
+            data["icon"] = Asset.from_path_hash(client, f"icons/{data['id']}/{{}}.png", icon_hash)
+        if splash_hash := data.pop("splash", None):
+            data["splash"] = Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}.png", splash_hash)
+        if disco_splash := data.pop("discovery_splash", None):
+            data["discovery_splash"] = Asset.from_path_hash(
+                client, f"discovery-splashes/{data['id']}/{{}}.png", disco_splash
+            )
+        return data
+
+
+@define()
+class GuildPreview(BaseGuild):
+    emoji: list[Emoji] = attr.ib(factory=list)
+    """A list of custom emoji from this guild"""
+    approximate_member_count: int = attr.ib()
+    """Approximate number of members in this guild"""
+    approximate_presence_count: int = attr.ib()
+    """Approximate number of online members in this guild"""
+
+    @classmethod
+    def _process_dict(cls, data, client):
+        return super()._process_dict(data, client)
+
+
+@define()
+class Guild(BaseGuild):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
     unavailable: bool = attr.ib(default=False)
     """True if this guild is unavailable due to an outage."""
-    name: str = attr.ib()
-    """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
-    splash: Optional[str] = attr.ib(default=None)
-    """Hash for splash image."""
-    discovery_splash: Optional[str] = attr.ib(default=None)
-    """Hash for discovery splash image. Only present for guilds with the "DISCOVERABLE" feature."""
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
     permissions: Optional[Permissions] = attr.ib(default=None, converter=optional(Permissions))
     """Total permissions for the user in the guild. (excludes overwrites)"""
@@ -102,8 +146,6 @@ class Guild(DiscordObject):
     """The maximum number of members for the guild."""
     vanity_url_code: Optional[str] = attr.ib(default=None)
     """The vanity url code for the guild."""
-    description: Optional[str] = attr.ib(default=None)
-    """The description of a Community guild."""
     banner: Optional[str] = attr.ib(default=None)
     """Hash for banner image."""
     premium_tier: Optional[str] = attr.ib(default=None)
@@ -128,16 +170,10 @@ class Guild(DiscordObject):
     _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _features: List[str] = attr.ib(factory=list)
-    _icon: Optional[str] = attr.ib(default=None)  # todo merge, convert to asset
-    _icon_hash: Optional[str] = attr.ib(default=None)
-
-    # TODO Not storing these for now, get accurate data from api when needed instead.
-    # _emojis: List[dict] = attr.ib(factory=list)
-    # _stickers: List[Sticker] = attr.ib(factory=list)
 
     @classmethod
     def _process_dict(cls, data, client):
+        data = super()._process_dict(data, client)
         guild_id = data["id"]
 
         channels_data = data.pop("channels", [])
@@ -199,19 +235,19 @@ class Guild(DiscordObject):
     @property
     def emoji_limit(self) -> int:
         """The maximum number of emoji this guild can have"""
-        base = 200 if "MORE_EMOJI" in self._features else 50
+        base = 200 if "MORE_EMOJI" in self.features else 50
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["emoji"])
 
     @property
     def sticker_limit(self) -> int:
         """The maximum number of stickers this guild can have"""
-        base = 60 if "MORE_sTICKERS" in self._features else 0
+        base = 60 if "MORE_sTICKERS" in self.features else 0
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["stickers"])
 
     @property
     def bitrate_limit(self) -> int:
         """The maximum bitrate for this guild"""
-        base = 128000 if "VIP_REGIONS" in self._features else 96000
+        base = 128000 if "VIP_REGIONS" in self.features else 9600024
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
 
     @property
