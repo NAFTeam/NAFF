@@ -14,6 +14,8 @@ class ChannelEvents(EventMixinTemplate):
     async def _on_raw_channel_create(self, event: RawGatewayEvent) -> None:
 
         channel = self.cache.place_channel_data(event.data)
+        if guild := channel.guild:
+            guild._channel_ids.append(channel.id)
         self.dispatch(events.ChannelCreate(channel))
 
     @listen()
@@ -21,6 +23,8 @@ class ChannelEvents(EventMixinTemplate):
         # for some reason this event returns the deleted object?
         # so we cache it regardless
         channel = self.cache.place_channel_data(event.data)
+        if guild := channel.guild:
+            guild._channel_ids.remove(channel.id)
         self.dispatch(events.ChannelDelete(channel))
 
     @listen()
