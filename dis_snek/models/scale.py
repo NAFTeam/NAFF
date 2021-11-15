@@ -7,6 +7,7 @@ from dis_snek.const import logger_name
 from dis_snek.models.application_commands import InteractionCommand, ComponentCommand
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.listener import Listener
+from dis_snek.tasks import Task
 from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
@@ -89,6 +90,8 @@ class Scale:
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
                 new_cls.listeners.append(val)
+            elif isinstance(val, Task):
+                wrap_partial(val, new_cls)
 
         log.debug(
             f"{len(new_cls._commands)} commands and {len(new_cls.listeners)} listeners"
