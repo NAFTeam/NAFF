@@ -372,7 +372,7 @@ class Snake(
         """
         print(f"Ignoring exception in {source}:\n{traceback.format_exc()}", file=sys.stderr)
 
-    async def on_command_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+    async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by commands
 
@@ -380,7 +380,7 @@ class Snake(
 
         Override this to change error handling behavior
         """
-        return await self.on_error(source, error, *args, **kwargs)
+        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
 
     async def on_command(self, ctx: Context) -> None:
         """
@@ -392,13 +392,55 @@ class Snake(
         """
         if isinstance(ctx, MessageContext):
             symbol = "@"
-        elif isinstance(ctx, ComponentContext):
-            symbol = "¢"
         elif isinstance(ctx, InteractionContext):
             symbol = "/"
         else:
             symbol = "?"  # likely custom context
         log.info(f"Command Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+
+    async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
+        """
+        Catches all errors dispatched by components
+
+        By default it will call `Snake.on_error`
+
+        Override this to change error handling behavior
+        """
+        return await self.on_error(f"Component Callback for {ctx.custom_id}", error, *args, **kwargs)
+
+    async def on_component(self, ctx: ComponentContext) -> None:
+        """
+        Called *after* any component callback is ran
+
+        By default, it will simply log the component use, override this to change that behaviour
+        Args:
+            ctx: The context of the component that was called
+        """
+        symbol = "¢"
+        log.info(f"Component Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+
+    async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
+        """
+        Catches all errors dispatched by autocompletion options
+
+        By default it will call `Snake.on_error`
+
+        Override this to change error handling behavior
+        """
+        return await self.on_error(f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs)
+
+    async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
+        """
+        Called *after* any autocomplete callback is ran
+
+        By default, it will simply log the autocomplete callback, override this to change that behaviour
+        Args:
+            ctx: The context of the command that was called
+        """
+
+        symbol = "$"
+        log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
@@ -894,12 +936,17 @@ class Snake(
                 log.debug(f"{scope} :: {command.name} should be called")
 
                 if auto_opt := getattr(ctx, "focussed_option", None):
-                    await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
+                    try:
+                        await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
+                    except Exception as e:
+                        await self.on_autocomplete_error(ctx, e)
+                    finally:
+                        await self.on_autocomplete(ctx)
                 else:
                     try:
                         await command(ctx, **ctx.kwargs)
                     except Exception as e:
-                        await self.on_command_error(f"cmd /`{name}`", e)
+                        await self.on_command_error(ctx, e)
                     finally:
                         await self.on_command(ctx)
             else:
@@ -915,9 +962,9 @@ class Snake(
                 try:
                     await callback(ctx)
                 except Exception as e:
-                    await self.on_command_error(f"Component Callback for {ctx.custom_id}", e)
+                    await self.on_component_error(ctx, e)
                 finally:
-                    await self.on_command(ctx)
+                    await self.on_component(ctx)
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
