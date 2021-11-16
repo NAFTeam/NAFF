@@ -71,9 +71,9 @@ class Task:
 
     def __call__(self):
         if inspect.iscoroutinefunction(self.callback):
-            asyncio.ensure_future(self.callback())
+            asyncio.gather(self.callback())
         else:
-            self.callback()
+            asyncio.gather(asyncio.to_thread(self.callback))
 
     def _fire(self, fire_time: datetime):
         """Called when the task is being fired"""
