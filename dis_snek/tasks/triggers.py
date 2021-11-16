@@ -12,7 +12,7 @@ class BaseTrigger(ABC):
         return new_cls
 
     @abstractmethod
-    def next_run(self) -> Optional[datetime]:
+    def next_fire(self) -> Optional[datetime]:
         """
         Return the next datetime to fire on.
 
@@ -35,7 +35,7 @@ class IntervalTrigger(BaseTrigger):
         if (datetime.now() + self.delta) < datetime.now():
             raise ValueError("Interval values must result in a time in the future!")
 
-    def next_run(self) -> Optional[datetime]:
+    def next_fire(self) -> Optional[datetime]:
         return self.last_call_time + self.delta
 
 
@@ -45,7 +45,23 @@ class DateTrigger(BaseTrigger):
     def __init__(self, target_datetime: datetime):
         self.target = target_datetime
 
-    def next_run(self) -> Optional[datetime]:
+    def next_fire(self) -> Optional[datetime]:
         if datetime.now() < self.target:
             return self.target
         return None
+
+
+class TimeTrigger(BaseTrigger):
+    """Trigger the task every day, at a specified (24 hour clock) time"""
+
+    def __init__(self, hour: int = 0, minute: int = 0, seconds: Union[int, float] = 0):
+        self.target_time = (hour, minute, seconds)
+
+    def next_fire(self) -> Optional[datetime]:
+        now = datetime.now()
+        target = datetime(now.year, now.month, now.day, self.target_time[0], self.target_time[1], self.target_time[2])
+
+        if target <= self.last_call_time:
+            target += timedelta(days=1)
+
+        return target

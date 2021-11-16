@@ -26,6 +26,7 @@ class Sleeper:
 
         delta = until - datetime.now()
         self.handle = self._loop.call_later(delta.total_seconds(), self.future.set_result, True)
+        print(f"Sleeping for {delta.total_seconds()}")
         return self.future
 
     def cancel(self):
@@ -65,7 +66,7 @@ class Task:
     def next_run(self) -> Optional[datetime]:
         """Get the next datetime this task will run"""
         if not self.task.done():
-            return self.trigger.next_run()
+            return self.trigger.next_fire()
         return None
 
     @property
@@ -86,14 +87,12 @@ class Task:
 
     async def _task_loop(self):
         while not self._stop:
-            fire_time = self.trigger.next_run()
+            fire_time = self.trigger.next_fire()
             if fire_time is None:
                 self.stop()
             if datetime.now() > fire_time:
                 self._fire(fire_time)
-                await self.sleeper(self.trigger.next_run())
-            else:
-                await self.sleeper(self.trigger.next_run())
+            await self.sleeper(self.trigger.next_fire())
 
     def start(self):
         """Start this task"""
