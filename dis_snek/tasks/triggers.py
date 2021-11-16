@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 
 class BaseTrigger(ABC):
@@ -65,3 +65,21 @@ class TimeTrigger(BaseTrigger):
             target += timedelta(days=1)
 
         return target
+
+
+class OrTrigger(BaseTrigger):
+    """Trigger a task when any sub-trigger is fulfilled"""
+
+    def __init__(self, *trigger: BaseTrigger):
+        self.triggers: List[BaseTrigger] = list(trigger)
+
+    def _get_delta(self, d: BaseTrigger):
+        if not d.next_fire():
+            return float("inf")
+        return abs(d.next_fire() - self.last_call_time)
+
+    def next_fire(self) -> Optional[datetime]:
+        if len(self.triggers) == 1:
+            return self.triggers[0].next_fire()
+        trigger = min(self.triggers, key=self._get_delta)
+        return trigger.next_fire()
