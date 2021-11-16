@@ -427,7 +427,9 @@ class Snake(
 
         Override this to change error handling behavior
         """
-        return await self.on_error(f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs)
+        return await self.on_error(
+            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs
+        )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
         """
@@ -440,7 +442,6 @@ class Snake(
 
         symbol = "$"
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
-
 
     @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
