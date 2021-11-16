@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union, List
 
 
@@ -54,12 +54,18 @@ class DateTrigger(BaseTrigger):
 class TimeTrigger(BaseTrigger):
     """Trigger the task every day, at a specified (24 hour clock) time"""
 
-    def __init__(self, hour: int = 0, minute: int = 0, seconds: Union[int, float] = 0):
+    def __init__(self, hour: int = 0, minute: int = 0, seconds: Union[int, float] = 0, utc: bool = True):
         self.target_time = (hour, minute, seconds)
+        self.tz = timezone.utc if utc else None
 
     def next_fire(self) -> Optional[datetime]:
         now = datetime.now()
-        target = datetime(now.year, now.month, now.day, self.target_time[0], self.target_time[1], self.target_time[2])
+        target = datetime(
+            now.year, now.month, now.day, self.target_time[0], self.target_time[1], self.target_time[2], tzinfo=self.tz
+        )
+        if target.tzinfo == timezone.utc:
+            target = target.astimezone(now.tzinfo)
+            target = target.replace(tzinfo=None)
 
         if target <= self.last_call_time:
             target += timedelta(days=1)
