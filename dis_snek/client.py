@@ -63,6 +63,7 @@ from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.tasks.task import Task
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
 
@@ -665,6 +666,8 @@ class Snake(
         process(
             [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
         )
+
+        [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, Task)]
 
     async def _init_interactions(self) -> None:
         """
