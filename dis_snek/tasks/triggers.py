@@ -11,6 +11,9 @@ class BaseTrigger(ABC):
         new_cls.last_call_time = datetime.now()
         return new_cls
 
+    def __or__(self, other):
+        return OrTrigger(self, other)
+
     @abstractmethod
     def next_fire(self) -> Optional[datetime]:
         """
@@ -69,7 +72,6 @@ class TimeTrigger(BaseTrigger):
 
         if target <= self.last_call_time:
             target += timedelta(days=1)
-
         return target
 
 
@@ -83,6 +85,10 @@ class OrTrigger(BaseTrigger):
         if not d.next_fire():
             return float("inf")
         return abs(d.next_fire() - self.last_call_time)
+
+    def __or__(self, other):
+        self.triggers.append(other)
+        return self
 
     def next_fire(self) -> Optional[datetime]:
         if len(self.triggers) == 1:
