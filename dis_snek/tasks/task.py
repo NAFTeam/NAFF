@@ -26,7 +26,6 @@ class Sleeper:
 
         delta = max(0.0, (until - datetime.now()).total_seconds())
         self.handle = self._loop.call_later(delta, self.future.set_result, True)
-        print(f"Sleeping for {delta.total_seconds()}")
         return self.future
 
     def cancel(self):
@@ -57,10 +56,6 @@ class Task:
     @property
     def _loop(self) -> AbstractEventLoop:
         return asyncio.get_event_loop()
-            return asyncio.get_running_loop()
-        except RuntimeError:
-            log.error("Unable to start task! Event loop is not running yet!")
-            self.stop()
 
     @property
     def next_run(self) -> Optional[datetime]:
@@ -94,20 +89,35 @@ class Task:
                 self._fire(fire_time)
             await self.sleeper(self.trigger.next_fire())
 
-    def start(self):
+    def start(self) -> None:
         """Start this task"""
         self._stop = False
         if self._loop:
             self.sleeper = Sleeper(self._loop)
             self.task = asyncio.create_task(self._task_loop())
 
-    def stop(self):
+    def stop(self) -> None:
         """End this task"""
         self._stop = True
         if self.task:
             self.task.cancel()
         if self.sleeper:
             self.sleeper.cancel()
+
+    def restart(self) -> None:
+        """Restart this task"""
+        self.stop()
+        self.start()
+
+    def reschedule(self, trigger: BaseTrigger) -> None:
+        """
+        Change the trigger being used by this task.
+
+        Args:
+            trigger: The new Trigger to use
+        """
+        self.trigger = trigger
+        self.restart()
 
     @classmethod
     def create(cls, trigger: BaseTrigger) -> Callable[[Callable], "Task"]:
