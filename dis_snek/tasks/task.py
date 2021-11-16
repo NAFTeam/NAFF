@@ -24,8 +24,8 @@ class Sleeper:
     def __call__(self, until: datetime):
         self.future = self._loop.create_future()
 
-        delta = until - datetime.now()
-        self.handle = self._loop.call_later(delta.total_seconds(), self.future.set_result, True)
+        delta = max(0.0, (until - datetime.now()).total_seconds())
+        self.handle = self._loop.call_later(delta, self.future.set_result, True)
         print(f"Sleeping for {delta.total_seconds()}")
         return self.future
 
@@ -56,7 +56,7 @@ class Task:
 
     @property
     def _loop(self) -> AbstractEventLoop:
-        try:
+        return asyncio.get_event_loop()
             return asyncio.get_running_loop()
         except RuntimeError:
             log.error("Unable to start task! Event loop is not running yet!")
@@ -89,7 +89,7 @@ class Task:
         while not self._stop:
             fire_time = self.trigger.next_fire()
             if fire_time is None:
-                self.stop()
+                return self.stop()
             if datetime.now() > fire_time:
                 self._fire(fire_time)
             await self.sleeper(self.trigger.next_fire())
