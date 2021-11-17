@@ -692,7 +692,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         if any(c.is_subcommand for c in cmd_list):
             # validate all commands share required attributes
             scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
-            permissions: dict = {k: v for c in cmd_list for k, v in c.permissions.items()}
+            permissions: list = [d for c in cmd_list for d in c.permissions]
             base_description = next(
                 (c.description for c in cmd_list if c.description is not None), "No Description Set"
             )
