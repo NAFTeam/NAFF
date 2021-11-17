@@ -27,7 +27,9 @@ async def my_long_command_function(ctx: InteractionContext):
 
 Interactions can either be global, or limited to specific guilds. 
 Global commands take up to an hour to sync with Discord and show up, so don't worry when you first register a command.
+
 When testing, it is recommended to use non-global commands, as they sync instantly.
+For that, you can either define `scopes` in every command, or set `debug_scope` in the bot instantiation which sets the scope automatically for all commands.
 
 You define non-global commands by passing a list of guild ids to `scopes` in the interaction creation.
 ```python
@@ -60,7 +62,7 @@ This will show up in discord as `/base group command`. There are two ways to add
 
 === ":one: Decorator"
     ```python
-    @my_command_function.subcomnmand(sub_cmd_name="second_command", sub_cmd_description="My second command")
+    @my_command_function.subcommand(sub_cmd_name="second_command", sub_cmd_description="My second command")
     async def my_second_command_function(ctx: InteractionContext):
         await ctx.send("Hello World")
     ```
@@ -161,6 +163,10 @@ You can also set an upper and lower limit for both `OptionTypes.INTEGER` and `Op
 async def my_command_function(ctx: InteractionContext, integer_option: int):
     await ctx.send(f"You input {integer_option} which is always between 10 and 15")
 ```
+
+!!! danger "Option Names"
+    Be aware that the option `name` and the function parameter need to be the same (In this example both are `integer_option`)
+
 
 ## But I Want A Choice
 
@@ -327,3 +333,20 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 
 The same principle can be used to reuse autocomplete options.
 
+## Simplified Error Handling
+
+If you want error handling for all commands, you can override `Snake` and define your own.
+Any error from interactions will trigger `on_command_error`. That includes context menus.
+
+In this example, we are logging the error and responding to the interaction if not done so yet:
+```python
+class CustomSnake(Snake):
+    async def on_command_error(self, ctx: InteractionContext, error: Exception):
+        logger.error(error)
+        if not ctx.responded:
+            await ctx.send("Something went wrong.")
+
+client = CustomErrorSnake(...)
+```
+
+There also is `on_command` which you can overwrite too. That fires on every interactions usage. 
