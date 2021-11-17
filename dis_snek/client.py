@@ -1009,7 +1009,7 @@ class Snake(
                     try:
                         await command(context)
                     except Exception as e:
-                        await self.on_command_error(f"cmd `{invoked_name}`", e)
+                        await self.on_command_error(context, e)
                     finally:
                         await self.on_command(context)
 
