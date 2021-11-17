@@ -30,6 +30,7 @@ from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models import Context
 
 log = logging.getLogger(logger_name)
 
@@ -170,6 +171,26 @@ class InteractionCommand(BaseCommand):
 
     @property
     def is_subcommand(self) -> bool:
+        return False
+
+    async def _permission_enforcer(self, ctx: "Context") -> bool:
+        """A check that enforces Discord permissions"""
+        # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
+        for perm in self.permissions:
+            if perm.type == PermissionTypes.ROLE:
+                if await ctx.author.has_role(perm.id):
+                    if perm.permission is True:
+                        return True
+                    elif self.default_permission is True:
+                        return False
+
+            elif perm.type == PermissionTypes.USER:
+                if ctx.author.id == perm.id:
+                    if perm.permission is True:
+                        return True
+                    elif self.default_permission is True:
+                        return False
+
         return False
 
 

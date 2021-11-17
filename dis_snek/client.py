@@ -98,6 +98,7 @@ class Snake(
         get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
         sync_interactions bool: Should application commands be synced with discord?
         delete_unused_application_cmds bool: Delete any commands from discord that arent implemented in this client
+        enforce_interaction_perms bool: Should snek enforce discord application command permissions
         asyncio_debug bool: Enable asyncio debug features
         status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
         activity Activity: The activity the bot should login "playing"
@@ -119,6 +120,7 @@ class Snake(
         get_prefix: Callable[..., Coroutine] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
+        enforce_interaction_perms: bool = True,
         debug_scope: "Snowflake_Type" = MISSING,
         asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
@@ -165,6 +167,7 @@ class Snake(
         """How long to wait for guilds to be cached"""
         self.start_time = MISSING
         """The DateTime the bot started at"""
+        self.enforce_interaction_perms = enforce_interaction_perms
 
         self._mention_reg = MISSING
 
@@ -614,6 +617,9 @@ class Snake(
             elif command.resolved_name in self.interactions[scope]:
                 old_cmd = self.interactions[scope][command.resolved_name]
                 raise ValueError(f"Duplicate Command! {scope}::{old_cmd.resolved_name}")
+
+            if self.enforce_interaction_perms:
+                command.checks.append(command._permission_enforcer)  # noqa
 
             self.interactions[scope][command.resolved_name] = command
 
