@@ -38,7 +38,7 @@ async def my_command_function(ctx: InteractionContext):
 
 For more information, please visit the API reference [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_command).
 
-## Sub Commands
+## Subcommands
 
 If you have multiple commands that fit under the same category, sub commands are perfect for you.
 
