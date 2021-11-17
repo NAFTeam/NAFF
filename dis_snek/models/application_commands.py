@@ -660,7 +660,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     "name": subcommand.name,
                     "description": subcommand.description,
                     "options": [],
-                    "permissions": subcommand.permissions,
+                    "permissions": [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions],
                     "default_permission": subcommand.default_permission,
                 }
             if subcommand.group_name:
