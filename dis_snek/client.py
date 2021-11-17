@@ -160,7 +160,7 @@ class Snake(
         """The websocket collection for the Discord Gateway."""
 
         # flags
-        self._ready = False
+        self._ready = asyncio.Event()
         self._closed = False
         self._startup = False
 
@@ -476,7 +476,7 @@ class Snake(
         # cache slash commands
         await self._init_interactions()
 
-        self._ready = True
+        self._ready.set()
         if not self._startup:
             self._startup = True
             self.dispatch(events.Startup())
@@ -499,7 +499,7 @@ class Snake(
 
     async def stop(self):
         log.debug("Stopping the bot.")
-        self._ready = False
+        self._ready.clear()
         self._startup = False
         await self.ws.close(1001)
 
@@ -527,6 +527,10 @@ class Snake(
 
         for idx in index_to_remove:
             _waits.pop(idx)
+
+    async def wait_until_ready(self):
+        """Waits for the client to become ready."""
+        await self._ready.wait()
 
     def wait_for(self, event: str, checks: Optional[Callable[..., bool]] = MISSING, timeout: Optional[float] = None):
         """
@@ -1018,6 +1022,10 @@ class Snake(
                         await self.on_command_error(context, e)
                     finally:
                         await self.on_command(context)
+
+    @listen("disconnect")
+    async def _disconnect(self):
+        self._ready.clear()
 
     def get_scale(self, name) -> Optional[Scale]:
         """
