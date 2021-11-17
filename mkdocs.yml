@@ -74,6 +74,7 @@ plugins:
       - dis_snek
 
 markdown_extensions:
+  - tables
   - admonition
   - pymdownx.details
   - pymdownx.snippets:
