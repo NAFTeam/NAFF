@@ -181,19 +181,19 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         if self.responded:
-            message_data = await self._client.http.post_followup(message_payload, self._client.user.id, self._token)
+            message_data = await self._client.http.post_followup(message_payload, self._client.app.id, self._token)
         else:
             if isinstance(message_payload, FormData) and not self.deferred:
                 await self.defer()
             if self.deferred:
                 message_data = await self._client.http.edit_interaction_message(
-                    message_payload, self._client.user.id, self._token
+                    message_payload, self._client.app.id, self._token
                 )
                 self.deferred = False
             else:
                 payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message_payload}
                 await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
-                message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
+                message_data = await self._client.http.get_interaction_message(self._client.app.id, self._token)
             self.responded = True
 
         return message_data
@@ -327,14 +327,14 @@ class ComponentContext(InteractionContext):
         message_data = None
         if self.deferred:
             message_data = await self._client.http.edit_interaction_message(
-                message_payload, self._client.user.id, self._token
+                message_payload, self._client.app.id, self._token
             )
             self.deferred = False
             self.defer_edit_origin = False
         else:
             payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message_payload}
             await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
-            message_data = await self._client.http.get_interaction_message(self._client.user.id, self._token)
+            message_data = await self._client.http.get_interaction_message(self._client.app.id, self._token)
 
         if message_data:
             self.message = self._client.cache.place_message_data(message_data)
