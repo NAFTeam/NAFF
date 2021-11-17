@@ -85,6 +85,7 @@ class Ready(BaseEvent):
 
     Note:
         Don't use this event for things that must only happen once, on startup, as this event may be called multiple times.
+        Instead, use the `Startup` event
     """
 
 
