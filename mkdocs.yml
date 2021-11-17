@@ -2,6 +2,7 @@ site_name: Dis-Snek
 repo_url: https://github.com/LordOfPolls/dis_snek
 repo_name: LordOfPolls/dis_snek
 copyright: Copyright &copy; 2021 - 2021 LordOfPolls
+docs_dir: docs/src
 
 theme:
   name: material
@@ -78,7 +79,7 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.snippets:
-      base_path: docs/snippets
+      base_path: docs/_snippets
       check_paths: True
   - pymdownx.highlight:
       linenums: true
