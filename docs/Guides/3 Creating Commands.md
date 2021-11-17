@@ -40,7 +40,7 @@ For more information, please visit the API reference [here](/API Reference/model
 
 ## Subcommands
 
-If you have multiple commands that fit under the same category, sub commands are perfect for you.
+If you have multiple commands that fit under the same category, subcommands are perfect for you.
 
 Let's define a basic sub command:
 ```python
