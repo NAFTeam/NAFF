@@ -45,6 +45,7 @@ class Task:
     sleeper: Sleeper
     task: _Task
     _stop: bool
+    iteration: int
 
     def __init__(self, callback: Callable, trigger: BaseTrigger):
         self.callback = callback
@@ -52,6 +53,7 @@ class Task:
         self._stop = False
         self.task = MISSING
         self.sleeper = MISSING
+        self.iteration = 0
 
     @property
     def _loop(self) -> AbstractEventLoop:
@@ -69,6 +71,13 @@ class Task:
         if not self.task.done():
             return self.next_run - datetime.now()
 
+    @property
+    def is_sleeping(self) -> bool:
+        """Returns True if the task is currently waiting to run"""
+        if getattr(self.sleeper, "future", None):
+            return not self.sleeper.future.done()
+        return False
+
     def __call__(self):
         if inspect.iscoroutinefunction(self.callback):
             asyncio.gather(self.callback())
@@ -79,6 +88,7 @@ class Task:
         """Called when the task is being fired"""
         self.trigger.last_call_time = fire_time
         self()
+        self.iteration += 1
 
     async def _task_loop(self):
         while not self._stop:
