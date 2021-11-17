@@ -333,3 +333,20 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 
 The same principle can be used to reuse autocomplete options.
 
+## Simplified Error Handling
+
+If you want error handling for all commands, you can override `Snake` and define your own.
+Any error from interactions will trigger `on_command_error`. That includes context menus.
+
+In this example, we are logging the error and responding to the interaction if not done so yet:
+```python
+class CustomSnake(Snake):
+    async def on_command_error(self, ctx: InteractionContext, error: Exception):
+        logger.error(error)
+        if not ctx.responded:
+            await ctx.send("Something went wrong.")
+
+client = CustomErrorSnake(...)
+```
+
+There also is `on_command` which you can overwrite too. That fires on every interactions usage. 
