@@ -81,4 +81,4 @@ Congratulations! You now have a basic understanding of this library.
 If you have any questions check out our other guides, or join the 
 --8<-- "discord_inv.md"
 
-For more examples, check out the [examples page](/guides/5 example)
+For more examples, check out the [examples page](/guides/7 Example)
