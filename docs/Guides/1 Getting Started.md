@@ -6,7 +6,7 @@ Hi! So you want to make a bot powered by snakes. This guide aims to get you star
 
 - [x] Python 3.9 or greater
 - [x] Know how to use `pip`
-- [x] [A bot account](Creating Your Bot.md)
+- [x] [A bot account](2 Creating Your Bot.md)
 - [ ] An aversion to snakes
 
 ## Installation
@@ -81,4 +81,4 @@ Congratulations! You now have a basic understanding of this library.
 If you have any questions check out our other guides, or join the 
 --8<-- "discord_inv.md"
 
-For more examples, check out the [examples page](/guides/example)
+For more examples, check out the [examples page](/guides/5 example)
