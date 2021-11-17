@@ -188,7 +188,7 @@ For more information, please visit the API reference [here](/API Reference/model
 
 ## I Need More Than 25 Choices
 
-Looks like you want autocomplete options. These dynamically show users choices bases on their input. 
+Looks like you want autocomplete options. These dynamically show users choices based on their input. 
 The downside is that you need to supply the choices on request, making this a bit more tricky to set up.
 
 To use autocomplete options, set `autocomplete=True` in `@slash_option()`:
