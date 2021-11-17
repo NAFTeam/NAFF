@@ -79,7 +79,7 @@ This will show up in discord as `/base group command`. There are two ways to add
         await ctx.send("Hello World")
     ```
 
-    **Note:** This is particullary useful if you want to split sub commands into different files.
+    **Note:** This is particularly useful if you want to split sub commands into different files.
 
 
 ## But I Need More Options
