@@ -44,10 +44,15 @@ class BaseCommand(DictSerializationMixin):
     scale: Any = attr.ib(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
 
     enabled: bool = attr.ib(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
-    checks: list = attr.ib(factory=list, metadata=docs("Any checks that must be *checked* before the command can run"))
-    cooldown: Cooldown = attr.ib(default=MISSING, metadata=docs("An optional cooldown to apply to the command"))
+    checks: list = attr.ib(
+        factory=list, metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta
+    )
+    cooldown: Cooldown = attr.ib(
+        default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
+    )
     max_concurrency: MaxConcurrency = attr.ib(
-        default=MISSING, metadata=docs("An optional maximum number of concurrent instances to apply to the command")
+        default=MISSING,
+        metadata=docs("An optional maximum number of concurrent instances to apply to the command") | no_export_meta,
     )
 
     callback: Callable[..., Coroutine] = attr.ib(
