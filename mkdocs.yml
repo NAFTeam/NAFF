@@ -1,8 +1,9 @@
 site_name: Dis-Snek
-repo_url: https://github.com/LordOfPolls/dis_snek
-repo_name: LordOfPolls/dis_snek
+repo_url: https://github.com/Discord-Snake-Pit/Dis-Snek
+repo_name: Discord-Snake-Pit/Dis-Snek
 copyright: Copyright &copy; 2021 - 2021 LordOfPolls
 docs_dir: docs/src
+edit_uri: edit/master/docs/src
 
 theme:
   name: material
