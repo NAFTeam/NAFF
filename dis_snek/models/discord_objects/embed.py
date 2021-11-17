@@ -253,7 +253,7 @@ class Embed(DictSerializationMixin):
         """
         self.footer = EmbedFooter(text=text, icon_url=icon_url)
 
-    def add_field(self, name: str, value: str, inline: bool = False) -> None:
+    def add_field(self, name: str, value: Any, inline: bool = False) -> None:
         """
         Add a field to the embed.
 
@@ -262,7 +262,7 @@ class Embed(DictSerializationMixin):
             value: The value in this field
             inline: Should this field be inline with other fields?
         """
-        self.fields.append(EmbedField(name, value, inline))
+        self.fields.append(EmbedField(name, str(value), inline))
         self._fields_validation("fields", self.fields)
 
 
