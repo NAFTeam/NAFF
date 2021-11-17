@@ -165,7 +165,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 ## But I Want A Choice
 
 If your users ~~are dumb~~ constantly misspell specific strings, it might be wise to set up choices. 
-With choices, the user can no longer freely input whatever they want, instead they must choose from a curated list.
+With choices, the user can no longer freely input whatever they want, instead, they must choose from a curated list.
 
 To create a choice, simply fill `choices` in `@slash_option()`. An option can have up to 25 choices:
 ```python
