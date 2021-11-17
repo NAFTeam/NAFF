@@ -64,7 +64,7 @@ class GlobalCache:
     user_guilds: TTLCache = field(factory=TTLCache)  # key: user_id; value: set[guild_id]
 
     def __attrs_post_init__(self):
-        if isinstance(self.message_cache, dict):
+        if not isinstance(self.message_cache, TTLCache):
             log.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
