@@ -190,8 +190,7 @@ class InteractionCommand(BaseCommand):
                         return True
                     elif self.default_permission is True:
                         return False
-
-        return False
+        return self.default_permission
 
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
