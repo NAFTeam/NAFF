@@ -56,7 +56,7 @@ async def my_command_function(ctx: InteractionContext):
     await ctx.send("Hello World")
 ```
 
-This will show up in discord as `/base group command`. There are two ways to add additional sub commands:
+This will show up in discord as `/base group command`. There are two ways to add additional subcommands:
 
 === ":one: Decorator"
     ```python
