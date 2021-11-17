@@ -73,6 +73,13 @@ class Disconnect(BaseEvent):
 
 
 @attr.s(slots=True)
+class Startup(BaseEvent):
+    """The client is now ready for the first time
+
+    Use this for tasks you want to do upon login, instead of ready, as this will only be called once."""
+
+
+@attr.s(slots=True)
 class Ready(BaseEvent):
     """The client is now ready.
 

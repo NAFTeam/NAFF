@@ -162,6 +162,8 @@ class Snake(
         # flags
         self._ready = False
         self._closed = False
+        self._startup = False
+
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
         """How long to wait for guilds to be cached"""
@@ -475,6 +477,9 @@ class Snake(
         await self._init_interactions()
 
         self._ready = True
+        if not self._startup:
+            self._startup = True
+            self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
     def start(self, token):
@@ -495,6 +500,7 @@ class Snake(
     async def stop(self):
         log.debug("Stopping the bot.")
         self._ready = False
+        self._startup = False
         await self.ws.close(1001)
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
