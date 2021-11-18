@@ -12,58 +12,56 @@ log = logging.getLogger(logger_name)
 
 class GuildEvents(EventMixinTemplate):
     @listen()
-    async def _on_raw_guild_create(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_guild_create(self, data: dict) -> None:
         """
         Automatically cache a guild upon GUILD_CREATE event from gateway.
 
         Args:
             event: raw guild create event
         """
-        guild = self.cache.place_guild_data(event.data)
+        guild = self.cache.place_guild_data(data)
         self._guild_event.set()
 
         self.dispatch(events.GuildJoin(guild))
 
     @listen()
-    async def _on_raw_guild_update(self, event: RawGatewayEvent) -> None:
-        before = copy.copy(await self.cache.get_guild(event.data.get("id")))
-        self.dispatch(events.GuildUpdate(before or MISSING, self.cache.place_guild_data(event.data)))
+    async def _on_raw_guild_update(self, data: dict) -> None:
+        before = copy.copy(await self.cache.get_guild(data.get("id")))
+        self.dispatch(events.GuildUpdate(before or MISSING, self.cache.place_guild_data(data)))
 
     @listen()
-    async def _on_raw_guild_delete(self, event: RawGatewayEvent) -> None:
-        if event.data.get("unavailable", False):
+    async def _on_raw_guild_delete(self, data: dict) -> None:
+        if data.get("unavailable", False):
             self.dispatch(
                 events.GuildUnavailable(
-                    event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    data.get("id"),
+                    await self.cache.get_guild(data.get("id"), False) or MISSING,
                 )
             )
         else:
             self.dispatch(
                 events.GuildLeft(
-                    event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    data.get("id"),
+                    await self.cache.get_guild(data.get("id"), False) or MISSING,
                 )
             )
 
     @listen()
-    async def _on_raw_guild_ban_add(self, event: RawGatewayEvent) -> None:
-        self.dispatch(BanCreate(event.data.get("guild_id"), self.cache.place_user_data(event.data.get("user"))))
+    async def _on_raw_guild_ban_add(self, data: dict) -> None:
+        self.dispatch(BanCreate(data.get("guild_id"), self.cache.place_user_data(data.get("user"))))
 
     @listen()
-    async def _on_raw_guild_ban_remove(self, event: RawGatewayEvent) -> None:
-        self.dispatch(BanRemove(event.data.get("guild_id"), self.cache.place_user_data(event.data.get("user"))))
+    async def _on_raw_guild_ban_remove(self, data: dict) -> None:
+        self.dispatch(BanRemove(data.get("guild_id"), self.cache.place_user_data(data.get("user"))))
 
     @listen()
-    async def _on_raw_integration_create(self, event: RawGatewayEvent) -> None:
-        self.dispatch(IntegrationCreate(GuildIntegration.from_dict(event.data, self)))  # type: ignore
+    async def _on_raw_integration_create(self, data: dict) -> None:
+        self.dispatch(IntegrationCreate(GuildIntegration.from_dict(data, self)))  # type: ignore
 
     @listen()
-    async def _on_raw_integration_update(self, event: RawGatewayEvent) -> None:
-        self.dispatch(IntegrationUpdate(GuildIntegration.from_dict(event.data, self)))  # type: ignore
+    async def _on_raw_integration_update(self, data: dict) -> None:
+        self.dispatch(IntegrationUpdate(GuildIntegration.from_dict(data, self)))  # type: ignore
 
     @listen()
-    async def _on_raw_integration_delete(self, event: RawGatewayEvent) -> None:
-        self.dispatch(
-            IntegrationDelete(event.data.get("guild_id"), event.data.get("id"), event.data.get("application_id"))
-        )
+    async def _on_raw_integration_delete(self, data: dict) -> None:
+        self.dispatch(IntegrationDelete(data.get("guild_id"), data.get("id"), data.get("application_id")))

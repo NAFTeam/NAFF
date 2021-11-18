@@ -12,7 +12,7 @@ log = logging.getLogger(logger_name)
 
 class UserEvents(EventMixinTemplate):
     @listen()
-    async def _on_raw_typing_start(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_typing_start(self, data: dict) -> None:
         """
         Process raw typing start and dispatch a processed typing event.
 
@@ -23,28 +23,28 @@ class UserEvents(EventMixinTemplate):
         channel: BaseChannel
         guild = None
 
-        if member := event.data.get("member"):
-            author = self.cache.place_member_data(event.data.get("guild_id"), member)
-            guild = await self.cache.get_guild(event.data.get("guild_id"))
+        if member := data.get("member"):
+            author = self.cache.place_member_data(data.get("guild_id"), member)
+            guild = await self.cache.get_guild(data.get("guild_id"))
         else:
-            author = await self.cache.get_user(event.data.get("user_id"))
+            author = await self.cache.get_user(data.get("user_id"))
 
-        channel = await self.cache.get_channel(event.data.get("channel_id"))
+        channel = await self.cache.get_channel(data.get("channel_id"))
 
         self.dispatch(
             events.TypingStart(
                 author=author,
                 channel=channel,
                 guild=guild,
-                timestamp=Timestamp.utcfromtimestamp(event.data.get("timestamp")),
+                timestamp=Timestamp.utcfromtimestamp(data.get("timestamp")),
             )
         )
 
     @listen()
-    async def _on_raw_presence_update(self, event: RawGatewayEvent) -> None:
-        g_id = to_snowflake(event.data["guild_id"])
-        user = await self.cache.get_user(event.data["user"]["id"])
-        status = Status[event.data["status"].upper()]
-        activities = [Activity.from_dict(a) for a in event.data.get("activities")]
+    async def _on_raw_presence_update(self, data: dict) -> None:
+        g_id = to_snowflake(data["guild_id"])
+        user = await self.cache.get_user(data["user"]["id"])
+        status = Status[data["status"].upper()]
+        activities = [Activity.from_dict(a) for a in data.get("activities")]
 
-        self.dispatch(events.PresenceUpdate(user, status, activities, event.data.get("client_status", None), g_id))
+        self.dispatch(events.PresenceUpdate(user, status, activities, data.get("client_status", None), g_id))

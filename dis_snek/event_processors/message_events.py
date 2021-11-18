@@ -11,16 +11,16 @@ log = logging.getLogger(logger_name)
 
 class MessageEvents(EventMixinTemplate):
     @listen()
-    async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_create(self, data: dict) -> None:
         """
         Automatically convert MESSAGE_CREATE event data to the object.
 
         Args:
             event: raw message event
         """
-        msg = self.cache.place_message_data(event.data)
-        if not msg._guild_id and event.data.get("guild_id"):
-            msg._guild_id = event.data["guild_id"]
+        msg = self.cache.place_message_data(data)
+        if not msg._guild_id and data.get("guild_id"):
+            msg._guild_id = data["guild_id"]
             # todo: Determine why this isn't set *always*
 
         if not msg.author:
@@ -37,19 +37,17 @@ class MessageEvents(EventMixinTemplate):
         self.dispatch(events.MessageCreate(msg))
 
     @listen()
-    async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_delete(self, data: dict) -> None:
         """
         Process raw deletions and dispatch a processed deletion event.
         Args:
             event: raw message deletion event
         """
-        message = await self.cache.get_message(
-            event.data.get("channel_id"), event.data.get("id"), request_fallback=False
-        )
+        message = await self.cache.get_message(data.get("channel_id"), data.get("id"), request_fallback=False)
         self.dispatch(events.MessageDelete(message))
 
     @listen()
-    async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_update(self, data: dict) -> None:
         """
         Process raw message update event and dispatch a processed update event.
 
@@ -58,8 +56,6 @@ class MessageEvents(EventMixinTemplate):
         """
 
         # a copy is made because the cache will update the original object in memory
-        before = copy.copy(
-            await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
-        )
-        after = self.cache.place_message_data(event.data)
+        before = copy.copy(await self.cache.get_message(data.get("channel_id"), data.get("id"), request_fallback=False))
+        after = self.cache.place_message_data(data)
         self.dispatch(events.MessageUpdate(before=before, after=after))

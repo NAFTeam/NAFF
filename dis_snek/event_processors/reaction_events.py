@@ -10,18 +10,16 @@ log = logging.getLogger(logger_name)
 
 class ReactionEvents(EventMixinTemplate):
     @listen()
-    async def _on_raw_message_reaction_add(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_reaction_add(self, data: dict) -> None:
         add = event.override_name == "raw_message_reaction_add"
 
-        if member := event.data.get("member"):
-            author = self.cache.place_member_data(event.data.get("guild_id"), member)
+        if member := data.get("member"):
+            author = self.cache.place_member_data(data.get("guild_id"), member)
         else:
-            author = await self.cache.get_user(event.data.get("user_id"))
+            author = await self.cache.get_user(data.get("user_id"))
 
-        emoji = Emoji.from_dict(event.data.get("emoji"))  # type: ignore
-        message = await self.cache.get_message(
-            event.data.get("channel_id"), event.data.get("message_id"), request_fallback=False
-        )
+        emoji = Emoji.from_dict(data.get("emoji"))  # type: ignore
+        message = await self.cache.get_message(data.get("channel_id"), data.get("message_id"), request_fallback=False)
 
         if message:
             for i in range(len(message.reactions)):
@@ -53,7 +51,7 @@ class ReactionEvents(EventMixinTemplate):
 
             self.cache.message_cache[(message.channel.id, message.id)] = message
         else:
-            message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("message_id"))
+            message = await self.cache.get_message(data.get("channel_id"), data.get("message_id"))
 
         if add:
             self.dispatch(events.MessageReactionAdd(message=message, emoji=emoji, author=author))
@@ -61,14 +59,14 @@ class ReactionEvents(EventMixinTemplate):
             self.dispatch(events.MessageReactionRemove(message=message, emoji=emoji, author=author))
 
     @listen()
-    async def _on_raw_message_reaction_remove(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_reaction_remove(self, data: dict) -> None:
         await self._on_raw_message_reaction_add(event)
 
     @listen()
-    async def _on_raw_message_reaction_remove_all(self, event: RawGatewayEvent) -> None:
+    async def _on_raw_message_reaction_remove_all(self, data: dict) -> None:
         self.dispatch(
             events.MessageReactionRemoveAll(
-                event.data.get("guild_id"),
-                await self.cache.get_message(event.data["channel_id"], event.data["message_id"]),
+                data.get("guild_id"),
+                await self.cache.get_message(data["channel_id"], data["message_id"]),
             )
         )

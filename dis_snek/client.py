@@ -65,7 +65,7 @@ from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
 from dis_snek.tasks.task import Task
 from dis_snek.utils.input_utils import get_first_word, get_args
-from dis_snek.utils.misc_utils import wrap_partial
+from dis_snek.utils.misc_utils import wrap_partial, get_parameters
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
@@ -358,10 +358,15 @@ class Snake(
                 if len(_event.__attrs_attrs__) == 1:
                     await _coro()
                 else:
-                    await _coro(_event, *_args, **_kwargs)
+                    params = get_parameters(_coro.callback)
+                    if all(p in _kwargs for p in params):
+                        await _coro(**_kwargs)
+                    else:
+                        await _coro(*_kwargs.values())
             except asyncio.CancelledError:
                 pass
             except Exception as e:
+                breakpoint()
                 await self.on_error(event, e)
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
@@ -450,14 +455,13 @@ class Snake(
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
     @listen()
-    async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
+    async def _on_websocket_ready(self, data: dict) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
 
         Args:
             event: The websocket ready packet
         """
-        data = event.data
         expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
         self._user._add_guilds(expected_guilds)
 
@@ -512,6 +516,11 @@ class Snake(
         """
         log.debug(f"Dispatching Event: {event.resolved_name}")
         listeners = self.listeners.get(event.resolved_name, [])
+        kwargs = {
+            a.name: getattr(event, a.name, a.default)
+            for a in event.__attrs_attrs__
+            if a.name not in ("override_name", "resolved_name")
+        } | kwargs
         for _listen in listeners:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
@@ -948,15 +957,13 @@ class Snake(
             return MessageContext.from_message(self, data)
 
     @listen("raw_interaction_create")
-    async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
+    async def _dispatch_interaction(self, interaction_data: dict) -> None:
         """
         Identify and dispatch interaction of slash commands or components.
 
         Args:
             raw interaction event
         """
-        interaction_data = event.data
-
         if interaction_data["type"] in (
             InteractionTypes.PING,
             InteractionTypes.APPLICATION_COMMAND,
@@ -1011,10 +1018,8 @@ class Snake(
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     @listen("message_create")
-    async def _dispatch_msg_commands(self, event: MessageCreate):
+    async def _dispatch_msg_commands(self, message: Message):
         """Determine if a command is being triggered, and dispatch it."""
-        message = event.message
-
         if not message.author.bot:
             prefix = await self.get_prefix(message)
 

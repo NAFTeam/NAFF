@@ -10,13 +10,13 @@ log = logging.getLogger(logger_name)
 
 class StageEvents(EventMixinTemplate):
     @listen()
-    async def _on_raw_stage_instance_create(self, event: RawGatewayEvent) -> None:
-        self.dispatch(events.StageInstanceCreate(StageInstance.from_dict(event.data, self)))  # type: ignore
+    async def _on_raw_stage_instance_create(self, data: dict) -> None:
+        self.dispatch(events.StageInstanceCreate(StageInstance.from_dict(data, self)))  # type: ignore
 
     @listen()
-    async def _on_raw_stage_instance_update(self, event: RawGatewayEvent) -> None:
-        self.dispatch(events.StageInstanceUpdate(StageInstance.from_dict(event.data, self)))  # type: ignore
+    async def _on_raw_stage_instance_update(self, data: dict) -> None:
+        self.dispatch(events.StageInstanceUpdate(StageInstance.from_dict(data, self)))  # type: ignore
 
     @listen()
-    async def _on_raw_stage_instance_delete(self, event: RawGatewayEvent) -> None:
-        self.dispatch(events.StageInstanceDelete(StageInstance.from_dict(event.data, self)))  # type: ignore
+    async def _on_raw_stage_instance_delete(self, data: dict) -> None:
+        self.dispatch(events.StageInstanceDelete(StageInstance.from_dict(data, self)))  # type: ignore
