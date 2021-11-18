@@ -366,7 +366,6 @@ class Snake(
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                breakpoint()
                 await self.on_error(event, e)
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
