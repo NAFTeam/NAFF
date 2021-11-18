@@ -600,7 +600,7 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
-    def listen(self, event_name: str = MISSING) -> Listener:
+    def fallback_listen(self, event_name: str = MISSING) -> Listener:
         """
         A decorator to be used in situations that snek can't automatically hook your listeners.
         Ideally, the standard listen decorator should be used, not this.
