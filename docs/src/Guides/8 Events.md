@@ -6,7 +6,7 @@ Events are dispatched whenever a subscribed event gets send by discord.
 
 What events you subscribe to are defined at startup by setting your `Intents`. 
 
-`Intents.DEFAULT` is a good place to start if your bot is new and small, otherwise it is recommended to take your time and go through them one by one.
+`Intents.DEFAULT` is a good place to start if your bot is new and small, otherwise, it is recommended to take your time and go through them one by one.
 ```python
 bot = Snake(intents=Intents.DEFAULT)
 bot.start("Put your token here")
@@ -17,7 +17,7 @@ For more information, please visit the API reference [here](/API Reference/enums
 ## Hey Listen!!!
 
 Now you can receive events. To respond to them, you need to register a callback. Callbacks should be lower-case, use `_` instead of spaces and start with `on_`.
-Depending on how you register your callbacks that's not a requirement, but it is good habit nonetheless.
+Depending on how you register your callbacks that's not a requirement, but it is a good habit nonetheless.
 
 You can find all events [here](/API Reference/models/events/discord/). Be aware that your `Intents` must be set to receive the event you are looking for.
 

@@ -86,7 +86,7 @@ components: list[ActionRow] = [
 await channel.send("Look a Button!", components=components)
 ```
 
-`ButtonStyles.URL` also does neither receive not require any callback.
+`ButtonStyles.URL` does not receive events, or work with callbacks.
 
 ## Select Your Favorite
 
@@ -109,7 +109,7 @@ components: list[ActionRow] = [
                     value="Egg Sandwich"
                 ),
             ],
-            placeholder="What is your favorite food?",
+            placeholder="What is your favourite food?",
             min_values=1,
             max_values=1,
         )
@@ -136,7 +136,7 @@ When responding to a component you need to satisfy discord either by responding 
 === ":one: `wait_for_component()`"
     As with discord.py, this supports checks and timeouts.
 
-    In this example we are checking that the username starts with "a" and clicks the button within 30 seconds.
+    In this example, we are checking that the username starts with "a" and clicks the button within 30 seconds.
     If it times out, we're just gonna disable it
     ```python
     components: list[ActionRow] = [

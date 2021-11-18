@@ -5,12 +5,12 @@ The following examples show you how to elevate your scales to the next level.
 
 ## Check This Out
 
-It would be cool the check some condition before invoking a command, wouldn't it.
+It would be cool the check some condition before invoking a command, wouldn't it?
 You are in luck, that is exactly what checks are for.
 
 Checks prohibit the interaction from running if they return `False`.
 
-You can add your own check to your scale. In this example, we only want user whose name starts with "a" to run any command from this scale.
+You can add your own check to your scale. In this example, we only want a user whose name starts with "a" to run any command from this scale.
 ```python
 class MyScale(Scale):
     def __init__(self, client: Snake):
@@ -30,9 +30,9 @@ def setup(client):
 
 ## Pre- And Post-Run Events
 
-Pre- and Post-Run events are similar to checks. They run before and after a interaction is invoked, respectively.
+Pre- and Post-Run events are similar to checks. They run before and after an interaction is invoked, respectively.
 
-In this example we are just printing some stats before and after the interaction.
+In this example, we are just printing some stats before and after the interaction.
 ```python
 class MyScale(Scale):
     def __init__(self, client: Snake):
@@ -59,8 +59,8 @@ def setup(client):
 Now you learned how to make checks for a scale right after we tell you to use scales to split your code into different files.
 Ironic, if you want a check for any interaction in any scale.
 
-Lucky you however, since you seem to have forgotten about python subclassing.
-By subclassing your own custom scale, your can still split your code in as many files as you want without having to redefine your checks.
+Lucky you, however, since you seem to have forgotten about python subclassing.
+By subclassing your own custom scale, your can still split your code into as many files as you want without having to redefine your checks.
 
 ### File 1
 ```python

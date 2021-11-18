@@ -16,7 +16,7 @@ async def my_command_function(ctx: InteractionContext):
 
 @slash_command(name="my_long_command", description="My second command :)")
 async def my_long_command_function(ctx: InteractionContext):
-    # need to defer it, otherwise it fails
+    # need to defer it, otherwise, it fails
     await ctx.defer()
     
     # do stuff for a bit
@@ -25,11 +25,11 @@ async def my_long_command_function(ctx: InteractionContext):
     await ctx.send("Hello World")
 ```
 
-Interactions can either be global, or limited to specific guilds. 
+Interactions can either be global or limited to specific guilds. 
 Global commands take up to an hour to sync with Discord and show up, so don't worry when you first register a command.
 
 When testing, it is recommended to use non-global commands, as they sync instantly.
-For that, you can either define `scopes` in every command, or set `debug_scope` in the bot instantiation which sets the scope automatically for all commands.
+For that, you can either define `scopes` in every command or set `debug_scope` in the bot instantiation which sets the scope automatically for all commands.
 
 You define non-global commands by passing a list of guild ids to `scopes` in the interaction creation.
 ```python
@@ -44,7 +44,7 @@ For more information, please visit the API reference [here](/API Reference/model
 
 If you have multiple commands that fit under the same category, subcommands are perfect for you.
 
-Let's define a basic sub command:
+Let's define a basic subcommand:
 ```python
 @slash_command(
     name="base", 
@@ -81,7 +81,7 @@ This will show up in discord as `/base group command`. There are two ways to add
         await ctx.send("Hello World")
     ```
 
-    **Note:** This is particularly useful if you want to split sub commands into different files.
+    **Note:** This is particularly useful if you want to split subcommands into different files.
 
 
 ## But I Need More Options
@@ -94,9 +94,9 @@ Interactions can also have options. There are a bunch of different [types of opt
 | `OptionTypes.INTEGER` | `int` |  Limit the input to a integer.  |
 | `OptionTypes.NUMBER` | `float` |  Limit the input to a float. |
 | `OptionTypes.BOOLEAN` | `bool` |  Let the user choose either `True` or `False`. |
-| `OptionTypes.USER` | `Member` in guilds, else `User` |  Let the user chose a discord user from an automatically generated list of options.  |
-| `OptionTypes.CHANNEL` | `GuildChannel` in guilds, else `DMChannel` |  Let the user chose a discord channel from an automatically generated list of options.  |
-| `OptionTypes.ROLE` | `Role` |  Let the user chose a discord role from an automatically generated list of options.  |
+| `OptionTypes.USER` | `Member` in guilds, else `User` |  Let the user choose a discord user from an automatically-generated list of options.  |
+| `OptionTypes.CHANNEL` | `GuildChannel` in guilds, else `DMChannel` |  Let the user choose a discord channel from an automatically-generated list of options.  |
+| `OptionTypes.ROLE` | `Role` |  Let the user choose a discord role from an automatically-generated list of options.  |
 | `OptionTypes.MENTIONABLE` | `DiscordObject` |  Let the user chose any discord mentionable from an automatically generated list of options.  |
 
 Now that you know all the options you have for options, you can opt into adding options to your interaction.
@@ -133,7 +133,7 @@ For more information, please visit the API reference [here](/API Reference/model
 
 ## Restricting Options
 
-If you are using a `OptionTypes.CHANNEL` option, you can restrict the channel a user can choose by setting `channel_types`:
+If you are using an `OptionTypes.CHANNEL` option, you can restrict the channel a user can choose by setting `channel_types`:
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
@@ -349,4 +349,4 @@ class CustomSnake(Snake):
 client = CustomErrorSnake(...)
 ```
 
-There also is `on_command` which you can overwrite too. That fires on every interactions usage. 
+There also is `on_command` which you can overwrite too. That fires on every interactions usage.

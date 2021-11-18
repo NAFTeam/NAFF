@@ -6,7 +6,7 @@ Well let me introduce you to `Scales`<br>
 Scales allow you to split your commands and listeners into separate files to allow you to better organise your project,
 as well as that, they allow you to reload Scales without having to shut down your bot. 
 
-Sounds pretty good right? Well lets go over how you can use them:
+Sounds pretty good right? Well, let's go over how you can use them:
 
 ## Usage
 
@@ -179,7 +179,7 @@ Below is an example of a bot, one with scales, one without.
         ```
 
 Scales are effectively just another python file that contains a class that inherits from an object called `Scale`, 
-inside this scale you can put whatever you would like. And upon loading, the contents are added to the bot.
+inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
 from dis_snek.models.scale import Scale
@@ -191,7 +191,7 @@ def setup(bot):
     # This is called by dis-snek so it knows how to load the Scale
     SomeClass(bot)
 ```
-As you can see, theres one extra bit, a function called `setup`, this function acts as an entry point for dis-snek, 
+As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek, 
 so it knows how to load the scale properly.
 
 To load a scale, you simply add the following to your `main` script, just above `bot.start`:
