@@ -655,11 +655,7 @@ class Snake(
 
         # check that everything is okay with the function
         parameters = inspect.signature(func).parameters
-        if (
-            (len(parameters) != 1)
-            or (not parameters.get("ctx"))
-            or (not inspect.iscoroutinefunction(func))
-        ):
+        if (len(parameters) != 1) or (not parameters.get("ctx")) or (not inspect.iscoroutinefunction(func)):
             raise ValueError(f"The function needs to be async, return bool and accept only `ctx: ComponentContext`")
 
         self._component_checks.append(func)
