@@ -86,6 +86,8 @@ components: list[ActionRow] = [
 await channel.send("Look a Button!", components=components)
 ```
 
+`ButtonStyles.URL` also does neither receive not require any callback.
+
 ## Select Your Favorite
 
 Sometimes there might be more than a handful options which user need to decide between. That's when a `Select` should probably be used.
@@ -133,8 +135,9 @@ When responding to a component you need to satisfy discord either by responding 
 
 === ":one: `wait_for_component()`"
     As with discord.py, this supports checks and timeouts.
-    In this example we are checking that the username starts with "a" and clicks the button within 30 seconds.
 
+    In this example we are checking that the username starts with "a" and clicks the button within 30 seconds.
+    If it times out, we're just gonna disable it
     ```python
     components: list[ActionRow] = [
         ActionRow(
@@ -147,7 +150,7 @@ When responding to a component you need to satisfy discord either by responding 
         )
     ]
 
-    await channel.send("Look a Button!", components=components)
+    message = await channel.send("Look a Button!", components=components)
 
     # define the check
     def check(component: Button) -> bool:
@@ -155,10 +158,15 @@ When responding to a component you need to satisfy discord either by responding 
     
     try:
         used_component = await wait_for_component(components=components, check=check, timeout=30)
+    
     except TimeoutError:    
         print("Timed Out!")
 
-    await used_component.context.send("Your name starts with 'a'")
+        components[0].components[0].disabled = True
+        await message.edit(components=components)
+    
+    else:
+        await used_component.context.send("Your name starts with 'a'")
     ```
 
     You can also use this to check for a normal message instead of a component interaction. 
