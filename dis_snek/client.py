@@ -600,12 +600,29 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
+    def listen(self, event_name: str = MISSING) -> Listener:
+        """
+        A decorator to be used in situations that snek can't automatically hook your listeners.
+        Ideally, the standard listen decorator should be used, not this.
+
+
+        Arguments:
+            event_name: The event name to use, if not the coroutine name
+        """
+
+        def wrapper(coro: Callable[..., Coroutine]):
+            listener = listen(event_name)(coro)
+            self.add_listener(listener)
+            return listener
+
+        return wrapper
+
     def add_listener(self, listener: Listener):
         """
         Add a listener for an event, if no event is passed, one is determined
 
         Args:
-            coro Listener: The listener to add to the client
+            listener Listener: The listener to add to the client
         """
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
