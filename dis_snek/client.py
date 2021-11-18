@@ -654,13 +654,10 @@ class Snake(
         """
 
         # check that everything is okay with the function
-        signature = inspect.signature(func)
-        parameters = signature.parameters
+        parameters = inspect.signature(func).parameters
         if (
             (len(parameters) != 1)
             or (not parameters.get("ctx"))
-            or (parameters.get("ctx").annotation != ComponentContext)
-            or (signature.return_annotation != bool)
             or (not inspect.iscoroutinefunction(func))
         ):
             raise ValueError(f"The function needs to be async, return bool and accept only `ctx: ComponentContext`")
