@@ -173,7 +173,7 @@ class GuildRequests:
             user_id: The ID of the user to remove
             reason: The reason for this action
         """
-        return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reaosn=reason)
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reason=reason)
 
     async def get_guild_bans(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
