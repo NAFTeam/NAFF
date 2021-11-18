@@ -191,6 +191,7 @@ class Snake(
         """A dictionary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self._component_checks: list[Callable[..., Coroutine]] = []
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.__extensions = {}
@@ -645,6 +646,27 @@ class Snake(
             return
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
+    def add_component_check(self, func: Callable[..., Coroutine]):
+        """Add a function that all components need to pass before they run. These functions need to be async, accept the parameter `ctx: ComponentContext`, and return bool. If the function returns True the check passes.
+
+        Args:
+            func: The async check function. Needs to return `bool` and accept only `ctx: ComponentContext`
+        """
+
+        # check that everything is okay with the function
+        signature = inspect.signature(func)
+        parameters = signature.parameters
+        if (
+            (len(parameters) != 1)
+            or (not parameters.get("ctx"))
+            or (parameters.get("ctx").annotation != ComponentContext)
+            or (signature.return_annotation != bool)
+            or (not inspect.iscoroutinefunction(func))
+        ):
+            raise ValueError(f"The function needs to be async, return bool and accept only `ctx: ComponentContext`")
+
+        self._component_checks.append(func)
+
     def add_component_callback(self, command: ComponentCommand):
         """Add a component callback to the client
 
@@ -980,7 +1002,13 @@ class Snake(
             self.dispatch(events.Component(ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 try:
-                    await callback(ctx)
+                    # run the checks first
+                    all_good = True
+                    for check in self._component_checks:
+                        all_good &= await check(ctx)
+
+                    if all_good:
+                        await callback(ctx)
                 except Exception as e:
                     await self.on_component_error(ctx, e)
                 finally:
