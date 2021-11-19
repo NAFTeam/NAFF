@@ -474,7 +474,8 @@ class Snake(
                 break
 
         # cache slash commands
-        await self._init_interactions()
+        if not self._startup:
+            await self._init_interactions()
 
         self._ready.set()
         if not self._startup:
