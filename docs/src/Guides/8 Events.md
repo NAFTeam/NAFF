@@ -19,9 +19,11 @@ For more information, please visit the API reference [here](/API Reference/enums
 Now you can receive events. To respond to them, you need to register a callback. Callbacks should be lower-case, use `_` instead of spaces and start with `on_`.
 Depending on how you register your callbacks that's not a requirement, but it is good habit nonetheless.
 
-You can find all events [here](/API Reference/models/events/discord/). Be aware that your `Intents` must be set to receive the event you are looking for.
-
 For example, the event callback for the `ChannelCreate` event should be called `on_channel_create`.
+
+You can find all events and their signatures [here](/API Reference/models/events/discord/).
+
+Be aware that your `Intents` must be set to receive the event you are looking for.
 
 ---
 
@@ -32,10 +34,10 @@ There are three ways to register events. **Subclassing** is the recommended way 
 
     ```python
     class MySnake(Snake):
-        async def on_channel_create(channel: BaseChannel):
+        async def on_channel_create(event: ChannelCreate):
             # this event is called when a channel is created in a guild where the bot is
             
-            print(f"Channel created with name: {channel.name}")
+            print(f"Channel created with name: {event.channel.name}")
 
     bot = MySnake(intents=Intents.DEFAULT)
     bot.start("Put your token here")
@@ -48,10 +50,10 @@ There are three ways to register events. **Subclassing** is the recommended way 
     bot = Snake(intents=Intents.DEFAULT)
 
     @listen()
-    async def on_channel_create(channel: BaseChannel):
+    async def on_channel_create(event: ChannelCreate):
         # this event is called when a channel is created in a guild where the bot is
         
-        print(f"Channel created with name: {channel.name}")
+        print(f"Channel created with name: {event.channel.name}")
 
     bot.start("Put your token here")
     ```
@@ -60,10 +62,10 @@ There are three ways to register events. **Subclassing** is the recommended way 
     You can also register the events manually. This gives you the most flexibility, but it's not the cleanest.
 
     ```python
-    async def on_channel_create(channel: BaseChannel):
+    async def on_channel_create(event: ChannelCreate):
         # this event is called when a channel is created in a guild where the bot is
         
-        print(f"Channel created with name: {channel.name}")
+        print(f"Channel created with name: {event.channel.name}")
 
 
     bot = Snake(intents=Intents.DEFAULT)
