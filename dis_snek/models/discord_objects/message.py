@@ -370,9 +370,14 @@ class Message(DiscordObject):
         else:
             await self._client.http.delete_message(self._channel_id, self.id)
 
-    async def reply(self, content: Optional[str], **kwargs) -> "Message":
+    async def reply(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        **kwargs,
+    ) -> "Message":
         """Reply to this message, takes all the same attributes as `send`"""
-        return await self.channel.send(content=content, reply_to=self, **kwargs)
+        return await self.channel.send(content=content, reply_to=self, embeds=embeds, **kwargs)
 
     async def create_thread(
         self,
