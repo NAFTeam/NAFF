@@ -17,7 +17,7 @@ This is `Dis-Snek`, an API wrapper for Discord, written in Python. This wrapper 
 - ✅ Dynamic cache with TTL support
 
 
-## "Is this just another discord.py fork"?
+## "Is this just another discord.py fork?"
 While this library shares some features and stylistic choice with `discord.py`, its completely separate from them. We think `discord.py` is a fantastic library, but we disagree with the direction and design decisions made by it.
 
 Compared to `discord.py`; `Snek` starts faster, responds faster, and is simpler to use. Especially compared to `Views`. 
