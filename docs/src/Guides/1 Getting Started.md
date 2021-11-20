@@ -41,12 +41,12 @@ Now let's get the library installed.
 
 === ":material-linux: Linux"
     ```shell
-    python3 -m pip install dis_snek --upgrade
+    python3 -m pip install dis-snek --upgrade
     ```
 
 === ":material-microsoft-windows: Windows"
     ```shell
-    py -3 -m install dis_snek --upgrade
+    py -3 -m install dis-snek --upgrade
     ```
 
 ## Basic bot
