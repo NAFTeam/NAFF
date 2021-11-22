@@ -36,22 +36,6 @@ from dis_snek.utils.serializer import dict_filter_missing
 log = logging.getLogger(logger_name)
 
 
-T = TypeVar("T")
-
-
-class DiscordClientWebSocketResponse(ClientWebSocketResponse):
-    """Represents the websocket connection with discord."""
-
-    async def close(self, *, code: int = 1000, message: bytes = b"") -> bool:
-        """
-        Close the connection.
-
-            code: The close code to use
-            message: A message to send within the close
-        """
-        return await super().close(code=code, message=message)
-
-
 class HTTPClient(
     BotRequests,
     ChannelRequests,
@@ -232,7 +216,7 @@ class HTTPClient(
         returns:
             The currently logged in bot's data
         """
-        self.__session = ClientSession(connector=self.connector, ws_response_class=DiscordClientWebSocketResponse)
+        self.__session = ClientSession(connector=self.connector)
         self.token = token
         try:
             return await self.request(Route("GET", "/users/@me"))

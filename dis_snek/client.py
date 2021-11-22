@@ -294,28 +294,24 @@ class Snake(
 
     async def _ws_connect(self):
         params = {
-            "http": self.http,
-            "dispatch": self.dispatch,
-            "intents": self.intents,
-            "resume": False,
             "session_id": None,
             "sequence": None,
             "presence": {"status": self._status, "activities": [self._activity.to_dict()] if self._activity else []},
         }
         while not self.is_closed:
-            log.info(f"Attempting to {'re' if params['resume'] else ''}connect to gateway...")
+            log.info(f"Attempting to {'re' if params['session_id'] else ''}connect to gateway...")
 
             try:
-                self.ws = await WebsocketClient.connect(**params)
+                self.ws = await WebsocketClient.connect(self, **params)
 
                 await self.ws.run()
             except WebSocketRestart as ex:
                 # internally requested restart
                 self.dispatch(events.Disconnect())
                 if ex.resume:
-                    params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                    params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
                     continue
-                params.update(resume=False, session_id=None, sequence=None)
+                params.update(session_id=None, sequence=None)
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
                 log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
@@ -325,7 +321,7 @@ class Snake(
                     if ex.code == 1000:
                         if self._ready:
                             # the bot disconnected, attempt to reconnect to gateway
-                            params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                            params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
                             continue
                         else:
                             return
@@ -341,14 +337,14 @@ class Snake(
 
                 if isinstance(ex, OSError) and ex.errno in (54, 10054):
                     print("should reconnect")
-                    params.update(resume=True, session_id=self.ws.session_id, sequence=self.ws.sequence)
+                    params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
                     continue
-                params.update(resume=False, session_id=None, sequence=None)
+                params.update(session_id=None, sequence=None)
 
             except Exception as e:
                 self.dispatch(events.Disconnect())
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-                params.update(resume=False, session_id=None, sequence=None)
+                params.update(session_id=None, sequence=None)
 
             await asyncio.sleep(5)
 
