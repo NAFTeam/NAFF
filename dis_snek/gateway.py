@@ -272,7 +272,7 @@ class WebsocketClient:
                 return await self.resume()
             elif op == OPCODE.HEARTBEAT_ACK:
                 return self._keep_alive.ack()
-            elif op in (OPCODE.INVALIDATE_SESSION | OPCODE.RECONNECT):
+            elif op in (OPCODE.INVALIDATE_SESSION, OPCODE.RECONNECT):
                 log.debug(f"Reconnecting to discord due to opcode {op}::{OPCODE(op).name}")
                 if data is True or op == OPCODE.RECONNECT:
                     await self.close(code=1001)
