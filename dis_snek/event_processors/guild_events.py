@@ -20,6 +20,10 @@ class GuildEvents(EventMixinTemplate):
             event: raw guild create event
         """
         guild = self.cache.place_guild_data(event.data)
+        if self.fetch_members:  # noqa
+            # delays events until chunking has completed
+            await guild.chunk_guild()
+
         self._guild_event.set()
 
         self.dispatch(events.GuildJoin(guild))

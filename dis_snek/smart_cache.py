@@ -158,6 +158,10 @@ class GlobalCache:
             member.update_from_dict(data)
 
         self.place_user_guild(user_id, guild_id)
+        guild = self.guild_cache.get(guild_id)
+        if guild:
+            # todo: this is slow, find a faster way
+            guild._member_ids.add(user_id)  # noqa
         return member
 
     def place_user_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> None:

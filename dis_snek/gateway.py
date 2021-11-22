@@ -9,13 +9,14 @@ import sys
 import threading
 import time
 import zlib
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional, TYPE_CHECKING
 
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name, MISSING
 from dis_snek.errors import WebSocketClosed, WebSocketRestart
-from dis_snek.models import events, Snowflake_Type, CooldownSystem
+from dis_snek.models import events, Snowflake_Type, CooldownSystem, to_snowflake
 from dis_snek.models.enums import Status
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
 from dis_snek.utils.input_utils import OverriddenJson
@@ -129,6 +130,7 @@ class WebsocketClient:
         "_zlib",
         "_max_heartbeat_timeout",
         "_trace",
+        "_thread_pool",
     )
 
     def __init__(self, session_id: Optional[int] = None, sequence: Optional[int] = None) -> None:
@@ -141,6 +143,7 @@ class WebsocketClient:
 
         self._max_heartbeat_timeout = 120
         self.rl_manager = GatewayRateLimit()
+        self._thread_pool = ThreadPoolExecutor(max_workers=2)
 
         self._trace = []
 
@@ -246,9 +249,9 @@ class WebsocketClient:
 
             msg = msg.decode("utf-8")
             msg = OverriddenJson.loads(msg)
-            log.debug(f"Websocket Event: {msg}")
+            # log.debug(f"Websocket Event: {msg}")
 
-            self.loop.create_task(self._dispatch(msg))
+            await self._dispatch(msg)
         await self.close()
 
     async def _dispatch(self, msg: dict):
@@ -291,6 +294,9 @@ class WebsocketClient:
                 return
             elif event == "RESUMED":
                 log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
+            elif event == "GUILD_MEMBERS_CHUNK":
+                # await self.loop.run_in_executor(self._thread_pool, self._process_member_chunk, data)
+                await self._process_member_chunk(data)
             else:
                 self._dispatch_soon(msg, "raw_socket_receive")
             self._dispatch_soon(data, f"raw_{event.lower()}")
@@ -358,7 +364,7 @@ class WebsocketClient:
         await self.send_json({"op": OPCODE.PRESENCE, "d": payload})
 
     async def request_member_chunks(
-        self, guild_id: Snowflake_Type, query=None, *, limit, user_ids=None, presences=False, nonce=None
+        self, guild_id: Snowflake_Type, query="", *, limit, user_ids=None, presences=False, nonce=None
     ):
         payload = {
             "op": OPCODE.REQUEST_MEMBERS,
@@ -374,3 +380,26 @@ class WebsocketClient:
             ),
         }
         await self.send_json(payload)
+
+    async def _process_member_chunk(self, chunk: dict):
+
+        g_id = to_snowflake(chunk.get("guild_id"))
+        log.debug(f"Processing chunk of {len(chunk.get('members'))} members for {g_id}")
+        data = {}
+
+        s = time.monotonic()
+
+        for i, member in enumerate(chunk.get("members")):
+            self.client.cache.place_member_data(g_id, member)
+            if (time.monotonic() - s) > 0.03:
+                # look, i get this *could* be a thread, but because it needs to modify data in the main thread,
+                # it is still blocking. So by periodically yielding to the event loop, we can avoid blocking, and still
+                # process this data properly
+                await asyncio.sleep(0)
+                s = time.monotonic()
+
+        if chunk.get("chunk_index") == chunk.get("chunk_count") - 1:
+            # if we have all expected chunks, mark the guild as "chunked"
+            log.info(f"chunked {g_id}")
+            guild = self.client.cache.guild_cache.get(g_id)
+            guild.chunked.set()

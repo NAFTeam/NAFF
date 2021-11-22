@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from io import IOBase
 from typing import TYPE_CHECKING, List, Optional, Union
 
@@ -5,7 +7,7 @@ import attr
 from aiohttp import FormData
 from attr.converters import optional
 
-from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS
+from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
@@ -44,6 +46,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
+
+log = logging.getLogger(logger_name)
 
 
 @define()
@@ -164,12 +168,14 @@ class Guild(BaseGuild):
     """The guild NSFW level."""
     stage_instances: List[dict] = attr.ib(factory=list)  # TODO stage instance objects
     """Stage instances in the guild."""
+    chunked = attr.ib(factory=asyncio.Event)
+    """An event that is fired when this guild has been chunked"""
 
     _owner_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    _channel_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _thread_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    _channel_ids: List["Snowflake_Type"] = attr.ib(factory=set)
+    _thread_ids: List["Snowflake_Type"] = attr.ib(factory=set)
+    _member_ids: List["Snowflake_Type"] = attr.ib(factory=set)
+    _role_ids: List["Snowflake_Type"] = attr.ib(factory=set)
 
     @classmethod
     def _process_dict(cls, data, client):
@@ -179,16 +185,18 @@ class Guild(BaseGuild):
         channels_data = data.pop("channels", [])
         for c in channels_data:
             c["guild_id"] = guild_id
-        data["channel_ids"] = [client.cache.place_channel_data(channel_data).id for channel_data in channels_data]
+        data["channel_ids"] = set(client.cache.place_channel_data(channel_data).id for channel_data in channels_data)
 
         threads_data = data.pop("threads", [])
-        data["thread_ids"] = [client.cache.place_channel_data(thread_data).id for thread_data in threads_data]
+        data["thread_ids"] = set(client.cache.place_channel_data(thread_data).id for thread_data in threads_data)
 
         members_data = data.pop("members", [])
-        data["member_ids"] = [client.cache.place_member_data(guild_id, member_data).id for member_data in members_data]
+        data["member_ids"] = set(
+            client.cache.place_member_data(guild_id, member_data).id for member_data in members_data
+        )
 
         roles_data = data.pop("roles", [])
-        data["role_ids"] = list(client.cache.place_role_data(guild_id, roles_data).keys())
+        data["role_ids"] = set(client.cache.place_role_data(guild_id, roles_data).keys())
 
         return data
 
@@ -283,6 +291,18 @@ class Guild(BaseGuild):
 
     def is_owner(self, member: "Member") -> bool:
         return self._owner_id == member.id
+
+    async def chunk_guild(self, wait=True, presences=False):
+        """
+        Trigger a gateway `get_members` event, populating this object with members
+
+        Args:
+            wait: Wait for chunking to be completed before continuing
+            presences: Do you need presence data for members?
+        """
+        await self._client.ws.request_member_chunks(self.id, limit=0, presences=presences)
+        if wait:
+            await self.chunked.wait()
 
     async def edit(
         self,
