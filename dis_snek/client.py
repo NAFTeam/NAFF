@@ -130,7 +130,6 @@ class Snake(
         activity: Union[Activity, str] = None,
         **kwargs,
     ):
-
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
 
         # Configuration
@@ -174,6 +173,9 @@ class Snake(
         """The DateTime the bot started at"""
         self.enforce_interaction_perms = enforce_interaction_perms
         self.fetch_members = fetch_members
+        """Fetch the full members list of all guilds on startup"""
+        if self.fetch_members:
+            log.warning("fetch_members enabled; startup will be delayed")
 
         self._mention_reg = MISSING
 
@@ -197,11 +199,14 @@ class Snake(
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
+        self.processors: Dict[str, Callable[..., Coroutine]] = {}
         self.__extensions = {}
         self.scales = {}
         """A dictionary of mounted Scales"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
+
+        super().__init__()
 
     @property
     def is_closed(self) -> bool:
@@ -308,48 +313,40 @@ class Snake(
             try:
                 self.ws = await WebsocketClient.connect(self, **params)
 
-                await self.ws.run()
-            except WebSocketRestart as ex:
-                # internally requested restart
-                self.dispatch(events.Disconnect())
-                if ex.resume:
-                    params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
-                    continue
-                params.update(session_id=None, sequence=None)
+                try:
+                    await self.ws.run()
+                    # wait for websocket to report it has closed
+                    await self.ws.closed.wait()
+                finally:
+                    if not self.ws.closed.is_set():
+                        await self.ws.close()
+                    self.dispatch(events.Disconnect())
 
-            except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError, WebSocketClosed) as ex:
+            except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError) as ex:
                 log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
-                self.dispatch(events.Disconnect())
 
-                if isinstance(ex, WebSocketClosed):
-                    if ex.code == 1000:
-                        if self._ready:
-                            # the bot disconnected, attempt to reconnect to gateway
-                            params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
-                            continue
-                        else:
-                            return
-                    elif ex.code == 4011:
-                        raise SnakeException("Your bot is too large, you must use shards") from None
-                    elif ex.code == 4013:
-                        raise SnakeException("Invalid Intents have been passed") from None
-                    elif ex.code == 4014:
-                        raise SnakeException(
-                            "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
-                        ) from None
-                    raise
-
-                if isinstance(ex, OSError) and ex.errno in (54, 10054):
-                    print("should reconnect")
-                    params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
-                    continue
-                params.update(session_id=None, sequence=None)
+            except WebSocketClosed as ex:
+                if ex.code == 4011:
+                    raise SnakeException("Your bot is too large, you must use shards") from None
+                elif ex.code == 4013:
+                    raise SnakeException(f"Invalid Intents have been passed: {self.intents}") from None
+                elif ex.code == 4014:
+                    raise SnakeException(
+                        "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
+                    ) from None
+                raise
 
             except Exception as e:
                 self.dispatch(events.Disconnect())
                 log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-                params.update(session_id=None, sequence=None)
 
+            if self.ws.shutdown:
+                return
+            elif self.ws.resume:
+                params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
+                continue
+            else:
+                params.update(session_id=None, sequence=None)
             await asyncio.sleep(5)
 
     def _queue_task(self, coro, event, *args, **kwargs):
@@ -464,6 +461,13 @@ class Snake(
         while True:
             try:  # wait to let guilds cache
                 await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+                if self.fetch_members:
+                    # ensure all guilds have completed chunking
+                    for guild in self.guilds:
+                        if guild and not guild.chunked.is_set():
+                            log.debug(f"Waiting for {guild.id} to chunk")
+                            await guild.chunked.wait()
+
             except asyncio.TimeoutError:
                 log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
                 break
@@ -502,7 +506,7 @@ class Snake(
         log.debug("Stopping the bot.")
         self._ready.clear()
         self._startup = False
-        await self.ws.close(1001)
+        await self.ws.close(shutdown=True)
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """
@@ -615,6 +619,18 @@ class Snake(
             listener = listen(event_name)(coro)
             self.add_listener(listener)
             return listener
+
+        return wrapper
+
+    def add_event_processor(self, event_name: str = MISSING) -> Callable[..., Coroutine]:
+        def wrapper(coro: Callable[..., Coroutine]):
+            name = event_name
+            if name is MISSING:
+                name = coro.__name__
+            name = name.lstrip("_")
+            name = name.removeprefix("on_")
+            self.processors[name] = coro
+            return coro
 
         return wrapper
 

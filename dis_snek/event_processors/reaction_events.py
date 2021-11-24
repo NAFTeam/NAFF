@@ -1,7 +1,7 @@
 import logging
 
 from dis_snek.const import logger_name
-from dis_snek.event_processors._template import EventMixinTemplate
+from dis_snek.event_processors._template import EventMixinTemplate, Processor
 from dis_snek.models import listen, events, Emoji, Reaction
 from dis_snek.models.events import RawGatewayEvent
 
@@ -9,7 +9,7 @@ log = logging.getLogger(logger_name)
 
 
 class ReactionEvents(EventMixinTemplate):
-    @listen()
+    @Processor.define()
     async def _on_raw_message_reaction_add(self, event: RawGatewayEvent) -> None:
         add = event.override_name == "raw_message_reaction_add"
 
@@ -60,11 +60,11 @@ class ReactionEvents(EventMixinTemplate):
         else:
             self.dispatch(events.MessageReactionRemove(message=message, emoji=emoji, author=author))
 
-    @listen()
+    @Processor.define()
     async def _on_raw_message_reaction_remove(self, event: RawGatewayEvent) -> None:
-        await self._on_raw_message_reaction_add(event)
+        await self._on_raw_message_reaction_add.callback(self, event)
 
-    @listen()
+    @Processor.define()
     async def _on_raw_message_reaction_remove_all(self, event: RawGatewayEvent) -> None:
         self.dispatch(
             events.MessageReactionRemoveAll(

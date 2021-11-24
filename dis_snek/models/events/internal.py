@@ -89,8 +89,11 @@ class Ready(BaseEvent):
     """
 
 
+@attr.s(slots=True)
 class WebsocketReady(BaseEvent):
     """The gateway has reported that it is ready"""
+
+    data: dict = attr.ib(metadata=docs("The data from the ready event"))
 
 
 @attr.s(slots=True)

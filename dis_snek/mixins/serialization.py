@@ -1,3 +1,5 @@
+import inspect
+
 from dis_snek.const import kwarg_spam
 from dis_snek.utils.serializer import to_dict
 from typing import Any, Dict, List
@@ -48,6 +50,10 @@ class DictSerializationMixin:
         parameters:
             data: The json data received from discord api.
         """
+        if inspect.iscoroutinefunction:
+            data = cls._process_dict(data)
+        else:
+            data = cls._process_dict(data)
         data = cls._process_dict(data)
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 
