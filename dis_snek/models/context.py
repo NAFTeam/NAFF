@@ -89,11 +89,11 @@ class Context:
     message: "Message" = attr.ib(default=None, metadata=docs("The message associated with this context"))
 
     @property
-    def guild(self):
+    def guild(self) -> Optional[Guild]:
         return self._client.cache.guild_cache.get(self.guild_id)
 
     @property
-    def bot(self):
+    def bot(self) -> Snake:
         """A reference to the bot instance"""
         return self._client
 
@@ -156,10 +156,6 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         Should you attach a component (ie. button) to the ephemeral message,
         you will be able to edit it when responding to a button interaction.
     """
-
-    @property
-    def guild(self):
-        return self._client.cache.guild_cache.get(self.guild_id)
 
     async def defer(self, ephemeral=False) -> None:
         """
@@ -404,7 +400,7 @@ class MessageContext(Context, SendMixin):
         return new_cls
 
     @property
-    def content_parameters(self):
+    def content_parameters(self) -> str:
         return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:

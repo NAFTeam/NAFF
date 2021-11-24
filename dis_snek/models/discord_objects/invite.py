@@ -13,6 +13,7 @@ from dis_snek.utils.converters import timestamp_converter
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models import TYPE_GUILD_CHANNEL
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.discord_objects.channel import BaseChannel
@@ -57,20 +58,20 @@ class Invite(ClientObject):
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
 
     @property
-    def guild(self):
+    def guild(self) -> "Guild":
         """the guild of the invite"""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
-    def channel(self):
+    def channel(self) -> "TYPE_GUILD_CHANNEL":
         """the channel the invite is for"""
         return self._client.cache.channel_cache.get(self._channel_id)
 
-    def inviter(self):
+    def inviter(self) -> "Member":
         """the user that created the invite"""
         return self._client.cache.guild_cache.get(self._inviter_id) if self._inviter_id else None
 
-    def target_user(self):
+    def target_user(self) -> "Member":
         """the user whose stream to display for this voice channel stream invite"""
         return self._client.cache.guild_cache.get(self._target_user_id) if self._inviter_id else None
 
@@ -84,5 +85,5 @@ class Invite(ClientObject):
         return data
 
     @property
-    def link(self):
+    def link(self) -> str:
         return f"https://discord.gg/{self.code}"

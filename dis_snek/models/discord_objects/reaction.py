@@ -14,6 +14,7 @@ from dis_snek.utils.attr_utils import define
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models import Message, TYPE_ALL_CHANNEL
     from dis_snek.models.discord_objects.user import BaseUser
 
 
@@ -69,11 +70,11 @@ class Reaction(ClientObject):
         return ReactionUsers(self, limit, after)
 
     @property
-    def message(self):
+    def message(self) -> "Message":
         return self._client.cache.message_cache.get((self._channel_id, self._message_id))
 
     @property
-    def channel(self):
+    def channel(self) -> "TYPE_ALL_CHANNEL":
         return self._client.cache.channel_cache.get(self._channel_id)
 
     async def remove(self):

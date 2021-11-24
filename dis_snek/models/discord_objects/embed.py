@@ -71,7 +71,7 @@ class EmbedAttachment:  # thumbnail or image or video
     width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
 
     @property
-    def size(self):
+    def size(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
 
 
