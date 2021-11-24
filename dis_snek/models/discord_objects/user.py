@@ -426,7 +426,7 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             reason: The reason for this removal
         """
-        return await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
+        return await self._client.http.remove_guild_member(self._guild_id, self.id)
 
     async def ban(self, delete_message_days=0, reason: str = MISSING):
         """
