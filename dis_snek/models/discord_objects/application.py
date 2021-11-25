@@ -12,6 +12,7 @@ from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models import User
 
 
 @attr.s(slots=True, kw_only=True)
@@ -71,5 +72,5 @@ class Application(DiscordObject):
         return data
 
     @property
-    def owner(self):
+    def owner(self) -> "User":
         return self._client.cache.user_cache.get(self.owner_id)

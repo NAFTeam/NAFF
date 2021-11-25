@@ -228,7 +228,7 @@ class Member(DiscordObject, _SendDMMixin):
         return super().update_from_dict(data)
 
     @property
-    def user(self):
+    def user(self) -> "User":
         """Returns this member's user object"""
         return self._client.cache.user_cache.get(self.id)
 
@@ -250,7 +250,7 @@ class Member(DiscordObject, _SendDMMixin):
         super(Member, self).__setattr__(key, value)
 
     @property
-    def nickname(self):
+    def nickname(self) -> str:
         """alias for nick"""
         return self.nick
 
@@ -276,7 +276,7 @@ class Member(DiscordObject, _SendDMMixin):
         return self.nickname or self.username
 
     @property
-    def display_avatar(self):
+    def display_avatar(self) -> "Asset":
         """The users displayed avatar, will return `guild_avatar` if one is set, otherwise will return user avatar"""
         return self.guild_avatar or self.user.avatar
 

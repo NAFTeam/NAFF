@@ -36,6 +36,7 @@ from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models import TYPE_THREAD_CHANNEL
     from dis_snek.models.discord_objects.application import Application
     from dis_snek.models.discord_objects.channel import TextChannel, Thread, GuildText
     from dis_snek.models.discord_objects.components import ActionRow
@@ -57,7 +58,7 @@ class Attachment(DiscordObject):
     width: Optional[int] = attr.ib(default=None)
 
     @property
-    def size(self):
+    def size(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
 
 
@@ -384,7 +385,7 @@ class Message(DiscordObject):
         name: str,
         auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
         reason: Optional[str] = None,
-    ):
+    ) -> "TYPE_THREAD_CHANNEL":
         """
         Create a thread from this message
 

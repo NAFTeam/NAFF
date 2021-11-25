@@ -619,7 +619,7 @@ class GuildChannel(BaseChannel):
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
-    def category(self):
+    def category(self) -> "GuildCategory":
         return self._client.cache.channel_cache.get(self.parent_id)
 
     @classmethod
@@ -889,7 +889,7 @@ class GuildStageVoice(GuildVoice):
 
     # todo: Listeners and speakers properties (needs voice state caching)
 
-    async def get_stage_instance(self):
+    async def get_stage_instance(self) -> StageInstance:
         """Gets the stage instance associated with this channel. If no stage is live, will return None."""
         self.stage_instance = StageInstance.from_dict(await self._client.http.get_stage_instance(self.id), self._client)
         return self.stage_instance
@@ -899,7 +899,7 @@ class GuildStageVoice(GuildVoice):
         topic: str,
         privacy_level: StagePrivacyLevel = StagePrivacyLevel.GUILD_ONLY,
         reason: Optional[str] = MISSING,
-    ):
+    ) -> StageInstance:
         """
         Create a stage instance in this channel.
 
