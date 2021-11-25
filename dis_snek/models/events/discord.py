@@ -368,7 +368,7 @@ class PresenceUpdate(BaseEvent):
     """The user in question"""
     status: str = attr.ib()
     """'Either `idle`, `dnd`, `online`, or `offline`'"""
-    activities: List['Activity'] = attr.ib()
+    activities: List["Activity"] = attr.ib()
     """The users current activities"""
     client_status: dict = attr.ib()
     """What platform the user is reported as being on"""
