@@ -93,7 +93,7 @@ class Context:
         return self._client.cache.guild_cache.get(self.guild_id)
 
     @property
-    def bot(self) -> Snake:
+    def bot(self) -> "Snake":
         """A reference to the bot instance"""
         return self._client
 
