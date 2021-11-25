@@ -16,7 +16,6 @@ from dis_snek.errors import (
     GatewayNotFound,
     SnakeException,
     WebSocketClosed,
-    WebSocketRestart,
     BotException,
     ScaleLoadException,
     ExtensionLoadException,
@@ -352,7 +351,8 @@ class Snake(
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):
             try:
-                if len(_event.__attrs_attrs__) == 1:
+                if len(_event.__attrs_attrs__) == 2:
+                    # override_name & bot
                     await _coro()
                 else:
                     await _coro(_event, *_args, **_kwargs)
@@ -517,6 +517,7 @@ class Snake(
         """
         log.debug(f"Dispatching Event: {event.resolved_name}")
         listeners = self.listeners.get(event.resolved_name, [])
+        event.bot = self
         for _listen in listeners:
             try:
                 self._queue_task(_listen, event, *args, **kwargs)
