@@ -11,7 +11,6 @@ import time
 import zlib
 from typing import Any, List, Optional, TYPE_CHECKING
 
-import anyio
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name, MISSING
@@ -163,8 +162,6 @@ class WebsocketClient:
         self.closed = asyncio.Event()
         self.resume = False
         self.shutdown = False
-
-        self.processors = anyio.create_task_group()
 
     @property
     def loop(self):
