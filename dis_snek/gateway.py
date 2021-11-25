@@ -241,9 +241,6 @@ class WebsocketClient:
     async def run(self) -> None:
         """Start receiving events from the websocket."""
         while not self.client.is_closed:
-            if (len(self.ws._reader._buffer)) > 30:
-                print(len(self.ws._reader._buffer))
-
             resp = await self.ws.receive()
             msg = resp.data
 
