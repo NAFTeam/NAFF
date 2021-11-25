@@ -89,7 +89,7 @@ class Role(DiscordObject):
             return True
         return False
 
-    async def delete(self, reason: str = None):
+    async def delete(self, reason: str = None) -> None:
         """
         Delete this role
 
