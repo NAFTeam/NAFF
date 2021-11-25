@@ -2,7 +2,7 @@ import logging
 
 from dis_snek.const import logger_name
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import listen, events, Invite
+from dis_snek.models import events, Invite
 from dis_snek.models.events import RawGatewayEvent
 from dis_snek.utils.converters import timestamp_converter
 

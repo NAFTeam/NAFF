@@ -8,11 +8,10 @@ import random
 import sys
 import threading
 import time
-import anyio
 import zlib
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional, TYPE_CHECKING
 
+import anyio
 from aiohttp import WSMsgType
 
 from dis_snek.const import logger_name, MISSING

@@ -2,7 +2,7 @@ import logging
 
 from dis_snek.const import logger_name
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import listen, events, StageInstance
+from dis_snek.models import events, StageInstance
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)

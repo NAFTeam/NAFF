@@ -3,7 +3,7 @@ from typing import Union
 
 from dis_snek.const import logger_name
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import listen, events, User, Member, BaseChannel, Timestamp, to_snowflake, Activity
+from dis_snek.models import events, User, Member, BaseChannel, Timestamp, to_snowflake, Activity
 from dis_snek.models.enums import Status
 from dis_snek.models.events import RawGatewayEvent
 

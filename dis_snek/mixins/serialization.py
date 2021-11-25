@@ -1,9 +1,10 @@
 import inspect
+from typing import Any, Dict, List
+
+import attr
 
 from dis_snek.const import kwarg_spam
 from dis_snek.utils.serializer import to_dict
-from typing import Any, Dict, List
-import attr
 
 
 @attr.s()
