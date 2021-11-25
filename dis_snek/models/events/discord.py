@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
     from dis_snek.models.snowflake import Snowflake_Type
+    from dis_snek.models.discord_objects.activity import Activity
     from dis_snek.models.discord_objects.emoji import Emoji
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
@@ -367,7 +368,7 @@ class PresenceUpdate(BaseEvent):
     """The user in question"""
     status: str = attr.ib()
     """'Either `idle`, `dnd`, `online`, or `offline`'"""
-    activities: List = attr.ib()
+    activities: List['Activity'] = attr.ib()
     """The users current activities"""
     client_status: dict = attr.ib()
     """What platform the user is reported as being on"""
