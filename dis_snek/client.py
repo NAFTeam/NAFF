@@ -740,52 +740,46 @@ class Snake(
         """Get all interactions used by this bot and cache them."""
         bot_scopes = set(g.id for g in self.cache.guild_cache.values())
         bot_scopes.add(GLOBAL_SCOPE)
+        req_lock = asyncio.Lock()
 
-        # Match all interaction is registered with discord's data.
-        for scope in self.interactions:
-            bot_scopes.discard(scope)
+        async def wrap(*args, **kwargs):
+            async with req_lock:
+                # throttle this
+                await asyncio.sleep(0.1)
             try:
-                remote_cmds = await self.http.get_application_commands(self.app.id, scope)
-            except Forbidden as e:
-                raise InteractionMissingAccess(scope) from None
-
-            remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
-            found = set()  # this is a temporary hack to fix subcommand detection
-            for cmd in self.interactions[scope].values():
-                cmd_data = remote_cmds.get(cmd.name, MISSING)
-                if cmd_data is MISSING:
-                    if cmd.name not in found:
-                        if warn_missing:
-                            log.error(
-                                f'Detected yet to sync slash command "/{cmd.name}" for scope '
-                                f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                            )
-                    continue
-                else:
-                    found.add(cmd.name)
-
-                self._interaction_scopes[str(cmd_data["id"])] = scope
-                cmd.cmd_id[scope] = to_snowflake(cmd_data["id"])
-
-            if warn_missing:
-                for cmd_data in remote_cmds.values():
-                    log.error(
-                        f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
-                        f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                    )
-
-        # Remaining guilds that bot is in but, no interaction is registered
-        for scope in bot_scopes:
-            try:
-                remote_cmds = await self.http.get_application_commands(self.user.id, scope)
+                return await self.http.get_interaction_element(*args, **kwargs)
             except Forbidden:
-                # We will just assume they don't want application commands in this guild.
+                return MISSING
+
+        results = await asyncio.gather(*[wrap(self.app.id, scope) for scope in bot_scopes])
+        results = dict(zip(bot_scopes, results))
+
+        for scope, remote_cmds in results.items():
+            if remote_cmds == MISSING:
                 log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
                 continue
 
-            for cmd_data in remote_cmds:
-                self._interaction_scopes[str(cmd_data["id"])] = scope
-                if warn_missing:
+            remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
+            found = set()  # this is a temporary hack to fix subcommand detection
+            if scope in self.interactions:
+                for cmd in self.interactions[scope].values():
+                    cmd_data = remote_cmds.get(cmd.name, MISSING)
+                    if cmd_data is MISSING:
+                        if cmd.name not in found:
+                            if warn_missing:
+                                log.error(
+                                    f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                                    f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                                )
+                        continue
+                    else:
+                        found.add(cmd.name)
+
+                    self._interaction_scopes[str(cmd_data["id"])] = scope
+                    cmd.cmd_id = str(cmd_data["id"])
+
+            if warn_missing:
+                for cmd_data in remote_cmds.values():
                     log.error(
                         f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
