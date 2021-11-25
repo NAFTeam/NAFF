@@ -5,7 +5,7 @@ from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate
 from dis_snek.models import listen, events, GuildIntegration
 from dis_snek.models.events import RawGatewayEvent
-from dis_snek.models.events.discord import IntegrationCreate, IntegrationDelete, BanCreate, BanRemove
+from dis_snek.models.events.discord import IntegrationCreate, IntegrationUpdate, IntegrationDelete, BanCreate, BanRemove
 
 log = logging.getLogger(logger_name)
 
