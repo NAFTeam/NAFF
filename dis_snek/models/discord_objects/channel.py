@@ -417,7 +417,7 @@ class ThreadableMixin:
 
     async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
         """
-        Get a `ThreadList` of **public** threads available in this channel.
+        Get a `ThreadList` of archived **public** threads available in this channel.
 
         Args:
             limit: optional maximum number of threads to return
@@ -431,7 +431,7 @@ class ThreadableMixin:
 
     async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
         """
-        Get a `ThreadList` of **private** threads available in this channel.
+        Get a `ThreadList` of archived **private** threads available in this channel.
 
         Args:
             limit: optional maximum number of threads to return
@@ -439,6 +439,23 @@ class ThreadableMixin:
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
+        )
+        threads_data["id"] = self.id
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+        """
+        Get a `ThreadList` of archived threads available in this channel.
+
+        Args:
+            limit: optional maximum number of threads to return
+            before: Returns threads before this timestamp
+        """
+        threads_data = await self._client.http.list_private_archived_threads(
+            channel_id=self.id, limit=limit, before=before
+        )
+        threads_data.update(
+            await self._client.http.list_public_archived_threads(channel_id=self.id, limit=limit, before=before)
         )
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
@@ -458,12 +475,41 @@ class ThreadableMixin:
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
-    async def get_active_threads(self) -> List["TYPE_THREAD_CHANNEL"]:
+    async def get_active_threads(self) -> ThreadList:
         """Returns all active threads in the channel, including public and private threads"""
-        raw_threads = await self.guild.get_active_threads()
-        if hasattr(raw_threads, "threads"):
-            return [t for t in raw_threads.threads if t.parent_channel.id == self.id]
-        return []
+
+        threads_data = await self._client.http.list_active_threads(guild_id=self.guild.id)
+
+        # delete the items where the channel_id does not match
+        removed_thread_ids = []
+        cleaned_threads_data_threads = []
+        for thread in threads_data["threads"]:
+            if thread["parent_id"] == str(self.id):
+                cleaned_threads_data_threads.append(thread)
+            else:
+                removed_thread_ids.append(thread["id"])
+        threads_data["threads"] = cleaned_threads_data_threads
+
+        # delete the member data which is not needed
+        cleaned_member_data_threads = []
+        for thread_member in threads_data["members"]:
+            if thread_member["id"] not in removed_thread_ids:
+                cleaned_member_data_threads.append(thread_member)
+        threads_data["members"] = cleaned_member_data_threads
+
+        return ThreadList.from_dict(threads_data, self._client)
+
+    async def get_all_threads(self) -> ThreadList:
+        """Returns all threads in the channel. Active and archived, including public and private threads"""
+
+        threads = await self.get_active_threads()
+
+        # update that data with the archived threads
+        archived_threads = await self.get_archived_threads()
+        threads.threads.extend(archived_threads.threads)
+        threads.members.extend(archived_threads.members)
+
+        return threads
 
 
 @define(slots=False)
