@@ -30,6 +30,6 @@ Of course, you can contribute to this project by submitting a pull-request here.
 
 ## Links:
 
-- Support Server: https://discord.gg/NTSHu97tHg
+- Support Server: https://discord.gg/dis-snek
 - Documentation:  https://dis-snek.rtfd.io/
 - Trello: https://trello.com/b/LVjnmYKt/dev-board

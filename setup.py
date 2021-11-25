@@ -24,7 +24,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     project_urls={
-        "Discord": "https://discord.gg/WCtUY2CRVu",
+        "Discord": "https://discord.gg/dis-snek",
         "Documentation": "https://dis-snek.readthedocs.io",
         "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },

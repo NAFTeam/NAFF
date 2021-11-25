@@ -1,1 +1,1 @@
-[:fontawesome-brands-discord:Discord Server](https://discord.gg/WCtUY2CRVu)
+[:fontawesome-brands-discord:Discord Server](https://discord.gg/dis-snek)
