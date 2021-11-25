@@ -89,7 +89,7 @@ class Context:
     message: "Message" = attr.ib(default=None, metadata=docs("The message associated with this context"))
 
     @property
-    def guild(self) -> Optional[Guild]:
+    def guild(self) -> Optional["Guild"]:
         return self._client.cache.guild_cache.get(self.guild_id)
 
     @property
