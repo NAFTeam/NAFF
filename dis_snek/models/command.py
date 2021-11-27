@@ -113,6 +113,11 @@ class BaseCommand(DictSerializationMixin):
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
+    async def try_convert(self, converter: Callable, context: "Context", value):
+        if converter is None:
+            return value
+        return await converter(context, value)
+
     async def call_callback(self, callback: Callable, context: "Context"):
         callback = functools.partial(callback, context)  # first param must be ctx
         parameters = get_parameters(callback)
@@ -124,9 +129,10 @@ class BaseCommand(DictSerializationMixin):
 
         c_args = copy.copy(context.args)
         for param in parameters.values():
+            convert = functools.partial(self.try_convert, getattr(param.annotation, "convert", None), context)
             if config := getattr(param.annotation, "_annotation_dat", None):
                 # if user has used an snek-annotation, run the annotation, and pass the result to the user
-                local = {"context": context, "scale": self.scale}
+                local = {"context": context, "scale": self.scale, "param": param.name}
                 ano_args = [local[c] for c in config["args"]]
                 if param.kind != param.POSITIONAL_ONLY:
                     kwargs[param.name] = param.annotation(*ano_args)
@@ -136,9 +142,9 @@ class BaseCommand(DictSerializationMixin):
             elif param.name in context.kwargs:
                 # if parameter is in kwargs, user obviously wants it, pass it
                 if param.kind != param.POSITIONAL_ONLY:
-                    kwargs[param.name] = context.kwargs[param.name]
+                    kwargs[param.name] = await convert(context.kwargs[param.name])
                 else:
-                    args.append(context.kwargs[param.name])
+                    args.append(await convert(context.kwargs[param.name]))
                 if context.kwargs[param.name] in c_args:
                     c_args.remove(context.kwargs[param.name])
             elif param.default is not param.empty:
@@ -147,7 +153,7 @@ class BaseCommand(DictSerializationMixin):
                 if not str(param).startswith("*"):
                     if param.kind != param.KEYWORD_ONLY:
                         try:
-                            args.append(c_args.pop(0))
+                            args.append(await convert(c_args.pop(0)))
                         except IndexError:
                             raise ValueError(
                                 f"{context.invoked_name} expects {len([p for p in parameters.values() if p.default is p.empty])+len(callback.args)}"
@@ -161,7 +167,7 @@ class BaseCommand(DictSerializationMixin):
             kwargs = kwargs | {k: v for k, v in context.kwargs.items() if k not in kwargs}
         if any(args_reg.match(str(param)) for param in parameters.values()):
             # user has `*args` pass all remaining args
-            args = args + c_args
+            args = args + [await convert(c) for c in c_args]
         return await callback(*args, **kwargs)
 
     async def _can_run(self, context):
