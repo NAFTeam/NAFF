@@ -11,7 +11,7 @@ from dis_snek.models.application_commands import CallbackTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 from dis_snek.utils.attr_utils import define, docs
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import to_optional_snowflake, to_snowflake
 from dis_snek.utils.input_utils import get_args
 
 if TYPE_CHECKING:
@@ -84,7 +84,7 @@ class Context:
     author: Union["Member", "User"] = attr.ib(default=None, metadata=docs("The author of the message"))
     channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None, metadata=docs("The channel this was sent within"))
     guild_id: "Snowflake_Type" = attr.ib(
-        default=None, converter=to_snowflake, metadata=docs("The guild this was sent within, if not a DM")
+        default=None, converter=to_optional_snowflake, metadata=docs("The guild this was sent within, if not a DM")
     )
     message: "Message" = attr.ib(default=None, metadata=docs("The message associated with this context"))
 
@@ -395,7 +395,7 @@ class MessageContext(Context, SendMixin):
             message=message,
             author=message.author,
             channel=message.channel,
-            guild_id=message.guild.id,
+            guild_id=message.guild.id if message.guild else None,
         )
         return new_cls
 
