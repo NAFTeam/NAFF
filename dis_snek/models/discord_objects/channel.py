@@ -415,7 +415,7 @@ class ThreadableMixin:
         )
         return self._client.cache.place_channel_data(thread_data)
 
-    async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+    async def get_public_archived_threads(self, limit: int = None, before: Union["Timestamp", None] = None) -> ThreadList:
         """
         Get a `ThreadList` of archived **public** threads available in this channel.
 
@@ -429,7 +429,7 @@ class ThreadableMixin:
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
-    async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+    async def get_private_archived_threads(self, limit: int = None, before: Union["Timestamp", None] = None) -> ThreadList:
         """
         Get a `ThreadList` of archived **private** threads available in this channel.
 
@@ -443,7 +443,7 @@ class ThreadableMixin:
         threads_data["id"] = self.id
         return ThreadList.from_dict(threads_data, self._client)
 
-    async def get_archived_threads(self, limit: int = None, before: Union["Timestamp"] = None) -> ThreadList:
+    async def get_archived_threads(self, limit: int = None, before: Union["Timestamp", None] = None) -> ThreadList:
         """
         Get a `ThreadList` of archived threads available in this channel.
 
@@ -461,7 +461,7 @@ class ThreadableMixin:
         return ThreadList.from_dict(threads_data, self._client)
 
     async def get_joined_private_archived_threads(
-        self, limit: int = None, before: Union["Timestamp"] = None
+        self, limit: int = None, before: Union["Timestamp", None] = None
     ) -> ThreadList:
         """
         Get a `ThreadList` of threads the bot is a participant of in this channel
@@ -578,7 +578,7 @@ class BaseChannel(DiscordObject):
         Returns:
 
         """
-        channel_data = self._client.http.modify_channel(self.id, payload, reason)
+        channel_data = await self._client.http.modify_channel(self.id, payload, reason)
         self.update_from_dict(channel_data)
 
     async def delete(self, reason: Optional[str] = MISSING) -> None:
