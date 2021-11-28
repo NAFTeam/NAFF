@@ -363,7 +363,7 @@ class DatabaseEntry():
     score: int
 
     @classmethod
-    def convert(cls, ctx: Context, value: str) -> DatabaseEntry:
+    async def convert(cls, ctx: Context, value: str) -> DatabaseEntry:
         """This is where the magic happens"""
         return cls(hypothetical_database.lookup(ctx.guild.id, value))
 
