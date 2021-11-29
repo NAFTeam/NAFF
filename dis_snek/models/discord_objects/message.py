@@ -27,7 +27,7 @@ from dis_snek.models.enums import (
     AutoArchiveDuration,
 )
 from dis_snek.models.file import File
-from dis_snek.models.snowflake import to_snowflake
+from dis_snek.models.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
@@ -127,9 +127,9 @@ class AllowedMentions:
 
     parse: Optional[List[str]] = attr.ib(factory=list)
     """An array of allowed mention types to parse from the content."""
-    roles: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
+    roles: Optional[List["Snowflake_Type"]] = attr.ib(factory=list, converter=to_snowflake_list)
     """Array of role_ids to mention. (Max size of 100)"""
-    users: Optional[List["Snowflake_Type"]] = attr.ib(factory=list)
+    users: Optional[List["Snowflake_Type"]] = attr.ib(factory=list, converter=to_snowflake_list)
     """Array of user_ids to mention. (Max size of 100)"""
     replied_user = attr.ib(default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
