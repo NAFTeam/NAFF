@@ -134,6 +134,12 @@ class AllowedMentions(DictSerializationMixin):
     replied_user = attr.ib(default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
+    def add_parse(self, *mention_types: Union["MentionTypes", str]):
+        for mention_type in mention_types:
+            if not isinstance(mention_type, MentionTypes) and mention_type not in MentionTypes.__members__.values():
+                raise ValueError(f"Invalid mention type: {mention_type}")
+            self.parse.append(mention_type)
+
     def add_roles(self, *roles: Union["Role", "Snowflake_Type"]):
         for role in roles:
             self.roles.append(to_snowflake(role))
