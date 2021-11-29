@@ -136,15 +136,11 @@ class AllowedMentions:
 
     def add_roles(self, *roles: Union["Role", "Snowflake_Type"]):
         for role in roles:
-            if isinstance(role, DiscordObject):
-                role = role.id
-            self.roles.append(role)
+            self.roles.append(to_snowflake(role))
 
     def add_users(self, *users: Union["Member", "BaseUser", "Snowflake_Type"]):
         for user in users:
-            if isinstance(user, DiscordObject):
-                user = user.id
-            self.users.append(user)
+            self.users.append(to_snowflake(user))
 
     def to_dict(self) -> dict:
         return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
