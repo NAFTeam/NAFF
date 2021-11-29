@@ -119,7 +119,7 @@ class MessageInteraction(DiscordObject):
 
 
 @attr.s(slots=True)
-class AllowedMentions:
+class AllowedMentions(DictSerializationMixin):
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
     This will always validate against message content to avoid phantom pings, and check against user/bot permissions.
@@ -141,9 +141,6 @@ class AllowedMentions:
     def add_users(self, *users: Union["Member", "BaseUser", "Snowflake_Type"]):
         for user in users:
             self.users.append(to_snowflake(user))
-
-    def to_dict(self) -> dict:
-        return attr.asdict(self, filter=lambda key, value: isinstance(value, bool) or value)
 
     @classmethod
     def all(cls):
