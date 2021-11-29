@@ -12,6 +12,7 @@ from dis_snek.const import MISSING
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
+from dis_snek.models.discord_objects.channel import GuildText
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
@@ -36,9 +37,8 @@ from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models import TYPE_THREAD_CHANNEL
     from dis_snek.models.discord_objects.application import Application
-    from dis_snek.models.discord_objects.channel import TextChannel, Thread, GuildText
+    from dis_snek.models.discord_objects.channel import TYPE_THREAD_CHANNEL, TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
@@ -195,8 +195,8 @@ class Message(DiscordObject):
     _referenced_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
 
-    channel: "TextChannel" = attr.ib(default=None)
-    thread: "Thread" = attr.ib(default=None)
+    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None)
+    thread: "TYPE_THREAD_CHANNEL" = attr.ib(default=None)
     guild: "Guild" = attr.ib(default=None)
     author: Union["Member", "User"] = attr.ib(default=None)
 
