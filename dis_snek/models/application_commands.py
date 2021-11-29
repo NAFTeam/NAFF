@@ -463,7 +463,7 @@ class ComponentCommand(InteractionCommand):
 
 def slash_command(
     name: str,
-    description: str = "No Description Set",
+    description: str = MISSING,
     scopes: List["Snowflake_Type"] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
@@ -501,13 +501,17 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
+        _description = description
+        if _description is MISSING:
+            _description = func.__doc__ if func.__doc__ else "No Description Set"
+
         cmd = SlashCommand(
             name=name,
             group_name=group_name,
             group_description=group_description,
             sub_cmd_name=sub_cmd_name,
             sub_cmd_description=sub_cmd_description,
-            description=description,
+            description=_description,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
             default_permission=default_permission,
             permissions=permissions or {},
