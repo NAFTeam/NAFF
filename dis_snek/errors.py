@@ -223,3 +223,7 @@ class InteractionMissingAccess(InteractionException):
             )
 
         super().__init__(err_msg)
+
+
+class ForeignWebhookException(SnakeException):
+    """Raised when you attempt to send using a webhook you did not create"""
