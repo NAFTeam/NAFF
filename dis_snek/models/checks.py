@@ -62,7 +62,7 @@ def is_owner():
     """
 
     async def check(ctx: Context) -> bool:
-        return ctx.author.id == ctx.bot.owner
+        return ctx.author.id == ctx.bot.owner.id
 
     return check
 
