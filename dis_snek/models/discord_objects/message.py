@@ -12,7 +12,7 @@ from dis_snek.const import MISSING
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
-from dis_snek.models.discord_objects.channel import GuildText
+
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
@@ -400,6 +400,9 @@ class Message(DiscordObject):
         Raises:
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
         """
+
+        # todo: This is a temp fix for circular imports. This should not remain
+        from dis_snek.models.discord_objects.channel import GuildText
 
         if not isinstance(await self.channel, GuildText):
             raise ThreadOutsideOfGuild()
