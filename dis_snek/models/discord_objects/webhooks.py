@@ -60,7 +60,7 @@ class Webhook(DiscordObject, SendMixin):
     """the default name of the webhook"""
     avatar: Optional[str] = attr.ib(default=None)
     """the default user avatar hash of the webhook"""
-    token: str = attr.ib()
+    token: str = attr.ib(default=MISSING)
     """the secure token of the webhook (returned for Incoming Webhooks)"""
     url: Optional[str] = attr.ib(default=None)
     """the url used for executing the webhook (returned by the webhooks OAuth2 flow)"""
@@ -120,6 +120,8 @@ class Webhook(DiscordObject, SendMixin):
         await self._client.http.delete_webhook(self.id, self.token)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+        if not self.token:
+            raise ForeignWebhookException("You cannot send messages with a webhook without a token!")
         wait = message_payload.pop("wait")
         return await self._client.http.execute_webhook(self.id, self.token, message_payload, wait)
 

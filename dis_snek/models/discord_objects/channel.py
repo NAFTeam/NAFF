@@ -537,6 +537,15 @@ class WebhookMixin:
         """
         return await webhook.delete()
 
+    async def get_webhooks(self) -> List[Webhook]:
+        """
+        Get all the webhooks for this channel
+        Returns:
+            List of webhooks
+        """
+        resp = await self._client.http.get_channel_webhooks(self.id)
+        return [Webhook.from_dict(d, self._client) for d in resp]
+
 
 @define(slots=False)
 class BaseChannel(DiscordObject):
