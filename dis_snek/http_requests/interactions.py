@@ -10,11 +10,11 @@ if TYPE_CHECKING:
 class InteractionRequests:
     request: Any
 
-    async def delete_interaction_element(
+    async def delete_application_command(
         self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type", command_id: "Snowflake_Type"
     ) -> None:
         """
-        Delete an existing interaction element for this application.
+        Delete an existing application command for this application.
 
         Attributes:
             application_id: the what application to delete for
@@ -27,9 +27,11 @@ class InteractionRequests:
             Route("DELETE", f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}")
         )
 
-    async def get_interaction_element(self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> List[Dict]:
+    async def get_application_commands(
+        self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type"
+    ) -> List[Dict]:
         """
-        Get all interaction elements for this application from discord.
+        Get all application commands for this application from discord.
 
         parameters:
             application_id: the what application to query
@@ -41,11 +43,11 @@ class InteractionRequests:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
-    async def post_interaction_element(
+    async def post_application_command(
         self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
     ):
         """
-        Register an interaction element.
+        Register an application command.
 
         parameters:
             app_id: The application ID of this bot

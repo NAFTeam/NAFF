@@ -5,6 +5,7 @@ import inspect
 import logging
 import re
 import sys
+import time
 import traceback
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
 
@@ -727,7 +728,7 @@ class Snake(
         for scope in self.interactions:
             bot_scopes.discard(scope)
             try:
-                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
+                remote_cmds = await self.http.get_application_commands(self.app.id, scope)
             except Forbidden as e:
                 raise InteractionMissingAccess(scope) from None
 
@@ -747,7 +748,7 @@ class Snake(
                     found.add(cmd.name)
 
                 self._interaction_scopes[str(cmd_data["id"])] = scope
-                cmd.cmd_id = str(cmd_data["id"])
+                cmd.cmd_id[scope] = to_snowflake(cmd_data["id"])
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
@@ -759,7 +760,7 @@ class Snake(
         # Remaining guilds that bot is in but, no interaction is registered
         for scope in bot_scopes:
             try:
-                remote_cmds = await self.http.get_interaction_element(self.user.id, scope)
+                remote_cmds = await self.http.get_application_commands(self.user.id, scope)
             except Forbidden:
                 # We will just assume they don't want application commands in this guild.
                 log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
@@ -774,72 +775,64 @@ class Snake(
                     )
 
     async def synchronise_interactions(self) -> None:
-        """Synchronise registered interactions with discord
-
-        One flaw of this is it cant determine if context menus need updating,
-        as discord isn't returning that data on get req, so they are unnecessarily updated"""
-
-        # first we need to make sure our local copy of cmd_ids is up-to-date
+        """Synchronise registered interactions with discord"""
+        s = time.perf_counter()
         await self._cache_interactions()
         cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
-
         guild_perms = {}
-
         cmds_json = application_commands_to_dict(self.interactions)
+        req_lock = asyncio.Lock()
 
-        for cmd_scope in cmd_scopes:
+        async def sync_scope(cmd_scope):
+            async with req_lock:
+                await asyncio.sleep(0.1)  # throttle this
+
+            need_sync = False  # whether to sync this scope
+            found = []  # commands where a remote equivalent has been found
+
             try:
-                cmds_resp_data = await self.http.get_interaction_element(self.user.id, cmd_scope)
-                need_to_sync = False
-                cmds_to_sync = []
-                found = []
+                try:
+                    remote_commands = await self.http.get_application_commands(self.app.id, cmd_scope)
+                except Forbidden:
+                    log.warning(f"Bot is lacking `application.commands` scope in {cmd_scope}!")
+                    return
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
-                    # try and find remote equiv of this command
-                    remote_cmd = next((v for v in cmds_resp_data if v["id"] == local_cmd.cmd_id), None)
+                    # get remote equivalent of this command
+                    remote_cmd = next(
+                        (v for v in remote_commands if to_snowflake(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
+                    )
+                    # get json representation of this command
+                    local_cmd_json = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
 
-                    local_cmd = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
-
-                    if local_cmd not in cmds_to_sync:
-                        cmds_to_sync.append(local_cmd)
-                    if remote_cmd not in found:
+                    if remote_cmd and remote_cmd not in found:
                         found.append(remote_cmd)
 
-                    # todo: prevent un-needed syncs for subcommands
-                    if sync_needed(local_cmd, remote_cmd):
-                        # if command local data doesnt match remote, a change has been made, sync it
-                        need_to_sync = True
+                    if sync_needed(local_cmd_json, remote_cmd):
+                        need_sync = True
 
-                if need_to_sync:
-                    log.info(f"Updating {len(cmds_to_sync)} commands in {cmd_scope}")
-                    cmd_sync_resp = await self.http.post_interaction_element(
-                        self.user.id, cmds_to_sync, guild_id=cmd_scope
+                if need_sync:
+
+                    log.info(f"Pushing {len(cmds_json[cmd_scope])} commands to {cmd_scope}")
+                    sync_response = await self.http.post_application_command(
+                        self.app.id, cmds_json[cmd_scope], guild_id=cmd_scope
                     )
-                    # cache cmd_ids and their scopes
-                    for cmd_data in cmd_sync_resp:
-                        self._interaction_scopes[cmd_data["id"]] = cmd_scope
-                        if cmd_data["name"] in self.interactions[cmd_scope]:
-                            self.interactions[cmd_scope][cmd_data["name"]].cmd_id = str(cmd_data["id"])
-                        else:
-                            # sub_cmd
-                            for sc in cmd_data["options"]:
-                                if sc["type"] == OptionTypes.SUB_COMMAND:
-                                    if f"{cmd_data['name']} {sc['name']}" in self.interactions[cmd_scope]:
-                                        self.interactions[cmd_scope][f"{cmd_data['name']} {sc['name']}"].cmd_id = str(
-                                            cmd_data["id"]
-                                        )
-                                elif sc["type"] == OptionTypes.SUB_COMMAND_GROUP:
-                                    for _sc in sc["options"]:
-                                        if (
-                                            f"{cmd_data['name']} {sc['name']} {_sc['name']}"
-                                            in self.interactions[cmd_scope]
-                                        ):
-                                            self.interactions[cmd_scope][
-                                                f"{cmd_data['name']} {sc['name']} {_sc['name']}"
-                                            ].cmd_id = str(cmd_data["id"])
 
+                    # cache command IDs
+                    self._cache_sync_response(sync_response, cmd_scope)
                 else:
-                    log.debug(f"{cmd_scope} is already up-to-date with {len(cmds_resp_data)} commands.")
+                    log.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
+
+                if self.del_unused_app_cmd:
+                    for cmd in [c for c in remote_commands if c not in found]:
+                        scope = cmd.get("guild_id", GLOBAL_SCOPE)
+                        log.warning(
+                            f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
+                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
+                        )
+                        await self.http.delete_application_command(
+                            self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
+                        )
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     if not local_cmd.permissions:
@@ -848,27 +841,51 @@ class Snake(
                         if perm.guild_id not in guild_perms:
                             guild_perms[perm.guild_id] = []
                         guild_perms[perm.guild_id].append(
-                            {"id": local_cmd.cmd_id, "permissions": [perm.to_dict() for perm in local_cmd.permissions]}
-                        )
-
-                for perm_scope in guild_perms:
-                    log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                    await self.http.batch_edit_application_command_permissions(
-                        application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
-                    )
-
-                if self.del_unused_app_cmd:
-                    for cmd in [c for c in cmds_resp_data if c not in found]:
-                        scope = cmd.get("guild_id", GLOBAL_SCOPE)
-                        log.warning(
-                            f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
-                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                        )
-                        await self.http.delete_interaction_element(
-                            self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
+                            {
+                                "id": local_cmd.cmd_id.get(cmd_scope),
+                                "permissions": [perm.to_dict() for perm in local_cmd.permissions],
+                            }
                         )
             except Forbidden as e:
-                raise InteractionMissingAccess(cmd_scope) from None
+                raise InteractionMissingAccess(cmd_scope)
+            except Exception as e:
+                breakpoint()
+
+        await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
+
+        for perm_scope in guild_perms:
+            try:
+                log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
+                await self.http.batch_edit_application_command_permissions(
+                    application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
+                )
+            except Forbidden as e:
+                raise InteractionMissingAccess(perm_scope)
+            except Exception as e:
+                breakpoint()
+
+        e = time.perf_counter() - s
+        log.debug(f"Sync of {len(cmd_scopes)} took {e} seconds")
+
+    def _cache_sync_response(self, sync_response: dict, scope: "Snowflake_Type"):
+        for cmd_data in sync_response:
+            self._interaction_scopes[cmd_data["id"]] = scope
+            if cmd_data["name"] in self.interactions[scope]:
+                self.interactions[scope][cmd_data["name"]].cmd_id[scope] = str(cmd_data["id"])
+            else:
+                # sub_cmd
+                for sc in cmd_data["options"]:
+                    if sc["type"] == OptionTypes.SUB_COMMAND:
+                        if f"{cmd_data['name']} {sc['name']}" in self.interactions[scope]:
+                            self.interactions[scope][f"{cmd_data['name']} {sc['name']}"].cmd_id[scope] = str(
+                                cmd_data["id"]
+                            )
+                    elif sc["type"] == OptionTypes.SUB_COMMAND_GROUP:
+                        for _sc in sc["options"]:
+                            if f"{cmd_data['name']} {sc['name']} {_sc['name']}" in self.interactions[scope]:
+                                self.interactions[scope][f"{cmd_data['name']} {sc['name']} {_sc['name']}"].cmd_id[
+                                    scope
+                                ] = str(cmd_data["id"])
 
     async def get_context(
         self, data: Union[dict, Message], interaction: bool = False

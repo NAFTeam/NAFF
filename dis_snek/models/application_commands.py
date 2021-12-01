@@ -157,9 +157,9 @@ class InteractionCommand(BaseCommand):
         factory=dict, metadata=docs("The permissions of this interaction")
     )
 
-    cmd_id: "Snowflake_Type" = attr.ib(
-        default=None, metadata=docs("The unique ID of this interaction") | no_export_meta
-    )
+    cmd_id: Dict[str, "Snowflake_Type"] = attr.ib(
+        factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
+    )  # scope: cmd_id
     callback: Callable[..., Coroutine] = attr.ib(
         default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
     )
@@ -755,7 +755,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict):
             remote_option = remote_opt_list[i]
             if local_option["type"] == remote_option["type"]:
                 if local_option["type"] in (OptionTypes.SUB_COMMAND_GROUP, OptionTypes.SUB_COMMAND):
-                    if not _compare_options(local_option["options"], remote_option["options"]):
+                    if not _compare_options(local_option.get("options", []), remote_option.get("options", [])):
                         return False
                 else:
                     if (
@@ -765,6 +765,8 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict):
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
                     ):
                         return False
+            else:
+                return False
     return True
 
 
