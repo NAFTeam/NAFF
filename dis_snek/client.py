@@ -747,7 +747,7 @@ class Snake(
                 # throttle this
                 await asyncio.sleep(0.1)
             try:
-                return await self.http.get_interaction_element(*args, **kwargs)
+                return await self.http.get_application_commands(*args, **kwargs)
             except Forbidden:
                 return MISSING
 
