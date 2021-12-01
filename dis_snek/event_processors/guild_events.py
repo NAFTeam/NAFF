@@ -3,7 +3,7 @@ import logging
 
 from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import events, GuildIntegration
+from dis_snek.models import events, GuildIntegration, to_snowflake
 from dis_snek.models.events import RawGatewayEvent
 from dis_snek.models.events.discord import IntegrationCreate, IntegrationUpdate, IntegrationDelete, BanCreate, BanRemove
 
@@ -21,7 +21,7 @@ class GuildEvents(EventMixinTemplate):
         """
         guild = self.cache.place_guild_data(event.data)
 
-        self.user._guild_ids.add(event.data.get("id"))
+        self.user._guild_ids.add(to_snowflake(event.data.get("id")))
 
         self._guild_event.set()
 
