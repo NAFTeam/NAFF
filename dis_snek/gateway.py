@@ -328,7 +328,7 @@ class WebsocketClient:
             processor = self.client.processors.get(event_name)
             if processor:
                 try:
-                    asyncio.ensure_future(processor(RawGatewayEvent(data)))
+                    asyncio.ensure_future(processor(RawGatewayEvent(data, override_name=event_name)))
                 except Exception as ex:
                     log.error(f"Failed to run event processor for {event_name}: {ex}")
             else:
