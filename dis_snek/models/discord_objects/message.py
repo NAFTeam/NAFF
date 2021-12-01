@@ -250,7 +250,7 @@ class Message(DiscordObject):
             data["mention_channels"] = mention_channels
 
         attachments = []
-        for attachment_data in data["attachments"]:
+        for attachment_data in data.get("attachments", []):
             attachments.append(Attachment.from_dict(attachment_data, client))
         data["attachments"] = attachments
 
