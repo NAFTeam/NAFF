@@ -37,7 +37,7 @@ def to_dict(inst):
         else:
             value = _to_dict_any(raw_value)
 
-        if isinstance(value, bool) or value:
+        if isinstance(value, (bool, int)) or value:
             d[a.name] = value
 
     return d
