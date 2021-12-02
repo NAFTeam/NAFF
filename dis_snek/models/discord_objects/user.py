@@ -406,7 +406,7 @@ class Member(DiscordObject, _SendDMMixin):
             role = role.id
         return await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
-    async def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
+    def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
         Checks if the user has the given role(s)
 
