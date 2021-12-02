@@ -178,7 +178,7 @@ class InteractionCommand(BaseCommand):
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
         for perm in self.permissions:
             if perm.type == PermissionTypes.ROLE:
-                if await ctx.author.has_role(perm.id):
+                if ctx.author.has_role(perm.id):
                     if perm.permission is True:
                         return True
                     elif self.default_permission is True:
