@@ -79,6 +79,10 @@ class Role(DiscordObject):
         """Is this role owned/managed by a integration"""
         return self.tags.integration_id is not None
 
+    @property
+    def members(self) -> list["Member"]:
+        return [member for member in self.guild.members if member.has_role(self)]
+
     async def is_assignable(self) -> bool:
         """Can this role be assigned or removed by this bot?
         !!! note:
