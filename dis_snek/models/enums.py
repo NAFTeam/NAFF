@@ -522,7 +522,7 @@ class ActivityType(IntEnum):
     """The types of presence activity that can be used in presences
 
     !!! note
-        Only `GAME` `STREAMING` AND `WATCHING` are usable by bots
+        Only `GAME` `STREAMING` `LISTENING` `WATCHING` and `COMPETING` are usable by bots
     """
 
     GAME = 0  # "Playing Rocket League"

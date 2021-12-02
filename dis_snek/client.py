@@ -1284,7 +1284,7 @@ class Snake(
             activity: The activity for the bot to be displayed as doing.
 
         note::
-            Bots may only be `playing` `streaming` or `listening`, other activity types are likely to fail.
+            Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
         """
         if activity:
             if not isinstance(activity, Activity):
@@ -1294,7 +1294,13 @@ class Snake(
             if activity.type == ActivityType.STREAMING:
                 if not activity.url:
                     log.warning("Streaming activity cannot be set without a valid URL attribute")
-            elif activity.type not in [ActivityType.GAME, ActivityType.STREAMING, ActivityType.LISTENING]:
+            elif activity.type not in [
+                ActivityType.GAME,
+                ActivityType.STREAMING,
+                ActivityType.LISTENING,
+                ActivityType.WATCHING,
+                ActivityType.COMPETING,
+            ]:
                 log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
         else:
             activity = self._activity if self._activity else []
