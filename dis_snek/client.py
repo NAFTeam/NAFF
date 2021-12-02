@@ -23,6 +23,7 @@ from dis_snek.errors import (
     ExtensionNotFound,
     Forbidden,
     InteractionMissingAccess,
+    HTTPException,
 )
 from dis_snek.event_processors import *
 from dis_snek.gateway import WebsocketClient
@@ -57,6 +58,7 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
+    parse_application_command_error,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
@@ -848,8 +850,8 @@ class Snake(
                         )
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope)
-            except Exception as e:
-                breakpoint()
+            except HTTPException as e:
+                self._raise_sync_exception(e, cmds_json, cmd_scope)
 
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
@@ -861,11 +863,25 @@ class Snake(
                 )
             except Forbidden as e:
                 raise InteractionMissingAccess(perm_scope)
-            except Exception as e:
-                breakpoint()
+            except HTTPException as e:
+                self._raise_sync_exception(e, cmds_json, perm_scope)
 
         e = time.perf_counter() - s
         log.debug(f"Sync of {len(cmd_scopes)} took {e} seconds")
+
+    @staticmethod
+    def _raise_sync_exception(e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type"):
+        try:
+            if isinstance(e.errors, dict):
+                for cmd_num in e.errors.keys():
+                    cmd = cmds_json[cmd_scope][int(cmd_num)]
+                    output = parse_application_command_error(e.errors[cmd_num], cmd=cmd)
+                    log.error(f"Error in command `{cmd['name']}`: {' & '.join(output)}")
+            else:
+                raise e from None
+        except Exception:
+            # the above shouldn't fail, but if it does, just raise the exception normally
+            raise e from None
 
     def _cache_sync_response(self, sync_response: dict, scope: "Snowflake_Type"):
         for cmd_data in sync_response:
