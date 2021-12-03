@@ -25,6 +25,7 @@ from dis_snek.errors import (
     HTTPException,
 )
 from dis_snek.event_processors import *
+from dis_snek.event_processors._template import Processor
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models import (
@@ -1023,7 +1024,7 @@ class Snake(
         else:
             return MessageContext.from_message(self, data)
 
-    @listen("raw_interaction_create")
+    @Processor.define("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
         """
         Identify and dispatch interaction of slash commands or components.
