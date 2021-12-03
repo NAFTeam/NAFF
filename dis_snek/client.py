@@ -22,6 +22,7 @@ from dis_snek.errors import (
     ExtensionNotFound,
     Forbidden,
     InteractionMissingAccess,
+    HTTPException,
 )
 from dis_snek.event_processors import *
 from dis_snek.gateway import WebsocketClient
@@ -56,6 +57,7 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
+    parse_application_command_error,
 )
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
@@ -851,32 +853,74 @@ class Snake(
                     for perm in local_cmd.permissions:
                         if perm.guild_id not in guild_perms:
                             guild_perms[perm.guild_id] = []
-                        guild_perms[perm.guild_id].append(
-                            {
+                            perm_json = {
                                 "id": local_cmd.cmd_id.get(cmd_scope),
                                 "permissions": [perm.to_dict() for perm in local_cmd.permissions],
                             }
-                        )
+                            if perm_json not in guild_perms[perm.guild_id]:
+                                guild_perms[perm.guild_id].append(perm_json)
+
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope)
-            except Exception as e:
-                breakpoint()
+            except HTTPException as e:
+                self._raise_sync_exception(e, cmds_json, cmd_scope)
 
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
         for perm_scope in guild_perms:
+            for cmd in guild_perms[perm_scope]:
+                if len(cmd["permissions"]) > 10:
+                    c = self.get_application_cmd_by_id(cmd["id"])
+                    log.error(
+                        f"Error in command `{c.name}`: Command has {len(cmd['permissions'])} permissions. Maximum is 10 per guild."
+                    )
+
             try:
                 log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
                 await self.http.batch_edit_application_command_permissions(
                     application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
                 )
             except Forbidden as e:
-                raise InteractionMissingAccess(perm_scope)
-            except Exception as e:
-                breakpoint()
+                log.error(
+                    f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
+                )
+            except HTTPException as e:
+                self._raise_sync_exception(e, cmds_json, perm_scope)
 
         e = time.perf_counter() - s
         log.debug(f"Sync of {len(cmd_scopes)} took {e} seconds")
+
+    def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
+        """
+        Get a application command from the internal cache by its ID.
+
+        Args:
+            cmd_id: The ID of the command
+
+        Returns:
+            The command, if one with the given ID exists internally, otherwise None
+        """
+        scope = self._interaction_scopes.get(str(cmd_id), MISSING)
+        cmd_id = int(cmd_id)  # ensure int ID
+        if scope != MISSING:
+            for cmd in self.interactions[scope].values():
+                if cmd.cmd_id.get(scope) == cmd_id:
+                    return cmd
+        return None
+
+    @staticmethod
+    def _raise_sync_exception(e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type"):
+        try:
+            if isinstance(e.errors, dict):
+                for cmd_num in e.errors.keys():
+                    cmd = cmds_json[cmd_scope][int(cmd_num)]
+                    output = parse_application_command_error(e.errors[cmd_num], cmd=cmd)
+                    log.error(f"Error in command `{cmd['name']}`: {' & '.join(output)}")
+            else:
+                raise e from None
+        except Exception:
+            # the above shouldn't fail, but if it does, just raise the exception normally
+            raise e from None
 
     def _cache_sync_response(self, sync_response: dict, scope: "Snowflake_Type"):
         for cmd_data in sync_response:
@@ -1279,7 +1323,7 @@ class Snake(
             activity: The activity for the bot to be displayed as doing.
 
         note::
-            Bots may only be `playing` `streaming` or `listening`, other activity types are likely to fail.
+            Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
         """
         if activity:
             if not isinstance(activity, Activity):
@@ -1289,7 +1333,13 @@ class Snake(
             if activity.type == ActivityType.STREAMING:
                 if not activity.url:
                     log.warning("Streaming activity cannot be set without a valid URL attribute")
-            elif activity.type not in [ActivityType.GAME, ActivityType.STREAMING, ActivityType.LISTENING]:
+            elif activity.type not in [
+                ActivityType.GAME,
+                ActivityType.STREAMING,
+                ActivityType.LISTENING,
+                ActivityType.WATCHING,
+                ActivityType.COMPETING,
+            ]:
                 log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
         else:
             activity = self._activity if self._activity else []

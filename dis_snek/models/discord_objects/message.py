@@ -400,11 +400,7 @@ class Message(DiscordObject):
         Raises:
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
         """
-
-        # todo: This is a temp fix for circular imports. This should not remain
-        from dis_snek.models.discord_objects.channel import GuildText
-
-        if not isinstance(await self.channel, GuildText):
+        if not self.channel.type == ChannelTypes.GUILD_TEXT:
             raise ThreadOutsideOfGuild()
 
         thread_data = await self._client.http.create_thread(
