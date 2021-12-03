@@ -778,7 +778,7 @@ class Snake(
                         found.add(cmd.name)
 
                     self._interaction_scopes[str(cmd_data["id"])] = scope
-                    cmd.cmd_id = str(cmd_data["id"])
+                    cmd.cmd_id[scope] = str(cmd_data["id"])
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
