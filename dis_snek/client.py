@@ -734,14 +734,18 @@ class Snake(
             if self.sync_interactions:
                 await self.synchronise_interactions()
             else:
-                await self._cache_interactions(warn_missing=True)
+                await self._cache_interactions(warn_missing=False)
         except Exception as e:
             await self.on_error("Interaction Syncing", e)
 
     async def _cache_interactions(self, warn_missing: bool = False):
         """Get all interactions used by this bot and cache them."""
-        bot_scopes = set(g.id for g in self.cache.guild_cache.values())
-        bot_scopes.add(GLOBAL_SCOPE)
+        if warn_missing or self.del_unused_app_cmd:
+            bot_scopes = set(g.id for g in self.cache.guild_cache.values())
+            bot_scopes.add(GLOBAL_SCOPE)
+        else:
+            bot_scopes = set(self.interactions.keys())
+
         req_lock = asyncio.Lock()
 
         async def wrap(*args, **kwargs):
