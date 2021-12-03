@@ -23,10 +23,12 @@ from typing import TYPE_CHECKING
 
 import attr
 
+from dis_snek.const import MISSING
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import docs
 
 if TYPE_CHECKING:
+    from dis_snek import Snake
     from dis_snek.models.context import ComponentContext
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -38,6 +40,7 @@ class BaseEvent:
     """A base event that all other events inherit from"""
 
     override_name: str = attr.ib(kw_only=True, default=None)
+    bot: "Snake" = attr.ib(kw_only=True, default=MISSING)
 
     @property
     def resolved_name(self):
@@ -89,8 +92,11 @@ class Ready(BaseEvent):
     """
 
 
+@attr.s(slots=True)
 class WebsocketReady(BaseEvent):
     """The gateway has reported that it is ready"""
+
+    data: dict = attr.ib(metadata=docs("The data from the ready event"))
 
 
 @attr.s(slots=True)

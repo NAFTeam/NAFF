@@ -2,15 +2,15 @@ import copy
 import logging
 
 from dis_snek.const import logger_name
-from dis_snek.event_processors._template import EventMixinTemplate
-from dis_snek.models import listen, events, to_snowflake
+from dis_snek.event_processors._template import EventMixinTemplate, Processor
+from dis_snek.models import events, to_snowflake
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)
 
 
 class MessageEvents(EventMixinTemplate):
-    @listen()
+    @Processor.define()
     async def _on_raw_message_create(self, event: RawGatewayEvent) -> None:
         """
         Automatically convert MESSAGE_CREATE event data to the object.
@@ -36,7 +36,7 @@ class MessageEvents(EventMixinTemplate):
 
         self.dispatch(events.MessageCreate(msg))
 
-    @listen()
+    @Processor.define()
     async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
         """
         Process raw deletions and dispatch a processed deletion event.
@@ -48,7 +48,7 @@ class MessageEvents(EventMixinTemplate):
         )
         self.dispatch(events.MessageDelete(message))
 
-    @listen()
+    @Processor.define()
     async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
         """
         Process raw message update event and dispatch a processed update event.

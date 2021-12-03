@@ -255,7 +255,7 @@ class Message(DiscordObject):
         data["attachments"] = attachments
 
         embeds = []
-        for embed_data in data["embeds"]:
+        for embed_data in data.get("embeds", []):
             embeds.append(Embed.from_dict(embed_data))
         data["embeds"] = embeds
 

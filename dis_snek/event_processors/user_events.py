@@ -2,8 +2,8 @@ import logging
 from typing import Union
 
 from dis_snek.const import logger_name
-from dis_snek.event_processors._template import EventMixinTemplate
-from dis_snek.models import listen, events, User, Member, BaseChannel, Timestamp, to_snowflake, Activity
+from dis_snek.event_processors._template import EventMixinTemplate, Processor
+from dis_snek.models import events, User, Member, BaseChannel, Timestamp, to_snowflake, Activity
 from dis_snek.models.enums import Status
 from dis_snek.models.events import RawGatewayEvent
 
@@ -11,7 +11,7 @@ log = logging.getLogger(logger_name)
 
 
 class UserEvents(EventMixinTemplate):
-    @listen()
+    @Processor.define()
     async def _on_raw_typing_start(self, event: RawGatewayEvent) -> None:
         """
         Process raw typing start and dispatch a processed typing event.
@@ -40,7 +40,7 @@ class UserEvents(EventMixinTemplate):
             )
         )
 
-    @listen()
+    @Processor.define()
     async def _on_raw_presence_update(self, event: RawGatewayEvent) -> None:
         g_id = to_snowflake(event.data["guild_id"])
         user = await self.cache.get_user(event.data["user"]["id"], request_fallback=False)

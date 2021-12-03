@@ -2,21 +2,21 @@ import copy
 import logging
 
 from dis_snek.const import logger_name, MISSING
-from dis_snek.event_processors._template import EventMixinTemplate
-from dis_snek.models import listen, events
+from dis_snek.event_processors._template import EventMixinTemplate, Processor
+from dis_snek.models import events
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)
 
 
 class RoleEvents(EventMixinTemplate):
-    @listen()
+    @Processor.define()
     async def _on_raw_guild_role_create(self, event: RawGatewayEvent) -> None:
         g_id = event.data.get("guild_id")
         role = self.cache.place_role_data(g_id, [event.data.get("role")])
         self.dispatch(events.RoleCreate(g_id, role[int(event.data["role"]["id"])]))
 
-    @listen()
+    @Processor.define()
     async def _on_raw_guild_role_update(self, event: RawGatewayEvent) -> None:
         g_id = event.data.get("guild_id")
         r_data = event.data.get("role")
@@ -27,6 +27,6 @@ class RoleEvents(EventMixinTemplate):
 
         self.dispatch(events.RoleUpdate(g_id, before, after))
 
-    @listen()
+    @Processor.define()
     async def _on_raw_guild_role_delete(self, event: RawGatewayEvent) -> None:
         self.dispatch(events.RoleDelete(event.data.get("guild_id"), event.data.get("role_id")))
