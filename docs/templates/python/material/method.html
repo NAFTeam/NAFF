@@ -26,6 +26,10 @@
           {% include "properties.html" with context %}
         {% endwith %}
 
+        <span class="doc doc-properties">
+          <small class="doc doc-property"><code>method</code></small>
+        </span>
+
         {% filter highlight(language="python", inline=True) %}
           {% if show_full_path %}{{ method.path }}{% else %}{{ method.name }}{% endif %}
           {% with signature = method.signature %}{% include "signature.html" with context %}{% endwith %}
