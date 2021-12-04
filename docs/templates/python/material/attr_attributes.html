@@ -1,0 +1,22 @@
+{{ log.debug() }}
+<p><strong>Attr attributes:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for attribute in attributes %}
+      {% if 'attrs-field' in attribute.properties and (config.show_if_no_docstring or attribute.has_contents) %}
+      <tr>
+        <td><code>{{ attribute.name }}</code></td>
+          <td>{% if attribute.type %}<code>{{ attribute.type }}</code>{% endif %}</td>
+        <td>{% if attribute.docstring %}{{ attribute.docstring|convert_markdown(heading_level, html_id) }}{% endif %}</td>
+      </tr>
+      {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
