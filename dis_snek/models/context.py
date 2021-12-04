@@ -251,7 +251,11 @@ class ComponentContext(InteractionContext):
         new_cls.custom_id = data["data"]["custom_id"]
         new_cls.component_type = data["data"]["component_type"]
         new_cls.message = client.cache.place_message_data(data["message"])
-        new_cls.values = data["data"]["values"]
+
+        if "values" in data["data"]:
+            new_cls.values = data["data"]["values"]
+        else:
+            new_cls.values = []
 
         return new_cls
 
