@@ -51,10 +51,11 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        if data["avatar"]:
-            data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
-        else:
-            data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}.png")
+        if not isinstance(data["avatar"], Asset):
+            if data["avatar"]:
+                data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
+            else:
+                data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}.png")
         return data
 
     @property
