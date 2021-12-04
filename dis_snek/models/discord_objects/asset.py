@@ -24,13 +24,17 @@ class Asset:
     BASE = "https://cdn.discordapp.com"
 
     _client: "Snake" = attr.field(metadata=no_export_meta)
-    url: str = attr.field()
+    _url: str = attr.field()
     hash: Optional[str] = attr.field(default=None)
 
     @classmethod
     def from_path_hash(cls, client: "Snake", path: str, asset_hash: str) -> "Asset":
         url = f"{cls.BASE}/{path.format(asset_hash)}"
         return cls(client=client, url=url, hash=asset_hash)
+
+    @property
+    def url(self) -> str:
+        return f"{self._url}?size=4096"
 
     @property
     def animated(self) -> bool:
