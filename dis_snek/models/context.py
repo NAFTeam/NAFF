@@ -238,7 +238,7 @@ class ComponentContext(InteractionContext):
     custom_id: str = attr.ib(default="", metadata=docs("The ID given to the component that has been pressed"))
     component_type: int = attr.ib(default=0, metadata=docs("The type of component that has been pressed"))
 
-    values: List = attr.ib(factory=list, metadata=docs("The values set"))  # todo: Polls, check this
+    values: List = attr.ib(factory=list, metadata=docs("The values set"))
 
     defer_edit_origin: bool = attr.ib(default=False, metadata=docs("Are we editing the message the component is on"))
 
@@ -251,6 +251,7 @@ class ComponentContext(InteractionContext):
         new_cls.custom_id = data["data"]["custom_id"]
         new_cls.component_type = data["data"]["component_type"]
         new_cls.message = client.cache.place_message_data(data["message"])
+        new_cls.values = data["data"].get("values", [])
 
         return new_cls
 
