@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dis-snek"
-version = "2.3.0"
+version = "3.0.0"
 description = "An API wrapper for Discord filled with snakes"
 authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
 
