@@ -15,7 +15,7 @@ class ChannelEvents(EventMixinTemplate):
 
         channel = self.cache.place_channel_data(event.data)
         if guild := channel.guild:
-            guild._channel_ids.append(channel.id)
+            guild._channel_ids.add(channel.id)
         self.dispatch(events.ChannelCreate(channel))
 
     @Processor.define()

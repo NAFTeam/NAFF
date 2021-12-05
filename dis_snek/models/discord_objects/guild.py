@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from io import IOBase
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union, Set
 
 import attr
 from aiohttp import FormData
@@ -172,10 +172,10 @@ class Guild(BaseGuild):
     """An event that is fired when this guild has been chunked"""
 
     _owner_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    _channel_ids: List["Snowflake_Type"] = attr.ib(factory=set)
-    _thread_ids: List["Snowflake_Type"] = attr.ib(factory=set)
-    _member_ids: List["Snowflake_Type"] = attr.ib(factory=set)
-    _role_ids: List["Snowflake_Type"] = attr.ib(factory=set)
+    _channel_ids: Set["Snowflake_Type"] = attr.ib(factory=set)
+    _thread_ids: Set["Snowflake_Type"] = attr.ib(factory=set)
+    _member_ids: Set["Snowflake_Type"] = attr.ib(factory=set)
+    _role_ids: Set["Snowflake_Type"] = attr.ib(factory=set)
 
     @classmethod
     def _process_dict(cls, data, client):
