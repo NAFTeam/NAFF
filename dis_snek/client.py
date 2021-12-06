@@ -1020,9 +1020,13 @@ class Snake(
             cls.kwargs = kwargs
             cls.args = [v for v in kwargs.values()]
 
-            return cls
         else:
-            return MessageContext.from_message(self, data)
+            cls = MessageContext.from_message(self, data)
+
+        if not cls.channel:
+            cls.channel = await self.cache.get_channel(data["channel_id"])
+
+        return cls
 
     @Processor.define("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
