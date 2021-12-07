@@ -314,7 +314,8 @@ class WebsocketClient:
             self._trace = data.get("_trace", [])
             self.sequence = seq
             self.session_id = data["session_id"]
-            log.debug(f"Successfully connected to Gateway! Trace: {self._trace} Session_ID: {self.session_id}")
+            log.info(f"Connected to gateway!")
+            log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
             self._dispatch_soon(WebsocketReady(data))
         elif event == "RESUMED":
             log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
