@@ -700,6 +700,45 @@ class GuildChannel(BaseChannel):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
 
+    async def create_invite(
+        self,
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        target_type: InviteTargetTypes = None,
+        target_user_id: "Snowflake_Type" = None,
+        target_application_id: "Snowflake_Type" = None,
+        reason: str = MISSING,
+    ) -> Invite:
+        """
+        Create an invite for this channel.
+        Args:
+            max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
+            max_uses: max number of uses or 0 for unlimited. between 0 and 100
+            temporary: whether this invite only grants temporary membership
+            unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
+            target_type: the type of target for this voice channel invite
+            target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
+            target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
+            reason: An optional reason for the audit log
+
+        Returns:
+            The created invite
+        """
+        resp = await self._client.http.create_channel_invite(
+            self.id,
+            max_age,
+            max_uses,
+            temporary,
+            unique,
+            target_type,
+            target_user_id,
+            target_application_id,
+            reason=reason,
+        )
+        return Invite.from_dict(resp, self._client)
+
     @property
     def members(self) -> List["Member"]:
         return [m for m in self.guild.members if Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore

@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-
 from dis_snek.const import MISSING
+from dis_snek.models.enums import ChannelTypes, StagePrivacyLevel
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_none, dict_filter_missing
-from dis_snek.models.enums import ChannelTypes, StagePrivacyLevel
 
 if TYPE_CHECKING:
     from dis_snek.models.discord_objects.channel import PermissionOverwrite
@@ -202,6 +201,30 @@ class ChannelRequests:
             payload["target_application_id"] = target_application_id
 
         return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
+
+    async def get_invite(
+        self,
+        invite_code: str,
+        with_counts: bool = False,
+        with_expiration: bool = True,
+        scheduled_event_id: "Snowflake_Type" = None,
+    ):
+        """
+        Get an invite object for a given code
+
+        Args:
+            invite_code: The code of the invite
+            with_counts: whether the invite should contain approximate member counts
+            with_expiration: whether the invite should contain the expiration date
+            scheduled_event_id: the guild scheduled event to include with the invite
+
+        Returns:
+            an invite object
+        """
+        params = dict_filter_none(
+            dict(with_counts=with_counts, with_expiration=with_expiration, guild_scheduled_event_id=scheduled_event_id)
+        )
+        return await self.request(Route("GET", f"/invites/{invite_code}", params=params))
 
     async def delete_invite(self, invite_code: str, reason: str = MISSING) -> dict:
         """
