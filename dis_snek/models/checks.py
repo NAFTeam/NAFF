@@ -55,13 +55,13 @@ def is_owner():
     """
     Is the author the owner of the bot.
 
-    !!! note
-        this does not account for teams
     parameters:
         coro: the function to check
     """
 
     async def check(ctx: Context) -> bool:
+        if ctx.bot.app.team:
+            return ctx.bot.app.team.is_in_team(ctx.author.id)
         return ctx.author.id == ctx.bot.owner.id
 
     return check
