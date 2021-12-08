@@ -111,7 +111,7 @@ class BeeGees(threading.Thread):
         if self._last_send != 0 and self.latency[-1] > 15:
             log.warning(f"High Latency! shard ID {0} heartbeat took {self.latency[-1]:.1f}s to be acknowledged!")
         else:
-            log.debug(f"Heartbeat acknowledged after {self.latency[-1]:.1f} seconds")
+            log.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.1f} seconds")
 
 
 class WebsocketClient:
@@ -392,7 +392,7 @@ class WebsocketClient:
     async def send_heartbeat(self) -> None:
         """Send a heartbeat to the gateway."""
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
-        log.debug(f"Keeping Shard ID {0} alive with sequence {self.sequence}")
+        log.debug(f"❤ Shard {0} is sending a Heartbeat")  # todo get shard num
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
         payload = dict_filter_none(
