@@ -909,7 +909,7 @@ class Snake(
         cmd_id = int(cmd_id)  # ensure int ID
         if scope != MISSING:
             for cmd in self.interactions[scope].values():
-                if cmd.cmd_id.get(scope) == cmd_id:
+                if int(cmd.cmd_id.get(scope)) == cmd_id:
                     return cmd
         return None
 
