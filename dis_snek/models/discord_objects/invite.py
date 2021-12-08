@@ -1,11 +1,13 @@
-from enum import IntEnum
-from typing import TYPE_CHECKING, List, Optional, Union, Dict, Any
+from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
 from attr.converters import optional as optional_c
 
 from dis_snek.const import MISSING
-from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import ClientObject
+from dis_snek.models.discord_objects.application import Application
+from dis_snek.models.discord_objects.guild import GuildPreview
+from dis_snek.models.discord_objects.stage_instance import StageInstance
+from dis_snek.models.enums import InviteTargetTypes
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
@@ -14,53 +16,34 @@ from dis_snek.utils.converters import timestamp_converter
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models import TYPE_GUILD_CHANNEL
-    from dis_snek.models.discord_objects.user import Member, User
+    from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models.discord_objects.channel import BaseChannel
-    from dis_snek.models.discord_objects.guild import Guild
-
-
-class InviteTargetTypes(IntEnum):
-    STREAM = 1
-    EMBEDDED_APPLICATION = 2
-
-
-@define()
-class InviteStageInstance(DictSerializationMixin):
-    members: List["Member"] = field()  # TODO Get from cache
-    participant_count: int = field()
-    speaker_count: int = field()
-    topic: str = field()
-
-
-@define()
-class InviteMetadata(DictSerializationMixin):  # TODO This should be part of invite.
-    uses: int = field()
-    max_uses: int = field()
-    max_age: int = field()
-    temporary: bool = field(default=False)
-    created_at: Timestamp = field(converter=timestamp_converter)
 
 
 @define()
 class Invite(ClientObject):
     code: str = field()
-    target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes))
-    approximate_presence_count: Optional[int] = field(default=-1)
-    approximate_member_count: Optional[int] = field(default=-1)
-    target_application: Optional[dict] = field(default=None)  # TODO Partial application
-    expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
-    stage_instance: Optional[InviteStageInstance] = field(default=None)
 
-    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    # metadata
+    uses: int = field(default=0)
+    max_uses: int = field(default=0)
+    created_at: Timestamp = field(default=MISSING, converter=optional_c(timestamp_converter))
+    expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
+    temporary: bool = field(default=False)
+
+    # target data
+    target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes))
+    approximate_presence_count: Optional[int] = field(default=MISSING)
+    approximate_member_count: Optional[int] = field(default=MISSING)
+    scheduled_event: Optional[dict] = field(default=None)  # todo: Scheduled Events
+    stage_instance: Optional[StageInstance] = field(default=None)
+    target_application: Optional[dict] = field(default=None)
+    guild_preview: Optional[GuildPreview] = field(default=MISSING)
+
+    # internal for props
     _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
     _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
-
-    @property
-    def guild(self) -> "Guild":
-        """the guild of the invite"""
-        return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def channel(self) -> "TYPE_GUILD_CHANNEL":
@@ -78,9 +61,21 @@ class Invite(ClientObject):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if "stage_instance" in data:
-            data["stage_instance"] = InviteStageInstance.from_dict(data)
+            data["stage_instance"] = StageInstance.from_dict(data, client)
 
-        # TODO Convert target_application
+        if "target_application" in data:
+            data["target_application"] = Application.from_dict(data, client)
+
+        if channel := data.pop("channel", None):
+            # invite metadata does not contain enough info to create a channel object
+            data["channel_id"] = channel["id"]
+
+        if guild := data.pop("guild", None):
+            data["guild_preview"] = GuildPreview.from_dict(guild, client)
+
+        if inviter := data.pop("inviter", None):
+            inviter = client.cache.place_user_data(inviter)
+            data["inviter_id"] = inviter.id
 
         return data
 

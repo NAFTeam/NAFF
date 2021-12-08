@@ -556,3 +556,8 @@ class StagePrivacyLevel(IntEnum):
 class IntegrationExpireBehaviour(IntEnum):
     REMOVE_ROLE = 0
     KICK = 1
+
+
+class InviteTargetTypes(IntEnum):
+    STREAM = 1
+    EMBEDDED_APPLICATION = 2
