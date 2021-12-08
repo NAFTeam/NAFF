@@ -1019,12 +1019,13 @@ class Snake(
             cls.invoked_name = invoked_name
             cls.kwargs = kwargs
             cls.args = [v for v in kwargs.values()]
+            if not cls.channel:
+                cls.channel = await self.cache.get_channel(data["channel_id"])
 
         else:
             cls = MessageContext.from_message(self, data)
-
-        if not cls.channel:
-            cls.channel = await self.cache.get_channel(data["channel_id"])
+            if not cls.channel:
+                cls.channel = await self.cache.get_channel(data._channel_id)
 
         return cls
 

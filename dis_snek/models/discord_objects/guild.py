@@ -250,7 +250,7 @@ class Guild(BaseGuild):
     @property
     def sticker_limit(self) -> int:
         """The maximum number of stickers this guild can have"""
-        base = 60 if "MORE_sTICKERS" in self.features else 0
+        base = 60 if "MORE_STICKERS" in self.features else 0
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["stickers"])
 
     @property
