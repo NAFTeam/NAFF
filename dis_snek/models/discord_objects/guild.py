@@ -12,13 +12,6 @@ from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.discord_objects.channel import (
-    GuildText,
-    GuildVoice,
-    GuildStageVoice,
-    PermissionOverwrite,
-    Invite,
-)
 from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
@@ -46,6 +39,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import Member, User
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
+    from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite
 
 log = logging.getLogger(logger_name)
 
@@ -89,9 +83,9 @@ class BaseGuild(DiscordObject):
 class GuildPreview(BaseGuild):
     emoji: list[Emoji] = attr.ib(factory=list)
     """A list of custom emoji from this guild"""
-    approximate_member_count: int = attr.ib()
+    approximate_member_count: int = attr.ib(default=0)
     """Approximate number of members in this guild"""
-    approximate_presence_count: int = attr.ib()
+    approximate_presence_count: int = attr.ib(default=0)
     """Approximate number of online members in this guild"""
 
     @classmethod
