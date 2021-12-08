@@ -363,7 +363,7 @@ class Member(DiscordObject, _SendDMMixin):
         # Apply role specific overwrites.
         allow = Permissions.NONE
         deny = Permissions.NONE
-        for role_id in self.roles.ids:
+        for role_id in self._role_ids:
             if overwrite_role := overwrites.get(role_id):
                 allow |= overwrite_role.allow
                 deny |= overwrite_role.deny
