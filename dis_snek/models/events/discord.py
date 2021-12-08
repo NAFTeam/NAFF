@@ -325,7 +325,14 @@ class MessageUpdate(BaseEvent):
 class MessageDelete(BaseEvent):
     """Dispatched when a message is deleted."""
 
-    message: "Message" = attr.ib()
+    id: "Snowflake_Type" = attr.ib()
+    """The ID of the message that was deleted"""
+    channel_id: "Snowflake_Type" = attr.ib()
+    """The ID of the channel that the message was deleted from"""
+    guild_id: "Snowflake_Type" = attr.ib()
+    """The ID of the guild that the message was deleted from"""
+    message: Optional["Message"] = attr.ib()
+    """The message that was deleted"""
 
 
 @attr.s(slots=True)

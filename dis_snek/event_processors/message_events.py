@@ -46,7 +46,10 @@ class MessageEvents(EventMixinTemplate):
         message = await self.cache.get_message(
             event.data.get("channel_id"), event.data.get("id"), request_fallback=False
         )
-        self.dispatch(events.MessageDelete(message))
+        msg_id = event.data.get("id")
+        g_id = event.data.get("guild_id")
+        c_id = event.data.get("channel_id")
+        self.dispatch(events.MessageDelete(msg_id, c_id, g_id, message))
 
     @Processor.define()
     async def _on_raw_message_update(self, event: RawGatewayEvent) -> None:
