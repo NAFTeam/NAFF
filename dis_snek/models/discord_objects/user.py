@@ -289,7 +289,7 @@ class Member(DiscordObject, _SendDMMixin):
         """Is this member a server booster?"""
         return self.premium_since is not None
 
-    async def guild_permissions(self) -> Permissions:
+    def guild_permissions(self) -> Permissions:
         """
         Returns the permissions this member has in the guild
 
@@ -311,7 +311,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         return permissions
 
-    async def has_permission(self, *permissions: Permissions) -> bool:
+    def has_permission(self, *permissions: Permissions) -> bool:
         """
         Checks if the member has all the given permission(s).
 
@@ -332,7 +332,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
 
         # Get the user's permissions
-        guild_permissions = await self.guild_permissions()
+        guild_permissions = self.guild_permissions()
 
         # Check all permissions separately
         for permission in permissions:
@@ -340,7 +340,7 @@ class Member(DiscordObject, _SendDMMixin):
                 return False
         return True
 
-    async def channel_permissions(self, channel: "TYPE_GUILD_CHANNEL") -> Permissions:
+    def channel_permissions(self, channel: "TYPE_GUILD_CHANNEL") -> Permissions:
         """
         Returns the permissions this member has in a channel.
 
@@ -350,7 +350,7 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             Permissions data
         """
-        permissions = await self.guild_permissions()
+        permissions = self.guild_permissions()
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 
