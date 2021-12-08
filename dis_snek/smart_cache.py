@@ -180,6 +180,9 @@ class GlobalCache:
             guilds = self.user_guilds.get(user_id)
             if guilds:
                 guilds.add(guild_id)
+            else:
+                guilds = {guild_id}
+            self.user_guilds[user_id] = guilds
 
     async def is_user_in_guild(
         self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type", request_fallback: bool = True
@@ -230,6 +233,7 @@ class GlobalCache:
                 for guild_id in self._client.user.guilds.ids
                 if await self.is_user_in_guild(user_id, guild_id, request_fallback)
             ]
+            self.user_guilds[user_id] = set(guild_ids)
         return guild_ids
 
     # Message cache methods
