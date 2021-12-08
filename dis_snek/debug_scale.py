@@ -96,7 +96,6 @@ class DebugScale(Scale):
             "channel_cache",
             "dm_channels",
             "guild_cache",
-            "guild_cache",
             "member_cache",
             "message_cache",
             "role_cache",
