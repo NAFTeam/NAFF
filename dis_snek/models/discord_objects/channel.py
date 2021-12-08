@@ -621,6 +621,10 @@ class DMChannel(BaseChannel, MessageableMixin):
         payload = dict(name=name, icon=to_image_data(icon))
         await self._edit(payload=payload, reason=reason)
 
+    @property
+    def members(self) -> List["User"]:
+        return self.recipients
+
 
 @define()
 class DM(DMChannel):
@@ -695,6 +699,10 @@ class GuildChannel(BaseChannel):
     ):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
+
+    @property
+    def members(self) -> List["Member"]:
+        return [m for m in self.guild.members if Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
 
 
 @define()
@@ -931,6 +939,11 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
             video_quality_mode=video_quality_mode,
         )
         await self._edit(payload=payload, reason=reason)
+
+    @property
+    def members(self) -> List["Member"]:
+        # todo: when we support voice states, check if user is within channel
+        return [m for m in self.guild.members if Permissions.CONNECT in m.channel_permissions(self)]  # type: ignore
 
 
 @define()
