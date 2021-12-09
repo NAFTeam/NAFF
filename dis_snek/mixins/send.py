@@ -37,7 +37,7 @@ class SendMixin:
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
-        **kwargs
+        **kwargs,
     ) -> "Message":
         """
         Send a message.
