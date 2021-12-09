@@ -169,7 +169,7 @@ class DebugScale(Scale):
 
         cmds = 0
         for v in self.bot.interactions.values():
-            cmds += 1
+            cmds += len(v.keys())
 
         e.add_field("Local application cmds (incld. Subcommands)", str(cmds))
         e.add_field("Component callbacks", str(len(self.bot._component_callbacks)))
