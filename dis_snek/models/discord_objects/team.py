@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @define()
-class TeamMember(ClientObject):
+class TeamMember(DiscordObject):
     membership_state: TeamMembershipState = attr.ib(converter=TeamMembershipState)
     # permissions: List[str] = attr.ib(default=["*"])  # disabled until discord adds more team roles
     team_id: "Snowflake_Type" = attr.ib()
@@ -24,6 +24,7 @@ class TeamMember(ClientObject):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data["user"] = client.cache.place_user_data(data["user"])
+        data["id"] = data["user"].id
         return data
 
 
