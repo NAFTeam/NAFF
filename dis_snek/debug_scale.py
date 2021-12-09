@@ -82,12 +82,12 @@ class DebugScale(Scale):
     def D_Embed(self, title: str) -> Embed:
         e = Embed(
             f"Dis-Snek Debug: {title}",
-            url="https://github.com/LordOfPolls/Rebecca/blob/master/scales/debug.py",
+            url="https://github.com/Discord-Snake-Pit/Dis-Snek/blob/master/dis_snek/debug_scale.py",
             color=MaterialColors.BLUE_GREY,
         )
         e.set_footer(
             "Dis-Snek Debug Scale",
-            icon_url="https://avatars.githubusercontent.com/u/91958504?s=200&v=4",
+            icon_url="https://media.discordapp.net/attachments/907639005070377020/918600896433238097/sparkle-snekCUnetnoise_scaleLevel0x2.500000.png",
         )
         return e
 
@@ -178,7 +178,6 @@ class DebugScale(Scale):
             "Tracked Scopes", str(len(Counter(scope for scope in self.bot._interaction_scopes.values()).keys()))
         )
 
-        e.set_footer(self.bot.user.username, icon_url=self.bot.user.avatar.url)
         await ctx.send(embeds=[e])
 
     @debug_info.subcommand(
@@ -241,7 +240,7 @@ class DebugScale(Scale):
         try:
             cmds = await self.bot.http.get_application_commands(self.bot.app.id, int(scope.strip()))
             if cmds:
-                e = Embed("Dis-Snek Application Command Information", "")
+                e = self.D_Embed("Application Command Information")
 
                 e.description = f"**Listing Commands Registered in {scope}**\n\n" + "\n".join(
                     [f"`{c['id']}` : `{c['name']}`" for c in cmds]
