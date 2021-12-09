@@ -28,7 +28,7 @@ from dis_snek.models.enums import (
     AutoArchiveDuration,
 )
 from dis_snek.models.file import File
-from dis_snek.models.snowflake import to_snowflake, to_snowflake_list
+from dis_snek.models.snowflake import to_snowflake, to_snowflake_list, to_optional_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
@@ -158,8 +158,37 @@ class AllowedMentions(DictSerializationMixin):
 
 
 @define()
-class Message(DiscordObject):
-    content: str = attr.ib()
+class BaseMessage(DiscordObject):
+    _channel_id: "Snowflake_Type" = attr.ib(default=MISSING, converter=to_optional_snowflake)
+    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_optional_snowflake)
+    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_optional_snowflake)
+    _author_id: "Snowflake_Type" = attr.ib(default=MISSING, converter=to_optional_snowflake)
+
+    @property
+    def guild(self) -> "Guild":
+        return self._client.cache.guild_cache.get(self._guild_id)
+
+    @property
+    def channel(self) -> "TYPE_MESSAGEABLE_CHANNEL":
+        return self._client.cache.channel_cache.get(self._channel_id)
+
+    @property
+    def thread(self) -> "TYPE_THREAD_CHANNEL":
+        return self._client.cache.channel_cache.get(self._thread_channel_id)
+
+    @property
+    def author(self) -> Union["Member", "User"]:
+        if self._author_id:
+            member = None
+            if self._guild_id:
+                member = self._client.cache.member_cache.get(self._guild_id, self._author_id)
+            return member or self._client.cache.user_cache.get(self._author_id)
+        return MISSING
+
+
+@define()
+class Message(BaseMessage):
+    content: str = attr.ib(default=MISSING)
     timestamp: Timestamp = attr.ib(converter=timestamp_converter)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
@@ -185,20 +214,9 @@ class Message(DiscordObject):
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
-    _channel_id: "Snowflake_Type" = attr.ib(converter=optional_c(to_snowflake))
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    _author_id: "Snowflake_Type" = attr.ib(
-        converter=optional_c(to_snowflake)
-    )  # TODO: create override for detecting PartialMember
     _mention_ids: List["Snowflake_Type"] = attr.ib(factory=list)
     _mention_roles: List["Snowflake_Type"] = attr.ib(factory=list)
     _referenced_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-
-    channel: "TYPE_MESSAGEABLE_CHANNEL" = attr.ib(default=None)
-    thread: "TYPE_THREAD_CHANNEL" = attr.ib(default=None)
-    guild: "Guild" = attr.ib(default=None)
-    author: Union["Member", "User"] = attr.ib(default=None)
 
     @property
     async def mention_users(self) -> AsyncGenerator["Member", None]:

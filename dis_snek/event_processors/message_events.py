@@ -3,7 +3,7 @@ import logging
 
 from dis_snek.const import logger_name
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import events, to_snowflake
+from dis_snek.models import events, to_snowflake, Message, BaseMessage
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)
@@ -46,6 +46,11 @@ class MessageEvents(EventMixinTemplate):
         message = await self.cache.get_message(
             event.data.get("channel_id"), event.data.get("id"), request_fallback=False
         )
+
+        if not message:
+            message = BaseMessage.from_dict(event.data, self)
+
+        log.debug(f"Dispatching Event: {event.resolved_name}")
         self.dispatch(events.MessageDelete(message))
 
     @Processor.define()
