@@ -518,24 +518,26 @@ class Snake(
         Args:
             event: The event to be dispatched.
         """
-        log.debug(f"Dispatching Event: {event.resolved_name}")
         listeners = self.listeners.get(event.resolved_name, [])
-        event.bot = self
-        for _listen in listeners:
-            try:
-                self._queue_task(_listen, event, *args, **kwargs)
-            except Exception as e:
-                raise BotException(f"An error occurred attempting during {event.resolved_name} event processing")
+        if listeners:
+            log.debug(f"Dispatching Event: {event.resolved_name}")
+            event.bot = self
+            for _listen in listeners:
+                try:
+                    self._queue_task(_listen, event, *args, **kwargs)
+                except Exception as e:
+                    raise BotException(f"An error occurred attempting during {event.resolved_name} event processing")
 
         _waits = self.waits.get(event.resolved_name, [])
-        index_to_remove = []
-        for i, _wait in enumerate(_waits):
-            result = _wait(event)
-            if result:
-                index_to_remove.append(i)
+        if _waits:
+            index_to_remove = []
+            for i, _wait in enumerate(_waits):
+                result = _wait(event)
+                if result:
+                    index_to_remove.append(i)
 
-        for idx in index_to_remove:
-            _waits.pop(idx)
+            for idx in index_to_remove:
+                _waits.pop(idx)
 
     async def wait_until_ready(self):
         """Waits for the client to become ready."""
@@ -967,13 +969,15 @@ class Snake(
         cls: Union[MessageContext, ComponentContext, InteractionContext, AutocompleteContext]
 
         if interaction:
-            # todo: change to match
-            if data["type"] == InteractionTypes.MESSAGE_COMPONENT:
-                return ComponentContext.from_dict(data, self)
-            elif data["type"] == InteractionTypes.AUTOCOMPLETE:
-                cls = AutocompleteContext.from_dict(data, self)
-            else:
-                cls = InteractionContext.from_dict(data, self)
+            match data["type"]:
+                case InteractionTypes.MESSAGE_COMPONENT:
+                    return ComponentContext.from_dict(data, self)
+
+                case InteractionTypes.AUTOCOMPLETE:
+                    cls = AutocompleteContext.from_dict(data, self)
+
+                case _:
+                    cls = InteractionContext.from_dict(data, self)
 
             invoked_name: str = data["data"]["name"]
             kwargs = {}
@@ -995,23 +999,29 @@ class Snake(
                 for option in options:
                     value = option.get("value")
 
-                    # todo change to match statement
                     # this block here resolves the options using the cache
-                    if option["type"] == OptionTypes.USER:
-                        value = (
-                            self.cache.member_cache.get((to_snowflake(data.get("guild_id", 0)), to_snowflake(value)))
-                            or self.cache.user_cache.get(to_snowflake(value))
-                        ) or value
-                    elif option["type"] == OptionTypes.CHANNEL:
-                        value = self.cache.channel_cache.get(to_snowflake(value)) or value
-                    elif option["type"] == OptionTypes.ROLE:
-                        value = self.cache.role_cache.get(to_snowflake(value)) or value
-                    elif option["type"] == OptionTypes.MENTIONABLE:
-                        snow = to_snowflake(value)
-                        if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
-                            value = user
-                        elif role := self.cache.role_cache.get(snow):
-                            value = role
+                    match option["type"]:
+                        case OptionTypes.USER:
+                            value = (
+                                self.cache.member_cache.get(
+                                    (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
+                                )
+                                or self.cache.user_cache.get(to_snowflake(value))
+                            ) or value
+
+                        case OptionTypes.CHANNEL:
+                            value = self.cache.channel_cache.get(to_snowflake(value)) or value
+
+                        case OptionTypes.ROLE:
+                            value = self.cache.role_cache.get(to_snowflake(value)) or value
+
+                        case OptionTypes.MENTIONABLE:
+                            snow = to_snowflake(value)
+                            if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
+                                value = user
+                            elif role := self.cache.role_cache.get(snow):
+                                value = role
+
                     if option.get("focused", False):
                         cls.focussed_option = option.get("name")
                     kwargs[option["name"].lower()] = value

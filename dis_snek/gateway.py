@@ -18,7 +18,6 @@ from dis_snek.errors import WebSocketClosed
 from dis_snek.models import events, Snowflake_Type, CooldownSystem, to_snowflake
 from dis_snek.models.enums import Status
 from dis_snek.models.enums import WebSocketOPCodes as OPCODE
-from dis_snek.models.events import BaseEvent, RawGatewayEvent, WebsocketReady
 from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
@@ -287,57 +286,63 @@ class WebsocketClient:
         await self.close()
 
     async def dispatch_opcode(self, data, op):
-        if op == OPCODE.HELLO:
-            if self._keep_alive:
-                self._keep_alive.stop()
-            self._keep_alive = BeeGees(ws=self, interval=data["heartbeat_interval"] / 1000)
-            # as per API, we shouldn't send a heartbeat on connect, wait a random offset
-            self.loop.call_later(self._keep_alive.interval * random.uniform(0, 0.5), self._keep_alive.start)
-            if not self.session_id:
-                return await self.identify()
-            return await self.resume_connection()
-        elif op == OPCODE.HEARTBEAT_ACK:
-            return self._keep_alive.ack()
-        elif op == OPCODE.HEARTBEAT:
-            return await self.send_heartbeat()
-        elif op == OPCODE.RECONNECT:
-            log.info("Gateway requested reconnect. Reconnecting...")
-            return await self.close(resume=True)
-        elif op == OPCODE.INVALIDATE_SESSION:
-            log.warning("Gateway has invalidated session! Reconnecting...")
-            return await self.close()
-        else:
-            return log.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
+        match op:
+            case OPCODE.HELLO:
+                if self._keep_alive:
+                    self._keep_alive.stop()
+                self._keep_alive = BeeGees(ws=self, interval=data["heartbeat_interval"] / 1000)
+                # as per API, we shouldn't send a heartbeat on connect, wait a random offset
+                self.loop.call_later(self._keep_alive.interval * random.uniform(0, 0.5), self._keep_alive.start)
+                if not self.session_id:
+                    return await self.identify()
+                return await self.resume_connection()
+
+            case OPCODE.HEARTBEAT:
+                return await self.send_heartbeat()
+
+            case OPCODE.HEARTBEAT_ACK:
+                return self._keep_alive.ack()
+
+            case OPCODE.RECONNECT:
+                log.info("Gateway requested reconnect. Reconnecting...")
+                return await self.close(resume=True)
+
+            case OPCODE.INVALIDATE_SESSION:
+                log.warning("Gateway has invalidated session! Reconnecting...")
+                return await self.close()
+
+            case _:
+                return log.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
 
     async def dispatch_event(self, data, seq, event):
-        if event == "READY":
-            self._trace = data.get("_trace", [])
-            self.sequence = seq
-            self.session_id = data["session_id"]
-            log.info(f"Connected to gateway!")
-            log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
-            self._dispatch_soon(WebsocketReady(data))
-        elif event == "RESUMED":
-            log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
-            self._dispatch_soon(events.Resume())
+        match event:
+            case "READY":
+                self._trace = data.get("_trace", [])
+                self.sequence = seq
+                self.session_id = data["session_id"]
+                log.info(f"Connected to gateway!")
+                log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
+                return self.loop.call_soon(self.client.dispatch, events.WebsocketReady(data))
 
-        elif event == "GUILD_MEMBERS_CHUNK":
-            # this *could* take ages to return, do **not** wait for it
-            return asyncio.ensure_future(self._process_member_chunk(data))
-        else:
-            event_name = f"raw_{event.lower()}"
-            processor = self.client.processors.get(event_name)
-            if processor:
-                try:
-                    asyncio.ensure_future(processor(RawGatewayEvent(data, override_name=event_name)))
-                except Exception as ex:
-                    log.error(f"Failed to run event processor for {event_name}: {ex}")
-            else:
-                log.warning(f"No processor for `{event_name}`")
-        self._dispatch_soon(RawGatewayEvent(data, override_name="raw_socket_receive"))
+            case "RESUMED":
+                log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
+                return self.loop.call_soon(self.client.dispatch, events.Resume())
 
-    def _dispatch_soon(self, event: BaseEvent):
-        self.loop.call_soon(self.client.dispatch, event)
+            case "GUILD_MEMBERS_CHUNK":
+                return self.loop.create_task(self._process_member_chunk(data))
+
+            case _:
+                # the above events are "special", and are handled by the gateway itself, the rest can be dispatched
+                event_name = f"raw_{event.lower()}"
+                processor = self.client.processors.get(event_name)
+                if processor:
+                    try:
+                        asyncio.ensure_future(processor(events.RawGatewayEvent(data, override_name=event_name)))
+                    except Exception as ex:
+                        log.error(f"Failed to run event processor for {event_name}: {ex}")
+                else:
+                    log.debug(f"No processor for `{event_name}`")
+        self.loop.call_soon(self.client.dispatch, events.RawGatewayEvent(data, override_name="raw_socket_receive"))
 
     def __del__(self) -> None:
         if not self.closed.is_set():

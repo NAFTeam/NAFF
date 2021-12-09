@@ -5,7 +5,7 @@ description = "An API wrapper for Discord filled with snakes"
 authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 aiohttp = "^3.7.4"
 attrs = "^21.2.0"
 mypy = "^0.910"
