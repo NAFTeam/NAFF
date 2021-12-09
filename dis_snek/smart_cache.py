@@ -257,6 +257,8 @@ class GlobalCache:
         if request_fallback and message is None:
             data = await self._client.http.get_message(channel_id, message_id)
             message = self.place_message_data(data)
+            if not message.guild and message.channel.guild:
+                message._guild_id = message.channel.guild.id
         return message
 
     def place_message_data(self, data: dict) -> Message:
