@@ -176,7 +176,7 @@ class InteractionCommand(BaseCommand):
     async def _permission_enforcer(self, ctx: "Context") -> bool:
         """A check that enforces Discord permissions"""
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
-        for perm in self.permissions:
+        for perm in self.permissions or []:
             if perm.type == PermissionTypes.ROLE:
                 if ctx.author.has_role(perm.id):
                     if perm.permission is True:
@@ -549,7 +549,7 @@ def context_menu(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        perm = permissions
+        perm = permissions or {}
         if hasattr(func, "permissions"):
             if perm:
                 perm.update(func.permissions)
