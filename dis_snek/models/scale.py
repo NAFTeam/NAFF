@@ -73,7 +73,7 @@ class Scale:
 
         new_cls = super().__new__(cls)
 
-        for name, val in cls.__dict__.items():
+        for name, val in inspect.getmembers(new_cls, predicate=lambda x: isinstance(x, (BaseCommand, Listener, Task))):
             if isinstance(val, BaseCommand):
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
