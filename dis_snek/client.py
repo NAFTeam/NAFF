@@ -922,10 +922,14 @@ class Snake(
                 for cmd_num in e.errors.keys():
                     cmd = cmds_json[cmd_scope][int(cmd_num)]
                     output = parse_application_command_error(e.errors[cmd_num], cmd=cmd)
-                    log.error(f"Error in command `{cmd['name']}`: {' & '.join(output)}")
+                    if len(output) > 1:
+                        output = "\n".join(output)
+                        log.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
+                    else:
+                        log.error(f"Error in command `{cmd['name']}`: {output[0]}")
             else:
                 raise e from None
-        except Exception:
+        except Exception as e:
             # the above shouldn't fail, but if it does, just raise the exception normally
             raise e from None
 

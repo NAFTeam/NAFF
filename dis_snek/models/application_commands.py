@@ -827,12 +827,16 @@ def parse_application_command_error(errors: dict, cmd, keys=None):
             keys.append(maybe_int(key))
 
             if out := parse_application_command_error(cmd_attribute, cmd, keys.copy()):
-                x = cmd
-                for k in keys:
-                    x = x[k]
-                if isinstance(x, dict):
-                    key = x.get("name", key)
-                    out = [f"`{key}` --> {o}" for o in out]
+                if cmd:
+                    x = cmd
+                    for k in keys:
+                        try:
+                            x = x[k]
+                        except KeyError as e:
+                            pass
+                    if isinstance(x, dict):
+                        key = x.get("name", key)
+                        out = [f"`{key}` --> {o}" for o in out]
 
                 messages += out
 
