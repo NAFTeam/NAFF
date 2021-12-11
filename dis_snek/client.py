@@ -785,7 +785,7 @@ class Snake(
                         found.add(cmd.name)
 
                     self._interaction_scopes[str(cmd_data["id"])] = scope
-                    cmd.cmd_id[scope] = str(cmd_data["id"])
+                    cmd.cmd_id[scope] = int(cmd_data["id"])
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
@@ -820,7 +820,7 @@ class Snake(
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # get remote equivalent of this command
                     remote_cmd = next(
-                        (v for v in remote_commands if to_snowflake(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
+                        (v for v in remote_commands if int(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
                     )
                     # get json representation of this command
                     local_cmd_json = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
@@ -895,7 +895,7 @@ class Snake(
                 self._raise_sync_exception(e, cmds_json, perm_scope)
 
         e = time.perf_counter() - s
-        log.debug(f"Sync of {len(cmd_scopes)} took {e} seconds")
+        log.debug(f"Sync of {len(cmd_scopes)} scopes took {e} seconds")
 
     def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
         """
@@ -937,13 +937,13 @@ class Snake(
         for cmd_data in sync_response:
             self._interaction_scopes[cmd_data["id"]] = scope
             if cmd_data["name"] in self.interactions[scope]:
-                self.interactions[scope][cmd_data["name"]].cmd_id[scope] = str(cmd_data["id"])
+                self.interactions[scope][cmd_data["name"]].cmd_id[scope] = int(cmd_data["id"])
             else:
                 # sub_cmd
                 for sc in cmd_data["options"]:
                     if sc["type"] == OptionTypes.SUB_COMMAND:
                         if f"{cmd_data['name']} {sc['name']}" in self.interactions[scope]:
-                            self.interactions[scope][f"{cmd_data['name']} {sc['name']}"].cmd_id[scope] = str(
+                            self.interactions[scope][f"{cmd_data['name']} {sc['name']}"].cmd_id[scope] = int(
                                 cmd_data["id"]
                             )
                     elif sc["type"] == OptionTypes.SUB_COMMAND_GROUP:
@@ -951,7 +951,7 @@ class Snake(
                             if f"{cmd_data['name']} {sc['name']} {_sc['name']}" in self.interactions[scope]:
                                 self.interactions[scope][f"{cmd_data['name']} {sc['name']} {_sc['name']}"].cmd_id[
                                     scope
-                                ] = str(cmd_data["id"])
+                                ] = int(cmd_data["id"])
 
     async def get_context(
         self, data: Union[dict, Message], interaction: bool = False
