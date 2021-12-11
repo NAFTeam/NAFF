@@ -155,9 +155,9 @@ class CooldownSystem:
         self._tokens: int = self.rate
 
         # sanity checks
-        if self.rate < 1:
+        if self.rate == 0:
             raise ValueError("Cooldown rate must be greater than 0")
-        if self.interval < 1:
+        if self.interval == 0:
             raise ValueError("Cooldown interval must be greater than 0")
 
     def reset(self) -> None:
@@ -190,8 +190,9 @@ class CooldownSystem:
 
         if self._tokens == 0:
             return False
+        if self._tokens == self.rate:
+            self.opened = time.time()
         self._tokens -= 1
-        self.opened = time.time()
 
         return True
 
