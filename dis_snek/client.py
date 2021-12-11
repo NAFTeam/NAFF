@@ -376,7 +376,21 @@ class Snake(
 
         Override this to change error handling behaviour
         """
-        print(f"Ignoring exception in {source}:\n{traceback.format_exc()}", file=sys.stderr)
+        out = traceback.format_exc()
+
+        if isinstance(error, HTTPException):
+            try:
+                errors = error.search_for_message(error.errors)
+                for i, e in enumerate(errors):
+                    errors[i] = f'{e.get("code")}: {e.get("message")}'
+                out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
+            except:
+                pass
+
+        print(
+            "Ignoring exception in {}:{}{}".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
+            file=sys.stderr,
+        )
 
     async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
         """
