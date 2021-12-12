@@ -18,6 +18,7 @@ from dis_snek.const import (
     logger_name,
 )
 from dis_snek.mixins.serialization import DictSerializationMixin
+from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.command import BaseCommand
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.role import Role
@@ -30,7 +31,7 @@ from dis_snek.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
-    from dis_snek.models import Context
+    from dis_snek.models.context import Context
 
 log = logging.getLogger(logger_name)
 
@@ -163,6 +164,16 @@ class InteractionCommand(BaseCommand):
     callback: Callable[..., Coroutine] = attr.ib(
         default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
     )
+    auto_defer: "AutoDefer" = attr.ib(
+        default=MISSING, metadata=docs("A system to automatically defer this command after a set duration")
+    )
+
+    def __attrs_post_init__(self):
+        if self.callback is not None:
+            if hasattr(self.callback, "auto_defer"):
+                self.auto_defer = self.callback.auto_defer
+
+        super().__attrs_post_init__()
 
     @property
     def resolved_name(self):
@@ -655,11 +666,29 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
 
     def wrapper(func):
         if hasattr(func, "cmd_id"):
-            raise Exception("slash_option decorators must be positioned under a slash_command decorator")
+            raise Exception("slash_permission decorators must be positioned under a slash_command decorator")
 
         if not hasattr(func, "permissions"):
             func.permissions = []
         func.permissions += list(permission)
+        return func
+
+    return wrapper
+
+
+def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
+    """
+    A decorator to add an auto defer to a application command
+    Args:
+        ephemeral: Should the command be deferred as ephemeral
+        time_until_defer: How long to wait before deferring automatically
+
+    """
+
+    def wrapper(func):
+        if hasattr(func, "cmd_id"):
+            raise Exception("auto_defer decorators must be positioned under a slash_command decorator")
+        func.auto_defer = AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
         return func
 
     return wrapper

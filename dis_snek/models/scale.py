@@ -3,8 +3,9 @@ import inspect
 import logging
 from typing import List, TYPE_CHECKING, Callable, Coroutine
 
-from dis_snek.const import logger_name
+from dis_snek.const import logger_name, MISSING
 from dis_snek.models.application_commands import InteractionCommand, ComponentCommand
+from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.command import MessageCommand, BaseCommand
 from dis_snek.models.listener import Listener
 from dis_snek.tasks import Task
@@ -54,6 +55,7 @@ class Scale:
     scale_postrun: List
     listeners: List
     _commands: List
+    auto_defer: AutoDefer
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
         cls.bot = bot
@@ -100,6 +102,7 @@ class Scale:
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
         new_cls.bot.scales[new_cls.name] = new_cls
+        new_cls.auto_defer = MISSING
         return new_cls
 
     @property
@@ -140,6 +143,16 @@ class Scale:
 
         self.bot.scales.pop(self.name, None)
         log.debug(f"{self.name} has been shed")
+
+    def add_scale_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0):
+        """
+        Add a auto defer for all commands in this scale
+
+        Args:
+            ephemeral: Should the command be deferred as ephemeral
+            time_until_defer: How long to wait before deferring automatically
+        """
+        self.auto_defer = AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
 
     def add_scale_check(self, coroutine: Callable[..., Coroutine]) -> None:
         """

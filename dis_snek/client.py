@@ -60,6 +60,7 @@ from dis_snek.models import (
     sync_needed,
     parse_application_command_error,
 )
+from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
 from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
@@ -106,6 +107,7 @@ class Snake(
         asyncio_debug bool: Enable asyncio debug features
         status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
         activity Activity: The activity the bot should login "playing"
+        auto_defer: AutoDefer: A system to automatically defer commands after a set duration
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
@@ -130,6 +132,7 @@ class Snake(
         asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
+        auto_defer: AutoDefer = AutoDefer(),
         **kwargs,
     ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -155,6 +158,8 @@ class Snake(
         """The default prefix to be used for message commands"""
         self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
         """A coroutine that returns a prefix, for dynamic prefixes"""
+        self.auto_defer = auto_defer
+        """A system to automatically defer commands after a set duration"""
 
         # resources
 
@@ -1082,6 +1087,13 @@ class Snake(
                 command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
                 log.debug(f"{scope} :: {command.name} should be called")
 
+                if command.auto_defer:
+                    auto_defer = command.auto_defer
+                elif command.scale and command.scale.auto_defer:
+                    auto_defer = command.scale.auto_defer
+                else:
+                    auto_defer = self.auto_defer
+
                 if auto_opt := getattr(ctx, "focussed_option", None):
                     try:
                         await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
@@ -1091,6 +1103,7 @@ class Snake(
                         await self.on_autocomplete(ctx)
                 else:
                     try:
+                        self.loop.create_task(auto_defer(ctx))
                         await command(ctx, **ctx.kwargs)
                     except Exception as e:
                         await self.on_command_error(ctx, e)
