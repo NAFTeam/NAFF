@@ -57,11 +57,11 @@ class GlobalCache:
 
     # Expiring discord objects cache
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
-    role_cache: TTLCache = field(factory=TTLCache)  # key: role_id
+    role_cache: TTLCache = field(factory=dict)  # key: role_id
 
     # Expiring id reference cache
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
-    user_guilds: TTLCache = field(factory=TTLCache)  # key: user_id; value: set[guild_id]
+    user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
 
     def __attrs_post_init__(self):
         if not isinstance(self.message_cache, TTLCache):
