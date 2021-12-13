@@ -58,22 +58,21 @@ class Scale:
     auto_defer: AutoDefer
 
     def __new__(cls, bot: "Snake", *args, **kwargs):
-        cls.bot = bot
-        cls.__name = cls.__name__
-        cls.scale_checks = []
-        cls.scale_prerun = []
-        cls.scale_postrun = []
-        cls.listeners = []
+        new_cls = super().__new__(cls)
+        new_cls.bot = bot
+        new_cls.__name = cls.__name__
+        new_cls.scale_checks = []
+        new_cls.scale_prerun = []
+        new_cls.scale_postrun = []
+        new_cls.auto_defer = MISSING
 
-        cls.description = kwargs.get("Description", None)
-        if not cls.description:
-            cls.description = inspect.cleandoc(cls.__doc__) if cls.__doc__ else None
+        new_cls.description = kwargs.get("Description", None)
+        if not new_cls.description:
+            new_cls.description = inspect.cleandoc(cls.__doc__) if cls.__doc__ else None
 
         # load commands from class
-        cls._commands = []
-        cls._listeners = []
-
-        new_cls = super().__new__(cls)
+        new_cls._commands = []
+        new_cls._listeners = []
 
         for name, val in inspect.getmembers(new_cls, predicate=lambda x: isinstance(x, (BaseCommand, Listener, Task))):
             if isinstance(val, BaseCommand):
@@ -102,7 +101,6 @@ class Scale:
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
         new_cls.bot.scales[new_cls.name] = new_cls
-        new_cls.auto_defer = MISSING
         return new_cls
 
     @property
