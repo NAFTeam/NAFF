@@ -912,7 +912,7 @@ class Snake(
                     remote_perms = {}
                 cmd_perms = [perm for perm in guild_perms[perm_scope] if perm["id"] == c.get_cmd_id(perm_scope)][0]
                 perms_to_sync[c.get_cmd_id(perm_scope)] = [
-                    perm for perm in cmd_perms["permissions"] if perm not in remote_perms["permissions"]
+                    perm for perm in cmd_perms["permissions"] if perm not in remote_perms.get("permissions", [])
                 ]
             perms_to_sync = [cmd for cmd in perms_to_sync.values() if cmd]
             if perms_to_sync:
