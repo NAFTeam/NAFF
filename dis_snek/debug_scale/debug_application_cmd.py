@@ -3,6 +3,7 @@ import pprint
 from collections import Counter
 
 from dis_snek.debug_scale.utils import debug_embed
+from dis_snek.errors import HTTPException
 from dis_snek.models import (
     slash_command,
     InteractionContext,
@@ -85,9 +86,14 @@ class DebugAppCMD(Scale):
 
             else:
                 data = await self.bot.http.get_application_commands(self.bot.app.id, scope)
-
+                try:
+                    perms = await self.bot.http.get_application_command_permissions(self.bot.app.id, scope, cmd_id)
+                except HTTPException:
+                    perms = None
                 for cmd in data:
                     if int(cmd["id"]) == cmd_id:
+                        if perms:
+                            cmd["permissions"] = perms
                         return await send(cmd)
         except Exception:
             pass
