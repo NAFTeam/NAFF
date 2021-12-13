@@ -602,7 +602,7 @@ def process_message_payload(
     message_data = dict_filter_none(
         dict(
             content=content,
-            embeds=embeds,
+            embeds=embeds if not all(e is None for e in embeds) else None,
             components=components,
             sticker_ids=stickers,
             allowed_mentions=allowed_mentions,

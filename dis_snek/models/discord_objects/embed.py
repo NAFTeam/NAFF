@@ -194,7 +194,7 @@ class Embed(DictSerializationMixin):
             elif not isinstance(color, int):
                 color = Color(color).value
             data["color"] = color
-        return data
+        return data or None
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this
@@ -273,7 +273,7 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
     Args:
         embeds: List of dict / embeds to process
     """
-    if not embeds:
+    if embeds is None:
         # Its just empty, so nothing to process.
         return embeds
 
