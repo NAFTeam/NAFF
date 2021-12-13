@@ -181,6 +181,9 @@ class InteractionCommand(BaseCommand):
         """A representation of this interaction's name"""
         return self.name
 
+    def get_cmd_id(self, scope: "Snowflake_Type"):
+        return self.cmd_id.get(scope, self.cmd_id.get(GLOBAL_SCOPE, None))
+
     @property
     def is_subcommand(self) -> bool:
         return False
