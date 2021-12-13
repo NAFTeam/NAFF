@@ -591,6 +591,9 @@ def process_message_payload(
     """
     content = content
     embeds = process_embeds(embeds)
+    if isinstance(embeds, list):
+        embeds = embeds if all(e is not None for e in embeds) else None
+
     components = process_components(components)
     if stickers:
         stickers = [to_snowflake(sticker) for sticker in stickers]
@@ -602,7 +605,7 @@ def process_message_payload(
     message_data = dict_filter_none(
         dict(
             content=content,
-            embeds=embeds if not all(e is None for e in embeds) else None,
+            embeds=embeds,
             components=components,
             sticker_ids=stickers,
             allowed_mentions=allowed_mentions,
