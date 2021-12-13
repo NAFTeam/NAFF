@@ -874,13 +874,14 @@ class Snake(
                         )
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
+
                     if not local_cmd.permissions:
                         continue
                     for perm in local_cmd.permissions:
                         if perm.guild_id not in guild_perms:
                             guild_perms[perm.guild_id] = []
                         perm_json = {
-                            "id": local_cmd.cmd_id.get(perm.guild_id, local_cmd.cmd_id.get(GLOBAL_SCOPE, None)),
+                            "id": local_cmd.get_cmd_id(perm.guild_id),
                             "permissions": [perm.to_dict() for perm in local_cmd.permissions],
                         }
                         if perm_json not in guild_perms[perm.guild_id]:
@@ -894,24 +895,40 @@ class Snake(
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
         for perm_scope in guild_perms:
+            perms_to_sync = {}
             for cmd in guild_perms[perm_scope]:
+                c = self.get_application_cmd_by_id(cmd["id"])
+
                 if len(cmd["permissions"]) > 10:
-                    c = self.get_application_cmd_by_id(cmd["id"])
                     log.error(
                         f"Error in command `{c.name}`: Command has {len(cmd['permissions'])} permissions. Maximum is 10 per guild."
                     )
 
-            try:
-                log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                await self.http.batch_edit_application_command_permissions(
-                    application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
-                )
-            except Forbidden as e:
-                log.error(
-                    f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
-                )
-            except HTTPException as e:
-                self._raise_sync_exception(e, cmds_json, perm_scope)
+                try:
+                    remote_perms = await self.http.get_application_command_permissions(
+                        self.app.id, perm_scope, c.get_cmd_id(perm_scope)
+                    )
+                except HTTPException:
+                    remote_perms = {}
+                cmd_perms = [perm for perm in guild_perms[perm_scope] if perm["id"] == c.get_cmd_id(perm_scope)][0]
+                perms_to_sync[c.get_cmd_id(perm_scope)] = [
+                    perm for perm in cmd_perms["permissions"] if perm not in remote_perms["permissions"]
+                ]
+            perms_to_sync = [cmd for cmd in perms_to_sync.values() if cmd]
+            if perms_to_sync:
+                try:
+                    log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
+                    await self.http.batch_edit_application_command_permissions(
+                        application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
+                    )
+                except Forbidden as e:
+                    log.error(
+                        f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
+                    )
+                except HTTPException as e:
+                    self._raise_sync_exception(e, cmds_json, perm_scope)
+            else:
+                log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
         e = time.perf_counter() - s
         log.debug(f"Sync of {len(cmd_scopes)} scopes took {e} seconds")

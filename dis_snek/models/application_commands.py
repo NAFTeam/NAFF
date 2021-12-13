@@ -128,6 +128,8 @@ class Permission:
         """
         data = attr.asdict(self)
         data.pop("guild_id", None)
+        data["id"] = str(data["id"])
+
         return data
 
 
