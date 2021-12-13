@@ -22,6 +22,12 @@ class AutoDefer:
 
     async def __call__(self, ctx: "InteractionContext"):
         if self.enabled:
-            await asyncio.sleep(self.time_until_defer)
-            if not ctx.responded:
+            if self.time_until_defer > 0:
+                loop = asyncio.get_event_loop()
+                loop.call_later(self.time_until_defer, loop.create_task, self.defer(ctx))
+            else:
                 await ctx.defer(self.ephemeral)
+
+    async def defer(self, ctx: "InteractionContext"):
+        if not ctx.responded:
+            await ctx.defer(self.ephemeral)

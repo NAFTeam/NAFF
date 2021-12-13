@@ -1103,7 +1103,7 @@ class Snake(
                         await self.on_autocomplete(ctx)
                 else:
                     try:
-                        self.loop.create_task(auto_defer(ctx))
+                        await auto_defer(ctx)
                         await command(ctx, **ctx.kwargs)
                     except Exception as e:
                         await self.on_command_error(ctx, e)
