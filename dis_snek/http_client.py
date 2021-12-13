@@ -29,11 +29,25 @@ from dis_snek.http_requests import (
     UserRequests,
     WebhookRequests,
 )
+from dis_snek.models import CooldownSystem
 from dis_snek.models.route import Route
 from dis_snek.utils.input_utils import response_decode
 from dis_snek.utils.serializer import dict_filter_missing
 
 log = logging.getLogger(logger_name)
+
+
+class GlobalLock:
+    def __init__(self):
+        self.cooldown_system: CooldownSystem = CooldownSystem(
+            45, 1
+        )  # global rate-limit is 50 per second, conservatively we use 45
+        self.lock: asyncio.Lock = asyncio.Lock()
+
+    async def rate_limit(self):
+        async with self.lock:
+            if not self.cooldown_system.acquire_token():
+                await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 
 class HTTPClient(
@@ -59,6 +73,7 @@ class HTTPClient(
         self._retries: int = 5
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self.global_lock: GlobalLock = GlobalLock()
 
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
@@ -124,11 +139,13 @@ class HTTPClient(
         result: Optional[Union[Dict[str, Any], str]] = None
 
         await lock.acquire()
+
         for tries in range(self._retries):
             try:
                 if self.__session.closed:
                     await self.login(self.token)
 
+                await self.global_lock.rate_limit()
                 async with self.__session.request(route.method, route.url, **kwargs) as response:
                     result = await response_decode(response)
                     r_limit_data = self._parse_ratelimit(response.headers)
