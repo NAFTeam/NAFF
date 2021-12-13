@@ -31,11 +31,12 @@ class GatewayRateLimit:
     def __init__(self):
         self.lock = asyncio.Lock()
         # docs state 120 calls per 60 seconds, this is set conservatively to 110 per 60 seconds.
-        self.cooldown = CooldownSystem(110, 60)
+        self.cooldown_system = CooldownSystem(110, 60)
 
     async def rate_limit(self):
         async with self.lock:
-            await asyncio.sleep(0.6)
+            if not self.cooldown_system.acquire_token():
+                await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 
 class BeeGees(threading.Thread):
