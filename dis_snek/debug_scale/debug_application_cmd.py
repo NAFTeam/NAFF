@@ -93,7 +93,7 @@ class DebugAppCMD(Scale):
                 for cmd in data:
                     if int(cmd["id"]) == cmd_id:
                         if perms:
-                            cmd["permissions"] = perms
+                            cmd["permissions"] = perms.get("permissions")
                         return await send(cmd)
         except Exception:
             pass
