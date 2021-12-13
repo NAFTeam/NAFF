@@ -879,12 +879,12 @@ class Snake(
                     for perm in local_cmd.permissions:
                         if perm.guild_id not in guild_perms:
                             guild_perms[perm.guild_id] = []
-                            perm_json = {
-                                "id": local_cmd.cmd_id.get(cmd_scope),
-                                "permissions": [perm.to_dict() for perm in local_cmd.permissions],
-                            }
-                            if perm_json not in guild_perms[perm.guild_id]:
-                                guild_perms[perm.guild_id].append(perm_json)
+                        perm_json = {
+                            "id": local_cmd.cmd_id.get(perm.guild_id, local_cmd.cmd_id.get(GLOBAL_SCOPE, None)),
+                            "permissions": [perm.to_dict() for perm in local_cmd.permissions],
+                        }
+                        if perm_json not in guild_perms[perm.guild_id]:
+                            guild_perms[perm.guild_id].append(perm_json)
 
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope)
@@ -904,7 +904,7 @@ class Snake(
             try:
                 log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
                 await self.http.batch_edit_application_command_permissions(
-                    application_id=self.user.id, scope=perm_scope, data=guild_perms[perm_scope]
+                    application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
                 )
             except Forbidden as e:
                 log.error(
@@ -948,7 +948,7 @@ class Snake(
                         log.error(f"Error in command `{cmd['name']}`: {output[0]}")
             else:
                 raise e from None
-        except Exception as e:
+        except Exception:
             # the above shouldn't fail, but if it does, just raise the exception normally
             raise e from None
 

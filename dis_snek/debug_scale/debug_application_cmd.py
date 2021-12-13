@@ -2,6 +2,7 @@ import io
 import pprint
 from collections import Counter
 
+from dis_snek.const import GLOBAL_SCOPE
 from dis_snek.debug_scale.utils import debug_embed
 from dis_snek.errors import HTTPException
 from dis_snek.models import (
@@ -87,7 +88,10 @@ class DebugAppCMD(Scale):
             else:
                 data = await self.bot.http.get_application_commands(self.bot.app.id, scope)
                 try:
-                    perms = await self.bot.http.get_application_command_permissions(self.bot.app.id, scope, cmd_id)
+                    perm_scope = scope
+                    if scope == GLOBAL_SCOPE:
+                        perm_scope = ctx.guild.id
+                    perms = await self.bot.http.get_application_command_permissions(self.bot.app.id, perm_scope, cmd_id)
                 except HTTPException:
                     perms = None
                 for cmd in data:

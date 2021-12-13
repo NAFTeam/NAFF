@@ -102,7 +102,7 @@ class CallbackTypes(IntEnum):
     AUTOCOMPLETE_RESULT = 8
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, hash=True)
 class Permission:
     """
     Represents a interaction permission.
@@ -165,7 +165,8 @@ class InteractionCommand(BaseCommand):
         default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
     )
     auto_defer: "AutoDefer" = attr.ib(
-        default=MISSING, metadata=docs("A system to automatically defer this command after a set duration")
+        default=MISSING,
+        metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
 
     def __attrs_post_init__(self):
@@ -381,6 +382,7 @@ class SlashCommand(InteractionCommand):
             data["name"] = self.sub_cmd_name
             data["description"] = self.sub_cmd_description
             data.pop("default_permission", None)
+            data.pop("permissions", None)
         return data
 
     @name.validator
@@ -745,7 +747,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         if any(c.is_subcommand for c in cmd_list):
             # validate all commands share required attributes
             scopes: list[Snowflake_Type] = list(set(s for c in cmd_list for s in c.scopes))
-            permissions: list = [d for c in cmd_list for d in c.permissions]
+            permissions: list = list(set(d for c in cmd_list for d in c.permissions))
             base_description = next(
                 (c.description for c in cmd_list if c.description is not None), "No Description Set"
             )
