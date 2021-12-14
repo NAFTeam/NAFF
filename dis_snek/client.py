@@ -141,6 +141,8 @@ class Snake(
         message_context: Type[MessageContext] = MessageContext,
         component_context: Type[ComponentContext] = ComponentContext,
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
+        global_pre_run_callback: Callable[..., Coroutine] = MISSING,
+        global_post_run_callback: Callable[..., Coroutine] = MISSING,
         **kwargs,
     ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -230,6 +232,19 @@ class Snake(
         """A dictionary of mounted Scales"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
+
+        # callbacks
+        if global_pre_run_callback:
+            if asyncio.iscoroutinefunction(global_pre_run_callback):
+                self.pre_run_callback: Callable[..., Coroutine] = global_pre_run_callback
+            else:
+                raise TypeError("Callback must be a coroutine")
+
+        if global_post_run_callback:
+            if asyncio.iscoroutinefunction(global_post_run_callback):
+                self.post_run_callback: Callable[..., Coroutine] = global_post_run_callback
+            else:
+                raise TypeError("Callback must be a coroutine")
 
         super().__init__()
         self._sanity_check()
@@ -1103,7 +1118,9 @@ class Snake(
                 else:
                     try:
                         await auto_defer(ctx)
+                        await self.pre_run_callback(ctx, **ctx.kwargs)
                         await command(ctx, **ctx.kwargs)
+                        await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
                         await self.on_command_error(ctx, e)
                     finally:
@@ -1119,7 +1136,9 @@ class Snake(
             self.dispatch(events.Component(ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 try:
+                    await self.pre_run_callback(ctx)
                     await callback(ctx)
+                    await self.post_run_callback(ctx)
                 except Exception as e:
                     await self.on_component_error(ctx, e)
                 finally:
@@ -1156,7 +1175,9 @@ class Snake(
                     context.prefix = prefix
                     context.args = get_args(context.content_parameters)
                     try:
+                        await self.pre_run_callback(context)
                         await command(context)
+                        await self.post_run_callback(context)
                     except Exception as e:
                         await self.on_command_error(context, e)
                     finally:
