@@ -756,7 +756,13 @@ class GuildCategory(GuildChannel):
         """
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
-    async def edit(self, name, position, permission_overwrites, reason):
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -767,7 +773,15 @@ class GuildCategory(GuildChannel):
 
 @define()
 class GuildStore(GuildChannel):
-    async def edit(self, name, position, permission_overwrites, parent_id, nsfw, reason):
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -784,15 +798,15 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        nsfw,
-        topic,
-        channel_type,
-        default_auto_archive_duration,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        topic: Optional[str] = MISSING,
+        channel_type: Optional["ChannelTypes"] = MISSING,
+        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
         payload = dict(  # TODO Proper processing
             name=name,
@@ -817,16 +831,16 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        nsfw,
-        topic,
-        channel_type,
-        default_auto_archive_duration,
-        rate_limit_per_user,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        topic: Optional[str] = MISSING,
+        channel_type: Optional[Union["ChannelTypes", int]] = MISSING,
+        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
+        rate_limit_per_user: Optional[int] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
         payload = dict(  # TODO Proper processing
             name=name,
@@ -957,15 +971,15 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        bitrate,
-        user_limit,
-        rtc_region,
-        video_quality_mode,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        bitrate: Optional[int] = MISSING,
+        user_limit: Optional[int] = MISSING,
+        rtc_region: Optional[str] = MISSING,
+        video_quality_mode: Optional[Union[VideoQualityModes, int]] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
         payload = dict(  # TODO Proper processing
             name=name,
