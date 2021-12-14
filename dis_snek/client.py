@@ -7,7 +7,7 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable, Type
 
 import aiohttp
 
@@ -108,6 +108,10 @@ class Snake(
         status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
         activity Activity: The activity the bot should login "playing"
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
+        interaction_context: InteractionContext: The object to instantiate for Interaction Context
+        message_context: MessageContext: The object to instantiate for Message Context
+        component_context: ComponentContext: The object to instantiate for Component Context
+        autocomplete_context: AutocompleteContext: The object to instantiate for Autocomplete Context
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
@@ -133,6 +137,10 @@ class Snake(
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
         auto_defer: AutoDefer = AutoDefer(),
+        interaction_context: Type[InteractionContext] = InteractionContext,
+        message_context: Type[MessageContext] = MessageContext,
+        component_context: Type[ComponentContext] = ComponentContext,
+        autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         **kwargs,
     ):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
@@ -167,6 +175,16 @@ class Snake(
         """The HTTP client to use when interacting with discord endpoints"""
         self.ws: WebsocketClient = MISSING
         """The websocket collection for the Discord Gateway."""
+
+        # context objects
+        self.interaction_context: Type[InteractionContext] = interaction_context
+        """The object to instantiate for Interaction Context"""
+        self.message_context: Type[MessageContext] = message_context
+        """The object to instantiate for Message Context"""
+        self.component_context: Type[ComponentContext] = component_context
+        """The object to instantiate for Component Context"""
+        self.autocomplete_context: Type[AutocompleteContext] = autocomplete_context
+        """The object to instantiate for Autocomplete Context"""
 
         # flags
         self._ready = asyncio.Event()
@@ -214,6 +232,7 @@ class Snake(
         self.waits: Dict[str, List] = {}
 
         super().__init__()
+        self._sanity_check()
 
     @property
     def is_closed(self) -> bool:
@@ -271,6 +290,19 @@ class Snake(
                     commands.append(cmd)
 
         return commands
+
+    def _sanity_check(self):
+        # todo: post-init sanity checks
+        log.debug("Running client sanity checks...")
+        contexts = {
+            self.interaction_context: InteractionContext,
+            self.message_context: MessageContext,
+            self.component_context: ComponentContext,
+            self.autocomplete_context: AutocompleteContext,
+        }
+        for obj, expected in contexts.items():
+            if not issubclass(obj, expected):
+                raise TypeError(f"{obj.__name__} must inherit from {expected.__name__}")
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -1011,69 +1043,19 @@ class Snake(
         if interaction:
             match data["type"]:
                 case InteractionTypes.MESSAGE_COMPONENT:
-                    return ComponentContext.from_dict(data, self)
+                    cls = self.component_context.from_dict(data, self)
 
                 case InteractionTypes.AUTOCOMPLETE:
-                    cls = AutocompleteContext.from_dict(data, self)
+                    cls = self.autocomplete_context.from_dict(data, self)
 
                 case _:
-                    cls = InteractionContext.from_dict(data, self)
+                    cls = self.interaction_context.from_dict(data, self)
 
-            invoked_name: str = data["data"]["name"]
-            kwargs = {}
-
-            if options := data["data"].get("options"):
-                o_type = options[0]["type"]
-                if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
-                    # this is a subcommand, process accordingly
-                    if o_type == OptionTypes.SUB_COMMAND:
-                        invoked_name = f"{invoked_name} {options[0]['name']}"
-                        options = options[0].get("options", [])
-                    else:
-                        invoked_name = (
-                            f"{invoked_name} {options[0]['name']} "
-                            f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
-                        )
-                        options = options[0]["options"][0].get("options", [])
-
-                for option in options:
-                    value = option.get("value")
-
-                    # this block here resolves the options using the cache
-                    match option["type"]:
-                        case OptionTypes.USER:
-                            value = (
-                                self.cache.member_cache.get(
-                                    (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
-                                )
-                                or self.cache.user_cache.get(to_snowflake(value))
-                            ) or value
-
-                        case OptionTypes.CHANNEL:
-                            value = self.cache.channel_cache.get(to_snowflake(value)) or value
-
-                        case OptionTypes.ROLE:
-                            value = self.cache.role_cache.get(to_snowflake(value)) or value
-
-                        case OptionTypes.MENTIONABLE:
-                            snow = to_snowflake(value)
-                            if user := self.cache.member_cache.get(snow) or self.cache.user_cache.get(snow):
-                                value = user
-                            elif role := self.cache.role_cache.get(snow):
-                                value = role
-
-                    if option.get("focused", False):
-                        cls.focussed_option = option.get("name")
-                    kwargs[option["name"].lower()] = value
-
-            cls.invoked_name = invoked_name
-            cls.kwargs = kwargs
-            cls.args = [v for v in kwargs.values()]
             if not cls.channel:
                 cls.channel = await self.cache.get_channel(data["channel_id"])
 
         else:
-            cls = MessageContext.from_message(self, data)
+            cls = self.message_context.from_message(self, data)
             if not cls.channel:
                 cls.channel = await self.cache.get_channel(data._channel_id)
 

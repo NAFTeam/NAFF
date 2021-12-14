@@ -1,3 +1,4 @@
+import asyncio
 from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -7,7 +8,7 @@ from aiohttp import FormData
 
 from dis_snek.const import MISSING
 from dis_snek.mixins.send import SendMixin
-from dis_snek.models.application_commands import CallbackTypes
+from dis_snek.models.application_commands import CallbackTypes, OptionTypes
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 from dis_snek.utils.attr_utils import define, docs
@@ -127,6 +128,8 @@ class _BaseInteractionContext(Context):
             invoked_name=data["data"].get("name"),
             guild_id=data.get("guild_id"),
         )
+        new_cls.data = data
+
         if res_data := data["data"].get("resolved"):
             new_cls.resolved = Resolved.from_dict(client, res_data, new_cls.guild_id)
 
@@ -140,8 +143,58 @@ class _BaseInteractionContext(Context):
 
         new_cls.target_id = data["data"].get("target_id")
 
-        new_cls.data = data
+        cls._process_options(data)
+
         return new_cls
+
+    @classmethod
+    def _process_options(cls, data: dict):
+        kwargs = {}
+        if options := data["data"].get("options"):
+            o_type = options[0]["type"]
+            if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
+                # this is a subcommand, process accordingly
+                if o_type == OptionTypes.SUB_COMMAND:
+                    cls.invoked_name = f"{cls.invoked_name} {options[0]['name']}"
+                    options = options[0].get("options", [])
+                else:
+                    cls.invoked_name = (
+                        f"{cls.invoked_name} {options[0]['name']} "
+                        f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
+                    )
+                    options = options[0]["options"][0].get("options", [])
+
+            for option in options:
+                value = option.get("value")
+
+                # this block here resolves the options using the cache
+                match option["type"]:
+                    case OptionTypes.USER:
+                        value = (
+                            cls.client.cache.member_cache.get(
+                                (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
+                            )
+                            or cls.client.cache.user_cache.get(to_snowflake(value))
+                        ) or value
+
+                    case OptionTypes.CHANNEL:
+                        value = cls.client.cache.channel_cache.get(to_snowflake(value)) or value
+
+                    case OptionTypes.ROLE:
+                        value = cls.client.cache.role_cache.get(to_snowflake(value)) or value
+
+                    case OptionTypes.MENTIONABLE:
+                        snow = to_snowflake(value)
+                        if user := cls.client.cache.member_cache.get(snow) or cls.client.cache.user_cache.get(snow):
+                            value = user
+                        elif role := cls.client.cache.role_cache.get(snow):
+                            value = role
+
+                if option.get("focused", False):
+                    cls.focussed_option = option.get("name")
+                kwargs[option["name"].lower()] = value
+        cls.kwargs = kwargs
+        cls.args = [v for v in kwargs.values()]
 
 
 @define
