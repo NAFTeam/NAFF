@@ -36,3 +36,4 @@ from .discord_objects.team import *
 from .discord_objects.thread import *
 from .discord_objects.user import *
 from .discord_objects.webhooks import *
+from .discord_objects.voice_state import *
