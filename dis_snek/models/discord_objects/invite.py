@@ -41,7 +41,7 @@ class Invite(ClientObject):
     guild_preview: Optional[GuildPreview] = field(default=MISSING)
 
     # internal for props
-    _channel_id: "Snowflake_Type" = field(converter=optional_c(to_snowflake))
+    _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
     _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
 
