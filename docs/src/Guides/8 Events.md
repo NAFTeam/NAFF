@@ -27,23 +27,9 @@ Be aware that your `Intents` must be set to receive the event you are looking fo
 
 ---
 
-There are three ways to register events. **Subclassing** is the recommended way to do this.
+There are two ways to register events. **Decorators** are the recommended way to do this.
 
-=== ":one: Subclassing"
-    Here, we are simply subclassing `Snake`. It's that simple!
-
-    ```python
-    class MySnake(Snake):
-        async def on_channel_create(event: ChannelCreate):
-            # this event is called when a channel is created in a guild where the bot is
-            
-            print(f"Channel created with name: {event.channel.name}")
-
-    bot = MySnake(intents=Intents.DEFAULT)
-    bot.start("Put your token here")
-    ```
-
-=== ":two: Decorators"
+=== ":one: Decorators"
     To use decorators, they need to be in the same file where you defined your `bot = Snake()`.
 
     ```python
@@ -58,7 +44,7 @@ There are three ways to register events. **Subclassing** is the recommended way 
     bot.start("Put your token here")
     ```
 
-=== ":three: Manual Registration"
+=== ":two: Manual Registration"
     You can also register the events manually. This gives you the most flexibility, but it's not the cleanest.
 
     ```python
