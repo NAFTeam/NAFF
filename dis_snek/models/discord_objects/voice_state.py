@@ -24,9 +24,9 @@ class VoiceState(ClientObject):
     mute: bool = field(default=False)
     self_deaf: bool = field(default=False)
     self_mute: bool = field(default=False)
-    self_stream: Optional[bool] = field(default=None)
-    self_video: bool = field(default=MISSING)
-    suppress: bool = field(default=MISSING)
+    self_stream: Optional[bool] = field(default=False)
+    self_video: bool = field(default=False)
+    suppress: bool = field(default=False)
     request_to_speak_timestamp: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
 
     # internal for props
