@@ -250,6 +250,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
@@ -267,6 +268,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         parameters:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
@@ -282,7 +284,9 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
 
-        return await super().send(content, embeds, components, stickers, allowed_mentions, reply_to, file, tts, flags)
+        return await super().send(
+            content, embeds or embed, components, stickers, allowed_mentions, reply_to, file, tts, flags
+        )
 
 
 @define
@@ -338,6 +342,7 @@ class ComponentContext(InteractionContext):
         self,
         content: str = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
@@ -351,6 +356,7 @@ class ComponentContext(InteractionContext):
         parameters:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
@@ -366,7 +372,7 @@ class ComponentContext(InteractionContext):
 
         message_payload = process_message_payload(
             content=content,
-            embeds=embeds,
+            embeds=embeds or embed,
             components=components,
             allowed_mentions=allowed_mentions,
             file=file,

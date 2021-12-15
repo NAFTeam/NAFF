@@ -28,6 +28,7 @@ class SendMixin:
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
@@ -45,6 +46,7 @@ class SendMixin:
         parameters:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
@@ -58,7 +60,7 @@ class SendMixin:
         """
         message_payload = process_message_payload(
             content=content,
-            embeds=embeds,
+            embeds=embeds or embed,
             components=components,
             stickers=stickers,
             allowed_mentions=allowed_mentions,
@@ -66,6 +68,7 @@ class SendMixin:
             file=file,
             tts=tts,
             flags=flags,
+            **kwargs,
         )
         if kwargs:
             for key, value in kwargs.items():

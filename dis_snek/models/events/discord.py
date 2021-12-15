@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.emoji import Emoji
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
+    from dis_snek.models.discord_objects.voice_state import VoiceState
 
 
 @attr.s(slots=True)
@@ -421,3 +422,13 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command"""
 
     interaction: dict = attr.ib()
+
+
+@attr.s(slots=True)
+class VoiceStateUpdate(BaseEvent):
+    """Dispatched when a user joins/leaves/moves voice channels"""
+
+    before: Optional["VoiceState"] = attr.ib()
+    """The voice state before this event was created or None if the user was not in a voice channel"""
+    after: Optional["VoiceState"] = attr.ib()
+    """The voice state after this event was created or None if the user is no longer in a voice channel"""
