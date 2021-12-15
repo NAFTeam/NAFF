@@ -168,13 +168,13 @@ class MessageableMixin(SendMixin):
 
     async def get_messages(
         self,
-        limit: int = 50,
+        limit: int = MISSING,
         around: Union["Timestamp", "Snowflake_Type"] = MISSING,
         before: Union["Timestamp", "Snowflake_Type"] = MISSING,
         after: Union["Timestamp", "Snowflake_Type"] = MISSING,
     ) -> List["Message"]:
         """
-        Fetch multiple messages from the channel.
+        Fetch multiple messages from the channel. 
 
         Args:
             limit: Max number of messages to return, default `50`, 1 request for every 100 messages
@@ -206,7 +206,7 @@ class MessageableMixin(SendMixin):
             raise ValueError("Around may not be used with Before or After")
 
         if before and after:
-            if limit:
+            if limit != MISSING:
                 log.warning("Limit ignored when using Before/After search")
             before_time = round(Timestamp.from_snowflake(before).timestamp() * 1000)
             after_time = round(Timestamp.from_snowflake(after).timestamp() * 1000)
@@ -219,7 +219,6 @@ class MessageableMixin(SendMixin):
             if len(before_id) == 0:
                 raise ValueError("Before message not found")
             before_id = before_id[0].get("id")
-            print(before_id)
             messages_data = await self._client.http.get_channel_messages(
                 self.id, limit=100, before=MISSING, after=after, around=MISSING
             )
@@ -230,7 +229,7 @@ class MessageableMixin(SendMixin):
                 messages_data.extend(next_messages_data)
 
             messages_data = messages_data[
-                messages_data.index(next(m for m in messages_data if m.get("id") == before_id)) : -1
+                messages_data.index(next(m for m in messages_data if m.get("id") == before_id)) :
             ]  # chops off out of range messages
 
         elif limit > 100:
@@ -302,7 +301,10 @@ class MessageableMixin(SendMixin):
                         messages_data.extend(next_messages_data)
                         if len(next_messages_data) < 100:
                             break
+
         else:
+            if limit == MISSING:
+                limit = 50
             messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
         return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
