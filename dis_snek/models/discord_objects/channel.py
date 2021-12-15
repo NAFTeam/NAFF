@@ -177,10 +177,10 @@ class MessageableMixin(SendMixin):
         Fetch multiple messages from the channel. 
 
         Args:
-            limit: Max number of messages to return, default `50`, 1 request for every 100 messages
-            around: Will get limit/2 in each direction from given `Snowflake`
-            before: Message to get messages before
-            after: Message to get messages after
+            limit: Max number of messages to return, default `50`
+            around: Snowflake | Timestamp to get messages around
+            before: Snowflake | Timestamp to get messages before
+            after: Snowflake | Timestamp to get messages after
 
         Returns:
             A list of messages fetched.
