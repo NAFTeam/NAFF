@@ -95,23 +95,31 @@ class Snake(
     note:
         By default, all non-privileged intents will be enabled
 
-    Attributes:
-        intents Union[int, Intents]: The intents to use
-        loop: An event loop to use, normally leave this blank
-        default_prefix str: The default_prefix to use for message commands, defaults to your bot being mentioned
-        get_prefix Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
-        sync_interactions bool: Should application commands be synced with discord?
-        delete_unused_application_cmds bool: Delete any commands from discord that arent implemented in this client
-        enforce_interaction_perms bool: Should snek enforce discord application command permissions
-        fetch_members bool: Should the client fetch members from guilds upon startup (this will delay the client being ready)
-        asyncio_debug bool: Enable asyncio debug features
-        status Status: The status the bot should login with (IE ONLINE, DND, IDLE)
-        activity Activity: The activity the bot should login "playing"
+    Args:
+        intents: Union[int, Intents]: The intents to use
+        loop: Optional[asyncio.AbstractEventLoop]: An event loop to use, normally leave this undefined
+
+        default_prefix: str: The default_prefix to use for message commands, defaults to your bot being mentioned
+        get_prefix: Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
+        status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
+        activity: Union[Activity, str]: The activity the bot should log in "playing"
+
+        sync_interactions: bool: Should application commands be synced with discord?
+        delete_unused_application_cmds: bool: Delete any commands from discord that aren't implemented in this client
+        enforce_interaction_perms: bool: Enforce discord application command permissions, locally
+        fetch_members: bool: Should the client fetch members from guilds upon startup (this will delay the client being ready)
+
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
-        interaction_context: InteractionContext: The object to instantiate for Interaction Context
-        message_context: MessageContext: The object to instantiate for Message Context
-        component_context: ComponentContext: The object to instantiate for Component Context
-        autocomplete_context: AutocompleteContext: The object to instantiate for Autocomplete Context
+        interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
+        message_context: Type[MessageContext]: The object to instantiate for Message Context
+        component_context: Type[ComponentContext]: The object to instantiate for Component Context
+        autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
+
+        global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
+        global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
+
+        debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
+        asyncio_debug: bool: Enable asyncio debug features
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
