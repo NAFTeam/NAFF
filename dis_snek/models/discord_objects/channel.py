@@ -174,7 +174,7 @@ class MessageableMixin(SendMixin):
         after: Union["Timestamp", "Snowflake_Type"] = MISSING,
     ) -> List["Message"]:
         """
-        Fetch multiple messages from the channel. 
+        Fetch multiple messages from the channel.
 
         Args:
             limit: Max number of messages to return, default `50`
