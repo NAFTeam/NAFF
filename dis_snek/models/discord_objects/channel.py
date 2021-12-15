@@ -588,6 +588,7 @@ class BaseChannel(DiscordObject):
 
         """
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
+
         self.update_from_dict(channel_data)
 
     async def delete(self, reason: Optional[str] = MISSING) -> None:
@@ -756,7 +757,13 @@ class GuildCategory(GuildChannel):
         """
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
-    async def edit(self, name, position, permission_overwrites, reason):
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -767,7 +774,15 @@ class GuildCategory(GuildChannel):
 
 @define()
 class GuildStore(GuildChannel):
-    async def edit(self, name, position, permission_overwrites, parent_id, nsfw, reason):
+    async def edit(
+        self,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        reason: Optional[str] = MISSING,
+    ):
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -784,16 +799,31 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        nsfw,
-        topic,
-        channel_type,
-        default_auto_archive_duration,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        topic: Optional[str] = MISSING,
+        channel_type: Optional["ChannelTypes"] = MISSING,
+        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
+        """
+        Edit the guild text channel.
+
+        Args:
+            name: 1-100 character channel name
+            position: the position of the channel in the left-hand listing
+            permission_overwrites: a list of PermissionOverwrite
+            parent_id:  the parent category `Snowflake_Type` for the channel
+            nsfw: whether the channel is nsfw
+            topic: 0-1024 character channel topic
+            channel_type: the type of channel; only conversion between text and news is supported and only in guilds with the "NEWS" feature
+            default_auto_archive_duration: optional AutoArchiveDuration
+            rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
+            reason: An optional reason for the audit log
+        """
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -817,17 +847,32 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        nsfw,
-        topic,
-        channel_type,
-        default_auto_archive_duration,
-        rate_limit_per_user,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        nsfw: Optional[bool] = MISSING,
+        topic: Optional[str] = MISSING,
+        channel_type: Optional[Union["ChannelTypes", int]] = MISSING,
+        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
+        rate_limit_per_user: Optional[int] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
+        """
+        Edit the guild text channel.
+
+        Args:
+            name: 1-100 character channel name
+            position: the position of the channel in the left-hand listing
+            permission_overwrites: a list of PermissionOverwrite
+            parent_id:  the parent category `Snowflake_Type` for the channel
+            nsfw: whether the channel is nsfw
+            topic: 0-1024 character channel topic
+            channel_type: the type of channel; only conversion between text and news is supported and only in guilds with the "NEWS" feature
+            default_auto_archive_duration: optional AutoArchiveDuration
+            rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
+            reason: An optional reason for the audit log
+        """
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
@@ -957,16 +1002,30 @@ class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly jus
 
     async def edit(
         self,
-        name,
-        position,
-        permission_overwrites,
-        parent_id,
-        bitrate,
-        user_limit,
-        rtc_region,
-        video_quality_mode,
-        reason,
+        name: Optional[str] = MISSING,
+        position: Optional[int] = MISSING,
+        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
+        parent_id: Optional["Snowflake_Type"] = MISSING,
+        bitrate: Optional[int] = MISSING,
+        user_limit: Optional[int] = MISSING,
+        rtc_region: Optional[str] = MISSING,
+        video_quality_mode: Optional[Union[VideoQualityModes, int]] = MISSING,
+        reason: Optional[str] = MISSING,
     ):
+        """
+        Edit guild voice channel.
+
+        Args:
+            name: 1-100 character channel name
+            position: the position of the channel in the left-hand listing
+            permission_overwrites: a list of `PermissionOverwrite` to apply to the channel
+            parent_id: the parent category `Snowflake_Type` for the channel
+            bitrate: the bitrate (in bits) of the voice channel; 8000 to 96000 (128000 for VIP servers)
+            user_limit: the user limit of the voice channel; 0 refers to no limit, 1 to 99 refers to a user limi
+            rtc_region: channel voice region id, automatic when not set
+            video_quality_mode: the camera video quality mode of the voice channel
+            reason: optional reason for audit logs
+        """
         payload = dict(  # TODO Proper processing
             name=name,
             position=position,
