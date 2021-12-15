@@ -1,4 +1,5 @@
 import datetime
+import inspect
 from typing import TYPE_CHECKING
 
 from dis_snek.models import Embed, MaterialColors
@@ -24,14 +25,9 @@ def debug_embed(title: str, **kwargs) -> Embed:
 
 def get_cache_state(bot: "Snake"):
     caches = [
-        "channel_cache",
-        "dm_channels",
-        "guild_cache",
-        "member_cache",
-        "message_cache",
-        "role_cache",
-        "user_cache",
-        "user_guilds",
+        c[0]
+        for c in inspect.getmembers(bot.cache, predicate=lambda x: isinstance(x, dict))
+        if not c[0].startswith("__")
     ]
     string = []
     length = len(max(caches, key=len))
