@@ -324,6 +324,7 @@ class Message(BaseMessage):
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
@@ -339,6 +340,7 @@ class Message(BaseMessage):
         Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
@@ -351,7 +353,7 @@ class Message(BaseMessage):
         """
         message_payload = process_message_payload(
             content=content,
-            embeds=embeds,
+            embeds=embeds or embed,
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
@@ -392,10 +394,11 @@ class Message(BaseMessage):
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union[Embed, dict]], Union[Embed, dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
         """Reply to this message, takes all the same attributes as `send`"""
-        return await self.channel.send(content=content, reply_to=self, embeds=embeds, **kwargs)
+        return await self.channel.send(content=content, reply_to=self, embeds=embeds or embed, **kwargs)
 
     async def create_thread(
         self,
