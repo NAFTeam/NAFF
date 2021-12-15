@@ -26,6 +26,7 @@ from dis_snek.errors import (
 )
 from dis_snek.event_processors import *
 from dis_snek.event_processors._template import Processor
+from dis_snek.event_processors.voice_events import VoiceEvents
 from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models import (
@@ -88,6 +89,7 @@ class Snake(
     StageEvents,
     ThreadEvents,
     UserEvents,
+    VoiceEvents,
 ):
     """
     The bot client.

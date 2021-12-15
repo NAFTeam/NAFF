@@ -5,6 +5,7 @@ import attr
 
 from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import NotFound, Forbidden
+from dis_snek.models import VoiceState
 from dis_snek.models.discord_objects.channel import BaseChannel
 from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
@@ -58,6 +59,7 @@ class GlobalCache:
     # Expiring discord objects cache
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
     role_cache: TTLCache = field(factory=dict)  # key: role_id
+    voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
 
     # Expiring id reference cache
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
@@ -443,3 +445,41 @@ class GlobalCache:
             roles[role_id] = role
 
         return roles
+
+    def get_voice_state(self, user_id: "Snowflake_Type") -> Optional[VoiceState]:
+        """
+        Get a voice state by their guild and user IDs.
+
+        Args:
+            user_id: The ID of the user
+
+        Returns:
+            VoiceState object if found
+        """
+        user_id = to_snowflake(user_id)
+
+        return self.voice_state_cache.get(user_id)
+
+    def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
+        """
+        Take json data representing a VoiceState, process it, and cache it
+        Args:
+            data: json representation of the VoiceState
+
+        Returns:
+            The processed VoiceState object
+        """
+
+        # check if the channel_id is None. If that is the case, the user disconnected, and we can delete them from the cache
+        if not data["channel_id"]:
+            user_id = to_snowflake(data["user_id"])
+
+            if user_id in self.voice_state_cache:
+                self.voice_state_cache.pop(user_id)
+            voice_state = None
+
+        else:
+            voice_state = VoiceState.from_dict(data, self._client)
+            self.voice_state_cache[voice_state.user_id] = voice_state
+
+        return voice_state
