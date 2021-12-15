@@ -1,5 +1,3 @@
-from logging import log
-import logging
 import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
@@ -42,9 +40,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
-from dis_snek.const import logger_name
-
-log = logging.getLogger(logger_name)
 
 
 class ChannelHistory(AsyncIterator):
