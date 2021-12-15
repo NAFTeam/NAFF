@@ -1,3 +1,8 @@
+/* Makes the content wider */
+.md-grid {
+  max-width: initial;
+}
+
 /* Adds the bars to the left to make children more clear */
 div.doc-contents:not(.first) {
   padding-left: 25px;
