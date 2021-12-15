@@ -143,23 +143,22 @@ class _BaseInteractionContext(Context):
 
         new_cls.target_id = data["data"].get("target_id")
 
-        cls._process_options(data)
+        new_cls._process_options(data)
 
         return new_cls
 
-    @classmethod
-    def _process_options(cls, data: dict):
+    def _process_options(self, data: dict):
         kwargs = {}
         if options := data["data"].get("options"):
             o_type = options[0]["type"]
             if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
                 # this is a subcommand, process accordingly
                 if o_type == OptionTypes.SUB_COMMAND:
-                    cls.invoked_name = f"{cls.invoked_name} {options[0]['name']}"
+                    self.invoked_name = f"{self.invoked_name} {options[0]['name']}"
                     options = options[0].get("options", [])
                 else:
-                    cls.invoked_name = (
-                        f"{cls.invoked_name} {options[0]['name']} "
+                    self.invoked_name = (
+                        f"{self.invoked_name} {options[0]['name']} "
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
@@ -171,30 +170,30 @@ class _BaseInteractionContext(Context):
                 match option["type"]:
                     case OptionTypes.USER:
                         value = (
-                            cls.client.cache.member_cache.get(
+                            self.client.cache.member_cache.get(
                                 (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
                             )
-                            or cls.client.cache.user_cache.get(to_snowflake(value))
+                            or self.client.cache.user_cache.get(to_snowflake(value))
                         ) or value
 
                     case OptionTypes.CHANNEL:
-                        value = cls.client.cache.channel_cache.get(to_snowflake(value)) or value
+                        value = self.client.cache.channel_cache.get(to_snowflake(value)) or value
 
                     case OptionTypes.ROLE:
-                        value = cls.client.cache.role_cache.get(to_snowflake(value)) or value
+                        value = self.client.cache.role_cache.get(to_snowflake(value)) or value
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := cls.client.cache.member_cache.get(snow) or cls.client.cache.user_cache.get(snow):
+                        if user := self.client.cache.member_cache.get(snow) or self.client.cache.user_cache.get(snow):
                             value = user
-                        elif role := cls.client.cache.role_cache.get(snow):
+                        elif role := self.client.cache.role_cache.get(snow):
                             value = role
 
                 if option.get("focused", False):
-                    cls.focussed_option = option.get("name")
+                    self.focussed_option = option.get("name")
                 kwargs[option["name"].lower()] = value
-        cls.kwargs = kwargs
-        cls.args = [v for v in kwargs.values()]
+        self.kwargs = kwargs
+        self.args = [v for v in kwargs.values()]
 
 
 @define
