@@ -1,3 +1,5 @@
+from logging import log
+import logging
 import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
@@ -40,6 +42,9 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.message import Message
     from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.snowflake import Snowflake_Type
+from dis_snek.const import logger_name
+
+log = logging.getLogger(logger_name)
 
 
 class ChannelHistory(AsyncIterator):
@@ -164,33 +169,141 @@ class MessageableMixin(SendMixin):
     async def get_messages(
         self,
         limit: int = 50,
-        around: "Snowflake_Type" = MISSING,
-        before: "Snowflake_Type" = MISSING,
-        after: "Snowflake_Type" = MISSING,
+        around: Union["Timestamp", "Snowflake_Type"] = MISSING,
+        before: Union["Timestamp", "Snowflake_Type"] = MISSING,
+        after: Union["Timestamp", "Snowflake_Type"] = MISSING,
     ) -> List["Message"]:
         """
         Fetch multiple messages from the channel.
 
         Args:
-            limit: Max number of messages to return, default `50`, max `100`
-            around: Message to get messages around
+            limit: Max number of messages to return, default `50`, 1 request for every 100 messages
+            around: Will get limit/2 in each direction from given `Snowflake`
             before: Message to get messages before
             after: Message to get messages after
 
         Returns:
             A list of messages fetched.
         """
-        if limit > 100:
-            raise ValueError("You cannot fetch more than 100 messages at once.")
 
         if around:
-            around = to_snowflake(around)
-        elif before:
-            before = to_snowflake(before)
-        elif after:
-            after = to_snowflake(after)
+            if type(around) == Timestamp:
+                around = around.to_snowflake()
+            else:
+                around = to_snowflake(around)
+        if before:
+            if type(before) == Timestamp:
+                before = before.to_snowflake()
+            else:
+                before = to_snowflake(before)
+        if after:
+            if type(after) == Timestamp:
+                after = after.to_snowflake()
+            else:
+                after = to_snowflake(after)
 
-        messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
+        if around and before or around and after:
+            raise ValueError("Around may not be used with Before or After")
+
+        if before and after:
+            if limit:
+                log.warning("Limit ignored when using Before/After search")
+            before_time = round(Timestamp.from_snowflake(before).timestamp() * 1000)
+            after_time = round(Timestamp.from_snowflake(after).timestamp() * 1000)
+            if before_time < after_time:
+                raise ValueError("Before must precede After. Did you accidentally swap them?")
+
+            before_id = await self._client.http.get_channel_messages(
+                self.id, limit=1, before=MISSING, after=MISSING, around=before
+            )
+            if len(before_id) == 0:
+                raise ValueError("Before message not found")
+            before_id = before_id[0].get("id")
+            print(before_id)
+            messages_data = await self._client.http.get_channel_messages(
+                self.id, limit=100, before=MISSING, after=after, around=MISSING
+            )
+            while before_id not in [m.get("id") for m in messages_data]:
+                next_messages_data = await self._client.http.get_channel_messages(
+                    self.id, limit=100, before=MISSING, after=messages_data[-1].get("id"), around=MISSING
+                )
+                messages_data.extend(next_messages_data)
+
+            messages_data = messages_data[
+                messages_data.index(next(m for m in messages_data if m.get("id") == before_id)) : -1
+            ]  # chops off out of range messages
+
+        elif limit > 100:
+            messages_data = await self._client.http.get_channel_messages(
+                self.id, limit=100, before=before, after=after, around=around
+            )
+            if after or before:
+                if after:
+                    messages_data = messages_data[::-1]
+                for i in range(0, limit, 100):
+                    if before:
+                        before = messages_data[-1].get("id")
+                    elif after:
+                        after = messages_data[-1].get("id")
+                    new_limit = min(limit - i, 100)
+                    next_messages_data = await self._client.http.get_channel_messages(
+                        self.id, limit=new_limit, before=before, after=after, around=around
+                    )
+                    if after:
+                        next_messages_data = next_messages_data[::-1]
+                    messages_data.extend(next_messages_data)
+                    if len(next_messages_data) < 100:
+                        break
+            elif around:
+                shared_limit = limit - len(messages_data)
+                if (shared_limit % 2) == 0:
+                    before_total = shared_limit // 2
+                    after_total = before_total
+                else:
+                    div_odd = lambda n: (n // 2, n // 2 + 1)
+                    before_total, after_total = div_odd(shared_limit)
+
+                if before_total <= 100:
+                    next_messages_data = await self._client.http.get_channel_messages(
+                        self.id, limit=before_total, before=messages_data[-1].get("id"), after=MISSING, around=MISSING
+                    )
+                    messages_data.extend(next_messages_data)
+                else:
+                    next_messages_data = await self._client.http.get_channel_messages(
+                        self.id, limit=100, before=before, after=MISSING, around=MISSING
+                    )
+                    for i in range(0, before_total, 100):
+                        before = messages_data[-1].get("id")
+                        new_limit = min(before_total - i, 100)
+                        next_messages_data = await self._client.http.get_channel_messages(
+                            self.id, limit=new_limit, before=before, after=MISSING, around=MISSING
+                        )
+                        messages_data.extend(next_messages_data)
+                        if len(next_messages_data) < 100:
+                            break
+
+                if after_total <= 100:
+                    next_messages_data = await self._client.http.get_channel_messages(
+                        self.id, limit=after_total, before=MISSING, after=messages_data[0].get("id"), around=MISSING
+                    )
+                    messages_data = next_messages_data + messages_data
+                else:
+                    next_messages_data = await self._client.http.get_channel_messages(
+                        self.id, limit=100, before=MISSING, after=after, around=MISSING
+                    )
+                    messages_data = messages_data[::-1]
+                    for i in range(0, after_total, 100):
+                        after = messages_data[-1].get("id")
+                        new_limit = min(after_total - i, 100)
+                        next_messages_data = await self._client.http.get_channel_messages(
+                            self.id, limit=new_limit, before=MISSING, after=after, around=MISSING
+                        )
+                        next_messages_data = next_messages_data[::-1]
+                        messages_data.extend(next_messages_data)
+                        if len(next_messages_data) < 100:
+                            break
+        else:
+            messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
         return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
     async def get_pinned_messages(self) -> List["Message"]:
