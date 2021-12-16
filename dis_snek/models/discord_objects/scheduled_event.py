@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional
 from dis_snek.const import MISSING
+from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
 
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
@@ -15,7 +16,9 @@ from enum import IntEnum
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.channel import GuildStageVoice, GuildVoice
+    from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -48,6 +51,24 @@ class ScheduledEventStatus(IntEnum):
     CANCELED = 4
 
 
+
+@define()
+class ScheduledEventUser(DiscordObject):
+    user: "User" = attr.ib()
+    member: "Member" = attr.ib(default=MISSING)
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        if data.get("member"):
+            fixed_member = data
+            fixed_member["user"]["member"] = fixed_member["member"]
+            data["member"] = client.cache.place_member_data(data["guild_scheduled_event_id"], fixed_member["user"])
+        data["user"] = client.cache.place_user_data(data["user"])
+        data["id"] = data["user"].id
+        return data
+
+
+
 @define()
 class ScheduledEvent(DiscordObject):
     name: str = attr.ib()
@@ -64,15 +85,17 @@ class ScheduledEvent(DiscordObject):
     """	the status of the scheduled event"""
     entity_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING, converter=optional(to_snowflake))
     """the id of an entity associated with a guild scheduled event"""
-    entity_metadata: Optional[Dict[str, Any]] = attr.ib(default=MISSING)
+    entity_metadata: Optional[Dict[str, Any]] = attr.ib(default=MISSING) # TODO make this 
     """the metadata associated with the entity_type"""
     user_count: int = attr.ib(default=MISSING)
     """	the number of users subscribed to the scheduled event"""
 
+    _guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
     _creator: Optional["User"] = attr.ib(default=MISSING)
     _creator_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING, converter=optional(to_snowflake))
     _channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+
+    __guild: "Guild" = attr.ib()
 
     @property
     async def creator(self) -> Optional["User"]:
@@ -87,19 +110,46 @@ class ScheduledEvent(DiscordObject):
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if data.get("creator"):
             data["creator"] = client.cache.place_user_data(data["creator"])
+        if data.get("channel_id"):
+            data["channel"] = client.cache.get_channel("channel_id")
+
         data = super()._process_dict(data, client)
         return data
 
     @property
-    def external_url(self) -> Optional[str]:
-        """Returns the external url of this event"""
+    def location(self) -> Optional[str]:
+        """Returns the external locatian of this event"""
         if self.entity_type == ScheduledEventEntityType.EXTERNAL:
             return self.entity_metadata["location"]
         return None
 
+    @property
+    def invite_url(self) -> str:
+        """ The event invite url """
+
+
+
     async def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
         """Returns the channel this event is scheduled in if it is scheduled in a channel"""
         return self._client.cache.channel_cache.get(self._channel_id) if self._channel_id else None
+
+    async def get_event_users(
+        self,
+        limit: Optional[int] = 100,
+        with_member_data: bool = False,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+    ) -> Optional[List["ScheduledEventUser"]]:
+        """Get event users
+
+        Args:
+            limit: Discord defualts to 100
+        """
+        event_users =  await self._client.http.get_scheduled_event_users(self._guild_id, self.id, limit, with_member_data)
+        if event_users:
+            return ScheduledEventUser.from_list(event_users, self._client)
+        else:
+            return None
 
     async def delete(self, reason: str = MISSING) -> None:
         """Deletes this event"""
@@ -111,8 +161,8 @@ class ScheduledEvent(DiscordObject):
         description: str = MISSING,
         channel_id: Optional["Snowflake_Type"] = MISSING,
         entity_type: ScheduledEventEntityType = MISSING,
-        start_time: "Timestamp" = MISSING,
-        end_time: "Timestamp" = MISSING,
+        scheduled_start_time: "Timestamp" = MISSING,
+        scheduled_end_time: "Timestamp" = MISSING,
         status: ScheduledEventStatus = MISSING,
         entity_metadata: dict = MISSING,
         privacy_level: ScheduledEventPrivacyLevel = MISSING,
@@ -137,8 +187,8 @@ class ScheduledEvent(DiscordObject):
             description=description,
             channel_id=channel_id,
             entity_type=entity_type,
-            scheduled_start_time=start_time.isoformat(),
-            scheduled_end_time=end_time.isoformat(),
+            scheduled_start_time=scheduled_start_time.isoformat(),
+            scheduled_end_time=scheduled_end_time.isoformat(),
             status=status,
             entity_metadata=entity_metadata,
             privacy_level=privacy_level,

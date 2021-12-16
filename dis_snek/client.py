@@ -48,6 +48,7 @@ from dis_snek.models import (
     OptionTypes,
     MessageCommand,
     BaseCommand,
+    ScheduledEvent,
     to_snowflake,
     to_snowflake_list,
     ComponentContext,
@@ -1391,6 +1392,21 @@ class Snake(
             Member object
         """
         return await self.cache.get_member(guild_id, user_id)
+
+    async def get_scheduled_event(
+        self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
+    ) -> "ScheduledEvent":
+        """
+        Get a scheduled event by id.
+
+        parameters:
+            event_id: The id of the scheduled event.
+
+        returns:
+            The scheduled event.
+        """
+        scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
+        return ScheduledEvent.from_dict(scheduled_event_data, self)
 
     async def get_sticker(self, sticker_id: "Snowflake_Type"):
         sticker_data = await self.http.get_sticker(sticker_id)

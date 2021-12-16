@@ -4,6 +4,8 @@ from dis_snek.models.route import Route
 from dis_snek.models.snowflake import Snowflake_Type
 from urllib.parse import urlencode
 
+from dis_snek.utils.serializer import dict_filter_missing
+
 
 class ScheduledEventsRequests:
     request: Any
@@ -113,21 +115,19 @@ class ScheduledEventsRequests:
         parameters:
             guild_id: The guild to get scheduled event users from
             scheduled_event_id: The scheduled event to get users from
-            with_count: Whether to include the user count in the response
+            limit: how many users to receive from the event
+            with_member: include guild member data if it exists
+            before: consider only users before given user id
+            after: consider only users after given user id
         returns:
             List of Scheduled Event Users or None
         """
         query_params = urlencode(
-            {
-                "limit": limit,
-                "with_memeber": with_member,
-                "before": before,
-                "after": after,
-            }
+            dict_filter_missing(dict(limit=limit, with_member=with_member, before=before, after=after))
         )
         return await self.request(
             Route(
                 "GET",
-                f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users{query_params}",
+                f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users?{query_params}",
             )
         )

@@ -654,7 +654,9 @@ class Guild(BaseGuild):
         scheduled_events_data = await self._client.http.list_schedules_events(self.id, with_user_count)
         return ScheduledEvent.from_list(scheduled_events_data, self._client)
 
-    async def get_scheduled_event(self, scheduled_event_id: "Snowflake_Type") -> "ScheduledEvent":
+    async def get_scheduled_event(
+        self, scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
+    ) -> "ScheduledEvent":
         """
         Get a scheduled event by id.
 
@@ -664,7 +666,7 @@ class Guild(BaseGuild):
         returns:
             The scheduled event.
         """
-        scheduled_event_data = await self._client.http.get_scheduled_event(self.id, scheduled_event_id)
+        scheduled_event_data = await self._client.http.get_scheduled_event(self.id, scheduled_event_id, with_user_count)
         return ScheduledEvent.from_dict(scheduled_event_data, self._client)
 
     async def create_scheduled_event(
