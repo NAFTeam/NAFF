@@ -10,3 +10,4 @@ from dis_snek.http_requests.stickers import StickerRequests  # noqa
 from dis_snek.http_requests.threads import ThreadRequests  # noqa
 from dis_snek.http_requests.users import UserRequests  # noqa
 from dis_snek.http_requests.webhooks import WebhookRequests  # noqa
+from dis_snek.http_requests.scheduled_events import ScheduledEventsRequests  # noqa

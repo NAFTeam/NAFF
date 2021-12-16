@@ -13,6 +13,7 @@ from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
+from dis_snek.models.discord_objects.scheduled_event import ScheduledEvent, ScheduledEventPrivacyLevel
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
@@ -40,6 +41,10 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite
+    from dis_snek.models.discord_objects.scheduled_event import (
+        ScheduledEventEntityType,
+        ScheduledEventPrivacyLevel,
+    )
 
 log = logging.getLogger(logger_name)
 
@@ -638,6 +643,76 @@ class Guild(BaseGuild):
             permission_overwrites=permission_overwrites,
             reason=reason,
         )
+
+    async def list_scheduled_events(self, with_user_count: bool = False) -> List["ScheduledEvent"]:
+        """
+        List all scheduled events in this guild.
+
+        returns:
+            A list of scheduled events.
+        """
+        scheduled_events_data = await self._client.http.list_schedules_events(self.id, with_user_count)
+        return ScheduledEvent.from_list(scheduled_events_data, self._client)
+
+    async def get_scheduled_event(self, scheduled_event_id: "Snowflake_Type") -> "ScheduledEvent":
+        """
+        Get a scheduled event by id.
+
+        parameters:
+            event_id: The id of the scheduled event.
+
+        returns:
+            The scheduled event.
+        """
+        scheduled_event_data = await self._client.http.get_scheduled_event(self.id, scheduled_event_id)
+        return ScheduledEvent.from_dict(scheduled_event_data, self._client)
+
+    async def create_scheduled_event(
+        self,
+        name: str,
+        entity_type: "ScheduledEventEntityType",
+        start_time: "Timestamp",
+        end_time: Optional["Timestamp"] = MISSING,
+        description: Optional[str] = MISSING,
+        channel_id: Optional["Snowflake_Type"] = MISSING,
+        entity_metadata: Optional[dict] = MISSING,
+        privacy_level: "ScheduledEventPrivacyLevel" = ScheduledEventPrivacyLevel.GUILD_ONLY,
+        reason: Optional[str] = MISSING,
+    ):
+        """Create a scheduled guild event.
+
+        Args:
+            name: event name
+            entity_type: event type
+            start_time: `Timestamp` object
+            end_time: `Timestamp` object
+            description: event description
+            channel_id: channel id
+            entity_metadata: event metadata
+            privacy_level: event privacy level
+            reason: reason for creating this scheduled event
+
+        Returns:
+            ScheduledEvent object
+
+        !!! note
+            channel_id is Optional when entity_type is `ScheduledEventEntityType.EXTERNAL`
+
+        ??? note
+            Example: `entity_metadata={"location": "https://discord.gg/dis-snek"}`
+        """
+        payload = dict(
+            name=name,
+            entity_type=entity_type,
+            scheduled_start_time=start_time.isoformat(),
+            scheduled_end_time=end_time.isoformat() if end_time is not MISSING else end_time,
+            description=description,
+            channel_id=channel_id,
+            entity_metadata=entity_metadata,
+            privacy_level=privacy_level,
+        )
+        scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)
+        return ScheduledEvent.from_dict(scheduled_event_data, self._client)
 
     async def delete_channel(self, channel: Union["TYPE_GUILD_CHANNEL", "Snowflake_Type"], reason: str = None) -> None:
         """
