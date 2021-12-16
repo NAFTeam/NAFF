@@ -6,7 +6,6 @@ import concurrent.futures
 import logging
 import random
 import sys
-import threading
 import time
 import zlib
 from typing import Any, List, Optional, TYPE_CHECKING
@@ -39,7 +38,7 @@ class GatewayRateLimit:
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 
-class BeeGees(threading.Thread):
+class BeeGees:
     """
     Keeps the gateway connection alive.
 
@@ -61,40 +60,45 @@ class BeeGees(threading.Thread):
 
         self._last_ack: float = time.perf_counter()
         self._last_send: float = 0
-        self._stop_ev: threading.Event = threading.Event()
+        self._stop_ev: asyncio.Event = asyncio.Event()
 
-        super().__init__()
-        self.daemon = True
-
-    def run(self) -> None:
+    async def run(self) -> None:
         """Start automatically sending heartbeats to discord."""
         log.debug(f"Sending heartbeat every {self.interval} seconds")
-        while not self._stop_ev.is_set():
-
+        while True:
             if self._last_send and (self._last_ack + self._max_heartbeat_timeout) < time.perf_counter():
                 log.warning(
                     f"Heartbeat has not been acknowledged for {self._max_heartbeat_timeout} seconds, likely zombied connection. Reconnect!"
                 )
                 self.stop()
-                asyncio.run_coroutine_threadsafe(self.ws.close(resume=True), loop=self.ws.loop)
-                continue
+                return await self.ws.close(resume=True)
 
             wait_time = 0
             while wait_time < self._max_heartbeat_timeout:
                 try:
-                    f = asyncio.run_coroutine_threadsafe(self.ws.send_heartbeat(), loop=self.ws.loop)
-                    f.result(10)
+                    await asyncio.wait_for(self.ws.send_heartbeat(), timeout=10)
                 except concurrent.futures.TimeoutError:
                     wait_time += 10
                     log.warning(f"Failed to send heartbeat! Blocked for {wait_time} seconds")
                     continue
                 else:
                     self._last_send = time.perf_counter()
-                    time.sleep(self.interval)
                     break
             if wait_time > self._max_heartbeat_timeout:
                 log.critical(f"Unable to send heartbeat for {wait_time} seconds, no longer sending heartbeats.")
                 self.stop()
+
+            try:
+                # wait for next iteration
+                await asyncio.wait_for(self._stop_ev.wait(), timeout=self.interval)
+            except asyncio.TimeoutError:
+                continue
+            else:
+                return
+
+    def start(self) -> None:
+        """Start sending heartbeats."""
+        self.ws.loop.create_task(self.run())
 
     def stop(self) -> None:
         """Stop sending heartbeats."""
