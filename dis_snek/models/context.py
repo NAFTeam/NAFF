@@ -7,6 +7,7 @@ import attr
 from aiohttp import FormData
 
 from dis_snek.const import MISSING
+from dis_snek.errors import AlreadyDeferred
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes, OptionTypes
 from dis_snek.models.discord_objects.message import process_message_payload
@@ -217,7 +218,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             ephemeral: Should the response be ephemeral
         """
         if self.deferred or self.responded:
-            raise Exception("You have already responded to this interaction!")
+            raise AlreadyDeferred("You have already responded to this interaction!")
 
         payload = {"type": CallbackTypes.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE}
         if ephemeral:
@@ -327,7 +328,7 @@ class ComponentContext(InteractionContext):
             edit_origin: Whether we intend to edit the original message
         """
         if self.deferred or self.responded:
-            raise Exception("You have already responded to this interaction!")
+            raise AlreadyDeferred("You have already responded to this interaction!")
 
         payload = {
             "type": CallbackTypes.DEFERRED_UPDATE_MESSAGE

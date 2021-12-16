@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 import attr
 
+from dis_snek.errors import AlreadyDeferred
+
 if TYPE_CHECKING:
     from dis_snek.models.context import InteractionContext
 
@@ -32,5 +34,5 @@ class AutoDefer:
         if not ctx.responded and not ctx.deferred:
             try:
                 await ctx.defer(self.ephemeral)
-            except Exception:
+            except AlreadyDeferred:
                 pass
