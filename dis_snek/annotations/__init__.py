@@ -1,1 +1,2 @@
-from dis_snek.annotations.argument_annotations import *
+from .argument_annotations import *
+from .slash_annotations import *

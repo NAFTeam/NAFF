@@ -240,7 +240,6 @@ class Message(BaseMessage):
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
-        # TODO: Is there a way to dynamically do this instead of hard coding?
 
         try:
             author_data = data.pop("author")

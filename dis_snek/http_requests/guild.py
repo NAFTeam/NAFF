@@ -55,7 +55,7 @@ class GuildRequests:
             guild_id: the guilds ID
 
         returns:
-            guild preview object  # todo: make an object representing this
+            guild preview object
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/preview"))
 

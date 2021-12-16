@@ -13,11 +13,7 @@ from .route import *
 from .scale import *
 from .snowflake import *
 from .timestamp import *
-
-# these are intentionally not imported, leaving them here so people dont think its a mistake
-# from .events import *
-# from .enums import *
-
+from .enums import Intents, ActivityType, Status
 
 from .discord_objects.activity import *
 from .discord_objects.application import *
@@ -37,3 +33,5 @@ from .discord_objects.thread import *
 from .discord_objects.user import *
 from .discord_objects.webhooks import *
 from .discord_objects.voice_state import *
+
+from . import events, enums

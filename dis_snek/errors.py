@@ -243,5 +243,9 @@ class InteractionMissingAccess(InteractionException):
         super().__init__(err_msg)
 
 
+class AlreadyDeferred(BotException):
+    """An interaction was already deferred, and you attempted to defer it again"""
+
+
 class ForeignWebhookException(SnakeException):
     """Raised when you attempt to send using a webhook you did not create"""
