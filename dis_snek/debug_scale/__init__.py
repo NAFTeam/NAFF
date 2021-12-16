@@ -69,6 +69,11 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         e.description = get_cache_state(self.bot)
         await ctx.send(embeds=[e])
 
+    @debug_info.subcommand("shutdown", sub_cmd_description="Shutdown the bot.")
+    async def shutdown(self, ctx: InteractionContext):
+        await ctx.send("Shutting down 😴")
+        await self.bot.stop()
+
 
 def setup(bot):
     DebugScale(bot)
