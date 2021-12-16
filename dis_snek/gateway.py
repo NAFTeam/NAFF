@@ -260,9 +260,12 @@ class WebsocketClient:
             if isinstance(resp.data, bytes):
                 self.buffer.extend(msg)
 
-            if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
-                # message isn't complete yet, wait
-                continue
+            try:
+                if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
+                    # message isn't complete yet, wait
+                    continue
+            except TypeError:
+                log.debug(f"None encountered while receiving data from Gateway: \n{resp = }\n{msg = }")
 
             msg = self._zlib.decompress(self.buffer)
             self.buffer = bytearray()
