@@ -406,7 +406,7 @@ class Guild(BaseGuild):
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
-        return CustomEmoji.from_dict(emoji_data, self._client)  # TODO Probably cache it
+        return CustomEmoji.from_dict(emoji_data, self._client)
 
     async def create_guild_template(self, name: str, description: str = None) -> "GuildTemplate":
 

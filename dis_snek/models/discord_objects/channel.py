@@ -994,7 +994,7 @@ class GuildPrivateThread(ThreadChannel):
 
 
 @define()
-class VoiceChannel(GuildChannel):  # TODO May not be needed, can be directly just GuildVoice.
+class VoiceChannel(GuildChannel):  # May not be needed, can be directly just GuildVoice.
     bitrate: int = attr.ib()
     user_limit: int = attr.ib()
     rtc_region: str = attr.ib(default="auto")

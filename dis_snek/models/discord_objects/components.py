@@ -26,7 +26,7 @@ class BaseComponent(DictSerializationMixin):
 
     @classmethod
     def from_dict_factory(cls, data: dict) -> "TYPE_ALL_COMPONENT":
-        data.pop("hash", None)  # TODO Zero clue why discord sometimes include a hash attribute...
+        data.pop("hash", None)  # Zero clue why discord sometimes include a hash attribute...
 
         component_type = data.pop("type", None)
         component_class = TYPE_COMPONENT_MAPPING.get(component_type, None)
