@@ -285,7 +285,14 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             flags = MessageFlags.EPHEMERAL
 
         return await super().send(
-            content, embeds or embed, components, stickers, allowed_mentions, reply_to, file, tts, flags
+            content,
+            embeds=embeds,
+            embed=embed,
+            components=components,
+            stickers=stickers,
+            allowed_mentions=allowed_mentions,
+            tts=tts,
+            flags=flags,
         )
 
 

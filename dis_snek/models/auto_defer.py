@@ -29,5 +29,8 @@ class AutoDefer:
                 await ctx.defer(self.ephemeral)
 
     async def defer(self, ctx: "InteractionContext"):
-        if not ctx.responded:
-            await ctx.defer(self.ephemeral)
+        if not ctx.responded and not ctx.deferred:
+            try:
+                await ctx.defer(self.ephemeral)
+            except Exception:
+                pass
