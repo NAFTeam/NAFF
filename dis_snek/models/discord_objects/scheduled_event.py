@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 class ScheduledEventPrivacyLevel(IntEnum):
     """The privacy level of the scheduled event."""
 
-    # Discord only has one at the momment.
     GUILD_ONLY = 2
 
 
@@ -44,7 +43,6 @@ class ScheduledEventEntityType(IntEnum):
 class ScheduledEventStatus(IntEnum):
     """The status of the scheduled event."""
 
-    # Discord only has one at the momment.
     SCHEDULED = 1
     ACTIVE = 2
     COMPLETED = 3
@@ -72,21 +70,26 @@ class ScheduledEvent(DiscordObject):
     name: str = attr.ib()
     description: str = attr.ib(default=MISSING)
     entity_type: Union[ScheduledEventEntityType, int] = attr.ib(converter=ScheduledEventEntityType)
-    """	the type of the scheduled event"""
+    """The type of the scheduled event"""
     scheduled_start_time: Timestamp = attr.ib(converter=timestamp_converter)
-    """ a Timestamp object representing the scheduled start time of the event """
+    """A Timestamp object representing the scheduled start time of the event """
     scheduled_end_time: Optional[Timestamp] = attr.ib(default=MISSING, converter=optional(timestamp_converter))
-    """	optinal Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
+    """Optional Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
     privacy_level: Union[ScheduledEventPrivacyLevel, int] = attr.ib(converter=ScheduledEventPrivacyLevel)
-    """the privacy level of the scheduled event"""
+    """
+    Privacy level of the scheduled event
+    
+    ??? note:
+        Discord only has `GUILD_ONLY` at the momment.
+    """
     status: Union[ScheduledEventStatus, int] = attr.ib(converter=ScheduledEventStatus)
-    """	the status of the scheduled event"""
+    """Current status of the scheduled event"""
     entity_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING, converter=optional(to_snowflake))
-    """the id of an entity associated with a guild scheduled event"""
+    """The id of an entity associated with a guild scheduled event"""
     entity_metadata: Optional[Dict[str, Any]] = attr.ib(default=MISSING)  # TODO make this
-    """the metadata associated with the entity_type"""
+    """The metadata associated with the entity_type"""
     user_count: int = attr.ib(default=MISSING)
-    """	the number of users subscribed to the scheduled event"""
+    """Amount of users subscribed to the scheduled event"""
 
     _guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
     _creator: Optional["User"] = attr.ib(default=MISSING)
@@ -95,7 +98,8 @@ class ScheduledEvent(DiscordObject):
 
     @property
     async def creator(self) -> Optional["User"]:
-        """Returns the user who created this event
+        """
+        Returns the user who created this event
 
         !!! note:
             Events made before October 25th, 2021 will not have a creator.
@@ -138,13 +142,17 @@ class ScheduledEvent(DiscordObject):
         before: Optional["Snowflake_Type"] = MISSING,
         after: Optional["Snowflake_Type"] = MISSING,
     ) -> Optional[List["ScheduledEventUser"]]:
-        """Get event users
+        """
+        Get event users
 
         Args:
             limit: Discord defualts to 100
+            with_member_data: Whether to include guild member data
+            before: Snowflake of a user to get before
+            after: Snowflake of a user to get after
         """
         event_users = await self._client.http.get_scheduled_event_users(
-            self._guild_id, self.id, limit, with_member_data
+            self._guild_id, self.id, limit, with_member_data, before, after
         )
         if event_users:
             return ScheduledEventUser.from_list(event_users, self._client)
@@ -152,7 +160,12 @@ class ScheduledEvent(DiscordObject):
             return None
 
     async def delete(self, reason: str = MISSING) -> None:
-        """Deletes this event"""
+        """
+        Deletes this event
+
+        Args:
+            reason: The reason for deleting this event
+        """
         await self._client.http.delete_scheduled_event(self._guild_id, self.id, reason)
 
     async def edit(
@@ -168,7 +181,8 @@ class ScheduledEvent(DiscordObject):
         privacy_level: ScheduledEventPrivacyLevel = MISSING,
         reason: str = MISSING,
     ):
-        """Edits this event
+        """
+        Edits this event
 
         Args:
             name: The name of the event
