@@ -66,7 +66,7 @@ class Invite(ClientObject):
         if "target_application" in data:
             data["target_application"] = Application.from_dict(data, client)
 
-        if "target_event_id" in data:
+        if data["target_event_id"]:
             data["scheduled_event"] = data["target_event_id"]
 
         if channel := data.pop("channel", None):
