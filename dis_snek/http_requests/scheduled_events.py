@@ -97,7 +97,7 @@ class ScheduledEventsRequests:
             Scheduled Event or None
         """
         return await self.request(
-            Route("DELETE", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}", reason=reason)
+            Route("DELETE", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"), reason=reason
         )
 
     async def get_scheduled_event_users(
