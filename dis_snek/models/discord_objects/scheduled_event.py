@@ -16,6 +16,7 @@ from enum import IntEnum
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import GuildStageVoice, GuildVoice
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL
     from dis_snek.models.discord_objects.user import User
@@ -102,15 +103,16 @@ class ScheduledEvent(DiscordObject):
         return await self._client.cache.get_user(self._creator_id) if self._creator_id else None
 
     @property
-    def channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
-        """The channel the user is connected to"""
-        if self._channel_id != MISSING:
-            return self._client.cache.channel_cache.get(self._channel_id)
+    def guild(self) -> "Guild":
+        return self._client.cache.guild_cache.get(self._guild_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if data.get("creator"):
             data["creator"] = client.cache.place_user_data(data["creator"])
+
+        if data.get("channel_id"):
+            data["channel"] = client.cache.channel_cache.get(data["channel_id"])
 
         data = super()._process_dict(data, client)
         return data
@@ -122,15 +124,12 @@ class ScheduledEvent(DiscordObject):
             return self.entity_metadata["location"]
         return None
 
-    @property
-    def create_invite(self) -> str:
-        """The event invite url"""
-        if self.channel != MISSING:
-            return self.channel.get_invite()
-
     async def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
         """Returns the channel this event is scheduled in if it is scheduled in a channel"""
-        return self._client.cache.channel_cache.get(self._channel_id) if self._channel_id else None
+        if self._channel_id:
+            channel = await self._client.get_channel(self._channel_id)
+            return channel
+        return None
 
     async def get_event_users(
         self,
@@ -171,7 +170,7 @@ class ScheduledEvent(DiscordObject):
     ):
         """Edits this event
 
-        Parameters:
+        Args:
             name: The name of the event
             description: The description of the event
             channel_id: The channel id of the event
@@ -182,14 +181,22 @@ class ScheduledEvent(DiscordObject):
             entity_metadata: The metadata of the event
             privacy_level: The privacy level of the event
             reason: The reason for editing the event
+
+        !!! note:
+            If updating entity_type to EXTERNAL:
+                `channel_id` is required and must be set to null
+
+                `entity_metadata` with a location field must be provided
+
+                `scheduled_end_time` must be provided
         """
         payload = dict(
             name=name,
             description=description,
             channel_id=channel_id,
             entity_type=entity_type,
-            scheduled_start_time=scheduled_start_time.isoformat(),
-            scheduled_end_time=scheduled_end_time.isoformat(),
+            scheduled_start_time=scheduled_start_time.isoformat() if scheduled_start_time else MISSING,
+            scheduled_end_time=scheduled_end_time.isoformat() if scheduled_end_time else MISSING,
             status=status,
             entity_metadata=entity_metadata,
             privacy_level=privacy_level,
