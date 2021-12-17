@@ -3,7 +3,7 @@ import copy
 import functools
 import logging
 import re
-from typing import Callable, Coroutine, Any, TYPE_CHECKING
+from typing import Awaitable, Callable, Coroutine, Any, TYPE_CHECKING
 
 import attr
 
@@ -259,7 +259,7 @@ def message_command(
     return wrapper
 
 
-def check(check: Callable[..., Coroutine]):
+def check(check: Callable[["Context"], Awaitable[bool]]):
     """
     Add a check to a command.
 
