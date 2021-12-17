@@ -35,7 +35,7 @@ class Invite(ClientObject):
     target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes))
     approximate_presence_count: Optional[int] = field(default=MISSING)
     approximate_member_count: Optional[int] = field(default=MISSING)
-    scheduled_event: Optional[dict] = field(default=None)  # todo: Scheduled Events
+    scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
     stage_instance: Optional[StageInstance] = field(default=None)
     target_application: Optional[dict] = field(default=None)
     guild_preview: Optional[GuildPreview] = field(default=MISSING)
@@ -66,6 +66,9 @@ class Invite(ClientObject):
         if "target_application" in data:
             data["target_application"] = Application.from_dict(data, client)
 
+        if "target_event_id" in data:
+            data["scheduled_event"] = data["target_event_id"]
+
         if channel := data.pop("channel", None):
             # invite metadata does not contain enough info to create a channel object
             data["channel_id"] = channel["id"]
@@ -81,4 +84,6 @@ class Invite(ClientObject):
 
     @property
     def link(self) -> str:
+        if self.scheduled_event:
+            return f"https://discord.gg/{self.code}?event={self.scheduled_event}"
         return f"https://discord.gg/{self.code}"
