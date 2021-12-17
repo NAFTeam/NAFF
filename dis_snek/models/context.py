@@ -171,23 +171,23 @@ class _BaseInteractionContext(Context):
                 match option["type"]:
                     case OptionTypes.USER:
                         value = (
-                            self.client.cache.member_cache.get(
+                            self._client.cache.member_cache.get(
                                 (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
                             )
-                            or self.client.cache.user_cache.get(to_snowflake(value))
+                            or self._client.cache.user_cache.get(to_snowflake(value))
                         ) or value
 
                     case OptionTypes.CHANNEL:
-                        value = self.client.cache.channel_cache.get(to_snowflake(value)) or value
+                        value = self._client.cache.channel_cache.get(to_snowflake(value)) or value
 
                     case OptionTypes.ROLE:
-                        value = self.client.cache.role_cache.get(to_snowflake(value)) or value
+                        value = self._client.cache.role_cache.get(to_snowflake(value)) or value
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := self.client.cache.member_cache.get(snow) or self.client.cache.user_cache.get(snow):
+                        if user := self._client.cache.member_cache.get(snow) or self._client.cache.user_cache.get(snow):
                             value = user
-                        elif role := self.client.cache.role_cache.get(snow):
+                        elif role := self._client.cache.role_cache.get(snow):
                             value = role
 
                 if option.get("focused", False):
