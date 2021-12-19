@@ -34,7 +34,10 @@ class EmojiRequests:
         Returns:
             Emoji object
         """
-        return await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))
+        data = await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))
+        if data:
+            data["guild_id"] = guild_id
+        return data
 
     async def create_guild_emoji(self, payload: dict, guild_id: "Snowflake_Type", reason: str = MISSING) -> dict:
         """
