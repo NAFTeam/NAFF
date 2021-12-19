@@ -10,7 +10,6 @@ from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
@@ -23,7 +22,7 @@ from dis_snek.utils.input_utils import _bytes_to_base64_data
 
 if TYPE_CHECKING:
     from aiohttp import FormData
-
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, DM
 
