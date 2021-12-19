@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import attr
 from attr.converters import optional
 from dis_snek.const import MISSING
+from dis_snek.errors import EventLocationNotProvided
 from dis_snek.models.discord import DiscordObject
 
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
@@ -29,7 +30,7 @@ class ScheduledEventPrivacyLevel(IntEnum):
     GUILD_ONLY = 2
 
 
-class ScheduledEventEntityType(IntEnum):
+class ScheduledEventType(IntEnum):
     """The type of entity that the scheduled event is attached to."""
 
     STAGE_INSTANCE = 1
@@ -69,11 +70,11 @@ class ScheduledEventUser(DiscordObject):
 class ScheduledEvent(DiscordObject):
     name: str = attr.ib()
     description: str = attr.ib(default=MISSING)
-    entity_type: Union[ScheduledEventEntityType, int] = attr.ib(converter=ScheduledEventEntityType)
+    entity_type: Union[ScheduledEventType, int] = attr.ib(converter=ScheduledEventType)
     """The type of the scheduled event"""
-    scheduled_start_time: Timestamp = attr.ib(converter=timestamp_converter)
+    start_time: Timestamp = attr.ib(converter=timestamp_converter)
     """A Timestamp object representing the scheduled start time of the event """
-    scheduled_end_time: Optional[Timestamp] = attr.ib(default=MISSING, converter=optional(timestamp_converter))
+    end_time: Optional[Timestamp] = attr.ib(default=None, converter=optional(timestamp_converter))
     """Optional Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
     privacy_level: Union[ScheduledEventPrivacyLevel, int] = attr.ib(converter=ScheduledEventPrivacyLevel)
     """
@@ -118,13 +119,20 @@ class ScheduledEvent(DiscordObject):
         if data.get("channel_id"):
             data["channel"] = client.cache.channel_cache.get(data["channel_id"])
 
+        data["start_time"] = data.get("scheduled_start_time")
+
+        if end_time := data.get("scheduled_end_time"): 
+            data["end_time"] = end_time
+        else:
+            data["end_time"] = None
+
         data = super()._process_dict(data, client)
         return data
 
     @property
     def location(self) -> Optional[str]:
         """Returns the external locatian of this event"""
-        if self.entity_type == ScheduledEventEntityType.EXTERNAL:
+        if self.entity_type == ScheduledEventType.EXTERNAL:
             return self.entity_metadata["location"]
         return None
 
@@ -171,12 +179,13 @@ class ScheduledEvent(DiscordObject):
     async def edit(
         self,
         name: str = MISSING,
+        start_time: "Timestamp" = MISSING,
+        end_time: "Timestamp" = MISSING,
+        status: ScheduledEventStatus = MISSING,
         description: str = MISSING,
         channel_id: Optional["Snowflake_Type"] = MISSING,
-        entity_type: ScheduledEventEntityType = MISSING,
-        scheduled_start_time: "Timestamp" = MISSING,
-        scheduled_end_time: "Timestamp" = MISSING,
-        status: ScheduledEventStatus = MISSING,
+        event_type: ScheduledEventType = MISSING,
+        external_location: Optional[str] = MISSING,
         entity_metadata: dict = MISSING,
         privacy_level: ScheduledEventPrivacyLevel = MISSING,
         reason: str = MISSING,
@@ -188,7 +197,7 @@ class ScheduledEvent(DiscordObject):
             name: The name of the event
             description: The description of the event
             channel_id: The channel id of the event
-            entity_type: The type of the event
+            event_type: The type of the event
             start_time: The scheduled start time of the event
             end_time: The scheduled end time of the event
             status: The status of the event
@@ -197,20 +206,29 @@ class ScheduledEvent(DiscordObject):
             reason: The reason for editing the event
 
         !!! note:
-            If updating entity_type to EXTERNAL:
+            If updating event_type to EXTERNAL:
                 `channel_id` is required and must be set to null
 
                 `entity_metadata` with a location field must be provided
 
                 `scheduled_end_time` must be provided
         """
+
+        if external_location is not MISSING:
+            entity_metadata = dict(location=external_location)
+        
+        if event_type == ScheduledEventType.EXTERNAL:
+            channel_id = None
+            if external_location == MISSING:
+                raise EventLocationNotProvided("Location is required for external events")
+
         payload = dict(
             name=name,
             description=description,
             channel_id=channel_id,
-            entity_type=entity_type,
-            scheduled_start_time=scheduled_start_time.isoformat() if scheduled_start_time else MISSING,
-            scheduled_end_time=scheduled_end_time.isoformat() if scheduled_end_time else MISSING,
+            entity_type=event_type,
+            scheduled_start_time=start_time.isoformat() if start_time else MISSING,
+            scheduled_end_time=end_time.isoformat() if end_time else MISSING,
             status=status,
             entity_metadata=entity_metadata,
             privacy_level=privacy_level,
