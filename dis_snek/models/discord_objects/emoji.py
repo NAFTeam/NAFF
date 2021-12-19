@@ -92,8 +92,13 @@ class CustomEmoji(Emoji):
         """
         if not self.available:
             return False
-        # todo: check roles
-        return True
+
+        guild = self._client.cache.guild_cache.get(self._guild_id)
+
+        if not self._role_ids or not guild:
+            return True
+
+        return any(e_role_id in guild.me._role_ids for e_role_id in self._role_ids)
 
     async def get_creator(self) -> "User":
         """
