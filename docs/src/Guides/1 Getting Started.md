@@ -4,7 +4,7 @@ Hi! So you want to make a bot powered by snakes. This guide aims to get you star
 
 ### Requirements
 
-- [x] Python 3.9 or greater
+- [x] Python 3.10 or greater
 - [x] Know how to use `pip`
 - [x] [A bot account](2 Creating Your Bot.md)
 - [ ] An aversion to snakes
