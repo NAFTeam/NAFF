@@ -24,7 +24,7 @@ class ChannelEvents(EventMixinTemplate):
         # so we cache it regardless
         channel = self.cache.place_channel_data(event.data)
         if guild := channel.guild:
-            guild._channel_ids.remove(channel.id)
+            guild._channel_ids.discard(channel.id)
         self.dispatch(events.ChannelDelete(channel))
 
     @Processor.define()

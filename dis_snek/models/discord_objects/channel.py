@@ -599,6 +599,8 @@ class BaseChannel(DiscordObject):
             reason: The reason for deleting this channel
         """
         await self._client.http.delete_channel(self.id, reason)
+        if guild := getattr(self, "guild"):
+            guild._channel_ids.discard(self.id)
 
 
 ################################################################
