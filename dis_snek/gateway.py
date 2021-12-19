@@ -22,6 +22,7 @@ from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek import Snake
+    from dis_snek.state import ConnectionState
 
 log = logging.getLogger(logger_name)
 
@@ -174,24 +175,29 @@ class WebsocketClient:
     @classmethod
     async def connect(
         cls,
-        client: "Snake",
+        state: "ConnectionState",
         session_id: Optional[int] = None,
         sequence: Optional[int] = None,
         presence: Optional[dict] = None,
     ):
         """
-        Connect tot he discord gateway
+        Connect to the discord gateway
         Args:
-            client: The Snek Client
+            state: The connection state
             session_id: The session id to use, if resuming
             sequence: The sequence to use, if resuming
             presence: The presence to login with
+
         """
-        cls.client = client
-        cls._gateway = await client.http.get_gateway()
+        cls.client = state.client
+        cls.state = state
+        cls._gateway = await state.client.http.get_gateway()
         cls.presence = presence
-        cls.ws = await client.http.websocket_connect(cls._gateway)
-        client.dispatch(events.Connect())
+        cls.ws = await state.client.http.websocket_connect(cls._gateway)
+
+        cls.shard_id = state.shard_id
+        cls.total_shards = state.client.total_shards
+        state.client.dispatch(events.Connect())
         if session_id and sequence:
             # resume
             return cls(session_id, sequence)
@@ -241,7 +247,7 @@ class WebsocketClient:
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
-        while not self.client.is_closed:
+        while not self.state.is_closed:
             resp = await self.ws.receive()
             msg = resp.data
 
@@ -384,7 +390,8 @@ class WebsocketClient:
             "op": OPCODE.IDENTIFY,
             "d": {
                 "token": self.client.http.token,
-                "intents": self.client.intents,
+                "intents": self.state.intents,
+                "shard": [self.shard_id, self.total_shards],
                 "large_threshold": 250,
                 "properties": {"$os": sys.platform, "$browser": "dis.snek", "$device": "dis.snek"},
                 "presence": self.presence,
@@ -392,7 +399,9 @@ class WebsocketClient:
             "compress": True,
         }
         await self.send_json(payload)
-        log.debug(f"Client has identified itself to Gateway, requesting intents: {self.client.intents}!")
+        log.debug(
+            f"Shard ID {self.shard_id} has identified itself to Gateway, requesting intents: {self.state.intents}!"
+        )
 
     async def resume_connection(self) -> None:
         """Send a resume payload to the gateway."""
@@ -406,7 +415,7 @@ class WebsocketClient:
     async def send_heartbeat(self) -> None:
         """Send a heartbeat to the gateway."""
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
-        log.debug(f"❤ Shard {0} is sending a Heartbeat")  # todo get shard num
+        log.debug(f"❤ Shard {self.shard_id} is sending a Heartbeat")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
         payload = dict_filter_none(
