@@ -52,46 +52,36 @@ class BeeGees:
 
     slots = ("ws", "interval", "timeout", "latency", "_last_ack", "_last_send", "_stop_ev")
 
-    def __init__(self, ws: Any, interval: int, timeout: int = 60, heartbeat_timeout: int = 120) -> None:
+    def __init__(self, ws: Any, interval: int, timeout: int = 60) -> None:
         self.ws = ws
         self.interval: int = interval
         self.timeout: int = timeout
         self.latency: List[float] = []
-        self._max_heartbeat_timeout = heartbeat_timeout
 
         self._last_ack: float = time.perf_counter()
         self._last_send: float = 0
         self._stop_ev: asyncio.Event = asyncio.Event()
+        self._ack_ev: asyncio.Event = asyncio.Event()
 
     async def run(self) -> None:
         """Start automatically sending heartbeats to discord."""
         log.debug(f"Sending heartbeat every {self.interval} seconds")
         while True:
-            if self._last_send and (self._last_ack + self._max_heartbeat_timeout) < time.perf_counter():
+            try:
+                self._ack_ev.clear()
+                await self.ws.send_heartbeat()
+                self._last_send = time.perf_counter()
+                await asyncio.wait_for(self._ack_ev.wait(), timeout=self.interval)
+            except asyncio.TimeoutError:
                 log.warning(
-                    f"Heartbeat has not been acknowledged for {self._max_heartbeat_timeout} seconds, likely zombied connection. Reconnect!"
+                    f"Heartbeat has not been acknowledged for {self.interval} seconds, likely zombied connection. Reconnect!"
                 )
                 self.stop()
                 return await self.ws.close(resume=True)
 
-            wait_time = 0
-            while wait_time < self._max_heartbeat_timeout:
-                try:
-                    await asyncio.wait_for(self.ws.send_heartbeat(), timeout=10)
-                except concurrent.futures.TimeoutError:
-                    wait_time += 10
-                    log.warning(f"Failed to send heartbeat! Blocked for {wait_time} seconds")
-                    continue
-                else:
-                    self._last_send = time.perf_counter()
-                    break
-            if wait_time > self._max_heartbeat_timeout:
-                log.critical(f"Unable to send heartbeat for {wait_time} seconds, no longer sending heartbeats.")
-                self.stop()
-
             try:
-                # wait for next iteration
-                await asyncio.wait_for(self._stop_ev.wait(), timeout=self.interval)
+                # wait for next iteration, accounting for latency
+                await asyncio.wait_for(self._stop_ev.wait(), timeout=self.interval - self.latency[-1])
             except asyncio.TimeoutError:
                 continue
             else:
@@ -108,15 +98,18 @@ class BeeGees:
     def ack(self) -> None:
         """Log discord ack the heartbeat."""
         ack_time = self._last_ack = time.perf_counter()
+        self._ack_ev.set()
 
         self.latency.append(ack_time - self._last_send)
         if len(self.latency) > 10:
             self.latency.pop(0)
 
         if self._last_send != 0 and self.latency[-1] > 15:
-            log.warning(f"High Latency! shard ID {0} heartbeat took {self.latency[-1]:.1f}s to be acknowledged!")
+            log.warning(
+                f"High Latency! shard ID {self.ws.shard_id} heartbeat took {self.latency[-1]:.1f}s to be acknowledged!"
+            )
         else:
-            log.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.1f} seconds")
+            log.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
 
 
 class WebsocketClient:
@@ -158,7 +151,6 @@ class WebsocketClient:
         self._zlib = zlib.decompressobj()
         self._keep_alive = MISSING
 
-        self._max_heartbeat_timeout = 120
         self.rl_manager = GatewayRateLimit()
         self.chunk_cache = {}
 
