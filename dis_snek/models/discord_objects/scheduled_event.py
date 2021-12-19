@@ -121,7 +121,7 @@ class ScheduledEvent(DiscordObject):
 
         data["start_time"] = data.get("scheduled_start_time")
 
-        if end_time := data.get("scheduled_end_time"): 
+        if end_time := data.get("scheduled_end_time"):
             data["end_time"] = end_time
         else:
             data["end_time"] = None
@@ -216,7 +216,7 @@ class ScheduledEvent(DiscordObject):
 
         if external_location is not MISSING:
             entity_metadata = dict(location=external_location)
-        
+
         if event_type == ScheduledEventType.EXTERNAL:
             channel_id = None
             if external_location == MISSING:

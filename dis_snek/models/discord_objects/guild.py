@@ -8,6 +8,7 @@ from aiohttp import FormData
 from attr.converters import optional
 
 from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name
+from dis_snek.errors import EventLocationNotProvided
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
@@ -15,7 +16,11 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
-from dis_snek.models.discord_objects.scheduled_event import ScheduledEvent, ScheduledEventPrivacyLevel
+from dis_snek.models.discord_objects.scheduled_event import (
+    ScheduledEvent,
+    ScheduledEventPrivacyLevel,
+    ScheduledEventType,
+)
 from dis_snek.models.enums import (
     NSFWLevels,
     Permissions,
@@ -41,7 +46,6 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite
-from dis_snek.models.discord_objects.scheduled_event import ScheduledEventEntityType
 
 log = logging.getLogger(logger_name)
 
@@ -680,7 +684,7 @@ class Guild(BaseGuild):
         """
         Get a scheduled event by id.
 
-        parameters:
+        Args:
             event_id: The id of the scheduled event.
 
         returns:
@@ -692,12 +696,13 @@ class Guild(BaseGuild):
     async def create_scheduled_event(
         self,
         name: str,
-        entity_type: "ScheduledEventEntityType",
-        scheduled_start_time: "Timestamp",
-        scheduled_end_time: Optional["Timestamp"] = MISSING,
+        event_type: "ScheduledEventType",
+        start_time: "Timestamp",
+        end_time: Optional["Timestamp"] = MISSING,
         description: Optional[str] = MISSING,
         channel_id: Optional["Snowflake_Type"] = MISSING,
-        entity_metadata: Optional[dict] = MISSING,
+        external_location: Optional[str] = MISSING,
+        entity_metadata: Optional[dict] = None,
         privacy_level: "ScheduledEventPrivacyLevel" = ScheduledEventPrivacyLevel.GUILD_ONLY,
         reason: Optional[str] = MISSING,
     ):
@@ -705,12 +710,13 @@ class Guild(BaseGuild):
 
         Args:
             name: event name
-            entity_type: event type
+            event_type: event type
             start_time: `Timestamp` object
             end_time: `Timestamp` object
             description: event description
             channel_id: channel id
-            entity_metadata: event metadata
+            external_location: event external location (For external events)
+            entity_metadata: event metadata (additional data for the event)
             privacy_level: event privacy level
             reason: reason for creating this scheduled event
 
@@ -718,23 +724,32 @@ class Guild(BaseGuild):
             ScheduledEvent object
 
         !!! note
-            channel_id is Optional when entity_type is `ScheduledEventEntityType.EXTERNAL`
+            For external events, external_location is required
+            For voice/stage events, channel_id is required
 
         ??? note
+            entity_metadata is the backend dictionary for fluff fields. Where possible, we plan to expose these fields directly.
+            The full list of supported fields is https://discord.com/developers/docs/resources/guild-scheduled-event#guild-scheduled-event-object-guild-scheduled-event-entity-metadata
             Example: `entity_metadata=dict(location="cool place")`
         """
+        if external_location is not MISSING:
+            entity_metadata = dict(location=external_location)
+
+        if event_type == ScheduledEventType.EXTERNAL:
+            if external_location == MISSING:
+                raise EventLocationNotProvided("Location is required for external events")
+
         payload = dict(
             name=name,
-            entity_type=entity_type,
-            scheduled_start_time=scheduled_start_time.isoformat(),
-            scheduled_end_time=scheduled_end_time.isoformat()
-            if scheduled_end_time is not MISSING
-            else scheduled_end_time,
+            entity_type=event_type,
+            scheduled_start_time=start_time.isoformat(),
+            scheduled_end_time=end_time.isoformat() if end_time is not MISSING else end_time,
             description=description,
             channel_id=channel_id,
             entity_metadata=entity_metadata,
             privacy_level=privacy_level,
         )
+
         scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)
         return ScheduledEvent.from_dict(scheduled_event_data, self._client)
 
