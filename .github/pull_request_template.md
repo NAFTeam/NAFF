@@ -17,5 +17,5 @@
 
 <!-- These are actions you **must** have taken, if you haven't, your PR will be rejected -->
 - [ ] I've formatted my code with [Black](https://black.readthedocs.io/en/stable/)
-- [ ] I've ensured my code works on `Python 3.9.x`
+- [ ] I've ensured my code works on `Python 3.10.x`
 - [ ] I've tested my code
