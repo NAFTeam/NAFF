@@ -131,7 +131,7 @@ class Paginator:
         content_pages = textwrap.wrap(
             content,
             width=page_size - (len(prefix) + len(suffix)),
-            break_long_words=False,
+            break_long_words=True,
             break_on_hyphens=False,
             replace_whitespace=False,
         )
@@ -259,7 +259,8 @@ class Paginator:
 
     async def _on_button(self, ctx: ComponentContext, *args, **kwargs):
         if ctx.author.id == self.author_id:
-            self._timeout_task.ping.set()
+            if self._timeout_task:
+                self._timeout_task.ping.set()
             match ctx.custom_id.split("|")[1]:
                 case "first":
                     self.page_index = 0
