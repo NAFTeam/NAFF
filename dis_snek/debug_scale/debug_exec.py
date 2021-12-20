@@ -14,6 +14,7 @@ from dis_snek.models import (
     File,
     checks,
 )
+from dis_snek.models.paginators import Paginator
 from dis_snek.models.scale import Scale
 
 
@@ -84,8 +85,8 @@ class DebugExec(Scale):
             return await ctx.message.reply(f"```py\n{result.replace(self.bot.http.token, '[REDACTED TOKEN]')}```")
 
         else:
-            # todo: paginator
-            return await ctx.message.reply(f"Content too large to send! {len(result)} characters")
+            paginator = Paginator.create_from_string(self.bot, result, prefix="```py", suffix="```", page_size=4000)
+            return await paginator.send(ctx)
 
 
 def setup(bot):

@@ -80,6 +80,12 @@ class BaseGuild(DiscordObject):
 
 
 @define()
+class GuildWelcome(ClientObject):
+    description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
+    welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))
+
+
+@define()
 class GuildPreview(BaseGuild):
     emoji: list[Emoji] = attr.ib(factory=list)
     """A list of custom emoji from this guild"""
@@ -156,7 +162,7 @@ class Guild(BaseGuild):
     """The id of the channel where admins and moderators of Community guilds receive notices from Discord."""
     max_video_channel_users: int = attr.ib(default=0)
     """The maximum amount of users in a video channel."""
-    welcome_screen: Optional[dict] = attr.ib(factory=list)  # TODO 	welcome screen object.
+    welcome_screen: Optional["GuildWelcome"] = attr.ib(default=None)
     """The welcome screen of a Community guild, shown to new members, returned in an Invite's guild object."""
     nsfw_level: Union[NSFWLevels, int] = attr.ib(default=NSFWLevels.DEFAULT)
     """The guild NSFW level."""
@@ -193,6 +199,8 @@ class Guild(BaseGuild):
         roles_data = data.pop("roles", [])
         data["role_ids"] = set(client.cache.place_role_data(guild_id, roles_data).keys())
 
+        if welcome_screen := data.get("welcome_screen"):
+            data["welcome_screen"] = GuildWelcome.from_dict(welcome_screen, client)
         return data
 
     @property
@@ -1009,6 +1017,10 @@ class Guild(BaseGuild):
         data = await self._client.http.get_guild_integrations(self.id)
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
+    async def search_members(self, query: str, limit: int = 1) -> List["Member"]:
+        data = await self._client.http.search_guild_members(guild_id=self.id, query=query, limit=limit)
+        return [self._client.cache.place_member_data(self.id, _d) for _d in data]
+
 
 @define()
 class GuildTemplate(ClientObject):
@@ -1072,12 +1084,6 @@ class GuildWelcomeChannel(ClientObject):
     emoji_name: Optional[str] = attr.ib(
         default=None, metadata=docs("Emoji name if custom, unicode character if standard")
     )
-
-
-@define()
-class GuildWelcome(ClientObject):
-    description: Optional[str] = attr.ib(default=None, metadata=docs("Welcome Screen server description"))
-    welcome_channels: List["GuildWelcomeChannel"] = attr.ib(metadata=docs("List of Welcome Channel objects, up to 5"))
 
 
 class GuildIntegration(DiscordObject):

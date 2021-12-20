@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -6,7 +7,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 import attr
 from aiohttp import FormData
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import AlreadyDeferred
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes, OptionTypes
@@ -29,6 +30,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.message import MessageReference
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.role import Role
+
+log = logging.getLogger(logger_name)
 
 
 @attr.s
@@ -389,6 +392,11 @@ class ComponentContext(InteractionContext):
 
         message_data = None
         if self.deferred:
+            if not self.defer_edit_origin:
+                log.warning(
+                    "If you want to edit the original message, and need to defer, you must set the `edit_origin` kwarg to True!"
+                )
+
             message_data = await self._client.http.edit_interaction_message(
                 message_payload, self._client.app.id, self._token
             )
