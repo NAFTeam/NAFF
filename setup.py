@@ -16,6 +16,7 @@ setup(
     url="https://github.com/Discord-Snake-Pit/Dis-Snek",
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
+    package_data={"dis_snek": ["py.typed"]},
     python_requires=">=3.10",
     install_requires=(Path(__file__).parent / "requirements.txt").read_text().splitlines(),
     classifiers=[
