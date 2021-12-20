@@ -58,8 +58,6 @@ class ConnectionState:
 
     async def stop(self):
         log.debug(f"Shutting down shard ID {self.shard_id}")
-        self._ready.clear()
-        self._startup = False
         await self.gateway.close(shutdown=True)
 
     async def _ws_connect(self):
