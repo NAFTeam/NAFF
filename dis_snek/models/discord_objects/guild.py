@@ -1017,7 +1017,7 @@ class Guild(BaseGuild):
         data = await self._client.http.get_guild_integrations(self.id)
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
-    async def search_guild_members(self, query: str, limit: int = 1) -> List["Member"]:
+    async def search_members(self, query: str, limit: int = 1) -> List["Member"]:
         data = await self._client.http.search_guild_members(guild_id=self.id, query=query, limit=limit)
         return [self._client.cache.place_member_data(self.id, _d) for _d in data]
 
