@@ -65,7 +65,7 @@ class MemberRequests:
         mute: bool = MISSING,
         deaf: bool = MISSING,
         channel_id: "Snowflake_Type" = MISSING,
-        communication_disabled_until: Union["Timestamp", None] = MISSING,
+        communication_disabled_until: Union[Timestamp, None] = MISSING,
         reason: str = MISSING,
     ) -> Dict:
         """
