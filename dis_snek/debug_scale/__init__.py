@@ -26,7 +26,7 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
             self.bot.loop.set_debug(True)
 
     @listen()
-    async def on_startup(self):
+    async def on_startup(self) -> None:
         log.info(f"Started {self.bot.user.tag} [{self.bot.user.id}] in Debug Mode")
 
         log.info(f"Caching System State: \n{get_cache_state(self.bot)}")

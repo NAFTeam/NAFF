@@ -171,7 +171,7 @@ class InteractionCommand(BaseCommand):
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if self.callback is not None:
             if hasattr(self.callback, "auto_defer"):
                 self.auto_defer = self.callback.auto_defer
@@ -361,7 +361,7 @@ class SlashCommand(InteractionCommand):
     def is_subcommand(self) -> bool:
         return self.sub_cmd_name is not None
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         params = get_parameters(self.callback)
         for name, val in params.items():
             if val.annotation and isinstance(val.annotation, SlashCommandOption):

@@ -28,7 +28,7 @@ class Sleeper:
         self.handle = self._loop.call_later(delta, self.future.set_result, True)
         return self.future
 
-    def cancel(self):
+    def cancel(self) -> None:
         self.handle.cancel()
         self.future.cancel()
 
@@ -78,7 +78,7 @@ class Task:
             return not self.sleeper.future.done()
         return False
 
-    def __call__(self):
+    def __call__(self) -> None:
         if inspect.iscoroutinefunction(self.callback):
             asyncio.gather(self.callback())
         else:

@@ -34,7 +34,7 @@ class Timeout:
     run: bool = attr.ib(default=True)
     ping: asyncio.Event = asyncio.Event()
 
-    async def __call__(self):
+    async def __call__(self) -> None:
         while self.run:
             try:
                 await asyncio.wait_for(self.ping.wait(), timeout=self.paginator.timeout_interval)
@@ -101,7 +101,7 @@ class Paginator:
     _timeout_task: Timeout = attr.ib(default=MISSING)
     _author_id: Snowflake_Type = attr.ib(default=MISSING)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         self.client.add_component_callback(
             ComponentCommand(
                 name=f"Paginator:{self._uuid}",
@@ -250,7 +250,7 @@ class Paginator:
             self._timeout_task.ping.set()
         await self._message.edit(components=self.create_components(True))
 
-    async def update(self):
+    async def update(self) -> None:
         """
         Update the paginator to the current state
 

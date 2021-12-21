@@ -71,7 +71,7 @@ class TTLCache(OrderedDict):
     def _first_item(self):
         return next(super().items().__iter__())
 
-    def expire(self):
+    def expire(self) -> None:
         """Removes expired elements from the cache"""
         if self.soft_limit and len(self) <= self.soft_limit:
             return
@@ -88,7 +88,7 @@ class TTLCache(OrderedDict):
             else:
                 break
 
-    def _expire_first(self):
+    def _expire_first(self) -> None:
         key, value = self.popitem(last=False)
         if self.on_expire:
             self.on_expire(key, value)

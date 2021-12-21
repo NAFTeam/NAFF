@@ -51,16 +51,16 @@ class ConnectionState:
         """Returns the average latency of the websocket connection"""
         return self.gateway.average_latency
 
-    async def start(self):
+    async def start(self) -> None:
         """Connect to the Discord Gateway"""
         log.debug(f"Starting Shard ID {self.shard_id}")
         await self._ws_connect()
 
-    async def stop(self):
+    async def stop(self) -> None:
         log.debug(f"Shutting down shard ID {self.shard_id}")
         await self.gateway.close(shutdown=True)
 
-    async def _ws_connect(self):
+    async def _ws_connect(self) -> None:
         params = {
             "session_id": None,
             "sequence": None,

@@ -329,7 +329,7 @@ class Snake(
 
         return commands
 
-    def _sanity_check(self):
+    def _sanity_check(self) -> None:
         # todo: post-init sanity checks
         log.debug("Running client sanity checks...")
         contexts = {
@@ -546,7 +546,7 @@ class Snake(
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
-    async def stop(self):
+    async def stop(self) -> None:
         log.debug("Stopping the bot.")
         self._ready.clear()
         await self._connection_state.stop()
@@ -579,7 +579,7 @@ class Snake(
             for idx in index_to_remove:
                 _waits.pop(idx)
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         """Waits for the client to become ready."""
         await self._ready.wait()
 
@@ -739,7 +739,7 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
-    def _gather_commands(self):
+    def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self"""
 
         def process(_cmds):
@@ -1164,7 +1164,7 @@ class Snake(
                         await self.on_command(context)
 
     @listen("disconnect")
-    async def _disconnect(self):
+    async def _disconnect(self) -> None:
         self._ready.clear()
 
     def get_scale(self, name) -> Optional[Scale]:
