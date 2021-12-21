@@ -126,14 +126,14 @@ For more information, please visit the API reference [here](/API Reference/model
 Okay now you can make components, but how do you interact with users?
 There are three ways to respond to components.
 
-If you add your component to a temporary message asking for additional user input, just should probably use `wait_for_component()`. 
+If you add your component to a temporary message asking for additional user input, just should probably use `bot.wait_for_component()`. 
 These have the downside that, for example, they won't work anymore after restarting your bot.
 
 Otherwise, you are looking for a persistent callback. For that, you want to define `custom_id` in your component creation.
 
 When responding to a component you need to satisfy discord either by responding to the context with `ctx.send()` or by editing the component with `ctx.edit_origin()`. You get access to the context with `component.context`.
 
-=== ":one: `wait_for_component()`"
+=== ":one: `bot.wait_for_component()`"
     As with discord.py, this supports checks and timeouts.
 
     In this example, we are checking that the username starts with "a" and clicks the button within 30 seconds.
@@ -157,7 +157,7 @@ When responding to a component you need to satisfy discord either by responding 
         return component.context.author.startswith("a")
     
     try:
-        used_component = await wait_for_component(components=components, check=check, timeout=30)
+        used_component = await bot.wait_for_component(components=components, check=check, timeout=30)
     
     except TimeoutError:    
         print("Timed Out!")
