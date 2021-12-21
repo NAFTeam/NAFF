@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route
@@ -65,7 +65,7 @@ class MemberRequests:
         mute: bool = MISSING,
         deaf: bool = MISSING,
         channel_id: "Snowflake_Type" = MISSING,
-        communication_disabled_until: Optional["Timestamp"] = MISSING,
+        communication_disabled_until: Union["Timestamp", None] = MISSING,
         reason: str = MISSING,
     ) -> Dict:
         """
