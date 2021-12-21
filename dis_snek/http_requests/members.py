@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from dis_snek.const import MISSING
 from dis_snek.models.route import Route
+from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.serializer import dict_filter_missing
 
 if TYPE_CHECKING:
@@ -64,6 +65,7 @@ class MemberRequests:
         mute: bool = MISSING,
         deaf: bool = MISSING,
         channel_id: "Snowflake_Type" = MISSING,
+        communication_disabled_until: Optional["Timestamp"] = MISSING,
         reason: str = MISSING,
     ) -> Dict:
         """
@@ -81,9 +83,22 @@ class MemberRequests:
         returns:
             The updated member object
         """
+        if communication_disabled_until is not MISSING:
+            if isinstance(communication_disabled_until, Timestamp):
+                communication_disabled_until = communication_disabled_until.isoformat()
+
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"),
-            data=dict_filter_missing(dict(nick=nickname, roles=roles, mute=mute, deaf=deaf, channel_id=channel_id)),
+            data=dict_filter_missing(
+                dict(
+                    nick=nickname,
+                    roles=roles,
+                    mute=mute,
+                    deaf=deaf,
+                    channel_id=channel_id,
+                    communication_disabled_until=communication_disabled_until,
+                )
+            ),
             reason=reason,
         )
 
