@@ -36,10 +36,11 @@ if TYPE_CHECKING:
 
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, TYPE_THREAD_CHANNEL, GuildCategory
     from dis_snek.models.discord_objects.role import Role
-    from dis_snek.models.discord_objects.user import Member, User
+    from dis_snek.models.discord_objects.user import Member, User, BaseUser
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite
+    from dis_snek.models.discord_objects.invite import Invite
 
 log = logging.getLogger(logger_name)
 

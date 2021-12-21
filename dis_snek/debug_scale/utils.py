@@ -23,7 +23,7 @@ def debug_embed(title: str, **kwargs) -> Embed:
     return e
 
 
-def get_cache_state(bot: "Snake"):
+def get_cache_state(bot: "Snake") -> str:
     caches = [
         c[0]
         for c in inspect.getmembers(bot.cache, predicate=lambda x: isinstance(x, dict))
@@ -43,7 +43,7 @@ def get_cache_state(bot: "Snake"):
     return "\n".join(string)
 
 
-def strf_delta(time_delta: datetime.timedelta, show_seconds=True) -> str:
+def strf_delta(time_delta: datetime.timedelta, show_seconds: bool = True) -> str:
     """Formats timedelta into a human readable string"""
     years, days = divmod(time_delta.days, 365)
     hours, rem = divmod(time_delta.seconds, 3600)

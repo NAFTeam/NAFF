@@ -53,7 +53,7 @@ class AsyncIterator(_AsyncIterator, ABC):
         """
         ...
 
-    async def _get_items(self):
+    async def _get_items(self) -> None:
         if self._continue:
             data = await self.fetch()
             [await self.add_object(obj) for obj in data]

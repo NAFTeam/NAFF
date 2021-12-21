@@ -154,7 +154,7 @@ class Snake(
         total_shards: int = 1,
         shard_id: int = 0,
         **kwargs,
-    ):
+    ) -> None:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
 
         # Configuration
@@ -329,7 +329,7 @@ class Snake(
 
         return commands
 
-    def _sanity_check(self):
+    def _sanity_check(self) -> None:
         # todo: post-init sanity checks
         log.debug("Running client sanity checks...")
         contexts = {
@@ -368,7 +368,7 @@ class Snake(
         # so im gathering commands here
         self._gather_commands()
 
-        log.debug(f"Attempting to login")
+        log.debug("Attempting to login")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
@@ -546,7 +546,7 @@ class Snake(
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
-    async def stop(self):
+    async def stop(self) -> None:
         log.debug("Stopping the bot.")
         self._ready.clear()
         await self._connection_state.stop()
@@ -579,7 +579,7 @@ class Snake(
             for idx in index_to_remove:
                 _waits.pop(idx)
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         """Waits for the client to become ready."""
         await self._ready.wait()
 
@@ -739,7 +739,7 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
-    def _gather_commands(self):
+    def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self"""
 
         def process(_cmds):
@@ -909,7 +909,7 @@ class Snake(
                             guild_perms[perm.guild_id].append(perm_json)
 
             except Forbidden as e:
-                raise InteractionMissingAccess(cmd_scope)
+                raise InteractionMissingAccess(cmd_scope) from e
             except HTTPException as e:
                 self._raise_sync_exception(e, cmds_json, cmd_scope)
 
@@ -951,8 +951,8 @@ class Snake(
             else:
                 log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
-        e = time.perf_counter() - s
-        log.debug(f"Sync of {len(cmd_scopes)} scopes took {e} seconds")
+        t = time.perf_counter() - s
+        log.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
 
     def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
         """
@@ -1164,7 +1164,7 @@ class Snake(
                         await self.on_command(context)
 
     @listen("disconnect")
-    async def _disconnect(self):
+    async def _disconnect(self) -> None:
         self._ready.clear()
 
     def get_scale(self, name) -> Optional[Scale]:
