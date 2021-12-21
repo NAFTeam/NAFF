@@ -431,7 +431,9 @@ class Member(DiscordObject, _SendDMMixin):
                 return False
         return True
 
-    async def timeout(self, communication_disabled_until: Union["Timestamp", datetime, int, float, str, None], reason: str = MISSING):
+    async def timeout(
+        self, communication_disabled_until: Union["Timestamp", datetime, int, float, str, None], reason: str = MISSING
+    ):
         """
         Disable a members communication for a given time.
 
