@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 import attr
 from attr.converters import optional as optional_c
 
+
+from datetime import datetime, timedelta
+
 from dis_snek.const import MISSING, logger_name
 from dis_snek.errors import HTTPException, TooManyChanges
 from dis_snek.mixins.send import SendMixin
@@ -15,7 +18,6 @@ from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.models.snowflake import to_snowflake
-from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field, class_defaults, docs
 from dis_snek.utils.converters import list_converter
 from dis_snek.utils.converters import timestamp_converter
@@ -25,6 +27,7 @@ if TYPE_CHECKING:
     from aiohttp import FormData
 
     from dis_snek.client import Snake
+    from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, DM
 
 log = logging.getLogger(logger_name)
@@ -191,6 +194,11 @@ class Member(DiscordObject, _SendDMMixin):
         default=None, metadata=docs("Whether the user has **not** passed guild's membership screening requirements")
     )
     guild_avatar: "Asset" = field(default=None, metadata=docs("The user's guild avatar"))
+    communication_disabled_until: Optional["Timestamp"] = field(
+        default=None,
+        converter=optional_c(timestamp_converter),
+        metadata=docs("wWen a member's timeout will expire, `None` or a time in the past if the user is not timed out"),
+    )
 
     _guild_id: "Snowflake_Type" = field(repr=True, metadata=docs("The ID of the guild"))
     _role_ids: List["Snowflake_Type"] = field(
@@ -422,6 +430,28 @@ class Member(DiscordObject, _SendDMMixin):
             if role_id not in self._role_ids:
                 return False
         return True
+
+    async def timeout(
+        self, communication_disabled_until: Union["Timestamp", datetime, int, float, str, None], reason: str = MISSING
+    ):
+        """
+        Disable a members communication for a given time.
+
+        Args:
+            communication_disabled_until: The time until the user can communicate again
+            reson: The reason for this timeout
+        """
+        if isinstance(communication_disabled_until, (datetime, int, float, str)):
+            communication_disabled_until = timestamp_converter(communication_disabled_until)
+
+        self.communication_disabled_until = communication_disabled_until
+
+        return await self._client.http.modify_guild_member(
+            self._guild_id,
+            self.id,
+            communication_disabled_until=communication_disabled_until,
+            reason=reason,
+        )
 
     async def kick(self, reason: str = MISSING):
         """
