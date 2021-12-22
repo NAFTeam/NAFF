@@ -439,7 +439,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         Args:
             communication_disabled_until: The time until the user can communicate again
-            reson: The reason for this timeout
+            reason: The reason for this timeout
         """
         if isinstance(communication_disabled_until, (datetime, int, float, str)):
             communication_disabled_until = timestamp_converter(communication_disabled_until)
