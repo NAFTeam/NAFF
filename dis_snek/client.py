@@ -351,6 +351,11 @@ class Snake(
             if not issubclass(obj, expected):
                 raise TypeError(f"{obj.__name__} must inherit from {expected.__name__}")
 
+        if self.del_unused_app_cmd:
+            log.warning(
+                "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
+            )
+
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
@@ -847,7 +852,12 @@ class Snake(
         """Synchronise registered interactions with discord"""
         s = time.perf_counter()
         await self._cache_interactions()
-        cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
+
+        if self.del_unused_app_cmd:
+            cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
+        else:
+            cmd_scopes = list(set(self._interaction_scopes.values())) + [GLOBAL_SCOPE]
+
         guild_perms = {}
         cmds_json = application_commands_to_dict(self.interactions)
         req_lock = asyncio.Lock()
