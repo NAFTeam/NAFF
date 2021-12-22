@@ -22,6 +22,7 @@ from dis_snek.errors import (
 from dis_snek.event_processors import *
 from dis_snek.event_processors._template import Processor
 from dis_snek.event_processors.voice_events import VoiceEvents
+from dis_snek.gateway import WebsocketClient
 from dis_snek.http_client import HTTPClient
 from dis_snek.models import (
     Activity,
@@ -208,6 +209,10 @@ class Snake(
         self._connection_state: ConnectionState = ConnectionState(self, intents, shard_id)
 
         self.enforce_interaction_perms = enforce_interaction_perms
+
+        if fetch_members and Intents.GUILD_MEMBERS not in intents:
+            raise BotException("Members Intent must be enabled in order to use fetch members")
+
         self.fetch_members = fetch_members
         """Fetch the full members list of all guilds on startup"""
         if self.fetch_members:
@@ -328,6 +333,10 @@ class Snake(
                     commands.append(cmd)
 
         return commands
+
+    @property
+    def ws(self) -> WebsocketClient:
+        return self._connection_state.gateway
 
     def _sanity_check(self) -> None:
         # todo: post-init sanity checks
