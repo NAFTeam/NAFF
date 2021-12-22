@@ -505,6 +505,10 @@ class Snake(
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
     @listen()
+    async def on_resume(self) -> None:
+        self._ready.set()
+
+    @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
