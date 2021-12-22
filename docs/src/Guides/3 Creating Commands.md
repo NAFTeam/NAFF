@@ -302,7 +302,7 @@ You are in luck. There are currently four different ways to create interactions,
 ## I Don't Want My Friends Using My Commands
 
 !!! danger "Interaction Permissions"
-    This page is currently missing, and will be populated at a later date. To learn how to use them, please visit their documentation [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_permission).
+    Since a big overhaul to discord's permission system is coming, this page is currently missing. It will be populated when discord updates their permission system. To learn how to use permissions in the meantime, please visit their documentation [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_permission).
 
 
 ## I Don't Want To Define The Same Option Every Time

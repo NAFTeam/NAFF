@@ -70,7 +70,7 @@ class BaseCommand(DictSerializationMixin):
         default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
     )
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if self.callback is not None:
             if hasattr(self.callback, "checks"):
                 self.checks += self.callback.checks

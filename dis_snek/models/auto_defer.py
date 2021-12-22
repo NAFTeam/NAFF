@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import attr
 
-from dis_snek.errors import AlreadyDeferred
+from dis_snek.errors import AlreadyDeferred, NotFound
 
 if TYPE_CHECKING:
     from dis_snek.models.context import InteractionContext
@@ -31,8 +31,8 @@ class AutoDefer:
                 await ctx.defer(self.ephemeral)
 
     async def defer(self, ctx: "InteractionContext"):
-        if not ctx.responded and not ctx.deferred:
+        if not ctx.responded or not ctx.deferred:
             try:
                 await ctx.defer(self.ephemeral)
-            except AlreadyDeferred:
+            except (AlreadyDeferred, NotFound):
                 pass

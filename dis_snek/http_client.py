@@ -6,12 +6,12 @@ import datetime
 import logging
 import traceback
 from collections import defaultdict
-from typing import Any, Dict, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, Union
 from urllib.parse import quote as _uriquote
 
-import aiohttp  # type: ignore
+import aiohttp
 from aiohttp import BaseConnector, ClientResponse, ClientSession, ClientWebSocketResponse, FormData
-from multidict import CIMultiDictProxy  # type: ignore
+from multidict import CIMultiDictProxy
 
 from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name, MISSING
 from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
@@ -38,13 +38,13 @@ log = logging.getLogger(logger_name)
 
 
 class GlobalLock:
-    def __init__(self):
+    def __init__(self) -> None:
         self.cooldown_system: CooldownSystem = CooldownSystem(
             45, 1
         )  # global rate-limit is 50 per second, conservatively we use 45
         self.lock: asyncio.Lock = asyncio.Lock()
 
-    async def rate_limit(self):
+    async def rate_limit(self) -> None:
         async with self.lock:
             if not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())

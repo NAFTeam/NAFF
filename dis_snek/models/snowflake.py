@@ -43,13 +43,13 @@ def to_snowflake_list(snowflakes: List[Union[Snowflake_Type, "SnowflakeObject"]]
 class SnowflakeObject:
     id: "Snowflake_Type" = field(repr=True, converter=to_snowflake)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.id == other.id
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return self.id != other.id
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return int(self.id) << 32
 
     @property

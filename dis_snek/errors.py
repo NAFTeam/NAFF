@@ -22,7 +22,7 @@ class BotException(SnakeException):
 class GatewayNotFound(SnakeException):
     """An exception that is raised when the gateway for Discord could not be found."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Unable to find discord gateway!")
 
 
@@ -207,7 +207,7 @@ class EphemeralEditException(MessageException):
 
     Its worth noting you can edit an ephemeral message with component's `edit_origin` method."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Ephemeral messages cannot be edited.")
 
 
@@ -218,7 +218,7 @@ class ThreadException(BotException):
 class ThreadOutsideOfGuild(ThreadException):
     """A thread was attempted to be created outside of a guild."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Threads cannot be created outside of guilds")
 
 

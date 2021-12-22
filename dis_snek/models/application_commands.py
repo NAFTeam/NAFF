@@ -171,7 +171,7 @@ class InteractionCommand(BaseCommand):
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if self.callback is not None:
             if hasattr(self.callback, "auto_defer"):
                 self.auto_defer = self.callback.auto_defer
@@ -361,7 +361,7 @@ class SlashCommand(InteractionCommand):
     def is_subcommand(self) -> bool:
         return self.sub_cmd_name is not None
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         params = get_parameters(self.callback)
         for name, val in params.items():
             if val.annotation and isinstance(val.annotation, SlashCommandOption):
@@ -537,6 +537,68 @@ def slash_command(
             options=options,
         )
 
+        return cmd
+
+    return wrapper
+
+
+def subcommand(
+    base: str,
+    *,
+    subcommand_group: Optional[str] = None,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    base_description: Optional[str] = None,
+    base_desc: Optional[str] = None,
+    base_default_permission: bool = True,
+    base_permissions: Optional[dict] = None,
+    subcommand_group_description: Optional[str] = None,
+    sub_group_desc: Optional[str] = None,
+    scopes: List["Snowflake_Type"] = None,
+    options: List[dict] = None,
+):
+    """
+    A decorator specifically tailored for creating subcommands.
+
+    Args:
+        base: The name of the base command
+        subcommand_group: The name of the subcommand group, if any.
+        name: The name of the subcommand, defaults to the name of the coroutine.
+        description: The description of the subcommand
+        base_description: The description of the base command
+        base_desc: An alias of `base_description`
+        base_default_permission: If users have permission to run the command by default when no permissions have been set
+        base_permissions: Permissions of the command
+        subcommand_group_description: Description of the subcommand group
+        sub_group_desc: An alias for `subcommand_group_description`
+        scopes: The scopes of which this command is available, defaults to GLOBAL_SCOPE
+        options: The options for this command
+
+    Returns:
+        A SlashCommand object
+    """
+
+    def wrapper(func) -> SlashCommand:
+        if not asyncio.iscoroutinefunction(func):
+            raise ValueError("Commands must be coroutines")
+
+        _description = description
+        if _description is MISSING:
+            _description = func.__doc__ if func.__doc__ else "No Description Set"
+
+        cmd = SlashCommand(
+            name=base,
+            description=(base_description or base_desc) or "No Description Set",
+            group_name=subcommand_group,
+            group_description=(subcommand_group_description or sub_group_desc) or "No Description Set",
+            sub_cmd_name=name,
+            sub_cmd_description=_description,
+            default_permission=base_default_permission,
+            permissions=base_permissions or {},
+            scopes=scopes if scopes else [GLOBAL_SCOPE],
+            callback=func,
+            options=options,
+        )
         return cmd
 
     return wrapper

@@ -77,13 +77,13 @@ class Button(InteractiveComponent):
         if not isinstance(value, ButtonStyles) and value not in ButtonStyles.__members__.values():
             raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if self.style != ButtonStyles.URL:
             # handle adding a custom id to any button that requires a custom id
             if self.custom_id is MISSING:
                 self.custom_id = str(uuid.uuid4())
 
-    def _check_object(self):
+    def _check_object(self) -> None:
         if self.style == ButtonStyles.URL:
             if self.custom_id not in (None, MISSING):
                 raise TypeError("A link button cannot have a `custom_id`!")
@@ -181,7 +181,7 @@ class Select(InteractiveComponent):
         if not all(isinstance(x, (SelectOption, Dict)) for x in value):
             raise ValueError(f"Select options must be of type `SelectOption`")
 
-    def _check_object(self):
+    def _check_object(self) -> None:
         if not self.custom_id:
             raise TypeError("You need to have a custom id to identify the select.")
 
@@ -238,7 +238,7 @@ class ActionRow(BaseComponent):
         component._check_object()
         return component
 
-    def _check_object(self):
+    def _check_object(self) -> None:
         if not (0 < len(self.components) <= ActionRow._max_items):
             raise TypeError(f"Number of components in one row should be between 1 and {ActionRow._max_items}.")
 

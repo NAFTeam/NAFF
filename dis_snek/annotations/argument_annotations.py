@@ -1,17 +1,17 @@
-from typing import Union, TYPE_CHECKING, Any, List, Type, Dict
+from typing import Callable, Union, TYPE_CHECKING, TypeVar
 
-from dis_snek.const import MISSING
 from dis_snek.utils.misc_utils import get_parameters
 
-from dis_snek.models.context import Context
+from dis_snek.models.context import Context, MessageContext
 from dis_snek.models.scale import Scale
-from dis_snek.client import Snake
 
 if TYPE_CHECKING:
     from dis_snek.models import Member, User, TYPE_MESSAGEABLE_CHANNEL
 
+T = TypeVar("T")
 
-def define_annotation():
+
+def define_annotation() -> Callable[[Callable[[Context], T]], Callable[[Context], T]]:
     """
     Define a function as an annotation.
 
@@ -23,7 +23,7 @@ def define_annotation():
     `Scale`
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable[[Context], T]) -> Callable[[Context], T]:
         params = get_parameters(func)
         args = []
         for param in params.values():
@@ -33,7 +33,7 @@ def define_annotation():
                 args.append("scale")
             # elif param.annotation is Snake:
             #     args.append("snake")
-        func._annotation_dat = {"args": args}
+        func._annotation_dat = {"args": args}  # type: ignore
         return func
 
     return wrapper
@@ -46,6 +46,8 @@ def CMD_BODY(context: Context) -> str:
 
     if `@bot hello how are you?` is sent this argument will be `hello how are you?`
     """
+    if not isinstance(context, MessageContext):
+        raise TypeError("CMD_BODY can only be used with Message Commands")
     return context.content_parameters
 
 

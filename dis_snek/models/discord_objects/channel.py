@@ -942,10 +942,10 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     async def remove_member(self, member: Union["Member", "Snowflake_Type"]) -> None:
         await self._client.http.remove_thread_member(self.id, to_snowflake(member))
 
-    async def join(self):
+    async def join(self) -> None:
         await self._client.http.join_thread(self.id)
 
-    async def leave(self):
+    async def leave(self) -> None:
         await self._client.http.leave_thread(self.id)
 
 

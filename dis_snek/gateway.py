@@ -28,12 +28,12 @@ log = logging.getLogger(logger_name)
 
 
 class GatewayRateLimit:
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = asyncio.Lock()
         # docs state 120 calls per 60 seconds, this is set conservatively to 110 per 60 seconds.
         self.cooldown_system = CooldownSystem(110, 60)
 
-    async def rate_limit(self):
+    async def rate_limit(self) -> None:
         async with self.lock:
             if not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
@@ -257,17 +257,17 @@ class WebsocketClient:
                 return
 
             if resp.type == WSMsgType.CLOSED:
-                await self.close()
+                return
 
             if isinstance(resp.data, bytes):
                 self.buffer.extend(msg)
 
-            try:
-                if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
-                    # message isn't complete yet, wait
-                    continue
-            except TypeError:
-                log.debug(f"None encountered while receiving data from Gateway: \n{resp = }\n{msg = }")
+            if msg is None:
+                continue
+
+            if len(msg) < 4 or msg[-4:] != b"\x00\x00\xff\xff":
+                # message isn't complete yet, wait
+                continue
 
             msg = self._zlib.decompress(self.buffer)
             self.buffer = bytearray()
