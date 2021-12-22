@@ -197,7 +197,7 @@ class Member(DiscordObject, _SendDMMixin):
     communication_disabled_until: Optional["Timestamp"] = field(
         default=None,
         converter=optional_c(timestamp_converter),
-        metadata=docs("wWen a member's timeout will expire, `None` or a time in the past if the user is not timed out"),
+        metadata=docs("When a member's timeout will expire, `None` or a time in the past if the user is not timed out"),
     )
 
     _guild_id: "Snowflake_Type" = field(repr=True, metadata=docs("The ID of the guild"))
