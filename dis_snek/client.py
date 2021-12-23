@@ -210,13 +210,8 @@ class Snake(
 
         self.enforce_interaction_perms = enforce_interaction_perms
 
-        if fetch_members and Intents.GUILD_MEMBERS not in intents:
-            raise BotException("Members Intent must be enabled in order to use fetch members")
-
         self.fetch_members = fetch_members
         """Fetch the full members list of all guilds on startup"""
-        if self.fetch_members:
-            log.warning("fetch_members enabled; startup will be delayed")
 
         self._mention_reg = MISSING
 
@@ -339,7 +334,6 @@ class Snake(
         return self._connection_state.gateway
 
     def _sanity_check(self) -> None:
-        # todo: post-init sanity checks
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
@@ -355,6 +349,17 @@ class Snake(
             log.warning(
                 "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
             )
+
+        if Intents.GUILDS not in self._connection_state.intents:
+            log.warning("GUILD intent has not been enabled; this is very likely to cause errors")
+
+        if self.fetch_members and Intents.GUILD_MEMBERS not in self._connection_state.intents:
+            raise BotException("Members Intent must be enabled in order to use fetch members")
+        elif self.fetch_members:
+            log.warning("fetch_members enabled; startup will be delayed")
+
+        if len(self.processors) == 0:
+            log.warning("No Processors are loaded! This means no events will be processed!")
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
