@@ -51,22 +51,6 @@ class ScheduledEventStatus(IntEnum):
 
 
 @define()
-class ScheduledEventUser(DiscordObject):
-    user: "User" = attr.ib()
-    member: "Member" = attr.ib(default=MISSING)
-
-    @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        if data.get("member"):
-            fixed_member = data
-            fixed_member["user"]["member"] = fixed_member["member"]
-            data["member"] = client.cache.place_member_data(data["guild_scheduled_event_id"], fixed_member["user"])
-        data["user"] = client.cache.place_user_data(data["user"])
-        data["id"] = data["user"].id
-        return data
-
-
-@define()
 class ScheduledEvent(DiscordObject):
     name: str = attr.ib()
     description: str = attr.ib(default=MISSING)
@@ -149,7 +133,7 @@ class ScheduledEvent(DiscordObject):
         with_member_data: bool = False,
         before: Optional["Snowflake_Type"] = MISSING,
         after: Optional["Snowflake_Type"] = MISSING,
-    ) -> Optional[List["ScheduledEventUser"]]:
+    ) -> List[Union["Member", "User"]]:
         """
         Get event users
 
@@ -158,14 +142,22 @@ class ScheduledEvent(DiscordObject):
             with_member_data: Whether to include guild member data
             before: Snowflake of a user to get before
             after: Snowflake of a user to get after
+
+        !!! note:
+            This method is paginated
         """
         event_users = await self._client.http.get_scheduled_event_users(
             self._guild_id, self.id, limit, with_member_data, before, after
         )
-        if event_users:
-            return ScheduledEventUser.from_list(event_users, self._client)
-        else:
-            return None
+        participants = []
+        for u in event_users:
+            if member := u.get('member'):
+                u['member']['user'] = u['user']
+                participants.append(self._client.cache.place_member_data(self._guild_id, member))
+            else:
+                participants.append(self._client.cache.place_user_data(u['user']))
+            
+        return participants
 
     async def delete(self, reason: str = MISSING) -> None:
         """
@@ -209,9 +201,9 @@ class ScheduledEvent(DiscordObject):
             If updating event_type to EXTERNAL:
                 `channel_id` is required and must be set to null
 
-                `entity_metadata` with a location field must be provided
+                `external_location` or `entity_metadata` with a location field must be provided
 
-                `scheduled_end_time` must be provided
+                `end_time` must be provided
         """
 
         if external_location is not MISSING:
