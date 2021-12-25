@@ -239,6 +239,7 @@ class WebsocketClient:
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
+        self.closed.clear()
         while not self.state.is_closed:
             resp = await self.ws.receive()
             msg = resp.data
@@ -251,12 +252,7 @@ class WebsocketClient:
                     await self.close(shutdown=True)
                     raise WebSocketClosed(msg)
 
-                return
-
-            if resp.type == WSMsgType.CLOSING:
-                return
-
-            if resp.type == WSMsgType.CLOSED:
+            if resp.type in (WSMsgType.CLOSING, WSMsgType.CLOSED):
                 return
 
             if isinstance(resp.data, bytes):
@@ -375,6 +371,8 @@ class WebsocketClient:
         await self.ws.close(code=code)
         if isinstance(self._keep_alive, BeeGees):
             self._keep_alive.stop()
+
+        self.closed.set()
 
     async def identify(self) -> None:
         """Send an identify payload to the gateway."""
