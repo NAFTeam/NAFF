@@ -28,6 +28,7 @@ from dis_snek.http_requests import (
     ThreadRequests,
     UserRequests,
     WebhookRequests,
+    ScheduledEventsRequests,
 )
 from dis_snek.models import CooldownSystem
 from dis_snek.models.route import Route
@@ -63,6 +64,7 @@ class HTTPClient(
     ThreadRequests,
     UserRequests,
     WebhookRequests,
+    ScheduledEventsRequests,
 ):
     """A http client for sending requests to the Discord API."""
 

@@ -79,6 +79,7 @@ MISSING = sentinel.create(
         "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
         "__name__": "MISSING",
         "__getattr__": lambda x, y: None,
+        "__setitem__": lambda x, y, z: None,
         "__bool__": lambda _: False,
     },
 )

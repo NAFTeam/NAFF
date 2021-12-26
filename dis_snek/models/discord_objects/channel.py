@@ -711,6 +711,7 @@ class GuildChannel(BaseChannel):
         unique: bool = False,
         target_type: InviteTargetTypes = None,
         target_user_id: "Snowflake_Type" = None,
+        target_event_id: "Snowflake_Type" = None,
         target_application_id: "Snowflake_Type" = None,
         reason: str = MISSING,
     ) -> Invite:
@@ -723,6 +724,7 @@ class GuildChannel(BaseChannel):
             unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
             target_type: the type of target for this voice channel invite
             target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
+            target_event_id: the channel's scheduled event ID. Only works for events scheduled in a channel.
             target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
             reason: An optional reason for the audit log
 
@@ -740,6 +742,7 @@ class GuildChannel(BaseChannel):
             target_application_id,
             reason=reason,
         )
+        resp["target_event_id"] = target_event_id
         return Invite.from_dict(resp, self._client)
 
     @property
