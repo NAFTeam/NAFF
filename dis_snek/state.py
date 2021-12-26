@@ -54,6 +54,7 @@ class ConnectionState:
     async def start(self) -> None:
         """Connect to the Discord Gateway"""
         log.debug(f"Starting Shard ID {self.shard_id}")
+        self.start_time = datetime.now()
         await self._ws_connect()
 
     async def stop(self) -> None:
