@@ -288,6 +288,11 @@ class Snake(
         return self._connection_state.start_time
 
     @property
+    def intents(self) -> Intents:
+        """The intents being used by this bot"""
+        return self._connection_state.intents
+
+    @property
     def user(self) -> SnakeBotUser:
         """Returns the bot's user"""
         return self._user
