@@ -317,7 +317,7 @@ class GlobalCache:
         if channel is None:
             channel = BaseChannel.from_dict_factory(data, self._client)
             self.channel_cache[channel_id] = channel
-            if guild := channel.guild:
+            if guild := getattr(channel, "guild", None):
                 guild._channel_ids.add(channel.id)
         else:
             channel.update_from_dict(data)
