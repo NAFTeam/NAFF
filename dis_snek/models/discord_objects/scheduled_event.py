@@ -151,12 +151,12 @@ class ScheduledEvent(DiscordObject):
         )
         participants = []
         for u in event_users:
-            if member := u.get('member'):
-                u['member']['user'] = u['user']
+            if member := u.get("member"):
+                u["member"]["user"] = u["user"]
                 participants.append(self._client.cache.place_member_data(self._guild_id, member))
             else:
-                participants.append(self._client.cache.place_user_data(u['user']))
-            
+                participants.append(self._client.cache.place_user_data(u["user"]))
+
         return participants
 
     async def delete(self, reason: str = MISSING) -> None:
