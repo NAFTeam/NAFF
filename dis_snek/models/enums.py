@@ -318,6 +318,9 @@ class Permissions(DiscordIntFlag):  # type: ignore
     USE_PUBLIC_THREADS = 1 << 35
     USE_PRIVATE_THREADS = 1 << 36
     USE_EXTERNAL_STICKERS = 1 << 37
+    SEND_MESSAGES_IN_THREADS = 1 << 38
+    START_EMBEDDED_ACTIVITIES = 1 << 39
+    MODERATE_MEMBERS = 1 << 40
 
     # Shortcuts/grouping/aliases
     REQUIRES_MFA = (

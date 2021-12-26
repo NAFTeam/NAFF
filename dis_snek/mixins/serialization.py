@@ -75,7 +75,7 @@ class DictSerializationMixin:
 
         return self
 
-    def _check_object(self):
+    def _check_object(self) -> None:
         """
         Logic to check object properties just before export to json data for sending to discord api.
         """

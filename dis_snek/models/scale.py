@@ -121,7 +121,7 @@ class Scale:
     def name(self):
         return self.__name
 
-    def shed(self):
+    def shed(self) -> None:
         """
         Called when this Scale is being removed.
         """

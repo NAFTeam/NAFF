@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.snowflake import Snowflake_Type
 
+emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
+
 
 @define()
 class Emoji(SnowflakeObject, DictSerializationMixin):
@@ -31,8 +34,33 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
     """Whether this emoji is animated"""
 
     @classmethod
-    def unicode(cls, emoji: str):
-        return cls(name=emoji)
+    def from_str(cls, emoji_str: str) -> "Emoji":
+        """
+        Generate an Emoji from a discord Emoji string representation, or unicode emoji.
+
+        Handles:
+            <:emoji_name:emoji_id>
+            :emoji_name:emoji_id
+            <a:emoji_name:emoji_id>
+            a:emoji_name:emoji_id
+            👋
+        Args:
+            emoji_str: The string representation an emoji
+
+        Returns:
+            An Emoji object
+
+        Raises:
+            ValueError if the string cannot be parsed
+        """
+        parsed = emoji_regex.findall(emoji_str)
+        if parsed:
+            if len(parsed[0]) == 3:
+                return cls(name=parsed[0][1], id=parsed[0][2], animated=True)
+            else:
+                return cls(name=parsed[0][0], id=parsed[0][1])
+        else:
+            return cls(name=emoji_str)
 
     def __str__(self) -> str:
         return f"<{'a:' if self.animated else ':'}{self.name}:{self.id}>"  # <:thinksmart:623335224318754826>
@@ -92,8 +120,13 @@ class CustomEmoji(Emoji):
         """
         if not self.available:
             return False
-        # todo: check roles
-        return True
+
+        guild = self._client.cache.guild_cache.get(self._guild_id)
+
+        if not self._role_ids or not guild:
+            return True
+
+        return any(e_role_id in guild.me._role_ids for e_role_id in self._role_ids)
 
     async def get_creator(self) -> "User":
         """
@@ -187,7 +220,7 @@ def process_emoji(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[dict]:
         return emoji
 
     if isinstance(emoji, str):
-        emoji = Emoji.unicode(emoji)
+        emoji = Emoji.from_str(emoji)
 
     if isinstance(emoji, Emoji):
         return emoji.to_dict()

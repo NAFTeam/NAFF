@@ -377,7 +377,7 @@ class Message(BaseMessage):
         """
         if delay and delay > 0:
 
-            async def delayed_delete():
+            async def delayed_delete() -> None:
                 await asyncio.sleep(delay)
                 try:
                     await self._client.http.delete_message(self._channel_id, self.id)
@@ -471,7 +471,7 @@ class Message(BaseMessage):
         user_id = to_snowflake(member)
         await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
-    async def clear_reactions(self, emoji: Union["Emoji", dict, str]):
+    async def clear_reactions(self, emoji: Union["Emoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
         """
         Clear a specific reaction from message
@@ -482,21 +482,21 @@ class Message(BaseMessage):
         emoji = process_emoji_req_format(emoji)
         await self._client.http.clear_reaction(self._channel_id, self.id, emoji)
 
-    async def clear_all_reactions(self):
+    async def clear_all_reactions(self) -> None:
         """Clear all emojis from a message."""
         await self._client.http.clear_reactions(self.channel.id, self.id)
 
-    async def pin(self):
+    async def pin(self) -> None:
         """Pin message"""
         await self._client.http.pin_message(self._channel_id, self.id)
         self.pinned = True
 
-    async def unpin(self):
+    async def unpin(self) -> None:
         """Unpin message"""
         await self._client.http.unpin_message(self._channel_id, self.id)
         self.pinned = False
 
-    async def publish(self):
+    async def publish(self) -> None:
         """Publish this message. (Discord api calls it "crosspost")"""
         await self._client.http.crosspost_message(self._channel_id, self.id)
 

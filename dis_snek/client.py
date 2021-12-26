@@ -9,13 +9,8 @@ import time
 import traceback
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable, Type
 
-import aiohttp
-
 from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX
 from dis_snek.errors import (
-    GatewayNotFound,
-    SnakeException,
-    WebSocketClosed,
     BotException,
     ScaleLoadException,
     ExtensionLoadException,
@@ -64,11 +59,12 @@ from dis_snek.models import (
 )
 from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
-from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status, ActivityType
+from dis_snek.models.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.events import RawGatewayEvent, MessageCreate
 from dis_snek.models.events.internal import Component
 from dis_snek.models.wait import Wait
 from dis_snek.smart_cache import GlobalCache
+from dis_snek.state import ConnectionState
 from dis_snek.tasks.task import Task
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
@@ -121,6 +117,9 @@ class Snake(
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
 
+        total_shards: int: The total number of shards in use
+        shard_id: int: The zero based int ID of this shard
+
         debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
         asyncio_debug: bool: Enable asyncio debug features
 
@@ -154,8 +153,10 @@ class Snake(
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         global_pre_run_callback: Callable[..., Coroutine] = MISSING,
         global_post_run_callback: Callable[..., Coroutine] = MISSING,
+        total_shards: int = 1,
+        shard_id: int = 0,
         **kwargs,
-    ):
+    ) -> None:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
 
         # Configuration
@@ -167,8 +168,6 @@ class Snake(
             tracemalloc.start()
             self.loop.set_debug(True)
 
-        self.intents = intents
-        """The intents in use"""
         self.sync_interactions = sync_interactions
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
@@ -186,8 +185,6 @@ class Snake(
 
         self.http: HTTPClient = HTTPClient(loop=self.loop)
         """The HTTP client to use when interacting with discord endpoints"""
-        self.ws: WebsocketClient = MISSING
-        """The websocket collection for the Discord Gateway."""
 
         # context objects
         self.interaction_context: Type[InteractionContext] = interaction_context
@@ -207,13 +204,15 @@ class Snake(
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
         """How long to wait for guilds to be cached"""
-        self.start_time = MISSING
-        """The DateTime the bot started at"""
+
+        # Sharding
+        self.total_shards = total_shards
+        self._connection_state: ConnectionState = ConnectionState(self, intents, shard_id)
+
         self.enforce_interaction_perms = enforce_interaction_perms
+
         self.fetch_members = fetch_members
         """Fetch the full members list of all guilds on startup"""
-        if self.fetch_members:
-            log.warning("fetch_members enabled; startup will be delayed")
 
         self._mention_reg = MISSING
 
@@ -230,7 +229,6 @@ class Snake(
         self._app: Application = MISSING
 
         # collections
-
         self.commands: Dict[str, MessageCommand] = {}
         """A dictionary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
@@ -266,17 +264,28 @@ class Snake(
 
     @property
     def is_closed(self) -> bool:
-        """Is the bot closed?"""
+        """Returns True if the bot has closed"""
         return self._closed
 
     @property
     def is_ready(self):
-        return self._ready
+        """Returns True if the bot is ready"""
+        return self._ready.is_set()
 
     @property
     def latency(self) -> float:
         """Returns the latency of the websocket connection"""
-        return self.ws.latency
+        return self._connection_state.latency
+
+    @property
+    def average_latency(self) -> float:
+        """Returns the average latency of the websocket connection"""
+        return self._connection_state.average_latency
+
+    @property
+    def start_time(self) -> datetime:
+        """The start time of the bot"""
+        return self._connection_state.start_time
 
     @property
     def user(self) -> SnakeBotUser:
@@ -321,8 +330,11 @@ class Snake(
 
         return commands
 
-    def _sanity_check(self):
-        # todo: post-init sanity checks
+    @property
+    def ws(self) -> WebsocketClient:
+        return self._connection_state.gateway
+
+    def _sanity_check(self) -> None:
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
@@ -333,6 +345,22 @@ class Snake(
         for obj, expected in contexts.items():
             if not issubclass(obj, expected):
                 raise TypeError(f"{obj.__name__} must inherit from {expected.__name__}")
+
+        if self.del_unused_app_cmd:
+            log.warning(
+                "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
+            )
+
+        if Intents.GUILDS not in self._connection_state.intents:
+            log.warning("GUILD intent has not been enabled; this is very likely to cause errors")
+
+        if self.fetch_members and Intents.GUILD_MEMBERS not in self._connection_state.intents:
+            raise BotException("Members Intent must be enabled in order to use fetch members")
+        elif self.fetch_members:
+            log.warning("fetch_members enabled; startup will be delayed")
+
+        if len(self.processors) == 0:
+            log.warning("No Processors are loaded! This means no events will be processed!")
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -360,63 +388,15 @@ class Snake(
         # so im gathering commands here
         self._gather_commands()
 
-        log.debug(f"Attempting to login")
+        log.debug("Attempting to login")
         me = await self.http.login(token.strip())
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self._mention_reg = re.compile(fr"^(<@!?{self.user.id}*>\s)")
-        self.start_time = datetime.datetime.now()
         self.dispatch(events.Login())
-        await self._ws_connect()
 
-    async def _ws_connect(self):
-        params = {
-            "session_id": None,
-            "sequence": None,
-            "presence": {"status": self._status, "activities": [self._activity.to_dict()] if self._activity else []},
-        }
-        while not self.is_closed:
-            log.info(f"Attempting to {'re' if params['session_id'] else ''}connect to gateway...")
-
-            try:
-                self.ws = await WebsocketClient.connect(self, **params)
-
-                try:
-                    await self.ws.run()
-                    # wait for websocket to report it has closed
-                    await self.ws.closed.wait()
-                finally:
-                    if not self.ws.closed.is_set():
-                        await self.ws.close()
-                    self.dispatch(events.Disconnect())
-
-            except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError) as ex:
-                log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
-
-            except WebSocketClosed as ex:
-                if ex.code == 4011:
-                    raise SnakeException("Your bot is too large, you must use shards") from None
-                elif ex.code == 4013:
-                    raise SnakeException(f"Invalid Intents have been passed: {self.intents}") from None
-                elif ex.code == 4014:
-                    raise SnakeException(
-                        "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
-                    ) from None
-                raise
-
-            except Exception as e:
-                self.dispatch(events.Disconnect())
-                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-
-            if self.ws.shutdown:
-                return
-            elif self.ws.resume:
-                params.update(session_id=self.ws.session_id, sequence=self.ws.sequence)
-                continue
-            else:
-                params.update(session_id=None, sequence=None)
-            await asyncio.sleep(5)
+        await self._connection_state.start()
 
     def _queue_task(self, coro, event, *args, **kwargs):
         async def _async_wrap(_coro, _event, *_args, **_kwargs):
@@ -531,6 +511,10 @@ class Snake(
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
     @listen()
+    async def on_resume(self) -> None:
+        self._ready.set()
+
+    @listen()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
@@ -586,11 +570,10 @@ class Snake(
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
-    async def stop(self):
+    async def stop(self) -> None:
         log.debug("Stopping the bot.")
         self._ready.clear()
-        self._startup = False
-        await self.ws.close(shutdown=True)
+        await self._connection_state.stop()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs):
         """
@@ -620,7 +603,7 @@ class Snake(
             for idx in index_to_remove:
                 _waits.pop(idx)
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         """Waits for the client to become ready."""
         await self._ready.wait()
 
@@ -780,7 +763,7 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
-    def _gather_commands(self):
+    def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self"""
 
         def process(_cmds):
@@ -879,7 +862,12 @@ class Snake(
         """Synchronise registered interactions with discord"""
         s = time.perf_counter()
         await self._cache_interactions()
-        cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
+
+        if self.del_unused_app_cmd:
+            cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
+        else:
+            cmd_scopes = list(set(self._interaction_scopes.values())) + [GLOBAL_SCOPE]
+
         guild_perms = {}
         cmds_json = application_commands_to_dict(self.interactions)
         req_lock = asyncio.Lock()
@@ -950,7 +938,7 @@ class Snake(
                             guild_perms[perm.guild_id].append(perm_json)
 
             except Forbidden as e:
-                raise InteractionMissingAccess(cmd_scope)
+                raise InteractionMissingAccess(cmd_scope) from e
             except HTTPException as e:
                 self._raise_sync_exception(e, cmds_json, cmd_scope)
 
@@ -992,8 +980,8 @@ class Snake(
             else:
                 log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
-        e = time.perf_counter() - s
-        log.debug(f"Sync of {len(cmd_scopes)} scopes took {e} seconds")
+        t = time.perf_counter() - s
+        log.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
 
     def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
         """
@@ -1205,7 +1193,7 @@ class Snake(
                         await self.on_command(context)
 
     @listen("disconnect")
-    async def _disconnect(self):
+    async def _disconnect(self) -> None:
         self._ready.clear()
 
     def get_scale(self, name) -> Optional[Scale]:
@@ -1432,39 +1420,4 @@ class Snake(
         note::
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
         """
-        if activity:
-            if not isinstance(activity, Activity):
-                # squash whatever the user passed into an activity
-                activity = Activity.create(name=str(activity))
-
-            if activity.type == ActivityType.STREAMING:
-                if not activity.url:
-                    log.warning("Streaming activity cannot be set without a valid URL attribute")
-            elif activity.type not in [
-                ActivityType.GAME,
-                ActivityType.STREAMING,
-                ActivityType.LISTENING,
-                ActivityType.WATCHING,
-                ActivityType.COMPETING,
-            ]:
-                log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
-        else:
-            activity = self._activity if self._activity else []
-
-        if status:
-            if not isinstance(status, Status):
-                try:
-                    status = Status[status.upper()]
-                except KeyError:
-                    raise ValueError(f"`{status}` is not a valid status type. Please use the Status enum") from None
-        else:
-            # in case the user set status to None
-            if self._status:
-                status = self._status
-            else:
-                log.warning("Status must be set to a valid status type, defaulting to online")
-                status = Status.ONLINE
-
-        self._status = status
-        self._activity = activity
-        await self.ws.change_presence(activity.to_dict() if activity else None, status)
+        return await self._connection_state.change_presence(status, activity)

@@ -41,7 +41,7 @@ def has_any_role(*roles: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
     return check
 
 
-def has_id(user_id) -> TYPE_CHECK_FUNCTION:
+def has_id(user_id: int) -> TYPE_CHECK_FUNCTION:
     """
     Checks if the author has the desired ID.
 

@@ -28,7 +28,7 @@ def create_cache(
 ) -> Union[dict, TTLCache]:
     """
     Create a cache object based on the parameters passed.
-    
+
     If `ttl` and `max_values` are set to None, the cache will just be a regular dict, with no culling.
     Args:
         ttl: The time to live of an object in the cache
@@ -65,7 +65,7 @@ class GlobalCache:
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
     user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):
             log.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
@@ -317,8 +317,11 @@ class GlobalCache:
         if channel is None:
             channel = BaseChannel.from_dict_factory(data, self._client)
             self.channel_cache[channel_id] = channel
+            if guild := channel.guild:
+                guild._channel_ids.add(channel.id)
         else:
             channel.update_from_dict(data)
+
         return channel
 
     def place_dm_channel_id(self, user_id, channel_id) -> None:
@@ -430,7 +433,7 @@ class GlobalCache:
         """
         guild_id = to_snowflake(guild_id)
 
-        roles = {}
+        roles: Dict["Snowflake_Type", Role] = {}
         for role_data in data:  # todo not update cache expiration order for roles
             role_data.update({"guild_id": guild_id})
             role_id = to_snowflake(role_data["id"])

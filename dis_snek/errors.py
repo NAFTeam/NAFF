@@ -12,22 +12,22 @@ if TYPE_CHECKING:
 
 
 class SnakeException(Exception):
-    """Base Exception of discord-snakes"""
+    """Base Exception of discord-snakes."""
 
 
 class BotException(SnakeException):
-    """An issue occurred in the client, likely user error"""
+    """An issue occurred in the client, likely user error."""
 
 
 class GatewayNotFound(SnakeException):
-    """An exception that is raised when the gateway for Discord could not be found"""
+    """An exception that is raised when the gateway for Discord could not be found."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Unable to find discord gateway!")
 
 
 class LoginError(BotException):
-    """The bot failed to login, check your token"""
+    """The bot failed to login, check your token."""
 
 
 class HTTPException(SnakeException):
@@ -79,31 +79,31 @@ class HTTPException(SnakeException):
 
 
 class DiscordError(HTTPException):
-    """A discord-side error"""
+    """A discord-side error."""
 
 
 class BadRequest(HTTPException):
-    """A bad request was made"""
+    """A bad request was made."""
 
 
 class Forbidden(HTTPException):
-    """You do not have access to this"""
+    """You do not have access to this."""
 
 
 class NotFound(HTTPException):
-    """This resource could not be found"""
+    """This resource could not be found."""
 
 
 class RateLimited(HTTPException):
-    """Discord is rate limiting this application"""
+    """Discord is rate limiting this application."""
 
 
 class TooManyChanges(SnakeException):
-    """You have changed something too frequently"""
+    """You have changed something too frequently."""
 
 
 class WebSocketClosed(SnakeException):
-    """The websocket was closed"""
+    """The websocket was closed."""
 
     code: int = 0
     codes: Dict[int, str] = {
@@ -130,7 +130,7 @@ class WebSocketClosed(SnakeException):
 
 
 class WebSocketRestart(SnakeException):
-    """The websocket closed, and is safe to restart"""
+    """The websocket closed, and is safe to restart."""
 
     resume: bool = False
 
@@ -140,23 +140,23 @@ class WebSocketRestart(SnakeException):
 
 
 class ExtensionException(BotException):
-    """An error occurred with an extension"""
+    """An error occurred with an extension."""
 
 
 class ExtensionNotFound(ExtensionException):
-    """The desired extension was not found"""
+    """The desired extension was not found."""
 
 
 class ExtensionLoadException(ExtensionException):
-    """An error occurred loading an extension"""
+    """An error occurred loading an extension."""
 
 
 class ScaleLoadException(ExtensionLoadException):
-    """A scale failed to load"""
+    """A scale failed to load."""
 
 
 class CommandException(BotException):
-    """An error occurred trying to execute a command"""
+    """An error occurred trying to execute a command."""
 
 
 class CommandOnCooldown(CommandException):
@@ -205,9 +205,9 @@ class MessageException(BotException):
 class EphemeralEditException(MessageException):
     """Your bot attempted to edit an ephemeral message. This is not possible.
 
-    Its worth noting you can edit an ephemeral message with component's `edit_origin` method"""
+    Its worth noting you can edit an ephemeral message with component's `edit_origin` method."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Ephemeral messages cannot be edited.")
 
 
@@ -218,16 +218,16 @@ class ThreadException(BotException):
 class ThreadOutsideOfGuild(ThreadException):
     """A thread was attempted to be created outside of a guild."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Threads cannot be created outside of guilds")
 
 
 class InteractionException(BotException):
-    """An error occurred with an interaction"""
+    """An error occurred with an interaction."""
 
 
 class InteractionMissingAccess(InteractionException):
-    """The bot does not have access to the specified scope"""
+    """The bot does not have access to the specified scope."""
 
     def __init__(self, scope: "Snowflake_Type"):
         self.scope: "Snowflake_Type" = scope
@@ -244,7 +244,7 @@ class InteractionMissingAccess(InteractionException):
 
 
 class AlreadyDeferred(BotException):
-    """An interaction was already deferred, and you attempted to defer it again"""
+    """An interaction was already deferred, and you attempted to defer it again."""
 
 
 class ForeignWebhookException(SnakeException):

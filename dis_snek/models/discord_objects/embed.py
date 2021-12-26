@@ -176,7 +176,7 @@ class Embed(DictSerializationMixin):
             if len(value) > EMBED_MAX_FIELDS:
                 raise ValueError(f"Embeds can only hold {EMBED_MAX_FIELDS} fields")
 
-    def _check_object(self):
+    def _check_object(self) -> None:
         self._name_validation("title", self.title)
         self._description_validation("description", self.description)
         self._fields_validation("fields", self.fields)
