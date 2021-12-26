@@ -219,11 +219,16 @@ class WebsocketClient:
             data: The data to send
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
         """
-        if not self.closed.is_set():
-            if not bypass:
-                await self.rl_manager.rate_limit()
-            log.debug(f"Sending data to gateway: {data}")
-            await self.ws.send_str(data)
+
+        try:
+            if not self.closed.is_set():
+                if not bypass:
+                    await self.rl_manager.rate_limit()
+                if not self.ws.closed:
+                    log.debug(f"Sending data to gateway: {data}")
+                    await self.ws.send_str(data)
+        except ConnectionResetError:
+            pass
 
     async def send_json(self, data: dict, bypass=False) -> None:
         """
