@@ -759,6 +759,36 @@ class GuildCategory(GuildChannel):
         """
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
+    @property
+    def voice_channels(self) -> List["GuildVoice"]:
+        """
+        Get all voice channels within the category.
+
+        Returns:
+            The list of voice channels
+        """
+        return [channel for channel in self.channels if isinstance(channel, GuildVoice) and not isinstance(channel, GuildStageVoice)]
+
+    @property
+    def stage_channels(self) -> List["GuildStageVoice"]:
+        """
+        Get all stage channels within the category.
+
+        Returns:
+            The list of stage channels
+        """
+        return [channel for channel in self.channels if isinstance(channel, GuildStageVoice)]
+
+    @property
+    def text_channels(self) -> List["TYPE_MESSAGEABLE_CHANNEL"]:
+        """
+        Get all text channels within the category.
+
+        Returns:
+            The list of text channels
+        """
+        return [channel for channel in self.channels if isinstance(channel, GuildText)]
+
     async def edit(
         self,
         name: Optional[str] = MISSING,
