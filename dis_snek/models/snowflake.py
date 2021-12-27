@@ -1,33 +1,38 @@
-from contextlib import suppress
-from typing import Union, List, Optional
+from typing import List, Optional, SupportsInt
 
 from dis_snek.const import MISSING
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 
-Snowflake_Type = Union[str, int]
+Snowflake_Type = SupportsInt
 
 
-def to_snowflake(snowflake: Union[Snowflake_Type, "SnowflakeObject"]) -> int:
-    if isinstance(snowflake, SnowflakeObject):
-        snowflake = snowflake.id
+def to_snowflake(snowflake: Snowflake_Type) -> int:
+    """
+    Helper function to convert something into correct Discord snowflake int, gives more helpful errors
+    Use internally to sanitize user input or in user-facing APIs (a must)
+    For Discord-API - facing code, just int() is sufficient
+    """
 
-    if not isinstance(snowflake, (int, str)):
+    try:
+        snowflake = int(snowflake)
+    except TypeError:
         raise TypeError(
-            f"ID (snowflake) should be instance of int, str or SnowflakeObject. Got '{snowflake}' ({type(snowflake)}) "
-            f"instead."
+            f"ID (snowflake) should be instance of int, str, SnowflakeObject, or support __int__. "
+            f"Got '{snowflake}' ({type(snowflake)}) instead."
+        )
+    except ValueError:
+        raise TypeError(
+            f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead."
         )
 
-    with suppress(ValueError):
-        snowflake = int(snowflake)
-
     if 22 > snowflake.bit_length() > 64:
-        raise ValueError("ID (snowflake) is not in correct discord format!")
+        raise ValueError("ID (snowflake) is not in correct Discord format!")
 
     return snowflake
 
 
-def to_optional_snowflake(snowflake: Optional[Union[Snowflake_Type, "SnowflakeObject"]] = MISSING) -> Optional[int]:
+def to_optional_snowflake(snowflake: Optional[Snowflake_Type] = MISSING) -> Optional[int]:
     if snowflake is MISSING:
         return MISSING
     if snowflake is None:
@@ -35,13 +40,13 @@ def to_optional_snowflake(snowflake: Optional[Union[Snowflake_Type, "SnowflakeOb
     return to_snowflake(snowflake)
 
 
-def to_snowflake_list(snowflakes: List[Union[Snowflake_Type, "SnowflakeObject"]]) -> List[int]:
+def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
     return [to_snowflake(c) for c in snowflakes]
 
 
 @define()
 class SnowflakeObject:
-    id: "Snowflake_Type" = field(repr=True, converter=to_snowflake)
+    id: int = field(repr=True, converter=int)
 
     def __eq__(self, other) -> bool:
         return self.id == other.id
@@ -50,7 +55,10 @@ class SnowflakeObject:
         return self.id != other.id
 
     def __hash__(self) -> int:
-        return int(self.id) << 32
+        return self.id << 32
+
+    def __int__(self) -> int:
+        return self.id
 
     @property
     def created_at(self) -> "Timestamp":
