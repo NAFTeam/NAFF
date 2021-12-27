@@ -22,7 +22,7 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
             f"Got '{snowflake}' ({type(snowflake)}) instead."
         )
     except ValueError:
-        raise TypeError(
+        raise ValueError(
             f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead."
         )
 
