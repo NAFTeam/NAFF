@@ -73,16 +73,11 @@ class ConnectionState:
         while not self.is_closed:
             log.info(f"Attempting to {'re' if params['session_id'] else ''}connect to gateway...")
             try:
-                self.gateway = await WebsocketClient.connect(self, **params)
-
-                try:
-                    await self.gateway.run()
-                    # wait for websocket to report it has closed
-                    await self.gateway.closed.wait()
-                finally:
-                    if not self.gateway.closed.is_set():
-                        await self.gateway.close()
-                    self.client.dispatch(events.Disconnect())
+                async with WebsocketClient.connect(self, **params) as self.gateway:
+                    try:
+                        await self.gateway.run()
+                    finally:
+                        self.client.dispatch(events.Disconnect())
 
             except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError) as ex:
                 log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))

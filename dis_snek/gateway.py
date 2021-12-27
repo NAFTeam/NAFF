@@ -8,9 +8,10 @@ import random
 import sys
 import time
 import zlib
+from contextlib import asynccontextmanager
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from aiohttp import WSMsgType
+from aiohttp import WSCloseCode, WSMsgType, ClientWebSocketResponse
 
 from dis_snek.const import logger_name, MISSING
 from dis_snek.errors import WebSocketClosed
@@ -143,9 +144,9 @@ class WebsocketClient:
     #     "_chunk_lock",
     # )
 
-    def __init__(self, session_id: Optional[int] = None, sequence: Optional[int] = None) -> None:
-        self.session_id = session_id
-        self.sequence = sequence
+    def __init__(self, state: "ConnectionState", ws: ClientWebSocketResponse) -> None:
+        self.state = state
+        self.ws = ws
 
         self.buffer = bytearray()
         self._zlib = zlib.decompressobj()
@@ -156,7 +157,6 @@ class WebsocketClient:
 
         self._trace = []
 
-        self.closed = asyncio.Event()
         self.resume = False
         self.shutdown = False
 
@@ -164,9 +164,10 @@ class WebsocketClient:
 
     @property
     def loop(self):
-        return self.client.loop
+        return self.state.client.loop
 
     @classmethod
+    @asynccontextmanager
     async def connect(
         cls,
         state: "ConnectionState",
@@ -183,19 +184,29 @@ class WebsocketClient:
             presence: The presence to login with
 
         """
-        cls.client = state.client
-        cls.state = state
-        cls._gateway = await state.client.http.get_gateway()
-        cls.presence = presence
-        cls.ws = await state.client.http.websocket_connect(cls._gateway)
+        gateway = await state.client.http.get_gateway()
+        ws = await state.client.http.websocket_connect(gateway)
+        self = cls(state, ws)
 
-        cls.shard_id = state.shard_id
-        cls.total_shards = state.client.total_shards
         state.client.dispatch(events.Connect())
-        if session_id and sequence:
-            # resume
-            return cls(session_id, sequence)
-        return cls()
+
+        try:
+            hello = await self.receive()
+
+            self._keep_alive = BeeGees(ws=self, interval=hello["heartbeat_interval"] / 1000)
+            # as per API, we shouldn't send a heartbeat on connect, wait a random offset
+            self.loop.call_later(self._keep_alive.interval * random.uniform(0, 0.5), self._keep_alive.start)
+
+            if session_id:
+                await self.identify((state.shard_id, state.client.total_shards), presence)
+            else:
+                await self.resume_connection(sequence, session_id)
+
+            yield self
+        finally:
+            # Always cleanup no matter what happens since we don't want to leave a connection
+            # open, even if this was cancelled or similar.
+            await self.close()
 
     @property
     def latency(self) -> float:
@@ -240,9 +251,8 @@ class WebsocketClient:
         data = OverriddenJson.dumps(data)
         await self.send(data, bypass)
 
-    async def run(self) -> None:
-        """Start receiving events from the websocket."""
-        self.closed.clear()
+    async def receive(self) -> Optional[dict]:
+        """Receive a full event payload from the WebSocket."""
         while not self.state.is_closed:
             resp = await self.ws.receive()
             msg = resp.data
@@ -273,6 +283,15 @@ class WebsocketClient:
             msg = msg.decode("utf-8")
             msg = OverriddenJson.loads(msg)
 
+            return msg
+
+    async def run(self) -> None:
+        """Start receiving events from the websocket."""
+        while not self.state.is_closed:
+            msg = await self.receive()
+            if not msg:
+                return
+
             op = msg.get("op")
             data = msg.get("d")
             seq = msg.get("s")
@@ -288,19 +307,8 @@ class WebsocketClient:
                 asyncio.ensure_future(self.dispatch_event(data, seq, event))
                 continue
 
-        await self.close()
-
     async def dispatch_opcode(self, data, op):
         match op:
-            case OPCODE.HELLO:
-                if self._keep_alive:
-                    self._keep_alive.stop()
-                self._keep_alive = BeeGees(ws=self, interval=data["heartbeat_interval"] / 1000)
-                # as per API, we shouldn't send a heartbeat on connect, wait a random offset
-                self.loop.call_later(self._keep_alive.interval * random.uniform(0, 0.5), self._keep_alive.start)
-                if not self.session_id:
-                    return await self.identify()
-                return await self.resume_connection()
 
             case OPCODE.HEARTBEAT:
                 return await self.send_heartbeat()
@@ -351,10 +359,6 @@ class WebsocketClient:
                     log.debug(f"No processor for `{event_name}`")
         self.loop.call_soon(self.client.dispatch, events.RawGatewayEvent(data, override_name="raw_socket_receive"))
 
-    def __del__(self) -> None:
-        if not self.closed.is_set():
-            self.loop.run_until_complete(self.close())
-
     async def close(self, code: int = None, *, shutdown: bool = False, resume: bool = False) -> None:
         """
         Close the connection to the gateway.
@@ -377,19 +381,17 @@ class WebsocketClient:
         if isinstance(self._keep_alive, BeeGees):
             self._keep_alive.stop()
 
-        self.closed.set()
-
-    async def identify(self) -> None:
+    async def identify(self, shard: tuple[int, int], presence: dict | None = None) -> None:
         """Send an identify payload to the gateway."""
         payload = {
             "op": OPCODE.IDENTIFY,
             "d": {
-                "token": self.client.http.token,
+                "token": self.state.client.http.token,
                 "intents": self.state.intents,
-                "shard": [self.shard_id, self.total_shards],
+                "shard": shard,
                 "large_threshold": 250,
                 "properties": {"$os": sys.platform, "$browser": "dis.snek", "$device": "dis.snek"},
-                "presence": self.presence,
+                "presence": presence,
             },
             "compress": True,
         }
@@ -398,11 +400,11 @@ class WebsocketClient:
             f"Shard ID {self.shard_id} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
 
-    async def resume_connection(self) -> None:
+    async def resume_connection(self, sequence: int, session_id: str) -> None:
         """Send a resume payload to the gateway."""
         payload = {
             "op": OPCODE.RESUME,
-            "d": {"token": self.client.http.token, "seq": self.sequence, "session_id": self.session_id},
+            "d": {"token": self.state.client.http.token, "seq": sequence, "session_id": session_id},
         }
         await self.send_json(payload, bypass=True)
         log.debug("Client is attempting to resume a connection")
