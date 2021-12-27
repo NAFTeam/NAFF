@@ -820,7 +820,7 @@ class Snake(
             bot_scopes = set(g.id for g in self.cache.guild_cache.values())
             bot_scopes.add(GLOBAL_SCOPE)
         else:
-            bot_scopes = set(self.interactions.keys())
+            bot_scopes = set(self.interactions)
 
         req_lock = asyncio.Lock()
 
@@ -875,7 +875,7 @@ class Snake(
         if self.del_unused_app_cmd:
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
-            cmd_scopes = list(set(self._interaction_scopes.values())) + [GLOBAL_SCOPE]
+            cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
         guild_perms = {}
         cmds_json = application_commands_to_dict(self.interactions)
