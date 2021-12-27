@@ -767,7 +767,11 @@ class GuildCategory(GuildChannel):
         Returns:
             The list of voice channels
         """
-        return [channel for channel in self.channels if isinstance(channel, GuildVoice) and not isinstance(channel, GuildStageVoice)]
+        return [
+            channel
+            for channel in self.channels
+            if isinstance(channel, GuildVoice) and not isinstance(channel, GuildStageVoice)
+        ]
 
     @property
     def stage_channels(self) -> List["GuildStageVoice"]:
