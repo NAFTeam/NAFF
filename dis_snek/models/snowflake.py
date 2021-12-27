@@ -1,10 +1,14 @@
-from typing import List, Optional, SupportsInt
+from typing import Union, List, Optional, SupportsInt
 
 from dis_snek.const import MISSING
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 
-Snowflake_Type = SupportsInt
+# Snowflake_Type should be used in FUNCTION args of user-facing APIs (combined with to_snowflake to sanitize input)
+# For MODEL id fields, just use int as type-hinting instead;
+# For attr convertors: Use int() when API-facing conversion is expected,
+# use to_snowflake when user should create this object
+Snowflake_Type = Union[int, str, "SnowflakeObject", SupportsInt]
 
 
 def to_snowflake(snowflake: Snowflake_Type) -> int:
