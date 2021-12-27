@@ -26,12 +26,13 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
             f"Got '{snowflake}' ({type(snowflake)}) instead."
         )
     except ValueError:
-        raise ValueError(
-            f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead."
-        )
+        raise ValueError(f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead.")
 
     if 22 > snowflake.bit_length() > 64:
-        raise ValueError("ID (snowflake) is not in correct Discord format!")
+        raise ValueError(
+            f"ID (snowflake) is not in correct Discord format! Bit length of int should be from 22 to 64"
+            f"Got '{snowflake}' (bit length {snowflake.bit_length()})"
+        )
 
     return snowflake
 
