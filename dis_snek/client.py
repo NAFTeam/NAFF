@@ -638,9 +638,9 @@ class Snake(
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
-        check=None,
-        timeout=None,
-    ) -> Awaitable["Future"]:
+        check: Optional[Callable] = None,
+        timeout: Optional[float] = None,
+    ) -> "Component":
         """
         Waits for a message to be sent to the bot.
 
@@ -651,8 +651,12 @@ class Snake(
             timeout: The number of seconds to wait before timing out.
 
         Returns:
-            `Component` that was invoked, or `None` if timed out. Use `.context` to get the `ComponentContext`.
+            `Component` that was invoked. Use `.context` to get the `ComponentContext`.
+
+        Raises:
+            `asyncio.TimeoutError` if timed out
         """
+
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
 
