@@ -675,6 +675,7 @@ class GuildChannel(BaseChannel):
 
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
     _permission_overwrites: Dict["Snowflake_Type", "PermissionOverwrite"] = attr.ib(factory=list)
+    _original_permission_overwrites: List[Union["PermissionOverwrite", dict]] = attr.ib(factory=list)
 
     @property
     def guild(self) -> "Guild":
@@ -686,9 +687,10 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        permission_overwrites = data.get("permission_overwrites", [])
+        data["original_permission_overwrites"] = data.get("permission_overwrites", [])
         data["permission_overwrites"] = {
-            obj.id: obj for obj in (PermissionOverwrite(**permission) for permission in permission_overwrites)
+            obj.id: obj
+            for obj in (PermissionOverwrite(**permission) for permission in data["original_permission_overwrites"])
         }
         return data
 
@@ -745,6 +747,30 @@ class GuildChannel(BaseChannel):
     @property
     def members(self) -> List["Member"]:
         return [m for m in self.guild.members if Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
+
+    async def clone(self, name: Optional[str] = None, reason: Optional[str] = MISSING) -> "TYPE_GUILD_CHANNEL":
+        """
+        Clone this channel and create a new one.
+
+        parameters:
+            name: The name of the new channel. Defaults to the current name
+            reason: The reason for creating this channel
+
+        returns:
+            The newly created channel.
+        """
+
+        await self.guild.create_channel(
+            channel_type=self.type,
+            name=name if name else self.name,
+            topic=getattr(self, "topic", MISSING),
+            position=self.position,
+            permission_overwrites=self._original_permission_overwrites,
+            category=self.category,
+            nsfw=self.nsfw,
+            rate_limit_per_user=getattr(self, "rate_limit_per_user", 0),
+            reason=reason,
+        )
 
 
 @define()

@@ -460,7 +460,7 @@ class Guild(BaseGuild):
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
-        slowmode_delay: int = 0,
+        rate_limit_per_user: int = 0,
         reason: Optional[str] = MISSING,
     ) -> "TYPE_GUILD_CHANNEL":
         """
@@ -476,7 +476,7 @@ class Guild(BaseGuild):
             nsfw: Should this channel be marked nsfw
             bitrate: The bitrate of this channel, only for voice
             user_limit: The max users that can be in this channel, only for voice
-            slowmode_delay: The time users must wait between sending messages
+            rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
         returns:
@@ -496,7 +496,7 @@ class Guild(BaseGuild):
             nsfw,
             bitrate,
             user_limit,
-            slowmode_delay,
+            rate_limit_per_user,
             reason,
         )
         return self._client.cache.place_channel_data(channel_data)
@@ -509,7 +509,7 @@ class Guild(BaseGuild):
         permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        slowmode_delay: int = 0,
+        rate_limit_per_user: int = 0,
         reason: Optional[str] = MISSING,
     ) -> "GuildText":
         """
@@ -522,7 +522,7 @@ class Guild(BaseGuild):
             permission_overwrites: Permission overwrites to apply to the channel
             category: The category this channel should be within
             nsfw: Should this channel be marked nsfw
-            slowmode_delay: The time users must wait between sending messages
+            rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
         returns:
@@ -536,7 +536,7 @@ class Guild(BaseGuild):
             permission_overwrites=permission_overwrites,
             category=category,
             nsfw=nsfw,
-            slowmode_delay=slowmode_delay,
+            rate_limit_per_user=rate_limit_per_user,
             reason=reason,
         )
 
