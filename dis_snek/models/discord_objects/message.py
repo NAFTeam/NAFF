@@ -189,7 +189,7 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = attr.ib(default=MISSING)
-    timestamp: Timestamp = attr.ib(converter=timestamp_converter)
+    timestamp: Timestamp = attr.ib(converter=timestamp_converter, default=MISSING)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
@@ -200,7 +200,7 @@ class Message(BaseMessage):
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
     webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    type: MessageTypes = attr.ib(converter=MessageTypes)
+    type: MessageTypes = attr.ib(converter=MessageTypes, default=MISSING)
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional["Application"] = attr.ib(default=None)  # TODO: partial application
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
