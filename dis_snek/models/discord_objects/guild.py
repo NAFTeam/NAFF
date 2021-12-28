@@ -920,7 +920,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(int(channel_id))
+            return self._client.cache.channel_cache.get(to_snowflake(channel_id))
         return None
 
     async def fetch_channel(
