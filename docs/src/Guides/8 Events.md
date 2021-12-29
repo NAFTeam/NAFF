@@ -4,7 +4,7 @@ Events are dispatched whenever a subscribed event gets send by discord.
 
 ## What Events Can I Get
 
-What events you subscribe to are defined at startup by setting your `Intents`. 
+What events you subscribe to are defined at startup by setting your `Intents`.
 
 `Intents.DEFAULT` is a good place to start if your bot is new and small, otherwise, it is recommended to take your time and go through them one by one.
 ```python
@@ -38,7 +38,7 @@ There are two ways to register events. **Decorators** are the recommended way to
     @listen()
     async def on_channel_create(event: ChannelCreate):
         # this event is called when a channel is created in a guild where the bot is
-        
+
         print(f"Channel created with name: {event.channel.name}")
 
     bot.start("Put your token here")
@@ -50,7 +50,7 @@ There are two ways to register events. **Decorators** are the recommended way to
     ```python
     async def on_channel_create(event: ChannelCreate):
         # this event is called when a channel is created in a guild where the bot is
-        
+
         print(f"Channel created with name: {event.channel.name}")
 
 

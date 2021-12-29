@@ -63,7 +63,7 @@ class ScheduledEvent(DiscordObject):
     privacy_level: Union[ScheduledEventPrivacyLevel, int] = attr.ib(converter=ScheduledEventPrivacyLevel)
     """
     Privacy level of the scheduled event
-    
+
     ??? note:
         Discord only has `GUILD_ONLY` at the momment.
     """

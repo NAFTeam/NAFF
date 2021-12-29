@@ -1,5 +1,5 @@
 # Tasks
-As you develop your bot, you're eventually going to want something to run in the background periodically. 
+As you develop your bot, you're eventually going to want something to run in the background periodically.
 Snek comes with built-in utilities to handle this for you.
 ___
 
@@ -18,7 +18,7 @@ async def some_task():
 ```
 To start this task, just run `some_task.start()`.
 
-Triggers are used to determine when a task should run, above is an `IntervalTrigger` that triggers the task 
+Triggers are used to determine when a task should run, above is an `IntervalTrigger` that triggers the task
 at a set interval. Other built-in Triggers can be seen [below](#triggers).
 
 You can also use multiple triggers on one task, lets say you want a task to run every 24 hours and **also** run at 6 am every day:

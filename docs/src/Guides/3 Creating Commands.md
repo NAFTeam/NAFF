@@ -1,13 +1,13 @@
 # Creating Slash Commands
 
-So you want to make a slash command (or interaction, as they are officially called), but don't know how to get started? 
+So you want to make a slash command (or interaction, as they are officially called), but don't know how to get started?
 Then this is the right place for you.
 
 ## Your First Command
 
 To create an interaction, simply define an asynchronous function and use the `@slash_command()` decorator above it.
 
-Interactions need to be responded to within 3 seconds. To do this, use `await ctx.send()`. 
+Interactions need to be responded to within 3 seconds. To do this, use `await ctx.send()`.
 If your code needs more time, don't worry. You can use `await ctx.defer()` to increase the time until you need to respond to the command to 15 minutes.
 ```python
 @slash_command(name="my_command", description="My first command :)")
@@ -18,14 +18,14 @@ async def my_command_function(ctx: InteractionContext):
 async def my_long_command_function(ctx: InteractionContext):
     # need to defer it, otherwise, it fails
     await ctx.defer()
-    
+
     # do stuff for a bit
     await asyncio.sleep(600)
-    
+
     await ctx.send("Hello World")
 ```
 
-Interactions can either be global or limited to specific guilds. 
+Interactions can either be global or limited to specific guilds.
 Global commands take up to an hour to sync with Discord and show up, so don't worry when you first register a command.
 
 When testing, it is recommended to use non-global commands, as they sync instantly.
@@ -47,7 +47,7 @@ If you have multiple commands that fit under the same category, subcommands are 
 Let's define a basic subcommand:
 ```python
 @slash_command(
-    name="base", 
+    name="base",
     description="My command base",
     group_name="group",
     group_description="My command group",
@@ -70,7 +70,7 @@ This will show up in discord as `/base group command`. There are two ways to add
 === ":two: Repeat Definition"
     ```python
     @slash_command(
-        name="base", 
+        name="base",
         description="My command base",
         group_name="group",
         group_description="My command group",
@@ -105,9 +105,9 @@ You do that by using the `@slash_option()` decorator and passing the option name
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="integer_option", 
-    description="Integer Option", 
-    required=True, 
+    name="integer_option",
+    description="Integer Option",
+    required=True,
     opt_type=OptionTypes.INTEGER
 )
 async def my_command_function(ctx: InteractionContext, integer_option: int):
@@ -120,9 +120,9 @@ Always make sure to define all required options first, that is a discord require
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="integer_option", 
-    description="Integer Option", 
-    required=False, 
+    name="integer_option",
+    description="Integer Option",
+    required=False,
     opt_type=OptionTypes.INTEGER
 )
 async def my_command_function(ctx: InteractionContext, integer_option: int = 5):
@@ -137,15 +137,15 @@ If you are using an `OptionTypes.CHANNEL` option, you can restrict the channel a
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="channel_option", 
-    description="Channel Option", 
-    required=True, 
-    opt_type=OptionTypes.CHANNEL, 
+    name="channel_option",
+    description="Channel Option",
+    required=True,
+    opt_type=OptionTypes.CHANNEL,
     channel_types=ChannelTypes.GUILD_TEXT
 )
 async def my_command_function(ctx: InteractionContext, channel_option: GUILD_TEXT):
     await channel_option.send("This is a text channel in a guild")
-    
+
     await ctx.send("...")
 ```
 
@@ -153,11 +153,11 @@ You can also set an upper and lower limit for both `OptionTypes.INTEGER` and `Op
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="integer_option", 
-    description="Integer Option", 
-    required=True, 
-    opt_type=OptionTypes.INTEGER, 
-    min_value=10, 
+    name="integer_option",
+    description="Integer Option",
+    required=True,
+    opt_type=OptionTypes.INTEGER,
+    min_value=10,
     max_value=15
 )
 async def my_command_function(ctx: InteractionContext, integer_option: int):
@@ -170,16 +170,16 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 
 ## But I Want A Choice
 
-If your users ~~are dumb~~ constantly misspell specific strings, it might be wise to set up choices. 
+If your users ~~are dumb~~ constantly misspell specific strings, it might be wise to set up choices.
 With choices, the user can no longer freely input whatever they want, instead, they must choose from a curated list.
 
 To create a choice, simply fill `choices` in `@slash_option()`. An option can have up to 25 choices:
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="integer_option", 
-    description="Integer Option", 
-    required=True, 
+    name="integer_option",
+    description="Integer Option",
+    required=True,
     opt_type=OptionTypes.INTEGER,
     choices=[
         SlashCommandChoice(name="One", value=1),
@@ -194,16 +194,16 @@ For more information, please visit the API reference [here](/API Reference/model
 
 ## I Need More Than 25 Choices
 
-Looks like you want autocomplete options. These dynamically show users choices based on their input. 
+Looks like you want autocomplete options. These dynamically show users choices based on their input.
 The downside is that you need to supply the choices on request, making this a bit more tricky to set up.
 
 To use autocomplete options, set `autocomplete=True` in `@slash_option()`:
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
-    name="string_option", 
-    description="String Option", 
-    required=True, 
+    name="string_option",
+    description="String Option",
+    required=True,
     opt_type=OptionTypes.STRING,
     autocomplete=True
 )
@@ -244,9 +244,9 @@ You are in luck. There are currently four different ways to create interactions,
     ```python
     @slash_command(name="my_command", description="My first command :)")
     @slash_option(
-        name="integer_option", 
-        description="Integer Option", 
-        required=True, 
+        name="integer_option",
+        description="Integer Option",
+        required=True,
         opt_type=OptionTypes.INTEGER
     )
     async def my_command_function(ctx: InteractionContext, integer_option: int):
@@ -256,13 +256,13 @@ You are in luck. There are currently four different ways to create interactions,
 === ":two: Single Decorator"
     ```python
     @slash_command(
-        name="my_command", 
+        name="my_command",
         description="My first command :)",
         options=[
             SlashCommandOption(
-                name="integer_option", 
-                description="Integer Option", 
-                required=True, 
+                name="integer_option",
+                description="Integer Option",
+                required=True,
                 opt_type=OptionTypes.INTEGER
             )
         ]
@@ -282,16 +282,16 @@ You are in luck. There are currently four different ways to create interactions,
     ```python
     async def my_command_function(ctx: InteractionContext, integer_option: int):
         await ctx.send(f"You input {integer_option}")
-    
+
     bot.add_interaction(
         command=SlashCommand(
             name="my_command",
             description="My first command :)",
             options=[
                 SlashCommandOption(
-                    name="integer_option", 
-                    description="Integer Option", 
-                    required=True, 
+                    name="integer_option",
+                    description="Integer Option",
+                    required=True,
                     opt_type=OptionTypes.INTEGER
                 )
             ]
@@ -316,9 +316,9 @@ def my_own_int_option():
 
     def wrapper(func):
         return slash_option(
-            name="integer_option", 
-            description="Integer Option", 
-            opt_type=OptionTypes.INTEGER, 
+            name="integer_option",
+            description="Integer Option",
+            opt_type=OptionTypes.INTEGER,
             required=True
         )(func)
 
@@ -369,9 +369,9 @@ class DatabaseEntry():
 
 @slash_command(name="lookup", description="Gives info about a thing from the db")
 @slash_option(
-    name="thing", 
-    description="The user enters a string", 
-    required=True, 
+    name="thing",
+    description="The user enters a string",
+    required=True,
     opt_type=OptionTypes.STRING
 )
 async def my_command_function(ctx: InteractionContext, thing: DatabaseEntry):

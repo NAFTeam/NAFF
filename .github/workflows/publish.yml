@@ -3,7 +3,7 @@ on:
   release:
     types: [created]
 
-jobs: 
+jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:

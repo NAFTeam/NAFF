@@ -13,7 +13,7 @@ To make a bot on Discord, you must first create an application on Discord. Thank
     <br>![Create Application Dialogue](../images/CreatingYourBot/CreateAnApplication.png "The Create Application Dialogue")
 
     ??? note
-        Don't worry if there isnt a `team` option, this only appears if you have a developer team. 
+        Don't worry if there isnt a `team` option, this only appears if you have a developer team.
         If you have a team and want to assign your bot to it, use this.
 
 5. In the `Bot` tab, press `Add bot`
@@ -24,18 +24,18 @@ To make a bot on Discord, you must first create an application on Discord. Thank
 
     !!! warning "Warning: Do not share your token!"
         Think of this token as your bots username **and** password in one. You should **never** share this with someone else.
-        If someone has your token, they can do absolutely anything with your bot, from banning every member in every server to 
-        leaving every server your bot is in. 
+        If someone has your token, they can do absolutely anything with your bot, from banning every member in every server to
+        leaving every server your bot is in.
 
-        If you think you have leaked your token, press `Regenerate` on the same page you copy your token on, 
-        this will revoke your token (logging out all exisitng sessions), and generate a new token for you. 
+        If you think you have leaked your token, press `Regenerate` on the same page you copy your token on,
+        this will revoke your token (logging out all exisitng sessions), and generate a new token for you.
 
-        :fontawesome-brands-github:Github will automatically revoke your token if you accidently commit it, but dont rely on this 
+        :fontawesome-brands-github:Github will automatically revoke your token if you accidently commit it, but dont rely on this
         as a crutch, keep your token safe.
 
 ## Inviting your bot!
 
-So you've created a bot, but it's not in a server yet. Lets fix that. 
+So you've created a bot, but it's not in a server yet. Lets fix that.
 
 1. On the [Developer Application page](https://discord.com/developers/applications) from above, select your bot
 
@@ -50,6 +50,6 @@ So you've created a bot, but it's not in a server yet. Lets fix that.
     <br>![A widget that lets you pick what your bot's permissions are](../images/CreatingYourBot/botPerms.png "Bot Permissions")
 
 6. Now you have an invite link! Simply use this to invite your bot.
-    
+
     !!! note
         You need `manage server` permissions to add a bot to a server

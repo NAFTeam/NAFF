@@ -1,4 +1,4 @@
-# Pagination 
+# Pagination
 
 > Pagination, also known as paging, is the process of dividing a document into discrete pages, either electronic pages or printed pages.
 
@@ -8,7 +8,7 @@ Snek comes builtin with a pagination utility that splits your messages up into p
 
 ![Paginator example](../images/paginator%20example.png)
 
-To use it, you only need 3 lines. 
+To use it, you only need 3 lines.
 
 ```python
 from dis_snek.models.paginators import Paginator

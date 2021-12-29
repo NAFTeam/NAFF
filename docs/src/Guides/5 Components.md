@@ -1,6 +1,6 @@
 # Components
 
-While interactions are cool and all, they are still missing a vital component. 
+While interactions are cool and all, they are still missing a vital component.
 Introducing components, aka Buttons, Selects, soon Text Input Fields.
 Components can be added to any message by passing them to `components` in any `.send()` method.
 
@@ -126,7 +126,7 @@ For more information, please visit the API reference [here](/API Reference/model
 Okay now you can make components, but how do you interact with users?
 There are three ways to respond to components.
 
-If you add your component to a temporary message asking for additional user input, just should probably use `bot.wait_for_component()`. 
+If you add your component to a temporary message asking for additional user input, just should probably use `bot.wait_for_component()`.
 These have the downside that, for example, they won't work anymore after restarting your bot.
 
 Otherwise, you are looking for a persistent callback. For that, you want to define `custom_id` in your component creation.
@@ -155,22 +155,22 @@ When responding to a component you need to satisfy discord either by responding 
     # define the check
     def check(component: Button) -> bool:
         return component.context.author.startswith("a")
-    
+
     try:
         used_component = await bot.wait_for_component(components=components, check=check, timeout=30)
-    
-    except TimeoutError:    
+
+    except TimeoutError:  
         print("Timed Out!")
 
         components[0].components[0].disabled = True
         await message.edit(components=components)
-    
+
     else:
         await used_component.context.send("Your name starts with 'a'")
     ```
 
-    You can also use this to check for a normal message instead of a component interaction. 
-    
+    You can also use this to check for a normal message instead of a component interaction.
+
     For more information, please visit the API reference [here](/API Reference/client/).
 
 
@@ -189,7 +189,7 @@ When responding to a component you need to satisfy discord either by responding 
                 )
             )
         ]
-        
+
         await channel.send("Look a Button!", components=components)
 
     @listen()
@@ -202,7 +202,7 @@ When responding to a component you need to satisfy discord either by responding 
     ```
 
 === ":three: Persistent Callback Option 2"
-    If you have a lot of components, putting everything in the `on_component()` event can get messy really quickly. 
+    If you have a lot of components, putting everything in the `on_component()` event can get messy really quickly.
 
     Personally, I put my callbacks into different files. For this example to work, the function name needs to be the same as the `custom_id` of the component.
 
@@ -218,7 +218,7 @@ When responding to a component you need to satisfy discord either by responding 
                 )
             )
         ]
-        
+
         await channel.send("Look a Button!", components=components)
 
     # my callbacks go in here or I subclass this if I want to split it up
