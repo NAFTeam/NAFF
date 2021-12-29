@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attr
 from attr.converters import optional as optional_c
 
-from dis_snek.const import MISSING, DISCORD_EPOCH
+from dis_snek.const import MISSING, DISCORD_EPOCH, Absent
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.invite import Invite, InviteTargetTypes
@@ -204,7 +204,7 @@ class MessageableMixin(SendMixin):
         return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
 
     async def delete_messages(
-        self, messages: List[Union["Snowflake_Type", "Message"]], reason: Optional[str] = MISSING
+        self, messages: List[Union["Snowflake_Type", "Message"]], reason: Absent[Optional[str]] = MISSING
     ) -> None:
         """
         Bulk delete messages from channel.
@@ -241,7 +241,7 @@ class MessageableMixin(SendMixin):
         before: Optional["Snowflake_Type"] = MISSING,
         after: Optional["Snowflake_Type"] = MISSING,
         around: Optional["Snowflake_Type"] = MISSING,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> int:
         """
         Bulk delete messages within a channel. If a `predicate` is provided, it will be used to determine which messages to delete,
@@ -514,7 +514,7 @@ class ThreadableMixin:
 
 @define(slots=False)
 class WebhookMixin:
-    async def create_webhook(self, name: str, avatar: Optional[bytes] = MISSING) -> Webhook:
+    async def create_webhook(self, name: str, avatar: Absent[Optional[bytes]] = MISSING) -> Webhook:
         """
         Create a webhook in this channel
         Args:
@@ -576,7 +576,7 @@ class BaseChannel(DiscordObject):
         """Returns a string that would mention the channel"""
         return f"<#{self.id}>"
 
-    async def _edit(self, payload: dict, reason: Optional[str] = MISSING) -> None:
+    async def _edit(self, payload: dict, reason: Absent[Optional[str]] = MISSING) -> None:
         """
         # TODO
 
@@ -591,7 +591,7 @@ class BaseChannel(DiscordObject):
 
         self.update_from_dict(channel_data)
 
-    async def delete(self, reason: Optional[str] = MISSING) -> None:
+    async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """
         Delete this channel.
 
@@ -617,9 +617,9 @@ class DMChannel(BaseChannel, MessageableMixin):
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
         icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         payload = dict(name=name, icon=to_image_data(icon))
         await self._edit(payload=payload, reason=reason)
@@ -651,7 +651,7 @@ class DMGroup(DMChannel):
         return await self._client.cache.get_user(self.owner_id)
 
     async def add_recipient(
-        self, user: Union["User", "Snowflake_Type"], access_token: str, nickname: Optional[str] = MISSING
+        self, user: Union["User", "Snowflake_Type"], access_token: str, nickname: Absent[Optional[str]] = MISSING
     ):
         user = await self._client.cache.get_user(user)
         await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
@@ -700,7 +700,7 @@ class GuildChannel(BaseChannel):
         )
 
     async def delete_permission(
-        self, target: Union["PermissionOverwrite", "Role", "User"], reason: Optional[str] = MISSING
+        self, target: Union["PermissionOverwrite", "Role", "User"], reason: Absent[Optional[str]] = MISSING
     ):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
@@ -715,7 +715,7 @@ class GuildChannel(BaseChannel):
         target_user_id: "Snowflake_Type" = None,
         target_event_id: "Snowflake_Type" = None,
         target_application_id: "Snowflake_Type" = None,
-        reason: str = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> Invite:
         """
         Create an invite for this channel.
@@ -751,7 +751,7 @@ class GuildChannel(BaseChannel):
     def members(self) -> List["Member"]:
         return [m for m in self.guild.members if Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
 
-    async def clone(self, name: Optional[str] = None, reason: Optional[str] = MISSING) -> "TYPE_GUILD_CHANNEL":
+    async def clone(self, name: Optional[str] = None, reason: Absent[Optional[str]] = MISSING) -> "TYPE_GUILD_CHANNEL":
         """
         Clone this channel and create a new one.
 
@@ -824,10 +824,10 @@ class GuildCategory(GuildChannel):
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        position: Optional[int] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         payload = dict(  # TODO Proper processing
             name=name,
@@ -841,12 +841,12 @@ class GuildCategory(GuildChannel):
 class GuildStore(GuildChannel):
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        position: Optional[int] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
         parent_id: Optional["Snowflake_Type"] = MISSING,
-        nsfw: Optional[bool] = MISSING,
-        reason: Optional[str] = MISSING,
+        nsfw: Absent[Optional[bool]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         payload = dict(  # TODO Proper processing
             name=name,
@@ -864,15 +864,15 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        position: Optional[int] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
         parent_id: Optional["Snowflake_Type"] = MISSING,
-        nsfw: Optional[bool] = MISSING,
-        topic: Optional[str] = MISSING,
+        nsfw: Absent[Optional[bool]] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         channel_type: Optional["ChannelTypes"] = MISSING,
         default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         """
         Edit the guild text channel.
@@ -912,16 +912,16 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        position: Optional[int] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
         parent_id: Optional["Snowflake_Type"] = MISSING,
-        nsfw: Optional[bool] = MISSING,
-        topic: Optional[str] = MISSING,
+        nsfw: Absent[Optional[bool]] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         channel_type: Optional[Union["ChannelTypes", int]] = MISSING,
         default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
-        rate_limit_per_user: Optional[int] = MISSING,
-        reason: Optional[str] = MISSING,
+        rate_limit_per_user: Absent[Optional[int]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         """
         Edit the guild text channel.
@@ -1067,15 +1067,15 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        position: Optional[int] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
         parent_id: Optional["Snowflake_Type"] = MISSING,
-        bitrate: Optional[int] = MISSING,
-        user_limit: Optional[int] = MISSING,
-        rtc_region: Optional[str] = MISSING,
-        video_quality_mode: Optional[Union[VideoQualityModes, int]] = MISSING,
-        reason: Optional[str] = MISSING,
+        bitrate: Absent[Optional[int]] = MISSING,
+        user_limit: Absent[Optional[int]] = MISSING,
+        rtc_region: Absent[Optional[str]] = MISSING,
+        video_quality_mode: Absent[Optional[Union[VideoQualityModes, int]]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         """
         Edit guild voice channel.
@@ -1129,7 +1129,7 @@ class GuildStageVoice(GuildVoice):
         self,
         topic: str,
         privacy_level: StagePrivacyLevel = StagePrivacyLevel.GUILD_ONLY,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> StageInstance:
         """
         Create a stage instance in this channel.
@@ -1144,7 +1144,7 @@ class GuildStageVoice(GuildVoice):
         )
         return self.stage_instance
 
-    async def close_stage(self, reason: Optional[str] = MISSING):
+    async def close_stage(self, reason: Absent[Optional[str]] = MISSING):
         """
         Closes the live stage instance
 

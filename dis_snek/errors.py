@@ -2,7 +2,7 @@ from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine
 
 import aiohttp
 
-from dis_snek.const import MISSING, GLOBAL_SCOPE
+from dis_snek.const import MISSING, GLOBAL_SCOPE, Absent
 
 if TYPE_CHECKING:
     from dis_snek.models.command import BaseCommand
@@ -46,7 +46,7 @@ class HTTPException(SnakeException):
         self.status: int = response.status
         self.code: int = discord_code
         self.text: str = text
-        self.errors: Any = MISSING
+        self.errors: Absent[Any] = MISSING
         self.route = kwargs.get("route", MISSING)
 
         if data := kwargs.get("response_data"):

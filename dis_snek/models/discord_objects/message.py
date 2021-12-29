@@ -8,7 +8,7 @@ import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
@@ -368,7 +368,7 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: Optional[int] = MISSING):
+    async def delete(self, delay: Absent[Optional[int]] = MISSING):
         """
         Delete message.
 

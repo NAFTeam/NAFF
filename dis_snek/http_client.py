@@ -13,7 +13,7 @@ import aiohttp
 from aiohttp import BaseConnector, ClientResponse, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
-from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name, MISSING
+from dis_snek.const import __py_version__, __repo_url__, __version__, logger_name, MISSING, Absent
 from dis_snek.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from dis_snek.http_requests import (
     BotRequests,
@@ -71,7 +71,7 @@ class HTTPClient(
     def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
         self.connector: Optional[BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
-        self.__session: Optional[ClientSession] = MISSING
+        self.__session: Absent[Optional[ClientSession]] = MISSING
         self._retries: int = 5
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
@@ -103,7 +103,11 @@ class HTTPClient(
         }
 
     async def request(
-        self, route: Route, data: Union[dict, FormData] = MISSING, reason: str = MISSING, **kwargs: Dict[str, Any]
+        self,
+        route: Route,
+        data: Absent[Union[dict, FormData]] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs: Dict[str, Any],
     ) -> Any:
         """
         Make a request to discord

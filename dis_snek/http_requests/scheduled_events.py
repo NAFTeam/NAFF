@@ -1,9 +1,9 @@
 from typing import Any
-from dis_snek.const import MISSING
-from dis_snek.models.route import Route
-from dis_snek.models.snowflake import Snowflake_Type
 from urllib.parse import urlencode
 
+from dis_snek.const import MISSING, Absent
+from dis_snek.models.route import Route
+from dis_snek.models.snowflake import Snowflake_Type
 from dis_snek.utils.serializer import dict_filter_missing
 
 
@@ -44,7 +44,7 @@ class ScheduledEventsRequests:
         self,
         guild_id: "Snowflake_Type",
         payload: dict,
-        reason: str = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> dict:
         """
         Create a scheduled event for a guild.
@@ -63,7 +63,7 @@ class ScheduledEventsRequests:
         guild_id: "Snowflake_Type",
         scheduled_event_id: "Snowflake_Type",
         payload: dict,
-        reason: str = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> dict:
         """
         Modify a scheduled event for a guild.
@@ -84,7 +84,7 @@ class ScheduledEventsRequests:
         self,
         guild_id: "Snowflake_Type",
         scheduled_event_id: "Snowflake_Type",
-        reason: str = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> dict:
         """
         Delete a scheduled event for a guild.

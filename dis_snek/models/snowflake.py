@@ -1,6 +1,6 @@
 from typing import Union, List, Optional, SupportsInt
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define, field
 
@@ -37,7 +37,7 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
     return snowflake
 
 
-def to_optional_snowflake(snowflake: Optional[Snowflake_Type] = MISSING) -> Optional[int]:
+def to_optional_snowflake(snowflake: Absent[Optional[Snowflake_Type]] = MISSING) -> Optional[int]:
     if snowflake is MISSING:
         return MISSING
     if snowflake is None:

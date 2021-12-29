@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 import attr
 from attr.converters import optional
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
@@ -81,10 +81,10 @@ class Sticker(StickerItem):
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        description: Optional[str] = MISSING,
-        tags: Optional[str] = MISSING,
-        reason: Optional[str] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        description: Absent[Optional[str]] = MISSING,
+        tags: Absent[Optional[str]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "Sticker":
         """
         Edit a sticker

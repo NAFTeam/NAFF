@@ -10,7 +10,7 @@ import attr
 from dis_snek.models.enums import Intents, Status, ActivityType
 from dis_snek.models.discord_objects.activity import Activity
 from dis_snek.errors import SnakeException, WebSocketClosed, GatewayNotFound
-from dis_snek.const import logger_name, MISSING
+from dis_snek.const import logger_name, MISSING, Absent
 from dis_snek.gateway import WebsocketClient
 from dis_snek.models import events
 
@@ -29,10 +29,10 @@ class ConnectionState:
     shard_id: int
     """The shard ID of this state"""
 
-    gateway: WebsocketClient = MISSING
+    gateway: Absent[WebsocketClient] = MISSING
     """The websocket connection for the Discord Gateway."""
 
-    start_time: datetime = MISSING
+    start_time: Absent[datetime] = MISSING
     """The DateTime the bot started at"""
 
     _closed: bool = False

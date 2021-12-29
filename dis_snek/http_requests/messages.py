@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, List
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.route import Route
 
 if TYPE_CHECKING:
@@ -15,13 +15,13 @@ class MessageRequests:
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
     async def delete_message(
-        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: str = MISSING
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: Absent[str] = MISSING
     ) -> Any:
         """Deletes a message from the specified channel. Incomplete."""
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
 
     async def bulk_delete_messages(
-        self, channel_id: "Snowflake_Type", message_ids: List["Snowflake_Type"], reason: str = MISSING
+        self, channel_id: "Snowflake_Type", message_ids: List["Snowflake_Type"], reason: Absent[str] = MISSING
     ) -> None:
         """
         Delete multiple messages in a single request.

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional
 
 import attr
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.models.enums import StagePrivacyLevel
@@ -29,7 +29,7 @@ class StageInstance(DiscordObject):
     def channel(self) -> "GuildStageVoice":
         return self._client.cache.channel_cache.get(self._channel_id)
 
-    async def delete(self, reason: Optional[str] = MISSING):
+    async def delete(self, reason: Absent[Optional[str]] = MISSING):
         """
         Delete this stage instance. Effectively closes the stage
 

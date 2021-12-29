@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.route import Route
 from dis_snek.utils.serializer import dict_filter_missing
 
@@ -108,7 +108,7 @@ class ReactionRequests:
         channel_id: "Snowflake_Type",
         message_id: "Snowflake_Type",
         emoji: str,
-        limit: int = MISSING,
+        limit: Absent[int] = MISSING,
         after: "Snowflake_Type" = MISSING,
     ) -> list:
         """

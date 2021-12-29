@@ -7,7 +7,7 @@ from attr.converters import optional as optional_c
 
 from datetime import datetime, timedelta
 
-from dis_snek.const import MISSING, logger_name
+from dis_snek.const import MISSING, logger_name, Absent
 from dis_snek.errors import HTTPException, TooManyChanges
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
@@ -394,7 +394,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
 
-    async def add_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
         """
         Add a role to this member.
 
@@ -405,7 +405,7 @@ class Member(DiscordObject, _SendDMMixin):
         role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
-    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
         """
         Remove a role from this user.
 
@@ -431,7 +431,9 @@ class Member(DiscordObject, _SendDMMixin):
         return True
 
     async def timeout(
-        self, communication_disabled_until: Union["Timestamp", datetime, int, float, str, None], reason: str = MISSING
+        self,
+        communication_disabled_until: Union["Timestamp", datetime, int, float, str, None],
+        reason: Absent[str] = MISSING,
     ):
         """
         Disable a members communication for a given time.
@@ -452,7 +454,7 @@ class Member(DiscordObject, _SendDMMixin):
             reason=reason,
         )
 
-    async def kick(self, reason: str = MISSING):
+    async def kick(self, reason: Absent[str] = MISSING):
         """
         Remove a member from the guild.
 
@@ -461,7 +463,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.remove_guild_member(self._guild_id, self.id)
 
-    async def ban(self, delete_message_days=0, reason: str = MISSING):
+    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING):
         """
         Ban a member from the guild.
 

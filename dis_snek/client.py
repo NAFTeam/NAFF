@@ -7,9 +7,9 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable, Type
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Type
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX
+from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
     BotException,
     ScaleLoadException,
@@ -71,7 +71,6 @@ from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
-    from asyncio import Future
 
 log = logging.getLogger(logger_name)
 
@@ -137,12 +136,12 @@ class Snake(
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         default_prefix: str = MENTION_PREFIX,
-        get_prefix: Callable[..., Coroutine] = MISSING,
+        get_prefix: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
-        debug_scope: "Snowflake_Type" = MISSING,
+        debug_scope: Absent["Snowflake_Type"] = MISSING,
         asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
@@ -151,8 +150,8 @@ class Snake(
         message_context: Type[MessageContext] = MessageContext,
         component_context: Type[ComponentContext] = ComponentContext,
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
-        global_pre_run_callback: Callable[..., Coroutine] = MISSING,
-        global_post_run_callback: Callable[..., Coroutine] = MISSING,
+        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         total_shards: int = 1,
         shard_id: int = 0,
         **kwargs,
@@ -225,8 +224,8 @@ class Snake(
         else:
             self._activity: Activity = activity
 
-        self._user: SnakeBotUser = MISSING
-        self._app: Application = MISSING
+        self._user: Absent[SnakeBotUser] = MISSING
+        self._app: Absent[Application] = MISSING
 
         # collections
         self.commands: Dict[str, MessageCommand] = {}
@@ -612,7 +611,9 @@ class Snake(
         """Waits for the client to become ready."""
         await self._ready.wait()
 
-    def wait_for(self, event: str, checks: Optional[Callable[..., bool]] = MISSING, timeout: Optional[float] = None):
+    def wait_for(
+        self, event: str, checks: Absent[Optional[Callable[..., bool]]] = MISSING, timeout: Optional[float] = None
+    ):
         """
         Waits for a WebSocket event to be dispatched.
 
@@ -684,7 +685,7 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
-    def fallback_listen(self, event_name: str = MISSING) -> Listener:
+    def fallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
         A decorator to be used in situations that snek can't automatically hook your listeners.
         Ideally, the standard listen decorator should be used, not this.
@@ -701,7 +702,7 @@ class Snake(
 
         return wrapper
 
-    def add_event_processor(self, event_name: str = MISSING) -> Callable[..., Coroutine]:
+    def add_event_processor(self, event_name: Absent[str] = MISSING) -> Callable[..., Coroutine]:
         def wrapper(coro: Callable[..., Coroutine]):
             name = event_name
             if name is MISSING:

@@ -1,25 +1,22 @@
+from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
 from attr.converters import optional
-from dis_snek.const import MISSING
+
+from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EventLocationNotProvided
 from dis_snek.models.discord import DiscordObject
-
 from dis_snek.models.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
 from dis_snek.utils.converters import timestamp_converter
-
-
-from enum import IntEnum
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import GuildStageVoice, GuildVoice
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.user import Member
-    from dis_snek.models.discord_objects.channel import TYPE_ALL_CHANNEL
     from dis_snek.models.discord_objects.user import User
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -131,8 +128,8 @@ class ScheduledEvent(DiscordObject):
         self,
         limit: Optional[int] = 100,
         with_member_data: bool = False,
-        before: Optional["Snowflake_Type"] = MISSING,
-        after: Optional["Snowflake_Type"] = MISSING,
+        before: Absent[Optional["Snowflake_Type"]] = MISSING,
+        after: Absent[Optional["Snowflake_Type"]] = MISSING,
     ) -> List[Union["Member", "User"]]:
         """
         Get event users
@@ -159,7 +156,7 @@ class ScheduledEvent(DiscordObject):
 
         return participants
 
-    async def delete(self, reason: str = MISSING) -> None:
+    async def delete(self, reason: Absent[str] = MISSING) -> None:
         """
         Deletes this event
 
@@ -170,17 +167,17 @@ class ScheduledEvent(DiscordObject):
 
     async def edit(
         self,
-        name: str = MISSING,
-        start_time: "Timestamp" = MISSING,
-        end_time: "Timestamp" = MISSING,
-        status: ScheduledEventStatus = MISSING,
-        description: str = MISSING,
-        channel_id: Optional["Snowflake_Type"] = MISSING,
-        event_type: ScheduledEventType = MISSING,
-        external_location: Optional[str] = MISSING,
-        entity_metadata: dict = MISSING,
-        privacy_level: ScheduledEventPrivacyLevel = MISSING,
-        reason: str = MISSING,
+        name: Absent[str] = MISSING,
+        start_time: Absent["Timestamp"] = MISSING,
+        end_time: Absent["Timestamp"] = MISSING,
+        status: Absent[ScheduledEventStatus] = MISSING,
+        description: Absent[str] = MISSING,
+        channel_id: Absent[Optional["Snowflake_Type"]] = MISSING,
+        event_type: Absent[ScheduledEventType] = MISSING,
+        external_location: Absent[Optional[str]] = MISSING,
+        entity_metadata: Absent[dict] = MISSING,
+        privacy_level: Absent[ScheduledEventPrivacyLevel] = MISSING,
+        reason: Absent[str] = MISSING,
     ):
         """
         Edits this event

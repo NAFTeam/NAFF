@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import attr
 
-from dis_snek.const import MISSING, logger_name
+from dis_snek.const import MISSING, logger_name, Absent
 from dis_snek.errors import NotFound, Forbidden
 from dis_snek.models import VoiceState
 from dis_snek.models.discord_objects.channel import BaseChannel
@@ -24,7 +24,7 @@ log = logging.getLogger(logger_name)
 
 
 def create_cache(
-    ttl: Optional[int] = 60, hard_limit: Optional[int] = 250, soft_limit: Optional[int] = MISSING
+    ttl: Optional[int] = 60, hard_limit: Optional[int] = 250, soft_limit: Absent[Optional[int]] = MISSING
 ) -> Union[dict, TTLCache]:
     """
     Create a cache object based on the parameters passed.

@@ -16,6 +16,7 @@ from dis_snek.const import (
     SLASH_CMD_MAX_DESC_LENGTH,
     MISSING,
     logger_name,
+    Absent,
 )
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.auto_defer import AutoDefer
@@ -481,8 +482,8 @@ class ComponentCommand(InteractionCommand):
 
 def slash_command(
     name: str,
-    description: str = MISSING,
-    scopes: List["Snowflake_Type"] = MISSING,
+    description: Absent[str] = MISSING,
+    scopes: Absent[List["Snowflake_Type"]] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
@@ -607,7 +608,7 @@ def subcommand(
 def context_menu(
     name: str,
     context_type: "CommandTypes",
-    scopes: List["Snowflake_Type"] = MISSING,
+    scopes: Absent[List["Snowflake_Type"]] = MISSING,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
 ):
