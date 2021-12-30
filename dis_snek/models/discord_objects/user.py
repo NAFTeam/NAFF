@@ -271,10 +271,12 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def guild(self) -> "Guild":
+        """The guild object this member is from"""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:
+        """The roles this member has"""
         return [r for r in self.guild.roles if r.id in self._role_ids]
 
     @property
