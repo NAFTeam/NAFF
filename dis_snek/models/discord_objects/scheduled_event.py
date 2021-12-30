@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.discord_objects.user import User
-    from dis_snek.models.snowflake import Snowflake_Type
 
 
 class ScheduledEventPrivacyLevel(IntEnum):

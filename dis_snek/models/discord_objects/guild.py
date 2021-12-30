@@ -466,7 +466,7 @@ class Guild(BaseGuild):
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
-        slowmode_delay: int = 0,
+        rate_limit_per_user: int = 0,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "TYPE_GUILD_CHANNEL":
         """
@@ -515,7 +515,7 @@ class Guild(BaseGuild):
         permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        slowmode_delay: int = 0,
+        rate_limit_per_user: int = 0,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildText":
         """
