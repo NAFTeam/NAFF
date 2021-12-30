@@ -7,9 +7,9 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Awaitable, Type
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Type
 
-from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX
+from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
     BotException,
     ScaleLoadException,
@@ -37,6 +37,7 @@ from dis_snek.models import (
     Member,
     StickerPack,
     Sticker,
+    ScheduledEvent,
     events,
     InteractionCommand,
     SlashCommand,
@@ -70,7 +71,6 @@ from dis_snek.utils.misc_utils import wrap_partial
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
-    from asyncio import Future
 
 log = logging.getLogger(logger_name)
 
@@ -136,12 +136,12 @@ class Snake(
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         default_prefix: str = MENTION_PREFIX,
-        get_prefix: Callable[..., Coroutine] = MISSING,
+        get_prefix: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
-        debug_scope: "Snowflake_Type" = MISSING,
+        debug_scope: Absent["Snowflake_Type"] = MISSING,
         asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
@@ -150,8 +150,8 @@ class Snake(
         message_context: Type[MessageContext] = MessageContext,
         component_context: Type[ComponentContext] = ComponentContext,
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
-        global_pre_run_callback: Callable[..., Coroutine] = MISSING,
-        global_post_run_callback: Callable[..., Coroutine] = MISSING,
+        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         total_shards: int = 1,
         shard_id: int = 0,
         **kwargs,
@@ -210,13 +210,8 @@ class Snake(
 
         self.enforce_interaction_perms = enforce_interaction_perms
 
-        if fetch_members and Intents.GUILD_MEMBERS not in intents:
-            raise BotException("Members Intent must be enabled in order to use fetch members")
-
         self.fetch_members = fetch_members
         """Fetch the full members list of all guilds on startup"""
-        if self.fetch_members:
-            log.warning("fetch_members enabled; startup will be delayed")
 
         self._mention_reg = MISSING
 
@@ -229,8 +224,8 @@ class Snake(
         else:
             self._activity: Activity = activity
 
-        self._user: SnakeBotUser = MISSING
-        self._app: Application = MISSING
+        self._user: Absent[SnakeBotUser] = MISSING
+        self._app: Absent[Application] = MISSING
 
         # collections
         self.commands: Dict[str, MessageCommand] = {}
@@ -292,6 +287,11 @@ class Snake(
         return self._connection_state.start_time
 
     @property
+    def intents(self) -> Intents:
+        """The intents being used by this bot"""
+        return self._connection_state.intents
+
+    @property
     def user(self) -> SnakeBotUser:
         """Returns the bot's user"""
         return self._user
@@ -339,7 +339,6 @@ class Snake(
         return self._connection_state.gateway
 
     def _sanity_check(self) -> None:
-        # todo: post-init sanity checks
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
@@ -355,6 +354,17 @@ class Snake(
             log.warning(
                 "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
             )
+
+        if Intents.GUILDS not in self._connection_state.intents:
+            log.warning("GUILD intent has not been enabled; this is very likely to cause errors")
+
+        if self.fetch_members and Intents.GUILD_MEMBERS not in self._connection_state.intents:
+            raise BotException("Members Intent must be enabled in order to use fetch members")
+        elif self.fetch_members:
+            log.warning("fetch_members enabled; startup will be delayed")
+
+        if len(self.processors) == 0:
+            log.warning("No Processors are loaded! This means no events will be processed!")
 
     async def get_prefix(self, message: Message) -> str:
         """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
@@ -601,7 +611,9 @@ class Snake(
         """Waits for the client to become ready."""
         await self._ready.wait()
 
-    def wait_for(self, event: str, checks: Optional[Callable[..., bool]] = MISSING, timeout: Optional[float] = None):
+    def wait_for(
+        self, event: str, checks: Absent[Optional[Callable[..., bool]]] = MISSING, timeout: Optional[float] = None
+    ):
         """
         Waits for a WebSocket event to be dispatched.
 
@@ -627,9 +639,9 @@ class Snake(
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
-        check=None,
-        timeout=None,
-    ) -> Awaitable["Future"]:
+        check: Optional[Callable] = None,
+        timeout: Optional[float] = None,
+    ) -> "Component":
         """
         Waits for a message to be sent to the bot.
 
@@ -640,8 +652,12 @@ class Snake(
             timeout: The number of seconds to wait before timing out.
 
         Returns:
-            `Component` that was invoked, or `None` if timed out. Use `.context` to get the `ComponentContext`.
+            `Component` that was invoked. Use `.context` to get the `ComponentContext`.
+
+        Raises:
+            `asyncio.TimeoutError` if timed out
         """
+
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
 
@@ -669,7 +685,7 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
-    def fallback_listen(self, event_name: str = MISSING) -> Listener:
+    def fallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
         A decorator to be used in situations that snek can't automatically hook your listeners.
         Ideally, the standard listen decorator should be used, not this.
@@ -686,7 +702,7 @@ class Snake(
 
         return wrapper
 
-    def add_event_processor(self, event_name: str = MISSING) -> Callable[..., Coroutine]:
+    def add_event_processor(self, event_name: Absent[str] = MISSING) -> Callable[..., Coroutine]:
         def wrapper(coro: Callable[..., Coroutine]):
             name = event_name
             if name is MISSING:
@@ -805,7 +821,7 @@ class Snake(
             bot_scopes = set(g.id for g in self.cache.guild_cache.values())
             bot_scopes.add(GLOBAL_SCOPE)
         else:
-            bot_scopes = set(self.interactions.keys())
+            bot_scopes = set(self.interactions)
 
         req_lock = asyncio.Lock()
 
@@ -860,7 +876,7 @@ class Snake(
         if self.del_unused_app_cmd:
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
-            cmd_scopes = list(set(self._interaction_scopes.values())) + [GLOBAL_SCOPE]
+            cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
         guild_perms = {}
         cmds_json = application_commands_to_dict(self.interactions)
@@ -1374,6 +1390,21 @@ class Snake(
             Member object
         """
         return await self.cache.get_member(guild_id, user_id)
+
+    async def get_scheduled_event(
+        self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
+    ) -> "ScheduledEvent":
+        """
+        Get a scheduled event by id.
+
+        parameters:
+            event_id: The id of the scheduled event.
+
+        returns:
+            The scheduled event.
+        """
+        scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
+        return ScheduledEvent.from_dict(scheduled_event_data, self)
 
     async def get_sticker(self, sticker_id: "Snowflake_Type"):
         sticker_data = await self.http.get_sticker(sticker_id)

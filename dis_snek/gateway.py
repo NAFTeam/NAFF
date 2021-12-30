@@ -160,6 +160,8 @@ class WebsocketClient:
         self.resume = False
         self.shutdown = False
 
+        self.ready: asyncio.Event = asyncio.Event()
+
     @property
     def loop(self):
         return self.client.loop
@@ -219,9 +221,10 @@ class WebsocketClient:
             data: The data to send
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
         """
-        if not self.closed.is_set():
-            if not bypass:
-                await self.rl_manager.rate_limit()
+        if not bypass:
+            await self.ready.wait()
+            await self.rl_manager.rate_limit()
+        if not self.ws.closed:
             log.debug(f"Sending data to gateway: {data}")
             await self.ws.send_str(data)
 
@@ -239,6 +242,7 @@ class WebsocketClient:
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
+        self.closed.clear()
         while not self.state.is_closed:
             resp = await self.ws.receive()
             msg = resp.data
@@ -251,12 +255,7 @@ class WebsocketClient:
                     await self.close(shutdown=True)
                     raise WebSocketClosed(msg)
 
-                return
-
-            if resp.type == WSMsgType.CLOSING:
-                return
-
-            if resp.type == WSMsgType.CLOSED:
+            if resp.type in (WSMsgType.CLOSING, WSMsgType.CLOSED):
                 return
 
             if isinstance(resp.data, bytes):
@@ -328,10 +327,12 @@ class WebsocketClient:
                 self.session_id = data["session_id"]
                 log.info(f"Connected to gateway!")
                 log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
+                self.ready.set()
                 return self.loop.call_soon(self.client.dispatch, events.WebsocketReady(data))
 
             case "RESUMED":
                 log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
+                self.ready.set()
                 return self.loop.call_soon(self.client.dispatch, events.Resume())
 
             case "GUILD_MEMBERS_CHUNK":
@@ -363,7 +364,7 @@ class WebsocketClient:
             resume: You are intending to resume this connection
             shutdown: You are shutting down the bot completely
         """
-        self.closed.set()
+        self.ready.clear()
         self.resume = resume
         self.shutdown = shutdown
 
@@ -375,6 +376,8 @@ class WebsocketClient:
         await self.ws.close(code=code)
         if isinstance(self._keep_alive, BeeGees):
             self._keep_alive.stop()
+
+        self.closed.set()
 
     async def identify(self) -> None:
         """Send an identify payload to the gateway."""
@@ -390,7 +393,7 @@ class WebsocketClient:
             },
             "compress": True,
         }
-        await self.send_json(payload)
+        await self.send_json(payload, bypass=True)
         log.debug(
             f"Shard ID {self.shard_id} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
@@ -401,7 +404,7 @@ class WebsocketClient:
             "op": OPCODE.RESUME,
             "d": {"token": self.client.http.token, "seq": self.sequence, "session_id": self.session_id},
         }
-        await self.send_json(payload)
+        await self.send_json(payload, bypass=True)
         log.debug("Client is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:

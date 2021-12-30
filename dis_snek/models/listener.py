@@ -1,7 +1,7 @@
 import asyncio
 from typing import Coroutine, Callable
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 
 
 class Listener:
@@ -13,7 +13,7 @@ class Listener:
         return await self.callback(*args, **kwargs)
 
     @classmethod
-    def create(cls, event_name: str = MISSING):
+    def create(cls, event_name: Absent[str] = MISSING):
         def wrapper(coro):
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
@@ -29,5 +29,5 @@ class Listener:
         return wrapper
 
 
-def listen(event_name: str = MISSING):
+def listen(event_name: Absent[str] = MISSING):
     return Listener.create(event_name)

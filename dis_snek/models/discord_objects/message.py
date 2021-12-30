@@ -8,7 +8,7 @@ import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
@@ -189,7 +189,7 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = attr.ib(default=MISSING)
-    timestamp: Timestamp = attr.ib(converter=timestamp_converter)
+    timestamp: Timestamp = attr.ib(default=MISSING, converter=timestamp_converter)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
@@ -200,7 +200,7 @@ class Message(BaseMessage):
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
     webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    type: MessageTypes = attr.ib(converter=MessageTypes)
+    type: MessageTypes = attr.ib(default=MISSING, converter=MessageTypes)
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional["Application"] = attr.ib(default=None)  # TODO: partial application
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
@@ -368,7 +368,7 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: Optional[int] = MISSING):
+    async def delete(self, delay: Absent[Optional[int]] = MISSING):
         """
         Delete message.
 

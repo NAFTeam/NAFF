@@ -31,6 +31,7 @@ attributes:
 import sys
 from collections import defaultdict
 from importlib.metadata import version as _v
+from typing import TypeVar, Union
 
 import sentinel
 
@@ -79,6 +80,7 @@ MISSING = sentinel.create(
         "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
         "__name__": "MISSING",
         "__getattr__": lambda x, y: None,
+        "__setitem__": lambda x, y, z: None,
         "__bool__": lambda _: False,
     },
 )
@@ -93,7 +95,6 @@ MENTION_PREFIX = sentinel.create(
     },
 )
 
-
 PREMIUM_GUILD_LIMITS = defaultdict(
     lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
     {
@@ -102,3 +103,6 @@ PREMIUM_GUILD_LIMITS = defaultdict(
         3: {"emoji": 250, "stickers": 60, "bitrate": 384000, "filesize": 104857600},
     },
 )
+
+T = TypeVar("T")
+Absent = Union[T, type(MISSING)]

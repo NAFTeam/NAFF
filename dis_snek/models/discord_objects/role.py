@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import attr
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.enums import Permissions
@@ -104,11 +104,11 @@ class Role(DiscordObject):
 
     async def edit(
         self,
-        name: str = MISSING,
-        permissions: str = MISSING,
-        color: Union[int, Color] = MISSING,
-        hoist: bool = MISSING,
-        mentionable: bool = MISSING,
+        name: Absent[str] = MISSING,
+        permissions: Absent[str] = MISSING,
+        color: Absent[Union[int, Color]] = MISSING,
+        hoist: Absent[bool] = MISSING,
+        mentionable: Absent[bool] = MISSING,
     ) -> "Role":
         """
         Edit this role, all arguments are optional.

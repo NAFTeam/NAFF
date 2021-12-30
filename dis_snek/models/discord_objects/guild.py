@@ -7,7 +7,8 @@ import attr
 from aiohttp import FormData
 from attr.converters import optional
 
-from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name
+from dis_snek.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
+from dis_snek.errors import EventLocationNotProvided
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
@@ -15,6 +16,11 @@ from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
 from dis_snek.models.discord_objects.sticker import Sticker
 from dis_snek.models.discord_objects.thread import ThreadList
+from dis_snek.models.discord_objects.scheduled_event import (
+    ScheduledEvent,
+    ScheduledEventPrivacyLevel,
+    ScheduledEventType,
+)
 from dis_snek.models.enums import (
     NSFWLevels,
     Permissions,
@@ -310,29 +316,29 @@ class Guild(BaseGuild):
 
     async def edit(
         self,
-        name: Optional[str] = MISSING,
-        description: Optional[str] = MISSING,
-        verification_level: Optional["VerificationLevels"] = MISSING,
-        default_message_notifications: Optional["DefaultNotificationLevels"] = MISSING,
-        explicit_content_filter: Optional["ExplicitContentFilterLevels"] = MISSING,
-        afk_channel: Optional[Union["GuildVoice", "Snowflake_Type"]] = MISSING,
-        afk_timeout: Optional[int] = MISSING,
-        system_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
-        system_channel_flags: Optional[SystemChannelFlags] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        description: Absent[Optional[str]] = MISSING,
+        verification_level: Absent[Optional["VerificationLevels"]] = MISSING,
+        default_message_notifications: Absent[Optional["DefaultNotificationLevels"]] = MISSING,
+        explicit_content_filter: Absent[Optional["ExplicitContentFilterLevels"]] = MISSING,
+        afk_channel: Absent[Optional[Union["GuildVoice", "Snowflake_Type"]]] = MISSING,
+        afk_timeout: Absent[Optional[int]] = MISSING,
+        system_channel: Absent[Optional[Union["GuildText", "Snowflake_Type"]]] = MISSING,
+        system_channel_flags: Absent[Optional[SystemChannelFlags]] = MISSING,
         # ToDo: these are not tested. Mostly, since I do not have access to those features
-        owner: Optional[Union["Member", "Snowflake_Type"]] = MISSING,
-        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        discovery_splash: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        banner: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        rules_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
-        public_updates_channel: Optional[Union["GuildText", "Snowflake_Type"]] = MISSING,
-        preferred_locale: Optional[str] = MISSING,
+        owner: Absent[Optional[Union["Member", "Snowflake_Type"]]] = MISSING,
+        icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        discovery_splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        banner: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        rules_channel: Absent[Optional[Union["GuildText", "Snowflake_Type"]]] = MISSING,
+        public_updates_channel: Absent[Optional[Union["GuildText", "Snowflake_Type"]]] = MISSING,
+        preferred_locale: Absent[Optional[str]] = MISSING,
         # ToDo: validate voice region
-        region: Optional[str] = MISSING,
+        region: Absent[Optional[str]] = MISSING,
         # ToDo: Fill in guild features. No idea how this works - https://discord.com/developers/docs/resources/guild#guild-object-guild-features
-        features: Optional[list[str]] = MISSING,
-        reason: Optional[str] = MISSING,
+        features: Absent[Optional[list[str]]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ):
         """
         Edit the guild.
@@ -391,7 +397,7 @@ class Guild(BaseGuild):
         name: str,
         imagefile: Union[str, "Path", "IOBase"],
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "CustomEmoji":
         """
         Create a new custom emoji for the guild.
@@ -453,15 +459,15 @@ class Guild(BaseGuild):
         self,
         channel_type: Union[ChannelTypes, int],
         name: str,
-        topic: Optional[str] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         position: int = 0,
-        permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
-        slowmode_delay: int = 0,
-        reason: Optional[str] = MISSING,
+        rate_limit_per_user: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "TYPE_GUILD_CHANNEL":
         """
         Create a guild channel, allows for explicit channel type setting.
@@ -476,7 +482,7 @@ class Guild(BaseGuild):
             nsfw: Should this channel be marked nsfw
             bitrate: The bitrate of this channel, only for voice
             user_limit: The max users that can be in this channel, only for voice
-            slowmode_delay: The time users must wait between sending messages
+            rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
         returns:
@@ -496,7 +502,7 @@ class Guild(BaseGuild):
             nsfw,
             bitrate,
             user_limit,
-            slowmode_delay,
+            rate_limit_per_user,
             reason,
         )
         return self._client.cache.place_channel_data(channel_data)
@@ -504,13 +510,13 @@ class Guild(BaseGuild):
     async def create_text_channel(
         self,
         name: str,
-        topic: Optional[str] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         position: int = 0,
-        permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
-        slowmode_delay: int = 0,
-        reason: Optional[str] = MISSING,
+        rate_limit_per_user: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildText":
         """
         Create a text channel in this guild.
@@ -522,7 +528,7 @@ class Guild(BaseGuild):
             permission_overwrites: Permission overwrites to apply to the channel
             category: The category this channel should be within
             nsfw: Should this channel be marked nsfw
-            slowmode_delay: The time users must wait between sending messages
+            rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
         returns:
@@ -536,21 +542,21 @@ class Guild(BaseGuild):
             permission_overwrites=permission_overwrites,
             category=category,
             nsfw=nsfw,
-            slowmode_delay=slowmode_delay,
+            rate_limit_per_user=rate_limit_per_user,
             reason=reason,
         )
 
     async def create_voice_channel(
         self,
         name: str,
-        topic: Optional[str] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         position: int = 0,
-        permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
         category: Union["Snowflake_Type", "GuildCategory"] = None,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildVoice":
         """
         Create a guild voice channel.
@@ -585,13 +591,13 @@ class Guild(BaseGuild):
     async def create_stage_channel(
         self,
         name: str,
-        topic: Optional[str] = MISSING,
+        topic: Absent[Optional[str]] = MISSING,
         position: int = 0,
-        permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
-        category: Union["Snowflake_Type", "GuildCategory"] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
+        category: Absent[Union["Snowflake_Type", "GuildCategory"]] = MISSING,
         bitrate: int = 64000,
         user_limit: int = 0,
-        reason: Optional[str] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildStageVoice":
         """
         Create a guild stage channel.
@@ -625,8 +631,8 @@ class Guild(BaseGuild):
         self,
         name: str,
         position: int = 0,
-        permission_overwrites: Optional[List[Union["PermissionOverwrite", dict]]] = MISSING,
-        reason: Optional[str] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildCategory":
         """
         Create a category within this guild.
@@ -671,13 +677,98 @@ class Guild(BaseGuild):
 
         await channel.delete(reason)
 
+    async def list_scheduled_events(self, with_user_count: bool = False) -> List["ScheduledEvent"]:
+        """
+        List all scheduled events in this guild.
+
+        returns:
+            A list of scheduled events.
+        """
+        scheduled_events_data = await self._client.http.list_schedules_events(self.id, with_user_count)
+        return ScheduledEvent.from_list(scheduled_events_data, self._client)
+
+    async def get_scheduled_event(
+        self, scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
+    ) -> "ScheduledEvent":
+        """
+        Get a scheduled event by id.
+
+        Args:
+            event_id: The id of the scheduled event.
+
+        returns:
+            The scheduled event.
+        """
+        scheduled_event_data = await self._client.http.get_scheduled_event(self.id, scheduled_event_id, with_user_count)
+        return ScheduledEvent.from_dict(scheduled_event_data, self._client)
+
+    async def create_scheduled_event(
+        self,
+        name: str,
+        event_type: "ScheduledEventType",
+        start_time: "Timestamp",
+        end_time: Absent[Optional["Timestamp"]] = MISSING,
+        description: Absent[Optional[str]] = MISSING,
+        channel_id: Absent[Optional["Snowflake_Type"]] = MISSING,
+        external_location: Absent[Optional[str]] = MISSING,
+        entity_metadata: Optional[dict] = None,
+        privacy_level: "ScheduledEventPrivacyLevel" = ScheduledEventPrivacyLevel.GUILD_ONLY,
+        reason: Absent[Optional[str]] = MISSING,
+    ):
+        """Create a scheduled guild event.
+
+        Args:
+            name: event name
+            event_type: event type
+            start_time: `Timestamp` object
+            end_time: `Timestamp` object
+            description: event description
+            channel_id: channel id
+            external_location: event external location (For external events)
+            entity_metadata: event metadata (additional data for the event)
+            privacy_level: event privacy level
+            reason: reason for creating this scheduled event
+
+        Returns:
+            ScheduledEvent object
+
+        !!! note
+            For external events, external_location is required
+            For voice/stage events, channel_id is required
+
+        ??? note
+            entity_metadata is the backend dictionary for fluff fields. Where possible, we plan to expose these fields directly.
+            The full list of supported fields is https://discord.com/developers/docs/resources/guild-scheduled-event#guild-scheduled-event-object-guild-scheduled-event-entity-metadata
+            Example: `entity_metadata=dict(location="cool place")`
+        """
+        if external_location is not MISSING:
+            entity_metadata = dict(location=external_location)
+
+        if event_type == ScheduledEventType.EXTERNAL:
+            if external_location == MISSING:
+                raise EventLocationNotProvided("Location is required for external events")
+
+        payload = dict(
+            name=name,
+            entity_type=event_type,
+            scheduled_start_time=start_time.isoformat(),
+            scheduled_end_time=end_time.isoformat() if end_time is not MISSING else end_time,
+            description=description,
+            channel_id=channel_id,
+            entity_metadata=entity_metadata,
+            privacy_level=privacy_level,
+        )
+
+        scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)
+        return ScheduledEvent.from_dict(scheduled_event_data, self._client)
+
     async def create_custom_sticker(
         self,
         name: str,
         imagefile: Union[str, "Path", "IOBase"],
-        description: Optional[str] = MISSING,
-        tags: Optional[str] = MISSING,
-        reason: Optional[str] = MISSING,
+        description: Absent[Optional[str]] = MISSING,
+        tags: Absent[Optional[str]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "Sticker":
         """
         Creates a custom sticker for a guild
@@ -758,15 +849,15 @@ class Guild(BaseGuild):
 
     async def create_role(
         self,
-        name: Optional[str] = MISSING,
-        permissions: Optional[Permissions] = MISSING,
-        colour: Optional[Union[Color, int]] = MISSING,
-        color: Optional[Union[Color, int]] = MISSING,
+        name: Absent[Optional[str]] = MISSING,
+        permissions: Absent[Optional[Permissions]] = MISSING,
+        colour: Absent[Optional[Union[Color, int]]] = MISSING,
+        color: Absent[Optional[Union[Color, int]]] = MISSING,
         hoist: Optional[bool] = False,
         mentionable: Optional[bool] = False,
         # ToDo: icon needs testing. I have to access to that
-        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        reason: Optional[str] = MISSING,
+        icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        reason: Absent[Optional[str]] = MISSING,
     ) -> "Role":
         """
         Create a new role for the guild.
@@ -815,9 +906,7 @@ class Guild(BaseGuild):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    async def get_channel(
-        self, channel_id: "Snowflake_Type"
-    ) -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
+    def get_channel(self, channel_id: "Snowflake_Type") -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
         """
         Returns a channel with the given `channel_id`
 
@@ -831,10 +920,29 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return await self._client.cache.get_channel(channel_id)
+            return self._client.cache.channel_cache.get(to_snowflake(channel_id))
         return None
 
-    async def get_thread(self, thread_id: "Snowflake_Type") -> Optional["TYPE_THREAD_CHANNEL"]:
+    async def fetch_channel(
+        self, channel_id: "Snowflake_Type"
+    ) -> Optional[Union["TYPE_GUILD_CHANNEL", "TYPE_THREAD_CHANNEL"]]:
+        """
+        Returns a channel with the given `channel_id` from the API
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+            # theoretically, this could get any channel the client can see,
+            # but to make it less confusing to new programmers,
+            # i intentionally check that the guild contains the channel first
+            return await self._client.get_channel(channel_id)
+        return None
+
+    def get_thread(self, thread_id: "Snowflake_Type") -> Optional["TYPE_THREAD_CHANNEL"]:
         """
         Returns a Thread with the given `thread_id`
 
@@ -846,15 +954,30 @@ class Guild(BaseGuild):
         """
         # get_channel can retrieve threads, so this is basically an alias with extra steps for that
         if thread_id in self._thread_ids:
-            return await self.get_channel(thread_id)
+            return self.get_channel(thread_id)
+        return None
+
+    async def fetch_thread(self, thread_id: "Snowflake_Type") -> Optional["TYPE_THREAD_CHANNEL"]:
+        """
+        Returns a Thread with the given `thread_id` from the API
+
+        Args:
+            thread_id: The ID of the thread to get
+
+        Returns:
+            Channel object if found, otherwise None
+        """
+        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
+        if thread_id in self._thread_ids:
+            return await self.fetch_channel(thread_id)
         return None
 
     async def prune_members(
         self,
         days: int = 7,
-        roles: List[Union["Snowflake_Type", "Role"]] = MISSING,
+        roles: Absent[List[Union["Snowflake_Type", "Role"]]] = MISSING,
         compute_prune_count: bool = True,
-        reason: str = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> Optional[int]:
         """
         Begin a guild prune. Removes members from the guild who who have not interacted for the last `days` days.
@@ -911,7 +1034,7 @@ class Guild(BaseGuild):
         """Delete the guild. You must own this guild to do this."""
         await self._client.http.delete_guild(self.id)
 
-    async def kick(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+    async def kick(self, user: Union["User", "Member", "Snowflake_Type"], reason: Absent[str] = MISSING) -> None:
         """
         Kick a user from the guild.
         You must have the `kick members` permission
@@ -922,7 +1045,10 @@ class Guild(BaseGuild):
         await self._client.http.remove_guild_member(self.id, to_snowflake(user), reason=reason)
 
     async def ban(
-        self, user: Union["User", "Member", "Snowflake_Type"], delete_message_days: int = 0, reason: str = MISSING
+        self,
+        user: Union["User", "Member", "Snowflake_Type"],
+        delete_message_days: int = 0,
+        reason: Absent[str] = MISSING,
     ) -> None:
         """
         Ban a user from the guild.
@@ -967,7 +1093,7 @@ class Guild(BaseGuild):
             for ban_info in ban_infos
         ]
 
-    async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: str = MISSING) -> None:
+    async def unban(self, user: Union["User", "Member", "Snowflake_Type"], reason: Absent[str] = MISSING) -> None:
         """
         Unban a user from the guild.
         You must have the `ban members` permission
@@ -1115,6 +1241,6 @@ class GuildIntegration(DiscordObject):
             data["user"] = client.cache.place_user_data(user)
         return super().from_dict(data, client)
 
-    async def delete(self, reason: str = MISSING):
+    async def delete(self, reason: Absent[str] = MISSING):
         """Delete this guild integration"""
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)

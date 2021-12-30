@@ -4,7 +4,7 @@ import inspect
 import logging
 from typing import TYPE_CHECKING, Callable, Coroutine
 
-from dis_snek.const import logger_name, MISSING
+from dis_snek.const import logger_name, MISSING, Absent
 from dis_snek.models import events, SnakeBotUser
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ class Processor:
         self.event_name = name
 
     @classmethod
-    def define(cls, event_name: str = MISSING):
+    def define(cls, event_name: Absent[str] = MISSING):
         def wrapper(coro):
             name = event_name
             if name is MISSING:

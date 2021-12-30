@@ -7,13 +7,12 @@ from attr.converters import optional as optional_c
 
 from datetime import datetime, timedelta
 
-from dis_snek.const import MISSING, logger_name
+from dis_snek.const import MISSING, logger_name, Absent
 from dis_snek.errors import HTTPException, TooManyChanges
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.enums import Permissions, PremiumTypes, UserFlags
 from dis_snek.models.snowflake import Snowflake_Type
@@ -25,7 +24,7 @@ from dis_snek.utils.input_utils import _bytes_to_base64_data
 
 if TYPE_CHECKING:
     from aiohttp import FormData
-
+    from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, DM
@@ -272,15 +271,19 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def guild(self) -> "Guild":
+        """The guild object this member is from"""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:
+        """The roles this member has"""
         return [r for r in self.guild.roles if r.id in self._role_ids]
 
     @property
     def top_role(self) -> "Role":
-        return self._client.cache.role_cache.get(self._role_ids[-1])
+        """The member's top most role, or None if the member has no roles."""
+        roles = self.roles
+        return max(roles, key=lambda x: x.position) if roles else None
 
     @property
     def display_name(self) -> str:
@@ -395,7 +398,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
 
-    async def add_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
         """
         Add a role to this member.
 
@@ -406,7 +409,7 @@ class Member(DiscordObject, _SendDMMixin):
         role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
-    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: str = MISSING):
+    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
         """
         Remove a role from this user.
 
@@ -432,7 +435,9 @@ class Member(DiscordObject, _SendDMMixin):
         return True
 
     async def timeout(
-        self, communication_disabled_until: Union["Timestamp", datetime, int, float, str, None], reason: str = MISSING
+        self,
+        communication_disabled_until: Union["Timestamp", datetime, int, float, str, None],
+        reason: Absent[str] = MISSING,
     ):
         """
         Disable a members communication for a given time.
@@ -453,7 +458,7 @@ class Member(DiscordObject, _SendDMMixin):
             reason=reason,
         )
 
-    async def kick(self, reason: str = MISSING):
+    async def kick(self, reason: Absent[str] = MISSING):
         """
         Remove a member from the guild.
 
@@ -462,7 +467,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.remove_guild_member(self._guild_id, self.id)
 
-    async def ban(self, delete_message_days=0, reason: str = MISSING):
+    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING):
         """
         Ban a member from the guild.
 

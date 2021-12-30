@@ -30,4 +30,3 @@ repos:
           - flake8-annotations~=2.0
           - flake8-bandit~=2.1
           - flake8-docstrings~=1.5
-        args: [--max-line-length=120, --ignore=ANN101 D107 ANN102 ANN206 D105 ANN204]

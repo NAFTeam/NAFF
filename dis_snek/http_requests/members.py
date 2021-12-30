@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.route import Route
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.serializer import dict_filter_missing
@@ -60,13 +60,13 @@ class MemberRequests:
         self,
         guild_id: "Snowflake_Type",
         user_id: "Snowflake_Type",
-        nickname: str = MISSING,
+        nickname: Absent[str] = MISSING,
         roles: List["Snowflake_Type"] = MISSING,
-        mute: bool = MISSING,
-        deaf: bool = MISSING,
+        mute: Absent[bool] = MISSING,
+        deaf: Absent[bool] = MISSING,
         channel_id: "Snowflake_Type" = MISSING,
-        communication_disabled_until: Union[Timestamp, None] = MISSING,
-        reason: str = MISSING,
+        communication_disabled_until: Absent[Union[Timestamp, None]] = MISSING,
+        reason: Absent[str] = MISSING,
     ) -> Dict:
         """
         Modify attributes of a guild member.
@@ -103,7 +103,11 @@ class MemberRequests:
         )
 
     async def add_guild_member_role(
-        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = MISSING
+        self,
+        guild_id: "Snowflake_Type",
+        user_id: "Snowflake_Type",
+        role_id: "Snowflake_Type",
+        reason: Absent[str] = MISSING,
     ) -> None:
         """
         Adds a role to a guild member.
@@ -117,7 +121,11 @@ class MemberRequests:
         return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
 
     async def remove_guild_member_role(
-        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: str = MISSING
+        self,
+        guild_id: "Snowflake_Type",
+        user_id: "Snowflake_Type",
+        role_id: "Snowflake_Type",
+        reason: Absent[str] = MISSING,
     ) -> None:
         """
         Remove a role from a guild member.

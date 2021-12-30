@@ -1,6 +1,6 @@
 # Introduction
 
-Hi! So you want to make a bot powered by snakes. This guide aims to get you started as fast as possible, for more advanced use-cases check out the other guides. 
+Hi! So you want to make a bot powered by snakes. This guide aims to get you started as fast as possible, for more advanced use-cases check out the other guides.
 
 ### Requirements
 
@@ -14,7 +14,7 @@ Hi! So you want to make a bot powered by snakes. This guide aims to get you star
 
 ### Virtual-Environments
 
-We strongly recommend that you make use of Virtual Environments when working on any project. 
+We strongly recommend that you make use of Virtual Environments when working on any project.
 This means that each project will have its own libraries of any version and does not affect anything else on your system.
 Don't worry, this isn't setting up a full-fledged virtual machine, just small python environment.
 
@@ -77,8 +77,8 @@ async def on_message_create(event):
 bot.start("Put your token here")
 ```
 
-Congratulations! You now have a basic understanding of this library. 
-If you have any questions check out our other guides, or join the 
+Congratulations! You now have a basic understanding of this library.
+If you have any questions check out our other guides, or join the
 --8<-- "discord_inv.md"
 
 For more examples, check out the [examples page](/Guides/9 Example)

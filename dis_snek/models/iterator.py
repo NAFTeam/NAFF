@@ -1,11 +1,10 @@
 import asyncio
 from abc import ABC, abstractmethod
 from asyncio import QueueEmpty
-from collections import namedtuple
 from collections.abc import AsyncIterator as _AsyncIterator
 from typing import List, Any
 
-from dis_snek.const import MISSING
+from dis_snek.const import MISSING, Absent
 from dis_snek.models.snowflake import to_snowflake, Snowflake_Type
 
 
@@ -17,7 +16,7 @@ class AsyncIterator(_AsyncIterator, ABC):
         self._limit: int = limit if limit else MISSING
         """the limit of items to retrieve"""
 
-        self.last: Any = MISSING
+        self.last: Absent[Any] = MISSING
         """The last item retrieved"""
 
         self._retrieved_objects: List = []
