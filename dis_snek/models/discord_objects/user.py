@@ -271,15 +271,19 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def guild(self) -> "Guild":
+        """The guild object this member is from"""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:
+        """The roles this member has"""
         return [r for r in self.guild.roles if r.id in self._role_ids]
 
     @property
     def top_role(self) -> "Role":
-        return self._client.cache.role_cache.get(self._role_ids[-1])
+        """The member's top most role, or None if the member has no roles."""
+        roles = self.roles
+        return max(roles, key=lambda x: x.position) if roles else None
 
     @property
     def display_name(self) -> str:
