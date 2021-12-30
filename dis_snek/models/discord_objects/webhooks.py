@@ -5,6 +5,7 @@ import attr
 from aiohttp import FormData
 
 from dis_snek.const import MISSING, Absent
+from dis_snek.errors import ForeignWebhookException
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.discord import DiscordObject
 from dis_snek.models.discord_objects.message import process_message_payload
