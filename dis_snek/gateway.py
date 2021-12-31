@@ -8,13 +8,12 @@ import random
 import sys
 import time
 import zlib
-from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import Any, AsyncGenerator, List, Optional, TypeVar, TYPE_CHECKING
+from typing import TypeVar, TYPE_CHECKING
 
-from aiohttp import WSCloseCode, WSMsgType, ClientWebSocketResponse
+from aiohttp import WSMsgType
 
-from dis_snek.const import logger_name, MISSING
+from dis_snek.const import logger_name
 from dis_snek.errors import WebSocketClosed
 from dis_snek.models import events, Snowflake_Type, CooldownSystem, to_snowflake
 from dis_snek.models.enums import Status
@@ -23,7 +22,6 @@ from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
-    from dis_snek import Snake
     from dis_snek.state import ConnectionState
 
 log = logging.getLogger(logger_name)
