@@ -67,10 +67,12 @@ class WebSocketOPCodes(IntEnum):
 
 
 class Intents(DiscordIntFlag):  # type: ignore
-    """When identifying to the gateway, you can specify an intents parameter which allows you to conditionally subscribe to pre-defined "intents", groups of events defined by Discord.
+    """
+    When identifying to the gateway, you can specify an intents parameter which allows you to conditionally subscribe to pre-defined "intents", groups of events defined by Discord.
 
     info:
-        For details about what intents do, or which intents you'll want, please read the [Discord API Documentation](https://discord.com/developers/docs/topics/gateway#gateway-intents)"""
+        For details about what intents do, or which intents you'll want, please read the [Discord API Documentation](https://discord.com/developers/docs/topics/gateway#gateway-intents)
+    """
 
     GUILDS = 1 << 0
     GUILD_MEMBERS = 1 << 1

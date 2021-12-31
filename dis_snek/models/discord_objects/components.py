@@ -179,7 +179,7 @@ class Select(InteractiveComponent):
     @options.validator
     def _options_validator(self, attribute: str, value: List[Union[SelectOption, Dict]]):
         if not all(isinstance(x, (SelectOption, Dict)) for x in value):
-            raise ValueError(f"Select options must be of type `SelectOption`")
+            raise ValueError("Select options must be of type `SelectOption`")
 
     def _check_object(self) -> None:
         if not self.custom_id:
@@ -194,7 +194,7 @@ class Select(InteractiveComponent):
         if self.max_values < self.min_values:
             raise TypeError("Selects max value cannot be less than min value.")
 
-    def add_option(self, option: Union[SelectOption]):
+    def add_option(self, option: SelectOption):
         if not isinstance(option, (SelectOption, Dict)):
             raise ValueError(f"Select option must be of `SelectOption` type, not {type(option)}")
         self.options.append(option)

@@ -325,7 +325,7 @@ class WebsocketClient:
                 self._trace = data.get("_trace", [])
                 self.sequence = seq
                 self.session_id = data["session_id"]
-                log.info(f"Connected to gateway!")
+                log.info("Connected to gateway!")
                 log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
                 self.ready.set()
                 return self.loop.call_soon(self.client.dispatch, events.WebsocketReady(data))

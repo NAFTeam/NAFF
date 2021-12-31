@@ -84,9 +84,11 @@ class Role(DiscordObject):
         return [member for member in self.guild.members if member.has_role(self)]
 
     async def is_assignable(self) -> bool:
-        """Can this role be assigned or removed by this bot?
+        """
+        Can this role be assigned or removed by this bot?
         !!! note:
-            This does not account for permissions, only the role hierarchy"""
+            This does not account for permissions, only the role hierarchy
+        """
         me = await self.guild.me
 
         if (self.default or await me.top_role.position > self.position) and not self.managed:

@@ -20,13 +20,13 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
 
     try:
         snowflake = int(snowflake)
-    except TypeError:
+    except TypeError as e:
         raise TypeError(
             f"ID (snowflake) should be instance of int, str, SnowflakeObject, or support __int__. "
             f"Got '{snowflake}' ({type(snowflake)}) instead."
-        )
-    except ValueError:
-        raise ValueError(f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead.")
+        ) from e
+    except ValueError as e:
+        raise ValueError(f"ID (snowflake) should represent int. Got '{snowflake}' ({type(snowflake)}) instead.") from e
 
     if 22 > snowflake.bit_length() > 64:
         raise ValueError(

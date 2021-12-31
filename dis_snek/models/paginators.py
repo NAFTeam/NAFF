@@ -254,7 +254,8 @@ class Paginator:
         """
         Update the paginator to the current state
 
-        Use this if you have programmatically changed the page_index"""
+        Use this if you have programmatically changed the page_index
+        """
         await self._message.edit(**self.to_dict())
 
     async def _on_button(self, ctx: ComponentContext, *args, **kwargs):

@@ -41,15 +41,15 @@ class DebugExec(Scale):
 
         to_compile = "async def func():\n%s" % textwrap.indent(body, "  ")
         try:
-            exec(to_compile, env)
-        except SyntaxError as e:
+            exec(to_compile, env)  # noqa: S102
+        except SyntaxError:
             return await ctx.send(f"```py\n{traceback.format_exc()}\n```")
 
         func = env["func"]
         try:
             with redirect_stdout(stdout):
                 ret = await func()  # noqa
-        except Exception as e:
+        except Exception:
             await ctx.message.add_reaction("❌")
             return await ctx.message.reply(f"```py\n{stdout.getvalue()}{traceback.format_exc()}\n```")
         else:
