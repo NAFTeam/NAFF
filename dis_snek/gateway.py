@@ -104,6 +104,7 @@ class WebsocketClient:
         self._kill_bee_gees = asyncio.Event()
         self._last_heartbeat = 0
         self._acknowledged = asyncio.Event()
+        self._acknowledged.set()  # Initialize it as set
 
         # Santity check, it is extremely important that an instance isn't reused.
         self._entered = False
@@ -264,8 +265,12 @@ class WebsocketClient:
                 await self._resume_connection()
 
             self._closed.set()
+            self._acknowledged.set()
 
     async def _start_bee_gees(self) -> None:
+        if self.heartbeat_interval is None:
+            raise RuntimeError
+
         log.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
         while not self._kill_bee_gees.is_set():
             if not self._acknowledged.is_set():
