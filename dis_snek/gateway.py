@@ -120,6 +120,16 @@ class WebsocketClient:
             raise RuntimeError("An instance of 'WebsocketClient' cannot be re-used!")
 
         self._entered = True
+
+        self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
+        self._closed.set()
+
+        hello = await self.receive()
+        log.warn(hello)
+        self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
+
+        await self._identify()
+
         return self
 
     async def __aexit__(
@@ -257,7 +267,7 @@ class WebsocketClient:
             self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
 
             hello = await self.receive()
-            self.heartbeat_interval = hello["heartbeat_interval"]
+            self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
             if not resume:
                 await self._identify()
