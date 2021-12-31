@@ -250,8 +250,8 @@ class Member(DiscordObject, _SendDMMixin):
         # this allows for transparent access to user attributes
         try:
             return getattr(self.user, name)
-        except AttributeError:
-            raise AttributeError(f"Neither `User` or `Member` have attribute {name}")
+        except AttributeError as e:
+            raise AttributeError(f"Neither `User` or `Member` have attribute {name}") from e
 
     def __setattr__(self, key, value):
         # this allows for transparent access to user attributes

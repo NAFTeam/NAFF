@@ -7,7 +7,7 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Union, Type
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, NoReturn, Optional, Union, Type
 
 from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
@@ -435,7 +435,7 @@ class Snake(
                 for i, e in enumerate(errors):
                     errors[i] = f'{e.get("code")}: {e.get("message")}'
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
-            except:
+            except Exception:  # noqa: S110
                 pass
 
         print(
@@ -594,7 +594,9 @@ class Snake(
                 try:
                     self._queue_task(_listen, event, *args, **kwargs)
                 except Exception as e:
-                    raise BotException(f"An error occurred attempting during {event.resolved_name} event processing")
+                    raise BotException(
+                        f"An error occurred attempting during {event.resolved_name} event processing"
+                    ) from e
 
         _waits = self.waits.get(event.resolved_name, [])
         if _waits:
@@ -981,7 +983,7 @@ class Snake(
                     await self.http.batch_edit_application_command_permissions(
                         application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
                     )
-                except Forbidden as e:
+                except Forbidden:
                     log.error(
                         f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
                     )
@@ -1012,7 +1014,7 @@ class Snake(
         return None
 
     @staticmethod
-    def _raise_sync_exception(e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type"):
+    def _raise_sync_exception(e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type") -> NoReturn:
         try:
             if isinstance(e.errors, dict):
                 for cmd_num in e.errors.keys():

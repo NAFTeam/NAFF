@@ -50,11 +50,11 @@ class ReactionUsers(AsyncIterator):
                 after=self.last.id or MISSING,
             )
             if not users:
-                raise QueueEmpty()
+                raise QueueEmpty
             self._more = len(users) == expected
             return [self.reaction._client.cache.place_user_data(u) for u in users]
         else:
-            raise QueueEmpty()
+            raise QueueEmpty
 
 
 @define()
