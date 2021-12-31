@@ -215,7 +215,7 @@ class WebsocketClient:
                     await self._closed.wait()
                 else:
                     # This is an odd corner-case where the underlying socket connection was closed
-                    # unexpectedly without communicating the WebSocket closing handle. We'll have
+                    # unexpectedly without communicating the WebSocket closing handshake. We'll have
                     # to reconnect ourselves.
                     await self.reconnect()
 
@@ -257,8 +257,6 @@ class WebsocketClient:
 
             hello = await self.receive()
             self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
-
-            await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
 
             if not resume:
                 await self._identify()
