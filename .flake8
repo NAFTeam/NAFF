@@ -5,8 +5,29 @@ extend-ignore =
     ANN1, # These insist that we have Type Annotations for self and cls.
     ANN204, ANN206, # return annotations for special methods and class methods
     D105, D107,  # Missing Docstrings in magic method and __init__
+    S311, # Standard pseudo-random generators are not suitable for security/cryptographic purposes.
 
-# After all of the above, we blow it away and only turn on specific settings anyway. 
-# This is a temporary measure.
-select = E9, F6, F7, F81, F82
+    # Everything below this line is something we care about, but don't currently meet
+    ANN001, # Missing type annotation for function argument 'token'
+    ANN002, # Missing type annotation for *args
+    ANN003, # Missing type annotation for **kwargs
+    ANN201, # Missing return type annotation for public function
+    ANN202, # Missing return type annotation for protected function
+    B007, # Loop control variable ... not used within the loop body. If this is intended, start the name with an underscore.
+    B008, # Do not perform function calls in argument defaults.
+    B009, # Do not call getattr with a constant attribute value, it is not any safer than normal property access.
+    B010, # Do not call setattr with a constant attribute value, it is not any safer than normal property access.
+    C815, C816, # missing trailing comma in Python 3.5+
+    D100, D101, D102, D103, D104,  # Missing docstring in public ...
+    D200, # One-line docstring should fit on one line with quotes
+    D202, # No blank lines allowed after function docstring
+    D205, # 1 blank line required between summary line and description
+    D400, # First line should end with a period
+    D401, # First line should be in imperative mood; try rephrasing
+    D403, # First word of the first line should be properly capitalized
+    D414, # Section has no content
+    F401, # ... imported but unused
+    F405, # ... may be undefined, or defined from star imports
+    W605, # invalid escape sequence
+
 max-line-length=120
