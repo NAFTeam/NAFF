@@ -126,6 +126,9 @@ class WebsocketClient:
         log.warn(hello)
         self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
+        await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
+        self._keep_alive = asyncio.create_task(self._start_bee_gees())
+
         await self._identify()
 
         return self
@@ -259,6 +262,8 @@ class WebsocketClient:
             hello = await self.receive()
             self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
+            await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
+
             if not resume:
                 await self._identify()
             else:
@@ -295,8 +300,6 @@ class WebsocketClient:
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
-        self._keep_alive = asyncio.create_task(self._start_bee_gees())
-
         while True:
             msg = await self.receive()
             if not msg:
