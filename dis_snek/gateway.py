@@ -99,7 +99,6 @@ class WebsocketClient:
         self._race_lock = asyncio.Lock()
         # Then this event is used so that receive() can wait for the reconnecting to complete.
         self._closed = asyncio.Event()
-        self._closed.set()
 
         self._keep_alive = None
         self._kill_bee_gees = asyncio.Event()
@@ -193,37 +192,26 @@ class WebsocketClient:
         buffer = bytearray()
 
         while True:
-            if self.ws is not None:
-                resp = await self.ws.receive()
-            else:
-                await self._closed.wait()
-                continue
+            # If we are currently reconnecting, wait for it to complete.
+            await self._closed.wait()
+
+            resp = await self.ws.receive()
 
             if resp.type == WSMsgType.CLOSE:
                 log.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
                 if resp.data >= 4000:
-                    async with self._race_lock:
-                        await self.ws.close(code=resp.data)
-                        self.ws = None
-                        self._kill_bee_gees.set()
-
-                        # The keep alive handler could be waiting for the lock here, if we only
-                        # set the Event then it would acquire the race lock and send over a closed
-                        # WebSocket! So instead we have to cancel here.
-                        if self._keep_alive is not None:
-                            self._keep_alive.cancel()
-
-                        raise WebSocketClosed(resp.data)
+                    # This should propogate to __aexit__() which will forcefully shutdown everything
+                    # and cleanup correctly.
+                    raise WebSocketClosed(resp.data)
 
                 await self.reconnect(code=1000)
                 continue
 
             elif resp.type is WSMsgType.CLOSED:
-                # AioHTTP returns this when the underlying socket connection is closed or something
-                # else goes wrong (among other things).
                 if not self._closed.is_set():
-                    # Since we don't hold the race lock while receiving, the keep-alive handler
-                    # is reconnecting the WebSocket while we're trying to receive from it.
+                    # Because we are waiting for the even before we receive, this shouldn't be
+                    # possible - the CLOSING message should be returned instead. Either way, if this
+                    # is possible after all we can just wait for the event to be set.
                     await self._closed.wait()
                 else:
                     # This is an odd corner-case where the underlying socket connection was closed
@@ -232,8 +220,9 @@ class WebsocketClient:
                     await self.reconnect()
 
             elif resp.type is WSMsgType.CLOSING:
-                # This happens when the keep-alive handler is reconnecting, for this case there
-                # is an event we can wait on rather than waiting for the lock to release.
+                # This happens when the keep-alive handler is reconnecting the connection even
+                # though we waited for the event before hand, because it got to run while we waited
+                # for data to come in. We can just wait for the event again.
                 await self._closed.wait()
                 continue
 
@@ -316,10 +305,14 @@ class WebsocketClient:
             if seq:
                 self.sequence = seq
 
-            if op != OPCODE.DISPATCH:
-                asyncio.create_task(self.dispatch_opcode(data, op))
-            else:
+            if op == OPCODE.DISPATCH:
                 asyncio.create_task(self.dispatch_event(data, seq, event))
+                continue
+
+            # This may try to reconnect the connection so it is best to wait
+            # for it to complete before receiving more - that way there's less
+            # possible race conditions to consider.
+            await self.dispatch_opcode(data, op)
 
     async def dispatch_opcode(self, data, op):
         match op:
