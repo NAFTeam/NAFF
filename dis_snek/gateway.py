@@ -121,7 +121,6 @@ class WebsocketClient:
         self._closed.set()
 
         hello = await self.receive()
-        log.warn(hello)
         self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
         await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
