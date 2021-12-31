@@ -65,6 +65,10 @@ class ConnectionState:
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
 
+        # Historically this method didn't return until the connection closed
+        # so we need to wait for the task to exit.
+        await self._shard_task
+
     async def stop(self) -> None:
         log.debug(f"Shutting down shard ID {self.shard_id}")
         self._shard_task.cancel()
