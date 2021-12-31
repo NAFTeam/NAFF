@@ -35,7 +35,7 @@ from dis_snek.models.enums import (
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define, docs
 from dis_snek.utils.converters import timestamp_converter
-from dis_snek.utils.serializer import to_image_data, dict_filter_none
+from dis_snek.utils.serializer import to_image_data, dict_filter_none, no_export_meta
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -175,7 +175,7 @@ class Guild(BaseGuild):
     """The guild NSFW level."""
     stage_instances: List[dict] = attr.ib(factory=list)  # TODO stage instance objects
     """Stage instances in the guild."""
-    chunked = attr.ib(factory=asyncio.Event)
+    chunked = attr.ib(factory=asyncio.Event, metadata=no_export_meta)
     """An event that is fired when this guild has been chunked"""
 
     _owner_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
