@@ -60,7 +60,6 @@ class WebsocketClient:
         "state",
         "ws",
         "shard",
-        "buffer",
         "_zlib",
         "rl_manager",
         "chunk_cache",
@@ -83,7 +82,6 @@ class WebsocketClient:
         self.ws = None
         self.shard = shard
 
-        self.buffer = bytearray()
         self._zlib = zlib.decompressobj()
 
         self.rl_manager = GatewayRateLimit()
@@ -192,6 +190,8 @@ class WebsocketClient:
     async def receive(self) -> dict:
         """Receive a full event payload from the WebSocket."""
 
+        buffer = bytearray()
+
         while True:
             if self.ws is not None:
                 resp = await self.ws.receive()
@@ -238,7 +238,7 @@ class WebsocketClient:
                 continue
 
             if isinstance(resp.data, bytes):
-                self.buffer.extend(resp.data)
+                buffer.extend(resp.data)
 
             if resp.data is None:
                 continue
@@ -247,8 +247,8 @@ class WebsocketClient:
                 # message isn't complete yet, wait
                 continue
 
-            msg = self._zlib.decompress(self.buffer)
-            self.buffer = bytearray()
+            msg = self._zlib.decompress(buffer)
+
             msg = msg.decode("utf-8")
             msg = OverriddenJson.loads(msg)
 
