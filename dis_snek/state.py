@@ -35,6 +35,9 @@ class ConnectionState:
     start_time: datetime = MISSING
     """The DateTime the bot started at"""
 
+    gateway_url: str = MISSING
+    """The URL that the gateway should connect to."""
+
     _shard_task: asyncio.Task | None = None
 
     @property
@@ -56,6 +59,8 @@ class ConnectionState:
 
     async def start(self) -> None:
         """Connect to the Discord Gateway"""
+        self.gateway_url = await self.client.http.get_gateway()
+
         log.debug(f"Starting Shard ID {self.shard_id}")
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
