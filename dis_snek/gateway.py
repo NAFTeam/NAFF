@@ -123,7 +123,6 @@ class WebsocketClient:
         hello = await self.receive()
         self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
-        await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
         self._keep_alive = asyncio.create_task(self._start_bee_gees())
 
         await self._identify()
@@ -272,6 +271,8 @@ class WebsocketClient:
     async def _start_bee_gees(self) -> None:
         if self.heartbeat_interval is None:
             raise RuntimeError
+
+        await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
 
         log.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
         while not self._kill_bee_gees.is_set():
