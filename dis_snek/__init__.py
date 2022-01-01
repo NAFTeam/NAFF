@@ -2,7 +2,7 @@
 Dis-Snek
 ~~~~~~~~~~~~~~~~~~~
 A Python API wrapper for Discord
-:copyright: (c) 2021-present LordOfPolls
+:copyright: (c) 2022-present LordOfPolls
 :license: MIT, see LICENSE for more details.
 """
 
