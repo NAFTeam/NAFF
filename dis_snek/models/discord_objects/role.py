@@ -76,7 +76,7 @@ class Role(DiscordObject):
     @property
     def mention(self) -> str:
         """Returns a string that would mention the role"""
-        return f"<@&{self.id}>"
+        return f"<@&{self.id}>" if self.id != self._guild_id else "@everyone"
 
     @property
     def integration(self) -> bool:
