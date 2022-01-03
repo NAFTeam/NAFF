@@ -1425,6 +1425,15 @@ class Snake(
             return None
 
     async def get_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
+        """
+        Get a sticker by ID.
+
+        Args:
+            sticker_id: The ID of the sticker.
+
+        Returns:
+            A sticker object if found, otherwise None
+        """
         try:
             sticker_data = await self.http.get_sticker(sticker_id)
             return Sticker.from_dict(sticker_data, self)
@@ -1432,6 +1441,12 @@ class Snake(
             return None
 
     async def get_nitro_packs(self) -> Optional[List["StickerPack"]]:
+        """
+        List the sticker packs available to Nitro subscribers
+
+        Returns:
+            A list of StickerPack objects if found, otherwise returns None
+        """
         try:
             packs_data = await self.http.list_nitro_sticker_packs()
             packs = []
