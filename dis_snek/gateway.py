@@ -117,10 +117,10 @@ class WebsocketClient:
         self._zlib = zlib.decompressobj()
 
         self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
-        self._closed.set()
 
-        hello = await self.receive()
+        hello = await self.receive(force=True)
         self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
+        self._closed.set()
 
         self._keep_alive = asyncio.create_task(self._start_bee_gees())
 
@@ -141,6 +141,9 @@ class WebsocketClient:
                 await self._race_lock.acquire()
             except asyncio.CancelledError:
                 if self._keep_alive is not None:
+                    # If we don't cancel the keep-alive handler it could potentially acquire the
+                    # lock after we exit (since we presumably don't hold it because we were
+                    # cancelled trying to do so).
                     self._keep_alive.cancel()
 
                 raise
@@ -185,14 +188,22 @@ class WebsocketClient:
         serialized = OverriddenJson.dumps(data)
         await self.send(serialized, bypass)
 
-    async def receive(self) -> dict:
-        """Receive a full event payload from the WebSocket."""
+    async def receive(self, force: bool = False) -> dict:
+        """Receive a full event payload from the WebSocket.
+
+        Parameters:
+            force:
+                Whether to force the receiving, ignoring safety measures such as the read-lock.
+                This option also means that exceptions are raised when a reconnection would normally
+                be tried.
+        """
 
         buffer = bytearray()
 
         while True:
-            # If we are currently reconnecting, wait for it to complete.
-            await self._closed.wait()
+            if not force:
+                # If we are currently reconnecting in another task, wait for it to complete.
+                await self._closed.wait()
 
             resp = await self.ws.receive()
 
@@ -203,10 +214,16 @@ class WebsocketClient:
                     # and cleanup correctly.
                     raise WebSocketClosed(resp.data)
 
+                if force:
+                    raise RuntimeError("Discord unexpectedly wants to close the WebSocket during force receive!")
+
                 await self.reconnect(code=1000)
                 continue
 
             elif resp.type is WSMsgType.CLOSED:
+                if force:
+                    raise RuntimeError("Discord unexpectedly closed the underlying socket during force receive!")
+
                 if not self._closed.is_set():
                     # Because we are waiting for the even before we receive, this shouldn't be
                     # possible - the CLOSING message should be returned instead. Either way, if this
@@ -219,6 +236,9 @@ class WebsocketClient:
                     await self.reconnect()
 
             elif resp.type is WSMsgType.CLOSING:
+                if force:
+                    raise RuntimeError("WebSocket is unexpectedly closing during force receive!")
+
                 # This happens when the keep-alive handler is reconnecting the connection even
                 # though we waited for the event before hand, because it got to run while we waited
                 # for data to come in. We can just wait for the event again.
@@ -255,7 +275,7 @@ class WebsocketClient:
 
             self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
 
-            hello = await self.receive()
+            hello = await self.receive(force=True)
             self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
 
             if not resume:
