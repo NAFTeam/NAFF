@@ -14,13 +14,13 @@ from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
-from dis_snek.models.discord_objects.sticker import Sticker
-from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.discord_objects.scheduled_event import (
     ScheduledEvent,
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
 )
+from dis_snek.models.discord_objects.sticker import Sticker
+from dis_snek.models.discord_objects.thread import ThreadList
 from dis_snek.models.enums import (
     NSFWLevels,
     Permissions,
@@ -490,6 +490,9 @@ class Guild(BaseGuild):
         """
         if category:
             category = to_snowflake(category)
+
+        if permission_overwrites is not MISSING:
+            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
 
         channel_data = await self._client.http.create_guild_channel(
             self.id,
