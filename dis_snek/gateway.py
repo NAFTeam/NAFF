@@ -342,7 +342,7 @@ class WebsocketClient:
 
             case OPCODE.INVALIDATE_SESSION:
                 log.warning("Gateway has invalidated session! Reconnecting...")
-                return await self.reconnect(resume=data["d"])
+                return await self.reconnect(resume=data)
 
             case _:
                 return log.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
