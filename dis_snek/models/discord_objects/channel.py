@@ -96,8 +96,8 @@ class PermissionOverwrite(SnowflakeObject):
     """
 
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
-    allow: "Permissions" = field(repr=True, converter=Permissions)
-    deny: "Permissions" = field(repr=True, converter=Permissions)
+    allow: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
 
 
 @define(slots=False)
