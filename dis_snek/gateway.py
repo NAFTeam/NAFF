@@ -80,8 +80,6 @@ class WebsocketClient:
         self.ws = None
         self.shard = shard
 
-        self._zlib = zlib.decompressobj()
-
         self.rl_manager = GatewayRateLimit()
         self.chunk_cache = {}
 
@@ -116,6 +114,7 @@ class WebsocketClient:
             raise RuntimeError("An instance of 'WebsocketClient' cannot be re-used!")
 
         self._entered = True
+        self._zlib = zlib.decompressobj()
 
         self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
         self._closed.set()
@@ -252,6 +251,7 @@ class WebsocketClient:
 
             await self.ws.close(code=code)
             self.ws = None
+            self._zlib = zlib.decompressobj()
 
             self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
 
