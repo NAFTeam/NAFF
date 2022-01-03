@@ -18,6 +18,7 @@ from dis_snek.errors import (
     Forbidden,
     InteractionMissingAccess,
     HTTPException,
+    NotFound,
 )
 from dis_snek.event_processors import *
 from dis_snek.event_processors._template import Processor
@@ -687,7 +688,7 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
-    def fallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
+    def gfallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
         A decorator to be used in situations that snek can't automatically hook your listeners.
         Ideally, the standard listen decorator should be used, not this.
@@ -1328,7 +1329,7 @@ class Snake(
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
 
-    async def get_guild(self, guild_id: "Snowflake_Type") -> Guild:
+    async def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
         """
         Get a guild
 
@@ -1340,11 +1341,14 @@ class Snake(
             guild_id: The ID of the guild to get
 
         Returns:
-            Guild Object
+            Guild Object if found, otherwise None
         """
-        return await self.cache.get_guild(guild_id)
+        try:
+            return await self.cache.get_guild(guild_id)
+        except NotFound:
+            return None
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> "TYPE_ALL_CHANNEL":
+    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel
 
@@ -1356,11 +1360,14 @@ class Snake(
             channel_id: The ID of the channel to get
 
         Returns:
-            Channel Object
+            Channel Object if found, otherwise None
         """
-        return await self.cache.get_channel(channel_id)
+        try:
+            return await self.cache.get_channel(channel_id)
+        except NotFound:
+            return None
 
-    async def get_user(self, user_id: "Snowflake_Type") -> User:
+    async def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
         """
         Get a user
 
@@ -1372,11 +1379,14 @@ class Snake(
             user_id: The ID of the user to get
 
         Returns:
-            User Object
+            User Object if found, otherwise None
         """
-        return await self.cache.get_user(user_id)
+        try:
+            return await self.cache.get_user(user_id)
+        except NotFound:
+            return None
 
-    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Member:
+    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
         """
         Get a member from a guild
 
@@ -1389,13 +1399,16 @@ class Snake(
             guild_id: The ID of the guild to get the member from
 
         Returns:
-            Member object
+            Member object if found, otherwise None
         """
-        return await self.cache.get_member(guild_id, user_id)
+        try:
+            return await self.cache.get_member(guild_id, user_id)
+        except NotFound:
+            return None
 
     async def get_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
-    ) -> "ScheduledEvent":
+    ) -> Optional["ScheduledEvent"]:
         """
         Get a scheduled event by id.
 
@@ -1403,21 +1416,30 @@ class Snake(
             event_id: The id of the scheduled event.
 
         returns:
-            The scheduled event.
+            The scheduled event if found, otherwise None
         """
-        scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
-        return ScheduledEvent.from_dict(scheduled_event_data, self)
+        try:
+            scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
+            return ScheduledEvent.from_dict(scheduled_event_data, self)
+        except NotFound:
+            return None
 
-    async def get_sticker(self, sticker_id: "Snowflake_Type"):
-        sticker_data = await self.http.get_sticker(sticker_id)
-        return Sticker.from_dict(sticker_data, self)
+    async def get_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
+        try:
+            sticker_data = await self.http.get_sticker(sticker_id)
+            return Sticker.from_dict(sticker_data, self)
+        except NotFound:
+            return None
 
-    async def get_nitro_packs(self) -> List["StickerPack"]:
-        packs_data = await self.http.list_nitro_sticker_packs()
-        packs = []
-        for pack_data in packs_data:
-            packs.append(StickerPack.from_dict(pack_data, self))
-        return packs
+    async def get_nitro_packs(self) -> Optional[List["StickerPack"]]:
+        try:
+            packs_data = await self.http.list_nitro_sticker_packs()
+            packs = []
+            for pack_data in packs_data:
+                packs.append(StickerPack.from_dict(pack_data, self))
+            return packs
+        except NotFound:
+            return None
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
