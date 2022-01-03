@@ -689,7 +689,7 @@ def slash_option(
     min_value: Optional[float] = None,
     max_value: Optional[float] = None,
 ) -> Any:
-    """
+    r"""
     A decorator to add an option to a slash command.
 
     parameters:
@@ -767,7 +767,8 @@ def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
 def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, InteractionCommand]]) -> dict:
     """Convert the command list into a format that would be accepted by discord
 
-    `Snake.interactions` should be the variable passed to this"""
+    `Snake.interactions` should be the variable passed to this
+    """
     cmd_bases = {}  # {cmd_base: [commands]}
     """A store of commands organised by their base command"""
     output = {}
@@ -907,13 +908,12 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
 def maybe_int(x):
     try:
         return int(x)
-    except:
+    except Exception:
         return x
 
 
 def parse_application_command_error(errors: dict, cmd, keys=None):
     messages = []
-    prefix = ""
 
     for key, cmd_attribute in errors.items():
         if isinstance(cmd_attribute, dict) and cmd_attribute.get("_errors", None):
@@ -931,7 +931,7 @@ def parse_application_command_error(errors: dict, cmd, keys=None):
                     for k in keys:
                         try:
                             x = x[k]
-                        except KeyError as e:
+                        except KeyError:  # noqa: S110
                             pass
                     if isinstance(x, dict):
                         key = x.get("name", key)

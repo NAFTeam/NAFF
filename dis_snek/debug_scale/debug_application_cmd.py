@@ -99,7 +99,7 @@ class DebugAppCMD(Scale):
                         if perms:
                             cmd["permissions"] = perms.get("permissions")
                         return await send(cmd)
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         return await ctx.send(f"Unable to locate any commands in {scope} with ID {cmd_id}!")
 
@@ -125,7 +125,7 @@ class DebugAppCMD(Scale):
                 await ctx.send(embeds=e)
             else:
                 return await ctx.send(f"No commands found in `{scope.strip()}`")
-        except:
+        except Exception:
             return await ctx.send(f"No commands found in `{scope.strip()}`")
 
 

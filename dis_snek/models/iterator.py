@@ -57,7 +57,7 @@ class AsyncIterator(_AsyncIterator, ABC):
             data = await self.fetch()
             [await self.add_object(obj) for obj in data]
         else:
-            raise QueueEmpty()
+            raise QueueEmpty
 
     async def __anext__(self):
         try:
@@ -69,8 +69,8 @@ class AsyncIterator(_AsyncIterator, ABC):
             self._retrieved_objects.append(self.last)
 
             return self.last
-        except QueueEmpty:
-            raise StopAsyncIteration()
+        except QueueEmpty as e:
+            raise StopAsyncIteration from e
 
     async def flatten(self) -> List:
         """Flatten this iterator into a list of objects"""

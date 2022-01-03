@@ -37,7 +37,6 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-    guild: "Guild" = field(default=None)
 
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
@@ -58,6 +57,11 @@ class Role(DiscordObject):
         if self._bot_id is None:
             return None
         return await self._client.cache.get_member(self._guild_id, self._bot_id)
+
+    @property
+    def guild(self) -> "Guild":
+        """The guild object this role is from"""
+        return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def default(self) -> bool:
@@ -84,9 +88,11 @@ class Role(DiscordObject):
         return [member for member in self.guild.members if member.has_role(self)]
 
     async def is_assignable(self) -> bool:
-        """Can this role be assigned or removed by this bot?
+        """
+        Can this role be assigned or removed by this bot?
         !!! note:
-            This does not account for permissions, only the role hierarchy"""
+            This does not account for permissions, only the role hierarchy
+        """
         me = await self.guild.me
 
         if (self.default or await me.top_role.position > self.position) and not self.managed:

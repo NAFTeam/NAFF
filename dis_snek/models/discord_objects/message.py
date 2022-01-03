@@ -362,7 +362,7 @@ class Message(BaseMessage):
         )
 
         if self.flags == MessageFlags.EPHEMERAL:
-            raise EphemeralEditException()
+            raise EphemeralEditException
 
         message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id)
         if message_data:
@@ -381,7 +381,7 @@ class Message(BaseMessage):
                 await asyncio.sleep(delay)
                 try:
                     await self._client.http.delete_message(self._channel_id, self.id)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass  # No real way to handle this
 
             asyncio.ensure_future(delayed_delete())
@@ -421,7 +421,7 @@ class Message(BaseMessage):
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
         """
         if not self.channel.type == ChannelTypes.GUILD_TEXT:
-            raise ThreadOutsideOfGuild()
+            raise ThreadOutsideOfGuild
 
         thread_data = await self._client.http.create_thread(
             channel_id=self._channel_id,

@@ -35,81 +35,67 @@ class ConnectionState:
     start_time: Absent[datetime] = MISSING
     """The DateTime the bot started at"""
 
-    _closed: bool = False
+    gateway_url: str = MISSING
+    """The URL that the gateway should connect to."""
 
-    @property
-    def is_closed(self) -> bool:
-        return self._closed
+    _shard_task: asyncio.Task | None = None
 
     @property
     def latency(self) -> float:
         """Returns the latency of the websocket connection"""
-        return self.gateway.latency
+        return self.gateway.average_latency
 
     @property
     def average_latency(self) -> float:
         """Returns the average latency of the websocket connection"""
         return self.gateway.average_latency
 
+    @property
+    def presence(self) -> dict:
+        return {
+            "status": self.client._status,
+            "activities": [self.client._activity.to_dict()] if self.client._activity else [],
+        }
+
     async def start(self) -> None:
         """Connect to the Discord Gateway"""
+        self.gateway_url = await self.client.http.get_gateway()
+
         log.debug(f"Starting Shard ID {self.shard_id}")
         self.start_time = datetime.now()
-        await self._ws_connect()
+        self._shard_task = asyncio.create_task(self._ws_connect())
+
+        # Historically this method didn't return until the connection closed
+        # so we need to wait for the task to exit.
+        await self._shard_task
 
     async def stop(self) -> None:
         log.debug(f"Shutting down shard ID {self.shard_id}")
-        await self.gateway.close(shutdown=True)
+        self._shard_task.cancel()
 
     async def _ws_connect(self) -> None:
-        params = {
-            "session_id": None,
-            "sequence": None,
-            "presence": {
-                "status": self.client._status,
-                "activities": [self.client._activity.to_dict()] if self.client._activity else [],
-            },
-        }
-        while not self.is_closed:
-            log.info(f"Attempting to {'re' if params['session_id'] else ''}connect to gateway...")
-            try:
-                self.gateway = await WebsocketClient.connect(self, **params)
-
+        log.info("Attempting to initially connect to gateway...")
+        try:
+            async with WebsocketClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
                     await self.gateway.run()
-                    # wait for websocket to report it has closed
-                    await self.gateway.closed.wait()
                 finally:
-                    if not self.gateway.closed.is_set():
-                        await self.gateway.close()
                     self.client.dispatch(events.Disconnect())
 
-            except (OSError, GatewayNotFound, aiohttp.ClientError, asyncio.TimeoutError) as ex:
-                log.debug("".join(traceback.format_exception(type(ex), ex, ex.__traceback__)))
+        except WebSocketClosed as ex:
+            if ex.code == 4011:
+                raise SnakeException("Your bot is too large, you must use shards") from None
+            elif ex.code == 4013:
+                raise SnakeException(f"Invalid Intents have been passed: {self.intents}") from None
+            elif ex.code == 4014:
+                raise SnakeException(
+                    "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
+                ) from None
+            raise
 
-            except WebSocketClosed as ex:
-                if ex.code == 4011:
-                    raise SnakeException("Your bot is too large, you must use shards") from None
-                elif ex.code == 4013:
-                    raise SnakeException(f"Invalid Intents have been passed: {self.intents}") from None
-                elif ex.code == 4014:
-                    raise SnakeException(
-                        "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
-                    ) from None
-                raise
-
-            except Exception as e:
-                self.client.dispatch(events.Disconnect())
-                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-
-            if self.gateway.shutdown:
-                return await self.client.stop()
-            elif self.gateway.resume:
-                params.update(session_id=self.gateway.session_id, sequence=self.gateway.sequence)
-                continue
-            else:
-                params.update(session_id=None, sequence=None)
-            await asyncio.sleep(5)
+        except Exception as e:
+            self.client.dispatch(events.Disconnect())
+            log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
