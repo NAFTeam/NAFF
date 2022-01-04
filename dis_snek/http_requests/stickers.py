@@ -19,6 +19,7 @@ class StickerRequests:
             sticker_id: The id of the sticker
         returns:
             Sticker or None
+
         """
         return await self.request(Route("GET", f"/stickers/{sticker_id}"))
 
@@ -28,6 +29,7 @@ class StickerRequests:
 
         returns:
             List of sticker packs
+
         """
         return await self.request(Route("GET", "/sticker-packs"))
 
@@ -39,6 +41,7 @@ class StickerRequests:
             guild_id: The guild to get stickers from
         returns:
             List of Stickers or None
+
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers"))
 
@@ -51,6 +54,7 @@ class StickerRequests:
             sticker_id: The sticker to get from the guild
         returns:
             Sticker or None
+
         """
         return await self.request(Route("GET", f"/guild/{guild_id}/stickers/{sticker_id}"))
 
@@ -67,6 +71,7 @@ class StickerRequests:
 
         returns:
             The new sticker data on success.
+
         """
         return await self.request(Route("POST", f"/guild/{guild_id}/stickers"), data=payload, reason=reason)
 
@@ -84,6 +89,7 @@ class StickerRequests:
 
         returns:
             The updated sticker data on success.
+
         """
         return await self.request(
             Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), data=payload, reason=reason
@@ -102,5 +108,6 @@ class StickerRequests:
 
         returns:
             Returns 204 No Content on success.
+
         """
         return await self.request(Route("DELETE", f"/guild/{guild_id}/stickers/{sticker_id}"), reason=reason)

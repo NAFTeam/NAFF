@@ -17,6 +17,7 @@ class ThreadRequests:
 
         parameters:
             thread_id: The thread to join.
+
         """
         return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/@me"))
 
@@ -26,6 +27,7 @@ class ThreadRequests:
 
         parameters:
             thread_id: The thread to leave.
+
         """
         return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/@me"))
 
@@ -36,6 +38,7 @@ class ThreadRequests:
         parameters:
             thread_id: The ID of the thread
             user_id: The ID of the user to add
+
         """
         return await self.request(Route("PUT", f"/channels/{thread_id}/thread-members/{user_id}"))
 
@@ -46,6 +49,7 @@ class ThreadRequests:
         parameters:
             thread_id: The ID of the thread
             user_id: The ID of the user to remove
+
         """
         return await self.request(Route("DELETE", f"/channels/{thread_id}/thread-members/{user_id}"))
 
@@ -57,6 +61,7 @@ class ThreadRequests:
             thread_id: the id of the thread
         returns:
             a list of member objects
+
         """
         return await self.request(Route("GET", f"/channels/{thread_id}/thread-members"))
 
@@ -72,6 +77,7 @@ class ThreadRequests:
             before: Get threads before this snowflake
         returns:
             a list of threads
+
         """
         payload = {}
         if limit:
@@ -92,6 +98,7 @@ class ThreadRequests:
             before: Get threads before this snowflake
         returns:
             a list of threads
+
         """
         payload = {}
         if limit:
@@ -112,6 +119,7 @@ class ThreadRequests:
             before: Get threads before this snowflake
         returns:
             a list of threads
+
         """
         payload = {}
         if limit:
@@ -130,6 +138,7 @@ class ThreadRequests:
             guild_id: the guild id to get threads from
         returns:
             A list of active threads
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/threads/active"))
 
@@ -144,8 +153,7 @@ class ThreadRequests:
         reason: Absent[str] = MISSING,
     ) -> dict:
         """
-        Create a thread in the given channel.
-        Can either create a thread with or without a message
+        Create a thread in the given channel. Can either create a thread with or without a message.
 
         parameters:
             channel_id: The ID of the channel to create this thread in
@@ -158,6 +166,7 @@ class ThreadRequests:
             reason: An optional reason for the audit log
         returns:
             The created thread
+
         """
         payload = dict(name=name, auto_archive_duration=auto_archive_duration)
         if message_id:

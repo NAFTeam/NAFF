@@ -8,7 +8,12 @@ if TYPE_CHECKING:
 
 @attr.s()
 class File:
-    """Representation of a file. Used to"""
+    """
+    Representation of a file.
+
+    Used to
+
+    """
 
     file: Union["IOBase", "Path", str] = attr.field()
     """Location of file to send or the bytes."""

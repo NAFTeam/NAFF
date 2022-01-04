@@ -24,6 +24,7 @@ class GuildRequests:
 
         returns:
             List[guilds]
+
         """
         params: Dict[str, Union[int, str]] = {"limit": limit}
 
@@ -42,6 +43,7 @@ class GuildRequests:
             with_counts: when `true`, will return approximate member and presence counts for the guild
         returns:
             a guild object
+
         """
         return await self.request(
             Route("GET", f"/guilds/{guild_id}"), params={"with_counts": int(with_counts)}  # type: ignore
@@ -49,13 +51,14 @@ class GuildRequests:
 
     async def get_guild_preview(self, guild_id: "Snowflake_Type") -> dict:
         """
-        Get a guild's preview
+        Get a guild's preview.
 
         parameters:
             guild_id: the guilds ID
 
         returns:
             guild preview object
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/preview"))
 
@@ -68,6 +71,7 @@ class GuildRequests:
 
         returns:
             List of channels
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
 
@@ -80,16 +84,19 @@ class GuildRequests:
 
         returns:
             List of roles
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/roles"))
 
     async def modify_guild(self, guild_id: "Snowflake_Type", reason: Absent[str] = MISSING, **kwargs) -> None:
         """
         Modify a guild's attributes.
+
         parameters:
             guild_id: The ID of the guild we want to modify
             reason: The reason for this change
             kwargs: The params to change
+
         """
         expected = [
             "name",
@@ -127,6 +134,7 @@ class GuildRequests:
 
         parameters:
             guild_id: The ID of the guild that we want to delete
+
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}"))
 
@@ -141,8 +149,7 @@ class GuildRequests:
         deaf: bool = False,
     ) -> dict:
         """
-        Add a user to the guild.
-        All parameters to this endpoint except for `access_token`, `guild_id` and `user_id` are optional.
+        Add a user to the guild. All parameters to this endpoint except for `access_token`, `guild_id` and `user_id` are optional.
 
         parameters:
             guild_id: The ID of the guild
@@ -154,6 +161,7 @@ class GuildRequests:
             deaf: whether the user is deafened in voice channels
         returns:
             Guild Member Object
+
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
@@ -172,6 +180,7 @@ class GuildRequests:
             guild_id: The ID of the guild
             user_id: The ID of the user to remove
             reason: The reason for this action
+
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reason=reason)
 
@@ -184,12 +193,13 @@ class GuildRequests:
 
         returns:
             List of ban objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans"))
 
     async def get_guild_ban(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Optional[dict]:
         """
-        Returns a ban object for the given user or a 404 not found if the ban cannot be found
+        Returns a ban object for the given user or a 404 not found if the ban cannot be found.
 
         parameters:
             guild_id: The ID of the guild to query
@@ -200,6 +210,7 @@ class GuildRequests:
 
         raises:
             Not found error if no ban exists
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans/{user_id}"))
 
@@ -218,6 +229,7 @@ class GuildRequests:
             user_id: The ID of the user to ban
             delete_message_days: number of days to delete messages for (0-7)
             reason: The reason for this action
+
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/bans/{user_id}"),
@@ -235,6 +247,7 @@ class GuildRequests:
             guild_id: The ID of the guild to remove the ban in
             user_id: The ID of the user to unban
             reason: The reason for this action
+
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/bans/{user_id}"), reason=reason)
 
@@ -250,6 +263,7 @@ class GuildRequests:
             include_roles: role(s) to include
         returns:
             {"pruned": int}
+
         """
         payload = {"days": days}
         if include_roles:
@@ -276,6 +290,7 @@ class GuildRequests:
             reason: The reason for this action
         returns:
             {"pruned": int}
+
         """
         payload = {"days": days, "compute_prune_count": compute_prune_count}
         if include_roles:
@@ -285,12 +300,13 @@ class GuildRequests:
 
     async def get_guild_invites(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
-        Returns a list of invite objects (with invite metadata) for the guild
+        Returns a list of invite objects (with invite metadata) for the guild.
 
         parameters:
             guild_id: The ID of the guild to query
         returns:
             List of invite objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/invites"))
 
@@ -304,6 +320,7 @@ class GuildRequests:
             reason: The reason for this action
         returns:
             Role object
+
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), data=payload, reason=reason)
 
@@ -320,6 +337,7 @@ class GuildRequests:
             reason: The reason for this action
         returns:
             List of guild roles
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/roles"), data={"id": role_id, "position": position}, reason=reason
@@ -338,6 +356,7 @@ class GuildRequests:
             reason: The reason for this action
         returns:
             Role object
+
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), data=payload, reason=reason)
 
@@ -351,18 +370,19 @@ class GuildRequests:
             role_id: The ID of the role to delete
             reason: The reason for this action
             guild_id: The ID of the guild
+
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"))
 
     async def get_guild_voice_regions(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
-        Returns a list of voice region objects for the guild.
-        Unlike the similar /voice route, this returns VIP servers when the guild is VIP-enabled.
+        Returns a list of voice region objects for the guild. Unlike the similar /voice route, this returns VIP servers when the guild is VIP- enabled.
 
         parameters:
             guild_id: The ID of the guild to query
         returns:
             List of voice region objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/regions"))
 
@@ -374,6 +394,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query
         returns:
             list of integration objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/integrations"))
 
@@ -386,6 +407,7 @@ class GuildRequests:
         parameters:
             guild_id: The ID of the guild
             integration_id: The ID of the integration to remove
+
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/integrations/{integration_id}"), reason=reason)
 
@@ -397,6 +419,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query
         returns:
             guild widget object
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/widget"))
 
@@ -408,6 +431,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query
         returns:
             Guild widget
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/widget.json"))
 
@@ -422,6 +446,7 @@ class GuildRequests:
             style: The style of widget required.
         returns:
             A url pointing to this image
+
         """
         route = Route("GET", f"/guilds/{guild_id}/widget.png{f'?style={style}' if style else ''}")
         return route.url
@@ -434,6 +459,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query
         returns:
             Welcome screen object
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/welcome-screen"))
 
@@ -445,6 +471,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query
         returns:
             `{"code": "abc", "uses": 420}` or `None`
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
 
@@ -460,6 +487,7 @@ class GuildRequests:
             channel_id: The widget's channel ID
         returns:
             Updated guild widget.
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/widget"),
@@ -479,6 +507,7 @@ class GuildRequests:
             description: The server description to show in the welcome screen
         returns:
             Updated welcome screen object
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/welcome-screen"),
@@ -500,6 +529,7 @@ class GuildRequests:
             channel_id: The id of the channel the user is currently in
             suppress: Toggle the user's suppress state.
             request_to_speak_timestamp: Sets the user's request to speak
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/@me"),
@@ -523,6 +553,7 @@ class GuildRequests:
             user_id: The ID of the user to modify.
             channel_id: The ID of the channel the user is currently in.
             suppress: Toggles the user's suppress state.
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/{user_id}"),
@@ -542,6 +573,7 @@ class GuildRequests:
 
         returns:
             The newly created guild object
+
         """
         # todo: add icon support
         return await self.request(Route("POST", f"/guilds/templates/{template_code}", data={"name": name}))
@@ -554,6 +586,7 @@ class GuildRequests:
             guild_id: The ID of the guild to query.
         returns:
             An array of guild templates
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/templates"))
 
@@ -567,6 +600,7 @@ class GuildRequests:
             description: The description of the template
         returns:
             The created guild template
+
         """
         return await self.request(
             Route("POST", f"/guilds/{guild_id}/templates"),
@@ -582,6 +616,7 @@ class GuildRequests:
             template_code: The code for the template to sync
         returns:
             The updated guild template
+
         """
         return await self.request(Route("PUT", f"/guilds/{guild_id}/templates/{template_code}"))
 
@@ -589,7 +624,7 @@ class GuildRequests:
         self, guild_id: "Snowflake_Type", template_code: str, name: str = None, description: str = None
     ) -> dict:
         """
-        Modifies the template's metadata
+        Modifies the template's metadata.
 
         parameters:
             guild_id: The ID of the guild
@@ -598,6 +633,7 @@ class GuildRequests:
             description: The description of the template
         returns:
             The updated guild template
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/templates/{template_code}"),
@@ -613,6 +649,7 @@ class GuildRequests:
             template_code: The ID of the template
         returns:
             The deleted template object
+
         """
         # why on earth does this return the deleted template object?
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))

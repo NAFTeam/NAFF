@@ -36,17 +36,17 @@ class VoiceState(ClientObject):
 
     @property
     def guild(self) -> "Guild":
-        """The guild this voice state is for"""
+        """The guild this voice state is for."""
         return self._client.cache.guild_cache.get(self._guild_id) if self._guild_id else None
 
     @property
     def channel(self) -> "TYPE_VOICE_CHANNEL":
-        """The channel the user is connected to"""
+        """The channel the user is connected to."""
         return self._client.cache.channel_cache.get(self._channel_id)
 
     @property
     def member(self) -> "Member":
-        """The member this voice state is for"""
+        """The member this voice state is for."""
         return self._client.cache.member_cache.get((self._guild_id, self._member_id)) if self._guild_id else None
 
     @classmethod

@@ -31,7 +31,8 @@ class LoginError(BotException):
 
 
 class HTTPException(SnakeException):
-    """A HTTP request resulted in an exception
+    """
+    A HTTP request resulted in an exception.
 
     Attributes:
         response aiohttp.ClientResponse: The response of the HTTP request
@@ -39,6 +40,7 @@ class HTTPException(SnakeException):
         status int: The HTTP status code
         code int: The discord error code, if one is provided
         route Route: The HTTP route that was used
+
     """
 
     def __init__(self, response: aiohttp.ClientResponse, text=MISSING, discord_code=MISSING, **kwargs):
@@ -61,11 +63,13 @@ class HTTPException(SnakeException):
     def search_for_message(self, data: dict):
         """
         Search the exceptions error dictionary for a message explaining the issue.
+
         Args:
             data: The error dictionary of the http exception
 
         Returns:
             A list of {"code": str, "message": str} found
+
         """
         if "_errors" in data:
             errors = []
@@ -160,11 +164,13 @@ class CommandException(BotException):
 
 
 class CommandOnCooldown(CommandException):
-    """A command is on cooldown, and was attempted to be executed
+    """
+    A command is on cooldown, and was attempted to be executed.
 
     Attributes:
         command BaseCommand: The command that is on cooldown
         cooldown CooldownSystem: The cooldown system
+
     """
 
     def __init__(self, command: "BaseCommand", cooldown: "CooldownSystem"):
@@ -185,11 +191,13 @@ class MaxConcurrencyReached(CommandException):
 
 
 class CommandCheckFailure(CommandException):
-    """A command check failed
+    """
+    A command check failed.
 
     Attributes:
         command BaseCommand: The command that's check failed
         check Callable[..., Coroutine]: The check that failed
+
     """
 
     def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context"):
@@ -203,9 +211,12 @@ class MessageException(BotException):
 
 
 class EphemeralEditException(MessageException):
-    """Your bot attempted to edit an ephemeral message. This is not possible.
+    """
+    Your bot attempted to edit an ephemeral message. This is not possible.
 
-    Its worth noting you can edit an ephemeral message with component's `edit_origin` method.
+    Its worth noting you can edit an ephemeral message with component's
+    `edit_origin` method.
+
     """
 
     def __init__(self) -> None:
@@ -249,8 +260,8 @@ class AlreadyDeferred(BotException):
 
 
 class ForeignWebhookException(SnakeException):
-    """Raised when you attempt to send using a webhook you did not create"""
+    """Raised when you attempt to send using a webhook you did not create."""
 
 
 class EventLocationNotProvided(BotException):
-    """Raised when you have entity_type external and no location is provided"""
+    """Raised when you have entity_type external and no location is provided."""

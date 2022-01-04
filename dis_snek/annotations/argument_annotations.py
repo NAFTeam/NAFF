@@ -21,6 +21,7 @@ def define_annotation() -> Callable[[Callable[[Context], T]], Callable[[Context]
     **Supported Types:**
     `Context`
     `Scale`
+
     """
 
     def wrapper(func: Callable[[Context], T]) -> Callable[[Context], T]:
@@ -42,9 +43,13 @@ def define_annotation() -> Callable[[Callable[[Context], T]], Callable[[Context]
 @define_annotation()
 def CMD_BODY(context: Context) -> str:
     """
-    This argument is for the body of the message. IE:
+    This argument is for the body of the message.
 
-    if `@bot hello how are you?` is sent this argument will be `hello how are you?`
+    IE:
+
+    if `@bot hello how are you?` is sent this argument will be `hello
+    how are you?`
+
     """
     if not isinstance(context, MessageContext):
         raise TypeError("CMD_BODY can only be used with Message Commands")
@@ -53,18 +58,17 @@ def CMD_BODY(context: Context) -> str:
 
 @define_annotation()
 def CMD_AUTHOR(context: Context) -> Union["Member", "User"]:
-    """This argument is the author of the command"""
-
+    """This argument is the author of the command."""
     return context.author
 
 
 @define_annotation()
 def CMD_CHANNEL(context: Context) -> "TYPE_MESSAGEABLE_CHANNEL":
-    """This argument is the channel the command was sent in"""
+    """This argument is the channel the command was sent in."""
     return context.channel
 
 
 @define_annotation()
 def CMD_ARGS(context: Context) -> list:
-    """This argument is all of the arguments sent with this command"""
+    """This argument is all of the arguments sent with this command."""
     return context.args

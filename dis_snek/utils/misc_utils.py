@@ -8,7 +8,7 @@ mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
 
 def escape_mentions(content: str) -> str:
     """
-    Escape mentions that could ping someone in a string
+    Escape mentions that could ping someone in a string.
 
     note:
         This does not escape channel mentions as they do not ping anybody
@@ -18,6 +18,7 @@ def escape_mentions(content: str) -> str:
 
     Returns:
         Processed string
+
     """
     return mention_reg.sub("@\u200b\\1", content)
 
@@ -36,6 +37,7 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
 
     Returns:
         A match if found, otherwise None
+
     """
     for el in sequence:
         if predicate(el):
@@ -45,7 +47,7 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
 
 def wrap_partial(obj, cls):
     """
-    🎁 Wraps a commands callback objects into partials
+    🎁 Wraps a commands callback objects into partials.
 
     !!! note
         This is used internally, you shouldn't need to use this function
@@ -56,6 +58,7 @@ def wrap_partial(obj, cls):
 
     Returns:
         The original command object with its callback methods wrapped
+
     """
     if isinstance(obj.callback, functools.partial):
         return obj

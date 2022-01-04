@@ -26,6 +26,7 @@ def slash_str_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -56,6 +57,7 @@ def slash_float_option(
         choices: The choices allowed by this command
         min_value:
         max_value:
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -88,6 +90,7 @@ def slash_int_option(
         choices: The choices allowed by this command
         min_value:
         max_value:
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -112,6 +115,7 @@ def slash_bool_option(
     Args:
         description: The description of your option
         required: Is this option required?
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -134,6 +138,7 @@ def slash_user_option(
         description: The description of your option
         required: Is this option required?
         autocomplete: Use autocomplete for this option
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -161,6 +166,7 @@ def slash_channel_option(
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
         channel_types: The types of channel allowed by this option
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -188,6 +194,7 @@ def slash_role_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
+
     """
     option = SlashCommandOption(
         name="placeholder",
@@ -214,6 +221,7 @@ def slash_mentionable_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
+
     """
     option = SlashCommandOption(
         name="placeholder",

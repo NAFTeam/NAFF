@@ -20,6 +20,7 @@ class InteractionRequests:
             application_id: the what application to delete for
             guild_id: specify a guild to delete commands from
             command_id The command to delete
+
         """
         if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("DELETE", f"/applications/{application_id}/commands/{command_id}"))
@@ -38,6 +39,7 @@ class InteractionRequests:
             guild_id: specify a guild to get commands from
         returns:
             InteractionCommand
+
         """
         if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
@@ -53,6 +55,7 @@ class InteractionRequests:
             app_id: The application ID of this bot
             guild_id: The ID of the guild this command is for, if this is a guild command
             data: List of your interaction data
+
         """
         if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("PUT", f"/applications/{app_id}/commands"), data=data)
@@ -66,8 +69,8 @@ class InteractionRequests:
             payload: the payload to send
             interaction_id: the id of the interaction
             token: the token of the interaction
-        """
 
+        """
         return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), data=payload)
 
     async def post_followup(self, payload: dict, application_id: "Snowflake_Type", token: str) -> None:
@@ -78,8 +81,8 @@ class InteractionRequests:
             payload: the payload to send
             application_id: the id of the application
             token: the token of the interaction
-        """
 
+        """
         return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), data=payload)
 
     async def edit_interaction_message(
@@ -96,8 +99,8 @@ class InteractionRequests:
 
         returns:
             The edited message data.
-        """
 
+        """
         return await self.request(
             Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), data=payload
         )
@@ -114,8 +117,8 @@ class InteractionRequests:
 
         returns:
             The message data.
-        """
 
+        """
         return await self.request(Route("GET", f"/webhooks/{application_id}/{token}/messages/{message_id}"))
 
     async def edit_application_command_permissions(
@@ -135,6 +138,7 @@ class InteractionRequests:
             permissions: The permissions to set to this command
         returns:
             Guild Application Command Permissions
+
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions"),
@@ -153,6 +157,7 @@ class InteractionRequests:
             data: The permissions to be set
         returns:
             array of GuildApplicationCommandPermissions objects
+
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
@@ -171,6 +176,7 @@ class InteractionRequests:
             cmd_id: The command id to edit
         returns:
             guild application command permissions
+
         """
         return await self.request(
             Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions")
@@ -180,12 +186,13 @@ class InteractionRequests:
         self, application_id: "Snowflake_Type", scope: "Snowflake_Type"
     ) -> dict:
         """
-        Get permission data for all commands in a scope
+        Get permission data for all commands in a scope.
 
         parameters:
             application_id: the id of the application
             scope: The scope this command is in
         returns:
             list of guild application command permissions
+
         """
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{scope}/commands/permissions"))

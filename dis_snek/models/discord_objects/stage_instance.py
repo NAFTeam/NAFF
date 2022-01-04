@@ -31,9 +31,10 @@ class StageInstance(DiscordObject):
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING):
         """
-        Delete this stage instance. Effectively closes the stage
+        Delete this stage instance. Effectively closes the stage.
 
         Args:
             reason: The reason for this deletion, for the audit log
+
         """
         await self._client.http.delete_stage_instance(self._channel_id, reason)

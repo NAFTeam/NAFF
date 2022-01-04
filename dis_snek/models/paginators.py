@@ -120,14 +120,14 @@ class Paginator:
 
     @classmethod
     def create_from_embeds(cls, client: "Snake", *embeds: Embed, timeout: int = 0) -> "Paginator":
-        """Create a paginator system from a list of embeds"""
+        """Create a paginator system from a list of embeds."""
         return cls(client, pages=list(embeds), timeout_interval=timeout)
 
     @classmethod
     def create_from_string(
         cls, client: "Snake", content: str, prefix: str = "", suffix: str = "", page_size: int = 4000, timeout: int = 0
     ) -> "Paginator":
-        """Create a paginator system from a string"""
+        """Create a paginator system from a string."""
         content_pages = textwrap.wrap(
             content,
             width=page_size - (len(prefix) + len(suffix)),
@@ -140,7 +140,7 @@ class Paginator:
 
     def create_components(self, disable=False, all=False) -> List[ActionRow]:
         """
-        Create the components for the paginator message
+        Create the components for the paginator message.
 
         Args:
             disable: Should all the components be disabled?
@@ -148,6 +148,7 @@ class Paginator:
 
         Returns:
             A list of ActionRows
+
         """
         output = []
 
@@ -210,7 +211,7 @@ class Paginator:
         return spread_to_rows(*output)
 
     def to_dict(self) -> dict:
-        """Convert this paginator into a dictionary for sending"""
+        """Convert this paginator into a dictionary for sending."""
         page = self.pages[self.page_index]
 
         if isinstance(page, Page):
@@ -226,13 +227,14 @@ class Paginator:
 
     async def send(self, ctx: Context) -> Message:
         """
-        Send this paginator
+        Send this paginator.
 
         Args:
             ctx: The context to send this paginator with
 
         Returns:
             The resulting message
+
         """
         self._message = await ctx.send(**self.to_dict())
         self._author_id = ctx.author.id
@@ -244,7 +246,7 @@ class Paginator:
         return self._message
 
     async def stop(self) -> None:
-        """Disable this paginator"""
+        """Disable this paginator."""
         if self._timeout_task:
             self._timeout_task.run = False
             self._timeout_task.ping.set()
@@ -252,9 +254,10 @@ class Paginator:
 
     async def update(self) -> None:
         """
-        Update the paginator to the current state
+        Update the paginator to the current state.
 
         Use this if you have programmatically changed the page_index
+
         """
         await self._message.edit(**self.to_dict())
 

@@ -1,5 +1,6 @@
 """
 Dis-Snek
+
 ~~~~~~~~~~~~~~~~~~~
 A Python API wrapper for Discord
 :copyright: (c) 2021-present LordOfPolls

@@ -21,6 +21,7 @@ class ChannelRequests:
             channel_id: The id of the channel
         returns:
             channel
+
         """
         return await self.request(Route("GET", f"/channels/{channel_id}"))
 
@@ -44,6 +45,7 @@ class ChannelRequests:
 
         returns:
             List of message dicts
+
         """
         params: Dict[str, Union[int, str]] = {"limit": limit}
 
@@ -120,6 +122,7 @@ class ChannelRequests:
             parent_id: The parent ID if needed
             lock_perms: Sync permissions with the new parent
             reason: An optional reason for the audit log
+
         """
         payload = dict(id=channel_id, position=new_pos, lock_permissions=lock_perms)
         if parent_id:
@@ -138,16 +141,18 @@ class ChannelRequests:
 
         returns:
             Channel object on success
+
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
 
     async def delete_channel(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING):
         """
-        Delete the channel
+        Delete the channel.
 
         parameters:
             channel_id: The ID of the channel to delete
             reason: An optional reason for the audit log
+
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}"), reason=reason)
 
@@ -160,6 +165,7 @@ class ChannelRequests:
 
         returns:
             List of invite objects
+
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/invites"))
 
@@ -191,6 +197,7 @@ class ChannelRequests:
 
         returns:
             an invite object
+
         """
         payload = dict(max_age=max_age, max_uses=max_uses, temporary=temporary, unique=unique)
         if target_type:
@@ -210,7 +217,7 @@ class ChannelRequests:
         scheduled_event_id: "Snowflake_Type" = None,
     ):
         """
-        Get an invite object for a given code
+        Get an invite object for a given code.
 
         Args:
             invite_code: The code of the invite
@@ -220,6 +227,7 @@ class ChannelRequests:
 
         Returns:
             an invite object
+
         """
         params = dict_filter_none(
             dict(with_counts=with_counts, with_expiration=with_expiration, guild_scheduled_event_id=scheduled_event_id)
@@ -230,13 +238,13 @@ class ChannelRequests:
         """
         Delete an invite.
 
-
         parameters:
             invite_code: The code of the invite to delete
             reason: The reason to delete the invite
 
         returns:
             The deleted invite object
+
         """
         return await self.request(Route("DELETE", f"/invites/{invite_code}"))
 
@@ -259,6 +267,7 @@ class ChannelRequests:
             deny: the bitwise value of all disallowed permissions
             perm_type: 0 for a role or 1 for a member
             reason: The reason for this action
+
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
@@ -276,6 +285,7 @@ class ChannelRequests:
             channel_id: The ID of the channel.
             overwrite_id: The ID of the overwrite
             reason: An optional reason for the audit log
+
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"), reason=reason)
 
@@ -289,6 +299,7 @@ class ChannelRequests:
 
         returns:
             Followed channel object
+
         """
         return await self.request(
             Route("POST", f"/channels/{channel_id}/followers"), data={"webhook_channel_id": webhook_channel_id}
@@ -300,6 +311,7 @@ class ChannelRequests:
 
         parameters:
             channel_id: The id of the channel to "type" in
+
         """
         return await self.request(Route("POST", f"/channels/{channel_id}/typing"))
 
@@ -312,6 +324,7 @@ class ChannelRequests:
 
         returns:
             A list of pinned message objects
+
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
 
@@ -333,6 +346,7 @@ class ChannelRequests:
 
         returns:
             The stage instance
+
         """
         return await self.request(
             Route("POST", "/stage-instances"),
@@ -353,6 +367,7 @@ class ChannelRequests:
 
         returns:
             A stage instance.
+
         """
         return await self.request(Route("GET", f"/stage-instances/{channel_id}"))
 
@@ -370,6 +385,7 @@ class ChannelRequests:
 
         returns:
             The updated stage instance.
+
         """
         return await self.request(
             Route("PATCH", f"/stage-instances/{channel_id}"),
@@ -384,5 +400,6 @@ class ChannelRequests:
         parameters:
             channel_id: The ID of the channel to delete the stage instance for.
             reason: The reason for the deletion
+
         """
         return await self.request(Route("DELETE", f"/stage-instances/{channel_id}"), reason=reason)

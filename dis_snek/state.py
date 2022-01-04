@@ -42,12 +42,12 @@ class ConnectionState:
 
     @property
     def latency(self) -> float:
-        """Returns the latency of the websocket connection"""
+        """Returns the latency of the websocket connection."""
         return self.gateway.average_latency
 
     @property
     def average_latency(self) -> float:
-        """Returns the average latency of the websocket connection"""
+        """Returns the average latency of the websocket connection."""
         return self.gateway.average_latency
 
     @property
@@ -58,7 +58,7 @@ class ConnectionState:
         }
 
     async def start(self) -> None:
-        """Connect to the Discord Gateway"""
+        """Connect to the Discord Gateway."""
         self.gateway_url = await self.client.http.get_gateway()
 
         log.debug(f"Starting Shard ID {self.shard_id}")
@@ -109,6 +109,7 @@ class ConnectionState:
 
         note::
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
+
         """
         if activity:
             if not isinstance(activity, Activity):

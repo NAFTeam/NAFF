@@ -33,7 +33,7 @@ class Processor:
 
 
 class EventMixinTemplate:
-    """All event mixins inherit from this to keep them uniform"""
+    """All event mixins inherit from this to keep them uniform."""
 
     cache: "GlobalCache"
     dispatch: Callable[[events.BaseEvent], None]

@@ -9,11 +9,10 @@ if TYPE_CHECKING:
 
 class Buckets(IntEnum):
     """
-    Outlines the cooldown buckets that may be used.
-    Should a bucket for guilds exist, and the command is invoked in a DM, a sane default will be used.
+    Outlines the cooldown buckets that may be used. Should a bucket for guilds exist, and the command is invoked in a DM, a sane default will be used.
 
-    ??? note
-        To add your own, override this
+    ??? note     To add your own, override this
+
     """
 
     DEFAULT = 0
@@ -52,9 +51,7 @@ class Buckets(IntEnum):
 
 
 class Cooldown:
-    """
-    Manages cooldowns and their respective buckets for a command
-    """
+    """Manages cooldowns and their respective buckets for a command."""
 
     __slots__ = "bucket", "cooldown_repositories", "rate", "interval"
 
@@ -75,14 +72,14 @@ class Cooldown:
 
     async def acquire_token(self, context: "Context") -> bool:
         """
-        Attempt to acquire a token for a command to run.
-        Uses the context of the command to use the correct CooldownSystem
+        Attempt to acquire a token for a command to run. Uses the context of the command to use the correct CooldownSystem.
 
         Args:
             context: The context of the command
 
         Returns:
             True if a token was acquired, False if not
+
         """
         cooldown = await self.get_cooldown(context)
 
@@ -97,19 +94,21 @@ class Cooldown:
 
         Returns:
             remaining cooldown time, will return 0 if the cooldown has not been reached
+
         """
         cooldown = await self.get_cooldown(context)
         return cooldown.get_cooldown_time()
 
     async def on_cooldown(self, context: "Context") -> bool:
         """
-        Returns the cooldown state of the command
+        Returns the cooldown state of the command.
 
         Args:
             context: The context of the command
 
         Returns:
             boolean state if the command is on cooldown or not
+
         """
         cooldown = await self.get_cooldown(context)
         return cooldown.on_cooldown()
@@ -118,18 +117,20 @@ class Cooldown:
         """
         Resets this cooldown system to its initial state.
 
-        !!! warning
-            To be clear, this will reset **all** cooldowns for this command to their initial states
+        !!! warning     To be clear, this will reset **all** cooldowns
+        for this command to their initial states
+
         """
         # this doesnt need to be async, but for consistency, it is
         self.cooldown_repositories = {}
 
     async def reset(self, context: "Context") -> None:
         """
-        Resets the cooldown for the bucket of which invoked this command
+        Resets the cooldown for the bucket of which invoked this command.
 
         Args:
             context: The context of the command
+
         """
         cooldown = await self.get_cooldown(context)
         cooldown.reset()
@@ -137,12 +138,13 @@ class Cooldown:
 
 class CooldownSystem:
     """
-    Represents a cooldown system for commands
+    Represents a cooldown system for commands.
 
     Attributes:
         rate: How many commands may be ran per interval
         interval: How many seconds to wait for a cooldown
         opened: When this cooldown session began
+
     """
 
     __slots__ = "rate", "interval", "opened", "_tokens"
@@ -161,15 +163,14 @@ class CooldownSystem:
             raise ValueError("Cooldown interval must be greater than 0")
 
     def reset(self) -> None:
-        """
-        Resets the tokens for this cooldown
-        """
+        """Resets the tokens for this cooldown."""
         self._tokens = self.rate
         self.opened = 0.0
 
     def on_cooldown(self) -> bool:
         """
-        Returns the cooldown state of the command
+        Returns the cooldown state of the command.
+
         Returns:
             boolean state if the command is on cooldown or not
         """
@@ -185,6 +186,7 @@ class CooldownSystem:
 
         Returns:
             True if a token was acquired, False if not
+
         """
         self.determine_cooldown()
 
@@ -199,17 +201,17 @@ class CooldownSystem:
     def get_cooldown_time(self) -> float:
         """
         Returns how long until the cooldown will reset.
+
         Returns:
             remaining cooldown time, will return 0 if the cooldown has not been reached
+
         """
         if self._tokens != 0:
             return 0
         return self.interval - (time.time() - self.opened)
 
     def determine_cooldown(self) -> None:
-        """
-        Determines the state of the cooldown system
-        """
+        """Determines the state of the cooldown system."""
         c_time = time.time()
 
         if c_time > self.opened + self.interval:
@@ -219,12 +221,13 @@ class CooldownSystem:
 
 class MaxConcurrency:
     """
-    Limits how many instances of a command may be running concurrently
+    Limits how many instances of a command may be running concurrently.
 
     Attributes:
         bucket Buckets: The bucket this concurrency applies to
         concurrent int: The maximum number of concurrent instances permitted to
         wait bool: Should we wait until a instance is available
+
     """
 
     def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait=False):
@@ -236,6 +239,7 @@ class MaxConcurrency:
     async def get_semaphore(self, context: "Context") -> asyncio.Semaphore:
         """
         Get the semaphore associated with the given context.
+
         Args:
             context: The commands context
 
@@ -252,12 +256,13 @@ class MaxConcurrency:
 
     async def acquire(self, context: "Context") -> bool:
         """
-        Acquire an instance of the semaphore
+        Acquire an instance of the semaphore.
 
         Args:
             context:The context of the command
         returns:
             If the semaphore was successfully acquired
+
         """
         semaphore = await self.get_semaphore(context)
 
@@ -272,6 +277,7 @@ class MaxConcurrency:
 
         Args:
             context: The context of the command
+
         """
         semaphore = await self.get_semaphore(context)
 

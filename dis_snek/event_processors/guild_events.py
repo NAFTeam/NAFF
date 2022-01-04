@@ -18,6 +18,7 @@ class GuildEvents(EventMixinTemplate):
 
         Args:
             event: raw guild create event
+
         """
         guild = self.cache.place_guild_data(event.data)
 

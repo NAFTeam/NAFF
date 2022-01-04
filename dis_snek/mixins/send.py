@@ -57,6 +57,7 @@ class SendMixin:
 
         returns:
             New message object that was sent.
+
         """
         message_payload = process_message_payload(
             content=content,

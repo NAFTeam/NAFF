@@ -44,7 +44,7 @@ def get_cache_state(bot: "Snake") -> str:
 
 
 def strf_delta(time_delta: datetime.timedelta, show_seconds: bool = True) -> str:
-    """Formats timedelta into a human readable string"""
+    """Formats timedelta into a human readable string."""
     years, days = divmod(time_delta.days, 365)
     hours, rem = divmod(time_delta.seconds, 3600)
     minutes, seconds = divmod(rem, 60)

@@ -93,6 +93,7 @@ class Webhook(DiscordObject, SendMixin):
 
         Raises:
             ValueError: If you try to name the webhook "Clyde"
+
         """
         if name.lower() == "clyde":
             raise ValueError('Webhook names cannot be "Clyde"')
@@ -117,7 +118,7 @@ class Webhook(DiscordObject, SendMixin):
         return data
 
     async def delete(self) -> None:
-        """Delete this webhook"""
+        """Delete this webhook."""
         await self._client.http.delete_webhook(self.id, self.token)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
@@ -144,7 +145,7 @@ class Webhook(DiscordObject, SendMixin):
         wait: bool = False,
     ) -> Optional["Message"]:
         """
-        Send a message as this webhook
+        Send a message as this webhook.
 
         Args:
             content: Message text content.
@@ -162,6 +163,7 @@ class Webhook(DiscordObject, SendMixin):
 
         Returns:
             New message object that was sent if `wait` is set to True
+
         """
         return await super().send(
             content,

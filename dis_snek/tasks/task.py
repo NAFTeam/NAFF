@@ -38,6 +38,7 @@ class Task:
     Create an asynchronous background tasks. Tasks allow you to run code according to a trigger object.
 
     A task's trigger must inherit from `BaseTrigger`.
+
     """
 
     callback: Callable
@@ -61,7 +62,7 @@ class Task:
 
     @property
     def next_run(self) -> Optional[datetime]:
-        """Get the next datetime this task will run"""
+        """Get the next datetime this task will run."""
         if not self.task.done():
             return self.trigger.next_fire()
         return None
@@ -73,7 +74,7 @@ class Task:
 
     @property
     def is_sleeping(self) -> bool:
-        """Returns True if the task is currently waiting to run"""
+        """Returns True if the task is currently waiting to run."""
         if getattr(self.sleeper, "future", None):
             return not self.sleeper.future.done()
         return False
@@ -85,7 +86,7 @@ class Task:
             asyncio.gather(asyncio.to_thread(self.callback))
 
     def _fire(self, fire_time: datetime):
-        """Called when the task is being fired"""
+        """Called when the task is being fired."""
         self.trigger.last_call_time = fire_time
         self()
         self.iteration += 1
@@ -100,14 +101,14 @@ class Task:
             await self.sleeper(self.trigger.next_fire())
 
     def start(self) -> None:
-        """Start this task"""
+        """Start this task."""
         self._stop = False
         if self._loop:
             self.sleeper = Sleeper(self._loop)
             self.task = asyncio.create_task(self._task_loop())
 
     def stop(self) -> None:
-        """End this task"""
+        """End this task."""
         self._stop = True
         if self.task:
             self.task.cancel()
@@ -115,7 +116,7 @@ class Task:
             self.sleeper.cancel()
 
     def restart(self) -> None:
-        """Restart this task"""
+        """Restart this task."""
         self.stop()
         self.start()
 
@@ -125,6 +126,7 @@ class Task:
 
         Args:
             trigger: The new Trigger to use
+
         """
         self.trigger = trigger
         self.restart()
@@ -132,10 +134,11 @@ class Task:
     @classmethod
     def create(cls, trigger: BaseTrigger) -> Callable[[Callable], "Task"]:
         """
-        A decorator to create a task
+        A decorator to create a task.
 
         Args:
             trigger: The trigger to use for this task
+
         """
 
         def wrapper(func: Callable):
