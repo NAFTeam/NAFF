@@ -46,7 +46,7 @@ Now let's get the library installed.
 
 === ":material-microsoft-windows: Windows"
     ```shell
-    py -3 -m install dis-snek --upgrade
+    py -3 -m pip install dis-snek --upgrade
     ```
 
 ## Basic bot
