@@ -372,6 +372,7 @@ class ComponentTypes(IntEnum):
     ACTION_ROW = 1
     BUTTON = 2
     SELECT = 3
+    INPUT_TEXT = 4
 
 
 class CommandTypes(IntEnum):
@@ -389,6 +390,7 @@ class InteractionTypes(IntEnum):
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
     AUTOCOMPLETE = 4
+    MODAL_RESPONSE = 5
 
 
 class ButtonStyles(IntEnum):

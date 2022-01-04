@@ -24,6 +24,7 @@ These are events dispatched by Discord. This is intended as a reference so you k
 from typing import TYPE_CHECKING, Any, List, Union, Optional
 
 import attr
+
 from dis_snek.models.discord_objects.stage_instance import StageInstance
 
 from dis_snek.models import Invite
@@ -44,6 +45,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.voice_state import VoiceState
+    from dis_snek.models.context import ModalContext
 
 
 @attr.s(slots=True)
@@ -439,6 +441,13 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = attr.ib()
+
+
+@attr.s(slots=True)
+class ModalResponse(BaseEvent):
+    """Dispatched when a modal receives a response"""
+
+    context: "ModalContext" = attr.ib()
 
 
 @attr.s(slots=True)

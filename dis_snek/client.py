@@ -7,8 +7,10 @@ import re
 import sys
 import time
 import traceback
+from pprint import pformat
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, NoReturn, Optional, Union, Type
 
+from dis_snek.models.discord_objects.modal import Modal
 from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
     BotException,
@@ -49,6 +51,7 @@ from dis_snek.models import (
     to_snowflake_list,
     ComponentContext,
     InteractionContext,
+    ModalContext,
     MessageContext,
     AutocompleteContext,
     ComponentCommand,
@@ -654,6 +657,10 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
+    async def wait_for_modal(self, modal: Modal, timeout: Optional[float] = None):
+        resp = await self.wait_for("modal_response", lambda e: e.context.custom_id == modal.custom_id, timeout)
+        return resp.context
+
     async def wait_for_component(
         self,
         messages: Union[Message, int, list] = None,
@@ -1105,6 +1112,9 @@ class Snake(
                 case InteractionTypes.AUTOCOMPLETE:
                     cls = self.autocomplete_context.from_dict(data, self)
 
+                case InteractionTypes.MODAL_RESPONSE:
+                    cls = ModalContext.from_dict(data, self)
+
                 case _:
                     cls = self.interaction_context.from_dict(data, self)
 
@@ -1195,6 +1205,9 @@ class Snake(
             if component_type == ComponentTypes.SELECT:
                 self.dispatch(events.Select(ctx))
 
+        elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
+            ctx = await self.get_context(interaction_data, True)
+            self.dispatch(events.ModalResponse(ctx))
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 

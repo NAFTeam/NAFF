@@ -12,16 +12,16 @@ from dis_snek.errors import AlreadyDeferred
 from dis_snek.mixins.send import SendMixin
 from dis_snek.models.application_commands import CallbackTypes, OptionTypes
 from dis_snek.models.discord_objects.message import process_message_payload
+from dis_snek.models.discord_objects.modal import Modal
 from dis_snek.models.enums import MessageFlags
-from dis_snek.utils.attr_utils import define, docs
 from dis_snek.models.snowflake import to_optional_snowflake, to_snowflake
-from dis_snek.utils.input_utils import get_args
+from dis_snek.utils.attr_utils import define, docs
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models import File
     from dis_snek.models.discord_objects.channel import TYPE_MESSAGEABLE_CHANNEL
-    from dis_snek.models.discord_objects.components import ActionRow, BaseComponent
+    from dis_snek.models.discord_objects.components import BaseComponent
     from dis_snek.models.discord_objects.embed import Embed
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.message import AllowedMentions, Message
@@ -166,7 +166,6 @@ class _BaseInteractionContext(Context):
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
-
             for option in options:
                 value = option.get("value")
 
@@ -198,6 +197,24 @@ class _BaseInteractionContext(Context):
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = [v for v in kwargs.values()]
+
+    async def send_modal(self, modal: Union[dict, Modal]) -> Union[dict, Modal]:
+        """
+        Respond using a modal.
+
+        Args:
+            modal: The modal to respond with
+
+        Returns:
+            The modal used.
+
+        """
+        payload = modal.to_dict() if not isinstance(modal, dict) else modal
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+        self.responded = True
+        return modal
 
 
 @define
@@ -462,6 +479,21 @@ class AutocompleteContext(_BaseInteractionContext):
 
         payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": processed_choices}}
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+
+@define
+class ModalContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+        new_cls = super().from_dict(data, client)
+
+        new_cls.kwargs = {
+            comp["components"][0]["custom_id"]: comp["components"][0]["value"] for comp in data["data"]["components"]
+        }
+        new_cls.custom_id = data["data"]["custom_id"]
+        return new_cls
 
 
 @define
