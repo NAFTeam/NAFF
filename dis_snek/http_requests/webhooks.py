@@ -18,6 +18,7 @@ class WebhookRequests:
             channel_id: The id of the channel to add this webhook to
             name: name of the webhook (1-80 characters)
             avatar: The image for the default webhook avatar
+
         """
         return await self.request(
             Route("POST", f"/channels/{channel_id}/webhooks"), data={"name": name, "avatar": avatar}
@@ -31,6 +32,7 @@ class WebhookRequests:
             channel_id: The id of the channel to query
         returns:
             List of webhook objects
+
         """
         return await self.request(Route("GET", f"/channels/{channel_id}/webhooks"))
 
@@ -42,6 +44,7 @@ class WebhookRequests:
             guild_id: The id of the guild to query
         returns:
             List of webhook objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/webhooks"))
 
@@ -54,6 +57,7 @@ class WebhookRequests:
             webhook_token: The token for the webhook
         returns:
             Webhook object
+
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -86,13 +90,14 @@ class WebhookRequests:
 
     async def delete_webhook(self, webhook_id: "Snowflake_Type", webhook_token: str = None) -> dict:
         """
-        Delete a webhook
+        Delete a webhook.
 
         parameters:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
         returns:
             Webhook object
+
         """
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
@@ -118,6 +123,7 @@ class WebhookRequests:
             suffix: An optional suffix to add to the end of the endpoint address
         returns:
             The sent `message`, if `wait` is True else None
+
         """
         return await self.request(
             Route("POST", f"/webhooks/{webhook_id}/{webhook_token}"),
@@ -137,6 +143,7 @@ class WebhookRequests:
             message_id: The ID of a message sent by this webhook
         returns:
             A message object on success
+
         """
         return await self.request(Route("GET", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"))
 
@@ -153,6 +160,7 @@ class WebhookRequests:
             payload: The JSON payload for the message
         returns:
             The updated message on success
+
         """
         return await self.request(
             Route("PATCH", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"), data=payload
@@ -168,5 +176,6 @@ class WebhookRequests:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
             message_id: The ID of a message sent by this webhook
+
         """
         return await self.request(Route("DELETE", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"))

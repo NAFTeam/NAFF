@@ -42,7 +42,7 @@ class _SendDMMixin(SendMixin):
 
 @define()
 class BaseUser(DiscordObject, _SendDMMixin):
-    """Base class for User, essentially partial user discord model"""
+    """Base class for User, essentially partial user discord model."""
 
     username: str = field(repr=True, metadata=docs("The user's username, not unique across the platform"))
     discriminator: int = field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
@@ -62,17 +62,17 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @property
     def tag(self) -> str:
-        """Returns the user's Discord tag"""
+        """Returns the user's Discord tag."""
         return f"{self.username}#{self.discriminator}"
 
     @property
     def mention(self) -> str:
-        """Returns a string that would mention the user"""
+        """Returns a string that would mention the user."""
         return f"<@{self.id}>"
 
     @property
     def display_name(self) -> str:
-        """The users display name, will return nickname if one is set, otherwise will return username"""
+        """The users display name, will return nickname if one is set, otherwise will return username."""
         return self.username  # for duck-typing compatibility with Member
 
     async def get_dm(self) -> "DM":
@@ -82,7 +82,6 @@ class BaseUser(DiscordObject, _SendDMMixin):
     @property
     def mutual_guilds(self) -> List["Guild"]:
         """Get a list of mutual guilds shared between this user and the client."""
-
         # should user_guilds be its own property?
         return [g for g in self._client.guilds if g.id in self.user_guilds]
 
@@ -158,12 +157,13 @@ class SnakeBotUser(User):
 
         Raises:
             TooManyChanges: If you change the profile too many times
+
         """
         payload = {}
         if username:
             payload["username"] = username
         if avatar:
-            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa
+            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa : w0212
         elif avatar is None:
             payload["avatar"] = None
 
@@ -240,7 +240,7 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def user(self) -> "User":
-        """Returns this member's user object"""
+        """Returns this member's user object."""
         return self._client.cache.user_cache.get(self.id)
 
     def __str__(self):
@@ -262,7 +262,7 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def nickname(self) -> str:
-        """alias for nick"""
+        """Alias for nick."""
         return self.nick
 
     @nickname.setter
@@ -271,12 +271,12 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def guild(self) -> "Guild":
-        """The guild object this member is from"""
+        """The guild object this member is from."""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:
-        """The roles this member has"""
+        """The roles this member has."""
         return [r for r in self.guild.roles if r.id in self._role_ids]
 
     @property
@@ -287,12 +287,12 @@ class Member(DiscordObject, _SendDMMixin):
 
     @property
     def display_name(self) -> str:
-        """The users display name, will return nickname if one is set, otherwise will return username"""
+        """The users display name, will return nickname if one is set, otherwise will return username."""
         return self.nickname or self.username
 
     @property
     def display_avatar(self) -> "Asset":
-        """The users displayed avatar, will return `guild_avatar` if one is set, otherwise will return user avatar"""
+        """The users displayed avatar, will return `guild_avatar` if one is set, otherwise will return user avatar."""
         return self.guild_avatar or self.user.avatar
 
     @property
@@ -302,10 +302,11 @@ class Member(DiscordObject, _SendDMMixin):
 
     def guild_permissions(self) -> Permissions:
         """
-        Returns the permissions this member has in the guild
+        Returns the permissions this member has in the guild.
 
         Returns:
             Permission data
+
         """
         guild = self.guild
         if guild.is_owner(self):
@@ -340,8 +341,8 @@ class Member(DiscordObject, _SendDMMixin):
 
         Args:
             permissions: The permission(s) to check whether the user has it.
-        """
 
+        """
         # Get the user's permissions
         guild_permissions = self.guild_permissions()
 
@@ -360,6 +361,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         Returns:
             Permissions data
+
         """
         permissions = self.guild_permissions()
         if Permissions.ADMINISTRATOR in permissions:
@@ -395,6 +397,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         Args:
             new_nickname: The new nickname to apply.
+
         """
         return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
 
@@ -405,6 +408,7 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             role: The role to add
             reason: The reason for adding this role
+
         """
         role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
@@ -416,6 +420,7 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             role: The role to remove
             reason: The reason for this removal
+
         """
         if isinstance(role, Role):
             role = role.id
@@ -423,10 +428,11 @@ class Member(DiscordObject, _SendDMMixin):
 
     def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
-        Checks if the user has the given role(s)
+        Checks if the user has the given role(s).
 
         Args:
             roles: The role(s) to check whether the user has it.
+
         """
         for role in roles:
             role_id = to_snowflake(role)
@@ -445,6 +451,7 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             communication_disabled_until: The time until the user can communicate again
             reason: The reason for this timeout
+
         """
         if isinstance(communication_disabled_until, (datetime, int, float, str)):
             communication_disabled_until = timestamp_converter(communication_disabled_until)
@@ -464,6 +471,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         Args:
             reason: The reason for this removal
+
         """
         return await self._client.http.remove_guild_member(self._guild_id, self.id)
 
@@ -474,5 +482,6 @@ class Member(DiscordObject, _SendDMMixin):
         Args:
             delete_message_days: The number of days of messages to delete
             reason: The reason for this ban
+
         """
         return await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)

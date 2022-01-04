@@ -30,7 +30,7 @@ def copy_converter(value):
 
 
 def docs(doc_string: str) -> Dict[str, str]:
-    """Makes it easier to quickly type attr documentation"""
+    """Makes it easier to quickly type attr documentation."""
     return {"docs": doc_string}
 
 

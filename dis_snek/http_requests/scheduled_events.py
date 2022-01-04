@@ -19,6 +19,7 @@ class ScheduledEventsRequests:
             with_user_count: Whether to include the user count in the response
         returns:
             List of Scheduled Events or None
+
         """
         return await self.request(
             Route("GET", f"/guilds/{guild_id}/scheduled-events?with_user_count={with_user_count}")
@@ -35,6 +36,7 @@ class ScheduledEventsRequests:
             with_user_count: Whether to include the user count in the response
         returns:
             Scheduled Event or None
+
         """
         return await self.request(
             Route("GET", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}?with_user_count={with_user_count}")
@@ -55,6 +57,7 @@ class ScheduledEventsRequests:
             reason: The reason to be displayed in audit logs
         returns:
             Scheduled Event or None
+
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/scheduled-events"), data=payload, reason=reason)
 
@@ -75,6 +78,7 @@ class ScheduledEventsRequests:
             reason: The reason to be displayed in audit logs
         returns:
             Scheduled Event or None
+
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"), data=payload, reason=reason
@@ -95,6 +99,7 @@ class ScheduledEventsRequests:
             reason: The reason to be displayed in audit logs
         returns:
             Scheduled Event or None
+
         """
         return await self.request(
             Route("DELETE", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"), reason=reason
@@ -121,6 +126,7 @@ class ScheduledEventsRequests:
             after: consider only users after given user id
         returns:
             List of Scheduled Event Users or None
+
         """
         query_params = urlencode(
             dict_filter_missing(dict(limit=limit, with_member=with_member, before=before, after=after))

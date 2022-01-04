@@ -35,6 +35,7 @@ class ThreadMember(DiscordObject, SendMixin):
 
         Returns:
             The thread in question
+
         """
         return await self._client.get_channel(self.id)
 
@@ -44,6 +45,7 @@ class ThreadMember(DiscordObject, SendMixin):
 
         Returns:
             The user object
+
         """
         return await self._client.get_user(self._user_id)
 

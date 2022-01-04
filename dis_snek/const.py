@@ -27,6 +27,7 @@ attributes:
     GLOBAL_SCOPE _sentinel: A sentinel that represents a global scope for application commands.
     MENTION_PREFIX _sentinel: A sentinel representing the bot will be mentioned for a prefix
     MISSING _sentinel: A sentinel value that indicates something has not been set
+
 """
 import sys
 from collections import defaultdict

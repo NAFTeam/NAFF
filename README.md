@@ -7,8 +7,8 @@
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
 
 # What is this?
-This is `Dis-Snek`, a python API wrapper for Discord. 
-Snek is intended to be fast, easy to use, and easily modified to suit your needs. 
+This is `Dis-Snek`, a python API wrapper for Discord.
+Snek is intended to be fast, easy to use, and easily modified to suit your needs.
 
 ### Features:
 - ✅ 100% coverage of the application commands API
@@ -18,9 +18,9 @@ Snek is intended to be fast, easy to use, and easily modified to suit your needs
 - ✅ Feature parity with most other Discord API wrappers
 
 ## Is this just another `Discord.py` fork?
-While this library shares features and some stylistic choices with `discord.py`, it is completely separate from them. We think `discord.py` is a fantastic library, but we disagree with the direction and design decisions that were made by it. 
+While this library shares features and some stylistic choices with `discord.py`, it is completely separate from them. We think `discord.py` is a fantastic library, but we disagree with the direction and design decisions that were made by it.
 
-Compared to `discord.py`; `Dis-Senk` starts faster, responds faster, is simpler to use, and comes equipped with plenty of creature comforts to help get your bot launched faster. 
+Compared to `discord.py`; `Dis-Senk` starts faster, responds faster, is simpler to use, and comes equipped with plenty of creature comforts to help get your bot launched faster.
 
 ## How do I use this?
 Here is a basic example:
@@ -31,11 +31,11 @@ bot = Snake(sync_interactions=True)
 async def on_startup():
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
-    
+
 @message_command()
     async def blurple_button(self, ctx):
         await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
-        
+
 @context_menu(name="user menu", context_type=CommandTypes.USER, scopes=701347683591389185)
     async def user_context(self, ctx):
         await ctx.send("Context menu:: user")
@@ -47,8 +47,8 @@ For more examples check out [our examples repo](https://github.com/Discord-Snake
 
 
 ## "Can I contribute to this project?"
-Of course, we welcome all contributions to this library. Just ensure you follow our [requirements](). 
-If youre stuck for things to contribute, check out our [Trello](https://trello.com/b/LVjnmYKt/dev-board) for inspiration. 
+Of course, we welcome all contributions to this library. Just ensure you follow our [requirements]().
+If youre stuck for things to contribute, check out our [Trello](https://trello.com/b/LVjnmYKt/dev-board) for inspiration.
 
 ## Links:
 - Support Server: https://discord.gg/dis-snek

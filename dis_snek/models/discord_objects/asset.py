@@ -19,6 +19,7 @@ class Asset:
         BASE str: The `cdn` address for assets
         url str: The URL of this asset
         hash Optional[str]: The hash of this asset
+
     """
 
     BASE = "https://cdn.discordapp.com"
@@ -38,14 +39,14 @@ class Asset:
 
     @property
     def animated(self) -> bool:
-        """True if this asset is animated"""
+        """True if this asset is animated."""
         if not self.hash:
             return None
         return self.hash.startswith("a_")
 
     async def get(self, extension: Optional[str] = None, size: Optional[int] = None) -> bytes:
         """
-        Get the asset from the Discord CDN
+        Get the asset from the Discord CDN.
 
         Args:
             extension: File extension
@@ -56,6 +57,7 @@ class Asset:
 
         Raises:
             ValueError: Incorrect file size if not power of 2 between 16 and 4096
+
         """
         if not extension:
             extension = ".gif" if self.animated else ".png"
@@ -77,7 +79,7 @@ class Asset:
         self, fd: Union[str, bytes, "PathLike", int], extension: Optional[str] = None, size: Optional[int] = None
     ) -> int:
         """
-        Save the asset to a file
+        Save the asset to a file.
 
         Args:
             fd: File destination
@@ -86,6 +88,7 @@ class Asset:
 
         Return:
             Status code
+
         """
         content = await self.get(extension=extension, size=size)
         with open(fd, "wb") as f:

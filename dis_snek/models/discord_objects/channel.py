@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 class ChannelHistory(AsyncIterator):
     """
-    An async iterator for searching through a channel's history
+    An async iterator for searching through a channel's history.
 
     Args:
         channel: The channel to search through
@@ -52,6 +52,7 @@ class ChannelHistory(AsyncIterator):
         before: get messages before this message ID
         after: get messages after this message ID
         around: get messages "around" this message ID
+
     """
 
     def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None):
@@ -87,17 +88,18 @@ class ChannelHistory(AsyncIterator):
 @define()
 class PermissionOverwrite(SnowflakeObject):
     """
-    Channel Permissions Overwrite object
+    Channel Permissions Overwrite object.
 
     Attributes:
         type: Permission overwrite type (role or member)
         allow: Permissions to allow
         deny: Permissions to deny
+
     """
 
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
-    allow: "Permissions" = field(repr=True, converter=Permissions)
-    deny: "Permissions" = field(repr=True, converter=Permissions)
+    allow: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
 
 
 @define(slots=False)
@@ -120,6 +122,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             The message object fetched.
+
         """
         message_id = to_snowflake(message_id)
         message: "Message" = await self._client.cache.get_message(self.id, message_id)
@@ -133,7 +136,7 @@ class MessageableMixin(SendMixin):
         around: "Snowflake_Type" = None,
     ):
         """
-        Get an async iterator for the history of this channel
+        Get an async iterator for the history of this channel.
 
         Paramters:
             limit: The maximum number of messages to return (set to 0 for no limit)
@@ -158,6 +161,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             ChannelHistory (AsyncIterator)
+
         """
         return ChannelHistory(self, limit, before, after, around)
 
@@ -179,6 +183,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             A list of messages fetched.
+
         """
         if limit > 100:
             raise ValueError("You cannot fetch more than 100 messages at once.")
@@ -199,6 +204,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             A list of messages fetched.
+
         """
         messages_data = await self._client.http.get_pinned_messages(self.id)
         return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
@@ -212,6 +218,7 @@ class MessageableMixin(SendMixin):
         Args:
             messages: List of messages or message IDs to delete.
             reason: The reason for this action. Used for audit logs.
+
         """
         message_ids = [to_snowflake(message) for message in messages]
         # TODO Add check for min/max and duplicates.
@@ -229,6 +236,7 @@ class MessageableMixin(SendMixin):
         Args:
             message: The message to delete
             reason: The reason for this action
+
         """
         message = to_snowflake(message)
         await self._client.http.delete_message(self.id, message, reason=reason)
@@ -244,8 +252,7 @@ class MessageableMixin(SendMixin):
         reason: Absent[Optional[str]] = MISSING,
     ) -> int:
         """
-        Bulk delete messages within a channel. If a `predicate` is provided, it will be used to determine which messages to delete,
-        otherwise all messages will be deleted within the `deletion_limit`
+        Bulk delete messages within a channel. If a `predicate` is provided, it will be used to determine which messages to delete, otherwise all messages will be deleted within the `deletion_limit`.
 
         ??? Hint "Example Usage:"
             ```python
@@ -265,6 +272,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             The total amount of messages deleted
+
         """
         if not predicate:
 
@@ -327,6 +335,7 @@ class InvitableMixin:
 
         Returns:
             Newly created Invite object.
+
         """
         if target_type:
             if target_type == InviteTargetTypes.STREAM and not target_user:
@@ -349,9 +358,7 @@ class InvitableMixin:
         return Invite.from_dict(invite_data, self._client)
 
     async def get_invites(self) -> List["Invite"]:
-        """
-        Gets all invites (with invite metadata) for the channel.
-        """
+        """Gets all invites (with invite metadata) for the channel."""
         invites_data = await self._client.http.get_channel_invites(self.id)
         return Invite.from_list(invites_data, self._client)
 
@@ -366,7 +373,8 @@ class ThreadableMixin:
         reason: Optional[str] = None,
     ) -> Union["GuildNewsThread", "GuildPublicThread"]:
         """
-        Create a thread connected to a message
+        Create a thread connected to a message.
+
         Args:
             name: 1-100 character thread name
             message: The message to connect this thread to
@@ -395,6 +403,7 @@ class ThreadableMixin:
     ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
         """
         Creates a thread without a message source.
+
         Args:
             name: 	1-100 character thread name
             thread_type: Is the thread private or public
@@ -422,6 +431,7 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
         """
         threads_data = await self._client.http.list_public_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -436,6 +446,7 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -450,6 +461,7 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -464,7 +476,8 @@ class ThreadableMixin:
         self, limit: int = None, before: Optional["Timestamp"] = None
     ) -> ThreadList:
         """
-        Get a `ThreadList` of threads the bot is a participant of in this channel
+        Get a `ThreadList` of threads the bot is a participant of in this channel.
+
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
@@ -476,8 +489,7 @@ class ThreadableMixin:
         return ThreadList.from_dict(threads_data, self._client)
 
     async def get_active_threads(self) -> ThreadList:
-        """Returns all active threads in the channel, including public and private threads"""
-
+        """Returns all active threads in the channel, including public and private threads."""
         threads_data = await self._client.http.list_active_threads(guild_id=self.guild.id)
 
         # delete the items where the channel_id does not match
@@ -500,8 +512,7 @@ class ThreadableMixin:
         return ThreadList.from_dict(threads_data, self._client)
 
     async def get_all_threads(self) -> ThreadList:
-        """Returns all threads in the channel. Active and archived, including public and private threads"""
-
+        """Returns all threads in the channel. Active and archived, including public and private threads."""
         threads = await self.get_active_threads()
 
         # update that data with the archived threads
@@ -516,7 +527,8 @@ class ThreadableMixin:
 class WebhookMixin:
     async def create_webhook(self, name: str, avatar: Absent[Optional[bytes]] = MISSING) -> Webhook:
         """
-        Create a webhook in this channel
+        Create a webhook in this channel.
+
         Args:
             name: The name of the webhook
             avatar: An optional default avatar to use
@@ -531,7 +543,8 @@ class WebhookMixin:
 
     async def delete_webhook(self, webhook: Webhook) -> None:
         """
-        Delete a given webhook in this channel
+        Delete a given webhook in this channel.
+
         Args:
             webhook: The webhook to delete
         """
@@ -539,7 +552,8 @@ class WebhookMixin:
 
     async def get_webhooks(self) -> List[Webhook]:
         """
-        Get all the webhooks for this channel
+        Get all the webhooks for this channel.
+
         Returns:
             List of webhooks
         """
@@ -555,7 +569,7 @@ class BaseChannel(DiscordObject):
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
         """
-        Creates a channel object of the appropriate type
+        Creates a channel object of the appropriate type.
 
         Args:
             data: The channel data.
@@ -563,6 +577,7 @@ class BaseChannel(DiscordObject):
 
         Returns:
             The new channel object.
+
         """
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
@@ -573,7 +588,7 @@ class BaseChannel(DiscordObject):
 
     @property
     def mention(self) -> str:
-        """Returns a string that would mention the channel"""
+        """Returns a string that would mention the channel."""
         return f"<#{self.id}>"
 
     async def _edit(self, payload: dict, reason: Absent[Optional[str]] = MISSING) -> None:
@@ -597,6 +612,7 @@ class BaseChannel(DiscordObject):
 
         Args:
             reason: The reason for deleting this channel
+
         """
         await self._client.http.delete_channel(self.id, reason)
         if guild := getattr(self, "guild"):
@@ -719,6 +735,7 @@ class GuildChannel(BaseChannel):
     ) -> Invite:
         """
         Create an invite for this channel.
+
         Args:
             max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
             max_uses: max number of uses or 0 for unlimited. between 0 and 100
@@ -761,8 +778,8 @@ class GuildChannel(BaseChannel):
 
         returns:
             The newly created channel.
-        """
 
+        """
         await self.guild.create_channel(
             channel_type=self.type,
             name=name if name else self.name,
@@ -785,6 +802,7 @@ class GuildCategory(GuildChannel):
 
         Returns:
             The list of channels
+
         """
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
@@ -795,6 +813,7 @@ class GuildCategory(GuildChannel):
 
         Returns:
             The list of voice channels
+
         """
         return [
             channel
@@ -809,6 +828,7 @@ class GuildCategory(GuildChannel):
 
         Returns:
             The list of stage channels
+
         """
         return [channel for channel in self.channels if isinstance(channel, GuildStageVoice)]
 
@@ -819,6 +839,7 @@ class GuildCategory(GuildChannel):
 
         Returns:
             The list of text channels
+
         """
         return [channel for channel in self.channels if isinstance(channel, GuildText)]
 
@@ -888,6 +909,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             default_auto_archive_duration: optional AutoArchiveDuration
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: An optional reason for the audit log
+
         """
         payload = dict(  # TODO Proper processing
             name=name,
@@ -937,6 +959,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             default_auto_archive_duration: optional AutoArchiveDuration
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: An optional reason for the audit log
+
         """
         payload = dict(  # TODO Proper processing
             name=name,
@@ -985,7 +1008,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
 
     @property
     def parent_channel(self) -> GuildText:
-        """The channel this thread is a child of"""
+        """The channel this thread is a child of."""
         return self._client.cache.channel_cache.get(self.parent_id)
 
     @property
@@ -1090,6 +1113,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             rtc_region: channel voice region id, automatic when not set
             video_quality_mode: the camera video quality mode of the voice channel
             reason: optional reason for audit logs
+
         """
         payload = dict(  # TODO Proper processing
             name=name,
@@ -1121,7 +1145,12 @@ class GuildStageVoice(GuildVoice):
     # todo: Listeners and speakers properties (needs voice state caching)
 
     async def get_stage_instance(self) -> StageInstance:
-        """Gets the stage instance associated with this channel. If no stage is live, will return None."""
+        """
+        Gets the stage instance associated with this channel.
+
+        If no stage is live, will return None.
+
+        """
         self.stage_instance = StageInstance.from_dict(await self._client.http.get_stage_instance(self.id), self._client)
         return self.stage_instance
 
@@ -1138,6 +1167,7 @@ class GuildStageVoice(GuildVoice):
             topic: The topic of the stage (1-120 characters)
             privacy_level: The privacy level of the stage
             reason: The reason for creating this instance
+
         """
         self.stage_instance = StageInstance.from_dict(
             await self._client.http.create_stage_instance(self.id, topic, privacy_level, reason), self._client
@@ -1146,12 +1176,12 @@ class GuildStageVoice(GuildVoice):
 
     async def close_stage(self, reason: Absent[Optional[str]] = MISSING):
         """
-        Closes the live stage instance
+        Closes the live stage instance.
 
         Arguments:
             reason: The reason for closing the stage
-        """
 
+        """
         if not self.stage_instance:
             # we dont know of an active stage instance, so lets check for one
             if not await self.get_stage_instance():

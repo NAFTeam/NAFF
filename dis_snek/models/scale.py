@@ -19,9 +19,7 @@ log = logging.getLogger(logger_name)
 
 class Scale:
     """
-    A class that allows you to separate your commands and listeners into separate files.
-    Skins require an entrypoint in the same file called `setup`, this function allows
-    client to load the Scale.
+    A class that allows you to separate your commands and listeners into separate files. Skins require an entrypoint in the same file called `setup`, this function allows client to load the Scale.
 
     ??? Hint "Example Usage:"
         ```python
@@ -44,6 +42,7 @@ class Scale:
         scale_checks str: A list of checks to be ran on any command in this scale
         scale_prerun List: A list of coroutines to be run before any command in this scale
         scale_postrun List: A list of coroutines to be run after any command in this scale
+
     """
 
     bot: "Snake"
@@ -109,12 +108,12 @@ class Scale:
 
     @property
     def commands(self):
-        """Get the commands from this Scale"""
+        """Get the commands from this Scale."""
         return self._commands
 
     @property
     def listeners(self):
-        """Get the listeners from this Scale"""
+        """Get the listeners from this Scale."""
         return self._listeners
 
     @property
@@ -122,9 +121,7 @@ class Scale:
         return self.__name
 
     def shed(self) -> None:
-        """
-        Called when this Scale is being removed.
-        """
+        """Called when this Scale is being removed."""
         for func in self._commands:
             if isinstance(func, ComponentCommand):
                 for listener in func.listeners:
@@ -144,11 +141,12 @@ class Scale:
 
     def add_scale_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0):
         """
-        Add a auto defer for all commands in this scale
+        Add a auto defer for all commands in this scale.
 
         Args:
             ephemeral: Should the command be deferred as ephemeral
             time_until_defer: How long to wait before deferring automatically
+
         """
         self.auto_defer = AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
 
@@ -170,6 +168,7 @@ class Scale:
             ```
         Args:
             coroutine: The coroutine to use as a check
+
         """
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Check must be a coroutine")
@@ -198,6 +197,7 @@ class Scale:
 
         Args:
             coroutine: The coroutine to run
+
         """
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Callback must be a coroutine")
@@ -222,6 +222,7 @@ class Scale:
 
         Args:
             coroutine: The coroutine to run
+
         """
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Callback must be a coroutine")

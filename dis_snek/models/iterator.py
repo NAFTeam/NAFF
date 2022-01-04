@@ -30,11 +30,11 @@ class AsyncIterator(_AsyncIterator, ABC):
 
     @property
     def get_limit(self):
-        """Get how the maximum number of items that should be retrieved"""
+        """Get how the maximum number of items that should be retrieved."""
         return min(self._limit - len(self._retrieved_objects), 100) if self._limit else 100
 
     async def add_object(self, obj):
-        """Add an object to iterator's queue"""
+        """Add an object to iterator's queue."""
         return await self._queue.put(obj)
 
     @abstractmethod
@@ -49,6 +49,7 @@ class AsyncIterator(_AsyncIterator, ABC):
             List of objects
         Raises:
               QueueEmpty when no more objects are available.
+
         """
         ...
 
@@ -73,11 +74,11 @@ class AsyncIterator(_AsyncIterator, ABC):
             raise StopAsyncIteration from e
 
     async def flatten(self) -> List:
-        """Flatten this iterator into a list of objects"""
+        """Flatten this iterator into a list of objects."""
         return [elem async for elem in self]
 
     async def search(self, target_id: "Snowflake_Type") -> bool:
-        """Search the iterator for an object with the given ID"""
+        """Search the iterator for an object with the given ID."""
         target_id = to_snowflake(target_id)
 
         if target_id in [o.id for o in self._retrieved_objects]:

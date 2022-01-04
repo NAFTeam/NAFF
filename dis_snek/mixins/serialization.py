@@ -40,6 +40,7 @@ class DictSerializationMixin:
 
         returns:
             The processed dictionary. Ready to be converted into object class.
+
         """
         return data
 
@@ -50,6 +51,7 @@ class DictSerializationMixin:
 
         parameters:
             data: The json data received from discord api.
+
         """
         data = cls._process_dict(data)
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
@@ -61,13 +63,12 @@ class DictSerializationMixin:
 
         parameters:
             data: The json data received from discord api.
+
         """
         return [cls.from_dict(data) for data in datas]
 
     def update_from_dict(self, data):
-        """
-        Updates object attribute(s) with new json data received from discord api.
-        """
+        """Updates object attribute(s) with new json data received from discord api."""
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
@@ -76,9 +77,7 @@ class DictSerializationMixin:
         return self
 
     def _check_object(self) -> None:
-        """
-        Logic to check object properties just before export to json data for sending to discord api.
-        """
+        """Logic to check object properties just before export to json data for sending to discord api."""
         pass
 
     def to_dict(self) -> Dict[str, Any]:
@@ -87,6 +86,7 @@ class DictSerializationMixin:
 
         returns:
             The exported dictionary.
+
         """
         self._check_object()
         return to_dict(self)

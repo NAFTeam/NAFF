@@ -19,6 +19,7 @@ class ReactionRequests:
             channel_id: The channel this is taking place in
             message_id: The message to create a a reaction on
             emoji: The emoji to use (format: `name:id`)
+
         """
         return await self.request(
             Route(
@@ -34,12 +35,13 @@ class ReactionRequests:
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str
     ) -> None:
         """
-        Remove client's reaction from a message
+        Remove client's reaction from a message.
 
         parameters:
             channel_id: The channel this is taking place in.
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
+
         """
         return await self.request(
             Route(
@@ -55,13 +57,14 @@ class ReactionRequests:
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str, user_id: "Snowflake_Type"
     ) -> None:
         """
-        Remove user's reaction from a message
+        Remove user's reaction from a message.
 
         parameters:
             channel_id: The channel this is taking place in
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
             user_id: The user to remove reaction of.
+
         """
         return await self.request(
             Route(
@@ -76,12 +79,13 @@ class ReactionRequests:
 
     async def clear_reaction(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", emoji: str) -> None:
         """
-        Remove specific reaction from a message
+        Remove specific reaction from a message.
 
         parameters:
             channel_id: The channel this is taking place in.
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
+
         """
         return await self.request(
             Route(
@@ -100,6 +104,7 @@ class ReactionRequests:
         parameters:
             channel_id: The channel this is taking place in.
             message_id: The message to clear reactions from.
+
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}/reactions"))
 
@@ -112,12 +117,13 @@ class ReactionRequests:
         after: "Snowflake_Type" = MISSING,
     ) -> list:
         """
-        Gets specific reaction from a message
+        Gets specific reaction from a message.
 
         parameters:
             channel_id: The channel this is taking place in.
             message_id: The message to get the reaction.
             emoji: The emoji to get. (format: `name:id`)
+
         """
         return await self.request(
             Route(

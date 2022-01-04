@@ -13,11 +13,11 @@ Snowflake_Type = Union[int, str, "SnowflakeObject", SupportsInt]
 
 def to_snowflake(snowflake: Snowflake_Type) -> int:
     """
-    Helper function to convert something into correct Discord snowflake int, gives more helpful errors
-    Use internally to sanitize user input or in user-facing APIs (a must)
-    For Discord-API - facing code, just int() is sufficient
-    """
+    Helper function to convert something into correct Discord snowflake int, gives more helpful errors Use internally to sanitize user input or in user- facing APIs (a must).
 
+    For Discord-API - facing code, just int() is sufficient
+
+    """
     try:
         snowflake = int(snowflake)
     except TypeError as e:
@@ -68,7 +68,9 @@ class SnowflakeObject:
     @property
     def created_at(self) -> "Timestamp":
         """
-        Returns a timestamp representing the date-time this discord object was created
+        Returns a timestamp representing the date-time this discord object was created.
+
         :return:
+
         """
         return Timestamp.from_snowflake(self.id)

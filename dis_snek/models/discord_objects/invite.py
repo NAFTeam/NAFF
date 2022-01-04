@@ -47,15 +47,15 @@ class Invite(ClientObject):
 
     @property
     def channel(self) -> "TYPE_GUILD_CHANNEL":
-        """the channel the invite is for"""
+        """The channel the invite is for."""
         return self._client.cache.channel_cache.get(self._channel_id)
 
     def inviter(self) -> "Member":
-        """the user that created the invite"""
+        """The user that created the invite."""
         return self._client.cache.guild_cache.get(self._inviter_id) if self._inviter_id else None
 
     def target_user(self) -> "Member":
-        """the user whose stream to display for this voice channel stream invite"""
+        """The user whose stream to display for this voice channel stream invite."""
         return self._client.cache.guild_cache.get(self._target_user_id) if self._inviter_id else None
 
     @classmethod

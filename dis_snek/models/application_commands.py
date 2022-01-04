@@ -61,6 +61,7 @@ class OptionTypes(IntEnum):
 
         returns:
             OptionType or None
+
         """
         if issubclass(t, str):
             return cls.STRING
@@ -113,6 +114,7 @@ class Permission:
         guild_id: The guild this permission belongs to
         type: The type of id (user or role)
         permission: The state of permission. ``True`` to allow, ``False``, to disallow.
+
     """
 
     id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
@@ -126,6 +128,7 @@ class Permission:
 
         returns:
             Representation of this object
+
         """
         data = attr.asdict(self)
         data.pop("guild_id", None)
@@ -145,6 +148,7 @@ class InteractionCommand(BaseCommand):
         permissions: Map of guild id and its respective list of permissions to apply.
         cmd_id: The id of this command given by discord.
         callback: The coroutine to callback when this interaction is received.
+
     """
 
     name: str = attr.ib(metadata=docs("1-32 character name") | no_export_meta)
@@ -181,7 +185,7 @@ class InteractionCommand(BaseCommand):
 
     @property
     def resolved_name(self):
-        """A representation of this interaction's name"""
+        """A representation of this interaction's name."""
         return self.name
 
     def get_cmd_id(self, scope: "Snowflake_Type"):
@@ -192,7 +196,7 @@ class InteractionCommand(BaseCommand):
         return False
 
     async def _permission_enforcer(self, ctx: "Context") -> bool:
-        """A check that enforces Discord permissions"""
+        """A check that enforces Discord permissions."""
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
         for perm in self.permissions or []:
             if perm.type == PermissionTypes.ROLE:
@@ -219,6 +223,7 @@ class ContextMenu(InteractionCommand):
     parameters:
         name: The name of this entry.
         type: The type of entry (user or message).
+
     """
 
     name: str = attr.ib(metadata=docs("1-32 character name"))
@@ -248,6 +253,7 @@ class SlashCommandChoice(DictSerializationMixin):
     parameters:
         name: The name the user will see
         value: The data sent to your code when this choice is used
+
     """
 
     name: str = attr.ib()
@@ -268,6 +274,7 @@ class SlashCommandOption(DictSerializationMixin):
         channel_types: The channel types permitted. The option needs to be a channel
         min_value: The minimum value permitted. The option needs to be an integer or float
         max_value: The maximum value permitted. The option needs to be an integer or float
+
     """
 
     name: str = attr.ib()
@@ -284,8 +291,8 @@ class SlashCommandOption(DictSerializationMixin):
     def _name_validator(self, attribute: str, value: str) -> None:
         if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
             raise ValueError(
-                f"Options names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
-            )  # noqa: W605
+                f"Options names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
+            )
 
     @description.validator
     def _description_validator(self, attribute: str, value: str) -> None:
@@ -398,8 +405,8 @@ class SlashCommand(InteractionCommand):
         if value:
             if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
                 raise ValueError(
-                    f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"
-                )  # noqa: W605
+                    f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
+                )
 
     @description.validator
     @group_description.validator
@@ -425,7 +432,7 @@ class SlashCommand(InteractionCommand):
                 raise TypeError("Options attribute must be either None or a list of options")
 
     def autocomplete(self, option_name: str):
-        """A decorator to declare a coroutine as an option autocomplete"""
+        """A decorator to declare a coroutine as an option autocomplete."""
 
         def wrapper(call: Callable[..., Coroutine]):
             if not asyncio.iscoroutinefunction(call):
@@ -514,6 +521,7 @@ def slash_command(
 
     returns:
         SlashCommand Object
+
     """
 
     def wrapper(func) -> SlashCommand:
@@ -577,6 +585,7 @@ def subcommand(
 
     Returns:
         A SlashCommand object
+
     """
 
     def wrapper(func) -> SlashCommand:
@@ -613,7 +622,7 @@ def context_menu(
     permissions: Optional[List[Union[Permission, Dict]]] = None,
 ):
     """
-    A decorator to declare a coroutine as a Context Menu
+    A decorator to declare a coroutine as a Context Menu.
 
     parameters:
         name: 1-32 character name of the context menu
@@ -624,6 +633,7 @@ def context_menu(
 
     returns:
         ContextMenu object
+
     """
 
     def wrapper(func) -> ContextMenu:
@@ -659,6 +669,7 @@ def component_callback(*custom_id: str):
 
     Args:
         custom_id: The custom ID of the component to wait for
+
     """
 
     def wrapper(func) -> ComponentCommand:
@@ -732,6 +743,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
 
     parameters:
         *permission: The permissions to apply to this command
+
     """
 
     def wrapper(func):
@@ -748,7 +760,8 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
 
 def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
     """
-    A decorator to add an auto defer to a application command
+    A decorator to add an auto defer to a application command.
+
     Args:
         ephemeral: Should the command be deferred as ephemeral
         time_until_defer: How long to wait before deferring automatically
@@ -765,9 +778,11 @@ def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
 
 
 def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, InteractionCommand]]) -> dict:
-    """Convert the command list into a format that would be accepted by discord
+    """
+    Convert the command list into a format that would be accepted by discord.
 
     `Snake.interactions` should be the variable passed to this
+
     """
     cmd_bases = {}  # {cmd_base: [commands]}
     """A store of commands organised by their base command"""
@@ -880,6 +895,7 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
 
     Returns:
         Boolean indicating if a sync is needed
+
     """
     if not remote_cmd:
         # No remote version, command must be new

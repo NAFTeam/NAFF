@@ -20,12 +20,13 @@ class EmojiRequests:
 
         Returns:
             List of emoji objects
+
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/emojis"))
 
     async def get_guild_emoji(self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type") -> dict:
         """
-        Get a specific guild emoji object
+        Get a specific guild emoji object.
 
         parameters:
             guild_id: The ID of the guild to query
@@ -33,6 +34,7 @@ class EmojiRequests:
 
         Returns:
             Emoji object
+
         """
         data = await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))
         if data:
@@ -52,6 +54,7 @@ class EmojiRequests:
 
         Returns:
             The created emoji object
+
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), data=payload, reason=reason)
 
@@ -69,6 +72,7 @@ class EmojiRequests:
 
         Returns:
             The updated emoji object
+
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/emojis/{emoji_id}"), data=payload, reason=reason)
 
@@ -82,5 +86,6 @@ class EmojiRequests:
             guild_id: The ID of the guild
             emoji_id: The ID of the emoji to update
             reason: The reason for this deletion
+
         """
         await self.request(Route("DELETE", f"/guilds/{guild_id}/emojis/{emoji_id}"), reason=reason)

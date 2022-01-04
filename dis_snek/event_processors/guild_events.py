@@ -18,10 +18,11 @@ class GuildEvents(EventMixinTemplate):
 
         Args:
             event: raw guild create event
+
         """
         guild = self.cache.place_guild_data(event.data)
 
-        self.user._guild_ids.add(to_snowflake(event.data.get("id")))
+        self.user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
 
         self._guild_event.set()
 

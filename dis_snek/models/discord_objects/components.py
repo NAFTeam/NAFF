@@ -18,7 +18,10 @@ if TYPE_CHECKING:
 
 class BaseComponent(DictSerializationMixin):
     """
-    A base component class. This should never be instantiated.
+    A base component class.
+
+    This should never be instantiated.
+
     """
 
     def __init__(self) -> None:
@@ -38,7 +41,10 @@ class BaseComponent(DictSerializationMixin):
 
 class InteractiveComponent(BaseComponent):
     """
-    A base interactive component class. This should never be instantiated.
+    A base interactive component class.
+
+    This should never be instantiated.
+
     """
 
     def __eq__(self, other: Any) -> bool:
@@ -51,7 +57,7 @@ class InteractiveComponent(BaseComponent):
 @attr.s(slots=True, eq=False)
 class Button(InteractiveComponent):
     """
-    Represents a discord ui button
+    Represents a discord ui button.
 
     Attributes:
         style optional[ButtonStyles, int]: Buttons come in a variety of styles to convey different types of actions.
@@ -60,6 +66,7 @@ class Button(InteractiveComponent):
         custom_id Optional[str]: A developer-defined identifier for the button, max 100 characters.
         url Optional[str]: A url for link-style buttons.
         disabled bool: Disable the button and make it not interactable, default false.
+
     """
 
     style: Union[ButtonStyles, int] = attr.ib()
@@ -108,6 +115,7 @@ class SelectOption(BaseComponent):
         description Optional[str]: A description of this option
         emoji Optional[Union[Emoji, dict, str]: An emoji to show in this select option
         default bool: Is this option selected by default
+
     """
 
     label: str = attr.ib(validator=str_validator)
@@ -137,7 +145,6 @@ class Select(InteractiveComponent):
     """
     Represents a select component.
 
-
     Attributes:
         options List[dict]: The choices in the select, max 25.
         custom_id str: A developer-defined identifier for the button, max 100 characters.
@@ -146,6 +153,7 @@ class Select(InteractiveComponent):
         max_values Optional[int]: The maximum number of items that can be chosen. (default 1, max 25)
         disabled bool: Disable the select and make it not intractable, default false.
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
+
     """
 
     options: List[Union[SelectOption, Dict]] = attr.ib(factory=list)
@@ -203,11 +211,12 @@ class Select(InteractiveComponent):
 @attr.s(slots=True, init=False)
 class ActionRow(BaseComponent):
     """
-    Represents an action row
+    Represents an action row.
 
     Attributes:
         components List[Union[dict, Select, Button]]: The components within this action row
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
+
     """
 
     _max_items = ACTION_ROW_MAX_ITEMS
@@ -247,10 +256,11 @@ class ActionRow(BaseComponent):
 
     def add_components(self, *components: Union[dict, Button, Select]):
         """
-        Add one or more component(s) to this action row
+        Add one or more component(s) to this action row.
 
         Args:
             components: The components to add
+
         """
         for c in components:
             self.components.append(self._component_checks(c))
@@ -272,6 +282,7 @@ def process_components(
 
     Raises:
         ValueError: Invalid components
+
     """
     if not components:
         # Its just empty, so nothing to process.
@@ -308,7 +319,7 @@ def process_components(
 
 def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) -> List[ActionRow]:
     """
-    A helper function that spreads your components into `ActionRow`s of a set size
+    A helper function that spreads your components into `ActionRow`s of a set size.
 
     Args:
         *components: The components to spread, use `None` to explicit start a new row
@@ -319,6 +330,7 @@ def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) 
 
     Raises:
         ValueError: Too many or few components or rows
+
     """
     # todo: incorrect format errors
     if not components or len(components) > 25:
@@ -365,6 +377,7 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
 
     Raises:
         ValueError: Unknown component type
+
     """
     if isinstance(component, str):
         yield component

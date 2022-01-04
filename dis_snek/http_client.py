@@ -1,6 +1,4 @@
-"""
-This file handles the interaction with discords http endpoints.
-"""
+"""This file handles the interaction with discords http endpoints."""
 import asyncio
 import datetime
 import logging
@@ -93,6 +91,7 @@ class HTTPClient(
         parameters:
             header: the header of the response
         :return:
+
         """
         return {
             "bucket": header.get("x-ratelimit-bucket"),
@@ -110,12 +109,13 @@ class HTTPClient(
         **kwargs: Dict[str, Any],
     ) -> Any:
         """
-        Make a request to discord
+        Make a request to discord.
 
         parameters:
             route: The route to take
             json: A json payload to send in the request
             reason: Attach a reason to this request, used for audit logs
+
         """
         # Assemble headers
         headers: Dict[str, str] = {"User-Agent": self.user_agent}
@@ -238,6 +238,7 @@ class HTTPClient(
             token: the token to use
         returns:
             The currently logged in bot's data
+
         """
         self.__session = ClientSession(connector=self.connector)
         self.token = token
@@ -267,6 +268,7 @@ class HTTPClient(
 
         parameters:
             url: the url to connect to
+
         """
         return await self.__session.ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0

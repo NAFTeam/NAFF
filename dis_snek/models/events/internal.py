@@ -1,4 +1,5 @@
-"""These are events dispatched by the client. This is intended as a reference so you know what data to expect for each event
+"""
+These are events dispatched by the client. This is intended as a reference so you know what data to expect for each event.
 
 ??? Hint "Example Usage:"
     The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
@@ -17,6 +18,7 @@
     ```
 !!! warning
     While all of these events are documented, not all of them are used, currently.
+
 """
 import re
 from typing import TYPE_CHECKING
@@ -37,7 +39,7 @@ _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
 @attr.s()
 class BaseEvent:
-    """A base event that all other events inherit from"""
+    """A base event that all other events inherit from."""
 
     override_name: str = attr.ib(kw_only=True, default=None)
     bot: "Snake" = attr.ib(kw_only=True, default=MISSING)
@@ -50,14 +52,14 @@ class BaseEvent:
 
 @attr.s()
 class GuildEvent:
-    """A base event that adds guild_id"""
+    """A base event that adds guild_id."""
 
     guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"), converter=to_snowflake)
 
 
 @attr.s(slots=True)
 class Login(BaseEvent):
-    """The bot has just logged in"""
+    """The bot has just logged in."""
 
 
 @attr.s(slots=True)
@@ -67,7 +69,7 @@ class Connect(BaseEvent):
 
 @attr.s(slots=True)
 class Resume(BaseEvent):
-    """The bot has resumed its connection to the discord Gateway"""
+    """The bot has resumed its connection to the discord Gateway."""
 
 
 @attr.s(slots=True)
@@ -77,41 +79,46 @@ class Disconnect(BaseEvent):
 
 @attr.s(slots=True)
 class Startup(BaseEvent):
-    """The client is now ready for the first time
+    """
+    The client is now ready for the first time.
 
-    Use this for tasks you want to do upon login, instead of ready, as this will only be called once.
+    Use this for tasks you want to do upon login, instead of ready, as
+    this will only be called once.
+
     """
 
 
 @attr.s(slots=True)
 class Ready(BaseEvent):
-    """The client is now ready.
+    """
+    The client is now ready.
 
     Note:
         Don't use this event for things that must only happen once, on startup, as this event may be called multiple times.
         Instead, use the `Startup` event
+
     """
 
 
 @attr.s(slots=True)
 class WebsocketReady(BaseEvent):
-    """The gateway has reported that it is ready"""
+    """The gateway has reported that it is ready."""
 
     data: dict = attr.ib(metadata=docs("The data from the ready event"))
 
 
 @attr.s(slots=True)
 class Component(BaseEvent):
-    """Dispatched when a user uses a Component"""
+    """Dispatched when a user uses a Component."""
 
     context: "ComponentContext" = attr.ib(metadata=docs("The context of the interaction"))
 
 
 @attr.s(slots=True)
 class Button(Component):
-    """Dispatched when a user uses a Button"""
+    """Dispatched when a user uses a Button."""
 
 
 @attr.s(slots=True)
 class Select(Component):
-    """Dispatched when a user uses a Select"""
+    """Dispatched when a user uses a Select."""

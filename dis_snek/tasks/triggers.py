@@ -22,12 +22,14 @@ class BaseTrigger(ABC):
         If no datetime can be determined, return None
         Returns:
             Datetime if one can be determined
+
         """
         ...
 
 
 class IntervalTrigger(BaseTrigger):
-    """Trigger the task every set interval
+    """
+    Trigger the task every set interval.
 
     Arguments:
         seconds Union[int, float]: How many seconds between intervals
@@ -35,6 +37,7 @@ class IntervalTrigger(BaseTrigger):
         hours Union[int, float]: How many hours between intervals
         days Union[int, float]: How many days between intervals
         weeks Union[int, float]: How many weeks between intervals
+
     """
 
     _t = Union[int, float]
@@ -51,10 +54,12 @@ class IntervalTrigger(BaseTrigger):
 
 
 class DateTrigger(BaseTrigger):
-    """Trigger the task once, when the specified datetime is reached
+    """
+    Trigger the task once, when the specified datetime is reached.
 
     Arguments:
         target_datetime datetime: A datetime representing the date/time to run this task
+
     """
 
     def __init__(self, target_datetime: datetime):
@@ -67,13 +72,15 @@ class DateTrigger(BaseTrigger):
 
 
 class TimeTrigger(BaseTrigger):
-    """Trigger the task every day, at a specified (24 hour clock) time
+    """
+    Trigger the task every day, at a specified (24 hour clock) time.
 
     Arguments:
         hour int: The hour of the day (24 hour clock)
         minute int: The minute of the hour
         seconds int: The seconds of the minute
         utc bool: If this time is in UTC
+
     """
 
     def __init__(self, hour: int = 0, minute: int = 0, seconds: Union[int, float] = 0, utc: bool = True):
@@ -95,7 +102,7 @@ class TimeTrigger(BaseTrigger):
 
 
 class OrTrigger(BaseTrigger):
-    """Trigger a task when any sub-trigger is fulfilled"""
+    """Trigger a task when any sub-trigger is fulfilled."""
 
     def __init__(self, *trigger: BaseTrigger):
         self.triggers: List[BaseTrigger] = list(trigger)

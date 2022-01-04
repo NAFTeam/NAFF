@@ -51,7 +51,6 @@ class MemberRequests:
             limit: The number of members to return
 
         """
-
         return await self.request(
             Route("GET", f"/guilds/{guild_id}/members/search"), params=dict(query=query, limit=limit)
         )
@@ -82,6 +81,7 @@ class MemberRequests:
             reason: An optional reason for the audit log
         returns:
             The updated member object
+
         """
         if communication_disabled_until is not MISSING:
             if isinstance(communication_disabled_until, Timestamp):
@@ -117,6 +117,7 @@ class MemberRequests:
             user_id: The ID of the user
             role_id: The ID of the role to add
             reason: The reason for this action
+
         """
         return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
 
@@ -135,6 +136,7 @@ class MemberRequests:
             user_id: The ID of the user
             role_id: The ID of the role to remove
             reason: The reason for this action
+
         """
         return await self.request(
             Route("DELETE", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"), reason=reason

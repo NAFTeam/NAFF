@@ -18,6 +18,7 @@ from dis_snek.errors import (
     Forbidden,
     InteractionMissingAccess,
     HTTPException,
+    NotFound,
 )
 from dis_snek.event_processors import *
 from dis_snek.event_processors._template import Processor
@@ -263,47 +264,47 @@ class Snake(
 
     @property
     def is_closed(self) -> bool:
-        """Returns True if the bot has closed"""
+        """Returns True if the bot has closed."""
         return self._closed
 
     @property
     def is_ready(self):
-        """Returns True if the bot is ready"""
+        """Returns True if the bot is ready."""
         return self._ready.is_set()
 
     @property
     def latency(self) -> float:
-        """Returns the latency of the websocket connection"""
+        """Returns the latency of the websocket connection."""
         return self._connection_state.latency
 
     @property
     def average_latency(self) -> float:
-        """Returns the average latency of the websocket connection"""
+        """Returns the average latency of the websocket connection."""
         return self._connection_state.average_latency
 
     @property
     def start_time(self) -> datetime:
-        """The start time of the bot"""
+        """The start time of the bot."""
         return self._connection_state.start_time
 
     @property
     def intents(self) -> Intents:
-        """The intents being used by this bot"""
+        """The intents being used by this bot."""
         return self._connection_state.intents
 
     @property
     def user(self) -> SnakeBotUser:
-        """Returns the bot's user"""
+        """Returns the bot's user."""
         return self._user
 
     @property
     def app(self) -> Application:
-        """Returns the bots application"""
+        """Returns the bots application."""
         return self._app
 
     @property
     def owner(self) -> Optional["User"]:
-        """Returns the bot's owner'"""
+        """Returns the bot's owner'."""
         try:
             return self.app.owner
         except TypeError:
@@ -315,17 +316,22 @@ class Snake(
 
     @property
     def status(self) -> Status:
-        """Get the status of the bot. IE online, afk, dnd"""
+        """
+        Get the status of the bot.
+
+        IE online, afk, dnd
+
+        """
         return self._status
 
     @property
     def activity(self) -> Activity:
-        """Get the activity of the bot"""
+        """Get the activity of the bot."""
         return self._activity
 
     @property
     def application_commands(self):
-        """a list of all application commands registered within the bot"""
+        """A list of all application commands registered within the bot."""
         commands = []
         for scope in self.interactions.keys():
             for cmd in self.interactions[scope].values():
@@ -367,7 +373,8 @@ class Snake(
             log.warning("No Processors are loaded! This means no events will be processed!")
 
     async def get_prefix(self, message: Message) -> str:
-        """A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
+        """
+        A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
         !!! note
             To easily override this method, simply use the `get_prefix` parameter when instantiating the client
@@ -377,15 +384,17 @@ class Snake(
 
         Returns:
             A string to use as a prefix, by default will return `client.default_prefix`
+
         """
         return self.default_prefix
 
     async def login(self, token):
         """
-        Login to discord
+        Login to discord.
 
         Args:
             token str: Your bot's token
+
         """
         # i needed somewhere to put this call,
         # login will always run after initialisation
@@ -426,6 +435,7 @@ class Snake(
         By default it will format and print them to console
 
         Override this to change error handling behaviour
+
         """
         out = traceback.format_exc()
 
@@ -435,7 +445,7 @@ class Snake(
                 for i, e in enumerate(errors):
                     errors[i] = f'{e.get("code")}: {e.get("message")}'
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
-            except Exception:  # noqa: S110
+            except Exception:  # noqa : S110
                 pass
 
         print(
@@ -445,21 +455,23 @@ class Snake(
 
     async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
         """
-        Catches all errors dispatched by commands
+        Catches all errors dispatched by commands.
 
         By default it will call `Snake.on_error`
 
         Override this to change error handling behavior
+
         """
         return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
 
     async def on_command(self, ctx: Context) -> None:
         """
-        Called *after* any command is ran
+        Called *after* any command is ran.
 
         By default, it will simply log the command, override this to change that behaviour
         Args:
             ctx: The context of the command that was called
+
         """
         if isinstance(ctx, MessageContext):
             symbol = "@"
@@ -471,32 +483,35 @@ class Snake(
 
     async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
         """
-        Catches all errors dispatched by components
+        Catches all errors dispatched by components.
 
         By default it will call `Snake.on_error`
 
         Override this to change error handling behavior
+
         """
         return await self.on_error(f"Component Callback for {ctx.custom_id}", error, *args, **kwargs)
 
     async def on_component(self, ctx: ComponentContext) -> None:
         """
-        Called *after* any component callback is ran
+        Called *after* any component callback is ran.
 
         By default, it will simply log the component use, override this to change that behaviour
         Args:
             ctx: The context of the component that was called
+
         """
         symbol = "¢"
         log.info(f"Component Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
         """
-        Catches all errors dispatched by autocompletion options
+        Catches all errors dispatched by autocompletion options.
 
         By default it will call `Snake.on_error`
 
         Override this to change error handling behavior
+
         """
         return await self.on_error(
             f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs
@@ -504,13 +519,13 @@ class Snake(
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
         """
-        Called *after* any autocomplete callback is ran
+        Called *after* any autocomplete callback is ran.
 
         By default, it will simply log the autocomplete callback, override this to change that behaviour
         Args:
             ctx: The context of the command that was called
-        """
 
+        """
         symbol = "$"
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
@@ -525,6 +540,7 @@ class Snake(
 
         Args:
             event: The websocket ready packet
+
         """
         data = event.data
         expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
@@ -568,6 +584,7 @@ class Snake(
 
         Args:
             token str: Your bot's token
+
         """
         try:
             self.loop.run_until_complete(self.login(token))
@@ -585,6 +602,7 @@ class Snake(
 
         Args:
             event: The event to be dispatched.
+
         """
         listeners = self.listeners.get(event.resolved_name, [])
         if listeners:
@@ -626,6 +644,7 @@ class Snake(
 
         Returns:
             The event object.
+
         """
         if event not in self.waits:
             self.waits[event] = []
@@ -658,8 +677,8 @@ class Snake(
 
         Raises:
             `asyncio.TimeoutError` if timed out
-        """
 
+        """
         if not (messages or components):
             raise ValueError("You must specify messages or components (or both)")
 
@@ -689,12 +708,11 @@ class Snake(
 
     def fallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
-        A decorator to be used in situations that snek can't automatically hook your listeners.
-        Ideally, the standard listen decorator should be used, not this.
-
+        A decorator to be used in situations that snek can't automatically hook your listeners. Ideally, the standard listen decorator should be used, not this.
 
         Arguments:
             event_name: The event name to use, if not the coroutine name
+
         """
 
         def wrapper(coro: Callable[..., Coroutine]):
@@ -718,10 +736,11 @@ class Snake(
 
     def add_listener(self, listener: Listener):
         """
-        Add a listener for an event, if no event is passed, one is determined
+        Add a listener for an event, if no event is passed, one is determined.
 
         Args:
             listener Listener: The listener to add to the client
+
         """
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
@@ -733,6 +752,7 @@ class Snake(
 
         Args:
             command InteractionCommand: The command to add
+
         """
         if self.debug_scope:
             command.scopes = [self.debug_scope]
@@ -745,7 +765,7 @@ class Snake(
                 raise ValueError(f"Duplicate Command! {scope}::{old_cmd.resolved_name}")
 
             if self.enforce_interaction_perms:
-                command.checks.append(command._permission_enforcer)  # noqa
+                command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
 
@@ -755,6 +775,7 @@ class Snake(
 
         Args:
             command InteractionCommand: The command to add
+
         """
         if command.name not in self.commands:
             self.commands[command.name] = command
@@ -762,10 +783,12 @@ class Snake(
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
     def add_component_callback(self, command: ComponentCommand):
-        """Add a component callback to the client
+        """
+        Add a component callback to the client.
 
         Args:
             command: The command to add
+
         """
         for listener in command.listeners:
             # I know this isn't an ideal solution, but it means we can lookup callbacks with O(1)
@@ -776,7 +799,7 @@ class Snake(
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
     def _gather_commands(self) -> None:
-        """Gathers commands from __main__ and self"""
+        """Gathers commands from __main__ and self."""
 
         def process(_cmds):
 
@@ -805,8 +828,10 @@ class Snake(
         """
         Initialise slash commands.
 
-        If `sync_interactions` this will submit all registered slash commands to discord.
-        Otherwise, it will get the list of interactions and cache their scopes.
+        If `sync_interactions` this will submit all registered slash
+        commands to discord. Otherwise, it will get the list of
+        interactions and cache their scopes.
+
         """
         # allow for cogs and main to share the same decorator
         try:
@@ -871,7 +896,7 @@ class Snake(
                     )
 
     async def synchronise_interactions(self) -> None:
-        """Synchronise registered interactions with discord"""
+        """Synchronise registered interactions with discord."""
         s = time.perf_counter()
         await self._cache_interactions()
 
@@ -1004,6 +1029,7 @@ class Snake(
 
         Returns:
             The command, if one with the given ID exists internally, otherwise None
+
         """
         scope = self._interaction_scopes.get(str(cmd_id), MISSING)
         cmd_id = int(cmd_id)  # ensure int ID
@@ -1055,7 +1081,7 @@ class Snake(
         self, data: Union[dict, Message], interaction: bool = False
     ) -> Union[MessageContext, InteractionContext, ComponentContext, AutocompleteContext]:
         """
-        Return a context object based on data passed
+        Return a context object based on data passed.
 
         note:
             If you want to use custom context objects, this is the method to override. Your replacement must take the same arguments as this, and return a Context-like object.
@@ -1066,6 +1092,7 @@ class Snake(
 
         returns:
             Context object
+
         """
         # this line shuts up IDE warnings
         cls: Union[MessageContext, ComponentContext, InteractionContext, AutocompleteContext]
@@ -1098,6 +1125,7 @@ class Snake(
 
         Args:
             raw interaction event
+
         """
         interaction_data = event.data
 
@@ -1210,7 +1238,8 @@ class Snake(
 
     def get_scale(self, name) -> Optional[Scale]:
         """
-        Get a scale
+        Get a scale.
+
         Args:
             name: The name of the scale, or the name of it's extension
 
@@ -1226,20 +1255,22 @@ class Snake(
 
     def grow_scale(self, file_name: str, package: str = None) -> None:
         """
-        A helper method to load a scale
+        A helper method to load a scale.
 
         Args:
             file_name: The name of the file to load the scale from.
             package: The package this scale is in.
+
         """
         self.load_extension(file_name, package)
 
     def shed_scale(self, scale_name: str) -> None:
         """
-        Helper method to unload a scale
+        Helper method to unload a scale.
 
         Args:
             scale_name: The name of the scale to unload.
+
         """
         if scale := self.get_scale(scale_name):
             return self.unload_extension(inspect.getmodule(scale).__name__)
@@ -1252,6 +1283,7 @@ class Snake(
 
         Args:
             scale_name: The name of the scale to reload
+
         """
         self.shed_scale(scale_name)
         self.grow_scale(scale_name)
@@ -1263,6 +1295,7 @@ class Snake(
         Args:
             name: The name of the extension.
             package: The package the extension is in
+
         """
         name = importlib.util.resolve_name(name, package)
         if name in self.__extensions:
@@ -1283,11 +1316,12 @@ class Snake(
 
     def unload_extension(self, name, package=None):
         """
-        unload an extension.
+        Unload an extension.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
+
         """
         name = importlib.util.resolve_name(name, package)
         module = self.__extensions.get(name)
@@ -1309,12 +1343,12 @@ class Snake(
 
     def reload_extension(self, name, package=None):
         """
-        Helper method to reload an extension.
-        Simply unloads, then loads the extension.
+        Helper method to reload an extension. Simply unloads, then loads the extension.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
+
         """
         name = importlib.util.resolve_name(name, package)
         module = self.__extensions.get(name)
@@ -1328,9 +1362,9 @@ class Snake(
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
 
-    async def get_guild(self, guild_id: "Snowflake_Type") -> Guild:
+    async def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
         """
-        Get a guild
+        Get a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1340,13 +1374,17 @@ class Snake(
             guild_id: The ID of the guild to get
 
         Returns:
-            Guild Object
-        """
-        return await self.cache.get_guild(guild_id)
+            Guild Object if found, otherwise None
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> "TYPE_ALL_CHANNEL":
         """
-        Get a channel
+        try:
+            return await self.cache.get_guild(guild_id)
+        except NotFound:
+            return None
+
+    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+        """
+        Get a channel.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1356,13 +1394,17 @@ class Snake(
             channel_id: The ID of the channel to get
 
         Returns:
-            Channel Object
-        """
-        return await self.cache.get_channel(channel_id)
+            Channel Object if found, otherwise None
 
-    async def get_user(self, user_id: "Snowflake_Type") -> User:
         """
-        Get a user
+        try:
+            return await self.cache.get_channel(channel_id)
+        except NotFound:
+            return None
+
+    async def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+        """
+        Get a user.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1372,13 +1414,17 @@ class Snake(
             user_id: The ID of the user to get
 
         Returns:
-            User Object
-        """
-        return await self.cache.get_user(user_id)
+            User Object if found, otherwise None
 
-    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Member:
         """
-        Get a member from a guild
+        try:
+            return await self.cache.get_user(user_id)
+        except NotFound:
+            return None
+
+    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+        """
+        Get a member from a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1389,13 +1435,17 @@ class Snake(
             guild_id: The ID of the guild to get the member from
 
         Returns:
-            Member object
+            Member object if found, otherwise None
+
         """
-        return await self.cache.get_member(guild_id, user_id)
+        try:
+            return await self.cache.get_member(guild_id, user_id)
+        except NotFound:
+            return None
 
     async def get_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
-    ) -> "ScheduledEvent":
+    ) -> Optional["ScheduledEvent"]:
         """
         Get a scheduled event by id.
 
@@ -1403,21 +1453,48 @@ class Snake(
             event_id: The id of the scheduled event.
 
         returns:
-            The scheduled event.
+            The scheduled event if found, otherwise None
+
         """
-        scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
-        return ScheduledEvent.from_dict(scheduled_event_data, self)
+        try:
+            scheduled_event_data = await self.http.get_scheduled_event(guild_id, scheduled_event_id, with_user_count)
+            return ScheduledEvent.from_dict(scheduled_event_data, self)
+        except NotFound:
+            return None
 
-    async def get_sticker(self, sticker_id: "Snowflake_Type"):
-        sticker_data = await self.http.get_sticker(sticker_id)
-        return Sticker.from_dict(sticker_data, self)
+    async def get_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
+        """
+        Get a sticker by ID.
 
-    async def get_nitro_packs(self) -> List["StickerPack"]:
-        packs_data = await self.http.list_nitro_sticker_packs()
-        packs = []
-        for pack_data in packs_data:
-            packs.append(StickerPack.from_dict(pack_data, self))
-        return packs
+        Args:
+            sticker_id: The ID of the sticker.
+
+        Returns:
+            A sticker object if found, otherwise None
+
+        """
+        try:
+            sticker_data = await self.http.get_sticker(sticker_id)
+            return Sticker.from_dict(sticker_data, self)
+        except NotFound:
+            return None
+
+    async def get_nitro_packs(self) -> Optional[List["StickerPack"]]:
+        """
+        List the sticker packs available to Nitro subscribers.
+
+        Returns:
+            A list of StickerPack objects if found, otherwise returns None
+
+        """
+        try:
+            packs_data = await self.http.list_nitro_sticker_packs()
+            packs = []
+            for pack_data in packs_data:
+                packs.append(StickerPack.from_dict(pack_data, self))
+            return packs
+        except NotFound:
+            return None
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
@@ -1431,5 +1508,6 @@ class Snake(
 
         note::
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
+
         """
         return await self._connection_state.change_presence(status, activity)

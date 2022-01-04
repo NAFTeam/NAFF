@@ -107,9 +107,10 @@ class Color:
 
 class BrandColors(Color, Enum):
     """
-    A collection of colors complying to the Discord Brand specification
+    A collection of colors complying to the Discord Brand specification.
 
     https://discord.com/branding
+
     """
 
     BLURPLE = "#5865F2"
@@ -126,6 +127,7 @@ class MaterialColors(Color, Enum):
     A collection of material ui colors.
 
     https://www.materialpalette.com/
+
     """
 
     RED = "#F44336"
@@ -155,6 +157,7 @@ class FlatUIColors(Color, Enum):
     A collection of flat ui colours.
 
     https://materialui.co/flatuicolors
+
     """
 
     TURQUOISE = "#1ABC9C"

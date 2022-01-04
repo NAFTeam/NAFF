@@ -27,8 +27,7 @@ args_reg = re.compile(r"^\*\w")
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class BaseCommand(DictSerializationMixin):
     """
-    An object all commands inherit from.
-    Outlines the basic structure of a command, and handles checks.
+    An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
 
     attributes:
         scale: The scale this command belongs to.
@@ -87,6 +86,7 @@ class BaseCommand(DictSerializationMixin):
             context: The context of this command
             args: Any
             kwargs: Any
+
         """
         try:
             if await self._can_run(context):
@@ -176,6 +176,7 @@ class BaseCommand(DictSerializationMixin):
 
         parameters:
             context: The context of the command
+
         """
         max_conc_acquired = False  # signals if a semaphore has been acquired, for exception handling
 
@@ -215,14 +216,14 @@ class BaseCommand(DictSerializationMixin):
         return call
 
     def pre_run(self, call: Callable[..., Coroutine]):
-        """A decorator to declare a coroutine as one that will be run before the command"""
+        """A decorator to declare a coroutine as one that will be run before the command."""
         if not asyncio.iscoroutinefunction(call):
             raise TypeError("pre_run must be coroutine")
         self.pre_run_callback = call
         return call
 
     def post_run(self, call: Callable[..., Coroutine]):
-        """A decorator to declare a coroutine as one that will be run after the command has"""
+        """A decorator to declare a coroutine as one that will be run after the command has."""
         if not asyncio.iscoroutinefunction(call):
             raise TypeError("post_run must be coroutine")
         self.post_run_callback = call
@@ -231,9 +232,7 @@ class BaseCommand(DictSerializationMixin):
 
 @attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
 class MessageCommand(BaseCommand):
-    """
-    Represents a command triggered by standard message.
-    """
+    """Represents a command triggered by standard message."""
 
     name: str = attr.ib(metadata=docs("The name of the command"))
 
@@ -248,6 +247,7 @@ def message_command(
         name: The name of the command, defaults to the name of the coroutine
     returns:
         Message Command Object
+
     """
 
     def wrapper(func):
@@ -265,6 +265,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]):
 
     parameters:
         check: A coroutine as a check for this command
+
     """
 
     def wrapper(coro):
@@ -281,12 +282,13 @@ def check(check: Callable[["Context"], Awaitable[bool]]):
 
 def cooldown(bucket: Buckets, rate: int, interval: float):
     """
-    Add a cooldown to a command
+    Add a cooldown to a command.
 
     Args:
         bucket: The bucket used to track cooldowns
         rate: How many commands may be ran per interval
         interval: How many seconds to wait for a cooldown
+
     """
 
     def wrapper(coro: Callable[..., Coroutine]):
@@ -306,6 +308,7 @@ def max_concurrency(bucket: Buckets, concurrent: int):
     Args:
         bucket: The bucket to enforce the maximum within
         concurrent: The maximum number of concurrent instances to allow
+
     """
 
     def wrapper(coro: Callable[..., Coroutine]):

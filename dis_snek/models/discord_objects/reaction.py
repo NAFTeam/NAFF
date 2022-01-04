@@ -20,12 +20,13 @@ if TYPE_CHECKING:
 
 class ReactionUsers(AsyncIterator):
     """
-    An async iterator for searching through a channel's history
+    An async iterator for searching through a channel's history.
 
     Args:
         channel_id: The ID of the channel to search through
         limit: The maximum number of users to return (set to 0 for no limit)
         after: get users after this message ID
+
     """
 
     def __init__(self, reaction: "Reaction", limit=50, after=None):
@@ -78,5 +79,5 @@ class Reaction(ClientObject):
         return self._client.cache.channel_cache.get(self._channel_id)
 
     async def remove(self) -> None:
-        """Remove all this emoji's reactions from the message"""
+        """Remove all this emoji's reactions from the message."""
         await self._client.http.clear_reaction(self._channel_id, self._message_id, self.emoji.req_format)
