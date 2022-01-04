@@ -445,7 +445,7 @@ class Snake(
                 for i, e in enumerate(errors):
                     errors[i] = f'{e.get("code")}: {e.get("message")}'
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
-            except Exception:  # noqa: S110
+            except Exception:  # noqa : S110
                 pass
 
         print(
@@ -765,7 +765,7 @@ class Snake(
                 raise ValueError(f"Duplicate Command! {scope}::{old_cmd.resolved_name}")
 
             if self.enforce_interaction_perms:
-                command.checks.append(command._permission_enforcer)  # noqa
+                command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
 
