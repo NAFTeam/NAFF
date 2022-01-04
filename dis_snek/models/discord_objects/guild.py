@@ -295,6 +295,18 @@ class Guild(BaseGuild):
                 return role
         return None
 
+    async def get_member(self, member_id: "Snowflake_Type") -> Optional["Member"]:
+        """
+        Return the Member with the given discord ID
+
+        Args:
+            member_id: The ID of the member:
+        Returns:
+            Member object or None
+        """
+
+        return await self._client.cache.get_member(self.id, member_id)
+
     async def get_owner(self) -> "Member":
         # maybe precache owner instead of using `get_owner`
         return await self._client.cache.get_member(self.id, self._owner_id)
