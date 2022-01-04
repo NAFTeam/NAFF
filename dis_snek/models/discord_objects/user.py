@@ -163,7 +163,7 @@ class SnakeBotUser(User):
         if username:
             payload["username"] = username
         if avatar:
-            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa
+            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa : w0212
         elif avatar is None:
             payload["avatar"] = None
 
