@@ -305,7 +305,7 @@ class Guild(BaseGuild):
             Member object or None
         """
 
-        return await self._client.get_member(user_id=member_id, guild_id=self.id)
+        return await self._client.cache.get_member(self.id, member_id)
 
     async def get_owner(self) -> "Member":
         # maybe precache owner instead of using `get_owner`
