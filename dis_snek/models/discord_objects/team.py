@@ -49,6 +49,7 @@ class Team(DiscordObject):
     def is_in_team(self, user: Union["SnowflakeObject", "Snowflake_Type"]) -> bool:
         """
         Returns True if the passed user or ID is a member within the team.
+
         Args:
             user: The user or user ID to check
 

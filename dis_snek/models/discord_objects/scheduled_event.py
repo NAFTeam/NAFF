@@ -80,10 +80,11 @@ class ScheduledEvent(DiscordObject):
     @property
     async def creator(self) -> Optional["User"]:
         """
-        Returns the user who created this event
+        Returns the user who created this event.
 
-        !!! note:
-            Events made before October 25th, 2021 will not have a creator.
+        !!! note:     Events made before October 25th, 2021 will not
+        have a creator.
+
         """
         return await self._client.cache.get_user(self._creator_id) if self._creator_id else None
 
@@ -111,13 +112,13 @@ class ScheduledEvent(DiscordObject):
 
     @property
     def location(self) -> Optional[str]:
-        """Returns the external locatian of this event"""
+        """Returns the external locatian of this event."""
         if self.entity_type == ScheduledEventType.EXTERNAL:
             return self.entity_metadata["location"]
         return None
 
     async def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
-        """Returns the channel this event is scheduled in if it is scheduled in a channel"""
+        """Returns the channel this event is scheduled in if it is scheduled in a channel."""
         if self._channel_id:
             channel = await self._client.get_channel(self._channel_id)
             return channel
@@ -131,7 +132,7 @@ class ScheduledEvent(DiscordObject):
         after: Absent[Optional["Snowflake_Type"]] = MISSING,
     ) -> List[Union["Member", "User"]]:
         """
-        Get event users
+        Get event users.
 
         Args:
             limit: Discord defualts to 100
@@ -141,6 +142,7 @@ class ScheduledEvent(DiscordObject):
 
         !!! note:
             This method is paginated
+
         """
         event_users = await self._client.http.get_scheduled_event_users(
             self._guild_id, self.id, limit, with_member_data, before, after
@@ -157,10 +159,11 @@ class ScheduledEvent(DiscordObject):
 
     async def delete(self, reason: Absent[str] = MISSING) -> None:
         """
-        Deletes this event
+        Deletes this event.
 
         Args:
             reason: The reason for deleting this event
+
         """
         await self._client.http.delete_scheduled_event(self._guild_id, self.id, reason)
 
@@ -179,7 +182,7 @@ class ScheduledEvent(DiscordObject):
         reason: Absent[str] = MISSING,
     ):
         """
-        Edits this event
+        Edits this event.
 
         Args:
             name: The name of the event
@@ -200,8 +203,8 @@ class ScheduledEvent(DiscordObject):
                 `external_location` or `entity_metadata` with a location field must be provided
 
                 `end_time` must be provided
-        """
 
+        """
         if external_location is not MISSING:
             entity_metadata = dict(location=external_location)
 

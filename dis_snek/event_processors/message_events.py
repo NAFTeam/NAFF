@@ -17,6 +17,7 @@ class MessageEvents(EventMixinTemplate):
 
         Args:
             event: raw message event
+
         """
         msg = self.cache.place_message_data(event.data)
         if not msg._guild_id and event.data.get("guild_id"):
@@ -40,8 +41,10 @@ class MessageEvents(EventMixinTemplate):
     async def _on_raw_message_delete(self, event: RawGatewayEvent) -> None:
         """
         Process raw deletions and dispatch a processed deletion event.
+
         Args:
             event: raw message deletion event
+
         """
         message = await self.cache.get_message(
             event.data.get("channel_id"), event.data.get("id"), request_fallback=False
@@ -60,8 +63,8 @@ class MessageEvents(EventMixinTemplate):
 
         Args:
             event: raw message update event
-        """
 
+        """
         # a copy is made because the cache will update the original object in memory
         before = copy.copy(
             await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)

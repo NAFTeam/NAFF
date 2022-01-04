@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 class Application(DiscordObject):
     """
     Represents a discord application.
+
     Attributes:
         name str: The name of the application.
         icon str: The icon of the application
@@ -37,6 +38,7 @@ class Application(DiscordObject):
         slug str: if this application is a game sold on Discord, this field will be the URL slug that links to the store page
         cover_image str: the application's default rich presence invite cover image hash
         flags int: the application's public flags
+
     """
 
     name: str = attr.ib()

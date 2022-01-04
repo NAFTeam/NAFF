@@ -1,7 +1,7 @@
 aiohttp
 attrs>=21.2.0
-sentinel
-mkdocs-material
-mkdocs-autorefs
 git+https://github.com/LordOfPolls/pytkdocs.git
+mkdocs-autorefs
+mkdocs-material
 mkdocstrings
+sentinel

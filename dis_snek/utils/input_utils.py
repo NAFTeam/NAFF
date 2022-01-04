@@ -65,6 +65,7 @@ async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, A
         response: the aiohttp response
     Returns:
         the response text field in its correct type
+
     """
     text = await response.text(encoding="utf-8")
 
@@ -81,6 +82,7 @@ def get_args(text: str):
         text: The text to process
     Returns:
         A list of words
+
     """
     return arg_parse.findall(text)
 
@@ -93,6 +95,7 @@ def get_first_word(text: str):
         text: The text to process
     Returns:
          The requested word
+
     """
     found = initial_word.findall(text)
     if len(found) == 0:

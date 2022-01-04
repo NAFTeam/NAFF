@@ -53,6 +53,7 @@ class Role(DiscordObject):
 
         Returns:
             Member object if any
+
         """
         if self._bot_id is None:
             return None
@@ -60,27 +61,27 @@ class Role(DiscordObject):
 
     @property
     def guild(self) -> "Guild":
-        """The guild object this role is from"""
+        """The guild object this role is from."""
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
     def default(self) -> bool:
-        """Is this the `@everyone` role"""
+        """Is this the `@everyone` role."""
         return self.id == self._guild_id
 
     @property
     def bot_managed(self) -> bool:
-        """Is this role owned/managed by a bot"""
+        """Is this role owned/managed by a bot."""
         return self.bot_id is not None
 
     @property
     def mention(self) -> str:
-        """Returns a string that would mention the role"""
+        """Returns a string that would mention the role."""
         return f"<@&{self.id}>" if self.id != self._guild_id else "@everyone"
 
     @property
     def integration(self) -> bool:
-        """Is this role owned/managed by a integration"""
+        """Is this role owned/managed by a integration."""
         return self.tags.integration_id is not None
 
     @property
@@ -90,8 +91,10 @@ class Role(DiscordObject):
     async def is_assignable(self) -> bool:
         """
         Can this role be assigned or removed by this bot?
-        !!! note:
-            This does not account for permissions, only the role hierarchy
+
+        !!! note:     This does not account for permissions, only the
+        role hierarchy
+
         """
         me = await self.guild.me
 
@@ -101,10 +104,11 @@ class Role(DiscordObject):
 
     async def delete(self, reason: str = None) -> None:
         """
-        Delete this role
+        Delete this role.
 
         Args:
             reason: An optional reason for this deletion
+
         """
         await self._client.http.delete_guild_role(self._guild_id, self.id, reason)
 
@@ -128,8 +132,8 @@ class Role(DiscordObject):
 
         Returns:
             Role with updated information
-        """
 
+        """
         if isinstance(color, Color):
             color = color.value
 

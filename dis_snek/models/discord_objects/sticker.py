@@ -63,19 +63,21 @@ class Sticker(StickerItem):
 
     async def get_creator(self) -> "User":
         """
-        Get the user who created this emoji
+        Get the user who created this emoji.
 
         Returns:
             User object
+
         """
         return await self._client.cache.get_user(self._user_id)
 
     async def get_guild(self) -> "Guild":
         """
-        Get the guild associated with this emoji
+        Get the guild associated with this emoji.
 
         Returns:
             Guild object
+
         """
         return await self._client.cache.get_guild(self._guild_id)
 
@@ -87,7 +89,7 @@ class Sticker(StickerItem):
         reason: Absent[Optional[str]] = MISSING,
     ) -> "Sticker":
         """
-        Edit a sticker
+        Edit a sticker.
 
         Args:
             name: New name of the sticker
@@ -97,6 +99,7 @@ class Sticker(StickerItem):
 
         Returns:
             The updated sticker instance
+
         """
         if not self._guild_id:
             raise ValueError("You can only edit guild stickers.")
@@ -107,13 +110,14 @@ class Sticker(StickerItem):
 
     async def delete(self, reason: Optional[str] = MISSING):
         """
-        Delete a sticker
+        Delete a sticker.
 
         Args:
             reason: Reason for the deletion
 
         Raises:
             ValueError: If you attempt to delete a non-guild sticker
+
         """
         if not self._guild_id:
             raise ValueError("You can only delete guild stickers.")

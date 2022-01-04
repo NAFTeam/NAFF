@@ -20,9 +20,11 @@ class TimestampStyles(str, Enum):
 
 
 class Timestamp(datetime):
-    """A special class that represents Discord timestamps.
+    """
+    A special class that represents Discord timestamps.
 
     Assumes that all naive datetimes are based on local timezone.
+
     """
 
     @classmethod
@@ -63,14 +65,15 @@ class Timestamp(datetime):
         return super().fromordinal(n).astimezone()
 
     def to_snowflake(self, high: bool = False) -> Union[str, int]:
-        """Returns a numeric snowflake pretending to be created at the given date.
+        """
+        Returns a numeric snowflake pretending to be created at the given date.
 
         When using as the lower end of a range, use ``tosnowflake(high=False) - 1``
         to be inclusive, ``high=True`` to be exclusive.
         When using as the higher end of a range, use ``tosnowflake(high=True) + 1``
         to be inclusive, ``high=False`` to be exclusive
-        """
 
+        """
         discord_millis = int(self.timestamp() * 1000 - DISCORD_EPOCH)
         return (discord_millis << 22) + (2 ** 22 - 1 if high else 0)
 

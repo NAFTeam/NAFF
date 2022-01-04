@@ -18,12 +18,14 @@ from dis_snek.utils.serializer import no_export_meta
 
 @attr.s(slots=True)
 class EmbedField(DictSerializationMixin):
-    """Representation of an embed field.
+    """
+    Representation of an embed field.
 
     Attributes:
         name: Field name
         value: Field value
         inline: If the field should be inline
+
     """
 
     name: str = attr.ib()
@@ -36,13 +38,15 @@ class EmbedField(DictSerializationMixin):
 
 @attr.s(slots=True)
 class EmbedAuthor:
-    """Representation of an embed author
+    """
+    Representation of an embed author.
 
     Attributes:
         name: Name to show on embed
         url: Url to go to when name is clicked
         icon_url: Icon to show next to name
         proxy_icon_url: Proxy icon url
+
     """
 
     name: Optional[str] = attr.ib(default=None)
@@ -56,13 +60,15 @@ class EmbedAuthor:
 
 @attr.s(slots=True)
 class EmbedAttachment:  # thumbnail or image or video
-    """Representation of an attachment
+    """
+    Representation of an attachment.
 
     Attributes:
         url: Attachment url
         proxy_url: Proxy url
         height: Attachment height
         width: Attachment width
+
     """
 
     url: Optional[str] = attr.ib(default=None)
@@ -77,12 +83,14 @@ class EmbedAttachment:  # thumbnail or image or video
 
 @attr.s(slots=True)
 class EmbedFooter:
-    """Representation of an Embed Footer
+    """
+    Representation of an Embed Footer.
 
     Attributes:
         text: Footer text
         icon_url: Footer icon url
         proxy_icon_url: Proxy icon url
+
     """
 
     text: str = attr.ib()
@@ -104,6 +112,7 @@ class EmbedProvider:
     Attributes:
         name: Provider name
         url: Provider url
+
     """
 
     name: Optional[str] = attr.ib(default=None)
@@ -222,6 +231,7 @@ class Embed(DictSerializationMixin):
             name: The text to go in the title section
             url: A url link to the author
             icon_url: A url of an image to use as the icon
+
         """
         self.author = EmbedAuthor(name=name, url=url, icon_url=icon_url)
 
@@ -231,6 +241,7 @@ class Embed(DictSerializationMixin):
 
         Args:
             url: the url of the image to use
+
         """
         self.thumbnail = EmbedAttachment(url=url)
 
@@ -240,6 +251,7 @@ class Embed(DictSerializationMixin):
 
         Args:
             url: the url of the image to use
+
         """
         self.image = EmbedAttachment(url=url)
 
@@ -250,6 +262,7 @@ class Embed(DictSerializationMixin):
         Args:
             text: The text to go in the title section
             icon_url: A url of an image to use as the icon
+
         """
         self.footer = EmbedFooter(text=text, icon_url=icon_url)
 
@@ -261,6 +274,7 @@ class Embed(DictSerializationMixin):
             name: The title of this field
             value: The value in this field
             inline: Should this field be inline with other fields?
+
         """
         self.fields.append(EmbedField(name, str(value), inline))
         self._fields_validation("fields", self.fields)
@@ -272,6 +286,7 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
 
     Args:
         embeds: List of dict / embeds to process
+
     """
     if embeds is None:
         # Its just empty, so nothing to process.

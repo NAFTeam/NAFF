@@ -1,5 +1,5 @@
 """
-These are events dispatched by Discord. This is intended as a reference so you know what data to expect for each event
+These are events dispatched by Discord. This is intended as a reference so you know what data to expect for each event.
 
 ??? Hint "Example Usage:"
     The event classes outlined here are in `CamelCase` to comply with Class naming convention, however the event names
@@ -18,6 +18,7 @@ These are events dispatched by Discord. This is intended as a reference so you k
     ```
 !!! warning
     While all of these events are documented, not all of them are used, currently.
+
 """
 
 from typing import TYPE_CHECKING, Any, List, Union, Optional
@@ -47,7 +48,12 @@ if TYPE_CHECKING:
 
 @attr.s(slots=True)
 class RawGatewayEvent(BaseEvent):
-    """An event dispatched from the gateway. Holds the raw dict that the gateway dispatches"""
+    """
+    An event dispatched from the gateway.
+
+    Holds the raw dict that the gateway dispatches
+
+    """
 
     data: dict = attr.ib(factory=dict)
     """Raw Data from the gateway"""
@@ -62,17 +68,17 @@ class ChannelCreate(BaseEvent):
 
 @attr.s(slots=True)
 class ChannelUpdate(ChannelCreate):
-    """Dispatched when a channel is updated"""
+    """Dispatched when a channel is updated."""
 
 
 @attr.s(slots=True)
 class ChannelDelete(ChannelCreate):
-    """Dispatched when a channel is deleted"""
+    """Dispatched when a channel is deleted."""
 
 
 @attr.s(slots=True)
 class ChannelPinsUpdate(ChannelCreate):
-    """Dispatched when a channel's pins are updated"""
+    """Dispatched when a channel's pins are updated."""
 
     last_pin_timestamp: "Timestamp" = attr.ib()
     """The time at which the most recent pinned message was pinned"""
@@ -87,17 +93,17 @@ class ThreadCreate(BaseEvent):
 
 @attr.s(slots=True)
 class ThreadUpdate(ThreadCreate):
-    """Dispatched when a thread is updated"""
+    """Dispatched when a thread is updated."""
 
 
 @attr.s(slots=True)
 class ThreadDelete(ThreadCreate):
-    """Dispatched when a thread is deleted"""
+    """Dispatched when a thread is deleted."""
 
 
 @attr.s(slots=True)
 class ThreadListSync(BaseEvent):
-    """Dispatched when gaining access to a channel, contains all active threads in that channel"""
+    """Dispatched when gaining access to a channel, contains all active threads in that channel."""
 
     channel_ids: List["Snowflake_Type"] = attr.ib()
     """The parent channel ids whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data."""
@@ -109,10 +115,13 @@ class ThreadListSync(BaseEvent):
 
 @attr.s(slots=True)
 class ThreadMemberUpdate(ThreadCreate):
-    """Dispatched when the thread member object for the current user is updated.
+    """
+    Dispatched when the thread member object for the current user is updated.
 
-    ??? info "Note from Discord"
-        This event is documented for completeness, but unlikely to be used by most bots. For bots, this event largely is just a signal that you are a member of the thread
+    ??? info "Note from Discord"     This event is documented for
+    completeness, but unlikely to be used by most bots. For bots, this
+    event largely is just a signal that you are a member of the thread
+
     """
 
     member: "Member" = attr.ib()
@@ -135,10 +144,12 @@ class ThreadMembersUpdate(BaseEvent):
 
 @attr.s(slots=True)
 class GuildJoin(BaseEvent):
-    """Dispatched when a guild is joined, created, or becomes available.
+    """
+    Dispatched when a guild is joined, created, or becomes available.
 
-    !!! note
-        This is called multiple times during startup, check the bot is ready before responding to this.
+    !!! note     This is called multiple times during startup, check the
+    bot is ready before responding to this.
+
     """
 
     guild: "Guild" = attr.ib()
@@ -157,7 +168,7 @@ class GuildUpdate(BaseEvent):
 
 @attr.s(slots=True)
 class GuildLeft(BaseEvent, GuildEvent):
-    """Dispatched when a guild is left"""
+    """Dispatched when a guild is left."""
 
     guild: Optional["Guild"] = attr.ib(default=MISSING)
     """The guild, if it was cached"""
@@ -173,14 +184,14 @@ class GuildUnavailable(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class BanCreate(BaseEvent, GuildEvent):
-    """Dispatched when someone was banned from a guild"""
+    """Dispatched when someone was banned from a guild."""
 
     user: "BaseUser" = attr.ib(metadata=docs("The user"))
 
 
 @attr.s(slots=True)
 class BanRemove(BanCreate):
-    """Dispatched when a users ban is removed"""
+    """Dispatched when a users ban is removed."""
 
 
 @attr.s(slots=True)
@@ -249,7 +260,7 @@ class RoleUpdate(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class RoleDelete(BaseEvent, GuildEvent):
-    """Dispatched when a guild role is deleted"""
+    """Dispatched when a guild role is deleted."""
 
     role_id: "Snowflake_Type" = attr.ib()
     """The ID of the deleted role"""
@@ -257,7 +268,13 @@ class RoleDelete(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class GuildMembersChunk(BaseEvent, GuildEvent):
-    """Sent in response to Guild Request Members. You can use the `chunk_index` and `chunk_count` to calculate how many chunks are left for your request."""
+    """
+    Sent in response to Guild Request Members.
+
+    You can use the `chunk_index` and `chunk_count` to calculate how
+    many chunks are left for your request.
+
+    """
 
     chunk_index: int = attr.ib()
     """The chunk index in the expected chunks for this response (0 <= chunk_index < chunk_count)"""
@@ -273,19 +290,19 @@ class GuildMembersChunk(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class IntegrationCreate(BaseEvent):
-    """Dispatched when a guild integration is created"""
+    """Dispatched when a guild integration is created."""
 
     integration: "GuildIntegration" = attr.ib()
 
 
 @attr.s(slots=True)
 class IntegrationUpdate(IntegrationCreate):
-    """Dispatched when a guild integration is updated"""
+    """Dispatched when a guild integration is updated."""
 
 
 @attr.s(slots=True)
 class IntegrationDelete(BaseEvent, GuildEvent):
-    """Dispatched when a guild integration is deleted"""
+    """Dispatched when a guild integration is deleted."""
 
     id: "Snowflake_Type" = attr.ib()
     """The ID of the integration"""
@@ -295,26 +312,26 @@ class IntegrationDelete(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class InviteCreate(BaseEvent):
-    """Dispatched when a guild invite is created"""
+    """Dispatched when a guild invite is created."""
 
     invite: Invite = attr.ib()
 
 
 @attr.s(slots=True)
 class InviteDelete(InviteCreate):
-    """Dispatched when an invite is deleted"""
+    """Dispatched when an invite is deleted."""
 
 
 @attr.s(slots=True)
 class MessageCreate(BaseEvent):
-    """Dispatched when a message is created"""
+    """Dispatched when a message is created."""
 
     message: "Message" = attr.ib()
 
 
 @attr.s(slots=True)
 class MessageUpdate(BaseEvent):
-    """Dispatched when a message is edited"""
+    """Dispatched when a message is edited."""
 
     before: "Message" = attr.ib()
     """The message before this event was created"""
@@ -350,12 +367,12 @@ class MessageReactionAdd(BaseEvent):
 
 @attr.s(slots=True)
 class MessageReactionRemove(MessageReactionAdd):
-    """Dispatched when a reaction is removed"""
+    """Dispatched when a reaction is removed."""
 
 
 @attr.s(slots=True)
 class MessageReactionRemoveAll(BaseEvent, GuildEvent):
-    """Dispatched when all reactions are removed from a message"""
+    """Dispatched when all reactions are removed from a message."""
 
     message: "Message" = attr.ib()
     """The message that was reacted to"""
@@ -363,7 +380,7 @@ class MessageReactionRemoveAll(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class PresenceUpdate(BaseEvent):
-    """A user's presence has changed"""
+    """A user's presence has changed."""
 
     user: "User" = attr.ib()
     """The user in question"""
@@ -379,24 +396,24 @@ class PresenceUpdate(BaseEvent):
 
 @attr.s(slots=True)
 class StageInstanceCreate(BaseEvent):
-    """Dispatched when a stage instance is created"""
+    """Dispatched when a stage instance is created."""
 
     stage_instance: StageInstance = attr.ib(metadata=docs("The stage instance"))
 
 
 @attr.s(slots=True)
 class StageInstanceDelete(StageInstanceCreate):
-    """Dispatched when a stage instance is deleted"""
+    """Dispatched when a stage instance is deleted."""
 
 
 @attr.s(slots=True)
 class StageInstanceUpdate(StageInstanceCreate):
-    """Dispatched when a stage instance is updated"""
+    """Dispatched when a stage instance is updated."""
 
 
 @attr.s(slots=True)
 class TypingStart(BaseEvent):
-    """Dispatched when a user starts typing"""
+    """Dispatched when a user starts typing."""
 
     author: Union["User", "Member"] = attr.ib()
     """The user who started typing"""
@@ -410,7 +427,7 @@ class TypingStart(BaseEvent):
 
 @attr.s(slots=True)
 class WebhooksUpdate(BaseEvent, GuildEvent):
-    """Dispatched when a guild channel webhook is created, updated, or deleted"""
+    """Dispatched when a guild channel webhook is created, updated, or deleted."""
 
     # Discord doesnt sent the webhook object for this event, for some reason
     channel_id: "Snowflake_Type" = attr.ib()
@@ -419,14 +436,14 @@ class WebhooksUpdate(BaseEvent, GuildEvent):
 
 @attr.s(slots=True)
 class InteractionCreate(BaseEvent):
-    """Dispatched when a user uses an Application Command"""
+    """Dispatched when a user uses an Application Command."""
 
     interaction: dict = attr.ib()
 
 
 @attr.s(slots=True)
 class VoiceStateUpdate(BaseEvent):
-    """Dispatched when a user joins/leaves/moves voice channels"""
+    """Dispatched when a user joins/leaves/moves voice channels."""
 
     before: Optional["VoiceState"] = attr.ib()
     """The voice state before this event was created or None if the user was not in a voice channel"""

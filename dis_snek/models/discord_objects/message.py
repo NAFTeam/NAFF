@@ -77,7 +77,12 @@ class MessageActivity:
 
 @attr.s(slots=True)
 class MessageReference(DictSerializationMixin):
-    """Reference to an originating message. Can be used for replies."""
+    """
+    Reference to an originating message.
+
+    Can be used for replies.
+
+    """
 
     message_id: int = attr.ib(default=None, converter=optional_c(to_snowflake))
     """id of the originating message."""
@@ -112,9 +117,7 @@ class MessageInteraction(DiscordObject):
         return data
 
     async def user(self) -> "User":
-        """
-        Get the user associated with this interaction.
-        """
+        """Get the user associated with this interaction."""
         return await self.get_user(self._user_id)
 
 
@@ -122,7 +125,10 @@ class MessageInteraction(DiscordObject):
 class AllowedMentions(DictSerializationMixin):
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
-    This will always validate against message content to avoid phantom pings, and check against user/bot permissions.
+
+    This will always validate against message content to avoid phantom
+    pings, and check against user/bot permissions.
+
     """
 
     parse: Optional[List[str]] = attr.ib(factory=list)
@@ -230,9 +236,11 @@ class Message(BaseMessage):
 
     async def get_referenced_message(self) -> Optional["Message"]:
         """
-        Get the message this message is referencing, if any
+        Get the message this message is referencing, if any.
+
         Returns:
             The referenced message, if found
+
         """
         if self._referenced_message_id is None:
             return None
@@ -311,12 +319,12 @@ class Message(BaseMessage):
 
     @property
     def jump_url(self) -> str:
-        """A url that allows the client to *jump* to this message"""
+        """A url that allows the client to *jump* to this message."""
         return f"https://discord.com/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     @property
     def proto_url(self) -> str:
-        """A URL like `jump_url` that uses protocols"""
+        """A URL like `jump_url` that uses protocols."""
         return f"discord://-/channels/{self._guild_id or '@me'}/{self._channel_id}/{self.id}"
 
     async def edit(
@@ -349,6 +357,7 @@ class Message(BaseMessage):
 
         Returns:
             New message object with edits applied
+
         """
         message_payload = process_message_payload(
             content=content,
@@ -374,6 +383,7 @@ class Message(BaseMessage):
 
         Args:
             delay: Seconds to wait before deleting message.
+
         """
         if delay and delay > 0:
 
@@ -396,7 +406,7 @@ class Message(BaseMessage):
         embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
-        """Reply to this message, takes all the same attributes as `send`"""
+        """Reply to this message, takes all the same attributes as `send`."""
         return await self.channel.send(content=content, reply_to=self, embeds=embeds or embed, **kwargs)
 
     async def create_thread(
@@ -406,7 +416,7 @@ class Message(BaseMessage):
         reason: Optional[str] = None,
     ) -> "TYPE_THREAD_CHANNEL":
         """
-        Create a thread from this message
+        Create a thread from this message.
 
         Args:
             name: The name of this thread
@@ -419,6 +429,7 @@ class Message(BaseMessage):
 
         Raises:
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
+
         """
         if not self.channel.type == ChannelTypes.GUILD_TEXT:
             raise ThreadOutsideOfGuild
@@ -434,13 +445,14 @@ class Message(BaseMessage):
 
     async def get_reaction(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
         """
-        Get reactions of a specific emoji from this message
+        Get reactions of a specific emoji from this message.
 
         Args:
             emoji: The emoji to get
 
         Returns:
             list of users who have reacted with that emoji
+
         """
         reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
@@ -451,6 +463,7 @@ class Message(BaseMessage):
 
         Args:
             emoji: the emoji to react with
+
         """
         emoji = process_emoji_req_format(emoji)
         await self._client.http.create_reaction(self._channel_id, self.id, emoji)
@@ -459,11 +472,12 @@ class Message(BaseMessage):
         self, emoji: Union["Emoji", dict, str], member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING
     ):
         """
-        Remove a specific reaction that a user reacted with
+        Remove a specific reaction that a user reacted with.
 
         Args:
             emoji: Emoji to remove
             member: Member to remove reaction of. Default's to snake bot user.
+
         """
         emoji_str = process_emoji_req_format(emoji)
         if not member:
@@ -474,10 +488,11 @@ class Message(BaseMessage):
     async def clear_reactions(self, emoji: Union["Emoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
         """
-        Clear a specific reaction from message
+        Clear a specific reaction from message.
 
         Args:
             emoji: The emoji to clear
+
         """
         emoji = process_emoji_req_format(emoji)
         await self._client.http.clear_reaction(self._channel_id, self.id, emoji)
@@ -487,23 +502,28 @@ class Message(BaseMessage):
         await self._client.http.clear_reactions(self.channel.id, self.id)
 
     async def pin(self) -> None:
-        """Pin message"""
+        """Pin message."""
         await self._client.http.pin_message(self._channel_id, self.id)
         self.pinned = True
 
     async def unpin(self) -> None:
-        """Unpin message"""
+        """Unpin message."""
         await self._client.http.unpin_message(self._channel_id, self.id)
         self.pinned = False
 
     async def publish(self) -> None:
-        """Publish this message. (Discord api calls it "crosspost")"""
+        """
+        Publish this message.
+
+        (Discord api calls it "crosspost")
+
+        """
         await self._client.http.crosspost_message(self._channel_id, self.id)
 
 
 def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, dict]]) -> Optional[dict]:
     """
-    Process allowed mentions into a dictionary
+    Process allowed mentions into a dictionary.
 
     Args:
         allowed_mentions: Allowed mentions object or dictionary
@@ -513,6 +533,7 @@ def process_allowed_mentions(allowed_mentions: Optional[Union[AllowedMentions, d
 
     Raises:
         ValueError: Invalid allowed mentions
+
     """
     if not allowed_mentions:
         return allowed_mentions
@@ -530,7 +551,7 @@ def process_message_reference(
     message_reference: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]]
 ) -> Optional[dict]:
     """
-    Process mention references into a dictionary
+    Process mention references into a dictionary.
 
     Args:
         message_reference: Message reference object
@@ -540,6 +561,7 @@ def process_message_reference(
 
     Raises:
         ValueError: Invalid message reference
+
     """
     if not message_reference:
         return message_reference
@@ -590,6 +612,7 @@ def process_message_payload(
 
     Returns:
         Dictionary or multipart data form.
+
     """
     content = content
     embeds = process_embeds(embeds)

@@ -52,6 +52,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
 
         Raises:
             ValueError if the string cannot be parsed
+
         """
         parsed = emoji_regex.findall(emoji_str)
         if parsed:
@@ -72,9 +73,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
 
     @property
     def req_format(self) -> str:
-        """
-        Format used for web request.
-        """
+        """Format used for web request."""
         if self.id:
             return f"{self.name}:{self.id}"
         else:
@@ -115,9 +114,7 @@ class CustomEmoji(Emoji):
 
     @property
     def is_usable(self) -> bool:
-        """
-        Determines if this emoji is usable by the current user.
-        """
+        """Determines if this emoji is usable by the current user."""
         if not self.available:
             return False
 
@@ -130,28 +127,31 @@ class CustomEmoji(Emoji):
 
     async def get_creator(self) -> "User":
         """
-        Get the user who created this emoji
+        Get the user who created this emoji.
 
         Returns:
             User object
+
         """
         return await self._client.cache.get_user(self._creator_id)
 
     async def get_roles(self) -> List["Role"]:
         """
-        Gets the roles allowed to use this emoji
+        Gets the roles allowed to use this emoji.
 
         Returns:
             List of roles
+
         """
         return [await self._client.cache.get_role(self._guild_id, r_id) for r_id in self._role_ids]
 
     async def get_guild(self) -> "Guild":
         """
-        Get the guild associated with this emoji
+        Get the guild associated with this emoji.
 
         Returns:
             Guild object
+
         """
         return await self._client.cache.get_guild(self._guild_id)
 
@@ -171,6 +171,7 @@ class CustomEmoji(Emoji):
 
         Returns:
             The newly modified custom emoji.
+
         """
         data_payload = dict_filter_none(
             dict(
@@ -189,6 +190,7 @@ class CustomEmoji(Emoji):
 
         Args:
             reason: Attach a reason to this action, used for audit logs.
+
         """
         if not self._guild_id:
             raise ValueError("Cannot delete emoji, no guild id set.")

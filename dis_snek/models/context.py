@@ -36,7 +36,7 @@ log = logging.getLogger(logger_name)
 
 @attr.s
 class Resolved:
-    """Represents resolved data in an interaction"""
+    """Represents resolved data in an interaction."""
 
     channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of channels mentioned in the interaction")
@@ -78,7 +78,7 @@ class Resolved:
 
 @define
 class Context:
-    """Represents the context of a command"""
+    """Represents the context of a command."""
 
     _client: "Snake" = attr.ib(default=None)
     invoked_name: str = attr.ib(default=None, metadata=docs("The name of the command to be invoked"))
@@ -99,13 +99,13 @@ class Context:
 
     @property
     def bot(self) -> "Snake":
-        """A reference to the bot instance"""
+        """A reference to the bot instance."""
         return self._client
 
 
 @define
 class _BaseInteractionContext(Context):
-    """An internal object used to define the attributes of interaction context and its children"""
+    """An internal object used to define the attributes of interaction context and its children."""
 
     _token: str = attr.ib(default=None, metadata=docs("The token for the interaction"))
     interaction_id: str = attr.ib(default=None, metadata=docs("The id of the interaction"))
@@ -123,7 +123,7 @@ class _BaseInteractionContext(Context):
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake"):
-        """Create a context object from a dictionary"""
+        """Create a context object from a dictionary."""
         new_cls = cls(
             client=client,
             token=data["token"],
@@ -203,7 +203,7 @@ class _BaseInteractionContext(Context):
 @define
 class InteractionContext(_BaseInteractionContext, SendMixin):
     """
-    Represents the context of an interaction
+    Represents the context of an interaction.
 
     !!! info "Ephemeral messages:"
         Ephemeral messages allow you to send messages that only the author of the interaction can see.
@@ -211,6 +211,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
         Should you attach a component (ie. button) to the ephemeral message,
         you will be able to edit it when responding to a button interaction.
+
     """
 
     async def defer(self, ephemeral=False) -> None:
@@ -219,6 +220,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
         parameters:
             ephemeral: Should the response be ephemeral
+
         """
         if self.deferred or self.responded:
             raise AlreadyDeferred("You have already responded to this interaction!")
@@ -284,6 +286,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
         returns:
             New message object that was sent.
+
         """
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
@@ -311,7 +314,7 @@ class ComponentContext(InteractionContext):
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
-        """Create a context object from a dictionary"""
+        """Create a context object from a dictionary."""
         new_cls = super().from_dict(data, client)
         new_cls.token = data["token"]
         new_cls.interaction_id = data["id"]
@@ -329,6 +332,7 @@ class ComponentContext(InteractionContext):
         parameters:
             ephemeral: Should the response be ephemeral
             edit_origin: Whether we intend to edit the original message
+
         """
         if self.deferred or self.responded:
             raise AlreadyDeferred("You have already responded to this interaction!")
@@ -376,6 +380,7 @@ class ComponentContext(InteractionContext):
 
         returns:
             The message after it was edited.
+
         """
         if not self.responded and not self.deferred and file:
             # Discord doesn't allow files at initial response, so we defer then edit.
@@ -418,20 +423,19 @@ class AutocompleteContext(_BaseInteractionContext):
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
-        """Create a context object from a dictionary"""
+        """Create a context object from a dictionary."""
         new_cls = super().from_dict(data, client)
 
         return new_cls
 
     @property
     def input_text(self) -> str:
-        """The text the user has entered so far"""
+        """The text the user has entered so far."""
         return self.kwargs.get(self.focussed_option, "")
 
     async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]):
         """
-        Send your autocomplete choices to discord.
-        Choices must be either a list of strings, or a dictionary following the following format:
+        Send your autocomplete choices to discord. Choices must be either a list of strings, or a dictionary following the following format:
 
         ```json
             {
@@ -444,6 +448,7 @@ class AutocompleteContext(_BaseInteractionContext):
 
         Args:
             choices: 25 choices the user can pick
+
         """
         processed_choices = []
         for choice in choices:

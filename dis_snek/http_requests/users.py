@@ -10,9 +10,7 @@ class UserRequests:
     request: Any
 
     async def get_current_user(self):
-        """
-        Shortcut to get requester's user.
-        """
+        """Shortcut to get requester's user."""
         return self.get_user("@me")
 
     async def get_user(self, user_id: "Snowflake_Type") -> dict:
@@ -23,6 +21,7 @@ class UserRequests:
             user_id: The user to get.
         returns:
             user
+
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
@@ -32,12 +31,16 @@ class UserRequests:
 
         parameters:
             payload: The data to send.
+
         """
         return await self.request(Route("PATCH", "/users/@me"), data=payload)
 
     async def get_user_guilds(self) -> list:
         """
-        Returns a list of partial guild objects the current user is a member of. Requires the guilds OAuth2 scope.
+        Returns a list of partial guild objects the current user is a member of.
+
+        Requires the guilds OAuth2 scope.
+
         """
         return await self.request(Route("GET", "/users/@me/guilds"))
 
@@ -47,6 +50,7 @@ class UserRequests:
 
         parameters:
             guild_id: The guild to leave from.
+
         """
         return await self.request(Route("DELETE", f"/users/@me/guilds/{guild_id}"))
 
@@ -56,6 +60,7 @@ class UserRequests:
 
         parameters:
             recipient_id: The recipient to open a DM channel with.
+
         """
         return await self.request(Route("POST", "/users/@me/channels"), data=dict(recipient_id=recipient_id))
 
@@ -65,12 +70,16 @@ class UserRequests:
 
         parameters:
             payload: The data to send.
+
         """
         return await self.request(Route("POST", "/users/@me/channels"), data=payload)
 
     async def get_user_connections(self) -> list:
         """
-        Returns a list of connection objects. Requires the connections OAuth2 scope.
+        Returns a list of connection objects.
+
+        Requires the connections OAuth2 scope.
+
         """
         return await self.request(Route("GET", "/users/@me/connections"))
 
@@ -85,6 +94,7 @@ class UserRequests:
             user_id: The ID of the user to add
             access_token: Access token of a user that has granted your app the gdm.join scope
             nick: Nickname of the user being added
+
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/recipients/{user_id}"),
@@ -98,15 +108,17 @@ class UserRequests:
         parameters:
             channel_id: The ID of the group dm
             user_id: The ID of the user to remove
+
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/recipients/{user_id}"))
 
     async def modify_current_user_nick(self, guild_id: "Snowflake_Type", nickname: str = None) -> None:
         """
-        Modifies the nickname of the current user in a guild
+        Modifies the nickname of the current user in a guild.
 
         parameters:
             guild_id: The ID of the guild
             nickname: The new nickname to use
+
         """
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/@me/nick"), data={"nick": nickname})

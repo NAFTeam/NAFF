@@ -9,10 +9,11 @@ TYPE_CHECK_FUNCTION = Callable[[Context], Awaitable[bool]]
 
 def has_role(role: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
     """
-    Check if the user has the given role
+    Check if the user has the given role.
 
     Args:
         role: The Role or role id to check for
+
     """
 
     async def check(ctx: Context) -> bool:
@@ -25,7 +26,8 @@ def has_role(role: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
 
 def has_any_role(*roles: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
     """
-    Checks if the user has any of the given roles
+    Checks if the user has any of the given roles.
+
     Args:
         *roles: The Role(s) or role id(s) to check for
     """
@@ -47,6 +49,7 @@ def has_id(user_id: int) -> TYPE_CHECK_FUNCTION:
 
     parameters:
         coro: the function to check
+
     """
 
     async def check(ctx: Context) -> bool:
@@ -61,6 +64,7 @@ def is_owner() -> TYPE_CHECK_FUNCTION:
 
     parameters:
         coro: the function to check
+
     """
 
     async def check(ctx: Context) -> bool:
@@ -72,9 +76,7 @@ def is_owner() -> TYPE_CHECK_FUNCTION:
 
 
 def guild_only() -> TYPE_CHECK_FUNCTION:
-    """
-    This command may only be ran in a guild
-    """
+    """This command may only be ran in a guild."""
 
     async def check(ctx: Context) -> bool:
         return ctx.guild is not None
@@ -83,9 +85,7 @@ def guild_only() -> TYPE_CHECK_FUNCTION:
 
 
 def dm_only() -> TYPE_CHECK_FUNCTION:
-    """
-    This command may only be ran in a dm
-    """
+    """This command may only be ran in a dm."""
 
     async def check(ctx: Context) -> bool:
         return ctx.guild is None

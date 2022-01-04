@@ -18,6 +18,7 @@ class UserEvents(EventMixinTemplate):
 
         Args:
             event: raw typing start event
+
         """
         author: Union[User, Member]
         channel: BaseChannel

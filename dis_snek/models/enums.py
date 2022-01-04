@@ -38,7 +38,7 @@ class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
 
 
 class WebSocketOPCodes(IntEnum):
-    """Codes used by the Gateway to signify events"""
+    """Codes used by the Gateway to signify events."""
 
     DISPATCH = 0
     """An event was dispatched"""
@@ -72,6 +72,7 @@ class Intents(DiscordIntFlag):  # type: ignore
 
     info:
         For details about what intents do, or which intents you'll want, please read the [Discord API Documentation](https://discord.com/developers/docs/topics/gateway#gateway-intents)
+
     """
 
     GUILDS = 1 << 0
@@ -129,9 +130,7 @@ class Intents(DiscordIntFlag):  # type: ignore
         default=True,
         all=False,
     ):
-        """
-        Set your desired intents
-        """
+        """Set your desired intents."""
         kwargs = locals()
         del kwargs["cls"]
 
@@ -143,7 +142,7 @@ class Intents(DiscordIntFlag):  # type: ignore
 
 
 class UserFlags(DiscordIntFlag):  # type: ignore
-    """Flags a user can have"""
+    """Flags a user can have."""
 
     DISCORD_EMPLOYEE = 1 << 0
     """This person works for Discord"""
@@ -186,7 +185,7 @@ class UserFlags(DiscordIntFlag):  # type: ignore
 
 
 class ApplicationFlags(DiscordIntFlag):  # type: ignore
-    """Flags an application can have"""
+    """Flags an application can have."""
 
     # Flags defined by the Discord API
     GATEWAY_PRESENCE = 1 << 12
@@ -204,14 +203,14 @@ class ApplicationFlags(DiscordIntFlag):  # type: ignore
 
 
 class TeamMembershipState(IntEnum):
-    """Self explanatory"""
+    """Self explanatory."""
 
     INVITED = 1
     ACCEPTED = 2
 
 
 class PremiumTypes(IntEnum):
-    """Types of premium membership"""
+    """Types of premium membership."""
 
     NONE = 0
     """No premium membership"""
@@ -222,7 +221,7 @@ class PremiumTypes(IntEnum):
 
 
 class MessageTypes(IntEnum):
-    """Types of message"""
+    """Types of message."""
 
     DEFAULT = 0
     RECIPIENT_ADD = 1
@@ -250,7 +249,7 @@ class MessageTypes(IntEnum):
 
 
 class MessageActivityTypes(IntEnum):
-    """An activity object, similar to an embed"""
+    """An activity object, similar to an embed."""
 
     JOIN = 1
     """Join the event"""
@@ -263,7 +262,7 @@ class MessageActivityTypes(IntEnum):
 
 
 class MessageFlags(DiscordIntFlag):  # type: ignore
-    """Message flags"""
+    """Message flags."""
 
     CROSSPOSTED = 1 << 0
     IS_CROSSPOST = 1 << 1
@@ -280,7 +279,7 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
 
 
 class Permissions(DiscordIntFlag):  # type: ignore
-    """Permissions a user or role may have"""
+    """Permissions a user or role may have."""
 
     # Permissions defined by Discord API
     CREATE_INSTANT_INVITE = 1 << 0
@@ -344,7 +343,7 @@ class Permissions(DiscordIntFlag):  # type: ignore
 
 
 class ChannelTypes(IntEnum):
-    """Types of channel"""
+    """Types of channel."""
 
     GUILD_TEXT = 0
     DM = 1
@@ -368,9 +367,7 @@ class ChannelTypes(IntEnum):
 
 
 class ComponentTypes(IntEnum):
-    """
-    The types of components supported by discord
-    """
+    """The types of components supported by discord."""
 
     ACTION_ROW = 1
     BUTTON = 2
@@ -378,9 +375,7 @@ class ComponentTypes(IntEnum):
 
 
 class CommandTypes(IntEnum):
-    """
-    The interaction commands supported by discord
-    """
+    """The interaction commands supported by discord."""
 
     CHAT_INPUT = 1
     USER = 2
@@ -388,9 +383,7 @@ class CommandTypes(IntEnum):
 
 
 class InteractionTypes(IntEnum):
-    """
-    The type of interaction received by discord
-    """
+    """The type of interaction received by discord."""
 
     PING = 1
     APPLICATION_COMMAND = 2
@@ -399,9 +392,7 @@ class InteractionTypes(IntEnum):
 
 
 class ButtonStyles(IntEnum):
-    """
-    The styles of buttons supported
-    """
+    """The styles of buttons supported."""
 
     # Based on discord api
     PRIMARY = 1
@@ -426,7 +417,7 @@ class ButtonStyles(IntEnum):
 
 
 class MentionTypes(str, Enum):
-    """Types of mention"""
+    """Types of mention."""
 
     EVERYONE = "everyone"
     ROLES = "roles"
@@ -434,21 +425,21 @@ class MentionTypes(str, Enum):
 
 
 class OverwriteTypes(IntEnum):
-    """Types of permission overwrite"""
+    """Types of permission overwrite."""
 
     ROLE = 0
     MEMBER = 1
 
 
 class DefaultNotificationLevels(IntEnum):
-    """Default Notification levels for dms and guilds"""
+    """Default Notification levels for dms and guilds."""
 
     ALL_MESSAGES = 0
     ONLY_MENTIONS = 1
 
 
 class ExplicitContentFilterLevels(IntEnum):
-    """Automatic filtering of explicit content"""
+    """Automatic filtering of explicit content."""
 
     DISABLED = 0
     MEMBERS_WITHOUT_ROLES = 1
@@ -456,14 +447,14 @@ class ExplicitContentFilterLevels(IntEnum):
 
 
 class MFALevels(IntEnum):
-    """Does the user use 2FA"""
+    """Does the user use 2FA."""
 
     NONE = 0
     ELEVATED = 1
 
 
 class VerificationLevels(IntEnum):
-    """Levels of verification needed by a guild"""
+    """Levels of verification needed by a guild."""
 
     NONE = 0
     """No verification needed"""
@@ -478,7 +469,7 @@ class VerificationLevels(IntEnum):
 
 
 class NSFWLevels(IntEnum):
-    """A guilds NSFW Level"""
+    """A guilds NSFW Level."""
 
     DEFAULT = 0
     EXPLICIT = 1
@@ -487,7 +478,7 @@ class NSFWLevels(IntEnum):
 
 
 class PremiumTiers(IntEnum):
-    """The boost level of a server"""
+    """The boost level of a server."""
 
     NONE = 0
     TIER_1 = 1
@@ -496,7 +487,7 @@ class PremiumTiers(IntEnum):
 
 
 class SystemChannelFlags(DiscordIntFlag):
-    """System channel settings"""
+    """System channel settings."""
 
     SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
     SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
@@ -508,14 +499,14 @@ class SystemChannelFlags(DiscordIntFlag):
 
 
 class VideoQualityModes(IntEnum):
-    """Video quality settings"""
+    """Video quality settings."""
 
     AUTO = 1
     FULL = 2
 
 
 class AutoArchiveDuration(IntEnum):
-    """Thread archive duration, in minutes"""
+    """Thread archive duration, in minutes."""
 
     ONE_HOUR = 60
     ONE_DAY = 1440
@@ -524,10 +515,12 @@ class AutoArchiveDuration(IntEnum):
 
 
 class ActivityType(IntEnum):
-    """The types of presence activity that can be used in presences
+    """
+    The types of presence activity that can be used in presences.
 
-    !!! note
-        Only `GAME` `STREAMING` `LISTENING` `WATCHING` and `COMPETING` are usable by bots
+    !!! note     Only `GAME` `STREAMING` `LISTENING` `WATCHING` and
+    `COMPETING` are usable by bots
+
     """
 
     GAME = 0  # "Playing Rocket League"
@@ -541,7 +534,7 @@ class ActivityType(IntEnum):
 
 
 class Status(str, Enum):
-    """Represents the statuses a user may have"""
+    """Represents the statuses a user may have."""
 
     ONLINE = "online"
     OFFLINE = "offline"

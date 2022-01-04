@@ -1,6 +1,4 @@
-"""
-This file outlines the interaction between snek and Discord's Gateway API.
-"""
+"""This file outlines the interaction between snek and Discord's Gateway API."""
 import asyncio
 import collections
 import logging
@@ -52,6 +50,7 @@ class WebsocketClient:
         buffer: A buffer to hold incoming data until its complete
         sequence: The sequence of this connection
         session_id: The session ID of this connection
+
     """
 
     __slots__ = (
@@ -165,6 +164,7 @@ class WebsocketClient:
         Parameters:
             data: The data to send
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
+
         """
         if self.ws is None:
             raise RuntimeError
@@ -189,15 +189,16 @@ class WebsocketClient:
         await self.send(serialized, bypass)
 
     async def receive(self, force: bool = False) -> dict:
-        """Receive a full event payload from the WebSocket.
+        """
+        Receive a full event payload from the WebSocket.
 
         Parameters:
             force:
                 Whether to force the receiving, ignoring safety measures such as the read-lock.
                 This option also means that exceptions are raised when a reconnection would normally
                 be tried.
-        """
 
+        """
         buffer = bytearray()
 
         while True:
