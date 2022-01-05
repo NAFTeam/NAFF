@@ -36,7 +36,7 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         sub_cmd_name="info",
         sub_cmd_description="Get basic information about the bot",
     )
-    async def debug_info(self, ctx: InteractionContext):
+    async def debug_info(self, ctx: InteractionContext) -> None:
         await ctx.defer()
 
         uptime = datetime.datetime.now() - self.bot.start_time
@@ -62,7 +62,7 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         await ctx.send(embeds=[e])
 
     @debug_info.subcommand("cache", sub_cmd_description="Get information about the current cache state")
-    async def cache_info(self, ctx: InteractionContext):
+    async def cache_info(self, ctx: InteractionContext) -> None:
         await ctx.defer()
         e = debug_embed("Cache")
 
@@ -70,10 +70,10 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         await ctx.send(embeds=[e])
 
     @debug_info.subcommand("shutdown", sub_cmd_description="Shutdown the bot.")
-    async def shutdown(self, ctx: InteractionContext):
+    async def shutdown(self, ctx: InteractionContext) -> None:
         await ctx.send("Shutting down 😴")
         await self.bot.stop()
 
 
-def setup(bot):
+def setup(bot) -> None:
     DebugScale(bot)

@@ -134,7 +134,7 @@ class SnakeBotUser(User):
     def guilds(self) -> List["Guild"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING):
+    async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING) -> None:
         """
         Edit the client's user.
 
@@ -232,7 +232,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         return data
 
-    def update_from_dict(self, data):
+    def update_from_dict(self, data) -> None:
         if "guild_id" not in data:
             data["guild_id"] = self._guild_id
         data["_role_ids"] = data.pop("roles", [])

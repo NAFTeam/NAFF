@@ -107,17 +107,17 @@ class Scale:
         return self.name
 
     @property
-    def commands(self):
+    def commands(self) -> List[BaseCommand]:
         """Get the commands from this Scale."""
         return self._commands
 
     @property
-    def listeners(self):
+    def listeners(self) -> List[Listener]:
         """Get the listeners from this Scale."""
         return self._listeners
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.__name
 
     def shed(self) -> None:
@@ -139,7 +139,7 @@ class Scale:
         self.bot.scales.pop(self.name, None)
         log.debug(f"{self.name} has been shed")
 
-    def add_scale_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0):
+    def add_scale_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
         """
         Add a auto defer for all commands in this scale.
 
@@ -178,7 +178,7 @@ class Scale:
 
         self.scale_checks.append(coroutine)
 
-    def add_scale_prerun(self, coroutine: Callable[..., Coroutine]):
+    def add_scale_prerun(self, coroutine: Callable[..., Coroutine]) -> None:
         """
         Add a coroutine to be run **before** all commands in this Scale.
 
@@ -206,7 +206,7 @@ class Scale:
             self.scale_prerun = []
         self.scale_prerun.append(coroutine)
 
-    def add_scale_postrun(self, coroutine: Callable[..., Coroutine]):
+    def add_scale_postrun(self, coroutine: Callable[..., Coroutine]) -> None:
         """
         Add a coroutine to be run **after** all commands in this Scale.
 
