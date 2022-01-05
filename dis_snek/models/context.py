@@ -298,6 +298,8 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             components=components,
             stickers=stickers,
             allowed_mentions=allowed_mentions,
+            reply_to=reply_to,
+            file=file,
             tts=tts,
             flags=flags,
         )
