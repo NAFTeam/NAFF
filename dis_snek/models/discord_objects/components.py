@@ -157,7 +157,7 @@ class Select(InteractiveComponent):
     """
 
     options: List[Union[SelectOption, Dict]] = attr.ib(factory=list)
-    custom_id: str = attr.ib(factory=uuid.uuid4, validator=str_validator)
+    custom_id: str = attr.ib(factory=lambda: str(uuid.uuid4()), validator=str_validator)
     placeholder: str = attr.ib(default=None)
     min_values: Optional[int] = attr.ib(default=1)
     max_values: Optional[int] = attr.ib(default=1)
