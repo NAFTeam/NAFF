@@ -99,7 +99,7 @@ class ConnectionState:
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
-    ):
+    ) -> None:
         """
         Change the bots presence.
 
