@@ -74,7 +74,7 @@ async def response_decode(response: aiohttp.ClientResponse) -> Union[Dict[str, A
     return text
 
 
-def get_args(text: str):
+def get_args(text: str) -> list:
     """
     Get arguments from an input text.
 
@@ -87,7 +87,7 @@ def get_args(text: str):
     return arg_parse.findall(text)
 
 
-def get_first_word(text: str):
+def get_first_word(text: str) -> str:
     """
     Get a the first word in a string, regardless of whitespace type.
 

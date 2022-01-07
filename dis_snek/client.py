@@ -8,7 +8,7 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, NoReturn, Optional, Union, Type
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
@@ -269,7 +269,7 @@ class Snake(
         return self._closed
 
     @property
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Returns True if the bot is ready."""
         return self._ready.is_set()
 
@@ -331,7 +331,7 @@ class Snake(
         return self._activity
 
     @property
-    def application_commands(self):
+    def application_commands(self) -> List[InteractionCommand]:
         """A list of all application commands registered within the bot."""
         commands = []
         for scope in self.interactions.keys():
@@ -389,7 +389,7 @@ class Snake(
         """
         return self.default_prefix
 
-    async def login(self, token):
+    async def login(self, token) -> None:
         """
         Login to discord.
 
@@ -412,8 +412,8 @@ class Snake(
 
         await self._connection_state.start()
 
-    def _queue_task(self, coro, event, *args, **kwargs):
-        async def _async_wrap(_coro, _event, *_args, **_kwargs):
+    def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
+        async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
             try:
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
@@ -515,7 +515,7 @@ class Snake(
 
         """
         return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs
+            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs,
         )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
@@ -576,7 +576,7 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
-    def start(self, token):
+    def start(self, token) -> None:
         """
         Start the bot.
 
@@ -597,7 +597,7 @@ class Snake(
         self._ready.clear()
         await self._connection_state.stop()
 
-    def dispatch(self, event: events.BaseEvent, *args, **kwargs):
+    def dispatch(self, event: events.BaseEvent, *args, **kwargs) -> None:
         """
         Dispatch an event.
 
@@ -634,7 +634,7 @@ class Snake(
 
     def wait_for(
         self, event: str, checks: Absent[Optional[Callable[..., bool]]] = MISSING, timeout: Optional[float] = None
-    ):
+    ) -> Any:
         """
         Waits for a WebSocket event to be dispatched.
 
@@ -692,7 +692,7 @@ class Snake(
         if custom_ids and not all(isinstance(x, str) for x in custom_ids):
             custom_ids = [str(i) for i in custom_ids]
 
-        def _check(event: Component):
+        def _check(event: Component) -> bool:
             ctx: ComponentContext = event.context
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.message.id in (
@@ -716,7 +716,7 @@ class Snake(
 
         """
 
-        def wrapper(coro: Callable[..., Coroutine]):
+        def wrapper(coro: Callable[..., Coroutine]) -> Listener:
             listener = listen(event_name)(coro)
             self.add_listener(listener)
             return listener
@@ -724,7 +724,7 @@ class Snake(
         return wrapper
 
     def add_event_processor(self, event_name: Absent[str] = MISSING) -> Callable[..., Coroutine]:
-        def wrapper(coro: Callable[..., Coroutine]):
+        def wrapper(coro: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
             name = event_name
             if name is MISSING:
                 name = coro.__name__
@@ -735,7 +735,7 @@ class Snake(
 
         return wrapper
 
-    def add_listener(self, listener: Listener):
+    def add_listener(self, listener: Listener) -> None:
         """
         Add a listener for an event, if no event is passed, one is determined.
 
@@ -747,7 +747,7 @@ class Snake(
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
 
-    def add_interaction(self, command: InteractionCommand):
+    def add_interaction(self, command: InteractionCommand) -> None:
         """
         Add a slash command to the client.
 
@@ -770,7 +770,7 @@ class Snake(
 
             self.interactions[scope][command.resolved_name] = command
 
-    def add_message_command(self, command: MessageCommand):
+    def add_message_command(self, command: MessageCommand) -> None:
         """
         Add a message command to the client.
 
@@ -783,7 +783,7 @@ class Snake(
             return
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
-    def add_component_callback(self, command: ComponentCommand):
+    def add_component_callback(self, command: ComponentCommand) -> None:
         """
         Add a component callback to the client.
 
@@ -802,7 +802,7 @@ class Snake(
     def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self."""
 
-        def process(_cmds):
+        def process(_cmds) -> None:
 
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
@@ -843,7 +843,7 @@ class Snake(
         except Exception as e:
             await self.on_error("Interaction Syncing", e)
 
-    async def _cache_interactions(self, warn_missing: bool = False):
+    async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
         if warn_missing or self.del_unused_app_cmd:
             bot_scopes = set(g.id for g in self.cache.guild_cache.values())
@@ -853,7 +853,7 @@ class Snake(
 
         req_lock = asyncio.Lock()
 
-        async def wrap(*args, **kwargs):
+        async def wrap(*args, **kwargs) -> Union[List[Dict], MISSING]:
             async with req_lock:
                 # throttle this
                 await asyncio.sleep(0.1)
@@ -910,7 +910,7 @@ class Snake(
         guild_perms = {}
         local_cmds_json = application_commands_to_dict(self.interactions)
 
-        async def sync_scope(cmd_scope):
+        async def sync_scope(cmd_scope) -> None:
 
             sync_needed_flag = False  # a flag to force this scope to synchronise
             sync_payload = []  # the payload to be pushed to discord
@@ -1055,7 +1055,7 @@ class Snake(
             # the above shouldn't fail, but if it does, just raise the exception normally
             raise e from None
 
-    def _cache_sync_response(self, sync_response: list[dict], scope: "Snowflake_Type"):
+    def _cache_sync_response(self, sync_response: list[dict], scope: "Snowflake_Type") -> None:
         for cmd_data in sync_response:
             self._interaction_scopes[cmd_data["id"]] = scope
             if cmd_data["name"] in self.interactions[scope]:
@@ -1197,7 +1197,7 @@ class Snake(
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     @listen("message_create")
-    async def _dispatch_msg_commands(self, event: MessageCreate):
+    async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
 
@@ -1286,7 +1286,7 @@ class Snake(
         self.shed_scale(scale_name)
         self.grow_scale(scale_name)
 
-    def load_extension(self, name: str, package: str = None):
+    def load_extension(self, name: str, package: str = None) -> None:
         """
         Load an extension.
 
@@ -1312,7 +1312,7 @@ class Snake(
             self.__extensions[name] = module
             return
 
-    def unload_extension(self, name, package=None):
+    def unload_extension(self, name, package=None) -> None:
         """
         Unload an extension.
 
@@ -1339,7 +1339,7 @@ class Snake(
         del sys.modules[name]
         del self.__extensions[name]
 
-    def reload_extension(self, name, package=None):
+    def reload_extension(self, name, package=None) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension.
 
@@ -1496,7 +1496,7 @@ class Snake(
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
-    ):
+    ) -> None:
         """
         Change the bots presence.
 
@@ -1508,4 +1508,4 @@ class Snake(
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """
-        return await self._connection_state.change_presence(status, activity)
+        await self._connection_state.change_presence(status, activity)

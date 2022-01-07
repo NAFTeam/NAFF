@@ -80,7 +80,7 @@ class Color:
         return tuple(v / 255 for v in self.rgb)
 
     @rgb.setter
-    def rgb(self, value: Tuple[int, int, int]):
+    def rgb(self, value: Tuple[int, int, int]) -> None:
         # noinspection PyTypeChecker
         r, g, b = (self.clamp(v) for v in value)
         self.value = (r << 16) + (g << 8) + b
@@ -91,7 +91,7 @@ class Color:
         return f"#{r:02x}{g:02x}{b:02x}"
 
     @hex.setter
-    def hex(self, value: str):
+    def hex(self, value: str) -> None:
         value = value.lstrip("#")
         # split hex into 3 parts of 2 digits and convert each to int from base-16 number
         self.rgb = tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
@@ -101,7 +101,7 @@ class Color:
         return colorsys.rgb_to_hsv(*self.rgb_float)
 
     @hsv.setter
-    def hsv(self, value):
+    def hsv(self, value) -> None:
         self.rgb = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(*value))
 
 

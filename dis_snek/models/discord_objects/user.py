@@ -413,7 +413,7 @@ class Member(DiscordObject, _SendDMMixin):
         role = to_snowflake(role)
         return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
 
-    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
+    async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
         Remove a role from this user.
 
@@ -465,7 +465,7 @@ class Member(DiscordObject, _SendDMMixin):
             reason=reason,
         )
 
-    async def kick(self, reason: Absent[str] = MISSING):
+    async def kick(self, reason: Absent[str] = MISSING) -> None:
         """
         Remove a member from the guild.
 
@@ -473,9 +473,9 @@ class Member(DiscordObject, _SendDMMixin):
             reason: The reason for this removal
 
         """
-        return await self._client.http.remove_guild_member(self._guild_id, self.id)
+        await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
 
-    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING):
+    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING) -> None:
         """
         Ban a member from the guild.
 
@@ -484,4 +484,4 @@ class Member(DiscordObject, _SendDMMixin):
             reason: The reason for this ban
 
         """
-        return await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)
+        await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)

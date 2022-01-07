@@ -45,7 +45,7 @@ class BaseEvent:
     bot: "Snake" = attr.ib(kw_only=True, default=MISSING)
 
     @property
-    def resolved_name(self):
+    def resolved_name(self) -> str:
         name = self.override_name or self.__class__.__name__
         return _event_reg.sub("_", name).lower()
 

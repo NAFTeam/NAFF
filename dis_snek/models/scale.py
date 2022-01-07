@@ -73,7 +73,7 @@ class Scale:
         new_cls._commands = []
         new_cls._listeners = []
 
-        for name, val in inspect.getmembers(new_cls, predicate=lambda x: isinstance(x, (BaseCommand, Listener, Task))):
+        for _name, val in inspect.getmembers(new_cls, predicate=lambda x: isinstance(x, (BaseCommand, Listener, Task))):
             if isinstance(val, BaseCommand):
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)

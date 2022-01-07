@@ -1,12 +1,12 @@
 import logging
 from functools import partial
-from typing import Any, Dict
+from typing import Any, Dict, TypeVar
 
 import attr
 from dis_snek.const import logger_name, MISSING
 
 log = logging.getLogger(logger_name)
-
+T = TypeVar("T")
 
 class_defaults = dict(
     eq=False,
@@ -23,7 +23,7 @@ define = partial(attr.define, **class_defaults)  # type: ignore
 field = partial(attr.field, **field_defaults)  # type: ignore
 
 
-def copy_converter(value):
+def copy_converter(value: T) -> T:
     if isinstance(value, (list, set)):
         return value.copy()
     return value
@@ -42,7 +42,7 @@ def docs(doc_string: str) -> Dict[str, str]:
 #     return decorator
 
 
-def str_validator(self, attribute: attr.Attribute, value: Any):
+def str_validator(self, attribute: attr.Attribute, value: Any) -> None:
     if not isinstance(value, str):
         if value is MISSING:
             return
