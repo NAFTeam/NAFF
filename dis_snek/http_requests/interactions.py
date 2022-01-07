@@ -45,11 +45,11 @@ class InteractionRequests:
             return await self.request(Route("GET", f"/applications/{application_id}/commands"))
         return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
 
-    async def post_application_command(
+    async def overwrite_application_commands(
         self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
     ):
         """
-        Register an application command.
+        Take a list of commands and overwrite the existing command list within the given scope
 
         parameters:
             app_id: The application ID of this bot
@@ -60,6 +60,24 @@ class InteractionRequests:
         if guild_id == GLOBAL_SCOPE:
             return await self.request(Route("PUT", f"/applications/{app_id}/commands"), data=data)
         return await self.request(Route("PUT", f"/applications/{app_id}/guilds/{guild_id}/commands"), data=data)
+
+    async def create_application_command(
+        self, app_id: "Snowflake_Type", command: Dict, guild_id: "Snowflake_Type"
+    ) -> dict:
+        """
+        Add a given command to scope.
+
+        Args:
+            app_id: The application ID of this bot
+            command: A dictionary representing a command to be created
+            guild_id: The ID of the guild this command is for, if this is a guild command
+
+        Returns:
+            An application command object
+        """
+        if guild_id == GLOBAL_SCOPE:
+            return await self.request(Route("POST", f"/applications/{app_id}/commands"), data=command)
+        return await self.request(Route("POST", f"/applications/{app_id}/guilds/{guild_id}/commands"), data=command)
 
     async def post_initial_response(self, payload: dict, interaction_id: str, token: str) -> None:
         """
