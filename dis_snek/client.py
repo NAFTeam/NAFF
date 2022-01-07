@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import importlib.util
 import inspect
+import json
 import logging
 import re
 import sys
@@ -884,7 +885,6 @@ class Snake(
                         continue
                     else:
                         found.add(cmd.name)
-
                     self._interaction_scopes[str(cmd_data["id"])] = scope
                     cmd.cmd_id[scope] = int(cmd_data["id"])
 
@@ -901,20 +901,19 @@ class Snake(
         await self._cache_interactions()
 
         if self.del_unused_app_cmd:
+            # if we're deleting unused commands, we check all scopes
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
+            # if we're not deleting, just check the scopes we have cmds registered in
             cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
         guild_perms = {}
-        cmds_json = application_commands_to_dict(self.interactions)
-        req_lock = asyncio.Lock()
+        local_cmds_json = application_commands_to_dict(self.interactions)
 
         async def sync_scope(cmd_scope):
-            async with req_lock:
-                await asyncio.sleep(0.1)  # throttle this
 
-            need_sync = False  # whether to sync this scope
-            found = []  # commands where a remote equivalent has been found
+            sync_needed_flag = False  # a flag to force this scope to synchronise
+            sync_payload = []  # the payload to be pushed to discord
 
             try:
                 try:
@@ -925,59 +924,58 @@ class Snake(
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # get remote equivalent of this command
-                    remote_cmd = next(
+                    remote_cmd_json = next(
                         (v for v in remote_commands if int(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
                     )
                     # get json representation of this command
-                    local_cmd_json = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
+                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == local_cmd.name))
 
-                    if remote_cmd and remote_cmd not in found:
-                        found.append(remote_cmd)
+                    # this works by adding any command we *want* on Discord, to a payload, and synchronising that
+                    # this allows us to delete unused commands, add new commands, or do nothing in 1 or less API calls
 
-                    if sync_needed(local_cmd_json, remote_cmd):
-                        need_sync = True
+                    if sync_needed(local_cmd_json, remote_cmd_json):
+                        # determine if the local and remote commands are out-of-sync
+                        sync_needed_flag = True
+                        sync_payload.append(local_cmd_json)
+                    elif not self.del_unused_app_cmd and remote_cmd_json:
+                        _remote_payload = {
+                            k: v for k, v in remote_cmd_json.items() if k not in ("id", "application_id", "version")
+                        }
+                        sync_payload.append(_remote_payload)
+                    elif self.del_unused_app_cmd:
+                        sync_payload.append(local_cmd_json)
 
-                if need_sync:
+                sync_payload = [json.loads(_dump) for _dump in {json.dumps(_cmd) for _cmd in sync_payload}]
 
-                    log.info(f"Pushing {len(cmds_json[cmd_scope])} commands to {cmd_scope}")
-                    sync_response = await self.http.post_application_command(
-                        self.app.id, cmds_json[cmd_scope], guild_id=cmd_scope
+                if sync_needed_flag or (self.del_unused_app_cmd and len(sync_payload) < len(remote_commands)):
+                    # synchronise commands if flag is set, or commands are to be deleted
+                    log.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
+                    sync_response: list[dict] = await self.http.overwrite_application_commands(
+                        self.app.id, sync_payload, cmd_scope
                     )
-
-                    # cache command IDs
                     self._cache_sync_response(sync_response, cmd_scope)
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
-
-                if self.del_unused_app_cmd:
-                    for cmd in [c for c in remote_commands if c not in found]:
-                        scope = cmd.get("guild_id", GLOBAL_SCOPE)
-                        log.warning(
-                            f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
-                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                        )
-                        await self.http.delete_application_command(
-                            self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
-                        )
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
 
                     if not local_cmd.permissions:
                         continue
                     for perm in local_cmd.permissions:
-                        if perm.guild_id not in guild_perms:
-                            guild_perms[perm.guild_id] = []
-                        perm_json = {
-                            "id": local_cmd.get_cmd_id(perm.guild_id),
-                            "permissions": [perm.to_dict() for perm in local_cmd.permissions],
-                        }
-                        if perm_json not in guild_perms[perm.guild_id]:
-                            guild_perms[perm.guild_id].append(perm_json)
+                        if perm.guild_id == cmd_scope:
+                            if perm.guild_id not in guild_perms:
+                                guild_perms[perm.guild_id] = []
+                            perm_json = {
+                                "id": local_cmd.get_cmd_id(perm.guild_id),
+                                "permissions": [perm.to_dict() for perm in local_cmd.permissions],
+                            }
+                            if perm_json not in guild_perms[perm.guild_id]:
+                                guild_perms[perm.guild_id].append(perm_json)
 
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
             except HTTPException as e:
-                self._raise_sync_exception(e, cmds_json, cmd_scope)
+                self._raise_sync_exception(e, local_cmds_json, cmd_scope)
 
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
@@ -1013,7 +1011,7 @@ class Snake(
                         f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
                     )
                 except HTTPException as e:
-                    self._raise_sync_exception(e, cmds_json, perm_scope)
+                    self._raise_sync_exception(e, local_cmds_json, perm_scope)
             else:
                 log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
@@ -1057,7 +1055,7 @@ class Snake(
             # the above shouldn't fail, but if it does, just raise the exception normally
             raise e from None
 
-    def _cache_sync_response(self, sync_response: dict, scope: "Snowflake_Type"):
+    def _cache_sync_response(self, sync_response: list[dict], scope: "Snowflake_Type"):
         for cmd_data in sync_response:
             self._interaction_scopes[cmd_data["id"]] = scope
             if cmd_data["name"] in self.interactions[scope]:
