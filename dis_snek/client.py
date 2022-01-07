@@ -515,7 +515,10 @@ class Snake(
 
         """
         return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs,
+            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}",
+            error,
+            *args,
+            **kwargs,
         )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
