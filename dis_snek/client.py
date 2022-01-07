@@ -856,7 +856,7 @@ class Snake(
 
         req_lock = asyncio.Lock()
 
-        async def wrap(*args, **kwargs) -> Union[List[Dict], MISSING]:
+        async def wrap(*args, **kwargs) -> Absent[List[Dict]]:
             async with req_lock:
                 # throttle this
                 await asyncio.sleep(0.1)
