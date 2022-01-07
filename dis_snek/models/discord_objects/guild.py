@@ -226,6 +226,11 @@ class Guild(BaseGuild):
         return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
 
     @property
+    def premium_subscribers(self) -> List["Member"]:
+        """Returns a list of all premium subscribers"""
+        return [member for member in self.members if member.premium]
+
+    @property
     def roles(self) -> List["Role"]:
         """Returns a list of roles associated with this guild."""
         return [self._client.cache.role_cache.get(r_id) for r_id in self._role_ids]
