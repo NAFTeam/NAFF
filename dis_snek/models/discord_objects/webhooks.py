@@ -194,7 +194,7 @@ class Webhook(DiscordObject, SendMixin):
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
-    ):
+    ) -> Optional["Message"]:
         message_payload = process_message_payload(
             content=content,
             embeds=embeds,

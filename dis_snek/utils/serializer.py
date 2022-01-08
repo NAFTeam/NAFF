@@ -17,7 +17,7 @@ def export_converter(converter) -> dict:
     return dict(export_converter=converter)
 
 
-def to_dict(inst):
+def to_dict(inst) -> dict:
     if (converter := getattr(inst, "as_dict", None)) is not None:
         return converter()
 

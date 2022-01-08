@@ -60,7 +60,7 @@ class HTTPException(SnakeException):
                 self.text = data
         super().__init__(f"{self.status}|{self.response.reason}: {f'({self.code}) ' if self.code else ''}{self.text}")
 
-    def search_for_message(self, data: dict):
+    def search_for_message(self, data: dict) -> list:
         """
         Search the exceptions error dictionary for a message explaining the issue.
 

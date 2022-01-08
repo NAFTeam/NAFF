@@ -141,7 +141,7 @@ class Task:
 
         """
 
-        def wrapper(func: Callable):
+        def wrapper(func: Callable) -> "Task":
             return cls(func, trigger)
 
         return wrapper
