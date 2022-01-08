@@ -69,7 +69,6 @@ class SendMixin:
             file=file,
             tts=tts,
             flags=flags,
-            **kwargs,
         )
         if kwargs:
             for key, value in kwargs.items():
