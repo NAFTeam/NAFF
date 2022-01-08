@@ -20,7 +20,7 @@ Snek is intended to be fast, easy to use, and easily modified to suit your needs
 ## Is this just another `Discord.py` fork?
 While this library shares features and some stylistic choices with `discord.py`, it is completely separate from them. We think `discord.py` is a fantastic library, but we disagree with the direction and design decisions that were made by it.
 
-Compared to `discord.py`; `Dis-Senk` starts faster, responds faster, is simpler to use, and comes equipped with plenty of creature comforts to help get your bot launched faster.
+Compared to `discord.py`; `Dis-Snek` starts faster, responds faster, is simpler to use, and comes equipped with plenty of creature comforts to help get your bot launched faster.
 
 ## How do I use this?
 Here is a basic example:
