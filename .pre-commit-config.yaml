@@ -11,11 +11,6 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
 
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
-    hooks:
-      - id: python-check-blanket-noqa
-
   - repo: https://github.com/psf/black
     rev: 21.12b0
     hooks:
