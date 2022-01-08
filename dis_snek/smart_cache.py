@@ -313,7 +313,10 @@ class GlobalCache:
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
         if request_fallback and channel is None:
-            data = await self._client.http.get_channel(channel_id)
+            try:
+                data = await self._client.http.get_channel(channel_id)
+            except (NotFound, Forbidden):
+                return None
             channel = self.place_channel_data(data)
         return channel
 
