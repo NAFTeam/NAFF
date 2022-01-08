@@ -130,6 +130,7 @@ class Webhook(DiscordObject, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
@@ -150,6 +151,7 @@ class Webhook(DiscordObject, SendMixin):
         Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
@@ -167,6 +169,7 @@ class Webhook(DiscordObject, SendMixin):
         """
         return await super().send(
             content=content,
+            embed=embed,
             embeds=embeds,
             components=components,
             stickers=stickers,
