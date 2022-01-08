@@ -1304,11 +1304,17 @@ class Snake(
 
         module = importlib.import_module(name, package)
         try:
-            setup = getattr(module, "setup")
+            setup = getattr(module, "setup", None)
+            if not setup:
+                raise ExtensionLoadException(
+                    f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
+                ) from None
             setup(self)
+        except ExtensionLoadException:
+            raise
         except Exception as e:
             del sys.modules[name]
-            raise ExtensionLoadException(f"Error loading {name}") from e
+            raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
 
         else:
             log.debug(f"Loaded Extension: {name}")
