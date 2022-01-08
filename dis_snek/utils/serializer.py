@@ -8,6 +8,7 @@ from typing import Optional
 from attr import fields, has
 
 from dis_snek.const import MISSING
+from dis_snek.models.file import File
 
 
 no_export_meta = dict(no_export=True)
@@ -73,6 +74,10 @@ def to_image_data(imagefile) -> Optional[str]:
     elif isinstance(imagefile, (str, Path)):
         with open(imagefile, "rb") as image_buffer:
             image_data = image_buffer.read()
+    elif isinstance(imagefile, File):
+        with open(imagefile.file, "rb") as image_buffer:
+            image_data = image_buffer.read()
+
     else:
         return imagefile
 
