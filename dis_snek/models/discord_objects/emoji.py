@@ -203,7 +203,7 @@ def process_emoji_req_format(emoji: Optional[Union[Emoji, dict, str]]) -> Option
         return emoji
 
     if isinstance(emoji, str):
-        return emoji
+        emoji = Emoji.from_str(emoji)
 
     if isinstance(emoji, dict):
         emoji = Emoji.from_dict(emoji)
