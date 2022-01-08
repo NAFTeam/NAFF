@@ -10,12 +10,6 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self):
-        return self
-
 
 class Sentinel(metaclass=Singleton):
     @staticmethod
@@ -34,3 +28,9 @@ class Sentinel(metaclass=Singleton):
 
     def __reduce__(self):
         return self.name
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, _):
+        return self
