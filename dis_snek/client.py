@@ -70,8 +70,12 @@ from dis_snek.state import ConnectionState
 from dis_snek.tasks.task import Task
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
+from dis_snek.utils.serializer import to_image_data
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
+    from dis_snek.models.file import File
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
@@ -1388,6 +1392,29 @@ class Snake(
             return await self.cache.get_guild(guild_id)
         except NotFound:
             return None
+
+    async def create_guild_from_guild_template(
+        self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
+    ) -> Optional[Guild]:
+        """
+        Creates a new guild based on a template.
+
+        note:
+            This endpoint can only be used by bots in less than 10 guilds.
+
+        parameters:
+            template_code: The code of the template to use.
+            name: The name of the guild (2-100 characters)
+            icon: Location or File of icon to set
+
+        returns:
+            The newly created guild object
+
+        """
+        if icon:
+            icon = to_image_data(icon)
+        guild_data = await self.http.create_guild_from_guild_template(template_code, name, icon)
+        return Guild.from_dict(guild_data, self)
 
     async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
