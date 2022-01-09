@@ -60,7 +60,7 @@ class SendMixin:
             New message object that was sent.
 
         """
-        if not content and not (embeds or embed):
+        if not content and not (embeds or embed) and not file:
             raise EmptyMessageException("You cannot send a message without any content or embeds")
         message_payload = process_message_payload(
             content=content,
