@@ -12,7 +12,6 @@ from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
-
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
 from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
@@ -31,7 +30,7 @@ from dis_snek.models.file import File
 from dis_snek.models.snowflake import to_snowflake, to_snowflake_list, to_optional_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.converters import timestamp_converter, optional_timestamp_converter
 from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
@@ -195,7 +194,7 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = attr.ib(default=MISSING)
-    timestamp: Timestamp = attr.ib(default=MISSING, converter=timestamp_converter)
+    timestamp: Timestamp = attr.ib(default=MISSING, converter=optional_timestamp_converter)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
