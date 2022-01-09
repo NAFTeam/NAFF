@@ -402,6 +402,7 @@ class SlashCommand(InteractionCommand):
     @group_name.validator
     @sub_cmd_name.validator
     def name_validator(self, attribute: str, value: str) -> None:
+        return
         if value:
             if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
                 raise ValueError(
@@ -919,40 +920,3 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
                 return True
 
     return False
-
-
-def maybe_int(x):
-    try:
-        return int(x)
-    except Exception:
-        return x
-
-
-def parse_application_command_error(errors: dict, cmd, keys=None) -> List[str]:
-    messages: List[str] = []
-
-    for key, cmd_attribute in errors.items():
-        if isinstance(cmd_attribute, dict) and cmd_attribute.get("_errors", None):
-            for _attrib_num, error_message in errors[key].items():
-                messages.append(f"{key}: {', '.join([i['message'] for i in error_message])}")
-
-        else:
-            if not keys:
-                keys = []
-            keys.append(maybe_int(key))
-
-            if out := parse_application_command_error(cmd_attribute, cmd, keys.copy()):
-                if cmd:
-                    x = cmd
-                    for k in keys:
-                        try:
-                            x = x[k]
-                        except KeyError:  # noqa: S110
-                            pass
-                    if isinstance(x, dict):
-                        key = x.get("name", key)
-                        out = [f"`{key}` --> {o}" for o in out]
-
-                messages += out
-
-    return messages

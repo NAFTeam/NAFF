@@ -57,7 +57,6 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
-    parse_application_command_error,
 )
 from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
@@ -75,7 +74,6 @@ from dis_snek.utils.serializer import to_image_data
 if TYPE_CHECKING:
     from io import IOBase
     from pathlib import Path
-    from dis_snek.models.file import File
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
@@ -445,10 +443,9 @@ class Snake(
         out = traceback.format_exc()
 
         if isinstance(error, HTTPException):
+            # HTTPException's are of 3 known formats, we can parse them for human readable errors
             try:
                 errors = error.search_for_message(error.errors)
-                for i, e in enumerate(errors):
-                    errors[i] = f'{e.get("code")}: {e.get("message")}'
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
             except Exception:  # noqa : S110
                 pass
@@ -1050,7 +1047,7 @@ class Snake(
             if isinstance(e.errors, dict):
                 for cmd_num in e.errors.keys():
                     cmd = cmds_json[cmd_scope][int(cmd_num)]
-                    output = parse_application_command_error(e.errors[cmd_num], cmd=cmd)
+                    output = e.search_for_message(e.errors[cmd_num], cmd)
                     if len(output) > 1:
                         output = "\n".join(output)
                         log.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
