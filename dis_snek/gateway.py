@@ -296,7 +296,12 @@ class WebsocketClient:
         if self.heartbeat_interval is None:
             raise RuntimeError
 
-        await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
+        try:
+            await asyncio.wait_for(self._kill_bee_gees.wait(), timeout=self.heartbeat_interval * random.uniform(0, 0.5))
+        except asyncio.TimeoutError:
+            pass
+        else:
+            return
 
         log.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
         while not self._kill_bee_gees.is_set():
