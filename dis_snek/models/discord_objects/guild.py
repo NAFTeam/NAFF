@@ -13,7 +13,7 @@ from dis_snek.models.color import Color
 from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.asset import Asset
-from dis_snek.models.discord_objects.emoji import CustomEmoji, Emoji
+from dis_snek.models.discord_objects.emoji import CustomEmoji, PartialEmoji
 from dis_snek.models.discord_objects.scheduled_event import (
     ScheduledEvent,
     ScheduledEventPrivacyLevel,
@@ -94,7 +94,7 @@ class GuildWelcome(ClientObject):
 
 @define()
 class GuildPreview(BaseGuild):
-    emoji: list[Emoji] = attr.ib(factory=list)
+    emoji: list[PartialEmoji] = attr.ib(factory=list)
     """A list of custom emoji from this guild"""
     approximate_member_count: int = attr.ib(default=0)
     """Approximate number of members in this guild"""

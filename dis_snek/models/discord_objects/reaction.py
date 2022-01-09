@@ -7,7 +7,7 @@ import attr
 
 from dis_snek.const import MISSING
 from dis_snek.models.discord import ClientObject
-from dis_snek.models.discord_objects.emoji import Emoji
+from dis_snek.models.discord_objects.emoji import PartialEmoji
 from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import define
@@ -62,7 +62,7 @@ class ReactionUsers(AsyncIterator):
 class Reaction(ClientObject):
     count: int = attr.ib()
     me: bool = attr.ib(default=False)
-    emoji: "Emoji" = attr.ib(converter=Emoji.from_dict)
+    emoji: "PartialEmoji" = attr.ib(converter=PartialEmoji.from_dict)
 
     _channel_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
     _message_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)

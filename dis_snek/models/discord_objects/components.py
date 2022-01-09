@@ -12,7 +12,7 @@ from dis_snek.utils.attr_utils import str_validator
 from dis_snek.utils.serializer import export_converter
 
 if TYPE_CHECKING:
-    from dis_snek.models.discord_objects.emoji import Emoji
+    from dis_snek.models.discord_objects.emoji import PartialEmoji
     from dis_snek.models.discord_objects.message import Message
 
 
@@ -62,7 +62,7 @@ class Button(InteractiveComponent):
     Attributes:
         style optional[ButtonStyles, int]: Buttons come in a variety of styles to convey different types of actions.
         label optional[str]: The text that appears on the button, max 80 characters.
-        emoji optional[Union[Emoji, dict, str]]: The emoji that appears on the button.
+        emoji optional[Union[PartialEmoji, dict, str]]: The emoji that appears on the button.
         custom_id Optional[str]: A developer-defined identifier for the button, max 100 characters.
         url Optional[str]: A url for link-style buttons.
         disabled bool: Disable the button and make it not interactable, default false.
@@ -71,7 +71,7 @@ class Button(InteractiveComponent):
 
     style: Union[ButtonStyles, int] = attr.ib()
     label: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
+    emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
     custom_id: Optional[str] = attr.ib(default=MISSING, validator=str_validator)
     url: Optional[str] = attr.ib(default=None)
     disabled: bool = attr.ib(default=False)
@@ -113,7 +113,7 @@ class SelectOption(BaseComponent):
         label str: The label (max 80 characters)
         value str: The value of the select, this is whats sent to your bot
         description Optional[str]: A description of this option
-        emoji Optional[Union[Emoji, dict, str]: An emoji to show in this select option
+        emoji Optional[Union[PartialEmoji, dict, str]: An emoji to show in this select option
         default bool: Is this option selected by default
 
     """
@@ -121,7 +121,7 @@ class SelectOption(BaseComponent):
     label: str = attr.ib(validator=str_validator)
     value: str = attr.ib(validator=str_validator)
     description: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["Emoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
+    emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
     default: bool = attr.ib(default=False)
 
     @label.validator
