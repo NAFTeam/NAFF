@@ -333,10 +333,12 @@ class WebsocketClient:
                 # Note that we check for a received message first, because if both completed at
                 # the same time, we don't want to discard that message.
                 msg = await receiving
+                stopping.cancel()
             else:
                 # This has to be the stopping task, which we join into the current task (even
                 # though that doesn't give any meaningful value in the return).
                 await stopping
+                receiving.cancel()
                 return
 
             op = msg.get("op")
