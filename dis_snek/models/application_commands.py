@@ -557,7 +557,7 @@ def subcommand(
     *,
     subcommand_group: Optional[str] = None,
     name: Optional[str] = None,
-    description: Optional[str] = None,
+    description: Absent[str] = MISSING,
     base_description: Optional[str] = None,
     base_desc: Optional[str] = None,
     base_default_permission: bool = True,
