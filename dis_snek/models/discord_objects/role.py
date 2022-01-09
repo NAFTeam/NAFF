@@ -78,7 +78,7 @@ class Role(DiscordObject):
     @property
     def bot_managed(self) -> bool:
         """Is this role owned/managed by a bot."""
-        return self.bot_id is not None
+        return self._bot_id is not None
 
     @property
     def mention(self) -> str:
