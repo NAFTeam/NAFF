@@ -62,7 +62,7 @@ class ChannelHistory(AsyncIterator):
         self.around: "Snowflake_Type" = around
         super().__init__(limit)
 
-    async def fetch(self) -> List[Message]:
+    async def fetch(self) -> List["Message"]:
         """
         Fetch additional objects.
 
