@@ -71,7 +71,13 @@ class ConnectionState:
 
     async def stop(self) -> None:
         log.debug(f"Shutting down shard ID {self.shard_id}")
-        self._shard_task.cancel()
+        if self.gateway is not None:
+            self.gateway.close()
+            self.gateway = None
+
+        if self._shard_task is not None:
+            await self._shard_task
+            self._shard_task = None
 
     async def _ws_connect(self) -> None:
         log.info("Attempting to initially connect to gateway...")

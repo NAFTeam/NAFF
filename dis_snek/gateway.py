@@ -71,6 +71,7 @@ class WebsocketClient:
         "_kill_bee_gees",
         "_last_heartbeat",
         "_acknowledged",
+        "_close_gateway",
         "_entered",
     )
 
@@ -101,6 +102,8 @@ class WebsocketClient:
         self._acknowledged = asyncio.Event()
         self._acknowledged.set()  # Initialize it as set
 
+        self._close_gateway = asyncio.Event()
+
         # Santity check, it is extremely important that an instance isn't reused.
         self._entered = False
 
@@ -130,6 +133,9 @@ class WebsocketClient:
     async def __aexit__(
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, traceback: TracebackType | None
     ) -> None:
+        # Technically should not be possible in any way, but might as well be safe worst-case.
+        self._close_gateway.set()
+
         if self._keep_alive is not None:
             self._kill_bee_gees.set()
 
@@ -318,8 +324,19 @@ class WebsocketClient:
     async def run(self) -> None:
         """Start receiving events from the websocket."""
         while True:
-            msg = await self.receive()
-            if not msg:
+
+            stopping = asyncio.create_task(self._close_gateway.wait())
+            receiving = asyncio.create_task(self.receive())
+            done, _ = await asyncio.wait({stopping, receiving}, return_when=asyncio.FIRST_COMPLETED)
+
+            if receiving in done:
+                # Note that we check for a received message first, because if both completed at
+                # the same time, we don't want to discard that message.
+                msg = await receiving
+            else:
+                # This has to be the stopping task, which we join into the current task (even
+                # though that doesn't give any meaningful value in the return).
+                await stopping
                 return
 
             op = msg.get("op")
@@ -398,6 +415,9 @@ class WebsocketClient:
                     log.debug(f"No processor for `{event_name}`")
 
         self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_socket_receive"))
+
+    def close(self) -> None:
+        self._close_gateway.set()
 
     async def _identify(self) -> None:
         """Send an identify payload to the gateway."""
