@@ -768,6 +768,16 @@ class GuildChannel(BaseChannel):
     def members(self) -> List["Member"]:
         return [m for m in self.guild.members if Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
 
+    @property
+    def bots(self) -> List["Member"]:
+        """Returns a list of bots that can see this channel."""
+        return [m for m in self.guild.members if m.bot and Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
+
+    @property
+    def humans(self) -> List["Member"]:
+        """Returns a list of humans that can see this channel."""
+        return [m for m in self.guild.members if not m.bot and Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
+
     async def clone(self, name: Optional[str] = None, reason: Absent[Optional[str]] = MISSING) -> "TYPE_GUILD_CHANNEL":
         """
         Clone this channel and create a new one.
