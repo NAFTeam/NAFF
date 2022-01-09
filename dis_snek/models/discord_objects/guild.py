@@ -231,6 +231,16 @@ class Guild(BaseGuild):
         return [member for member in self.members if member.premium]
 
     @property
+    def bots(self) -> List["Member"]:
+        """Returns a list of all bots within this guild"""
+        return [member for member in self.members if member.bot]
+
+    @property
+    def humans(self):
+        """Returns a list of all humans within this guild"""
+        return [member for member in self.members if not member.bot]
+
+    @property
     def roles(self) -> List["Role"]:
         """Returns a list of roles associated with this guild."""
         return [self._client.cache.role_cache.get(r_id) for r_id in self._role_ids]
