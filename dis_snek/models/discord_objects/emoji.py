@@ -21,8 +21,8 @@ emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
 
 @define()
-class Emoji(SnowflakeObject, DictSerializationMixin):
-    """Represent a basic emoji used in discord."""
+class PartialEmoji(SnowflakeObject, DictSerializationMixin):
+    """Represent a basic ("partial") emoji used in discord."""
 
     id: Optional["Snowflake_Type"] = attr.ib(
         default=None, converter=optional(to_snowflake)
@@ -34,9 +34,9 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
     """Whether this emoji is animated"""
 
     @classmethod
-    def from_str(cls, emoji_str: str) -> "Emoji":
+    def from_str(cls, emoji_str: str) -> "PartialEmoji":
         """
-        Generate an Emoji from a discord Emoji string representation, or unicode emoji.
+        Generate a PartialEmoji from a discord Emoji string representation, or unicode emoji.
 
         Handles:
             <:emoji_name:emoji_id>
@@ -48,7 +48,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
             emoji_str: The string representation an emoji
 
         Returns:
-            An Emoji object
+            A PartialEmoji object
 
         Raises:
             ValueError if the string cannot be parsed
@@ -81,7 +81,7 @@ class Emoji(SnowflakeObject, DictSerializationMixin):
 
 
 @define()
-class CustomEmoji(Emoji):
+class CustomEmoji(PartialEmoji):
     """Represent a custom emoji in a guild with all its properties."""
 
     _client: "Snake" = field(metadata=no_export_meta)
@@ -198,23 +198,23 @@ class CustomEmoji(Emoji):
         await self._client.http.delete_guild_emoji(self._guild_id, self.id, reason=reason)
 
 
-def process_emoji_req_format(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[str]:
+def process_emoji_req_format(emoji: Optional[Union[PartialEmoji, dict, str]]) -> Optional[str]:
     if not emoji:
         return emoji
 
     if isinstance(emoji, str):
-        emoji = Emoji.from_str(emoji)
+        emoji = PartialEmoji.from_str(emoji)
 
     if isinstance(emoji, dict):
-        emoji = Emoji.from_dict(emoji)
+        emoji = PartialEmoji.from_dict(emoji)
 
-    if isinstance(emoji, Emoji):
+    if isinstance(emoji, PartialEmoji):
         return emoji.req_format
 
     raise ValueError(f"Invalid emoji: {emoji}")
 
 
-def process_emoji(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[dict]:
+def process_emoji(emoji: Optional[Union[PartialEmoji, dict, str]]) -> Optional[dict]:
     if not emoji:
         return emoji
 
@@ -222,9 +222,9 @@ def process_emoji(emoji: Optional[Union[Emoji, dict, str]]) -> Optional[dict]:
         return emoji
 
     if isinstance(emoji, str):
-        emoji = Emoji.from_str(emoji)
+        emoji = PartialEmoji.from_str(emoji)
 
-    if isinstance(emoji, Emoji):
+    if isinstance(emoji, PartialEmoji):
         return emoji.to_dict()
 
     raise ValueError(f"Invalid emoji: {emoji}")

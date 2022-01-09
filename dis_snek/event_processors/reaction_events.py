@@ -2,7 +2,7 @@ import logging
 
 from dis_snek.const import logger_name
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
-from dis_snek.models import events, Emoji, Reaction
+from dis_snek.models import events, PartialEmoji, Reaction
 from dis_snek.models.events import RawGatewayEvent
 
 log = logging.getLogger(logger_name)
@@ -18,7 +18,7 @@ class ReactionEvents(EventMixinTemplate):
         else:
             author = await self.cache.get_user(event.data.get("user_id"))
 
-        emoji = Emoji.from_dict(event.data.get("emoji"))  # type: ignore
+        emoji = PartialEmoji.from_dict(event.data.get("emoji"))  # type: ignore
         message = await self.cache.get_message(
             event.data.get("channel_id"), event.data.get("message_id"), request_fallback=False
         )
