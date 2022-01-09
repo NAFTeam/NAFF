@@ -40,7 +40,7 @@ class Role(DiscordObject):
 
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
-    integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
+    _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
 
     def __lt__(self, other):
         return self.position < other.position
@@ -87,8 +87,8 @@ class Role(DiscordObject):
 
     @property
     def integration(self) -> bool:
-        """Is this role owned/managed by a integration."""
-        return self.tags.integration_id is not None
+        """Is this role owned/managed by an integration."""
+        return self._integration_id is not None
 
     @property
     def members(self) -> list["Member"]:
