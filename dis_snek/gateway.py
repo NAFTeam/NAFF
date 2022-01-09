@@ -136,24 +136,23 @@ class WebsocketClient:
         # Technically should not be possible in any way, but might as well be safe worst-case.
         self._close_gateway.set()
 
-        if self._keep_alive is not None:
-            self._kill_bee_gees.set()
-
-        if self.ws is not None:
-            # We could be cancelled here, it is extremely important that we close the
-            # WebSocket either way, hence the try/except.
-            try:
-                await self._race_lock.acquire()
-            except asyncio.CancelledError:
-                if self._keep_alive is not None:
-                    # If we don't cancel the keep-alive handler it could potentially acquire the
-                    # lock after we exit (since we presumably don't hold it because we were
-                    # cancelled trying to do so).
-                    self._keep_alive.cancel()
-
-                raise
-            finally:
-                await self.ws.close(code=1000)
+        try:
+            if self._keep_alive is not None:
+                self._kill_bee_gees.set()
+                try:
+                    # Even if we get cancelled that is fine, because then the keep-alive
+                    # handler will also be cancelled since we're waiting on it.
+                    await self._keep_alive  # Wait for the keep-alive handler to finish
+                finally:
+                    self._keep_alive = None
+        finally:
+            if self.ws is not None:
+                # We could be cancelled here, it is extremely important that we close the
+                # WebSocket either way, hence the try/except.
+                try:
+                    await self.ws.close(code=1000)
+                finally:
+                    self.ws = None
 
     @property
     def average_latency(self) -> float:
