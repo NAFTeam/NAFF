@@ -879,6 +879,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict):
                         or local_option["description"] != remote_option["description"]
                         or local_option["required"] != remote_option.get("required", False)
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
+                        or local_option["choices"] != remote_option.get("choices", [])
                     ):
                         return False
             else:
