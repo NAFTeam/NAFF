@@ -244,6 +244,10 @@ class MessageException(BotException):
     """A message operation encountered an exception."""
 
 
+class EmptyMessageException(MessageException):
+    """You have attempted to send a message without any content or embeds"""
+
+
 class EphemeralEditException(MessageException):
     """
     Your bot attempted to edit an ephemeral message. This is not possible.
