@@ -71,6 +71,7 @@ class WebsocketClient:
         "_kill_bee_gees",
         "_last_heartbeat",
         "_acknowledged",
+        "_close_gateway",
         "_entered",
     )
 
@@ -101,6 +102,8 @@ class WebsocketClient:
         self._acknowledged = asyncio.Event()
         self._acknowledged.set()  # Initialize it as set
 
+        self._close_gateway = asyncio.Event()
+
         # Santity check, it is extremely important that an instance isn't reused.
         self._entered = False
 
@@ -130,24 +133,26 @@ class WebsocketClient:
     async def __aexit__(
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, traceback: TracebackType | None
     ) -> None:
-        if self._keep_alive is not None:
-            self._kill_bee_gees.set()
+        # Technically should not be possible in any way, but might as well be safe worst-case.
+        self._close_gateway.set()
 
-        if self.ws is not None:
-            # We could be cancelled here, it is extremely important that we close the
-            # WebSocket either way, hence the try/except.
-            try:
-                await self._race_lock.acquire()
-            except asyncio.CancelledError:
-                if self._keep_alive is not None:
-                    # If we don't cancel the keep-alive handler it could potentially acquire the
-                    # lock after we exit (since we presumably don't hold it because we were
-                    # cancelled trying to do so).
-                    self._keep_alive.cancel()
-
-                raise
-            finally:
-                await self.ws.close(code=1000)
+        try:
+            if self._keep_alive is not None:
+                self._kill_bee_gees.set()
+                try:
+                    # Even if we get cancelled that is fine, because then the keep-alive
+                    # handler will also be cancelled since we're waiting on it.
+                    await self._keep_alive  # Wait for the keep-alive handler to finish
+                finally:
+                    self._keep_alive = None
+        finally:
+            if self.ws is not None:
+                # We could be cancelled here, it is extremely important that we close the
+                # WebSocket either way, hence the try/except.
+                try:
+                    await self.ws.close(code=1000)
+                finally:
+                    self.ws = None
 
     @property
     def average_latency(self) -> float:
@@ -291,7 +296,12 @@ class WebsocketClient:
         if self.heartbeat_interval is None:
             raise RuntimeError
 
-        await asyncio.sleep(self.heartbeat_interval * random.uniform(0, 0.5))
+        try:
+            await asyncio.wait_for(self._kill_bee_gees.wait(), timeout=self.heartbeat_interval * random.uniform(0, 0.5))
+        except asyncio.TimeoutError:
+            pass
+        else:
+            return
 
         log.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
         while not self._kill_bee_gees.is_set():
@@ -318,8 +328,21 @@ class WebsocketClient:
     async def run(self) -> None:
         """Start receiving events from the websocket."""
         while True:
-            msg = await self.receive()
-            if not msg:
+
+            stopping = asyncio.create_task(self._close_gateway.wait())
+            receiving = asyncio.create_task(self.receive())
+            done, _ = await asyncio.wait({stopping, receiving}, return_when=asyncio.FIRST_COMPLETED)
+
+            if receiving in done:
+                # Note that we check for a received message first, because if both completed at
+                # the same time, we don't want to discard that message.
+                msg = await receiving
+                stopping.cancel()
+            else:
+                # This has to be the stopping task, which we join into the current task (even
+                # though that doesn't give any meaningful value in the return).
+                await stopping
+                receiving.cancel()
                 return
 
             op = msg.get("op")
@@ -398,6 +421,9 @@ class WebsocketClient:
                     log.debug(f"No processor for `{event_name}`")
 
         self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_socket_receive"))
+
+    def close(self) -> None:
+        self._close_gateway.set()
 
     async def _identify(self) -> None:
         """Send an identify payload to the gateway."""
