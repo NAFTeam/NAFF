@@ -323,7 +323,7 @@ class GlobalCache:
 
     # Channel cache methods
 
-    async def get_cached_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+    def get_cached_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on it's ID.
 
