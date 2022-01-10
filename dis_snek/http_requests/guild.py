@@ -560,23 +560,23 @@ class GuildRequests:
             data=dict_filter_none({"channel_id": channel_id, "suppress": suppress}),
         )
 
-    async def create_guild_from_guild_template(self, template_code: str, name: str) -> dict:
+    async def create_guild_from_guild_template(self, template_code: str, name: str, icon: str) -> dict:
         """
-        Create a a new guild based on a template.
+        Creates a new guild based on a template.
 
         note:
             This endpoint can only be used by bots in less than 10 guilds.
 
         parameters:
             template_code: The code of the template to use.
-            name: The name o the guild (2-100 characters)
+            name: The name of the guild (2-100 characters)
+            icon: Data URI scheme
 
         returns:
             The newly created guild object
 
         """
-        # todo: add icon support
-        return await self.request(Route("POST", f"/guilds/templates/{template_code}", data={"name": name}))
+        return await self.request(Route("POST", f"/guilds/templates/{template_code}"), data=dict(name=name, icon=icon))
 
     async def get_guild_templates(self, guild_id: "Snowflake_Type") -> List[dict]:
         """

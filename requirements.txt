@@ -1,4 +1,3 @@
 aiohttp
 attrs
-sentinel
 tomli

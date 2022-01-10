@@ -180,7 +180,7 @@ class ScheduledEvent(DiscordObject):
         entity_metadata: Absent[dict] = MISSING,
         privacy_level: Absent[ScheduledEventPrivacyLevel] = MISSING,
         reason: Absent[str] = MISSING,
-    ):
+    ) -> None:
         """
         Edits this event.
 

@@ -29,7 +29,7 @@ class StageInstance(DiscordObject):
     def channel(self) -> "GuildStageVoice":
         return self._client.cache.channel_cache.get(self._channel_id)
 
-    async def delete(self, reason: Absent[Optional[str]] = MISSING):
+    async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """
         Delete this stage instance. Effectively closes the stage.
 

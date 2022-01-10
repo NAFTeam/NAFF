@@ -184,11 +184,11 @@ class InteractionCommand(BaseCommand):
         super().__attrs_post_init__()
 
     @property
-    def resolved_name(self):
+    def resolved_name(self) -> str:
         """A representation of this interaction's name."""
         return self.name
 
-    def get_cmd_id(self, scope: "Snowflake_Type"):
+    def get_cmd_id(self, scope: "Snowflake_Type") -> "Snowflake_Type":
         return self.cmd_id.get(scope, self.cmd_id.get(GLOBAL_SCOPE, None))
 
     @property
@@ -362,7 +362,7 @@ class SlashCommand(InteractionCommand):
     autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
 
     @property
-    def resolved_name(self):
+    def resolved_name(self) -> str:
         return f"{self.name}{f' {self.group_name}' if self.group_name else ''}{f' {self.sub_cmd_name}' if self.sub_cmd_name else ''}"
 
     @property
@@ -402,6 +402,7 @@ class SlashCommand(InteractionCommand):
     @group_name.validator
     @sub_cmd_name.validator
     def name_validator(self, attribute: str, value: str) -> None:
+        return
         if value:
             if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
                 raise ValueError(
@@ -434,7 +435,7 @@ class SlashCommand(InteractionCommand):
     def autocomplete(self, option_name: str):
         """A decorator to declare a coroutine as an option autocomplete."""
 
-        def wrapper(call: Callable[..., Coroutine]):
+        def wrapper(call: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("autocomplete must be coroutine")
             self.autocomplete_callbacks[option_name] = call
@@ -498,7 +499,7 @@ def slash_command(
     group_name: str = None,
     sub_cmd_description: str = "No Description Set",
     group_description: str = "No Description Set",
-):
+) -> Callable[[Coroutine], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
 
@@ -556,7 +557,7 @@ def subcommand(
     *,
     subcommand_group: Optional[str] = None,
     name: Optional[str] = None,
-    description: Optional[str] = None,
+    description: Absent[str] = MISSING,
     base_description: Optional[str] = None,
     base_desc: Optional[str] = None,
     base_default_permission: bool = True,
@@ -819,7 +820,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         output_data["options"] = options
         return output_data
 
-    for scope, cmds in commands.items():
+    for _scope, cmds in commands.items():
         for cmd in cmds.values():
             if cmd.name not in cmd_bases:
                 cmd_bases[cmd.name] = [cmd]
@@ -878,6 +879,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict):
                         or local_option["description"] != remote_option["description"]
                         or local_option["required"] != remote_option.get("required", False)
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
+                        or local_option["choices"] != remote_option.get("choices", [])
                     ):
                         return False
             else:
@@ -919,40 +921,3 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
                 return True
 
     return False
-
-
-def maybe_int(x):
-    try:
-        return int(x)
-    except Exception:
-        return x
-
-
-def parse_application_command_error(errors: dict, cmd, keys=None):
-    messages = []
-
-    for key, cmd_attribute in errors.items():
-        if isinstance(cmd_attribute, dict) and cmd_attribute.get("_errors", None):
-            for attrib_num, error_message in errors[key].items():
-                messages.append(f"{key}: {', '.join([i['message'] for i in error_message])}")
-
-        else:
-            if not keys:
-                keys = []
-            keys.append(maybe_int(key))
-
-            if out := parse_application_command_error(cmd_attribute, cmd, keys.copy()):
-                if cmd:
-                    x = cmd
-                    for k in keys:
-                        try:
-                            x = x[k]
-                        except KeyError:  # noqa: S110
-                            pass
-                    if isinstance(x, dict):
-                        key = x.get("name", key)
-                        out = [f"`{key}` --> {o}" for o in out]
-
-                messages += out
-
-    return messages

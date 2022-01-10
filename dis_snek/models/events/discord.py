@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.discord_objects.activity import Activity
-    from dis_snek.models.discord_objects.emoji import Emoji
+    from dis_snek.models.discord_objects.emoji import PartialEmoji
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.voice_state import VoiceState
@@ -198,9 +198,9 @@ class BanRemove(BanCreate):
 class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
-    before: List["Emoji"] = attr.ib(factory=list)
+    before: List["PartialEmoji"] = attr.ib(factory=list)
     """List of emoji before this event"""
-    after: List["Emoji"] = attr.ib(factory=list)
+    after: List["PartialEmoji"] = attr.ib(factory=list)
     """List of emoji after this event"""
 
 

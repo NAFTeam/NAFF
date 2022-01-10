@@ -108,7 +108,7 @@ class Sticker(StickerItem):
         sticker_data = await self._client.http.modify_guild_sticker(payload, self._guild_id, self.id, reason)
         return self.update_from_dict(sticker_data)
 
-    async def delete(self, reason: Optional[str] = MISSING):
+    async def delete(self, reason: Optional[str] = MISSING) -> None:
         """
         Delete a sticker.
 

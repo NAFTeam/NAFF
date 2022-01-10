@@ -1,4 +1,4 @@
-from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine
+from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine, List, Optional, Union
 
 import aiohttp
 
@@ -60,26 +60,60 @@ class HTTPException(SnakeException):
                 self.text = data
         super().__init__(f"{self.status}|{self.response.reason}: {f'({self.code}) ' if self.code else ''}{self.text}")
 
-    def search_for_message(self, data: dict):
+    @staticmethod
+    def search_for_message(errors: dict, lookup: Optional[dict] = None) -> list[str]:
         """
         Search the exceptions error dictionary for a message explaining the issue.
 
         Args:
-            data: The error dictionary of the http exception
+            errors: The error dictionary of the http exception
+            lookup: A lookup dictionary to use to convert indexes into named items
 
         Returns:
-            A list of {"code": str, "message": str} found
+            A list of parsed error strings found
 
         """
-        if "_errors" in data:
-            errors = []
-            for e in data["_errors"]:
-                errors.append(e)
-            return errors
-        else:
-            for k, v in data.items():
-                if isinstance(v, dict):
-                    return self.search_for_message(data[k])
+        messages: List[str] = []
+        errors = errors.get("errors", errors)
+
+        def maybe_int(x) -> Union[int, Any]:
+            """If something can be an integer, convert it to one, otherwise return its normal value"""
+            try:
+                return int(x)
+            except ValueError:
+                return x
+
+        def _parse(_errors: dict, keys: Optional[List[str]] = None):
+            """Search through the entire dictionary for any errors defined"""
+            for key, val in _errors.items():
+                if key == "_errors":
+                    key_out = []
+                    if keys:
+                        if lookup:
+                            # this code simply substitutes keys for attribute names
+                            _lookup = lookup
+                            for _key in keys:
+                                _lookup = _lookup[maybe_int(_key)]
+
+                                if isinstance(_lookup, dict):
+                                    key_out.append(_lookup.get("name", _key))
+                                else:
+                                    key_out.append(_key)
+                        else:
+                            key_out = keys
+
+                    for msg in val:
+                        messages.append(f"{'->'.join(key_out)} {msg['code']}: {msg['message']}")
+                else:
+                    if keys:
+                        keys.append(key)
+                    else:
+                        keys = [key]
+                    _parse(val, keys)
+
+        _parse(errors)
+
+        return messages
 
 
 class DiscordError(HTTPException):
@@ -208,6 +242,10 @@ class CommandCheckFailure(CommandException):
 
 class MessageException(BotException):
     """A message operation encountered an exception."""
+
+
+class EmptyMessageException(MessageException):
+    """You have attempted to send a message without any content or embeds"""
 
 
 class EphemeralEditException(MessageException):

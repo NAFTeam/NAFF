@@ -1,7 +1,14 @@
 from datetime import datetime
 from typing import Union
 
+from dis_snek.const import Absent, MISSING
 from dis_snek.models.timestamp import Timestamp
+
+
+def optional_timestamp_converter(value: Absent[Union[datetime, int, float, str]]) -> Absent[Timestamp]:
+    if value is MISSING:
+        return value
+    return timestamp_converter(value)
 
 
 def timestamp_converter(value: Union[datetime, int, float, str]) -> Timestamp:
