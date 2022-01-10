@@ -61,7 +61,7 @@ class GlobalCache:
     # Non expiring discord objects cache
     user_cache: dict[int, User] = field(factory=dict)  # key: user_id
     _member_cache: dict[Tuple[int, int], Member | Deferred] = field(factory=dict)  # key: (guild_id, user_id)
-    _channel_cache: dict[Tuple[int, int], "TYPE_ALL_CHANNEL" | Deferred] = field(factory=dict)  # key: channel_id
+    _channel_cache: dict[Tuple[int, int], Union["TYPE_ALL_CHANNEL", Deferred]] = field(factory=dict)  # key: channel_id
     guild_cache: dict = field(factory=dict)  # key: guild_id
 
     # Expiring discord objects cache
