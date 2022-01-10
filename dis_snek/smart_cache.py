@@ -122,9 +122,7 @@ class GlobalCache:
 
     # Member cache methods
 
-    def get_cached_member(
-        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
-    ) -> Optional[Member]:
+    def get_cached_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Optional[Member]:
         """
         Synchronously get a member by their guild and user IDs. Will not request data from Discord if it's not cached locally.
 
@@ -325,9 +323,7 @@ class GlobalCache:
 
     # Channel cache methods
 
-    async def get_cached_channel(
-        self, channel_id: "Snowflake_Type"
-    ) -> Optional["TYPE_ALL_CHANNEL"]:
+    async def get_cached_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on it's ID.
 
