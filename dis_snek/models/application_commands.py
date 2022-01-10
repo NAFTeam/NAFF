@@ -402,7 +402,6 @@ class SlashCommand(InteractionCommand):
     @group_name.validator
     @sub_cmd_name.validator
     def name_validator(self, attribute: str, value: str) -> None:
-        return
         if value:
             if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
                 raise ValueError(
