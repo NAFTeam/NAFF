@@ -98,7 +98,7 @@ class ScheduledEvent(DiscordObject):
             data["creator"] = client.cache.place_user_data(data["creator"])
 
         if data.get("channel_id"):
-            data["channel"] = client.cache.channel_cache.get(data["channel_id"])
+            data["channel"] = client.cache.get_cached_channel(data["channel_id"])
 
         data["start_time"] = data.get("scheduled_start_time")
 

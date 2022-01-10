@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
+from typing import TYPE_CHECKING, List, Dict, Any, Optional, Tuple, Union
 
 import attr
 
@@ -59,9 +59,9 @@ class GlobalCache:
     _client: "Snake" = field()
 
     # Non expiring discord objects cache
-    user_cache: dict = field(factory=dict)  # key: user_id
-    member_cache: dict = field(factory=dict)  # key: (guild_id, user_id)
-    channel_cache: dict = field(factory=dict)  # key: channel_id
+    user_cache: dict[int, User] = field(factory=dict)  # key: user_id
+    _member_cache: dict[Tuple[int, int], Member | Deferred] = field(factory=dict)  # key: (guild_id, user_id)
+    _channel_cache: dict[Tuple[int, int], TYPE_ALL_CHANNEL | Deferred] = field(factory=dict)  # key: channel_id
     guild_cache: dict = field(factory=dict)  # key: guild_id
 
     # Expiring discord objects cache
@@ -122,6 +122,27 @@ class GlobalCache:
 
     # Member cache methods
 
+    def get_cached_member(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
+    ) -> Optional[Member]:
+        """
+        Synchronously get a member by their guild and user IDs. Will not request data from Discord if it's not cached locally.
+
+        Args:
+            guild_id: The ID of the guild this user belongs to
+            user_id: The ID of the user
+
+        Returns:
+            Member object if found
+
+        """
+        guild_id = to_snowflake(guild_id)
+        user_id = to_snowflake(user_id)
+        member = self._member_cache.get((guild_id, user_id))
+        if isinstance(member, Deferred):
+            member = self.place_member_data(guild_id, member.data)
+        return member
+
     async def get_member(
         self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type", request_fallback: bool = True
     ) -> Optional[Member]:
@@ -137,12 +158,8 @@ class GlobalCache:
             Member object if found
 
         """
-        guild_id = to_snowflake(guild_id)
-        user_id = to_snowflake(user_id)
-        member = self.member_cache.get((guild_id, user_id))
-        if isinstance(member, Deferred):
-            member = self.place_member_data(guild_id, member.data)
-        elif request_fallback and member is None:
+        member = self.get_cached_member(guild_id, user_id)
+        if request_fallback and member is None:
             data = await self._client.http.get_member(guild_id, user_id)
             member = self.place_member_data(guild_id, data)
         return member
@@ -162,17 +179,17 @@ class GlobalCache:
         is_user = "member" in data
         user_id = to_snowflake(data["id"] if is_user else data["user"]["id"])
 
-        member = self.member_cache.get((guild_id, user_id))
+        member = self._member_cache.get((guild_id, user_id))
         if member is None or isinstance(member, Deferred):
             if deferred:
-                member = self.member_cache[(guild_id, user_id)] = Deferred(data, user_id)
+                member = self._member_cache[(guild_id, user_id)] = Deferred(data, user_id)
                 return member
             member_extra = {"guild_id": guild_id}
             member = data["member"] if is_user else data
             member.update(member_extra)
 
             member = Member.from_dict(data, self._client)
-            self.member_cache[(guild_id, user_id)] = member
+            self._member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
 
@@ -308,6 +325,25 @@ class GlobalCache:
 
     # Channel cache methods
 
+    async def get_cached_channel(
+        self, channel_id: "Snowflake_Type"
+    ) -> Optional["TYPE_ALL_CHANNEL"]:
+        """
+        Get a channel based on it's ID.
+
+        Args:
+            channel_id: The ID of the channel
+            request_fallback: Should data be requested from Discord if not cached?
+
+        Returns:
+            The channel if found
+        """
+        channel_id = to_snowflake(channel_id)
+        channel = self._channel_cache.get(channel_id)
+        if isinstance(channel, Deferred):
+            channel = self.place_channel_data(channel.data)
+        return channel
+
     async def get_channel(
         self, channel_id: "Snowflake_Type", request_fallback: bool = True
     ) -> Optional["TYPE_ALL_CHANNEL"]:
@@ -321,11 +357,8 @@ class GlobalCache:
         Returns:
             The channel if found
         """
-        channel_id = to_snowflake(channel_id)
-        channel = self.channel_cache.get(channel_id)
-        if isinstance(channel, Deferred):
-            channel = self.place_channel_data(channel.data)
-        elif request_fallback and channel is None:
+        channel = self.get_cached_channel(channel_id)
+        if request_fallback and channel is None:
             try:
                 data = await self._client.http.get_channel(channel_id)
             except (NotFound, Forbidden):
@@ -344,14 +377,14 @@ class GlobalCache:
             The processed channel
         """
         channel_id = to_snowflake(data["id"])
-        channel = self.channel_cache.get(channel_id)
+        channel = self._channel_cache.get(channel_id)
 
         if channel is None or isinstance(channel, Deferred):
             if deferred:
-                channel = self.channel_cache[channel_id] = Deferred(data, channel_id)
+                channel = self._channel_cache[channel_id] = Deferred(data, channel_id)
             else:
                 channel = BaseChannel.from_dict_factory(data, self._client)
-                self.channel_cache[channel_id] = channel
+                self._channel_cache[channel_id] = channel
                 if guild := getattr(channel, "guild", None):
                     guild._channel_ids.add(channel.id)
         else:

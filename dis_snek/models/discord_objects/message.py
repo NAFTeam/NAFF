@@ -175,18 +175,18 @@ class BaseMessage(DiscordObject):
 
     @property
     def channel(self) -> "TYPE_MESSAGEABLE_CHANNEL":
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_cached_channel(self._channel_id)
 
     @property
     def thread(self) -> "TYPE_THREAD_CHANNEL":
-        return self._client.cache.channel_cache.get(self._thread_channel_id)
+        return self._client.cache.get_cached_channel(self._thread_channel_id)
 
     @property
     def author(self) -> Union["Member", "User"]:
         if self._author_id:
             member = None
             if self._guild_id:
-                member = self._client.cache.member_cache.get((self._guild_id, self._author_id))
+                member = self._client.cache.get_cached_member((self._guild_id, self._author_id))
             return member or self._client.cache.user_cache.get(self._author_id)
         return MISSING
 

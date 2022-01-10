@@ -217,17 +217,17 @@ class Guild(BaseGuild):
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
         """Returns a list of channels associated with this guild."""
-        return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
+        return [self._client.cache.get_cached_channel(c_id) for c_id in self._channel_ids]
 
     @property
     def threads(self) -> List["TYPE_THREAD_CHANNEL"]:
         """Returns a list of threads associated with this guild."""
-        return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
+        return [self._client.cache.get_cached_channel(t_id) for t_id in self._thread_ids]
 
     @property
     def members(self) -> List["Member"]:
         """A generator that yields all members of this guild."""
-        return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
+        return [self._client.cache.get_cached_member((self.id, m_id)) for m_id in self._member_ids]
 
     @property
     def premium_subscribers(self) -> List["Member"]:
@@ -252,22 +252,22 @@ class Guild(BaseGuild):
     @property
     def me(self) -> "Member":
         """Returns this bots member object within this guild."""
-        return self._client.cache.member_cache.get((self.id, self._client.user.id))
+        return self._client.cache.get_cached_member((self.id, self._client.user.id))
 
     @property
     def system_channel(self) -> Optional["GuildText"]:
         """Returns the channel this guild uses for system messages."""
-        return self._client.cache.channel_cache.get(self.system_channel_id)
+        return self._client.cache.get_cached_channel(self.system_channel_id)
 
     @property
     def rules_channel(self) -> Optional["GuildText"]:
         """Returns the channel declared as a rules channel."""
-        return self._client.cache.channel_cache.get(self.rules_channel_id)
+        return self._client.cache.get_cached_channel(self.rules_channel_id)
 
     @property
     def public_updates_channel(self) -> Optional["GuildText"]:
         """Returns the channel where server staff receive notices from Discord."""
-        return self._client.cache.channel_cache.get(self.public_updates_channel_id)
+        return self._client.cache.get_cached_channel(self.public_updates_channel_id)
 
     @property
     def emoji_limit(self) -> int:
@@ -971,7 +971,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(to_snowflake(channel_id))
+            return self._client.cache.get_cached_channel(to_snowflake(channel_id))
         return None
 
     async def fetch_channel(

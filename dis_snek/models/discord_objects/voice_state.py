@@ -42,12 +42,12 @@ class VoiceState(ClientObject):
     @property
     def channel(self) -> "TYPE_VOICE_CHANNEL":
         """The channel the user is connected to."""
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_cached_channel(self._channel_id)
 
     @property
     def member(self) -> "Member":
         """The member this voice state is for."""
-        return self._client.cache.member_cache.get((self._guild_id, self._member_id)) if self._guild_id else None
+        return self._client.cache.get_cached_member((self._guild_id, self._member_id)) if self._guild_id else None
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

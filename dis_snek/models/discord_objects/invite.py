@@ -48,7 +48,7 @@ class Invite(ClientObject):
     @property
     def channel(self) -> "TYPE_GUILD_CHANNEL":
         """The channel the invite is for."""
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_cached_channel(self._channel_id)
 
     def inviter(self) -> "Member":
         """The user that created the invite."""

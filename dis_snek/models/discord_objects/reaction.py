@@ -76,7 +76,7 @@ class Reaction(ClientObject):
 
     @property
     def channel(self) -> "TYPE_ALL_CHANNEL":
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_cached_channel(self._channel_id)
 
     async def remove(self) -> None:
         """Remove all this emoji's reactions from the message."""

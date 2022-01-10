@@ -140,10 +140,10 @@ class _BaseInteractionContext(Context):
         if new_cls.guild_id:
             new_cls.author = client.cache.place_member_data(new_cls.guild_id, data["member"].copy())
             client.cache.place_user_data(data["member"]["user"])
-            new_cls.channel = client.cache.channel_cache.get(to_snowflake(data["channel_id"]))
+            new_cls.channel = client.cache.get_cached_channel(to_snowflake(data["channel_id"]))
         else:
             new_cls.author = client.cache.place_user_data(data["user"])
-            new_cls.channel = client.cache.channel_cache.get(new_cls.author.id)
+            new_cls.channel = client.cache.get_cached_channel(new_cls.author.id)
 
         new_cls.target_id = data["data"].get("target_id")
 
@@ -174,21 +174,21 @@ class _BaseInteractionContext(Context):
                 match option["type"]:
                     case OptionTypes.USER:
                         value = (
-                            self._client.cache.member_cache.get(
+                            self._client.cache.get_cached_member(
                                 (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
                             )
                             or self._client.cache.user_cache.get(to_snowflake(value))
                         ) or value
 
                     case OptionTypes.CHANNEL:
-                        value = self._client.cache.channel_cache.get(to_snowflake(value)) or value
+                        value = self._client.cache.get_cached_channel(to_snowflake(value)) or value
 
                     case OptionTypes.ROLE:
                         value = self._client.cache.role_cache.get(to_snowflake(value)) or value
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := self._client.cache.member_cache.get(snow) or self._client.cache.user_cache.get(snow):
+                        if user := self._client.cache._member_cache.get(snow) or self._client.cache.user_cache.get(snow):
                             value = user
                         elif role := self._client.cache.role_cache.get(snow):
                             value = role

@@ -27,7 +27,7 @@ class StageInstance(DiscordObject):
 
     @property
     def channel(self) -> "GuildStageVoice":
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_cached_channel(self._channel_id)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """

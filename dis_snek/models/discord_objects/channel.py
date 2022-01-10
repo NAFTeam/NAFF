@@ -738,7 +738,7 @@ class GuildChannel(BaseChannel):
     @property
     def category(self) -> Optional["GuildCategory"]:
         """The parent category of this channel."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_cached_channel(self.parent_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1106,7 +1106,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     @property
     def parent_channel(self) -> GuildText:
         """The channel this thread is a child of."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_cached_channel(self.parent_id)
 
     @property
     def mention(self) -> str:
