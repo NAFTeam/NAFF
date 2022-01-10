@@ -34,7 +34,7 @@ from collections import defaultdict
 from importlib.metadata import version as _v
 from typing import TypeVar, Union
 
-import sentinel
+from dis_snek.sentinel import Sentinel
 
 _ver_info = sys.version_info
 
@@ -64,37 +64,33 @@ EMBED_MAX_DESC_LENGTH = 4096
 EMBED_MAX_FIELDS = 25
 EMBED_TOTAL_MAX = 6000
 
-GLOBAL_SCOPE = sentinel.create(
-    "GLOBAL_SCOPE",
-    (int,),
-    cls_dict={
-        "__name__": "GLOBAL_SCOPE",
-        "__getattr__": lambda x, y: 0,
-        "__hash__": lambda _: hash(0),
-        "__bool__": lambda _: False,
-    },
-)
 
-MISSING = sentinel.create(
-    "MISSING",
-    cls_dict={
-        "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
-        "__name__": "MISSING",
-        "__getattr__": lambda x, y: None,
-        "__setitem__": lambda x, y, z: None,
-        "__bool__": lambda _: False,
-    },
-)
+class GlobalScope(Sentinel, int):
+    def __getattr__(self, _):
+        return 0
+
+    def __hash__(self):
+        return 0
+
+    def __bool__(self):
+        return False
 
 
-MENTION_PREFIX = sentinel.create(
-    "MENTION_PREFIX",
-    cls_dict={
-        "__name__": "MENTION_PREFIX",
-        "__eq__": lambda x, y: x.__name__ == y.__name__ if hasattr(y, "__name__") else False,
-        # i would love for this to have a `__str__` that returns a mention string, but thats not viable
-    },
-)
+class Missing(Sentinel):
+    def __getattr__(self, *_):
+        return None
+
+    def __bool__(self):
+        return False
+
+
+class MentionPrefix(Sentinel):
+    ...
+
+
+GLOBAL_SCOPE = GlobalScope()
+MISSING = Missing()
+MENTION_PREFIX = MentionPrefix()
 
 PREMIUM_GUILD_LIMITS = defaultdict(
     lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
@@ -106,4 +102,4 @@ PREMIUM_GUILD_LIMITS = defaultdict(
 )
 
 T = TypeVar("T")
-Absent = Union[T, type(MISSING)]
+Absent = Union[T, Missing]

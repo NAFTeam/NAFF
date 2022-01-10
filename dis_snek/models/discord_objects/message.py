@@ -12,10 +12,9 @@ from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord import DiscordObject
-
 from dis_snek.models.discord_objects.components import BaseComponent, process_components
 from dis_snek.models.discord_objects.embed import Embed, process_embeds
-from dis_snek.models.discord_objects.emoji import Emoji, process_emoji_req_format
+from dis_snek.models.discord_objects.emoji import PartialEmoji, process_emoji_req_format
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.sticker import StickerItem
 from dis_snek.models.enums import (
@@ -31,7 +30,7 @@ from dis_snek.models.file import File
 from dis_snek.models.snowflake import to_snowflake, to_snowflake_list, to_optional_snowflake
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.converters import timestamp_converter
+from dis_snek.utils.converters import timestamp_converter, optional_timestamp_converter
 from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
@@ -195,7 +194,7 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = attr.ib(default=MISSING)
-    timestamp: Timestamp = attr.ib(default=MISSING, converter=timestamp_converter)
+    timestamp: Timestamp = attr.ib(default=MISSING, converter=optional_timestamp_converter)
     edited_timestamp: Optional[Timestamp] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)
@@ -443,7 +442,7 @@ class Message(BaseMessage):
         )
         return self._client.cache.place_channel_data(thread_data)
 
-    async def get_reaction(self, emoji: Union["Emoji", dict, str]) -> List["User"]:
+    async def get_reaction(self, emoji: Union["PartialEmoji", dict, str]) -> List["User"]:
         """
         Get reactions of a specific emoji from this message.
 
@@ -457,7 +456,7 @@ class Message(BaseMessage):
         reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
 
-    async def add_reaction(self, emoji: Union["Emoji", dict, str]):
+    async def add_reaction(self, emoji: Union["PartialEmoji", dict, str]):
         """
         Add a reaction to this message.
 
@@ -469,7 +468,9 @@ class Message(BaseMessage):
         await self._client.http.create_reaction(self._channel_id, self.id, emoji)
 
     async def remove_reaction(
-        self, emoji: Union["Emoji", dict, str], member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING
+        self,
+        emoji: Union["PartialEmoji", dict, str],
+        member: Optional[Union["Member", "User", "Snowflake_Type"]] = MISSING,
     ):
         """
         Remove a specific reaction that a user reacted with.
@@ -485,7 +486,7 @@ class Message(BaseMessage):
         user_id = to_snowflake(member)
         await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
-    async def clear_reactions(self, emoji: Union["Emoji", dict, str]) -> None:
+    async def clear_reactions(self, emoji: Union["PartialEmoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
         """
         Clear a specific reaction from message.

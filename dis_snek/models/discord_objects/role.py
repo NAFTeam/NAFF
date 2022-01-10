@@ -40,7 +40,13 @@ class Role(DiscordObject):
 
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
-    integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
+    _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
+
+    def __lt__(self, other):
+        return self.position < other.position
+
+    def __gt__(self, other):
+        return self.position > other.position
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -72,7 +78,7 @@ class Role(DiscordObject):
     @property
     def bot_managed(self) -> bool:
         """Is this role owned/managed by a bot."""
-        return self.bot_id is not None
+        return self._bot_id is not None
 
     @property
     def mention(self) -> str:
@@ -81,8 +87,8 @@ class Role(DiscordObject):
 
     @property
     def integration(self) -> bool:
-        """Is this role owned/managed by a integration."""
-        return self.tags.integration_id is not None
+        """Is this role owned/managed by an integration."""
+        return self._integration_id is not None
 
     @property
     def members(self) -> list["Member"]:

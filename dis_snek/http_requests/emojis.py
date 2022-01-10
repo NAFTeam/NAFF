@@ -33,7 +33,7 @@ class EmojiRequests:
             emoji_id: The ID of the emoji to get
 
         Returns:
-            Emoji object
+            PartialEmoji object
 
         """
         data = await self.request(Route("GET", f"/guilds/{guild_id}/emojis/{emoji_id}"))

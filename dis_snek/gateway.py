@@ -105,7 +105,7 @@ class WebsocketClient:
         self._entered = False
 
     @property
-    def loop(self):
+    def loop(self) -> asyncio.AbstractEventLoop:
         return self.state.client.loop
 
     async def __aenter__(self: SELF) -> SELF:

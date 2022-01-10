@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
+from dis_snek.errors import EmptyMessageException
 from dis_snek.models.discord_objects.message import process_message_payload
 from dis_snek.models.enums import MessageFlags
 
@@ -59,6 +60,8 @@ class SendMixin:
             New message object that was sent.
 
         """
+        if not content and not (embeds or embed) and not file:
+            raise EmptyMessageException("You cannot send a message without any content or embeds")
         message_payload = process_message_payload(
             content=content,
             embeds=embeds or embed,
@@ -69,7 +72,6 @@ class SendMixin:
             file=file,
             tts=tts,
             flags=flags,
-            **kwargs,
         )
         if kwargs:
             for key, value in kwargs.items():

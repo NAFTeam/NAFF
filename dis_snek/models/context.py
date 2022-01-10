@@ -238,7 +238,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             message_data = await self._client.http.post_followup(message_payload, self._client.app.id, self._token)
         else:
             if isinstance(message_payload, FormData) and not self.deferred:
-                await self.defer()
+                await self.defer(self.ephemeral)
             if self.deferred:
                 message_data = await self._client.http.edit_interaction_message(
                     message_payload, self._client.app.id, self._token
@@ -290,6 +290,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         """
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
+            self.ephemeral = True
 
         return await super().send(
             content,
@@ -298,6 +299,8 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             components=components,
             stickers=stickers,
             allowed_mentions=allowed_mentions,
+            reply_to=reply_to,
+            file=file,
             tts=tts,
             flags=flags,
         )

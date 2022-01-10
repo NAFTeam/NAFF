@@ -2,12 +2,13 @@ import asyncio
 import datetime
 import importlib.util
 import inspect
+import json
 import logging
 import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, NoReturn, Optional, Union, Type
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 from dis_snek.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.errors import (
@@ -56,7 +57,6 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
-    parse_application_command_error,
 )
 from dis_snek.models.auto_defer import AutoDefer
 from dis_snek.models.discord_objects.components import get_components_ids, BaseComponent
@@ -69,8 +69,11 @@ from dis_snek.state import ConnectionState
 from dis_snek.tasks.task import Task
 from dis_snek.utils.input_utils import get_first_word, get_args
 from dis_snek.utils.misc_utils import wrap_partial
+from dis_snek.utils.serializer import to_image_data
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
@@ -268,7 +271,7 @@ class Snake(
         return self._closed
 
     @property
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Returns True if the bot is ready."""
         return self._ready.is_set()
 
@@ -330,7 +333,7 @@ class Snake(
         return self._activity
 
     @property
-    def application_commands(self):
+    def application_commands(self) -> List[InteractionCommand]:
         """A list of all application commands registered within the bot."""
         commands = []
         for scope in self.interactions.keys():
@@ -388,7 +391,7 @@ class Snake(
         """
         return self.default_prefix
 
-    async def login(self, token):
+    async def login(self, token) -> None:
         """
         Login to discord.
 
@@ -411,8 +414,8 @@ class Snake(
 
         await self._connection_state.start()
 
-    def _queue_task(self, coro, event, *args, **kwargs):
-        async def _async_wrap(_coro, _event, *_args, **_kwargs):
+    def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
+        async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
             try:
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
@@ -440,10 +443,9 @@ class Snake(
         out = traceback.format_exc()
 
         if isinstance(error, HTTPException):
+            # HTTPException's are of 3 known formats, we can parse them for human readable errors
             try:
                 errors = error.search_for_message(error.errors)
-                for i, e in enumerate(errors):
-                    errors[i] = f'{e.get("code")}: {e.get("message")}'
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
             except Exception:  # noqa : S110
                 pass
@@ -514,7 +516,10 @@ class Snake(
 
         """
         return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}", error, *args, **kwargs
+            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}",
+            error,
+            *args,
+            **kwargs,
         )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
@@ -575,7 +580,7 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
-    def start(self, token):
+    def start(self, token) -> None:
         """
         Start the bot.
 
@@ -596,7 +601,7 @@ class Snake(
         self._ready.clear()
         await self._connection_state.stop()
 
-    def dispatch(self, event: events.BaseEvent, *args, **kwargs):
+    def dispatch(self, event: events.BaseEvent, *args, **kwargs) -> None:
         """
         Dispatch an event.
 
@@ -633,7 +638,7 @@ class Snake(
 
     def wait_for(
         self, event: str, checks: Absent[Optional[Callable[..., bool]]] = MISSING, timeout: Optional[float] = None
-    ):
+    ) -> Any:
         """
         Waits for a WebSocket event to be dispatched.
 
@@ -691,7 +696,7 @@ class Snake(
         if custom_ids and not all(isinstance(x, str) for x in custom_ids):
             custom_ids = [str(i) for i in custom_ids]
 
-        def _check(event: Component):
+        def _check(event: Component) -> bool:
             ctx: ComponentContext = event.context
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.message.id in (
@@ -715,7 +720,7 @@ class Snake(
 
         """
 
-        def wrapper(coro: Callable[..., Coroutine]):
+        def wrapper(coro: Callable[..., Coroutine]) -> Listener:
             listener = listen(event_name)(coro)
             self.add_listener(listener)
             return listener
@@ -723,7 +728,7 @@ class Snake(
         return wrapper
 
     def add_event_processor(self, event_name: Absent[str] = MISSING) -> Callable[..., Coroutine]:
-        def wrapper(coro: Callable[..., Coroutine]):
+        def wrapper(coro: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
             name = event_name
             if name is MISSING:
                 name = coro.__name__
@@ -734,7 +739,7 @@ class Snake(
 
         return wrapper
 
-    def add_listener(self, listener: Listener):
+    def add_listener(self, listener: Listener) -> None:
         """
         Add a listener for an event, if no event is passed, one is determined.
 
@@ -746,7 +751,7 @@ class Snake(
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
 
-    def add_interaction(self, command: InteractionCommand):
+    def add_interaction(self, command: InteractionCommand) -> None:
         """
         Add a slash command to the client.
 
@@ -769,7 +774,7 @@ class Snake(
 
             self.interactions[scope][command.resolved_name] = command
 
-    def add_message_command(self, command: MessageCommand):
+    def add_message_command(self, command: MessageCommand) -> None:
         """
         Add a message command to the client.
 
@@ -782,7 +787,7 @@ class Snake(
             return
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
-    def add_component_callback(self, command: ComponentCommand):
+    def add_component_callback(self, command: ComponentCommand) -> None:
         """
         Add a component callback to the client.
 
@@ -801,7 +806,7 @@ class Snake(
     def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self."""
 
-        def process(_cmds):
+        def process(_cmds) -> None:
 
             for func in _cmds:
                 if isinstance(func, ComponentCommand):
@@ -842,7 +847,7 @@ class Snake(
         except Exception as e:
             await self.on_error("Interaction Syncing", e)
 
-    async def _cache_interactions(self, warn_missing: bool = False):
+    async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
         if warn_missing or self.del_unused_app_cmd:
             bot_scopes = set(g.id for g in self.cache.guild_cache.values())
@@ -852,7 +857,7 @@ class Snake(
 
         req_lock = asyncio.Lock()
 
-        async def wrap(*args, **kwargs):
+        async def wrap(*args, **kwargs) -> Absent[List[Dict]]:
             async with req_lock:
                 # throttle this
                 await asyncio.sleep(0.1)
@@ -884,7 +889,6 @@ class Snake(
                         continue
                     else:
                         found.add(cmd.name)
-
                     self._interaction_scopes[str(cmd_data["id"])] = scope
                     cmd.cmd_id[scope] = int(cmd_data["id"])
 
@@ -901,20 +905,19 @@ class Snake(
         await self._cache_interactions()
 
         if self.del_unused_app_cmd:
+            # if we're deleting unused commands, we check all scopes
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
+            # if we're not deleting, just check the scopes we have cmds registered in
             cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
         guild_perms = {}
-        cmds_json = application_commands_to_dict(self.interactions)
-        req_lock = asyncio.Lock()
+        local_cmds_json = application_commands_to_dict(self.interactions)
 
-        async def sync_scope(cmd_scope):
-            async with req_lock:
-                await asyncio.sleep(0.1)  # throttle this
+        async def sync_scope(cmd_scope) -> None:
 
-            need_sync = False  # whether to sync this scope
-            found = []  # commands where a remote equivalent has been found
+            sync_needed_flag = False  # a flag to force this scope to synchronise
+            sync_payload = []  # the payload to be pushed to discord
 
             try:
                 try:
@@ -925,59 +928,58 @@ class Snake(
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
                     # get remote equivalent of this command
-                    remote_cmd = next(
+                    remote_cmd_json = next(
                         (v for v in remote_commands if int(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
                     )
                     # get json representation of this command
-                    local_cmd_json = next((c for c in cmds_json[cmd_scope] if c["name"] == local_cmd.name))
+                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == local_cmd.name))
 
-                    if remote_cmd and remote_cmd not in found:
-                        found.append(remote_cmd)
+                    # this works by adding any command we *want* on Discord, to a payload, and synchronising that
+                    # this allows us to delete unused commands, add new commands, or do nothing in 1 or less API calls
 
-                    if sync_needed(local_cmd_json, remote_cmd):
-                        need_sync = True
+                    if sync_needed(local_cmd_json, remote_cmd_json):
+                        # determine if the local and remote commands are out-of-sync
+                        sync_needed_flag = True
+                        sync_payload.append(local_cmd_json)
+                    elif not self.del_unused_app_cmd and remote_cmd_json:
+                        _remote_payload = {
+                            k: v for k, v in remote_cmd_json.items() if k not in ("id", "application_id", "version")
+                        }
+                        sync_payload.append(_remote_payload)
+                    elif self.del_unused_app_cmd:
+                        sync_payload.append(local_cmd_json)
 
-                if need_sync:
+                sync_payload = [json.loads(_dump) for _dump in {json.dumps(_cmd) for _cmd in sync_payload}]
 
-                    log.info(f"Pushing {len(cmds_json[cmd_scope])} commands to {cmd_scope}")
-                    sync_response = await self.http.post_application_command(
-                        self.app.id, cmds_json[cmd_scope], guild_id=cmd_scope
+                if sync_needed_flag or (self.del_unused_app_cmd and len(sync_payload) < len(remote_commands)):
+                    # synchronise commands if flag is set, or commands are to be deleted
+                    log.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
+                    sync_response: list[dict] = await self.http.overwrite_application_commands(
+                        self.app.id, sync_payload, cmd_scope
                     )
-
-                    # cache command IDs
                     self._cache_sync_response(sync_response, cmd_scope)
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
-
-                if self.del_unused_app_cmd:
-                    for cmd in [c for c in remote_commands if c not in found]:
-                        scope = cmd.get("guild_id", GLOBAL_SCOPE)
-                        log.warning(
-                            f"Deleting unimplemented slash command \"/{cmd['name']}\" from scope "
-                            f"{'global' if scope == GLOBAL_SCOPE else scope}"
-                        )
-                        await self.http.delete_application_command(
-                            self.user.id, cmd.get("guild_id", GLOBAL_SCOPE), cmd["id"]
-                        )
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
 
                     if not local_cmd.permissions:
                         continue
                     for perm in local_cmd.permissions:
-                        if perm.guild_id not in guild_perms:
-                            guild_perms[perm.guild_id] = []
-                        perm_json = {
-                            "id": local_cmd.get_cmd_id(perm.guild_id),
-                            "permissions": [perm.to_dict() for perm in local_cmd.permissions],
-                        }
-                        if perm_json not in guild_perms[perm.guild_id]:
-                            guild_perms[perm.guild_id].append(perm_json)
+                        if perm.guild_id == cmd_scope:
+                            if perm.guild_id not in guild_perms:
+                                guild_perms[perm.guild_id] = []
+                            perm_json = {
+                                "id": local_cmd.get_cmd_id(perm.guild_id),
+                                "permissions": [perm.to_dict() for perm in local_cmd.permissions],
+                            }
+                            if perm_json not in guild_perms[perm.guild_id]:
+                                guild_perms[perm.guild_id].append(perm_json)
 
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
             except HTTPException as e:
-                self._raise_sync_exception(e, cmds_json, cmd_scope)
+                self._raise_sync_exception(e, local_cmds_json, cmd_scope)
 
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
@@ -1013,7 +1015,7 @@ class Snake(
                         f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
                     )
                 except HTTPException as e:
-                    self._raise_sync_exception(e, cmds_json, perm_scope)
+                    self._raise_sync_exception(e, local_cmds_json, perm_scope)
             else:
                 log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
@@ -1045,7 +1047,7 @@ class Snake(
             if isinstance(e.errors, dict):
                 for cmd_num in e.errors.keys():
                     cmd = cmds_json[cmd_scope][int(cmd_num)]
-                    output = parse_application_command_error(e.errors[cmd_num], cmd=cmd)
+                    output = e.search_for_message(e.errors[cmd_num], cmd)
                     if len(output) > 1:
                         output = "\n".join(output)
                         log.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
@@ -1057,7 +1059,7 @@ class Snake(
             # the above shouldn't fail, but if it does, just raise the exception normally
             raise e from None
 
-    def _cache_sync_response(self, sync_response: dict, scope: "Snowflake_Type"):
+    def _cache_sync_response(self, sync_response: list[dict], scope: "Snowflake_Type") -> None:
         for cmd_data in sync_response:
             self._interaction_scopes[cmd_data["id"]] = scope
             if cmd_data["name"] in self.interactions[scope]:
@@ -1199,7 +1201,7 @@ class Snake(
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     @listen("message_create")
-    async def _dispatch_msg_commands(self, event: MessageCreate):
+    async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
 
@@ -1288,7 +1290,7 @@ class Snake(
         self.shed_scale(scale_name)
         self.grow_scale(scale_name)
 
-    def load_extension(self, name: str, package: str = None):
+    def load_extension(self, name: str, package: str = None) -> None:
         """
         Load an extension.
 
@@ -1303,18 +1305,24 @@ class Snake(
 
         module = importlib.import_module(name, package)
         try:
-            setup = getattr(module, "setup")
+            setup = getattr(module, "setup", None)
+            if not setup:
+                raise ExtensionLoadException(
+                    f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
+                ) from None
             setup(self)
+        except ExtensionLoadException:
+            raise
         except Exception as e:
             del sys.modules[name]
-            raise ExtensionLoadException(f"Error loading {name}") from e
+            raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
 
         else:
             log.debug(f"Loaded Extension: {name}")
             self.__extensions[name] = module
             return
 
-    def unload_extension(self, name, package=None):
+    def unload_extension(self, name, package=None) -> None:
         """
         Unload an extension.
 
@@ -1341,7 +1349,7 @@ class Snake(
         del sys.modules[name]
         del self.__extensions[name]
 
-    def reload_extension(self, name, package=None):
+    def reload_extension(self, name, package=None) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension.
 
@@ -1381,6 +1389,29 @@ class Snake(
             return await self.cache.get_guild(guild_id)
         except NotFound:
             return None
+
+    async def create_guild_from_guild_template(
+        self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
+    ) -> Optional[Guild]:
+        """
+        Creates a new guild based on a template.
+
+        note:
+            This endpoint can only be used by bots in less than 10 guilds.
+
+        parameters:
+            template_code: The code of the template to use.
+            name: The name of the guild (2-100 characters)
+            icon: Location or File of icon to set
+
+        returns:
+            The newly created guild object
+
+        """
+        if icon:
+            icon = to_image_data(icon)
+        guild_data = await self.http.create_guild_from_guild_template(template_code, name, icon)
+        return Guild.from_dict(guild_data, self)
 
     async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
@@ -1498,7 +1529,7 @@ class Snake(
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
-    ):
+    ) -> None:
         """
         Change the bots presence.
 
@@ -1510,4 +1541,4 @@ class Snake(
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """
-        return await self._connection_state.change_presence(status, activity)
+        await self._connection_state.change_presence(status, activity)
