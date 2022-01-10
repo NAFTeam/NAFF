@@ -188,7 +188,9 @@ class _BaseInteractionContext(Context):
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := self._client.cache.get_cached_member(snow) or self._client.cache.user_cache.get(snow):
+                        if user := self._client.cache.get_cached_member(snow) or self._client.cache.user_cache.get(
+                            snow
+                        ):
                             value = user
                         elif role := self._client.cache.role_cache.get(snow):
                             value = role
