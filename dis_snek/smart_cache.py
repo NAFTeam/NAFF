@@ -49,6 +49,12 @@ def create_cache(
 
 
 @attr.define()
+class Deferred:
+    data: dict
+    id: int
+
+
+@attr.define()
 class GlobalCache:
     _client: "Snake" = field()
 
@@ -134,12 +140,14 @@ class GlobalCache:
         guild_id = to_snowflake(guild_id)
         user_id = to_snowflake(user_id)
         member = self.member_cache.get((guild_id, user_id))
-        if request_fallback and member is None:
+        if isinstance(member, Deferred):
+            member = self.place_member_data(guild_id, member.data)
+        elif request_fallback and member is None:
             data = await self._client.http.get_member(guild_id, user_id)
             member = self.place_member_data(guild_id, data)
         return member
 
-    def place_member_data(self, guild_id: "Snowflake_Type", data: dict) -> Member:
+    def place_member_data(self, guild_id: "Snowflake_Type", data: dict, deferred: bool = False) -> Member:
         """
         Take json data representing a User, process it, and cache it.
 
@@ -155,7 +163,10 @@ class GlobalCache:
         user_id = to_snowflake(data["id"] if is_user else data["user"]["id"])
 
         member = self.member_cache.get((guild_id, user_id))
-        if member is None:
+        if member is None or isinstance(member, Deferred):
+            if deferred:
+                member = self.member_cache[(guild_id, user_id)] = Deferred(data, user_id)
+                return member
             member_extra = {"guild_id": guild_id}
             member = data["member"] if is_user else data
             member.update(member_extra)
@@ -312,7 +323,9 @@ class GlobalCache:
         """
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
-        if request_fallback and channel is None:
+        if isinstance(channel, Deferred):
+            channel = self.place_channel_data(channel.data)
+        elif request_fallback and channel is None:
             try:
                 data = await self._client.http.get_channel(channel_id)
             except (NotFound, Forbidden):
@@ -320,7 +333,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def place_channel_data(self, data: dict) -> "TYPE_ALL_CHANNEL":
+    def place_channel_data(self, data: dict, deferred: bool = False) -> "TYPE_ALL_CHANNEL":
         """
         Take json data representing a channel, process it, and cache it.
 
@@ -332,11 +345,15 @@ class GlobalCache:
         """
         channel_id = to_snowflake(data["id"])
         channel = self.channel_cache.get(channel_id)
-        if channel is None:
-            channel = BaseChannel.from_dict_factory(data, self._client)
-            self.channel_cache[channel_id] = channel
-            if guild := getattr(channel, "guild", None):
-                guild._channel_ids.add(channel.id)
+
+        if channel is None or isinstance(channel, Deferred):
+            if deferred:
+                channel = self.channel_cache[channel_id] = Deferred(data, channel_id)
+            else:
+                channel = BaseChannel.from_dict_factory(data, self._client)
+                self.channel_cache[channel_id] = channel
+                if guild := getattr(channel, "guild", None):
+                    guild._channel_ids.add(channel.id)
         else:
             channel.update_from_dict(data)
 

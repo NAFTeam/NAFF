@@ -40,6 +40,7 @@ from dis_snek.utils.serializer import to_image_data, dict_filter_none, no_export
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import TYPE_GUILD_CHANNEL, TYPE_THREAD_CHANNEL, GuildCategory
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
@@ -185,22 +186,25 @@ class Guild(BaseGuild):
     _role_ids: Set["Snowflake_Type"] = attr.ib(factory=set)
 
     @classmethod
-    def _process_dict(cls, data, client):
-        # todo: find a away to prevent this loop from blocking the event loop
+    def _process_dict(cls, data: dict, client: "Snake") -> dict:
         data = super()._process_dict(data, client)
         guild_id = data["id"]
 
         channels_data = data.pop("channels", [])
         for c in channels_data:
             c["guild_id"] = guild_id
-        data["channel_ids"] = set(client.cache.place_channel_data(channel_data).id for channel_data in channels_data)
+        data["channel_ids"] = set(
+            client.cache.place_channel_data(channel_data, deferred=True).id for channel_data in channels_data
+        )
 
         threads_data = data.pop("threads", [])
-        data["thread_ids"] = set(client.cache.place_channel_data(thread_data).id for thread_data in threads_data)
+        data["thread_ids"] = set(
+            client.cache.place_channel_data(thread_data, deferred=True).id for thread_data in threads_data
+        )
 
         members_data = data.pop("members", [])
         data["member_ids"] = set(
-            client.cache.place_member_data(guild_id, member_data).id for member_data in members_data
+            client.cache.place_member_data(guild_id, member_data, deferred=True).id for member_data in members_data
         )
 
         roles_data = data.pop("roles", [])
