@@ -193,15 +193,13 @@ class Guild(BaseGuild):
         channels_data = data.pop("channels", [])
         for c in channels_data:
             c["guild_id"] = guild_id
-        data["channel_ids"] = set(client.cache.place_channel_data(channel_data).id for channel_data in channels_data)
+        data["channel_ids"] = {client.cache.place_channel_data(channel_data).id for channel_data in channels_data}
 
         threads_data = data.pop("threads", [])
-        data["thread_ids"] = set(client.cache.place_channel_data(thread_data).id for thread_data in threads_data)
+        data["thread_ids"] = {client.cache.place_channel_data(thread_data).id for thread_data in threads_data}
 
         members_data = data.pop("members", [])
-        data["member_ids"] = set(
-            client.cache.place_member_data(guild_id, member_data).id for member_data in members_data
-        )
+        data["member_ids"] = {client.cache.place_member_data(guild_id, member_data).id for member_data in members_data}
 
         roles_data = data.pop("roles", [])
         data["role_ids"] = set(client.cache.place_role_data(guild_id, roles_data).keys())

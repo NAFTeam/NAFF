@@ -548,7 +548,7 @@ class Snake(
 
         """
         data = event.data
-        expected_guilds = set(to_snowflake(guild["id"]) for guild in data["guilds"])
+        expected_guilds = {to_snowflake(guild["id"]) for guild in data["guilds"]}
         self._user._add_guilds(expected_guilds)
 
         while True:
@@ -850,7 +850,7 @@ class Snake(
     async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
         if warn_missing or self.del_unused_app_cmd:
-            bot_scopes = set(g.id for g in self.cache.guild_cache.values())
+            bot_scopes = {g.id for g in self.cache.guild_cache.values()}
             bot_scopes.add(GLOBAL_SCOPE)
         else:
             bot_scopes = set(self.interactions)
