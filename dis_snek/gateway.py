@@ -124,7 +124,7 @@ class WebsocketClient:
         self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
         self._closed.set()
 
-        self._keep_alive = asyncio.create_task(self._start_bee_gees())
+        self._keep_alive = asyncio.create_task(self.run_bee_gees())
 
         await self._identify()
 
@@ -171,14 +171,14 @@ class WebsocketClient:
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
 
         """
-        if self.ws is None:
-            raise RuntimeError
-
         if not bypass:
             await self.rl_manager.rate_limit()
 
         log.debug(f"Sending data to gateway: {data}")
         async with self._race_lock:
+            if self.ws is None:
+                raise RuntimeError
+
             await self.ws.send_str(data)
 
     async def send_json(self, data: dict, bypass=False) -> None:
@@ -269,13 +269,12 @@ class WebsocketClient:
             return msg
 
     async def reconnect(self, *, resume: bool = False, code: int = 1012) -> None:
-        if self.ws is None:
-            raise RuntimeError
-
         async with self._race_lock:
             self._closed.clear()
 
-            await self.ws.close(code=code)
+            if self.ws is not None:
+                await self.ws.close(code=code)
+
             self.ws = None
             self._zlib = zlib.decompressobj()
 
@@ -291,6 +290,13 @@ class WebsocketClient:
 
             self._closed.set()
             self._acknowledged.set()
+
+    async def run_bee_gees(self) -> None:
+        try:
+            await self._start_bee_gees()
+        except Exception:
+            self.close()
+            log.error("The heartbeater raised an exception!", exc_info=True)
 
     async def _start_bee_gees(self) -> None:
         if self.heartbeat_interval is None:
