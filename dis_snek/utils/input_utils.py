@@ -36,8 +36,8 @@ _quotes = {
     "〈": "〉",
 }
 _pending_regex = r"(1.*2|[^\s]+)"
-_pending_regex = _pending_regex.replace("1", f"[{''.join([k for k in _quotes.keys()])}]")
-_pending_regex = _pending_regex.replace("2", f"[{''.join([k for k in _quotes.values()])}]")
+_pending_regex = _pending_regex.replace("1", f"[{''.join(list(k for k in _quotes.keys()))}]")
+_pending_regex = _pending_regex.replace("2", f"[{''.join(list(_quotes.values()))}]")
 
 arg_parse = re.compile(_pending_regex)
 white_space = re.compile(r"\s+")

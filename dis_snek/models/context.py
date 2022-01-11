@@ -197,7 +197,7 @@ class _BaseInteractionContext(Context):
                     self.focussed_option = option.get("name")
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
-        self.args = [v for v in kwargs.values()]
+        self.args = list(kwargs.values())
 
 
 @define
