@@ -537,9 +537,7 @@ class GlobalCache:
 
         return emoji
 
-    def place_emoji_data(
-        self, guild_id: "Snowflake_Type", data: dict
-    ) -> "CustomEmoji":
+    def place_emoji_data(self, guild_id: "Snowflake_Type", data: dict) -> "CustomEmoji":
         """
         Take json data representing an emoji, process it, and cache it.
 

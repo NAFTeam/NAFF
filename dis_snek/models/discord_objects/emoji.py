@@ -122,7 +122,9 @@ class CustomEmoji(PartialEmoji):
     def creator(self) -> Union["Member", "User"]:
         """The member that created this emoji."""
 
-        return self._client.cache.member_cache.get((self._creator_id, self._guild_id)) or self._client.cache.user_cache.get(self._creator_id)
+        return self._client.cache.member_cache.get(
+            (self._creator_id, self._guild_id)
+        ) or self._client.cache.user_cache.get(self._creator_id)
 
     @property
     def roles(self) -> List["Role"]:
@@ -138,7 +140,6 @@ class CustomEmoji(PartialEmoji):
 
         guild = self.guild
         return any(e_role_id in guild.me._role_ids for e_role_id in self._role_ids)
-
 
     async def edit(
         self,
