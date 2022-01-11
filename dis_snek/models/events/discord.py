@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord_objects.user import Member, User, BaseUser
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.discord_objects.activity import Activity
-    from dis_snek.models.discord_objects.emoji import PartialEmoji
+    from dis_snek.models.discord_objects.emoji import CustomEmoji
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.discord_objects.sticker import Sticker
     from dis_snek.models.discord_objects.voice_state import VoiceState
@@ -113,6 +113,7 @@ class ThreadListSync(BaseEvent):
     """all thread member objects from the synced threads for the current user, indicating which threads the current user has been added to"""
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class ThreadMemberUpdate(ThreadCreate):
     """
@@ -198,12 +199,13 @@ class BanRemove(BanCreate):
 class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
-    before: List["PartialEmoji"] = attr.ib(factory=list)
-    """List of emoji before this event"""
-    after: List["PartialEmoji"] = attr.ib(factory=list)
+    before: List["CustomEmoji"] = attr.ib(factory=list)
+    """List of emoji before this event. Only includes emojis that were cached."""
+    after: List["CustomEmoji"] = attr.ib(factory=list)
     """List of emoji after this event"""
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class GuildStickersUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's stickers are updated."""
@@ -266,6 +268,7 @@ class RoleDelete(BaseEvent, GuildEvent):
     """The ID of the deleted role"""
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class GuildMembersChunk(BaseEvent, GuildEvent):
     """
@@ -346,6 +349,7 @@ class MessageDelete(BaseEvent):
     message: "Message" = attr.ib()
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class MessageDeleteBulk(BaseEvent, GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
@@ -425,6 +429,7 @@ class TypingStart(BaseEvent):
     """unix time (in seconds) of when the user started typing"""
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class WebhooksUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
@@ -434,6 +439,7 @@ class WebhooksUpdate(BaseEvent, GuildEvent):
     """The ID of the webhook was updated"""
 
 
+# todo implementation missing
 @attr.s(slots=True)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
