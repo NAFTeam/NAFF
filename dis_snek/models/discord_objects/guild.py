@@ -236,7 +236,7 @@ class Guild(BaseGuild):
         return [member for member in self.members if member.bot]
 
     @property
-    def humans(self):
+    def humans(self) -> List["Member"]:
         """Returns a list of all humans within this guild"""
         return [member for member in self.members if not member.bot]
 
