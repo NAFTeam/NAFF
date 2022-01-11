@@ -41,7 +41,7 @@ def create_cache(
 
     """
     if ttl is None and hard_limit is None:
-        return dict()
+        return {}
     else:
         if not soft_limit:
             soft_limit = int(hard_limit / 4) if hard_limit else 50

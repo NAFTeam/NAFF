@@ -82,16 +82,16 @@ class ChannelRequests:
         reason: Absent[str] = MISSING,
     ) -> Dict:
         """"""
-        payload = dict(
-            name=name,
-            type=channel_type,
-            topic=topic,
-            position=position,
-            rate_limit_per_user=rate_limit_per_user,
-            nsfw=nsfw,
-            parent_id=parent_id,
-            permission_overwrites=permission_overwrites,
-        )
+        payload = {
+            "name": name,
+            "type": channel_type,
+            "topic": topic,
+            "position": position,
+            "rate_limit_per_user": rate_limit_per_user,
+            "nsfw": nsfw,
+            "parent_id": parent_id,
+            "permission_overwrites": permission_overwrites,
+        }
 
         if channel_type in (2, 13):
             payload.update(
@@ -124,7 +124,7 @@ class ChannelRequests:
             reason: An optional reason for the audit log
 
         """
-        payload = dict(id=channel_id, position=new_pos, lock_permissions=lock_perms)
+        payload = {"id": channel_id, "position": new_pos, "lock_permissions": lock_perms}
         if parent_id:
             payload["parent_id"] = parent_id
 
@@ -199,7 +199,7 @@ class ChannelRequests:
             an invite object
 
         """
-        payload = dict(max_age=max_age, max_uses=max_uses, temporary=temporary, unique=unique)
+        payload = {"max_age": max_age, "max_uses": max_uses, "temporary": temporary, "unique": unique}
         if target_type:
             payload["target_type"] = target_type
         if target_user_id:
@@ -230,7 +230,11 @@ class ChannelRequests:
 
         """
         params = dict_filter_none(
-            dict(with_counts=with_counts, with_expiration=with_expiration, guild_scheduled_event_id=scheduled_event_id)
+            {
+                "with_counts": with_counts,
+                "with_expiration": with_expiration,
+                "guild_scheduled_event_id": scheduled_event_id,
+            }
         )
         return await self.request(Route("GET", f"/invites/{invite_code}", params=params))
 

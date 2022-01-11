@@ -168,7 +168,7 @@ class ThreadRequests:
             The created thread
 
         """
-        payload = dict(name=name, auto_archive_duration=auto_archive_duration)
+        payload = {"name": name, "auto_archive_duration": auto_archive_duration}
         if message_id:
             return await self.request(
                 Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), data=payload, reason=reason

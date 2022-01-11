@@ -665,7 +665,7 @@ class DMChannel(BaseChannel, MessageableMixin):
             icon: An icon to use
             reason: The reason for this change
         """
-        payload = dict(name=name, icon=to_image_data(icon))
+        payload = {"name": name, "icon": to_image_data(icon)}
         await self._edit(payload=payload, reason=reason)
 
     @property
@@ -930,11 +930,11 @@ class GuildCategory(GuildChannel):
             permission_overwrites: channel or category-specific permissions
             reason: the reason for this change
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "position": position,
+            "permission_overwrites": permission_overwrites,
+        }
         await self._edit(payload=payload, reason=reason)
 
 
@@ -960,13 +960,13 @@ class GuildStore(GuildChannel):
             nsfw: whether the channel is nsfw
             reason: The reason for this change
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            nsfw=nsfw,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "position": position,
+            "permission_overwrites": permission_overwrites,
+            "parent_id": parent_id,
+            "nsfw": nsfw,
+        }
         await self._edit(payload=payload, reason=reason)
 
 
@@ -1002,16 +1002,16 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            nsfw=nsfw,
-            topic=topic,
-            channel_type=channel_type,
-            default_auto_archive_duration=default_auto_archive_duration,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "position": position,
+            "permission_overwrites": permission_overwrites,
+            "parent_id": parent_id,
+            "nsfw": nsfw,
+            "topic": topic,
+            "channel_type": channel_type,
+            "default_auto_archive_duration": default_auto_archive_duration,
+        }
         await self._edit(payload=payload, reason=reason)
 
     async def follow(self, webhook_channel_id: "Snowflake_Type") -> None:
@@ -1058,17 +1058,17 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            nsfw=nsfw,
-            topic=topic,
-            channel_type=channel_type,
-            rate_limit_per_user=rate_limit_per_user,
-            default_auto_archive_duration=default_auto_archive_duration,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "position": position,
+            "permission_overwrites": permission_overwrites,
+            "parent_id": parent_id,
+            "nsfw": nsfw,
+            "topic": topic,
+            "channel_type": channel_type,
+            "rate_limit_per_user": rate_limit_per_user,
+            "default_auto_archive_duration": default_auto_archive_duration,
+        }
         await self._edit(payload=payload, reason=reason)
 
     async def follow(self, webhook_channel_id: "Snowflake_Type") -> None:
@@ -1169,13 +1169,13 @@ class GuildNewsThread(ThreadChannel):
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            archived=archived,
-            auto_archive_duration=auto_archive_duration,
-            locked=locked,
-            rate_limit_per_user=rate_limit_per_user,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "archived": archived,
+            "auto_archive_duration": auto_archive_duration,
+            "locked": locked,
+            "rate_limit_per_user": rate_limit_per_user,
+        }
         await self._edit(payload=payload, reason=reason)
 
 
@@ -1193,13 +1193,13 @@ class GuildPublicThread(ThreadChannel):
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            archived=archived,
-            auto_archive_duration=auto_archive_duration,
-            locked=locked,
-            rate_limit_per_user=rate_limit_per_user,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "archived": archived,
+            "auto_archive_duration": auto_archive_duration,
+            "locked": locked,
+            "rate_limit_per_user": rate_limit_per_user,
+        }
         await self._edit(payload=payload, reason=reason)
 
 
@@ -1220,14 +1220,14 @@ class GuildPrivateThread(ThreadChannel):
             invitable: whether non-moderators can add other non-moderators to a thread; only available on private threads
             reason: The reason for this change
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            archived=archived,
-            auto_archive_duration=auto_archive_duration,
-            locked=locked,
-            rate_limit_per_user=rate_limit_per_user,
-            invitable=invitable,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "archived": archived,
+            "auto_archive_duration": auto_archive_duration,
+            "locked": locked,
+            "rate_limit_per_user": rate_limit_per_user,
+            "invitable": invitable,
+        }
         await self._edit(payload=payload, reason=reason)
 
 
@@ -1269,16 +1269,16 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             reason: optional reason for audit logs
 
         """
-        payload = dict(  # TODO Proper processing
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            bitrate=bitrate,
-            user_limit=user_limit,
-            rtc_region=rtc_region,
-            video_quality_mode=video_quality_mode,
-        )
+        payload = {  # TODO Proper processing
+            "name": name,
+            "position": position,
+            "permission_overwrites": permission_overwrites,
+            "parent_id": parent_id,
+            "bitrate": bitrate,
+            "user_limit": user_limit,
+            "rtc_region": rtc_region,
+            "video_quality_mode": video_quality_mode,
+        }
         await self._edit(payload=payload, reason=reason)
 
     @property

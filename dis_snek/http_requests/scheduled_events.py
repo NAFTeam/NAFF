@@ -129,7 +129,7 @@ class ScheduledEventsRequests:
 
         """
         query_params = urlencode(
-            dict_filter_missing(dict(limit=limit, with_member=with_member, before=before, after=after))
+            dict_filter_missing({"limit": limit, "with_member": with_member, "before": before, "after": after})
         )
         return await self.request(
             Route(

@@ -35,7 +35,7 @@ class MemberRequests:
             after: Get IDs after this snowflake
 
         """
-        payload = dict(limit=limit)
+        payload = {"limit": limit}
         if after is not MISSING:
             payload["after"] = after
 
@@ -52,7 +52,7 @@ class MemberRequests:
 
         """
         return await self.request(
-            Route("GET", f"/guilds/{guild_id}/members/search"), params=dict(query=query, limit=limit)
+            Route("GET", f"/guilds/{guild_id}/members/search"), params={"query": query, "limit": limit}
         )
 
     async def modify_guild_member(
@@ -90,14 +90,14 @@ class MemberRequests:
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"),
             data=dict_filter_missing(
-                dict(
-                    nick=nickname,
-                    roles=roles,
-                    mute=mute,
-                    deaf=deaf,
-                    channel_id=channel_id,
-                    communication_disabled_until=communication_disabled_until,
-                )
+                {
+                    "nick": nickname,
+                    "roles": roles,
+                    "mute": mute,
+                    "deaf": deaf,
+                    "channel_id": channel_id,
+                    "communication_disabled_until": communication_disabled_until,
+                }
             ),
             reason=reason,
         )

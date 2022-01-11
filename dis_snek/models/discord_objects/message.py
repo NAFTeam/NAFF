@@ -629,17 +629,17 @@ def process_message_payload(
         attachments = [attachment.to_dict() for attachment in attachments]
 
     message_data = dict_filter_none(
-        dict(
-            content=content,
-            embeds=embeds,
-            components=components,
-            sticker_ids=stickers,
-            allowed_mentions=allowed_mentions,
-            message_reference=message_reference,
-            attachments=attachments,
-            tts=tts,
-            flags=flags,
-        )
+        {
+            "content": content,
+            "embeds": embeds,
+            "components": components,
+            "sticker_ids": stickers,
+            "allowed_mentions": allowed_mentions,
+            "message_reference": message_reference,
+            "attachments": attachments,
+            "tts": tts,
+            "flags": flags,
+        }
     )
 
     if file:

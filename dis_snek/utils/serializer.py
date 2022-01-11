@@ -11,11 +11,11 @@ from dis_snek.const import MISSING
 from dis_snek.models.file import File
 
 
-no_export_meta = dict(no_export=True)
+no_export_meta = {"no_export": True}
 
 
 def export_converter(converter) -> dict:
-    return dict(export_converter=converter)
+    return {"export_converter": converter}
 
 
 def to_dict(inst) -> dict:
@@ -23,7 +23,7 @@ def to_dict(inst) -> dict:
         return converter()
 
     attrs = fields(inst.__class__)
-    d = dict()
+    d = {}
 
     for a in attrs:
         if a.metadata.get("no_export", False):

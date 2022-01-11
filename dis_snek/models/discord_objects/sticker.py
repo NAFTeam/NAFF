@@ -104,7 +104,7 @@ class Sticker(StickerItem):
         if not self._guild_id:
             raise ValueError("You can only edit guild stickers.")
 
-        payload = dict_filter_none(dict(name=name, description=description, tags=tags))
+        payload = dict_filter_none({"name": name, "description": description, "tags": tags})
         sticker_data = await self._client.http.modify_guild_sticker(payload, self._guild_id, self.id, reason)
         return self.update_from_dict(sticker_data)
 

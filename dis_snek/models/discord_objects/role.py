@@ -144,7 +144,7 @@ class Role(DiscordObject):
             color = color.value
 
         payload = dict_filter_missing(
-            dict(name=name, permissions=permissions, color=color, hoist=hoist, mentionable=mentionable)
+            {"name": name, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
         )
 
         r_data = await self._client.http.modify_guild_role(self._guild_id, self.id, payload)
