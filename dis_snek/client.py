@@ -149,7 +149,7 @@ class Snake(
         asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
-        auto_defer: AutoDefer = AutoDefer(),
+        auto_defer: Optional[AutoDefer] = None,
         interaction_context: Type[InteractionContext] = InteractionContext,
         message_context: Type[MessageContext] = MessageContext,
         component_context: Type[ComponentContext] = ComponentContext,
@@ -181,7 +181,7 @@ class Snake(
         """The default prefix to be used for message commands"""
         self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
         """A coroutine that returns a prefix, for dynamic prefixes"""
-        self.auto_defer = auto_defer
+        self.auto_defer = auto_defer or AutoDefer()
         """A system to automatically defer commands after a set duration"""
 
         # resources
