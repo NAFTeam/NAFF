@@ -449,7 +449,7 @@ class Guild(BaseGuild):
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
         emoji_data["guild_id"] = self.id
-        return CustomEmoji.from_dict(emoji_data, self._client)
+        return self._client.cache.place_emoji_data(self.id, emoji_data)
 
     async def create_guild_template(self, name: str, description: str = None) -> "GuildTemplate":
 
@@ -469,7 +469,7 @@ class Guild(BaseGuild):
 
         """
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
-        return [CustomEmoji.from_dict(emoji_data, self._client) for emoji_data in emojis_data]
+        return [self._client.cache.place_emoji_data(self.id, emoji_data) for emoji_data in emojis_data]
 
     async def get_custom_emoji(self, emoji_id: "Snowflake_Type") -> CustomEmoji:
         """
@@ -482,8 +482,8 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-        emoji_data = await self._client.http.get_guild_emoji(self.id, emoji_id)
-        return CustomEmoji.from_dict(emoji_data, self._client)
+
+        return await self._client.cache.get_emoji(self.id, emoji_id)
 
     async def create_channel(
         self,

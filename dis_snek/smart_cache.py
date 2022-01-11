@@ -18,6 +18,7 @@ from dis_snek.utils.cache import TTLCache
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_ALL_CHANNEL
+    from dis_snek.models.discord_objects.emoji import CustomEmoji
     from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
@@ -61,6 +62,7 @@ class GlobalCache:
     # Expiring discord objects cache
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
     role_cache: TTLCache = field(factory=dict)  # key: role_id
+    emoji_cache: TTLCache = field(factory=dict)  # key: emoji_id
     voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
 
     # Expiring id reference cache
@@ -514,3 +516,43 @@ class GlobalCache:
             self.voice_state_cache[voice_state.user_id] = voice_state
 
         return voice_state
+
+    async def get_emoji(
+        self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", request_fallback: bool = True
+    ) -> "CustomEmoji":
+        """
+        Get an emoji based on the guild and its own ID.
+
+        Args:
+            guild_id: The ID of the guild this emoji belongs to
+            emoji_id: The ID of the emoji
+            request_fallback: Should data be requested from Discord if not cached?
+        """
+        guild_id = to_snowflake(guild_id)
+        emoji_id = to_snowflake(emoji_id)
+        emoji = self.emoji_cache.get(emoji_id)
+        if request_fallback and emoji is None:
+            data = await self._client.http.get_guild_emoji(guild_id, emoji_id)
+            emoji = self.place_emoji_data(guild_id, data)
+
+        return emoji
+
+    def place_emoji_data(
+        self, guild_id: "Snowflake_Type", data: dict
+    ) -> "CustomEmoji":
+        """
+        Take json data representing an emoji, process it, and cache it.
+
+        Args:
+            guild_id: The ID of the guild this emoji belongs to
+            data: json representation of the emoji
+
+        Returns:
+            The processed emoji
+        """
+        guild_id = to_snowflake(guild_id)
+
+        emoji = CustomEmoji.from_dict(data, self._client, guild_id)
+        self.guild_cache[emoji.id] = emoji
+
+        return emoji
