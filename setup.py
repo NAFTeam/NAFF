@@ -20,8 +20,7 @@ setup(
     python_requires=">=3.10",
     install_requires=(Path(__file__).parent / "requirements.txt").read_text().splitlines(),
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 3 - Alpha",
         "Framework :: AsyncIO",
         "Framework :: aiohttp",
         "Intended Audience :: Developers",
@@ -33,7 +32,6 @@ setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Documentation",
-        "Topic :: Documentation :: Sphinx",
         "Typing :: Typed",
     ],
     project_urls={
