@@ -1,10 +1,13 @@
 import inspect
+import logging
 from typing import Any, Dict, List
 
 import attr
 
-from dis_snek.const import kwarg_spam
+from dis_snek.const import kwarg_spam, logger_name
 from dis_snek.utils.serializer import to_dict
+
+log = logging.getLogger(logger_name)
 
 
 @attr.s()
@@ -27,7 +30,7 @@ class DictSerializationMixin:
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
         unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
         if unused and kwarg_spam:
-            print("Unused kwargs:", cls.__name__, unused)  # for debug
+            log.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod

@@ -450,9 +450,8 @@ class Snake(
             except Exception:  # noqa : S110
                 pass
 
-        print(
-            "Ignoring exception in {}:{}{}".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
-            file=sys.stderr,
+        sys.stderr.write(
+            "Ignoring exception in {}:{}{}\n".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
         )
 
     async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
