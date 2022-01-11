@@ -174,9 +174,7 @@ class _BaseInteractionContext(Context):
                 match option["type"]:
                     case OptionTypes.USER:
                         value = (
-                            self._client.cache.get_cached_member(
-                                (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
-                            )
+                            self._client.cache.get_cached_member(to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
                             or self._client.cache.user_cache.get(to_snowflake(value))
                         ) or value
 
@@ -188,7 +186,7 @@ class _BaseInteractionContext(Context):
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := self._client.cache.get_cached_member(snow) or self._client.cache.user_cache.get(
+                        if user := self._client.cache.get_cached_member(to_snowflake(data.get("guild_id", 0)), snow) or self._client.cache.user_cache.get(
                             snow
                         ):
                             value = user

@@ -136,7 +136,7 @@ class GlobalCache:
         """
         guild_id = to_snowflake(guild_id)
         user_id = to_snowflake(user_id)
-        member = self._member_cache.get(guild_id, user_id)
+        member = self._member_cache.get((guild_id, user_id))
         if isinstance(member, Deferred):
             member = self.place_member_data(guild_id, member.data)
         return member
@@ -179,12 +179,13 @@ class GlobalCache:
 
         member = self._member_cache.get((guild_id, user_id))
         if member is None or isinstance(member, Deferred):
-            if deferred:
-                member = self._member_cache[(guild_id, user_id)] = Deferred(data, user_id)
-                return member
             member_extra = {"guild_id": guild_id}
             member = data["member"] if is_user else data
             member.update(member_extra)
+
+            if deferred:
+                member = self._member_cache[(guild_id, user_id)] = Deferred(data, user_id)
+                return member
 
             member = Member.from_dict(data, self._client)
             self._member_cache[(guild_id, user_id)] = member

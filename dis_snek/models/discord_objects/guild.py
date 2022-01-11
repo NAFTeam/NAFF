@@ -227,7 +227,7 @@ class Guild(BaseGuild):
     @property
     def members(self) -> List["Member"]:
         """A generator that yields all members of this guild."""
-        return [self._client.cache.get_cached_member((self.id, m_id)) for m_id in self._member_ids]
+        return [self._client.cache.get_cached_member(self.id, m_id) for m_id in self._member_ids]
 
     @property
     def premium_subscribers(self) -> List["Member"]:
@@ -252,7 +252,7 @@ class Guild(BaseGuild):
     @property
     def me(self) -> "Member":
         """Returns this bots member object within this guild."""
-        return self._client.cache.get_cached_member((self.id, self._client.user.id))
+        return self._client.cache.get_cached_member(self.id, self._client.user.id)
 
     @property
     def system_channel(self) -> Optional["GuildText"]:
