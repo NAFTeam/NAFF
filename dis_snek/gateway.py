@@ -529,7 +529,7 @@ class WebsocketClient:
             s = time.monotonic()
             start_time = time.perf_counter()
 
-            for i, member in enumerate(members):
+            for member in members:
                 self.state.client.cache.place_member_data(g_id, member)
                 if (time.monotonic() - s) > 0.05:
                     # look, i get this *could* be a thread, but because it needs to modify data in the main thread,
