@@ -19,6 +19,7 @@ from dis_snek.models.enums import (
     VideoQualityModes,
     AutoArchiveDuration,
     StagePrivacyLevel,
+    MessageFlags,
 )
 from dis_snek.models.iterator import AsyncIterator
 from dis_snek.models.snowflake import SnowflakeObject, to_snowflake
@@ -258,6 +259,7 @@ class MessageableMixin(SendMixin):
         deletion_limit: int = 50,
         search_limit: int = 100,
         predicate: Callable[["Message"], bool] = MISSING,
+        avoid_loading_msg: bool = True,
         before: Optional["Snowflake_Type"] = MISSING,
         after: Optional["Snowflake_Type"] = MISSING,
         around: Optional["Snowflake_Type"] = MISSING,
@@ -277,6 +279,7 @@ class MessageableMixin(SendMixin):
             deletion_limit: The target amount of messages to delete
             search_limit: How many messages to search through
             predicate: A function that returns True or False, and takes a message as an argument
+            avoid_loading_msg: Should the bot attempt to avoid deleting its own loading messages (recommended enabled)
             before: Search messages before this ID
             after: Search messages after this ID
             around: Search messages around this ID
@@ -302,6 +305,10 @@ class MessageableMixin(SendMixin):
             if not predicate(message):
                 # fails predicate
                 continue
+
+            if avoid_loading_msg:
+                if message.author.id == self._client.user.id and MessageFlags.LOADING in message.flags:
+                    continue
 
             if message.id < fourteen_days_ago:
                 # message is too old to be purged
