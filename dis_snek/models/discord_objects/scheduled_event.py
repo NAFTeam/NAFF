@@ -206,22 +206,22 @@ class ScheduledEvent(DiscordObject):
 
         """
         if external_location is not MISSING:
-            entity_metadata = dict(location=external_location)
+            entity_metadata = {"location": external_location}
 
         if event_type == ScheduledEventType.EXTERNAL:
             channel_id = None
             if external_location == MISSING:
                 raise EventLocationNotProvided("Location is required for external events")
 
-        payload = dict(
-            name=name,
-            description=description,
-            channel_id=channel_id,
-            entity_type=event_type,
-            scheduled_start_time=start_time.isoformat() if start_time else MISSING,
-            scheduled_end_time=end_time.isoformat() if end_time else MISSING,
-            status=status,
-            entity_metadata=entity_metadata,
-            privacy_level=privacy_level,
-        )
+        payload = {
+            "name": name,
+            "description": description,
+            "channel_id": channel_id,
+            "entity_type": event_type,
+            "scheduled_start_time": start_time.isoformat() if start_time else MISSING,
+            "scheduled_end_time": end_time.isoformat() if end_time else MISSING,
+            "status": status,
+            "entity_metadata": entity_metadata,
+            "privacy_level": privacy_level,
+        }
         await self._client.http.modify_scheduled_event(self._guild_id, self.id, payload, reason)

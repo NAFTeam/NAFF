@@ -438,11 +438,11 @@ class Guild(BaseGuild):
 
         """
         data_payload = dict_filter_none(
-            dict(
-                name=name,
-                image=to_image_data(imagefile),
-                roles=roles,
-            )
+            {
+                "name": name,
+                "image": to_image_data(imagefile),
+                "roles": roles,
+            }
         )
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
@@ -783,22 +783,22 @@ class Guild(BaseGuild):
 
         """
         if external_location is not MISSING:
-            entity_metadata = dict(location=external_location)
+            entity_metadata = {"location": external_location}
 
         if event_type == ScheduledEventType.EXTERNAL:
             if external_location == MISSING:
                 raise EventLocationNotProvided("Location is required for external events")
 
-        payload = dict(
-            name=name,
-            entity_type=event_type,
-            scheduled_start_time=start_time.isoformat(),
-            scheduled_end_time=end_time.isoformat() if end_time is not MISSING else end_time,
-            description=description,
-            channel_id=channel_id,
-            entity_metadata=entity_metadata,
-            privacy_level=privacy_level,
-        )
+        payload = {
+            "name": name,
+            "entity_type": event_type,
+            "scheduled_start_time": start_time.isoformat(),
+            "scheduled_end_time": end_time.isoformat() if end_time is not MISSING else end_time,
+            "description": description,
+            "channel_id": channel_id,
+            "entity_metadata": entity_metadata,
+            "privacy_level": privacy_level,
+        }
 
         scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)
         return ScheduledEvent.from_dict(scheduled_event_data, self._client)

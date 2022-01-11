@@ -133,5 +133,5 @@ class ReactionRequests:
                 message_id=message_id,
                 emoji=emoji,
             ),
-            params=dict_filter_missing(dict(limit=limit, after=after)),
+            params=dict_filter_missing({"limit": limit, "after": after}),
         )

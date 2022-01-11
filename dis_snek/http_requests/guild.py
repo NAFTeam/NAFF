@@ -576,7 +576,9 @@ class GuildRequests:
             The newly created guild object
 
         """
-        return await self.request(Route("POST", f"/guilds/templates/{template_code}"), data=dict(name=name, icon=icon))
+        return await self.request(
+            Route("POST", f"/guilds/templates/{template_code}"), data={"name": name, "icon": icon}
+        )
 
     async def get_guild_templates(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
