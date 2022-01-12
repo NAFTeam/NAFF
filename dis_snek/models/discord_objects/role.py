@@ -42,11 +42,23 @@ class Role(DiscordObject):
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
     _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
 
-    def __lt__(self, other):
+    def __lt__(self: "Role", other: "Role") -> bool:
+        if not isinstance(self, Role) or not isinstance(other, Role):
+            raise TypeError("Only Role object can be compared.")
+
+        if self._guild_id != other._guild_id:
+            raise RuntimeError("Unable to compare Roles from different guilds.")
+
         return self.position < other.position
 
-    def __gt__(self, other):
-        return self.position > other.position
+    def __gt__(self: "Role", other: "Role") -> bool:
+        return Role.__lt__(other, self)
+
+    def __le__(self: "Role", other: "Role") -> bool:
+        return not Role.__lt__(other, self)
+
+    def __ge__(self: "Role", other: "Role") -> bool:
+        return not Role.__lt__(self, other)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
