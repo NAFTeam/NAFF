@@ -14,7 +14,7 @@ log = logging.getLogger(logger_name)
 
 class Sleeper:
     __slots__ = "_loop", "future", "handle"
-    loop: AbstractEventLoop
+    _loop: AbstractEventLoop
     future: Future
     handle: TimerHandle
 
