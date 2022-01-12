@@ -534,7 +534,7 @@ class ActivityType(IntEnum):
 
 
 class Status(str, Enum):
-    """Represents the status' a user may have."""
+    """Represents the statuses a user may have."""
 
     ONLINE = "online"
     OFFLINE = "offline"
