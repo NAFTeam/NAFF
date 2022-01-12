@@ -68,7 +68,6 @@ class GlobalCache:
     """If the emoji cache should be enabled. Default: False"""
     emoji_cache: Optional[dict] = field(default=None, init=False)  # key: emoji_id
 
-
     # Expiring id reference cache
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
     user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
