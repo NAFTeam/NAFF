@@ -448,10 +448,10 @@ class Snake(
                 errors = error.search_for_message(error.errors)
                 out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
             except Exception:  # noqa : S110
-                pass
+                passit
 
-        sys.stderr.write(
-            "Ignoring exception in {}:{}{}\n".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
+        log.error(
+            "Ignoring exception in {}:{}{}".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
         )
 
     async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
