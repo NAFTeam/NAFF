@@ -110,7 +110,7 @@ class CustomEmoji(PartialEmoji):
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "Snake", guild_id: int) -> "CustomEmoji":
         data = cls._process_dict(data, client)
-        return cls(_client=client, _guild_id=guild_id, **cls._filter_kwargs(data, cls._get_init_keys()))
+        return cls(client=client, guild_id=guild_id, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property
     def guild(self) -> "Guild":
@@ -119,7 +119,7 @@ class CustomEmoji(PartialEmoji):
         return self._client.cache.guild_cache.get(self._guild_id)
 
     @property
-    def creator(self) -> Union["Member", "User"]:
+    def creator(self) -> Optional[Union["Member", "User"]]:
         """The member that created this emoji."""
 
         return self._client.cache.member_cache.get(
