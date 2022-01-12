@@ -1,11 +1,11 @@
 # Modals
 
-As everyone knows from surfing on the web, popups are really great. Everyone loves them and they make for a great UX. 
+As everyone knows from surfing on the web, popups are really great. Everyone loves them and they make for a great UX.
 Luckily for you, you have the option to regale your user's love for them by using modals.
 
-Modals are made of modular *(hah)* components, similar to `ActionRow` from the last Chapter. 
-Importantly, modal components also have a `custom_id` which you can supply. 
-If you want to do anything with the data the users input, it is ***highly*** recommended that you set a `custom_id`. 
+Modals are made of modular *(hah)* components, similar to `ActionRow` from the last Chapter.
+Importantly, modal components also have a `custom_id` which you can supply.
+If you want to do anything with the data the users input, it is ***highly*** recommended that you set a `custom_id`.
 
 You cannot not use the same components you can use in `ActionRow` for modals.
 
@@ -13,9 +13,9 @@ You cannot not use the same components you can use in `ActionRow` for modals.
 
 Modals are one of the ways you can respond to interactions with. They are intended for when you need to query a lot of information from a user.
 
-Modals are valid responses to Slash Commands and Components. 
+Modals are valid responses to Slash Commands and Components.
 You **cannot** respond to a modal with a modal.
-Use `ctx.send_modal()` to send a modal. 
+Use `ctx.send_modal()` to send a modal.
 
 ```python
 @slash_command(name="my_modal_command", description="Playing with Modals")
@@ -38,7 +38,7 @@ This example leads to the following modal:
 ## Reading Responses
 
 Okay now the users can input and submit information, but we cannot view their response yet.
-To wait for a user to fill out a modal and then get the data, use `bot.wait_for_modal(my_modal)`. 
+To wait for a user to fill out a modal and then get the data, use `bot.wait_for_modal(my_modal)`.
 
 As with `bot.wait_for_component()`, `bot.wait_for_modal()` supports timeouts. Checks are not supported, since modals are not persistent like Components, and only visible to the Interaction invoker.
 
