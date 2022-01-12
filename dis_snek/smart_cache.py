@@ -11,6 +11,7 @@ from dis_snek.models.discord_objects.guild import Guild
 from dis_snek.models.discord_objects.message import Message
 from dis_snek.models.discord_objects.role import Role
 from dis_snek.models.discord_objects.user import Member, User
+from dis_snek.models.discord_objects.emoji import CustomEmoji
 from dis_snek.models.snowflake import to_snowflake
 from dis_snek.utils.attr_utils import field
 from dis_snek.utils.cache import TTLCache
@@ -18,7 +19,6 @@ from dis_snek.utils.cache import TTLCache
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.channel import DM, TYPE_ALL_CHANNEL
-    from dis_snek.models.discord_objects.emoji import CustomEmoji
     from dis_snek.models.snowflake import Snowflake_Type
 
 log = logging.getLogger(logger_name)
@@ -62,8 +62,12 @@ class GlobalCache:
     # Expiring discord objects cache
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
     role_cache: TTLCache = field(factory=dict)  # key: role_id
-    emoji_cache: TTLCache = field(factory=dict)  # key: emoji_id
     voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
+
+    enable_emoji_cache: bool = field(default=False)
+    """If the emoji cache should be enabled. Default: False"""
+    emoji_cache: Optional[dict] = field(default=None, init=False)  # key: emoji_id
+
 
     # Expiring id reference cache
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
@@ -74,6 +78,10 @@ class GlobalCache:
             log.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
+
+        # enable emoji cache
+        if self.enable_emoji_cache:
+            self.emoji_cache = {}
 
     async def get_user(self, user_id: "Snowflake_Type", request_fallback: bool = True) -> Optional[User]:
         """
@@ -519,9 +527,10 @@ class GlobalCache:
 
     async def get_emoji(
         self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", request_fallback: bool = True
-    ) -> "CustomEmoji":
+    ) -> Optional["CustomEmoji"]:
         """
         Get an emoji based on the guild and its own ID.
+        This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
         Args:
             guild_id: The ID of the guild this emoji belongs to
@@ -530,7 +539,7 @@ class GlobalCache:
         """
         guild_id = to_snowflake(guild_id)
         emoji_id = to_snowflake(emoji_id)
-        emoji = self.emoji_cache.get(emoji_id)
+        emoji = self.emoji_cache.get(emoji_id) if self.emoji_cache is not None else None
         if request_fallback and emoji is None:
             data = await self._client.http.get_guild_emoji(guild_id, emoji_id)
             emoji = self.place_emoji_data(guild_id, data)
@@ -540,6 +549,7 @@ class GlobalCache:
     def place_emoji_data(self, guild_id: "Snowflake_Type", data: dict) -> "CustomEmoji":
         """
         Take json data representing an emoji, process it, and cache it.
+        This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
         Args:
             guild_id: The ID of the guild this emoji belongs to
@@ -551,6 +561,7 @@ class GlobalCache:
         guild_id = to_snowflake(guild_id)
 
         emoji = CustomEmoji.from_dict(data, self._client, guild_id)
-        self.guild_cache[emoji.id] = emoji
+        if self.emoji_cache is not None:
+            self.emoji_cache[emoji.id] = emoji
 
         return emoji
