@@ -82,7 +82,7 @@ class EmbedAttachment:  # thumbnail or image or video
 
 
 @attr.s(slots=True)
-class EmbedFooter:
+class EmbedFooter(DictSerializationMixin):
     """
     Representation of an Embed Footer.
 
@@ -151,7 +151,7 @@ class Embed(DictSerializationMixin):
         default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
-    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter))
+    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.from_dict))
     """The footer of the embed"""
     provider: Optional[EmbedProvider] = field(
         default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta
