@@ -528,8 +528,7 @@ class GlobalCache:
         self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", request_fallback: bool = True
     ) -> Optional["CustomEmoji"]:
         """
-        Get an emoji based on the guild and its own ID.
-        This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
+        Get an emoji based on the guild and its own ID. This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
         Args:
             guild_id: The ID of the guild this emoji belongs to
@@ -547,8 +546,7 @@ class GlobalCache:
 
     def place_emoji_data(self, guild_id: "Snowflake_Type", data: dict) -> "CustomEmoji":
         """
-        Take json data representing an emoji, process it, and cache it.
-        This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
+        Take json data representing an emoji, process it, and cache it. This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
         Args:
             guild_id: The ID of the guild this emoji belongs to

@@ -482,7 +482,6 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-
         return await self._client.cache.get_emoji(self.id, emoji_id)
 
     async def create_channel(
