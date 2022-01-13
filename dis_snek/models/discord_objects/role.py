@@ -44,7 +44,7 @@ class Role(DiscordObject):
 
     def __lt__(self: "Role", other: "Role") -> bool:
         if not isinstance(self, Role) or not isinstance(other, Role):
-            raise TypeError("Only Role object can be compared.")
+            return NotImplemented
 
         if self._guild_id != other._guild_id:
             raise RuntimeError("Unable to compare Roles from different guilds.")
