@@ -106,9 +106,9 @@ class Role(DiscordObject):
         role hierarchy
 
         """
-        me = await self.guild.me
+        me = self.guild.me
 
-        if (self.default or await me.top_role.position > self.position) and not self.managed:
+        if (self.default or me.top_role.position > self.position) and not self.managed:
             return True
         return False
 
