@@ -1,4 +1,4 @@
-from functools import partial
+from functools import partial, total_ordering
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import attr
@@ -26,6 +26,7 @@ def sentinel_converter(value, sentinel=attr.NOTHING):
 
 
 @define()
+@total_ordering
 class Role(DiscordObject):
     _sentinel = object()
 
@@ -42,11 +43,14 @@ class Role(DiscordObject):
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
     _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
 
-    def __lt__(self, other):
-        return self.position < other.position
+    def __lt__(self: "Role", other: "Role") -> bool:
+        if not isinstance(self, Role) or not isinstance(other, Role):
+            return NotImplemented
 
-    def __gt__(self, other):
-        return self.position > other.position
+        if self._guild_id != other._guild_id:
+            raise RuntimeError("Unable to compare Roles from different guilds.")
+
+        return self.position < other.position
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
