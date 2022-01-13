@@ -107,7 +107,7 @@ class Role(DiscordObject):
         role hierarchy
 
         """
-        return (self.default or self.guild.me.top_role.position > self.position) and not self.managed
+        return (self.default or self.guild.me.top_role > self) and not self.managed
 
     async def delete(self, reason: str = None) -> None:
         """
