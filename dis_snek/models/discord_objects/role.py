@@ -54,12 +54,6 @@ class Role(DiscordObject):
     def __gt__(self: "Role", other: "Role") -> bool:
         return Role.__lt__(other, self)
 
-    def __le__(self: "Role", other: "Role") -> bool:
-        return not Role.__lt__(other, self)
-
-    def __ge__(self: "Role", other: "Role") -> bool:
-        return not Role.__lt__(self, other)
-
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data.update(data.pop("tags", {}))
