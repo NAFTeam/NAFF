@@ -1,4 +1,4 @@
-from functools import partial
+from functools import partial, total_ordering
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import attr
@@ -26,6 +26,7 @@ def sentinel_converter(value, sentinel=attr.NOTHING):
 
 
 @define()
+@total_ordering
 class Role(DiscordObject):
     _sentinel = object()
 
@@ -50,9 +51,6 @@ class Role(DiscordObject):
             raise RuntimeError("Unable to compare Roles from different guilds.")
 
         return self.position < other.position
-
-    def __gt__(self: "Role", other: "Role") -> bool:
-        return Role.__lt__(other, self)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
