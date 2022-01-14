@@ -208,14 +208,17 @@ class Embed(DictSerializationMixin):
     def __len__(self):
         # yes i know there are far more optimal ways to write this
         # its written like this for readability
-        total = 0
-        total += len(self.title) if self.title else 0
-        total += len(self.description) if self.description else 0
-        total += len(self.footer) if self.footer else 0
-        total += len(self.author) if self.author else 0
-
-        for _field in self.fields:
-            total += len(_field)
+        total: int = 0
+        if self.title:
+            total += len(self.title)
+        if self.description:
+            total += len(self.description)
+        if self.footer:
+            total += len(self.footer)
+        if self.author:
+            total += len(self.author)
+        if self.fields:
+            total += sum(map(len, self.fields))
         return total
 
     def set_author(
