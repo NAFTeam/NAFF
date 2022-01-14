@@ -13,7 +13,7 @@ from dis_snek.utils.serializer import dict_filter_none, no_export_meta
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.guild import Guild
-    from dis_snek.models.discord_objects.user import User
+    from dis_snek.models.discord_objects.user import User, Member
     from dis_snek.models.discord_objects.role import Role
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -95,7 +95,7 @@ class CustomEmoji(PartialEmoji):
 
     _creator_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
     _role_ids: List["Snowflake_Type"] = attr.ib(factory=list, converter=optional(list_converter(to_snowflake)))
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+    _guild_id: "Snowflake_Type" = attr.ib(default=None, converter=to_snowflake)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -108,9 +108,26 @@ class CustomEmoji(PartialEmoji):
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: "Snake") -> "CustomEmoji":
+    def from_dict(cls, data: Dict[str, Any], client: "Snake", guild_id: int) -> "CustomEmoji":
         data = cls._process_dict(data, client)
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+        return cls(client=client, guild_id=guild_id, **cls._filter_kwargs(data, cls._get_init_keys()))
+
+    @property
+    def guild(self) -> "Guild":
+        """The guild this emoji belongs to."""
+        return self._client.cache.guild_cache.get(self._guild_id)
+
+    @property
+    def creator(self) -> Optional[Union["Member", "User"]]:
+        """The member that created this emoji."""
+        return self._client.cache.member_cache.get(
+            (self._creator_id, self._guild_id)
+        ) or self._client.cache.user_cache.get(self._creator_id)
+
+    @property
+    def roles(self) -> List["Role"]:
+        """The roles allowed to use this emoji."""
+        return [self._client.cache.role_cache.get(role_id) for role_id in self._role_ids]
 
     @property
     def is_usable(self) -> bool:
@@ -118,42 +135,8 @@ class CustomEmoji(PartialEmoji):
         if not self.available:
             return False
 
-        guild = self._client.cache.guild_cache.get(self._guild_id)
-
-        if not self._role_ids or not guild:
-            return True
-
+        guild = self.guild
         return any(e_role_id in guild.me._role_ids for e_role_id in self._role_ids)
-
-    async def get_creator(self) -> "User":
-        """
-        Get the user who created this emoji.
-
-        Returns:
-            User object
-
-        """
-        return await self._client.cache.get_user(self._creator_id)
-
-    async def get_roles(self) -> List["Role"]:
-        """
-        Gets the roles allowed to use this emoji.
-
-        Returns:
-            List of roles
-
-        """
-        return [await self._client.cache.get_role(self._guild_id, r_id) for r_id in self._role_ids]
-
-    async def get_guild(self) -> "Guild":
-        """
-        Get the guild associated with this emoji.
-
-        Returns:
-            Guild object
-
-        """
-        return await self._client.cache.get_guild(self._guild_id)
 
     async def edit(
         self,

@@ -5,7 +5,14 @@ from dis_snek.const import logger_name, MISSING
 from dis_snek.event_processors._template import EventMixinTemplate, Processor
 from dis_snek.models import events, GuildIntegration, to_snowflake
 from dis_snek.models.events import RawGatewayEvent
-from dis_snek.models.events.discord import IntegrationCreate, IntegrationUpdate, IntegrationDelete, BanCreate, BanRemove
+from dis_snek.models.events.discord import (
+    GuildEmojisUpdate,
+    IntegrationCreate,
+    IntegrationUpdate,
+    IntegrationDelete,
+    BanCreate,
+    BanRemove,
+)
 
 log = logging.getLogger(logger_name)
 
@@ -76,4 +83,22 @@ class GuildEvents(EventMixinTemplate):
     async def _on_raw_integration_delete(self, event: RawGatewayEvent) -> None:
         self.dispatch(
             IntegrationDelete(event.data.get("guild_id"), event.data.get("id"), event.data.get("application_id"))
+        )
+
+    @Processor.define()
+    async def _on_raw_guild_emojis_update(self, event: RawGatewayEvent) -> None:
+        guild_id = event.data.get("guild_id")
+        emojis = event.data.get("emojis")
+
+        self.dispatch(
+            GuildEmojisUpdate(
+                guild_id=guild_id,
+                before=[
+                    copy.copy(await self.cache.get_emoji(guild_id, emoji["id"], request_fallback=False))
+                    for emoji in emojis
+                ]
+                if self.cache.enable_emoji_cache
+                else [],
+                after=[self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis],
+            )
         )
