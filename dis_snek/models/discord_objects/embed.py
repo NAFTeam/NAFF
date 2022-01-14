@@ -209,16 +209,16 @@ class Embed(DictSerializationMixin):
         # yes i know there are far more optimal ways to write this
         # its written like this for readability
         total: int = 0
-        if title := self.title:
-            total += len(title)
-        if description := self.description:
-            total += len(description)
-        if footer := self.footer:
-            total += len(footer)
-        if author := self.author:
-            total += len(author)
-        if fields := self.fields:
-            total += sum(map(len, fields))
+        if self.title:
+            total += len(self.title)
+        if self.description:
+            total += len(self.description)
+        if self.footer:
+            total += len(self.footer)
+        if self.author:
+            total += len(self.author)
+        if self.fields:
+            total += sum(map(len, self.fields))
         return total
 
     def set_author(
