@@ -160,7 +160,7 @@ class UserFlags(DiscordIntFlag):  # type: ignore
     HOUSE_BALANCE = 1 << 8
     """User belongs to the `balance` house"""
     EARLY_SUPPORTER = 1 << 9
-    """This person had Nitro prior to prior to Wednesday, October 10th, 2018"""
+    """This person had Nitro prior to Wednesday, October 10th, 2018"""
 
     TEAM_USER = 1 << 10
     """A team user"""
