@@ -98,7 +98,8 @@ class Role(DiscordObject):
     def members(self) -> list["Member"]:
         return [member for member in self.guild.members if member.has_role(self)]
 
-    async def is_assignable(self) -> bool:
+    @property
+    def is_assignable(self) -> bool:
         """
         Can this role be assigned or removed by this bot?
 
@@ -106,11 +107,7 @@ class Role(DiscordObject):
         role hierarchy
 
         """
-        me = await self.guild.me
-
-        if (self.default or await me.top_role.position > self.position) and not self.managed:
-            return True
-        return False
+        return (self.default or self.guild.me.top_role > self) and not self.managed
 
     async def delete(self, reason: str = None) -> None:
         """
