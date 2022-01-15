@@ -133,8 +133,6 @@ class ConnectionState:
                 ActivityType.COMPETING,
             ]:
                 log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
-        else:
-            activity = self._activity if self._activity else []
 
         if status:
             if not isinstance(status, Status):
