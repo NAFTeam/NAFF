@@ -14,6 +14,7 @@ from dis_snek.models.discord import DiscordObject, ClientObject
 from dis_snek.models.discord_objects.application import Application
 from dis_snek.models.discord_objects.asset import Asset
 from dis_snek.models.discord_objects.emoji import CustomEmoji, PartialEmoji
+from dis_snek.models.discord_objects.invite import Invite
 from dis_snek.models.discord_objects.scheduled_event import (
     ScheduledEvent,
     ScheduledEventPrivacyLevel,
@@ -46,7 +47,6 @@ if TYPE_CHECKING:
     from dis_snek.models.snowflake import Snowflake_Type
     from dis_snek.models.timestamp import Timestamp
     from dis_snek.models.discord_objects.channel import GuildText, GuildVoice, GuildStageVoice, PermissionOverwrite
-    from dis_snek.models.discord_objects.invite import Invite
 
 log = logging.getLogger(logger_name)
 
