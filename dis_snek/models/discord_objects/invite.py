@@ -5,7 +5,6 @@ from attr.converters import optional as optional_c
 from dis_snek.const import MISSING
 from dis_snek.models.discord import ClientObject
 from dis_snek.models.discord_objects.application import Application
-from dis_snek.models.discord_objects.guild import GuildPreview
 from dis_snek.models.discord_objects.stage_instance import StageInstance
 from dis_snek.models.enums import InviteTargetTypes
 from dis_snek.models.snowflake import to_snowflake
@@ -16,6 +15,7 @@ from dis_snek.utils.converters import timestamp_converter
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models import TYPE_GUILD_CHANNEL
+    from dis_snek.models.discord_objects.guild import GuildPreview
     from dis_snek.models.discord_objects.user import Member
     from dis_snek.models.snowflake import Snowflake_Type
 
@@ -38,7 +38,7 @@ class Invite(ClientObject):
     scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
     stage_instance: Optional[StageInstance] = field(default=None)
     target_application: Optional[dict] = field(default=None)
-    guild_preview: Optional[GuildPreview] = field(default=MISSING)
+    guild_preview: Optional["GuildPreview"] = field(default=MISSING)
 
     # internal for props
     _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
@@ -74,6 +74,9 @@ class Invite(ClientObject):
             data["channel_id"] = channel["id"]
 
         if guild := data.pop("guild", None):
+            # todo: A hacky way to fix circular import, to be fixed with lib restructure.
+            from dis_snek.models.discord_objects.guild import GuildPreview
+
             data["guild_preview"] = GuildPreview.from_dict(guild, client)
 
         if inviter := data.pop("inviter", None):
