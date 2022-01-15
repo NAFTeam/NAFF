@@ -1,9 +1,11 @@
-from asyncio import Future
-from typing import Coroutine, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
+
+if TYPE_CHECKING:
+    from asyncio import Future
 
 
 class Wait:
-    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future):
+    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: "Future"):
         self.event = event
         self.checks = checks
         self.future = future
