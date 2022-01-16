@@ -367,7 +367,7 @@ class InvitableMixin:
         )
         return models.Invite.from_dict(invite_data, self._client)
 
-    async def get_invites(self) -> List["Invite"]:
+    async def get_invites(self) -> List["models.Invite"]:
         """Gets all invites (with invite metadata) for the channel."""
         invites_data = await self._client.http.get_channel_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
@@ -555,7 +555,7 @@ class WebhookMixin:
         Raises:
             ValueError: If you try to name the webhook "Clyde"
         """
-        return await Webhook.create(self._client, self, name, avatar)  # type: ignore
+        return await models.Webhook.create(self._client, self, name, avatar)  # type: ignore
 
     async def delete_webhook(self, webhook: "models.Webhook") -> None:
         """
@@ -734,7 +734,7 @@ class GuildChannel(BaseChannel):
     _original_permission_overwrites: List[Union["PermissionOverwrite", dict]] = attr.ib(factory=list)
 
     @property
-    def guild(self) -> "Guild":
+    def guild(self) -> "models.Guild":
         """The guild this channel belongs to."""
         return self._client.cache.guild_cache.get(self._guild_id)
 
@@ -765,7 +765,9 @@ class GuildChannel(BaseChannel):
         )
 
     async def delete_permission(
-        self, target: Union["PermissionOverwrite", "Role", "models.User"], reason: Absent[Optional[str]] = MISSING
+        self,
+        target: Union["PermissionOverwrite", "models.Role", "models.User"],
+        reason: Absent[Optional[str]] = MISSING,
     ) -> None:
         """
         Delete a permission overwrite for this channel.
