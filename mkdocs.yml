@@ -56,6 +56,7 @@ extra_css:
 
 plugins:
 - search
+- awesome-pages
 - autorefs
 - mkdocstrings:
     custom_templates: docs/templates
