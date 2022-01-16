@@ -2,12 +2,11 @@ import asyncio
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
 
 import attr
 from aiohttp.formdata import FormData
 from attr.converters import optional as optional_c
-
 from dis_snek.const import MISSING, Absent
 from dis_snek.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.mixins.serialization import DictSerializationMixin
@@ -18,26 +17,33 @@ from dis_snek.models.discord_objects.emoji import PartialEmoji, process_emoji_re
 from dis_snek.models.discord_objects.reaction import Reaction
 from dis_snek.models.discord_objects.sticker import StickerItem
 from dis_snek.models.enums import (
+    AutoArchiveDuration,
     ChannelTypes,
     InteractionTypes,
     MentionTypes,
     MessageActivityTypes,
     MessageFlags,
     MessageTypes,
-    AutoArchiveDuration,
 )
 from dis_snek.models.file import File
-from dis_snek.models.snowflake import to_snowflake, to_snowflake_list, to_optional_snowflake
+from dis_snek.models.snowflake import (
+    to_optional_snowflake,
+    to_snowflake,
+    to_snowflake_list,
+)
 from dis_snek.models.timestamp import Timestamp
 from dis_snek.utils.attr_utils import define
-from dis_snek.utils.converters import timestamp_converter, optional_timestamp_converter
+from dis_snek.utils.converters import optional_timestamp_converter, timestamp_converter
 from dis_snek.utils.input_utils import OverriddenJson
 from dis_snek.utils.serializer import dict_filter_none
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord_objects.application import Application
-    from dis_snek.models.discord_objects.channel import TYPE_THREAD_CHANNEL, TYPE_MESSAGEABLE_CHANNEL
+    from dis_snek.models.discord_objects.channel import (
+        TYPE_MESSAGEABLE_CHANNEL,
+        TYPE_THREAD_CHANNEL,
+    )
     from dis_snek.models.discord_objects.components import ActionRow
     from dis_snek.models.discord_objects.guild import Guild
     from dis_snek.models.discord_objects.role import Role
@@ -97,7 +103,7 @@ class MessageReference(DictSerializationMixin):
         return cls(
             message_id=message.id,
             channel_id=message.channel.id,
-            guild_id=message.guild.id,
+            guild_id=message.guild.id if message.guild else None,
             fail_if_not_exists=fail_if_not_exists,
         )
 
