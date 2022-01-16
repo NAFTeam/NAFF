@@ -16,6 +16,7 @@ theme:
     - navigation.tabs
     - search.suggest
     - search.share
+    - navigation.indexes
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default

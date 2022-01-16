@@ -11,7 +11,7 @@ Snek comes builtin with a pagination utility that splits your messages up into p
 To use it, you only need 3 lines.
 
 ```python
-from dis_snek.models.paginators import Paginator
+from dis_snek.ext.paginators import Paginator
 
 paginator = Paginator.create_from_string(bot, your_content, page_size=1000)
 await paginator.send(ctx)
@@ -23,4 +23,4 @@ embeds = [Embed("Page 1 content"), Embed("Page 2 embed"), Embed("Page 3 embed"),
 paginator = Paginator.create_from_embeds(bot, *embeds)
 ```
 
-Paginators are configurable, you can choose which buttons show, add timeouts, add select-menu navigation, and even add callbacks. To see your options, check out their documentation [here](/API Reference/models/Internal Models/paginator).
+Paginators are configurable, you can choose which buttons show, add timeouts, add select-menu navigation, and even add callbacks. To see your options, check out their documentation [here](/API Reference/ext/paginators).

@@ -5,7 +5,7 @@ Context menus work of `ctx.target_id` which contains the id of the object the us
 
 You can also define `scopes` and `permissions` for them, just like with interactions.
 
-For more information, please visit the API reference [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.context_menu).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.context_menu).
 
 ## Message Context Menus
 
