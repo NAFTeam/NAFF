@@ -201,10 +201,37 @@ When responding to a component you need to satisfy discord either by responding 
                 await ctx.send("You clicked it!")
     ```
 
-=== ":three: Persistent Callback Option 2"
+=== ":two: Persistent Callback Option 2"
     If you have a lot of components, putting everything in the `on_component()` event can get messy really quickly.
 
-    Personally, I put my callbacks into different files. For this example to work, the function name needs to be the same as the `custom_id` of the component.
+    Similarly to Option 1, you can define `@component_callback` listeners. This works after restarts too.
+    
+    You have to pass your `custom_id` to `@component_callback(custom_id)` for the libary to be able to register the callback function to the wanted component.
+
+    ```python
+    async def my_command(...):
+        components: list[ActionRow] = [
+            ActionRow(
+                Button(
+                    custom_id="my_button",
+                    style=ButtonStyles.GREEN,
+                    label="Click Me",
+                    disabled=False,
+                )
+            )
+        ]
+
+        await channel.send("Look a Button!", components=components)
+
+    @component_callback("my_button")
+    async def my_callback(ctx: ComponentContext):
+        await ctx.send("You clicked it!")
+    ```
+
+=== ":three: Persistent Callback Option 3"
+    Personally, I put my callbacks into different files, which is why I use this method, because the usage of different files can make using decorators challenging. 
+
+    For this example to work, the function name needs to be the same as the `custom_id` of the component.
 
     ```python
     async def my_command(...):
