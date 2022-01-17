@@ -52,10 +52,7 @@ bot.start("Token")
 
 ```python
 
-from dis_snek.models.command import message_command
-from dis_snek.models.discord_objects.components import Button, ActionRow
-from dis_snek.models.enums import ButtonStyles
-from dis_snek.models.scale import Scale
+from dis_snek import message_command, Button, ActionRow, ButtonStyles, Scale
 
 
 class ButtonExampleSkin(Scale):
@@ -96,11 +93,7 @@ def setup(bot):
 
 ```python
 
-from dis_snek.models.application_commands import slash_command, slash_option, context_menu
-from dis_snek.models.discord_objects.components import Button, ActionRow
-from dis_snek.models.context import InteractionContext
-from dis_snek.models.enums import CommandTypes
-from dis_snek.models.scale import Scale
+from dis_snek import slash_command, slash_option, InteractionContext, context_menu, CommandTypes, Button, ActionRow, ButtonStyles, Scale
 
 
 class CommandsExampleSkin(Scale):

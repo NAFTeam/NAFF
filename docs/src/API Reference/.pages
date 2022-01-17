@@ -1,0 +1,8 @@
+nav:
+    - Snake.md
+    - const.md
+    - errors.md
+    - API_Communication
+    - events
+    - models
+    - ext

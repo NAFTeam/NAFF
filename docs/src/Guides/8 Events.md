@@ -12,7 +12,7 @@ bot = Snake(intents=Intents.DEFAULT)
 bot.start("Put your token here")
 ```
 
-For more information, please visit the API reference [here](/API Reference/enums/#dis_snek.models.enums.Intents).
+For more information, please visit the API reference [here](/API Reference/models/Discord/enums/#dis_snek.models.discord.enums.Intents).
 
 ## Hey Listen!!!
 
@@ -21,7 +21,7 @@ Depending on how you register your callbacks that's not a requirement, but it is
 
 For example, the event callback for the `ChannelCreate` event should be called `on_channel_create`.
 
-You can find all events and their signatures [here](/API Reference/models/events/discord/).
+You can find all events and their signatures [here](/API Reference/events/discord/).
 
 Be aware that your `Intents` must be set to receive the event you are looking for.
 

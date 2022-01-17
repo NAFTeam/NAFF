@@ -182,7 +182,7 @@ Scales are effectively just another python file that contains a class that inher
 inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
-from dis_snek.models.scale import Scale
+from dis_snek import Scale
 
 class SomeClass(Scale):
     ...
