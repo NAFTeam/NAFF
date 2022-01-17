@@ -42,7 +42,7 @@ try:
     __version__ = _v("dis-snek")
 except Exception:
     __version__ = "0.0.0"
-__repo_url__ = "https://github.com/LordOfPolls/dis_snek"
+__repo_url__ = "https://github.com/Discord-Snake-Pit/Dis-Snek"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 logger_name = "dis.snek"
 kwarg_spam = False
