@@ -935,6 +935,171 @@ class GuildCategory(GuildChannel):
         }
         await self._edit(payload=payload, reason=reason)
 
+    async def create_channel(
+        self,
+        channel_type: Union[ChannelTypes, int],
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: int = 0,
+        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        nsfw: bool = False,
+        bitrate: int = 64000,
+        user_limit: int = 0,
+        rate_limit_per_user: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "TYPE_GUILD_CHANNEL":
+        """
+        Create a guild channel within this category, allows for explicit channel type setting.
+
+        parameters:
+            channel_type: The type of channel to create
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            nsfw: Should this channel be marked nsfw
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this channel
+
+        returns:
+            The newly created channel.
+
+        """
+        if permission_overwrites is not MISSING:
+            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
+
+        channel_data = await self._client.http.create_guild_channel(
+            self.guild.id,
+            name,
+            channel_type,
+            topic,
+            position,
+            permission_overwrites,
+            to_snowflake(self),
+            nsfw,
+            bitrate,
+            user_limit,
+            rate_limit_per_user,
+            reason,
+        )
+        return self._client.cache.place_channel_data(channel_data)
+
+    async def create_text_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: int = 0,
+        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        nsfw: bool = False,
+        rate_limit_per_user: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "GuildText":
+        """
+        Create a text channel in this guild within this category.
+
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            nsfw: Should this channel be marked nsfw
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this channel
+
+        returns:
+           The newly created text channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_TEXT,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
+        )
+
+    async def create_voice_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: int = 0,
+        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        nsfw: bool = False,
+        bitrate: int = 64000,
+        user_limit: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "GuildVoice":
+        """
+        Create a guild voice channel within this category.
+
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            nsfw: Should this channel be marked nsfw
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            reason: The reason for creating this channel
+
+        returns:
+           The newly created voice channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_VOICE,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            reason=reason,
+        )
+
+    async def create_stage_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: int = 0,
+        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        bitrate: int = 64000,
+        user_limit: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "GuildStageVoice":
+        """
+        Create a guild stage channel within this category.
+
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            reason: The reason for creating this channel
+
+        returns:
+            The newly created stage channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_STAGE_VOICE,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            reason=reason,
+        )
+
 
 @define()
 class GuildStore(GuildChannel):
