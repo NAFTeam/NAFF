@@ -7,7 +7,13 @@ from attr.converters import optional as c_optional
 from attr.validators import instance_of
 from attr.validators import optional as v_optional
 
-from dis_snek.client.const import EMBED_MAX_NAME_LENGTH, EMBED_MAX_FIELDS, EMBED_MAX_DESC_LENGTH, EMBED_TOTAL_MAX
+from dis_snek.client.const import (
+    EMBED_MAX_NAME_LENGTH,
+    EMBED_MAX_FIELDS,
+    EMBED_MAX_DESC_LENGTH,
+    EMBED_TOTAL_MAX,
+    EMBED_FIELD_VALUE_LENGTH,
+)
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.timestamp import Timestamp
@@ -32,6 +38,16 @@ class EmbedField(DictSerializationMixin):
     value: str = attr.ib()
     inline: bool = attr.ib(default=False)
 
+    @name.validator
+    def _name_validation(self, attribute: str, value: Any) -> None:
+        if len(value) > EMBED_MAX_NAME_LENGTH:
+            raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
+
+    @value.validator
+    def _value_validation(self, attribute: str, value: Any) -> None:
+        if len(value) > EMBED_FIELD_VALUE_LENGTH:
+            raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
+
     def __len__(self):
         return len(self.name) + len(self.value)
 
@@ -53,6 +69,11 @@ class EmbedAuthor:
     url: Optional[str] = attr.ib(default=None)
     icon_url: Optional[str] = attr.ib(default=None)
     proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+
+    @name.validator
+    def _name_validation(self, attribute: str, value: Any) -> None:
+        if len(value) > EMBED_MAX_NAME_LENGTH:
+            raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
 
     def __len__(self):
         return len(self.name)
