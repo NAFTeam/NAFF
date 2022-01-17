@@ -205,7 +205,7 @@ When responding to a component you need to satisfy discord either by responding 
     If you have a lot of components, putting everything in the `on_component()` event can get messy really quickly.
 
     Similarly to Option 1, you can define `@component_callback` listeners. This works after restarts too.
-    
+
     You have to pass your `custom_id` to `@component_callback(custom_id)` for the libary to be able to register the callback function to the wanted component.
 
     ```python
@@ -229,7 +229,7 @@ When responding to a component you need to satisfy discord either by responding 
     ```
 
 === ":three: Persistent Callback Option 3"
-    Personally, I put my callbacks into different files, which is why I use this method, because the usage of different files can make using decorators challenging. 
+    Personally, I put my callbacks into different files, which is why I use this method, because the usage of different files can make using decorators challenging.
 
     For this example to work, the function name needs to be the same as the `custom_id` of the component.
 
