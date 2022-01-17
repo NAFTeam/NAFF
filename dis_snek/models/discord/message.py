@@ -24,6 +24,7 @@ from .enums import (
     MessageActivityTypes,
     MessageFlags,
     MessageTypes,
+    AutoArchiveDuration,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
 
