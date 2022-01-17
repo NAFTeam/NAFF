@@ -10,15 +10,12 @@ import time
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
-from .smart_cache import GlobalCache
-from dis_snek.api.gateway.state import ConnectionState
-from dis_snek.ext.tasks.task import Task
-
 import dis_snek.api.events as events
 from dis_snek.api.events import RawGatewayEvent, MessageCreate
 from dis_snek.api.events import processors
 from dis_snek.api.events.internal import Component
 from dis_snek.api.gateway.gateway import WebsocketClient
+from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
 from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.client.errors import (
@@ -34,6 +31,7 @@ from dis_snek.client.errors import (
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial
 from dis_snek.client.utils.serializer import to_image_data
+from dis_snek.ext.tasks.task import Task
 from dis_snek.models import (
     Activity,
     Application,
@@ -68,6 +66,7 @@ from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.snek.auto_defer import AutoDefer
+from .smart_cache import GlobalCache
 
 if TYPE_CHECKING:
     from io import IOBase
@@ -429,16 +428,15 @@ class Snake(
 
         return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
 
-    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+    @staticmethod
+    def default_error_handler(source: str, error: BaseException) -> None:
         """
-        Catches all errors dispatched by the library.
-
-        By default it will format and print them to console
-
-        Override this to change error handling behaviour
-
+        The default error logging behaviour.
+        Args:
+            source: The source of this error
+            error: The exception itself
         """
-        out = traceback.format_exc()
+        out = traceback.format_exception(error)
 
         if isinstance(error, HTTPException):
             # HTTPException's are of 3 known formats, we can parse them for human readable errors
@@ -449,8 +447,19 @@ class Snake(
                 pass
 
         log.error(
-            "Ignoring exception in {}:{}{}".format(source, "\n" if len(out.split("\n")) > 1 else " ", out),
+            "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
+
+    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+        """
+        Catches all errors dispatched by the library.
+
+        By default it will format and print them to console
+
+        Override this to change error handling behaviour
+
+        """
+        self.default_error_handler(source, error)
 
     async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
         """
