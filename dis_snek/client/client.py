@@ -432,6 +432,7 @@ class Snake(
     def default_error_handler(source: str, error: BaseException) -> None:
         """
         The default error logging behaviour.
+
         Args:
             source: The source of this error
             error: The exception itself
