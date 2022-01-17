@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, Union
@@ -63,6 +64,23 @@ class Timestamp(datetime):
     @classmethod
     def fromordinal(cls, n: int) -> "Timestamp":
         return super().fromordinal(n).astimezone()
+
+    @classmethod
+    def now(cls, tz=None):
+        """
+        Construct a datetime from time.time() and optional time zone info.
+
+        If no timezone is provided, the time is assumed to be from the computer's
+        local timezone.
+        """
+        t = time.time()
+        return cls.fromtimestamp(t, tz)
+
+    @classmethod
+    def utcnow(cls):
+        """Construct a timezone-aware UTC datetime from time.time()."""
+        t = time.time()
+        return cls.utcfromtimestamp(t)
 
     def to_snowflake(self, high: bool = False) -> Union[str, int]:
         """
