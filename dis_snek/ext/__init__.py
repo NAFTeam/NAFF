@@ -1,2 +1,1 @@
-from .paginators import *
-from .tasks import *
+from . import tasks
