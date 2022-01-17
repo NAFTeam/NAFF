@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, AsyncGenerator
+from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
 
 import attr
 from aiohttp.formdata import FormData
@@ -24,7 +24,6 @@ from .enums import (
     MessageActivityTypes,
     MessageFlags,
     MessageTypes,
-    AutoArchiveDuration,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
 
@@ -82,7 +81,7 @@ class MessageReference(DictSerializationMixin):
         return cls(
             message_id=message.id,
             channel_id=message.channel.id,
-            guild_id=message.guild.id,
+            guild_id=message.guild.id if message.guild else None,
             fail_if_not_exists=fail_if_not_exists,
         )
 
