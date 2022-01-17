@@ -1,36 +1,16 @@
 import asyncio
 import inspect
 import logging
-from asyncio import AbstractEventLoop, Future, TimerHandle
+from asyncio import AbstractEventLoop
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
+import dis_snek
 from dis_snek.client.const import logger_name, MISSING
 from .triggers import BaseTrigger
 
 log = logging.getLogger(logger_name)
-
-
-class Sleeper:
-    __slots__ = "_loop", "future", "handle"
-    _loop: AbstractEventLoop
-    future: Future
-    handle: TimerHandle
-
-    def __init__(self, event_loop: AbstractEventLoop):
-        self._loop = event_loop
-
-    def __call__(self, until: datetime):
-        self.future = self._loop.create_future()
-
-        delta = max(0.0, (until - datetime.now()).total_seconds())
-        self.handle = self._loop.call_later(delta, self.future.set_result, True)
-        return self.future
-
-    def cancel(self) -> None:
-        self.handle.cancel()
-        self.future.cancel()
 
 
 class Task:
@@ -43,17 +23,15 @@ class Task:
 
     callback: Callable
     trigger: BaseTrigger
-    sleeper: Sleeper
     task: _Task
-    _stop: bool
+    _stop: asyncio.Event
     iteration: int
 
     def __init__(self, callback: Callable, trigger: BaseTrigger):
         self.callback = callback
         self.trigger = trigger
-        self._stop = False
+        self._stop = asyncio.Event()
         self.task = MISSING
-        self.sleeper = MISSING
         self.iteration = 0
 
     @property
@@ -72,48 +50,50 @@ class Task:
         if not self.task.done():
             return self.next_run - datetime.now()
 
-    @property
-    def is_sleeping(self) -> bool:
-        """Returns True if the task is currently waiting to run."""
-        if getattr(self.sleeper, "future", None):
-            return not self.sleeper.future.done()
-        return False
+    def on_error(self, error):
+        dis_snek.Snake.default_error_handler("Task", error)
 
-    def __call__(self) -> None:
-        if inspect.iscoroutinefunction(self.callback):
-            asyncio.gather(self.callback())
-        else:
-            asyncio.gather(asyncio.to_thread(self.callback))
+    async def __call__(self) -> None:
+        try:
+            if inspect.iscoroutinefunction(self.callback):
+                await self.callback()
+            else:
+                self.callback()
+        except Exception as e:
+            self.on_error(e)
 
     def _fire(self, fire_time: datetime):
         """Called when the task is being fired."""
         self.trigger.last_call_time = fire_time
-        self()
+        self._loop.create_task(self())
         self.iteration += 1
 
     async def _task_loop(self):
-        while not self._stop:
+        while not self._stop.is_set():
             fire_time = self.trigger.next_fire()
             if fire_time is None:
                 return self.stop()
-            if datetime.now() > fire_time:
-                self._fire(fire_time)
-            await self.sleeper(self.trigger.next_fire())
+
+            try:
+                await asyncio.wait_for(self._stop.wait(), max(0.0, (fire_time - datetime.now()).total_seconds()))
+            except asyncio.TimeoutError:
+                pass
+            else:
+                return
+
+            self._fire(fire_time)
 
     def start(self) -> None:
         """Start this task."""
-        self._stop = False
+        self._stop.clear()
         if self._loop:
-            self.sleeper = Sleeper(self._loop)
             self.task = asyncio.create_task(self._task_loop())
 
     def stop(self) -> None:
         """End this task."""
-        self._stop = True
+        self._stop.set()
         if self.task:
             self.task.cancel()
-        if self.sleeper:
-            self.sleeper.cancel()
 
     def restart(self) -> None:
         """Restart this task."""
