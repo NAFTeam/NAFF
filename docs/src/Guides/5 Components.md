@@ -4,7 +4,7 @@ While interactions are cool and all, they are still missing a vital component.
 Introducing components, aka Buttons, Selects, soon Text Input Fields.
 Components can be added to any message by passing them to `components` in any `.send()` method.
 
-They are organised in a 5x5 grid, so you either have to manage the layout yourself, or use `spread_to_rows()` where we organise them for you.
+They are organised in a 5x5 grid, so you either have to manage the layout yourself, use `spread_to_rows()` where we organise them for you, or have a single component.
 
 If you want to define the layout yourself, you have to put them in an `ActionRow()`. The `components` parameter need a list of up to five `ActionRow()`.
 
@@ -42,6 +42,21 @@ If you want to define the layout yourself, you have to put them in an `ActionRow
     await channel.send("Look, Buttons!", components=components)
     ```
 
+=== ":three: With only one component"
+    If you only have **one** component, you do not need to worry about the layout at all and can simply pass it.
+    We will put it in an `ActionRow` behind the scenes.
+
+    ```python
+    components = Button(
+        style=ButtonStyles.GREEN,
+        label="Click Me",
+    )
+
+    await channel.send("Look, Buttons!", components=components)
+    ```
+
+For simplicity's sake, example three will be used for all examples going forward. 
+
 If you want to delete components, you need to pass `components=[]` to `.edit()`.
 
 ## You Have To Button Up
@@ -49,15 +64,11 @@ If you want to delete components, you need to pass `components=[]` to `.edit()`.
 Buttons are, you guessed right, buttons. Users can click them and they can be disabled if you wish. That's all really.
 
 ```python
-components: list[ActionRow] = [
-    ActionRow(
-        Button(
-            style=ButtonStyles.GREEN,
-            label="Click Me",
-            disabled=False,
-        )
-    )
-]
+components = Button(
+    style=ButtonStyles.GREEN,
+    label="Click Me",
+    disabled=False,
+)
 
 await channel.send("Look a Button!", components=components)
 ```
@@ -73,15 +84,11 @@ The colours correspond to the styles found in `ButtonStyles`. Click [here](/API 
 
 If you use `ButtonStyles.URL`, you can pass an url to the button with `url`. User who click the button will get redirected to your url.
 ```python
-components: list[ActionRow] = [
-    ActionRow(
-        Button(
-            style=ButtonStyles.URL,
-            label="Click Me",
-            url="https://github.com/Discord-Snake-Pit/Dis-Snek",
-        )
-    )
-]
+components = Button(
+    style=ButtonStyles.URL,
+    label="Click Me",
+    url="https://github.com/Discord-Snake-Pit/Dis-Snek",
+)
 
 await channel.send("Look a Button!", components=components)
 ```
@@ -96,25 +103,21 @@ Selects are very similar to Buttons. The main difference is that they need optio
 
 You can also define how many options users can choose by setting `min_values` and `max_values`.
 ```python
-components: list[ActionRow] = [
-    ActionRow(
-        Select(
-            options=[
-                SelectOption(
-                    label="Pizza",
-                    value="Pizza"
-                ),
-            SelectOption(
-                    label="Egg Sandwich",
-                    value="Egg Sandwich"
-                ),
-            ],
-            placeholder="What is your favourite food?",
-            min_values=1,
-            max_values=1,
-        )
-    )
-]
+components = Select(
+    options=[
+        SelectOption(
+            label="Pizza",
+            value="Pizza"
+        ),
+        SelectOption(
+            label="Egg Sandwich",
+            value="Egg Sandwich"
+        ),
+    ],
+    placeholder="What is your favourite food?",
+    min_values=1,
+    max_values=1,
+)
 
 await channel.send("Look a Select!", components=components)
 ```
@@ -139,16 +142,12 @@ When responding to a component you need to satisfy discord either by responding 
     In this example, we are checking that the username starts with "a" and clicks the button within 30 seconds.
     If it times out, we're just gonna disable it
     ```python
-    components: list[ActionRow] = [
-        ActionRow(
-            Button(
-                custom_id="my_button_id",
-                style=ButtonStyles.GREEN,
-                label="Click Me",
-                disabled=False,
-            )
-        )
-    ]
+    components = Button(
+        custom_id="my_button_id",
+        style=ButtonStyles.GREEN,
+        label="Click Me",
+        disabled=False,
+    )
 
     message = await channel.send("Look a Button!", components=components)
 
@@ -157,6 +156,8 @@ When responding to a component you need to satisfy discord either by responding 
         return component.context.author.startswith("a")
 
     try:
+        # you need to pass the component you want to listen for here
+        # you can also pass an ActionRow, or a list of ActionRows. Then a press on any component in there will be listened for
         used_component = await bot.wait_for_component(components=components, check=check, timeout=30)
 
     except TimeoutError:  
@@ -179,16 +180,12 @@ When responding to a component you need to satisfy discord either by responding 
 
     ```python
     async def my_command(...):
-        components: list[ActionRow] = [
-            ActionRow(
-                Button(
-                    custom_id="my_button_id",
-                    style=ButtonStyles.GREEN,
-                    label="Click Me",
-                    disabled=False,
-                )
-            )
-        ]
+        components = Button(
+            custom_id="my_button_id",
+            style=ButtonStyles.GREEN,
+            label="Click Me",
+            disabled=False,
+        )
 
         await channel.send("Look a Button!", components=components)
 
@@ -210,16 +207,12 @@ When responding to a component you need to satisfy discord either by responding 
 
     ```python
     async def my_command(...):
-        components: list[ActionRow] = [
-            ActionRow(
-                Button(
-                    custom_id="my_button_id",
-                    style=ButtonStyles.GREEN,
-                    label="Click Me",
-                    disabled=False,
-                )
-            )
-        ]
+        components = Button(
+            custom_id="my_button_id",
+            style=ButtonStyles.GREEN,
+            label="Click Me",
+            disabled=False,
+        )
 
         await channel.send("Look a Button!", components=components)
 
@@ -236,16 +229,12 @@ When responding to a component you need to satisfy discord either by responding 
 
     ```python
     async def my_command(...):
-        components: list[ActionRow] = [
-            ActionRow(
-                Button(
-                    custom_id="my_button_id",
-                    style=ButtonStyles.GREEN,
-                    label="Click Me",
-                    disabled=False,
-                )
-            )
-        ]
+        components = Button(
+            custom_id="my_button_id",
+            style=ButtonStyles.GREEN,
+            label="Click Me",
+            disabled=False,
+        )
 
         await channel.send("Look a Button!", components=components)
 
