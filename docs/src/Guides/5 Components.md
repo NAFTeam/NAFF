@@ -61,7 +61,7 @@ If you want to delete components, you need to pass `components=[]` to `.edit()`.
 
 ## You Have To Button Up
 
-Buttons are, you guessed right, buttons. Users can click them and they can be disabled if you wish. That's all really.
+Buttons are, you guessed right, buttons. Users can click them, and they can be disabled if you wish. That's all really.
 
 ```python
 components = Button(
@@ -146,7 +146,6 @@ When responding to a component you need to satisfy discord either by responding 
         custom_id="my_button_id",
         style=ButtonStyles.GREEN,
         label="Click Me",
-        disabled=False,
     )
 
     message = await channel.send("Look a Button!", components=components)
@@ -184,7 +183,6 @@ When responding to a component you need to satisfy discord either by responding 
             custom_id="my_button_id",
             style=ButtonStyles.GREEN,
             label="Click Me",
-            disabled=False,
         )
 
         await channel.send("Look a Button!", components=components)
@@ -211,7 +209,6 @@ When responding to a component you need to satisfy discord either by responding 
             custom_id="my_button_id",
             style=ButtonStyles.GREEN,
             label="Click Me",
-            disabled=False,
         )
 
         await channel.send("Look a Button!", components=components)
@@ -233,7 +230,6 @@ When responding to a component you need to satisfy discord either by responding 
             custom_id="my_button_id",
             style=ButtonStyles.GREEN,
             label="Click Me",
-            disabled=False,
         )
 
         await channel.send("Look a Button!", components=components)
