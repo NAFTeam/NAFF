@@ -104,7 +104,7 @@ class ConnectionState:
             log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     async def change_presence(
-        self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
+        self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Absent[Union[Activity, str]] = MISSING
     ) -> None:
         """
         Change the bots presence.
@@ -117,22 +117,25 @@ class ConnectionState:
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """
-        if activity:
-            if not isinstance(activity, Activity):
-                # squash whatever the user passed into an activity
-                activity = Activity.create(name=str(activity))
+        if activity is not MISSING:
+            if activity is None:
+                activity = []
+            else:
+                if not isinstance(activity, Activity):
+                    # squash whatever the user passed into an activity
+                    activity = Activity.create(name=str(activity))
 
-            if activity.type == ActivityType.STREAMING:
-                if not activity.url:
-                    log.warning("Streaming activity cannot be set without a valid URL attribute")
-            elif activity.type not in [
-                ActivityType.GAME,
-                ActivityType.STREAMING,
-                ActivityType.LISTENING,
-                ActivityType.WATCHING,
-                ActivityType.COMPETING,
-            ]:
-                log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+                if activity.type == ActivityType.STREAMING:
+                    if not activity.url:
+                        log.warning("Streaming activity cannot be set without a valid URL attribute")
+                elif activity.type not in [
+                    ActivityType.GAME,
+                    ActivityType.STREAMING,
+                    ActivityType.LISTENING,
+                    ActivityType.WATCHING,
+                    ActivityType.COMPETING,
+                ]:
+                    log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
         else:
             activity = self.client.activity
 
