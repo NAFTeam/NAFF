@@ -830,12 +830,12 @@ class GuildChannel(BaseChannel):
     @property
     def bots(self) -> List["models.Member"]:
         """Returns a list of bots that can see this channel."""
-        return [m for m in self.guild.members if m.bot and Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
+        return [m for m in self.members if m.bot]  # type: ignore
 
     @property
     def humans(self) -> List["models.Member"]:
         """Returns a list of humans that can see this channel."""
-        return [m for m in self.guild.members if not m.bot and Permissions.VIEW_CHANNEL in m.channel_permissions(self)]  # type: ignore
+        return [m for m in self.members if not m.bot]  # type: ignore
 
     async def clone(self, name: Optional[str] = None, reason: Absent[Optional[str]] = MISSING) -> "TYPE_GUILD_CHANNEL":
         """
