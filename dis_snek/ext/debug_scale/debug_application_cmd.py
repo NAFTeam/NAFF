@@ -50,7 +50,9 @@ class DebugAppCMD(Scale):
         await ctx.send(embeds=[e])
 
     @app_cmd.subcommand(
-        "lookup", sub_cmd_description="Search for a specified command and get its json representation", **app_cmds_def
+        "lookup",
+        sub_cmd_description="Search for a specified command and get its json representation",
+        **app_cmds_def,
     )
     @slash_option("cmd_id", "The ID of the command you want to lookup", opt_type=OptionTypes.STRING, required=True)
     @slash_option(
@@ -104,7 +106,9 @@ class DebugAppCMD(Scale):
         return await ctx.send(f"Unable to locate any commands in {scope} with ID {cmd_id}!")
 
     @app_cmd.subcommand(
-        "list_scope", sub_cmd_description="List all synced commands in a specified scope", **app_cmds_def
+        "list_scope",
+        sub_cmd_description="List all synced commands in a specified scope",
+        **app_cmds_def,
     )
     @slash_option(
         "scope",
