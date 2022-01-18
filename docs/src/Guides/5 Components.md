@@ -55,7 +55,7 @@ If you want to define the layout yourself, you have to put them in an `ActionRow
     await channel.send("Look, Buttons!", components=components)
     ```
 
-For simplicity's sake, example three will be used for all examples going forward. 
+For simplicity's sake, example three will be used for all examples going forward.
 
 If you want to delete components, you need to pass `components=[]` to `.edit()`.
 
