@@ -1520,7 +1520,7 @@ TYPE_ALL_CHANNEL = Union[
     GuildPublicThread,
     GuildPrivateThread,
     GuildNewsThread,
-    DMChannel,
+    DM,
     DMGroup,
 ]
 
