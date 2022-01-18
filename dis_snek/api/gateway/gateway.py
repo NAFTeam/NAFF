@@ -491,7 +491,14 @@ class WebsocketClient:
         await self.send_json({"op": OPCODE.PRESENCE, "d": payload})
 
     async def request_member_chunks(
-        self, guild_id: "Snowflake_Type", query="", *, limit, user_ids=None, presences=False, nonce=None
+        self,
+        guild_id: "Snowflake_Type",
+        query="",
+        *,
+        limit,
+        user_ids=None,
+        presences=False,
+        nonce=None,
     ):
         payload = {
             "op": OPCODE.REQUEST_MEMBERS,
