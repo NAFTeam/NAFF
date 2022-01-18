@@ -79,7 +79,7 @@ class Task:
             except asyncio.TimeoutError:
                 pass
             else:
-                return
+                return None
 
             self._fire(fire_time)
 
