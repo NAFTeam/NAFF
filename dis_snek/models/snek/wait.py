@@ -1,5 +1,5 @@
 from asyncio import Future
-from typing import Coroutine, Callable, Optional
+from typing import Callable, Optional
 
 
 class Wait:
