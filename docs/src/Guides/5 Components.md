@@ -142,7 +142,7 @@ When responding to a component you need to satisfy discord either by responding 
     components: list[ActionRow] = [
         ActionRow(
             Button(
-                custom_id="my_button",
+                custom_id="my_button_id",
                 style=ButtonStyles.GREEN,
                 label="Click Me",
                 disabled=False,
@@ -182,7 +182,7 @@ When responding to a component you need to satisfy discord either by responding 
         components: list[ActionRow] = [
             ActionRow(
                 Button(
-                    custom_id="my_button",
+                    custom_id="my_button_id",
                     style=ButtonStyles.GREEN,
                     label="Click Me",
                     disabled=False,
@@ -197,7 +197,7 @@ When responding to a component you need to satisfy discord either by responding 
         ctx = event.context
 
         match ctx.custom_id:
-            case "my_button":
+            case "my_button_id":
                 await ctx.send("You clicked it!")
     ```
 
@@ -213,7 +213,7 @@ When responding to a component you need to satisfy discord either by responding 
         components: list[ActionRow] = [
             ActionRow(
                 Button(
-                    custom_id="my_button",
+                    custom_id="my_button_id",
                     style=ButtonStyles.GREEN,
                     label="Click Me",
                     disabled=False,
@@ -223,7 +223,8 @@ When responding to a component you need to satisfy discord either by responding 
 
         await channel.send("Look a Button!", components=components)
 
-    @component_callback("my_button")
+    # you need to pass your custom_id to this decorator
+    @component_callback("my_button_id")
     async def my_callback(ctx: ComponentContext):
         await ctx.send("You clicked it!")
     ```
@@ -238,7 +239,7 @@ When responding to a component you need to satisfy discord either by responding 
         components: list[ActionRow] = [
             ActionRow(
                 Button(
-                    custom_id="my_button",
+                    custom_id="my_button_id",
                     style=ButtonStyles.GREEN,
                     label="Click Me",
                     disabled=False,
@@ -251,7 +252,7 @@ When responding to a component you need to satisfy discord either by responding 
     # my callbacks go in here or I subclass this if I want to split it up
     class MyComponentCallbacks:
         @staticmethod
-        async def my_button(ctx: ComponentContext):
+        async def my_button_id(ctx: ComponentContext):
             await ctx.send("You clicked it!")
 
     # magically register all functions from the class
