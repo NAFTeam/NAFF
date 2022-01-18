@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Callable, Union
 
 from dis_snek.client.const import Absent, MISSING
 from dis_snek.models.discord.timestamp import Timestamp
@@ -21,8 +21,8 @@ def timestamp_converter(value: Union[datetime, int, float, str]) -> Timestamp:
     raise TypeError("Timestamp must be one of: datetime, int, float, ISO8601 str")
 
 
-def list_converter(converter):
-    def convert_action(value):
+def list_converter(converter) -> Callable[[list], list]:
+    def convert_action(value: list) -> list:
         return [
             converter(element) if not hasattr(element, "to_dict") else converter(**element.to_dict())
             for element in value

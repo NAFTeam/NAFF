@@ -14,7 +14,7 @@ class Listener:
 
     @classmethod
     def create(cls, event_name: Absent[str] = MISSING):
-        def wrapper(coro):
+        def wrapper(coro) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
 

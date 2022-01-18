@@ -11,7 +11,7 @@ class TTLItem:
     value: Any = attr.ib()
     expire: float = attr.ib()
 
-    def is_expired(self, timestamp):
+    def is_expired(self, timestamp) -> bool:
         return timestamp >= self.expire
 
 

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class UserRequests:
     request: Any
 
-    async def get_current_user(self):
+    async def get_current_user(self) -> dict:
         """Shortcut to get requester's user."""
         return self.get_user("@me")
 

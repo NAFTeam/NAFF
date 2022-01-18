@@ -47,7 +47,7 @@ class InteractionRequests:
 
     async def overwrite_application_commands(
         self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
-    ):
+    ) -> dict:
         """
         Take a list of commands and overwrite the existing command list within the given scope
 

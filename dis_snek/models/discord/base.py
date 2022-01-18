@@ -28,7 +28,7 @@ class ClientObject(DictSerializationMixin):
     def from_list(cls, datas: List[Dict[str, Any]], client: "Snake"):
         return [cls.from_dict(data, client) for data in datas]
 
-    def update_from_dict(self, data):
+    def update_from_dict(self, data) -> None:
         data = self._process_dict(data, self._client)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve

@@ -202,7 +202,7 @@ class Select(InteractiveComponent):
         if self.max_values < self.min_values:
             raise TypeError("Selects max value cannot be less than min value.")
 
-    def add_option(self, option: SelectOption):
+    def add_option(self, option: SelectOption) -> None:
         if not isinstance(option, (SelectOption, Dict)):
             raise ValueError(f"Select option must be of `SelectOption` type, not {type(option)}")
         self.options.append(option)
@@ -254,7 +254,7 @@ class ActionRow(BaseComponent):
         if any(x.type == ComponentTypes.SELECT for x in self.components) and len(self.components) != 1:
             raise TypeError("Action row must have only one select component and nothing else.")
 
-    def add_components(self, *components: Union[dict, Button, Select]):
+    def add_components(self, *components: Union[dict, Button, Select]) -> None:
         """
         Add one or more component(s) to this action row.
 

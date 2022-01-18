@@ -124,26 +124,26 @@ class AllowedMentions(DictSerializationMixin):
     replied_user = attr.ib(default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
-    def add_parse(self, *mention_types: Union["MentionTypes", str]):
+    def add_parse(self, *mention_types: Union["MentionTypes", str]) -> None:
         for mention_type in mention_types:
             if not isinstance(mention_type, MentionTypes) and mention_type not in MentionTypes.__members__.values():
                 raise ValueError(f"Invalid mention type: {mention_type}")
             self.parse.append(mention_type)
 
-    def add_roles(self, *roles: Union["models.Role", "Snowflake_Type"]):
+    def add_roles(self, *roles: Union["models.Role", "Snowflake_Type"]) -> None:
         for role in roles:
             self.roles.append(to_snowflake(role))
 
-    def add_users(self, *users: Union["models.Member", "models.BaseUser", "Snowflake_Type"]):
+    def add_users(self, *users: Union["models.Member", "models.BaseUser", "Snowflake_Type"]) -> None:
         for user in users:
             self.users.append(to_snowflake(user))
 
     @classmethod
-    def all(cls):
+    def all(cls) -> "AllowedMentions":
         return cls(parse=list(MentionTypes.__members__.values()), replied_user=True)
 
     @classmethod
-    def none(cls):
+    def none(cls) -> "AllowedMentions":
         return cls()
 
 
@@ -366,7 +366,7 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: Absent[Optional[int]] = MISSING):
+    async def delete(self, delay: Absent[Optional[int]] = MISSING) -> None:
         """
         Delete message.
 
@@ -446,7 +446,7 @@ class Message(BaseMessage):
         reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
 
-    async def add_reaction(self, emoji: Union["models.PartialEmoji", dict, str]):
+    async def add_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
         """
         Add a reaction to this message.
 
@@ -461,7 +461,7 @@ class Message(BaseMessage):
         self,
         emoji: Union["models.PartialEmoji", dict, str],
         member: Optional[Union["models.Member", "models.User", "Snowflake_Type"]] = MISSING,
-    ):
+    ) -> None:
         """
         Remove a specific reaction that a user reacted with.
 

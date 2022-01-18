@@ -264,7 +264,7 @@ class Member(DiscordObject, _SendDMMixin):
         return self.nick
 
     @nickname.setter
-    def nickname(self, nickname):
+    def nickname(self, nickname) -> None:
         self.nick = nickname
 
     @property
@@ -389,7 +389,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         return permissions
 
-    async def edit_nickname(self, new_nickname: str):
+    async def edit_nickname(self, new_nickname: str) -> dict:
         """
         Change the user's nickname.
 
@@ -399,7 +399,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
 
-    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING):
+    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> dict:
         """
         Add a role to this member.
 
@@ -442,7 +442,7 @@ class Member(DiscordObject, _SendDMMixin):
         self,
         communication_disabled_until: Union["Timestamp", datetime, int, float, str, None],
         reason: Absent[str] = MISSING,
-    ):
+    ) -> dict:
         """
         Disable a members communication for a given time.
 

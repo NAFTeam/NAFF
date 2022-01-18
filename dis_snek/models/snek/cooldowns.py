@@ -1,7 +1,7 @@
 import asyncio
 import time
 from enum import IntEnum
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
@@ -30,7 +30,7 @@ class Buckets(IntEnum):
     ROLE = 6
     """Per role cooldowns"""
 
-    async def get_key(self, context: "Context"):
+    async def get_key(self, context: "Context") -> Any:
         if self is Buckets.USER:
             return context.author.id
         elif self is Buckets.GUILD:

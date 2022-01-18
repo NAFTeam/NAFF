@@ -1,6 +1,7 @@
 import io
 import pprint
 from collections import Counter
+from typing import Optional
 
 from dis_snek import Scale
 from dis_snek.client.const import GLOBAL_SCOPE
@@ -9,6 +10,7 @@ from dis_snek.models import (
     slash_command,
     InteractionContext,
     File,
+    Message,
     slash_option,
     OptionTypes,
     application_commands_to_dict,
@@ -32,7 +34,7 @@ class DebugAppCMD(Scale):
         sub_cmd_description="Get Information about registered app commands",
         **app_cmds_def,
     )
-    async def app_cmd(self, ctx: InteractionContext):
+    async def app_cmd(self, ctx: InteractionContext) -> None:
         await ctx.defer()
         e = debug_embed("Application-Commands Cache")
 
@@ -67,7 +69,9 @@ class DebugAppCMD(Scale):
         opt_type=OptionTypes.BOOLEAN,
         required=False,
     )
-    async def cmd_lookup(self, ctx: InteractionContext, cmd_id: str = None, scope: str = None, remote: bool = False):
+    async def cmd_lookup(
+        self, ctx: InteractionContext, cmd_id: str = None, scope: str = None, remote: bool = False
+    ) -> Optional[Message]:
         await ctx.defer()
         try:
             cmd_id = int(cmd_id.strip())

@@ -113,12 +113,12 @@ class BaseCommand(DictSerializationMixin):
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
-    async def try_convert(self, converter: Callable, context: "Context", value):
+    async def try_convert(self, converter: Callable, context: "Context", value) -> Any:
         if converter is None:
             return value
         return await converter(context, value)
 
-    async def call_callback(self, callback: Callable, context: "Context"):
+    async def call_callback(self, callback: Callable, context: "Context") -> None:
         callback = functools.partial(callback, context)  # first param must be ctx
         parameters = get_parameters(callback)
         args = []
@@ -170,7 +170,7 @@ class BaseCommand(DictSerializationMixin):
             args = args + [await convert(c) for c in c_args]
         return await callback(*args, **kwargs)
 
-    async def _can_run(self, context):
+    async def _can_run(self, context) -> bool:
         """
         Determines if this command can be run.
 
@@ -208,21 +208,21 @@ class BaseCommand(DictSerializationMixin):
                 await self.max_concurrency.release(context)
             raise
 
-    def error(self, call: Callable[..., Coroutine]):
+    def error(self, call: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         """A decorator to declare a coroutine as one that will be run upon an error."""
         if not asyncio.iscoroutinefunction(call):
             raise TypeError("Error handler must be coroutine")
         self.error_callback = call
         return call
 
-    def pre_run(self, call: Callable[..., Coroutine]):
+    def pre_run(self, call: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         """A decorator to declare a coroutine as one that will be run before the command."""
         if not asyncio.iscoroutinefunction(call):
             raise TypeError("pre_run must be coroutine")
         self.pre_run_callback = call
         return call
 
-    def post_run(self, call: Callable[..., Coroutine]):
+    def post_run(self, call: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         """A decorator to declare a coroutine as one that will be run after the command has."""
         if not asyncio.iscoroutinefunction(call):
             raise TypeError("post_run must be coroutine")
@@ -239,7 +239,7 @@ class MessageCommand(BaseCommand):
 
 def message_command(
     name: str = None,
-):
+) -> Callable[[Coroutine], MessageCommand]:
     """
     A decorator to declare a coroutine as a message command.
 
@@ -250,7 +250,7 @@ def message_command(
 
     """
 
-    def wrapper(func):
+    def wrapper(func) -> MessageCommand:
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
         cmd = MessageCommand(name=name or func.__name__, callback=func)

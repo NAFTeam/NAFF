@@ -1,6 +1,5 @@
-import inspect
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
 import attr
 
@@ -8,6 +7,8 @@ import dis_snek.client.const as const
 import dis_snek.client.utils.serializer as serializer
 
 log = logging.getLogger(const.logger_name)
+
+T = TypeVar("T")
 
 
 @attr.s()
@@ -70,7 +71,7 @@ class DictSerializationMixin:
         """
         return [cls.from_dict(data) for data in datas]
 
-    def update_from_dict(self, data):
+    def update_from_dict(self: T, data: Dict[str, Any]) -> T:
         """Updates object attribute(s) with new json data received from discord api."""
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():

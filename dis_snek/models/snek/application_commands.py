@@ -431,7 +431,7 @@ class SlashCommand(InteractionCommand):
             else:
                 raise TypeError("Options attribute must be either None or a list of options")
 
-    def autocomplete(self, option_name: str):
+    def autocomplete(self, option_name: str) -> Callable[..., Coroutine]:
         """A decorator to declare a coroutine as an option autocomplete."""
 
         def wrapper(call: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
@@ -565,7 +565,7 @@ def subcommand(
     sub_group_desc: Optional[str] = None,
     scopes: List["Snowflake_Type"] = None,
     options: List[dict] = None,
-):
+) -> Callable[[Coroutine], SlashCommand]:
     """
     A decorator specifically tailored for creating subcommands.
 
@@ -660,7 +660,7 @@ def context_menu(
     return wrapper
 
 
-def component_callback(*custom_id: str):
+def component_callback(*custom_id: str) -> Callable[[Coroutine], ComponentCommand]:
     """
     Register a coroutine as a component callback.
 
@@ -714,7 +714,7 @@ def slash_option(
         max_value: The maximum value permitted. The option needs to be an integer or float
     """
 
-    def wrapper(func):
+    def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
             raise Exception("slash_option decorators must be positioned under a slash_command decorator")
 
@@ -758,7 +758,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
     return wrapper
 
 
-def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
+def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0) -> Callable[[Coroutine], Coroutine]:
     """
     A decorator to add an auto defer to a application command.
 
@@ -768,7 +768,7 @@ def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0):
 
     """
 
-    def wrapper(func):
+    def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
             raise Exception("auto_defer decorators must be positioned under a slash_command decorator")
         func.auto_defer = AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)

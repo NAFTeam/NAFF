@@ -23,5 +23,5 @@ class Route:
         self.webhook_token: Optional[str] = parameters.get("webhook_token")
 
     @property
-    def rl_bucket(self):
+    def rl_bucket(self) -> str:
         return f"{self.channel_id}:{self.guild_id}:{self.path}"
