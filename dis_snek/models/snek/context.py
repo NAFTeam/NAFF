@@ -436,7 +436,7 @@ class AutocompleteContext(_BaseInteractionContext):
         """The text the user has entered so far."""
         return self.kwargs.get(self.focussed_option, "")
 
-    async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]):
+    async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]) -> None:
         """
         Send your autocomplete choices to discord. Choices must be either a list of strings, or a dictionary following the following format:
 

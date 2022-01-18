@@ -363,7 +363,7 @@ class GuildRequests:
 
     async def delete_guild_role(
         self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: Absent[str] = MISSING
-    ):
+    ) -> None:
         """
         Delete a guild role.
 

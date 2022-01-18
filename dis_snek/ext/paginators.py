@@ -54,7 +54,7 @@ class Page:
     suffix: str = attr.ib(kw_only=True, default="")
 
     @property
-    def get_summary(self):
+    def get_summary(self) -> str:
         return self.title or textwrap.shorten(self.content, 40, placeholder="...")
 
     def to_embed(self) -> Embed:

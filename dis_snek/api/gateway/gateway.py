@@ -371,7 +371,7 @@ class WebsocketClient:
             # possible race conditions to consider.
             await self.dispatch_opcode(data, op)
 
-    async def dispatch_opcode(self, data, op):
+    async def dispatch_opcode(self, data, op) -> None:
         match op:
 
             case OPCODE.HEARTBEAT:
@@ -400,7 +400,7 @@ class WebsocketClient:
             case _:
                 return log.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
 
-    async def dispatch_event(self, data, seq, event):
+    async def dispatch_event(self, data, seq, event) -> None:
         match event:
             case "READY":
                 self._trace = data.get("_trace", [])
@@ -479,7 +479,7 @@ class WebsocketClient:
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
         log.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
 
-    async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None):
+    async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None) -> None:
         payload = dict_filter_none(
             {
                 "since": int(since if since else time.time() * 1000),
@@ -499,7 +499,7 @@ class WebsocketClient:
         user_ids=None,
         presences=False,
         nonce=None,
-    ):
+    ) -> None:
         payload = {
             "op": OPCODE.REQUEST_MEMBERS,
             "d": dict_filter_none(

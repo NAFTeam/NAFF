@@ -1,13 +1,11 @@
-import asyncio
 from asyncio import QueueEmpty
 from collections import namedtuple
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import attr
 
 from dis_snek.client.const import MISSING
 from .base import ClientObject
-import dis_snek.models.discord
 from dis_snek.models.discord.emoji import PartialEmoji
 from dis_snek.models.snek.iterator import AsyncIterator
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -16,7 +14,7 @@ from dis_snek.client.utils.attr_utils import define
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models import Message, TYPE_ALL_CHANNEL
-    from dis_snek.models.discord.user import BaseUser
+    from dis_snek.models.discord.user import User
 
 
 class ReactionUsers(AsyncIterator):
@@ -36,7 +34,7 @@ class ReactionUsers(AsyncIterator):
         self._more = True
         super().__init__(limit)
 
-    async def fetch(self):
+    async def fetch(self) -> List["User"]:
         if self._more:
             expected = self.get_limit
 

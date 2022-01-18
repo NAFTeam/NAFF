@@ -312,7 +312,7 @@ class Guild(BaseGuild):
     def is_owner(self, member: "models.Member") -> bool:
         return self._owner_id == member.id
 
-    async def chunk_guild(self, wait=True, presences=False):
+    async def chunk_guild(self, wait=True, presences=False) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
 
@@ -388,7 +388,7 @@ class Guild(BaseGuild):
         # ToDo: Fill in guild features. No idea how this works - https://discord.com/developers/docs/resources/guild#guild-object-guild-features
         features: Absent[Optional[list[str]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
-    ):
+    ) -> None:
         """
         Edit the guild.
 
@@ -478,7 +478,7 @@ class Guild(BaseGuild):
         template = await self._client.http.create_guild_template(self.id, name, description)
         return GuildTemplate.from_dict(template, self._client)
 
-    async def get_guild_templates(self):
+    async def get_guild_templates(self) -> List["models.GuildTemplate"]:
         templates = await self._client.http.get_guild_templates(self.id)
         return [GuildTemplate.from_dict(t, self._client) for t in templates]
 
@@ -778,7 +778,7 @@ class Guild(BaseGuild):
         entity_metadata: Optional[dict] = None,
         privacy_level: ScheduledEventPrivacyLevel = ScheduledEventPrivacyLevel.GUILD_ONLY,
         reason: Absent[Optional[str]] = MISSING,
-    ):
+    ) -> "models.ScheduledEvent":
         """
         Create a scheduled guild event.
 
@@ -1321,13 +1321,13 @@ class GuildIntegration(DiscordObject):
     revoked: bool = attr.ib(default=MISSING)
 
     @classmethod
-    def from_dict(cls, data, client):
+    def from_dict(cls, data, client) -> "GuildIntegration":
         if app := data.get("application", None):
             data["application"] = models.Application.from_dict(app, client)
         if user := data.get("user", None):
             data["user"] = client.cache.place_user_data(user)
         return super().from_dict(data, client)
 
-    async def delete(self, reason: Absent[str] = MISSING):
+    async def delete(self, reason: Absent[str] = MISSING) -> None:
         """Delete this guild integration."""
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)

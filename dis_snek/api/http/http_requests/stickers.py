@@ -60,7 +60,7 @@ class StickerRequests:
 
     async def create_guild_sticker(
         self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = MISSING
-    ):
+    ) -> dict:
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 

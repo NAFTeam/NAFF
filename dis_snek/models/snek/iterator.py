@@ -29,11 +29,11 @@ class AsyncIterator(_AsyncIterator, ABC):
         return not len(self._retrieved_objects) >= self._limit
 
     @property
-    def get_limit(self):
+    def get_limit(self) -> int:
         """Get how the maximum number of items that should be retrieved."""
         return min(self._limit - len(self._retrieved_objects), 100) if self._limit else 100
 
-    async def add_object(self, obj):
+    async def add_object(self, obj) -> None:
         """Add an object to iterator's queue."""
         return await self._queue.put(obj)
 

@@ -1,5 +1,5 @@
 from functools import partial, total_ordering
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
 
 import attr
 
@@ -16,8 +16,10 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+T = TypeVar("T")
 
-def sentinel_converter(value, sentinel=attr.NOTHING):
+
+def sentinel_converter(value: Optional[bool | T], sentinel: T = attr.NOTHING) -> bool:
     if value is sentinel:
         return False
     elif value is None:

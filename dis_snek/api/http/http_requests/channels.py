@@ -145,7 +145,7 @@ class ChannelRequests:
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
 
-    async def delete_channel(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING):
+    async def delete_channel(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
         """
         Delete the channel.
 
@@ -215,7 +215,7 @@ class ChannelRequests:
         with_counts: bool = False,
         with_expiration: bool = True,
         scheduled_event_id: "Snowflake_Type" = None,
-    ):
+    ) -> dict:
         """
         Get an invite object for a given code.
 

@@ -50,7 +50,7 @@ class Task:
         if not self.task.done():
             return self.next_run - datetime.now()
 
-    def on_error(self, error):
+    def on_error(self, error) -> None:
         dis_snek.Snake.default_error_handler("Task", error)
 
     async def __call__(self) -> None:
@@ -62,7 +62,7 @@ class Task:
         except Exception as e:
             self.on_error(e)
 
-    def _fire(self, fire_time: datetime):
+    def _fire(self, fire_time: datetime) -> None:
         """Called when the task is being fired."""
         self.trigger.last_call_time = fire_time
         self._loop.create_task(self())

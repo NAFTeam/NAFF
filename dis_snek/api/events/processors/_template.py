@@ -22,7 +22,7 @@ class Processor:
 
     @classmethod
     def define(cls, event_name: Absent[str] = MISSING):
-        def wrapper(coro):
+        def wrapper(coro) -> "Processor":
             name = event_name
             if name is MISSING:
                 name = coro.__name__

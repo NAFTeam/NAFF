@@ -19,7 +19,7 @@ from ... import Scale, CMD_BODY
 
 class DebugExec(Scale):
     @message_command("exec")
-    async def debug_exec(self, ctx: MessageContext, body: CMD_BODY):
+    async def debug_exec(self, ctx: MessageContext, body: CMD_BODY) -> None:
         await ctx.channel.trigger_typing()
         env = {
             "bot": self.bot,
@@ -54,7 +54,7 @@ class DebugExec(Scale):
         else:
             return await self.handle_exec_result(ctx, ret, stdout.getvalue())
 
-    async def handle_exec_result(self, ctx: MessageContext, result: Any, value: Any):
+    async def handle_exec_result(self, ctx: MessageContext, result: Any, value: Any) -> None:
         if not result:
             result = value or "No Output!"
 
@@ -88,5 +88,5 @@ class DebugExec(Scale):
             return await paginator.send(ctx)
 
 
-def setup(bot):
+def setup(bot) -> None:
     DebugExec(bot)
