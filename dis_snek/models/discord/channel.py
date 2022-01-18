@@ -1233,15 +1233,6 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         }
         await self._edit(payload=payload, reason=reason)
 
-    async def follow(self, webhook_channel_id: Snowflake_Type) -> None:
-        """
-        Follow this channel.
-
-        Args:
-            webhook_channel_id: The ID of the channel to post messages from this channel to
-        """
-        await self._client.http.follow_news_channel(self.id, webhook_channel_id)
-
 
 ################################################################
 # Guild Threads
