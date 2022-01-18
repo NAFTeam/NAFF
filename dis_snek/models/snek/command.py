@@ -271,7 +271,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]):
     def wrapper(coro):
         if isinstance(coro, BaseCommand):
             coro.checks.append(check)
-            return
+            return None
         if not hasattr(coro, "checks"):
             coro.checks = []
         coro.checks.append(check)
