@@ -141,7 +141,7 @@ class MessageableMixin(SendMixin):
         """
         Get an async iterator for the history of this channel.
 
-        Paramters:
+        Parameters:
             limit: The maximum number of messages to return (set to 0 for no limit)
             before: get messages before this message ID
             after: get messages after this message ID
@@ -1161,7 +1161,6 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             topic: 0-1024 character channel topic
             channel_type: the type of channel; only conversion between text and news is supported and only in guilds with the "NEWS" feature
             default_auto_archive_duration: optional AutoArchiveDuration
-            rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: An optional reason for the audit log
 
         """
@@ -1426,7 +1425,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             permission_overwrites: a list of `PermissionOverwrite` to apply to the channel
             parent_id: the parent category `Snowflake_Type` for the channel
             bitrate: the bitrate (in bits) of the voice channel; 8000 to 96000 (128000 for VIP servers)
-            user_limit: the user limit of the voice channel; 0 refers to no limit, 1 to 99 refers to a user limi
+            user_limit: the user limit of the voice channel; 0 refers to no limit, 1 to 99 refers to a user limit
             rtc_region: channel voice region id, automatic when not set
             video_quality_mode: the camera video quality mode of the voice channel
             reason: optional reason for audit logs
