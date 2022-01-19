@@ -1,15 +1,14 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Any
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 
 if TYPE_CHECKING:
-    from dis_snek.http_client import HTTPClient
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
 
 class EmojiRequests:
-    request: "HTTPClient.request"
+    request: Any
 
     async def get_all_guild_emoji(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
