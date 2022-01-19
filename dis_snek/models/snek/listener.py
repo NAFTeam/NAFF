@@ -5,7 +5,11 @@ from dis_snek.client.const import MISSING, Absent
 
 
 class Listener:
-    def __init__(self, func: Callable[..., Coroutine], event: str):
+
+    event: str
+    callback: Coroutine
+
+    def __init__(self, func: Coroutine, event: str):
         self.event = event
         self.callback = func
 
@@ -13,8 +17,8 @@ class Listener:
         return await self.callback(*args, **kwargs)
 
     @classmethod
-    def create(cls, event_name: Absent[str] = MISSING):
-        def wrapper(coro) -> "Listener":
+    def create(cls, event_name: Absent[str] = MISSING) -> Callable[[Coroutine], "Listener"]:
+        def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
 
@@ -29,5 +33,5 @@ class Listener:
         return wrapper
 
 
-def listen(event_name: Absent[str] = MISSING):
+def listen(event_name: Absent[str] = MISSING) -> Callable[[Coroutine], Listener]:
     return Listener.create(event_name)
