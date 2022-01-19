@@ -1,9 +1,10 @@
+import copy
 import logging
 from typing import TYPE_CHECKING
 
 import dis_snek.api.events as events
 from dis_snek.models.discord.invite import Invite
-from dis_snek.client.const import logger_name
+from dis_snek.client.const import MISSING, logger_name
 from ._template import EventMixinTemplate, Processor
 from dis_snek.client.utils.converters import timestamp_converter
 
@@ -33,8 +34,8 @@ class ChannelEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_channel_update(self, event: "RawGatewayEvent") -> None:
-        channel = self.cache.place_channel_data(event.data)
-        self.dispatch(events.ChannelUpdate(channel))
+        before = copy.copy(await self.cache.get_channel(channel_id=event.data.get("id"), request_fallback=False))
+        self.dispatch(events.ChannelUpdate(before=before or MISSING, after=self.cache.place_channel_data(event.data)))
 
     @Processor.define()
     async def _on_raw_channel_pins_update(self, event: "RawGatewayEvent") -> None:
