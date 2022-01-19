@@ -1,5 +1,4 @@
 from base64 import b64encode
-from ctypes import Union
 from datetime import datetime, timezone
 from io import IOBase
 from pathlib import Path
