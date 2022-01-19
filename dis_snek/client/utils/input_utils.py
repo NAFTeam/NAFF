@@ -1,7 +1,7 @@
 import logging
 import re
 from base64 import b64encode
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional
 
 import aiohttp  # type: ignore
 
@@ -87,7 +87,7 @@ def get_args(text: str) -> list:
     return arg_parse.findall(text)
 
 
-def get_first_word(text: str) -> str:
+def get_first_word(text: str) -> Optional[str]:
     """
     Get a the first word in a string, regardless of whitespace type.
 
