@@ -16,13 +16,17 @@ log = logging.getLogger(logger_name)
 
 
 class Processor:
-    def __init__(self, callback, name):
+
+    callback: Coroutine
+    event_name: str
+
+    def __init__(self, callback: Coroutine, name: str):
         self.callback = callback
         self.event_name = name
 
     @classmethod
-    def define(cls, event_name: Absent[str] = MISSING):
-        def wrapper(coro) -> "Processor":
+    def define(cls, event_name: Absent[str] = MISSING) -> Callable[[Coroutine], "Processor"]:
+        def wrapper(coro: Coroutine) -> "Processor":
             name = event_name
             if name is MISSING:
                 name = coro.__name__
