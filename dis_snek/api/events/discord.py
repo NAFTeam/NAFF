@@ -66,8 +66,13 @@ class ChannelCreate(BaseEvent):
 
 
 @attr.s(slots=True)
-class ChannelUpdate(ChannelCreate):
+class ChannelUpdate(BaseEvent):
     """Dispatched when a channel is updated."""
+
+    before: "BaseChannel" = attr.ib()
+    """Channel before this event. MISSING if it was not cached before"""
+    after: "BaseChannel" = attr.ib()
+    """Channel after this event"""
 
 
 @attr.s(slots=True)
