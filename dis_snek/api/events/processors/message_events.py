@@ -6,7 +6,7 @@ import dis_snek.api.events as events
 
 from dis_snek.client.const import logger_name
 from ._template import EventMixinTemplate, Processor
-from dis_snek.models import to_snowflake, Message, BaseMessage
+from dis_snek.models import to_snowflake, BaseMessage
 
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent

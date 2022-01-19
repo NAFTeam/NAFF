@@ -4,12 +4,11 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
-import aiohttp
 import attr
 
 from dis_snek.models.discord.enums import Intents, Status, ActivityType
 from dis_snek.models.discord.activity import Activity
-from dis_snek.client.errors import SnakeException, WebSocketClosed, GatewayNotFound
+from dis_snek.client.errors import SnakeException, WebSocketClosed
 from dis_snek.client.const import logger_name, MISSING, Absent
 from .gateway import WebsocketClient
 from dis_snek.api import events
