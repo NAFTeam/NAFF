@@ -220,7 +220,7 @@ class GlobalCache:
 
         # Try to get guild members list from the cache, without sending requests
         guild = await self.get_guild(guild_id, request_fallback=False)
-        if guild and (user_id in guild.members.ids):
+        if guild and (user_id in guild._member_ids):
             return True
         # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
         try:
@@ -252,7 +252,7 @@ class GlobalCache:
         if not guild_ids and calculation_fallback:
             guild_ids = [
                 guild_id
-                for guild_id in self._client.user.guilds.ids
+                for guild_id in self._client.user._member_ids
                 if await self.is_user_in_guild(user_id, guild_id, request_fallback)
             ]
             self.user_guilds[user_id] = set(guild_ids)
