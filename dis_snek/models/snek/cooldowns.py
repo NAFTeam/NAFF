@@ -42,7 +42,7 @@ class Buckets(IntEnum):
         elif self is Buckets.CATEGORY:
             return await context.channel.parent.id if context.channel.parent else context.channel.id
         elif self is Buckets.ROLE:
-            return context.channel.id if not context.guild else await context.author.top_role.id
+            return context.channel.id if not context.guild else context.author.top_role.id
         else:
             return context.author.id
 
