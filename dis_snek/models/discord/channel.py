@@ -857,6 +857,8 @@ class GuildChannel(BaseChannel):
             permission_overwrites=self._original_permission_overwrites,
             category=self.category,
             nsfw=self.nsfw,
+            bitrate=getattr(self, "bitrate", 64000),
+            user_limit=getattr(self, "user_limit", 0),
             rate_limit_per_user=getattr(self, "rate_limit_per_user", 0),
             reason=reason,
         )
