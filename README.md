@@ -33,7 +33,7 @@ async def on_startup():
     print(f"This bot is owned by {bot.owner}")
 
 @message_command()
-async def button(ctx):
+async def test_button(ctx):
     await ctx.send("Blurple button example!", components=Button(ButtonStyles.BLURPLE, "Click me"))
 
 @context_menu(name="User menu", context_type=CommandTypes.USER, scopes=[931832853770149918])
