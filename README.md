@@ -23,6 +23,8 @@ While this library shares features and some stylistic choices with `discord.py`,
 ## How do I use this?
 Here is a basic example:
 ```python
+from dis_snek import Snake, Button, ButtonStyles, CommandTypes, context_menu, message_command, listen
+
 bot = Snake(sync_interactions=True)
 
 @listen()
@@ -31,15 +33,15 @@ async def on_startup():
     print(f"This bot is owned by {bot.owner}")
 
 @message_command()
-    async def blurple_button(self, ctx):
-        await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
+async def button(ctx):
+    await ctx.send("Blurple button example!", components=Button(ButtonStyles.BLURPLE, "Click me"))
 
-@context_menu(name="user menu", context_type=CommandTypes.USER, scopes=701347683591389185)
-    async def user_context(self, ctx):
-        await ctx.send("Context menu:: user")
+@context_menu(name="User menu", context_type=CommandTypes.USER, scopes=[931832853770149918])
+async def user_context(ctx):
+    await ctx.send("Context menu example!", ephemeral=True)
 
 
-bot.start("Token")
+bot.start("TOKEN")
 ```
 For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/), and if you get stuck join our [Discord server](https://discord.gg/dis-snek)
 
