@@ -225,7 +225,7 @@ class WebsocketClient:
                 if force:
                     raise RuntimeError("Discord unexpectedly wants to close the WebSocket during force receive!")
 
-                await self.reconnect(code=1000)
+                await self.reconnect(code=resp.data, resume=resp.data != 1000)
                 continue
 
             elif resp.type is WSMsgType.CLOSED:
@@ -241,7 +241,7 @@ class WebsocketClient:
                     # This is an odd corner-case where the underlying socket connection was closed
                     # unexpectedly without communicating the WebSocket closing handshake. We'll have
                     # to reconnect ourselves.
-                    await self.reconnect()
+                    await self.reconnect(resume=True)
 
             elif resp.type is WSMsgType.CLOSING:
                 if force:
