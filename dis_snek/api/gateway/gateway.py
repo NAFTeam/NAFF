@@ -174,13 +174,12 @@ class WebsocketClient:
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
 
         """
-        if not bypass:
-            await self.rl_manager.rate_limit()
-
         log.debug(f"Sending data to gateway: {data}")
         async with self._race_lock:
             if self.ws is None:
                 raise RuntimeError
+            if not bypass:
+                await self.rl_manager.rate_limit()
 
             await self.ws.send_str(data)
 
