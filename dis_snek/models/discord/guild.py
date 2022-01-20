@@ -338,7 +338,7 @@ class Guild(BaseGuild):
         if not self._chunk_cache:
             self._chunk_cache: List = chunk.get("members")
         else:
-            self._chunk_cache = self.chunk_cache + chunk.get("members")
+            self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
             return log.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
