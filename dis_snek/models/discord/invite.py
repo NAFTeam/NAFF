@@ -32,7 +32,9 @@ class Invite(ClientObject):
     temporary: bool = field(default=False, repr=True)
 
     # target data
-    target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes), repr=True)
+    target_type: Optional[Union[InviteTargetTypes, int]] = field(
+        default=None, converter=optional_c(InviteTargetTypes), repr=True
+    )
     approximate_presence_count: Optional[int] = field(default=MISSING)
     approximate_member_count: Optional[int] = field(default=MISSING)
     scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake), repr=True)
