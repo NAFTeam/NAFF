@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
 from attr.converters import optional as optional_c
 
-from dis_snek.client.const import MISSING
+from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional_timestamp_converter, timestamp_converter
 from dis_snek.models.discord.application import Application
@@ -90,3 +90,17 @@ class Invite(ClientObject):
         if self.scheduled_event:
             return f"https://discord.gg/{self.code}?event={self.scheduled_event}"
         return f"https://discord.gg/{self.code}"
+
+    async def delete(self, reason: Absent[str] = MISSING) -> None:
+        """
+        Delete this invite.
+
+        You must have the `manage_channels` permission on the channel this invite belongs to.
+
+        Note:
+            With `manage_guild` permission, you can delete any invite across the guild.
+
+        Args:
+            reason: The reason for the deletion
+        """
+        await self._client.http.delete_invite(self.code, reason=reason)

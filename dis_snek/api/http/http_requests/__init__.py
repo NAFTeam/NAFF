@@ -3,6 +3,7 @@ from .channels import ChannelRequests
 from .emojis import EmojiRequests
 from .guild import GuildRequests
 from .interactions import InteractionRequests
+from .invites import InviteRequests
 from .members import MemberRequests
 from .messages import MessageRequests
 from .reactions import ReactionRequests
