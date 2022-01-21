@@ -22,27 +22,27 @@ if TYPE_CHECKING:
 
 @define()
 class Invite(ClientObject):
-    code: str = field()
+    code: str = field(repr=True)
 
     # metadata
-    uses: int = field(default=0)
+    uses: int = field(default=0, repr=True)
     max_uses: int = field(default=0)
     created_at: Timestamp = field(default=MISSING, converter=optional_c(optional_timestamp_converter))
-    expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
-    temporary: bool = field(default=False)
+    expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter), repr=True)
+    temporary: bool = field(default=False, repr=True)
 
     # target data
-    target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes))
+    target_type: Optional[Union[InviteTargetTypes, int]] = field(default=None, converter=optional_c(InviteTargetTypes), repr=True)
     approximate_presence_count: Optional[int] = field(default=MISSING)
     approximate_member_count: Optional[int] = field(default=MISSING)
-    scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake), repr=True)
     stage_instance: Optional[StageInstance] = field(default=None)
     target_application: Optional[dict] = field(default=None)
     guild_preview: Optional[GuildPreview] = field(default=MISSING)
 
     # internal for props
-    _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
-    _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    _channel_id: "Snowflake_Type" = field(converter=to_snowflake, repr=True)
+    _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake), repr=True)
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
 
     @property
@@ -81,6 +81,9 @@ class Invite(ClientObject):
             data["inviter_id"] = inviter.id
 
         return data
+
+    def __str__(self) -> str:
+        return self.link
 
     @property
     def link(self) -> str:
