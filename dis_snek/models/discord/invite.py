@@ -27,7 +27,7 @@ class Invite(ClientObject):
     # metadata
     uses: int = field(default=0, repr=True)
     max_uses: int = field(default=0)
-    created_at: Timestamp = field(default=MISSING, converter=optional_c(optional_timestamp_converter))
+    created_at: Timestamp = field(default=MISSING, converter=optional_c(optional_timestamp_converter), repr=True)
     expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter), repr=True)
     temporary: bool = field(default=False, repr=True)
 
