@@ -27,9 +27,9 @@ The contributors will review your code and highlight any changes they suggest be
 
 ### Your commits
 
-Your commits must comply with the following requirements, if they do not, where possible a contributor will `squash` your commits, if that is not possible, you will be asked to rename them.
+Your commits must comply with the following requirements, if they do not, where possible, a contributor will `squash` your commits, if that is not possible, you will be asked to rename them.
 
-Your commits must comply with [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary). For a short summary, your commits must have a prefix which outlines their intent. For example:
+Your commits must comply with [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary). For a short summary, your commits must have a prefix that outlines their intent. For example:
 
 `feat: Adds support for modals`
 
@@ -49,7 +49,7 @@ Here is a quick reference for acceptable prefixes, and their meanings:
 | chore       | Chores                   | Other changes that do **not** modify source or test files                          |
 | revert      | Reverts                  | Reverts a previous commit                                                          |
 
-Should your commit introduce a breaking change, we ask you add either an `!` or `💥` just after the prefix.
+Should your commit introduce a breaking change, you should add either an `!` or `💥` just after the prefix.
 
 ie.
 `feat💥: User/Member permission methods are no longer async`
