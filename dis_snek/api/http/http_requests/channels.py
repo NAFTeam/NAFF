@@ -250,7 +250,7 @@ class ChannelRequests:
             The deleted invite object
 
         """
-        return await self.request(Route("DELETE", f"/invites/{invite_code}"))
+        return await self.request(Route("DELETE", f"/invites/{invite_code}"), reason=reason)
 
     async def edit_channel_permission(
         self,
