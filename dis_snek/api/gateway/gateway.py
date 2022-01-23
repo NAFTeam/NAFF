@@ -410,7 +410,7 @@ class WebsocketClient:
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
-                log.debug(f"Successfully resumed connection! Session_ID: {self.session_id}")
+                log.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
                 return self.state.client.dispatch(events.Resume())
 
             case "GUILD_MEMBERS_CHUNK":
