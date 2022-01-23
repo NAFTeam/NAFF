@@ -294,8 +294,8 @@ class Guild(BaseGuild):
 
     @property
     def permissions(self) -> Permissions:
-        """Alias for me.guild_permissions()"""
-        return self.me.guild_permissions()
+        """Alias for me.guild_permissions"""
+        return self.me.guild_permissions
 
     async def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
