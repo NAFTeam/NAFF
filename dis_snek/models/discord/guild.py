@@ -98,8 +98,6 @@ class Guild(BaseGuild):
     unavailable: bool = attr.ib(default=False)
     """True if this guild is unavailable due to an outage."""
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
-    permissions: Optional["models.Permissions"] = attr.ib(default=None, converter=optional(Permissions))
-    """Total permissions for the user in the guild. (excludes overwrites)"""
     afk_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
     """The channel id for afk."""
     afk_timeout: Optional[int] = attr.ib(default=None)
@@ -293,6 +291,11 @@ class Guild(BaseGuild):
             if role._bot_id == m_r_id:
                 return role
         return None
+
+    @property
+    def permissions(self) -> Permissions:
+        """Alias for me.guild_permissions()"""
+        return self.me.guild_permissions()
 
     async def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
