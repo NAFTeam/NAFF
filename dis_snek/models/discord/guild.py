@@ -312,8 +312,17 @@ class Guild(BaseGuild):
         # maybe precache owner instead of using `get_owner`
         return await self._client.cache.get_member(self.id, self._owner_id)
 
-    def is_owner(self, member: "models.Member") -> bool:
-        return self._owner_id == member.id
+    def is_owner(self, user_id: Snowflake_Type) -> bool:
+        """
+        Whether the user is owner of the guild.
+
+        Args:
+            user_id: The ID of the user
+
+        Note:
+            the `user_id` argument can be any type that meets `Snowflake_Type`
+        """
+        return self._owner_id == to_snowflake(user_id)
 
     async def chunk_guild(self, wait=True, presences=False) -> None:
         """
