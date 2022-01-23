@@ -51,7 +51,7 @@ Here is a quick reference for acceptable prefixes, and their meanings:
 
 Should your commit introduce a breaking change, we ask you add either an `!` or `💥` just after the prefix.
 
-ie. 
+ie.
 `feat💥: User/Member permission methods are no longer async`
 
 ---
