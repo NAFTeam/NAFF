@@ -298,6 +298,7 @@ class Member(DiscordObject, _SendDMMixin):
         """Is this member a server booster?"""
         return self.premium_since is not None
 
+    @property
     def guild_permissions(self) -> Permissions:
         """
         Returns the permissions this member has in the guild.
@@ -310,8 +311,7 @@ class Member(DiscordObject, _SendDMMixin):
         if guild.is_owner(self):
             return Permissions.ALL
 
-        role_everyone = guild.default_role  # get @everyone role
-        permissions = role_everyone.permissions
+        permissions = guild.default_role.permissions  # get @everyone role
 
         for role in self.roles:
             permissions |= role.permissions
@@ -329,10 +329,11 @@ class Member(DiscordObject, _SendDMMixin):
             Two different styles can be used to call this method.
 
             ```python
-            await member.has_permission(Permissions.KICK_MEMBERS, Permissions.BAN_MEMBERS)
+            member.has_permission(Permissions.KICK_MEMBERS, Permissions.BAN_MEMBERS)
             ```
+            or
             ```python
-            await member.has_permission(Permissions.KICK_MEMBERS | Permissions.BAN_MEMBERS)
+            member.has_permission(Permissions.KICK_MEMBERS | Permissions.BAN_MEMBERS)
             ```
 
             If `member` has both permissions, `True` gets returned.
@@ -342,7 +343,7 @@ class Member(DiscordObject, _SendDMMixin):
 
         """
         # Get the user's permissions
-        guild_permissions = self.guild_permissions()
+        guild_permissions = self.guild_permissions
 
         # Check all permissions separately
         for permission in permissions:
@@ -361,7 +362,7 @@ class Member(DiscordObject, _SendDMMixin):
             Permissions data
 
         """
-        permissions = self.guild_permissions()
+        permissions = self.guild_permissions
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 

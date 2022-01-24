@@ -98,8 +98,6 @@ class Guild(BaseGuild):
     unavailable: bool = attr.ib(default=False)
     """True if this guild is unavailable due to an outage."""
     # owner: bool = attr.ib(default=False)  # we get this from api but it's kinda useless to store
-    permissions: Optional["models.Permissions"] = attr.ib(default=None, converter=optional(Permissions))
-    """Total permissions for the user in the guild. (excludes overwrites)"""
     afk_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
     """The channel id for afk."""
     afk_timeout: Optional[int] = attr.ib(default=None)
@@ -294,6 +292,11 @@ class Guild(BaseGuild):
                 return role
         return None
 
+    @property
+    def permissions(self) -> Permissions:
+        """Alias for me.guild_permissions"""
+        return self.me.guild_permissions
+
     async def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
         Return the Member with the given discord ID.
@@ -309,8 +312,17 @@ class Guild(BaseGuild):
         # maybe precache owner instead of using `get_owner`
         return await self._client.cache.get_member(self.id, self._owner_id)
 
-    def is_owner(self, member: "models.Member") -> bool:
-        return self._owner_id == member.id
+    def is_owner(self, user: Snowflake_Type) -> bool:
+        """
+        Whether the user is owner of the guild.
+
+        Args:
+            user: The user to check
+
+        Note:
+            the `user` argument can be any type that meets `Snowflake_Type`
+        """
+        return self._owner_id == to_snowflake(user)
 
     async def chunk_guild(self, wait=True, presences=False) -> None:
         """
