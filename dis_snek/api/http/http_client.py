@@ -113,6 +113,7 @@ class HTTPClient(
         self.token: Optional[str] = None
         self.ratelimit_locks: Dict[str, BucketLock] = defaultdict(BucketLock)
         self.global_lock: GlobalLock = GlobalLock()
+        self._max_attempts: int = 3
 
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
@@ -173,7 +174,7 @@ class HTTPClient(
 
         lock = self.ratelimit_locks[route.rl_bucket]
 
-        for attempt in range(3):
+        for attempt in range(self._max_attempts):
             async with lock:
                 try:
                     if self.__session.closed:
@@ -213,7 +214,7 @@ class HTTPClient(
                         log.debug(f"{route.endpoint} Received {response.status}, releasing")
                         return result
                 except OSError as e:
-                    if attempt < 5 - 1 and e.errno in (54, 10054):
+                    if attempt < self._max_attempts - 1 and e.errno in (54, 10054):
                         await asyncio.sleep(1 + attempt * 2)
                         continue
                     raise
