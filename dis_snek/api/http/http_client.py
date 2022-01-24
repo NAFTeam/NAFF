@@ -37,6 +37,8 @@ log = logging.getLogger(logger_name)
 
 
 class GlobalLock:
+    """Manages the global ratelimit"""
+
     def __init__(self) -> None:
         self.cooldown_system: CooldownSystem = CooldownSystem(
             45, 1
@@ -47,6 +49,44 @@ class GlobalLock:
         async with self.lock:
             if not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
+
+
+class BucketLock:
+    """Manages the ratelimit for each bucket"""
+
+    def __init__(self) -> None:
+        self.lock: asyncio.Lock = asyncio.Lock()
+
+        self.unlock_on_exit: bool = True
+
+    async def blind_deferred_unlock(self, delta: float) -> None:
+        """
+        Unlocks the BucketLock but doesn't wait for completion
+
+        args:
+            delta: The time until unlock, in seconds
+        """
+        self.unlock_on_exit = False
+        loop = asyncio.get_event_loop()
+        loop.call_later(delta, self.lock.release)
+
+    async def deferred_unlock(self, delta: float) -> None:
+        """
+        Unlocks the BucketLock after a specified delay.
+
+        args:
+            delta: The time until unlock, in seconds
+        """
+        self.unlock_on_exit = False
+        await asyncio.sleep(delta)
+        self.lock.release()
+
+    async def __aenter__(self) -> None:
+        await self.lock.acquire()
+
+    async def __aexit__(self, *args) -> None:
+        if self.unlock_on_exit:
+            self.lock.release()
 
 
 class HTTPClient(
@@ -70,9 +110,8 @@ class HTTPClient(
         self.connector: Optional[BaseConnector] = connector
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.__session: Absent[Optional[ClientSession]] = MISSING
-        self._retries: int = 5
         self.token: Optional[str] = None
-        self.ratelimit_locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self.ratelimit_locks: Dict[str, BucketLock] = defaultdict(BucketLock)
         self.global_lock: GlobalLock = GlobalLock()
 
         self.user_agent: str = (
@@ -118,98 +157,71 @@ class HTTPClient(
 
         """
         # Assemble headers
-        headers: Dict[str, str] = {"User-Agent": self.user_agent}
-        if self.token not in (None, MISSING):
-            headers["Authorization"] = "Bot " + self.token
+        kwargs["headers"] = {"User-Agent": self.user_agent, "Content-Type": "application/json"}
+        if self.token:
+            kwargs["headers"]["Authorization"] = f"Bot {self.token}"
+        if reason not in (None, MISSING):
+            kwargs["headers"]["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
+        # sanity check payload
         if isinstance(data, list):
-            headers["Content-Type"] = "application/json"
             kwargs["json"] = [dict_filter_missing(x) if isinstance(x, dict) else x for x in data]
         elif isinstance(data, dict):
-            headers["Content-Type"] = "application/json"
             kwargs["json"] = dict_filter_missing(data)
         elif isinstance(data, FormData):
             kwargs["data"] = data
 
-        if reason not in (None, MISSING):
-            headers["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
+        lock = self.ratelimit_locks[route.rl_bucket]
 
-        kwargs["headers"] = headers
-
-        if route.rl_bucket is not None:
-            lock = self.ratelimit_locks[route.rl_bucket]
-        else:
-            lock = asyncio.Lock()
-
-        response: Optional[ClientResponse] = None
-        result: Optional[Union[Dict[str, Any], str]] = None
-
-        await lock.acquire()
-
-        for tries in range(self._retries):
-            try:
-                if self.__session.closed:
-                    await self.login(self.token)
-
-                await self.global_lock.rate_limit()
-                async with self.__session.request(route.method, route.url, **kwargs) as response:
-                    result = await response_decode(response)
-                    r_limit_data = self._parse_ratelimit(response.headers)
-
-                    if response.status == 429:
-                        # ratelimit exceeded
-                        log.error(
-                            f"{route.method}::{route.url}: Has exceeded ratelimit! Reset in {r_limit_data['delta']} seconds"
-                        )
-                        await asyncio.sleep(r_limit_data["delta"])
-                        continue
-
-                    elif r_limit_data["remaining"] == 0:
-                        # ratelimit about to be exceeded, stop calls
-                        log.debug(
-                            f"{route.method}::{route.url}: Has exhausted its ratelimit! Locking route for {r_limit_data['delta']} seconds"
-                        )
-                        self.loop.call_later(r_limit_data["delta"], lock.release)
-
-                    elif response.status in {500, 502, 504}:
-                        # server issues, retry
-                        log.warning(
-                            f"{route.method}::{route.url}: Received {response.status}... retrying in {1 + tries * 2} seconds"
-                        )
-                        await asyncio.sleep(1 + tries * 2)
-                        continue
-
-                    if not 300 > response.status >= 200:
-                        if not r_limit_data["remaining"] == 0:
-                            lock.release()
-                        await self._raise_exception(response, route, result)
-
-                    # Success!
-                    log.debug(f"{route.method}::{route.url}: Received {response.status}, releasing")
-                    if not r_limit_data["remaining"] == 0:
-                        lock.release()
-                    return result
-            except OSError as e:
-                if tries < self._retries - 1 and e.errno in (54, 10054):
-                    await asyncio.sleep(1 + tries * 2)
-                    continue
+        for attempt in range(3):
+            async with lock:
                 try:
-                    lock.release()
-                except RuntimeError:
-                    pass
-                raise
-            except (Forbidden, NotFound, DiscordError, HTTPException):
-                raise
-            except Exception as e:
-                try:
-                    lock.release()
-                except RuntimeError:
-                    pass
-                log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-                break
-        if lock.locked():
-            # be clean and make sure we unlock
-            lock.release()
+                    if self.__session.closed:
+                        await self.login(self.token)
+
+                    await self.global_lock.rate_limit()
+
+                    async with self.__session.request(route.method, route.url, **kwargs) as response:
+                        result = await response_decode(response)
+                        r_limit_data = self._parse_ratelimit(response.headers)
+
+                        if response.status == 429:
+                            # ratelimit exceeded
+                            log.error(
+                                f"{route.endpoint} Has exceeded it's ratelimit! Reset in {r_limit_data['delta']} seconds"
+                            )
+                            await lock.deferred_unlock(r_limit_data["delta"])
+                            continue
+                        elif r_limit_data["remaining"] == 0:
+                            # Last call available in the bucket, lock until reset
+                            log.debug(
+                                f"{route.endpoint} Has exhausted its ratelimit! Locking route for {r_limit_data['delta']}"
+                            )
+                            await lock.blind_deferred_unlock(r_limit_data["delta"])
+
+                        elif response.status in {500, 502, 504}:
+                            # Server issues, retry
+                            log.warning(
+                                f"{route.endpoint} Received {response.status}... retrying in {1 + attempt * 2} seconds"
+                            )
+                            await asyncio.sleep(1 + attempt * 2)
+                            continue
+
+                        if not 300 > response.status >= 200:
+                            await self._raise_exception(response, route, result)
+
+                        log.debug(f"{route.endpoint} Received {response.status}, releasing")
+                        return result
+                except OSError as e:
+                    if attempt < 5 - 1 and e.errno in (54, 10054):
+                        await asyncio.sleep(1 + attempt * 2)
+                        continue
+                    raise
+                except (Forbidden, NotFound, DiscordError, HTTPException):
+                    raise
+                except Exception as e:
+                    log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                    break
 
     async def _raise_exception(self, response, route, result):
         log.error(f"{route.method}::{route.url}: {response.status}")
