@@ -119,7 +119,7 @@ class MemberRequests:
             reason: The reason for this action
 
         """
-        return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"))
+        return await self.request(Route("PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}"), reason=reason)
 
     async def remove_guild_member_role(
         self,

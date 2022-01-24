@@ -373,7 +373,7 @@ class GuildRequests:
             guild_id: The ID of the guild
 
         """
-        return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"))
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"), reason=reason)
 
     async def get_guild_voice_regions(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
