@@ -25,7 +25,7 @@ class Route:
     def __eq__(self, other):
         if isinstance(other, Route):
             return self.rl_bucket == other.rl_bucket
-        return False
+        return NotImplemented
 
     def __hash__(self):
         return hash(self.rl_bucket)
