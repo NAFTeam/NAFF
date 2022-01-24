@@ -474,7 +474,9 @@ class Message(BaseMessage):
         if not member:
             member = self._client.user
         user_id = to_snowflake(member)
-        await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
+        if user_id == self._client.user.id:
+            return await self._client.http.remove_self_reaction(self._channel_id, self.id, emoji_str)
+        return await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
