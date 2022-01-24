@@ -813,7 +813,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 groups[subcommand.group_name]["options"].append(
                     subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)}
                 )
-            else:
+            elif subcommand.is_subcommand:
                 sub_cmds.append(subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)})
         options = list(groups.values()) + sub_cmds
         output_data["options"] = options
