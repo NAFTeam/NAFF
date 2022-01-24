@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any
 
 import attr
-from attr.converters import optional
 
 from dis_snek.client.const import MISSING
+from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.enums import ApplicationFlags
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake

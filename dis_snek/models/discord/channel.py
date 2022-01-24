@@ -3,13 +3,16 @@ from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
 import attr
-from attr.converters import optional as optional_c
 
+import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field
+from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.serializer import to_image_data
+from dis_snek.models.snek import AsyncIterator
+from .base import DiscordObject, SnowflakeObject
 from .enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -20,10 +23,7 @@ from .enums import (
     MessageFlags,
     InviteTargetTypes,
 )
-import dis_snek.models as models
 from .snowflake import to_snowflake, Snowflake_Type
-from dis_snek.models.snek import AsyncIterator
-from .base import DiscordObject, SnowflakeObject
 
 if TYPE_CHECKING:
     from io import IOBase

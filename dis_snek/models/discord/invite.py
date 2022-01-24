@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
-from attr.converters import optional as optional_c
-
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional_timestamp_converter, timestamp_converter
+from dis_snek.client.utils.converters import optional as optional_c
+from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.application import Application
 from dis_snek.models.discord.enums import InviteTargetTypes
 from dis_snek.models.discord.guild import GuildPreview
@@ -27,7 +26,7 @@ class Invite(ClientObject):
     # metadata
     uses: int = field(default=0, repr=True)
     max_uses: int = field(default=0)
-    created_at: Timestamp = field(default=MISSING, converter=optional_c(optional_timestamp_converter), repr=True)
+    created_at: Timestamp = field(default=MISSING, converter=optional_c(timestamp_converter), repr=True)
     expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter), repr=True)
     temporary: bool = field(default=False, repr=True)
 

@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
 
 import attr
 from aiohttp.formdata import FormData
-from attr.converters import optional as optional_c
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define
-from dis_snek.client.utils.converters import timestamp_converter, optional_timestamp_converter
+from dis_snek.client.utils.converters import optional as optional_c
+from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
 from dis_snek.client.utils.serializer import dict_filter_none
 from .base import DiscordObject
@@ -179,7 +179,7 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = attr.ib(default=MISSING)
-    timestamp: "models.Timestamp" = attr.ib(default=MISSING, converter=optional_timestamp_converter)
+    timestamp: "models.Timestamp" = attr.ib(default=MISSING, converter=optional_c(timestamp_converter))
     edited_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
     tts: bool = attr.ib(default=False)
     mention_everyone: bool = attr.ib(default=False)

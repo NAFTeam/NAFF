@@ -7,12 +7,12 @@ from typing import List, Optional, Union, Set
 
 import attr
 from aiohttp import FormData
-from attr.converters import optional
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
 from dis_snek.client.errors import EventLocationNotProvided
 from dis_snek.client.utils.attr_utils import define, docs
+from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.serializer import to_image_data, dict_filter_none, no_export_meta
 from .base import DiscordObject, ClientObject

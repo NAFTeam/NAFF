@@ -1,17 +1,15 @@
-from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
-from attr.converters import optional
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import EventLocationNotProvided
-from .base import DiscordObject
+from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
-from dis_snek.client.utils.attr_utils import define
-from dis_snek.client.utils.converters import timestamp_converter
-
+from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
 
 if TYPE_CHECKING:

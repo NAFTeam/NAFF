@@ -2,13 +2,13 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
-from attr.converters import optional
 
 from dis_snek.client.const import MISSING, Absent
-from .base import DiscordObject
-from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none
+from dis_snek.models.discord.snowflake import to_snowflake
+from .base import DiscordObject
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild

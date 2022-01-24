@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 import attr
-from attr.converters import optional as optional_c
 
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field, class_defaults, docs
 from dis_snek.client.utils.converters import list_converter
+from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.input_utils import _bytes_to_base64_data
 from dis_snek.models.discord.asset import Asset

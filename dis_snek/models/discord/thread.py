@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING, List, Dict, Any, Union
 
-from attr.converters import optional
-
 from dis_snek.client.mixins.send import SendMixin
-from .base import DiscordObject, ClientObject
+from dis_snek.client.utils.attr_utils import define, field
+from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
-from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import timestamp_converter
+from .base import DiscordObject, ClientObject
 
 if TYPE_CHECKING:
     from aiohttp import FormData

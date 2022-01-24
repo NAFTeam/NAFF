@@ -2,13 +2,13 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attr
-from attr.converters import optional
 
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.models.discord.snowflake import SnowflakeObject, to_snowflake
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import list_converter
+from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none, no_export_meta
+from dis_snek.models.discord.snowflake import SnowflakeObject, to_snowflake
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

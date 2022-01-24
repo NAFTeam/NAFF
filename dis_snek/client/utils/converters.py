@@ -1,14 +1,10 @@
+import inspect
+import typing
 from datetime import datetime
 from typing import Callable, Union
 
 from dis_snek.client.const import Absent, MISSING
 from dis_snek.models.discord.timestamp import Timestamp
-
-
-def optional_timestamp_converter(value: Absent[Union[datetime, int, float, str]]) -> Absent[Timestamp]:
-    if value is MISSING:
-        return value
-    return timestamp_converter(value)
 
 
 def timestamp_converter(value: Union[datetime, int, float, str]) -> Timestamp:
@@ -29,3 +25,34 @@ def list_converter(converter) -> Callable[[list], list]:
         ]
 
     return convert_action
+
+
+def optional(converter: typing.Callable) -> typing.Any:
+    """
+    A modified version of attrs optional decorator that supports both `None` and `MISSING`
+
+    Type annotations will be inferred from the wrapped converter's, if it
+    has any.
+
+    args:
+        converter: The convertor that is used for the non-None or MISSING
+    """
+
+    def optional_converter(val):
+        if val is None or val is MISSING:
+            return val
+        return converter(val)
+
+    sig = None
+    try:
+        sig = inspect.signature(converter)
+    except (ValueError, TypeError):  # inspect failed
+        pass
+    if sig:
+        params = list(sig.parameters.values())
+        if params and params[0].annotation is not inspect.Parameter.empty:
+            optional_converter.__annotations__["val"] = typing.Optional[params[0].annotation]
+        if sig.return_annotation is not inspect.Signature.empty:
+            optional_converter.__annotations__["return"] = typing.Optional[sig.return_annotation]
+
+    return optional_converter
