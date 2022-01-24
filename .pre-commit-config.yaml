@@ -28,6 +28,12 @@ repos:
           - flake8-annotations~=2.0
           - flake8-bandit~=2.1
           - flake8-docstrings~=1.5
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-quotes
+          - flake8-raise
+          - flake8-deprecated
+          - flake8-print
         language_version: python3.10
 ci:
   autoupdate_branch: 'dev'

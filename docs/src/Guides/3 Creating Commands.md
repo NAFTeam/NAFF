@@ -38,7 +38,7 @@ async def my_command_function(ctx: InteractionContext):
     await ctx.send("Hello World")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_command).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_command).
 
 ## Subcommands
 
@@ -86,7 +86,7 @@ This will show up in discord as `/base group command`. There are two ways to add
 
 ## But I Need More Options
 
-Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.OptionTypes):
+Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.OptionTypes):
 
 | Option Type | Return Type | Description |
 | ------------ | ------------- | ------------- |
@@ -129,7 +129,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int = 5):
     await ctx.send(f"You input {integer_option}")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_option).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_option).
 
 ## Restricting Options
 
@@ -190,7 +190,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
     await ctx.send(f"You input {integer_option} which is either 1 or 2")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.SlashCommandChoice).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.SlashCommandChoice).
 
 ## I Need More Than 25 Choices
 
@@ -302,7 +302,7 @@ You are in luck. There are currently four different ways to create interactions,
 ## I Don't Want My Friends Using My Commands
 
 !!! danger "Interaction Permissions"
-    Since a big overhaul to discord's permission system is coming, this page is currently missing. It will be populated when discord updates their permission system. To learn how to use permissions in the meantime, please visit their documentation [here](/API Reference/models/Internal Models/application commands/#dis_snek.models.application_commands.slash_permission).
+    Since a big overhaul to discord's permission system is coming, this page is currently missing. It will be populated when discord updates their permission system. To learn how to use permissions in the meantime, please visit their documentation [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_permission).
 
 
 ## I Don't Want To Define The Same Option Every Time

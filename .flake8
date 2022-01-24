@@ -23,6 +23,8 @@ extend-ignore =
     F401, # ... imported but unused
     F405, # ... may be undefined, or defined from star imports
 
-
+    # Plugins we don't currently include: flake8-return
+    R503, # missing explicit return at the  end of function ableto return non-None value.
+    R504, # unecessary variable assignement before return statement.
 
 max-line-length=120
