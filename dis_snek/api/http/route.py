@@ -22,6 +22,11 @@ class Route:
         self.webhook_id = parameters.get("webhook_id")
         self.webhook_token = parameters.get("webhook_token")
 
+    def __eq__(self, other):
+        if isinstance(other, Route):
+            return self.rl_bucket == other.rl_bucket
+        return False
+
     def __hash__(self):
         return hash(self.rl_bucket)
 
