@@ -67,7 +67,7 @@ class BucketLock:
             delta: The time until unlock, in seconds
         """
         self.unlock_on_exit = False
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         loop.call_later(delta, self.lock.release)
 
     async def deferred_unlock(self, delta: float) -> None:
