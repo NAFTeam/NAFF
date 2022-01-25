@@ -6,7 +6,6 @@ import dis_snek.api.events as events
 from dis_snek.models.discord.invite import Invite
 from dis_snek.client.const import MISSING, logger_name
 from ._template import EventMixinTemplate, Processor
-from dis_snek.client.utils.converters import timestamp_converter
 
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
@@ -40,7 +39,7 @@ class ChannelEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_channel_pins_update(self, event: "RawGatewayEvent") -> None:
         channel = await self.cache.get_channel(event.data.get("channel_id"))
-        channel.last_pin_timestamp = timestamp_converter(event.data.get("last_pin_timestamp"))
+        channel.last_pin_timestamp = event.data.get("last_pin_timestamp")
         self.cache.channel_cache[channel.id] = channel
         self.dispatch(events.ChannelPinsUpdate(channel, channel.last_pin_timestamp))
 
