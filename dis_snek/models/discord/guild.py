@@ -1062,7 +1062,7 @@ class Guild(BaseGuild):
     async def prune_members(
         self,
         days: int = 7,
-        roles: Absent[List[Union[Snowflake_Type, "models.Role"]]] = MISSING,
+        roles: Optional[List[Snowflake_Type]] = None,
         compute_prune_count: bool = True,
         reason: Absent[str] = MISSING,
     ) -> Optional[int]:
@@ -1079,10 +1079,8 @@ class Guild(BaseGuild):
             The total number of members pruned, if `compute_prune_count` is set to True, otherwise None
 
         """
-        if roles is not MISSING:
-            roles = [r.id if isinstance(r, models.Role) else r for r in roles]
-        else:
-            roles = []
+        if roles:
+            roles = [str(to_snowflake(r)) for r in roles]
 
         resp = await self._client.http.begin_guild_prune(
             self.id, days, include_roles=roles, compute_prune_count=compute_prune_count, reason=reason
