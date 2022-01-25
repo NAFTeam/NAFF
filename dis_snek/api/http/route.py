@@ -37,14 +37,9 @@ class Route:
         return self.endpoint
 
     @property
-    def bucket(self) -> str:
-        """This routes bucket"""
-        return f"{self.params.get('channel_id')}:{self.params.get('guild_id')}:{self.path}"
-
-    @property
     def rl_bucket(self) -> str:
-        """Sane bucket for use in rate limiting including method"""
-        return f"{self.method}::{self.bucket}"
+        """This route's bucket"""
+        return f"{self.params.get('channel_id')}:{self.params.get('guild_id')}:{self.path}"
 
     @property
     def endpoint(self) -> str:
