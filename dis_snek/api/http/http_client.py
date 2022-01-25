@@ -47,7 +47,7 @@ class GlobalLock:
 
     async def rate_limit(self) -> None:
         async with self.lock:
-            if not self.cooldown_system.acquire_token():
+            while not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 
