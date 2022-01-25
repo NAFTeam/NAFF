@@ -189,14 +189,14 @@ class HTTPClient(
                         if response.status == 429:
                             # ratelimit exceeded
                             log.error(
-                                f"{route.endpoint} Has exceeded it's ratelimit! Reset in {r_limit_data['delta']} seconds"
+                                f"{route.endpoint} Has exceeded it's ratelimit ({r_limit_data['limit']})! Reset in {r_limit_data['delta']} seconds"
                             )
                             await lock.deferred_unlock(r_limit_data["delta"])
                             continue
                         elif r_limit_data["remaining"] == 0:
                             # Last call available in the bucket, lock until reset
                             log.debug(
-                                f"{route.endpoint} Has exhausted its ratelimit! Locking route for {r_limit_data['delta']}"
+                                f"{route.endpoint} Has exhausted its ratelimit ({r_limit_data['limit']})! Locking route for {r_limit_data['delta']} seconds"
                             )
                             await lock.blind_deferred_unlock(r_limit_data["delta"])
 
@@ -211,7 +211,9 @@ class HTTPClient(
                         if not 300 > response.status >= 200:
                             await self._raise_exception(response, route, result)
 
-                        log.debug(f"{route.endpoint} Received {response.status}, releasing")
+                        log.debug(
+                            f"{route.endpoint} Received {response.status} :: [{r_limit_data['remaining']}/{r_limit_data['limit']} calls remaining]"
+                        )
                         return result
                 except OSError as e:
                     if attempt < self._max_attempts - 1 and e.errno in (54, 10054):
