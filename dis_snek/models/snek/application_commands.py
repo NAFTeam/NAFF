@@ -456,19 +456,24 @@ class SlashCommand(InteractionCommand):
         sub_cmd_name: str,
         group_name: str = None,
         group_description: str = "No Description Set",
-        sub_cmd_description: str = "No Description Set",
+        sub_cmd_description: Absent[str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("Subcommand must be coroutine")
+
+            _description = sub_cmd_description
+            if _description is MISSING:
+                _description = call.__doc__ if call.__doc__ else "No Description Set"
+
             return SlashCommand(
                 name=self.name,
                 description=self.description,
                 group_name=group_name,
                 group_description=group_description,
                 sub_cmd_name=sub_cmd_name,
-                sub_cmd_description=sub_cmd_description,
+                sub_cmd_description=_description,
                 options=options,
                 callback=call,
             )
@@ -813,7 +818,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 groups[subcommand.group_name]["options"].append(
                     subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)}
                 )
-            else:
+            elif subcommand.is_subcommand:
                 sub_cmds.append(subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)})
         options = list(groups.values()) + sub_cmds
         output_data["options"] = options
