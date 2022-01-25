@@ -1,14 +1,12 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
-import datetime
 import logging
-import traceback
 from collections import defaultdict
 from typing import Any, Dict, Optional, Union
 from urllib.parse import quote as _uriquote
 
 import aiohttp
-from aiohttp import BaseConnector, ClientResponse, ClientSession, ClientWebSocketResponse, FormData
+from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
 from dis_snek.api.http.http_requests import (
@@ -55,38 +53,52 @@ class BucketLock:
     """Manages the ratelimit for each bucket"""
 
     def __init__(self) -> None:
-        self.lock: asyncio.Lock = asyncio.Lock()
+        self._lock: asyncio.Lock = asyncio.Lock()
 
         self.unlock_on_exit: bool = True
 
-    async def blind_deferred_unlock(self, delta: float) -> None:
-        """
-        Unlocks the BucketLock but doesn't wait for completion
+        self.bucket_hash: Optional[str] = None
+        self.limit: int = -1
+        self.remaining: int = -1
+        self.delta: float = 0.0
 
-        args:
-            delta: The time until unlock, in seconds
-        """
+    def ingest_ratelimit_header(self, header: CIMultiDictProxy):
+        self.bucket_hash = header.get("x-ratelimit-bucket")
+        self.limit = int(header.get("x-ratelimit-limit") or -1)
+        self.remaining = int(header.get("x-ratelimit-remaining") or -1)
+        self.delta = float(header.get("x-ratelimit-reset-after", 0.0))
+
+    def __repr__(self) -> str:
+        return f"<BucketLock: {self.bucket_hash or 'Generic'}>"
+
+    async def blind_defer_unlock(self) -> None:
+        """Unlocks the BucketLock but doesn't wait for completion."""
         self.unlock_on_exit = False
         loop = asyncio.get_running_loop()
-        loop.call_later(delta, self.lock.release)
+        loop.call_later(self.delta, self.unlock)
 
-    async def deferred_unlock(self, delta: float) -> None:
-        """
-        Unlocks the BucketLock after a specified delay.
+    @property
+    def locked(self) -> bool:
+        """Return True if lock is acquired."""
+        return self._lock.locked()
 
-        args:
-            delta: The time until unlock, in seconds
-        """
+    def unlock(self) -> None:
+        """Unlock this bucket."""
+        self._lock.release()
+        self.unlock_on_exit = True
+
+    async def defer_unlock(self) -> None:
+        """Unlocks the BucketLock after a specified delay."""
         self.unlock_on_exit = False
-        await asyncio.sleep(delta)
-        self.lock.release()
+        await asyncio.sleep(self.delta)
+        self.unlock()
 
     async def __aenter__(self) -> None:
-        await self.lock.acquire()
+        await self._lock.acquire()
 
     async def __aexit__(self, *args) -> None:
         if self.unlock_on_exit:
-            self.lock.release()
+            self.unlock()
 
 
 class HTTPClient(
@@ -111,9 +123,11 @@ class HTTPClient(
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.__session: Absent[Optional[ClientSession]] = MISSING
         self.token: Optional[str] = None
-        self.ratelimit_locks: Dict[str, BucketLock] = defaultdict(BucketLock)
         self.global_lock: GlobalLock = GlobalLock()
         self._max_attempts: int = 3
+
+        self.ratelimit_locks: Dict[str, BucketLock] = defaultdict(BucketLock)
+        self._endpoints = {}
 
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
@@ -123,23 +137,36 @@ class HTTPClient(
         if self.__session and not self.__session.closed:
             self.loop.run_until_complete(self.__session.close())
 
-    @staticmethod
-    def _parse_ratelimit(header: CIMultiDictProxy[str]) -> dict:
+    def get_ratelimit(self, route: Route) -> BucketLock:
         """
-        Parse the ratelimit data into a more usable format.
+        Get a route's rate limit bucket.
 
-        parameters:
-            header: the header of the response
-        :return:
+        Args:
+            route: The route to fetch the ratelimit bucket for
 
+        Returns:
+            The BucketLock object for this route
         """
-        return {
-            "bucket": header.get("x-ratelimit-bucket"),
-            "limit": int(header.get("x-ratelimit-limit") or -1),
-            "remaining": int(header.get("x-ratelimit-remaining") or -1),
-            "delta": float(header.get("x-ratelimit-reset-after", 0)),  # type: ignore
-            "time": datetime.datetime.utcfromtimestamp(float(header.get("x-ratelimit-reset", 0))),  # type: ignore
-        }
+        if bucket := self._endpoints.get(route.rl_bucket):
+            return self.ratelimit_locks[bucket]
+        return BucketLock()
+
+    def ingest_ratelimit(self, route: Route, header: CIMultiDictProxy, bucket_lock: BucketLock) -> None:
+        """
+        Ingests a ratelimit header from discord to determine ratelimit.
+
+        Args:
+            route: The route we're ingesting ratelimit for
+            header: The rate limit header in question
+            bucket_lock: The rate limit bucket for this route
+        """
+        bucket_lock.ingest_ratelimit_header(header)
+
+        if bucket_lock.bucket_hash:
+            # We only ever try and cache the bucket if the bucket hash has been set (ignores unlimited endpoints)
+            log.debug(f"Caching ingested rate limit data for: {bucket_lock.bucket_hash}")
+            self._endpoints[route.rl_bucket] = bucket_lock.bucket_hash
+            self.ratelimit_locks[bucket_lock.bucket_hash] = bucket_lock
 
     async def request(
         self,
@@ -172,7 +199,7 @@ class HTTPClient(
         elif isinstance(data, FormData):
             kwargs["data"] = data
 
-        lock = self.ratelimit_locks[route.rl_bucket]
+        lock = self.get_ratelimit(route)
 
         for attempt in range(self._max_attempts):
             async with lock:
@@ -184,27 +211,25 @@ class HTTPClient(
 
                     async with self.__session.request(route.method, route.url, **kwargs) as response:
                         result = await response_decode(response)
-                        r_limit_data = self._parse_ratelimit(response.headers)
+                        self.ingest_ratelimit(route, response.headers, lock)
 
                         if response.status == 429:
                             # ratelimit exceeded
                             log.error(
-                                f"{route.endpoint} Has exceeded it's ratelimit ({r_limit_data['limit']})! Reset in {r_limit_data['delta']} seconds"
+                                f"{lock} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
                             )
-                            await lock.deferred_unlock(r_limit_data["delta"])
+                            await lock.defer_unlock()
                             continue
-                        elif r_limit_data["remaining"] == 0:
+                        elif lock.remaining == 0:
                             # Last call available in the bucket, lock until reset
                             log.debug(
-                                f"{route.endpoint} Has exhausted its ratelimit ({r_limit_data['limit']})! Locking route for {r_limit_data['delta']} seconds"
+                                f"{lock} Has exhausted its ratelimit ({lock.limit})! Locking route for {lock.delta} seconds"
                             )
-                            await lock.blind_deferred_unlock(r_limit_data["delta"])
+                            await lock.blind_defer_unlock()
 
                         elif response.status in {500, 502, 504}:
                             # Server issues, retry
-                            log.warning(
-                                f"{route.endpoint} Received {response.status}... retrying in {1 + attempt * 2} seconds"
-                            )
+                            log.warning(f"{lock} Received {response.status}... retrying in {1 + attempt * 2} seconds")
                             await asyncio.sleep(1 + attempt * 2)
                             continue
 
@@ -212,7 +237,7 @@ class HTTPClient(
                             await self._raise_exception(response, route, result)
 
                         log.debug(
-                            f"{route.endpoint} Received {response.status} :: [{r_limit_data['remaining']}/{r_limit_data['limit']} calls remaining]"
+                            f"{route.endpoint} Received {response.status} :: [{lock.remaining}/{lock.limit} calls remaining]"
                         )
                         return result
                 except OSError as e:
