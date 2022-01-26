@@ -48,7 +48,7 @@ class Route:
 
         if self.webhook_token:
             return f"{self.webhook_id}{self.webhook_token}:{self.channel_id}:{self.guild_id}:{self.endpoint}"
-        return f"{self.channel_id}:{self.guild_id}:{self.path}"
+        return f"{self.channel_id}:{self.guild_id}:{self.endpoint}"
 
     @property
     def endpoint(self) -> str:
