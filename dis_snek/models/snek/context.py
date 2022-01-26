@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
 
+__all__ = ["Resolved", "Context", "InteractionContext", "ComponentContext", "AutocompleteContext", "MessageContext"]
+
 log = logging.getLogger(logger_name)
 
 

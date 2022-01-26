@@ -34,6 +34,27 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.snek.context import Context
 
+__all__ = [
+    "OptionTypes",
+    "PermissionTypes",
+    "CallbackTypes",
+    "Permission",
+    "InteractionCommand",
+    "ContextMenu",
+    "SlashCommandChoice",
+    "SlashCommand",
+    "ComponentCommand",
+    "slash_command",
+    "subcommand",
+    "context_menu",
+    "component_callback",
+    "slash_option",
+    "slash_permission",
+    "auto_defer",
+    "application_commands_to_dict",
+    "sync_needed",
+]
+
 log = logging.getLogger(logger_name)
 
 

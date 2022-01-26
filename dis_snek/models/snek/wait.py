@@ -1,6 +1,8 @@
 from asyncio import Future
 from typing import Callable, Optional
 
+__all__ = ["Wait"]
+
 
 class Wait:
     def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future):
