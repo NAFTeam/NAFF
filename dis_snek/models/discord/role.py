@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
 import attr
 
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.models.discord.color import Color
-from .base import DiscordObject
-from dis_snek.models.discord.enums import Permissions
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import dict_filter_missing
+from dis_snek.models.discord.color import Color
+from dis_snek.models.discord.enums import Permissions
+from .base import DiscordObject
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

@@ -10,10 +10,10 @@ import attr
 from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
 from dis_snek.client.utils.attr_utils import docs
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context

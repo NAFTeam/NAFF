@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, Optional
 import attr
 
 from dis_snek.client.const import MISSING, Absent
-from .base import DiscordObject
-from dis_snek.models.discord.snowflake import to_snowflake
-from dis_snek.models.discord.enums import StagePrivacyLevel
 from dis_snek.client.utils.attr_utils import define
+from dis_snek.models.discord.enums import StagePrivacyLevel
+from dis_snek.models.discord.snowflake import to_snowflake
+from .base import DiscordObject
 
 if TYPE_CHECKING:
     from dis_snek.models import Guild, GuildStageVoice, Snowflake_Type

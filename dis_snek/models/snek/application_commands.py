@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Option
 
 import attr
 
+import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
     GLOBAL_SCOPE,
     CONTEXT_MENU_NAME_LENGTH,
@@ -19,16 +20,15 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.models.snek.auto_defer import AutoDefer
-from dis_snek.models.snek.command import BaseCommand
-import dis_snek.models.discord.channel as channel
-from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.user import BaseUser
-from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
-from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.client.utils.attr_utils import docs
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
+from dis_snek.models.discord.role import Role
+from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
+from dis_snek.models.discord.user import BaseUser
+from dis_snek.models.snek.auto_defer import AutoDefer
+from dis_snek.models.snek.command import BaseCommand
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type

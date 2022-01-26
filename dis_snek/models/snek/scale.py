@@ -3,10 +3,10 @@ import inspect
 import logging
 from typing import List, TYPE_CHECKING, Callable, Coroutine
 
-from dis_snek.client.const import logger_name, MISSING
 import dis_snek.models.snek as snek
-from dis_snek.ext.tasks import Task
+from dis_snek.client.const import logger_name, MISSING
 from dis_snek.client.utils.misc_utils import wrap_partial
+from dis_snek.ext.tasks import Task
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake

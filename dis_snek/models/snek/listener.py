@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import re
-from typing import Coroutine, Callable, Union
+from typing import Coroutine, Callable
 
 from dis_snek.api.events.internal import BaseEvent
 from dis_snek.client.const import MISSING, Absent
