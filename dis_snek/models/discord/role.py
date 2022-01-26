@@ -98,6 +98,7 @@ class Role(DiscordObject):
 
     @property
     def members(self) -> list["Member"]:
+        """List of members with this role"""
         return [member for member in self.guild.members if member.has_role(self)]
 
     @property
@@ -105,8 +106,8 @@ class Role(DiscordObject):
         """
         Can this role be assigned or removed by this bot?
 
-        !!! note:     This does not account for permissions, only the
-        role hierarchy
+        Note:
+            This does not account for permissions, only the role hierarchy
 
         """
         return (self.default or self.guild.me.top_role > self) and not self.managed

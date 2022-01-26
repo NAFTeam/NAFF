@@ -204,7 +204,7 @@ class Guild(BaseGuild):
 
     @property
     def members(self) -> List["models.Member"]:
-        """A generator that yields all members of this guild."""
+        """Returns a list of all members within this guild."""
         return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
 
     @property
