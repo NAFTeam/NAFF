@@ -280,8 +280,7 @@ class Member(DiscordObject, _SendDMMixin):
     @property
     def top_role(self) -> "Role":
         """The member's top most role, or None if the member has no roles."""
-        roles = self.roles
-        return max(roles, key=lambda x: x.position) if roles else None
+        return max(self.roles, key=lambda x: x.position) if self.roles else self.guild.default_role
 
     @property
     def display_name(self) -> str:
