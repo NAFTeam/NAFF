@@ -1,7 +1,12 @@
 import asyncio
-from typing import Coroutine, Callable
+import inspect
+import re
+from typing import Coroutine, Callable, Union
 
+from dis_snek.api.events.internal import BaseEvent
 from dis_snek.client.const import MISSING, Absent
+
+camel_to_snake = re.compile(r"([A-Z]+)")
 
 
 class Listener:
@@ -17,15 +22,24 @@ class Listener:
         return await self.callback(*args, **kwargs)
 
     @classmethod
-    def create(cls, event_name: Absent[str] = MISSING) -> Callable[[Coroutine], "Listener"]:
+    def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:
         def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
 
             name = event_name
+
             if name is MISSING:
                 name = coro.__name__
+
+            elif inspect.isclass(name) and issubclass(name, BaseEvent):
+                name = name.__name__
+
+            # convert CamelCase to snake_case
+            name = camel_to_snake.sub(r"_\1", name).lower()
+            # remove any leading underscores
             name = name.lstrip("_")
+            # remove any `on_` prefixes
             name = name.removeprefix("on_")
 
             return cls(coro, name)
