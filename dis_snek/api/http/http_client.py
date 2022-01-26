@@ -85,7 +85,6 @@ class BucketLock:
     def unlock(self) -> None:
         """Unlock this bucket."""
         self._lock.release()
-        self.unlock_on_exit = True
 
     async def defer_unlock(self) -> None:
         """Unlocks the BucketLock after a specified delay."""
@@ -97,8 +96,9 @@ class BucketLock:
         await self._lock.acquire()
 
     async def __aexit__(self, *args) -> None:
-        if self.unlock_on_exit:
+        if self.unlock_on_exit and self._lock.locked():
             self.unlock()
+        self.unlock_on_exit = True
 
 
 class HTTPClient(
