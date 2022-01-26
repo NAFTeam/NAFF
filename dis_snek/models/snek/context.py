@@ -14,6 +14,7 @@ from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.models.discord.enums import MessageFlags
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
+from dis_snek.models.discord.modal import Modal
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
@@ -196,6 +197,21 @@ class _BaseInteractionContext(Context):
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    async def send_modal(self, modal: Union[dict, Modal]) -> Union[dict, Modal]:
+        """
+        Respond using a modal.
+        Args:
+            modal: The modal to respond with
+        Returns:
+            The modal used.
+        """
+        payload = modal.to_dict() if not isinstance(modal, dict) else modal
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+        self.responded = True
+        return modal
 
 
 @define
@@ -416,6 +432,21 @@ class ComponentContext(InteractionContext):
         if message_data:
             self.message = self._client.cache.place_message_data(message_data)
             return self.message
+
+
+@define
+class ModalContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+        new_cls = super().from_dict(data, client)
+
+        new_cls.kwargs = {
+            comp["components"][0]["custom_id"]: comp["components"][0]["value"] for comp in data["data"]["components"]
+        }
+        new_cls.custom_id = data["data"]["custom_id"]
+        return new_cls
 
 
 @define

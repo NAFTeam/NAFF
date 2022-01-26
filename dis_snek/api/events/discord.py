@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.voice_state import VoiceState
     from dis_snek.models.discord.stage_instance import StageInstance
+    from dis_snek.models.snek.context import ModalContext
 
 
 @attr.s(slots=True)
@@ -449,6 +450,13 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = attr.ib()
+
+
+@attr.s(slots=True)
+class ModalResponse(BaseEvent):
+    """Dispatched when a modal receives a response"""
+
+    context: "ModalContext" = attr.ib()
 
 
 @attr.s(slots=True)

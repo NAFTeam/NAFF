@@ -59,6 +59,8 @@ from dis_snek.models import (
     AutocompleteContext,
     ComponentCommand,
     Context,
+    Modal,
+    ModalContext,
     application_commands_to_dict,
     sync_needed,
 )
@@ -666,6 +668,10 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
+    async def wait_for_modal(self, modal: Modal, timeout: Optional[float] = None) -> "ModalContext":
+        resp = await self.wait_for("modal_response", lambda e: e.context.custom_id == modal.custom_id, timeout)
+        return resp.context
+
     async def wait_for_component(
         self,
         messages: Union[Message, int, list] = None,
@@ -1114,6 +1120,9 @@ class Snake(
                 case InteractionTypes.AUTOCOMPLETE:
                     cls = self.autocomplete_context.from_dict(data, self)
 
+                case InteractionTypes.MODAL_RESPONSE:
+                    cls = ModalContext.from_dict(data, self)
+
                 case _:
                     cls = self.interaction_context.from_dict(data, self)
 
@@ -1203,6 +1212,10 @@ class Snake(
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
                 self.dispatch(events.Select(ctx))
+
+        elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
+            ctx = await self.get_context(interaction_data, True)
+            self.dispatch(events.ModalResponse(ctx))
 
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
