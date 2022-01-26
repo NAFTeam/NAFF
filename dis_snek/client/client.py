@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import importlib.util
 import inspect
 import json
@@ -8,6 +7,7 @@ import re
 import sys
 import time
 import traceback
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
