@@ -147,8 +147,8 @@ class HTTPClient(
         Returns:
             The BucketLock object for this route
         """
-        if bucket := self._endpoints.get(route.rl_bucket):
-            return self.ratelimit_locks[bucket]
+        if bucket_hash := self._endpoints.get(route.rl_bucket):
+            return self.ratelimit_locks[bucket_hash]
         return BucketLock()
 
     def ingest_ratelimit(self, route: Route, header: CIMultiDictProxy, bucket_lock: BucketLock) -> None:
@@ -204,10 +204,10 @@ class HTTPClient(
         for attempt in range(self._max_attempts):
             async with lock:
                 try:
+                    await self.global_lock.rate_limit()
+
                     if self.__session.closed:
                         await self.login(self.token)
-
-                    await self.global_lock.rate_limit()
 
                     async with self.__session.request(route.method, route.url, **kwargs) as response:
                         result = await response_decode(response)
@@ -215,21 +215,23 @@ class HTTPClient(
 
                         if response.status == 429:
                             # ratelimit exceeded
-                            log.error(
-                                f"{lock} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
+                            log.warning(
+                                f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
                             )
                             await lock.defer_unlock()
                             continue
                         elif lock.remaining == 0:
                             # Last call available in the bucket, lock until reset
                             log.debug(
-                                f"{lock} Has exhausted its ratelimit ({lock.limit})! Locking route for {lock.delta} seconds"
+                                f"{route.endpoint} Has exhausted its ratelimit ({lock.limit})! Locking route for {lock.delta} seconds"
                             )
                             await lock.blind_defer_unlock()
 
                         elif response.status in {500, 502, 504}:
                             # Server issues, retry
-                            log.warning(f"{lock} Received {response.status}... retrying in {1 + attempt * 2} seconds")
+                            log.warning(
+                                f"{route.endpoint} Received {response.status}... retrying in {1 + attempt * 2} seconds"
+                            )
                             await asyncio.sleep(1 + attempt * 2)
                             continue
 
