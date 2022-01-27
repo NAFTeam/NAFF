@@ -987,9 +987,7 @@ class Guild(BaseGuild):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    def get_channel(
-        self, channel_id: Snowflake_Type
-    ) -> Optional[Union["models.TYPE_GUILD_CHANNEL", "models.TYPE_THREAD_CHANNEL"]]:
+    def get_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
         """
         Returns a channel with the given `channel_id`.
 
@@ -1000,16 +998,14 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids or channel_id in self._thread_ids:
+        if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(to_snowflake(channel_id))
+            return self._client.cache.channel_cache.get(channel_id)
         return None
 
-    async def fetch_channel(
-        self, channel_id: Snowflake_Type
-    ) -> Optional[Union["models.TYPE_GUILD_CHANNEL", "models.TYPE_THREAD_CHANNEL"]]:
+    async def fetch_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
         """
         Returns a channel with the given `channel_id` from the API.
 
@@ -1020,7 +1016,7 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids or channel_id in self._thread_ids:
+        if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
@@ -1037,11 +1033,10 @@ class Guild(BaseGuild):
         Returns:
             Thread object if found, otherwise None
 
-        Note:
-            get_channel can retrieve threads, so this is basically an alias with extra steps for that
-
         """
-        return self.get_channel(thread_id)
+        if thread_id in self._thread_ids:
+            return self._client.cache.channel_cache.get(thread_id)
+        return None
 
     async def fetch_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
         """
@@ -1053,11 +1048,10 @@ class Guild(BaseGuild):
         Returns:
             Thread object if found, otherwise None
 
-        Note:
-            fetch_channel can retrieve threads, so this is basically an alias with extra steps for that
-
         """
-        return await self.fetch_channel(thread_id)
+        if thread_id in self._thread_ids:
+            return await self._client.get_channel(thread_id)
+        return None
 
     async def prune_members(
         self,
