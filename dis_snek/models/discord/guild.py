@@ -1000,7 +1000,7 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+        if channel_id in self._channel_ids or channel_id in self._thread_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
@@ -1020,7 +1020,7 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+        if channel_id in self._channel_ids or channel_id in self._thread_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
@@ -1035,13 +1035,13 @@ class Guild(BaseGuild):
             thread_id: The ID of the thread to get
 
         Returns:
-            Channel object if found, otherwise None
+            Thread object if found, otherwise None
+
+        Note:
+            get_channel can retrieve threads, so this is basically an alias with extra steps for that
 
         """
-        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
-        if thread_id in self._thread_ids:
-            return self.get_channel(thread_id)
-        return None
+        return self.get_channel(thread_id)
 
     async def fetch_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
         """
@@ -1051,13 +1051,13 @@ class Guild(BaseGuild):
             thread_id: The ID of the thread to get
 
         Returns:
-            Channel object if found, otherwise None
+            Thread object if found, otherwise None
+
+        Note:
+            fetch_channel can retrieve threads, so this is basically an alias with extra steps for that
 
         """
-        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
-        if thread_id in self._thread_ids:
-            return await self.fetch_channel(thread_id)
-        return None
+        return await self.fetch_channel(thread_id)
 
     async def prune_members(
         self,
