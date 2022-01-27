@@ -1,9 +1,9 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
 import logging
-from collections import defaultdict
 from typing import Any, Dict, Optional, Union
 from urllib.parse import quote as _uriquote
+from weakref import WeakValueDictionary
 
 import aiohttp
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
@@ -132,7 +132,7 @@ class HTTPClient(
         self.global_lock: GlobalLock = GlobalLock()
         self._max_attempts: int = 3
 
-        self.ratelimit_locks: Dict[str, BucketLock] = defaultdict(BucketLock)
+        self.ratelimit_locks: WeakValueDictionary[str, BucketLock] = WeakValueDictionary()
         self._endpoints = {}
 
         self.user_agent: str = (
@@ -154,7 +154,13 @@ class HTTPClient(
             The BucketLock object for this route
         """
         if bucket_hash := self._endpoints.get(route.rl_bucket):
-            return self.ratelimit_locks[bucket_hash]
+            # we have seen this route before, we know which bucket it is associated with
+            lock = self.ratelimit_locks.get(bucket_hash)
+            if lock:
+                # if we have an active lock on this route, it'll still be in the cache
+                # return that lock
+                return lock
+        # if no cached lock exists, return a new lock
         return BucketLock()
 
     def ingest_ratelimit(self, route: Route, header: CIMultiDictProxy, bucket_lock: BucketLock) -> None:
@@ -225,6 +231,8 @@ class HTTPClient(
 
                         if response.status == 429:
                             # ratelimit exceeded
+                            # 429's are unfortunately unavoidable, but we can attempt to avoid them
+                            # so long as these are infrequent we're doing well
                             log.warning(
                                 f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
                             )
