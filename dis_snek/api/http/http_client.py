@@ -62,20 +62,8 @@ class BucketLock:
         self.remaining: int = -1
         self.delta: float = 0.0
 
-    def ingest_ratelimit_header(self, header: CIMultiDictProxy):
-        self.bucket_hash = header.get("x-ratelimit-bucket")
-        self.limit = int(header.get("x-ratelimit-limit") or -1)
-        self.remaining = int(header.get("x-ratelimit-remaining") or -1)
-        self.delta = float(header.get("x-ratelimit-reset-after", 0.0))
-
     def __repr__(self) -> str:
         return f"<BucketLock: {self.bucket_hash or 'Generic'}>"
-
-    async def blind_defer_unlock(self) -> None:
-        """Unlocks the BucketLock but doesn't wait for completion."""
-        self.unlock_on_exit = False
-        loop = asyncio.get_running_loop()
-        loop.call_later(self.delta, self.unlock)
 
     @property
     def locked(self) -> bool:
@@ -85,6 +73,24 @@ class BucketLock:
     def unlock(self) -> None:
         """Unlock this bucket."""
         self._lock.release()
+
+    def ingest_ratelimit_header(self, header: CIMultiDictProxy) -> None:
+        """
+        Ingests a discord rate limit header to configure this bucket lock.
+
+        Args:
+            header: A header from a http response
+        """
+        self.bucket_hash = header.get("x-ratelimit-bucket")
+        self.limit = int(header.get("x-ratelimit-limit") or -1)
+        self.remaining = int(header.get("x-ratelimit-remaining") or -1)
+        self.delta = float(header.get("x-ratelimit-reset-after", 0.0))
+
+    async def blind_defer_unlock(self) -> None:
+        """Unlocks the BucketLock but doesn't wait for completion."""
+        self.unlock_on_exit = False
+        loop = asyncio.get_running_loop()
+        loop.call_later(self.delta, self.unlock)
 
     async def defer_unlock(self) -> None:
         """Unlocks the BucketLock after a specified delay."""
@@ -200,11 +206,15 @@ class HTTPClient(
             kwargs["data"] = data
 
         lock = self.get_ratelimit(route)
+        # this gets a BucketLock for this route.
+        # If this endpoint has been used before, it will get an existing ratelimit for the respective buckethash
+        # otherwise a brand-new bucket lock will be returned
 
         for attempt in range(self._max_attempts):
             async with lock:
                 try:
                     await self.global_lock.rate_limit()
+                    # prevent us exceeding the global rate limit by throttling http requests
 
                     if self.__session.closed:
                         await self.login(self.token)
@@ -218,14 +228,14 @@ class HTTPClient(
                             log.warning(
                                 f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
                             )
-                            await lock.defer_unlock()
+                            await lock.defer_unlock()  # lock this route and wait for unlock
                             continue
                         elif lock.remaining == 0:
                             # Last call available in the bucket, lock until reset
                             log.debug(
                                 f"{route.endpoint} Has exhausted its ratelimit ({lock.limit})! Locking route for {lock.delta} seconds"
                             )
-                            await lock.blind_defer_unlock()
+                            await lock.blind_defer_unlock()  # lock this route, but continue processing the current response
 
                         elif response.status in {500, 502, 504}:
                             # Server issues, retry
