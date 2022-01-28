@@ -399,7 +399,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
 
-    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> dict:
+    async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
         Add a role to this member.
 
@@ -409,7 +409,8 @@ class Member(DiscordObject, _SendDMMixin):
 
         """
         role = to_snowflake(role)
-        return await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
+        await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
+        self._role_ids.append(role)
 
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
@@ -422,7 +423,8 @@ class Member(DiscordObject, _SendDMMixin):
         """
         if isinstance(role, Role):
             role = role.id
-        return await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
+        await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
+        self._role_ids.remove(role)
 
     def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
