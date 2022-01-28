@@ -33,6 +33,8 @@ from dis_snek.client.utils.serializer import dict_filter_missing
 from dis_snek.models import CooldownSystem
 from .route import Route
 
+__all__ = ["HTTPClient"]
+
 log = logging.getLogger(logger_name)
 
 

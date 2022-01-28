@@ -9,6 +9,9 @@ from dis_snek.models import StageInstance
 
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
+
+__all__ = ["StageEvents"]
+
 log = logging.getLogger(logger_name)
 
 
