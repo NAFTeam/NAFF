@@ -41,12 +41,23 @@ class GlobalLock:
         self.cooldown_system: CooldownSystem = CooldownSystem(
             45, 1
         )  # global rate-limit is 50 per second, conservatively we use 45
-        self.lock: asyncio.Lock = asyncio.Lock()
+        self._lock: asyncio.Lock = asyncio.Lock()
 
     async def rate_limit(self) -> None:
-        async with self.lock:
+        async with self._lock:
             while not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
+
+    async def lock(self, delta: float):
+        """
+        Lock the global lock for a given duration.
+
+        Args:
+            delta: The time to keep the lock acquired
+        """
+        await self._lock.acquire()
+        await asyncio.sleep(delta)
+        self._lock.release()
 
 
 class BucketLock:
@@ -231,13 +242,22 @@ class HTTPClient(
 
                         if response.status == 429:
                             # ratelimit exceeded
-                            # 429's are unfortunately unavoidable, but we can attempt to avoid them
-                            # so long as these are infrequent we're doing well
-                            log.warning(
-                                f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
-                            )
-                            await lock.defer_unlock()  # lock this route and wait for unlock
-                            continue
+
+                            if result.get("global", False):
+                                # if we get a global, that's pretty bad, this would usually happen if the user is hitting the api from 2 clients sharing a token
+                                log.error(
+                                    f"Bot has exceeded global ratelimit, locking REST API for {result.get('retry_after')} seconds"
+                                )
+                                await self.global_lock.lock(float(result.get("retry_after")))
+                                continue
+                            else:
+                                # 429's are unfortunately unavoidable, but we can attempt to avoid them
+                                # so long as these are infrequent we're doing well
+                                log.warning(
+                                    f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
+                                )
+                                await lock.defer_unlock()  # lock this route and wait for unlock
+                                continue
                         elif lock.remaining == 0:
                             # Last call available in the bucket, lock until reset
                             log.debug(
