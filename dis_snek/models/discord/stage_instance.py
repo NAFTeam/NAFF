@@ -11,6 +11,8 @@ from .base import DiscordObject
 if TYPE_CHECKING:
     from dis_snek.models import Guild, GuildStageVoice, Snowflake_Type
 
+__all__ = ["StageInstance"]
+
 
 @define
 class StageInstance(DiscordObject):

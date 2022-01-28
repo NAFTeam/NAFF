@@ -5,6 +5,17 @@ from typing import Tuple
 
 import attr
 
+__all__ = [
+    "Color",
+    "BrandColors",
+    "MaterialColors",
+    "FlatUIColors",
+    "Colour",
+    "BrandColours",
+    "MaterialColours",
+    "FlatUIColours",
+]
+
 
 @attr.s(init=False, slots=True)
 class Color:

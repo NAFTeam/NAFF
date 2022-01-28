@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from dis_snek.models import Message, TYPE_ALL_CHANNEL
     from dis_snek.models.discord.user import User
 
+__all__ = ["ReactionUsers", "Reaction"]
+
 
 class ReactionUsers(AsyncIterator):
     """

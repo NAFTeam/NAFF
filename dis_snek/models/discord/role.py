@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["Role"]
+
 T = TypeVar("T")
 
 

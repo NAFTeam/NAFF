@@ -27,6 +27,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.timestamp import Timestamp
     from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM
 
+__all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
+
 log = logging.getLogger(logger_name)
 
 
