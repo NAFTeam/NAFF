@@ -27,6 +27,8 @@ from dis_snek import (
 if TYPE_CHECKING:
     from dis_snek import Snake
 
+__all__ = ["Paginator"]
+
 
 @attr.s()
 class Timeout:
