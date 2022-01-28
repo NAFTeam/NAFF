@@ -998,6 +998,7 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
+        channel_id = to_snowflake(channel_id)
         if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
@@ -1016,6 +1017,7 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
+        channel_id = to_snowflake(channel_id)
         if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
@@ -1034,6 +1036,7 @@ class Guild(BaseGuild):
             Thread object if found, otherwise None
 
         """
+        thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
             return self._client.cache.channel_cache.get(thread_id)
         return None
@@ -1049,6 +1052,7 @@ class Guild(BaseGuild):
             Thread object if found, otherwise None
 
         """
+        thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
             return await self._client.get_channel(thread_id)
         return None
