@@ -16,6 +16,8 @@ from .utils import debug_embed
 from ..paginators import Paginator
 from ... import Scale, CMD_BODY
 
+__all__ = ["DebugExec"]
+
 
 class DebugExec(Scale):
     @message_command("exec")

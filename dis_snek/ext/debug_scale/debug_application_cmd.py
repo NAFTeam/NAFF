@@ -18,6 +18,8 @@ from dis_snek.models import (
 )
 from .utils import debug_embed
 
+__all__ = ["DebugAppCMD"]
+
 app_cmds_def = {
     "group_name": "app_cmds",
     "group_description": "Debug for application commands",
