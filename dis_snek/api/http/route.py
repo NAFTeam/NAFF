@@ -19,8 +19,12 @@ class Route:
         self.method: str = method
         self.params = parameters
 
+        self.channel_id = parameters.get("channel_id")
+        self.guild_id = parameters.get("guild_id")
         self.webhook_id = parameters.get("webhook_id")
         self.webhook_token = parameters.get("webhook_token")
+
+        self.known_bucket: Optional[str] = None
 
     def __eq__(self, other):
         if isinstance(other, Route):
@@ -38,8 +42,13 @@ class Route:
 
     @property
     def rl_bucket(self) -> str:
-        """This route's bucket"""
-        return f"{self.params.get('channel_id')}:{self.params.get('guild_id')}:{self.path}"
+        """This route's full rate limit bucket"""
+        if self.known_bucket:
+            return self.known_bucket
+
+        if self.webhook_token:
+            return f"{self.webhook_id}{self.webhook_token}:{self.channel_id}:{self.guild_id}:{self.endpoint}"
+        return f"{self.channel_id}:{self.guild_id}:{self.endpoint}"
 
     @property
     def endpoint(self) -> str:
