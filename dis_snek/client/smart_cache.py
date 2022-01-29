@@ -6,7 +6,7 @@ import attr
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
 from dis_snek.models import VoiceState
-from dis_snek.models.discord.channel import BaseChannel
+from dis_snek.models.discord.channel import BaseChannel, GuildChannel
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role
@@ -277,10 +277,14 @@ class GlobalCache:
         channel_id = to_snowflake(channel_id)
         message_id = to_snowflake(message_id)
         message = self.message_cache.get((channel_id, message_id))
+
         if request_fallback and message is None:
             data = await self._client.http.get_message(channel_id, message_id)
             message = self.place_message_data(data)
-            if not message.guild and message.channel.guild:
+            if message.channel is None:
+                await self.get_channel(channel_id, request_fallback=True)
+
+            if not message.guild and isinstance(message.channel, GuildChannel) and message.channel.guild:
                 message._guild_id = message.channel.guild.id
         return message
 
