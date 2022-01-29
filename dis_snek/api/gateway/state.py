@@ -16,6 +16,8 @@ from dis_snek.api import events
 if TYPE_CHECKING:
     from dis_snek import Snake
 
+__all__ = ["ConnectionState"]
+
 log = logging.getLogger(logger_name)
 
 

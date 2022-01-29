@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
 
+__all__ = ["Asset"]
+
 
 @attr.s(slots=True)
 class Asset:

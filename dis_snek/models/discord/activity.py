@@ -10,6 +10,8 @@ from dis_snek.models.discord.enums import ActivityType
 from dis_snek.models.discord.snowflake import Snowflake_Type
 from dis_snek.models.discord.timestamp import Timestamp
 
+__all__ = ["Activity"]
+
 
 @define()
 class Activity(DictSerializationMixin):

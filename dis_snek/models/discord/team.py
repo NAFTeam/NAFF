@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type, SnowflakeObject
     from dis_snek.client import Snake
 
+__all__ = ["TeamMember", "Team"]
+
 
 @define()
 class TeamMember(DiscordObject):

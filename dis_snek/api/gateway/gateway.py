@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["WebsocketClient"]
+
 log = logging.getLogger(logger_name)
 
 

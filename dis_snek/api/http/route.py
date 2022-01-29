@@ -5,6 +5,8 @@ from urllib.parse import quote as _uriquote
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["Route"]
+
 
 class Route:
     BASE: ClassVar[str] = "https://discord.com/api/v9"

@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     )
     from dis_snek.models.discord.sticker import Sticker
 
+__all__ = ["WebhookTypes", "Webhook"]
+
 
 class WebhookTypes(IntEnum):
     INCOMING = 1

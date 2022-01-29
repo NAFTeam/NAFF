@@ -6,6 +6,8 @@ import attr
 import dis_snek.client.const as const
 import dis_snek.client.utils.serializer as serializer
 
+__all__ = ["DictSerializationMixin"]
+
 log = logging.getLogger(const.logger_name)
 
 T = TypeVar("T")

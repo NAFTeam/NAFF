@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from dis_snek.client.smart_cache import GlobalCache
     from dis_snek.api.events.internal import BaseEvent
 
+__all__ = ["Processor", "EventMixinTemplate"]
+
 log = logging.getLogger(logger_name)
 
 
