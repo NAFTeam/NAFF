@@ -73,7 +73,7 @@ class ChannelRequests:
         channel_type: Union["ChannelTypes", int],
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: List[Union["PermissionOverwrite", dict]] = MISSING,
+        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
         parent_id: "Snowflake_Type" = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
