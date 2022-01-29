@@ -36,6 +36,9 @@ from importlib.metadata import version as _v
 from typing import TypeVar, Union
 
 __all__ = [
+    "__version__",
+    "__repo_url__",
+    "__py_version__",
     "logger_name",
     "kwarg_spam",
     "DISCORD_EPOCH",
@@ -61,7 +64,6 @@ __all__ = [
     "MISSING",
     "MENTION_PREFIX",
     "PREMIUM_GUILD_LIMITS",
-    "T",
     "Absent",
 ]
 
