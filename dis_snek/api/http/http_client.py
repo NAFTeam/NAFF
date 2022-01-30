@@ -210,11 +210,14 @@ class HTTPClient(
 
         """
         # Assemble headers
-        kwargs["headers"] = {"User-Agent": self.user_agent, "Content-Type": "application/json"}
+        kwargs["headers"] = {"User-Agent": self.user_agent}
         if self.token:
             kwargs["headers"]["Authorization"] = f"Bot {self.token}"
         if reason not in (None, MISSING):
             kwargs["headers"]["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
+
+        if isinstance(data, (list, dict)):
+            kwargs["headers"]["Content-Type"] = "application/json"
 
         # sanity check payload
         if isinstance(data, list):
