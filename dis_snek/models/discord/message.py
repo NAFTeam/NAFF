@@ -629,7 +629,6 @@ def process_message_payload(
         Dictionary or multipart data form.
 
     """
-    content = content
     embeds = models.process_embeds(embeds)
     if isinstance(embeds, list):
         embeds = embeds if all(e is not None for e in embeds) else None
