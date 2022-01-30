@@ -668,8 +668,36 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
-    async def wait_for_modal(self, modal: "Modal", timeout: Optional[float] = None) -> ModalContext:
-        resp = await self.wait_for("modal_response", lambda e: e.context.custom_id == modal.custom_id, timeout)
+    async def wait_for_modal(
+        self,
+        modal: "Modal",
+        author: Optional["Snowflake_Type"] = None,
+        timeout: Optional[float] = None,
+    ) -> ModalContext:
+        """
+        Wait for a modal response.
+
+        Args:
+            modal: The modal we're waiting for.
+            author: The user we're waiting for to reply
+            timeout: A timeout in seconds to stop waiting
+
+        Returns:
+            The context of the modal response
+        Raises:
+           ` asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+
+        """
+        author = to_snowflake(author) if author else None
+
+        def predicate(event):
+            if modal.custom_id != event.context.custom_id:
+                return False
+            if author and author != to_snowflake(event.context.author):
+                return False
+            return True
+
+        resp = await self.wait_for("modal_response", predicate, timeout)
         return resp.context
 
     async def wait_for_component(
