@@ -49,5 +49,5 @@ class Listener:
         return wrapper
 
 
-def listen(event_name: Absent[str] = MISSING) -> Callable[[Coroutine], Listener]:
+def listen(event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], Listener]:
     return Listener.create(event_name)
