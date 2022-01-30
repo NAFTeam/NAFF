@@ -497,6 +497,16 @@ class ModalContext(InteractionContext):
         new_cls.custom_id = data["data"]["custom_id"]
         return new_cls
 
+    @property
+    def responses(self) -> dict[str, str]:
+        """
+        Get the responses to this modal.
+
+        Returns:
+            A dictionary of responses. Keys are the custom_ids of your components.
+        """
+        return self.kwargs
+
 
 @define
 class MessageContext(Context, SendMixin):
