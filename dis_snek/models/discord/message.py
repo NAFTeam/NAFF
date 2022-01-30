@@ -205,7 +205,7 @@ class Message(BaseMessage):
     nonce: Optional[Union[int, str]] = attr.ib(default=None)
     pinned: bool = attr.ib(default=False)
     webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    type: MessageTypes = attr.ib(default=MISSING, converter=MessageTypes)
+    type: MessageTypes = attr.ib(default=MISSING, converter=optional_c(MessageTypes))
     activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
     application: Optional["models.Application"] = attr.ib(default=None)  # TODO: partial application
     application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
