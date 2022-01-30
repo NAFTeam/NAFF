@@ -50,6 +50,9 @@ class Resolved:
     roles: Dict["Snowflake_Type", "Role"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of roles mentioned in the interaction")
     )
+    messages: Dict["Snowflake_Type", "Message"] = attr.ib(
+        factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
+    )
 
     @classmethod
     def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
@@ -72,6 +75,10 @@ class Resolved:
         if roles := data.get("roles"):
             for key, _role in roles.items():
                 new_cls.roles[key] = client.cache.role_cache.get(to_snowflake(key))
+
+        if messages := data.get("messages"):
+            for key, _msg in messages.items():
+                new_cls.messages[key] = client.cache.place_message_data(_msg)
 
         return new_cls
 
