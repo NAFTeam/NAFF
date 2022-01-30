@@ -284,8 +284,8 @@ class GlobalCache:
             if message.channel is None:
                 await self.get_channel(channel_id, request_fallback=True)
 
-            if not message.guild and isinstance(message.channel, GuildChannel) and message.channel.guild:
-                message._guild_id = message.channel.guild.id
+            if not message.guild and isinstance(message.channel, GuildChannel):
+                message._guild_id = message.channel._guild_id
         return message
 
     def place_message_data(self, data: dict) -> Message:
