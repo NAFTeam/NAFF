@@ -426,7 +426,10 @@ class Member(DiscordObject, _SendDMMixin):
         if isinstance(role, Role):
             role = role.id
         await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
-        self._role_ids.remove(role)
+        try:
+            self._role_ids.remove(role)
+        except ValueError:
+            pass
 
     def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
