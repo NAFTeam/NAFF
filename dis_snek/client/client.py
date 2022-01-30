@@ -668,7 +668,7 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
-    async def wait_for_modal(self, modal: "Modal", timeout: Optional[float] = None):
+    async def wait_for_modal(self, modal: "Modal", timeout: Optional[float] = None) -> ModalContext:
         resp = await self.wait_for("modal_response", lambda e: e.context.custom_id == modal.custom_id, timeout)
         return resp.context
 
