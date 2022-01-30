@@ -94,7 +94,7 @@ class Timestamp(datetime):
 
         """
         discord_millis = int(self.timestamp() * 1000 - DISCORD_EPOCH)
-        return (discord_millis << 22) + (2 ** 22 - 1 if high else 0)
+        return (discord_millis << 22) + (2**22 - 1 if high else 0)
 
     @classmethod
     def from_snowflake(cls, snowflake: "Snowflake_Type") -> "Timestamp":
