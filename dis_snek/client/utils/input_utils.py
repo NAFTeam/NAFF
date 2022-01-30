@@ -7,6 +7,8 @@ import aiohttp  # type: ignore
 
 from dis_snek.client.const import logger_name
 
+__all__ = ["OverriddenJson", "response_decode", "get_args", "get_first_word", "_bytes_to_base64_data"]
+
 log = logging.getLogger(logger_name)
 
 try:

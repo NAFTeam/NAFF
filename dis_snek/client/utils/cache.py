@@ -5,6 +5,8 @@ from typing import Any
 
 import attr
 
+__all__ = ["TTLItem", "TTLCache"]
+
 
 @attr.s(slots=True)
 class TTLItem:

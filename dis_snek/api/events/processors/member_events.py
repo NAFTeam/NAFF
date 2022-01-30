@@ -10,6 +10,8 @@ from ._template import EventMixinTemplate, Processor
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
+__all__ = ["MemberEvents"]
+
 log = logging.getLogger(logger_name)
 
 

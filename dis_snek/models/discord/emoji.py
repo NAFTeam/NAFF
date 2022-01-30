@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji"]
+
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
 

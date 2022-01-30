@@ -31,6 +31,17 @@ from .enums import (
 )
 from .snowflake import to_snowflake, Snowflake_Type
 
+__all__ = [
+    "GuildBan",
+    "BaseGuild",
+    "GuildWelcome",
+    "GuildPreview",
+    "Guild",
+    "GuildTemplate",
+    "GuildWelcomeChannel",
+    "GuildIntegration",
+]
+
 log = logging.getLogger(logger_name)
 
 
@@ -204,7 +215,7 @@ class Guild(BaseGuild):
 
     @property
     def members(self) -> List["models.Member"]:
-        """A generator that yields all members of this guild."""
+        """Returns a list of all members within this guild."""
         return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
 
     @property
@@ -523,7 +534,7 @@ class Guild(BaseGuild):
         channel_type: Union[ChannelTypes, int],
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -578,7 +589,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -618,7 +629,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -661,7 +672,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Absent[Union[Snowflake_Type, "models.GuildCategory"]] = MISSING,
         bitrate: int = 64000,
@@ -700,7 +711,7 @@ class Guild(BaseGuild):
     async def create_category(
         self,
         name: str,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.GuildCategory":

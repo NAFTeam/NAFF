@@ -8,6 +8,8 @@ from dis_snek.client.const import MISSING, Absent
 
 camel_to_snake = re.compile(r"([A-Z]+)")
 
+__all__ = ["Listener", "listen"]
+
 
 class Listener:
 

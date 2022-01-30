@@ -10,6 +10,40 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.cooldowns import CooldownSystem, MaxConcurrency
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = [
+    "SnakeException",
+    "BotException",
+    "GatewayNotFound",
+    "LoginError",
+    "HTTPException",
+    "DiscordError",
+    "BadRequest",
+    "Forbidden",
+    "NotFound",
+    "RateLimited",
+    "TooManyChanges",
+    "WebSocketClosed",
+    "WebSocketRestart",
+    "ExtensionException",
+    "ExtensionNotFound",
+    "ExtensionLoadException",
+    "ScaleLoadException",
+    "CommandException",
+    "CommandOnCooldown",
+    "MaxConcurrencyReached",
+    "CommandCheckFailure",
+    "MessageException",
+    "EmptyMessageException",
+    "EphemeralEditException",
+    "ThreadException",
+    "ThreadOutsideOfGuild",
+    "InteractionException",
+    "InteractionMissingAccess",
+    "AlreadyDeferred",
+    "ForeignWebhookException",
+    "EventLocationNotProvided",
+]
+
 
 class SnakeException(Exception):
     """Base Exception of discord-snakes."""

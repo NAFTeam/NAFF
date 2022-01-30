@@ -5,6 +5,8 @@ from typing import Any, Dict, TypeVar
 import attr
 from dis_snek.client.const import logger_name, MISSING
 
+__all__ = ["define", "field", "docs", "str_validator"]
+
 log = logging.getLogger(logger_name)
 T = TypeVar("T")
 
