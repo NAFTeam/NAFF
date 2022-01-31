@@ -30,7 +30,15 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.modal import Modal
 
-__all__ = ["Resolved", "Context", "InteractionContext", "ComponentContext", "AutocompleteContext", "MessageContext"]
+__all__ = [
+    "Resolved",
+    "Context",
+    "InteractionContext",
+    "ComponentContext",
+    "AutocompleteContext",
+    "ModalContext",
+    "MessageContext",
+]
 
 log = logging.getLogger(logger_name)
 
