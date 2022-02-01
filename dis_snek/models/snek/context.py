@@ -7,11 +7,12 @@ import attr
 from aiohttp import FormData
 
 import dis_snek.models.discord.message as message
-from dis_snek.client.const import MISSING, logger_name
+from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import AlreadyDeferred
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, docs
-from dis_snek.models.discord.enums import MessageFlags
+from dis_snek.client.utils.converters import optional
+from dis_snek.models.discord.enums import MessageFlags, CommandTypes
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
 
@@ -50,6 +51,9 @@ class Resolved:
     roles: Dict["Snowflake_Type", "Role"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of roles mentioned in the interaction")
     )
+    messages: Dict["Snowflake_Type", "Message"] = attr.ib(
+        factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
+    )
 
     @classmethod
     def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
@@ -72,6 +76,10 @@ class Resolved:
         if roles := data.get("roles"):
             for key, _role in roles.items():
                 new_cls.roles[key] = client.cache.role_cache.get(to_snowflake(key))
+
+        if messages := data.get("messages"):
+            for key, _msg in messages.items():
+                new_cls.messages[key] = client.cache.place_message_data(_msg)
 
         return new_cls
 
@@ -108,9 +116,12 @@ class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children."""
 
     _token: str = attr.ib(default=None, metadata=docs("The token for the interaction"))
+    _context_type: int = attr.ib()  # we don't want to convert this in case of a new context type, which is expected
     interaction_id: str = attr.ib(default=None, metadata=docs("The id of the interaction"))
     target_id: "Snowflake_Type" = attr.ib(
-        default=None, metadata=docs("The ID of the target, used for context menus to show what was clicked on")
+        default=None,
+        metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
+        converter=optional(to_snowflake),
     )
 
     deferred: bool = attr.ib(default=False, metadata=docs("Is this interaction deferred?"))
@@ -131,6 +142,7 @@ class _BaseInteractionContext(Context):
             data=data,
             invoked_name=data["data"].get("name"),
             guild_id=data.get("guild_id"),
+            context_type=data["data"].get("type", 0),
         )
         new_cls.data = data
 
@@ -304,6 +316,41 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             tts=tts,
             flags=flags,
         )
+
+    @property
+    def target(self) -> "Absent[Member | User | Message]":
+        """For context menus, this will be the object of which was clicked on."""
+        thing = MISSING
+
+        match self._context_type:
+            # Only searches caches based on what kind of context menu this is
+
+            case CommandTypes.USER:
+                # This can only be in the member or user cache
+                caches = [
+                    (self._client.cache.member_cache, (self.guild_id, self.target_id)),
+                    (self._client.cache.user_cache, self.target_id),
+                ]
+            case CommandTypes.MESSAGE:
+                # This can only be in the message cache
+                caches = [(self._client.cache.message_cache, (self.channel.id, self.target_id))]
+            case _:
+                # Most likely a new context type, check all rational caches for the target_id
+                log.warning(f"New Context Type Detected. Please Report: {self._context_type}")
+                caches = [
+                    (self._client.cache.message_cache, (self.channel.id, self.target_id)),
+                    (self._client.cache.member_cache, (self.guild_id, self.target_id)),
+                    (self._client.cache.user_cache, self.target_id),
+                    (self._client.cache.channel_cache, self.target_id),
+                    (self._client.cache.role_cache, self.target_id),
+                    (self._client.cache.emoji_cache, self.target_id),  # unlikely, so check last
+                ]
+
+        for cache, key in caches:
+            thing = cache.get(key, MISSING)
+            if thing is not MISSING:
+                break
+        return thing
 
 
 @define
