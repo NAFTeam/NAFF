@@ -102,17 +102,17 @@ class MemberRequests:
             reason=reason,
         )
 
-    async def modify_self_nickname(
+    async def modify_current_member(
         self,
         guild_id: "Snowflake_Type",
         nickname: Absent[str] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> None:
         """
-        Change the user's nickname.
+        Modify attributes of the user
 
         parameters:
-            new_nickname: The new nickname to apply
+            nickname: The new nickname to apply
             reason: An optional reason for the audit log
         """
         await self.request(

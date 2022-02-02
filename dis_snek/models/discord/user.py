@@ -403,7 +403,7 @@ class Member(DiscordObject, _SendDMMixin):
             Leave `new_nickname` empty to clean user's nickname
 
         """
-        await self._client.http.modify_self_nickname(self._guild_id, new_nickname, reason=reason)
+        await self._client.http.modify_current_member(self._guild_id, nickname=new_nickname, reason=reason)
 
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
