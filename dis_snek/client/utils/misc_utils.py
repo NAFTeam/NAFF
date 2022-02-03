@@ -45,6 +45,31 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
     return None
 
 
+def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
+    """
+    Find the first element in a sequence that matches all attrs.
+
+    ??? Hint "Example Usage:"
+        ```python
+        channel = get(guild.channels, nsfw=False, category="General")
+        ```
+
+    Args:
+        sequence: A sequence to be searched
+        kwargs: Keyword arguments to search the sequence for
+
+    Returns:
+        A match if found, otherwise None
+    """
+    if not kwargs:
+        return sequence[0]
+
+    for el in sequence:
+        if all(getattr(el, attr, None) == value for attr, value in kwargs.items()):
+            return el
+    return None
+
+
 def wrap_partial(obj, cls):
     """
     🎁 Wraps a commands callback objects into partials.
