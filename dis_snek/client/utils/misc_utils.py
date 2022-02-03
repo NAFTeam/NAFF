@@ -65,7 +65,9 @@ def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
         return sequence[0]
 
     for el in sequence:
-        if all(getattr(el, attr, None) == value for attr, value in kwargs.items()):
+        if any(not hasattr(el, attr) for attr in kwargs.keys()):
+            continue
+        if all(getattr(el, attr) == value for attr, value in kwargs.items()):
             return el
     return None
 
