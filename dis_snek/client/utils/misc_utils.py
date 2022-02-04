@@ -61,7 +61,7 @@ def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
         A list of matches
 
     """
-    matches = list()
+    matches = []
     for el in sequence:
         if predicate(el):
             matches.append(el)
@@ -114,7 +114,7 @@ def get_all(sequence: Iterable, **kwargs: Any) -> List[Any]:
     if not kwargs:
         return sequence
 
-    matches = list()
+    matches = []
     for el in sequence:
         if any(not hasattr(el, attr) for attr in kwargs.keys()):
             continue
