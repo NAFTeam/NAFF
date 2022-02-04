@@ -72,7 +72,7 @@ class Color:
 
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        return self._get_byte(2), self._get_byte(1), self._get_byte(0)
+        return self.r, self.g, self.b
 
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
