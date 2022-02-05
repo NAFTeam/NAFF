@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member, User, BaseUser
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.discord.activity import Activity
-    from dis_snek.models.discord.emoji import CustomEmoji
+    from dis_snek.models.discord.emoji import CustomEmoji, PartialEmoji
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.voice_state import VoiceState
@@ -369,7 +369,7 @@ class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
     message: "Message" = attr.ib(metadata=docs("The message that was reacted to"))
-    emoji: "emoji" = attr.ib(metadata=docs("The emoji that was added to the message"))
+    emoji: "PartialEmoji" = attr.ib(metadata=docs("The emoji that was added to the message"))
     author: Union["Member", "User"] = attr.ib(metadata=docs("The user who added the reaction"))
 
 
