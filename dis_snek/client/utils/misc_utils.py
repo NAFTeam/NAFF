@@ -61,11 +61,7 @@ def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
         A list of matches
 
     """
-    matches = []
-    for el in sequence:
-        if predicate(el):
-            matches.append(el)
-    return matches
+    return [el for el in sequence if predicate(el)]
 
 
 def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
