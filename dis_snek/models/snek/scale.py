@@ -52,7 +52,6 @@ class Scale:
     scale_checks: List
     scale_prerun: List
     scale_postrun: List
-    listeners: List
     _commands: List
     auto_defer: "AutoDefer"
 
