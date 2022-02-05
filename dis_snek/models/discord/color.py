@@ -71,7 +71,7 @@ class Color:
 
     @property
     def r(self) -> int:
-        return self._get_byte(0)
+        return self._get_byte(2)
 
     @property
     def g(self) -> int:
@@ -79,11 +79,11 @@ class Color:
 
     @property
     def b(self) -> int:
-        return self._get_byte(2)
+        return self._get_byte(0)
 
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        return self._get_byte(0), self._get_byte(1), self._get_byte(2)
+        return self.r, self.g, self.b
 
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
