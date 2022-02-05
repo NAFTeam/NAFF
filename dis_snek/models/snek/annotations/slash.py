@@ -2,6 +2,9 @@ from typing import Union, List, Optional, Type, TYPE_CHECKING
 
 import dis_snek.models as models
 
+from dis_snek.models.snek.application_commands import SlashCommandOption
+
+
 if TYPE_CHECKING:
     from dis_snek.models.snek import SlashCommandChoice
     from dis_snek.models.discord import User, Member, Role, BaseChannel, ChannelTypes
@@ -23,7 +26,7 @@ def slash_str_option(
         choices: The choices allowed by this command
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -54,7 +57,7 @@ def slash_float_option(
         max_value:
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -87,7 +90,7 @@ def slash_int_option(
         max_value:
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -112,7 +115,7 @@ def slash_bool_option(
         required: Is this option required?
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -135,7 +138,7 @@ def slash_user_option(
         autocomplete: Use autocomplete for this option
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -163,7 +166,7 @@ def slash_channel_option(
         channel_types: The types of channel allowed by this option
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -191,7 +194,7 @@ def slash_role_option(
         choices: The choices allowed by this command
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
@@ -218,7 +221,7 @@ def slash_mentionable_option(
         choices: The choices allowed by this command
 
     """
-    option = models.SlashCommandOption(
+    option = SlashCommandOption(
         name="placeholder",
         description=description,
         required=required,
