@@ -47,7 +47,7 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
     return None
 
 
-def wrap_partial(obj, cls):
+def wrap_partial(obj, cls) -> Callable:
     """
     🎁 Wraps a commands callback objects into partials.
 

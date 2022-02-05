@@ -40,7 +40,7 @@ def optional(converter: typing.Callable) -> typing.Any:
         converter: The convertor that is used for the non-None or MISSING
     """
 
-    def optional_converter(val):
+    def optional_converter(val) -> typing.Any:
         if val is None or val is MISSING:
             return val
         return converter(val)

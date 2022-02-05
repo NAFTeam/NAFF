@@ -261,7 +261,7 @@ def message_command(
     return wrapper
 
 
-def check(check: Callable[["Context"], Awaitable[bool]]):
+def check(check: Callable[["Context"], Awaitable[bool]]) -> Callable[[Coroutine], Coroutine]:
     """
     Add a check to a command.
 
@@ -270,7 +270,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]):
 
     """
 
-    def wrapper(coro):
+    def wrapper(coro: Coroutine) -> Coroutine:
         if isinstance(coro, BaseCommand):
             coro.checks.append(check)
             return coro
@@ -282,7 +282,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]):
     return wrapper
 
 
-def cooldown(bucket: Buckets, rate: int, interval: float):
+def cooldown(bucket: Buckets, rate: int, interval: float) -> Callable[[Coroutine], Coroutine]:
     """
     Add a cooldown to a command.
 
@@ -293,7 +293,7 @@ def cooldown(bucket: Buckets, rate: int, interval: float):
 
     """
 
-    def wrapper(coro: Callable[..., Coroutine]):
+    def wrapper(coro: Coroutine) -> Coroutine:
         cooldown_obj = Cooldown(bucket, rate, interval)
 
         coro.cooldown = cooldown_obj
@@ -303,7 +303,7 @@ def cooldown(bucket: Buckets, rate: int, interval: float):
     return wrapper
 
 
-def max_concurrency(bucket: Buckets, concurrent: int):
+def max_concurrency(bucket: Buckets, concurrent: int) -> Callable[[Coroutine], Coroutine]:
     """
     Add a maximum number of concurrent instances to the command.
 
@@ -313,7 +313,7 @@ def max_concurrency(bucket: Buckets, concurrent: int):
 
     """
 
-    def wrapper(coro: Callable[..., Coroutine]):
+    def wrapper(coro: Coroutine) -> Coroutine:
         max_conc = MaxConcurrency(concurrent, bucket)
 
         coro.max_concurrency = max_conc
