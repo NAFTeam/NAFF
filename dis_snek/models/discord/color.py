@@ -85,16 +85,16 @@ class Color:
     def rgb(self) -> Tuple[int, int, int]:
         return self.r, self.g, self.b
 
-    @property
-    def rgb_float(self) -> Tuple[float, float, float]:
-        # noinspection PyTypeChecker
-        return tuple(v / 255 for v in self.rgb)
-
     @rgb.setter
     def rgb(self, value: Tuple[int, int, int]) -> None:
         # noinspection PyTypeChecker
         r, g, b = (self.clamp(v) for v in value)
         self.value = (r << 16) + (g << 8) + b
+
+    @property
+    def rgb_float(self) -> Tuple[float, float, float]:
+        # noinspection PyTypeChecker
+        return tuple(v / 255 for v in self.rgb)
 
     @property
     def hex(self) -> str:
