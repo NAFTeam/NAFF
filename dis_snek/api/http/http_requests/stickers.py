@@ -77,7 +77,7 @@ class StickerRequests:
 
     async def modify_guild_sticker(
         self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = MISSING
-    ):
+    ) -> dict:
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 

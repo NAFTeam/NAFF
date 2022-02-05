@@ -39,5 +39,5 @@ class DebugScales(Scale):
         raise
 
 
-def setup(bot):
+def setup(bot) -> None:
     DebugScales(bot)

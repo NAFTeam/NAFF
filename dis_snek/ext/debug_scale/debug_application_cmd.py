@@ -81,7 +81,7 @@ class DebugAppCMD(Scale):
 
             # search internal registers for command
 
-            async def send(cmd_json: dict):
+            async def send(cmd_json: dict) -> None:
                 await ctx.send(
                     file=File(io.BytesIO(pprint.pformat(cmd_json, 2).encode("utf-8")), f"{cmd_json.get('name')}.json")
                 )
@@ -122,7 +122,7 @@ class DebugAppCMD(Scale):
         opt_type=OptionTypes.STRING,
         required=True,
     )
-    async def list_scope(self, ctx: InteractionContext, scope: str):
+    async def list_scope(self, ctx: InteractionContext, scope: str) -> Message:
         await ctx.defer()
         try:
             cmds = await self.bot.http.get_application_commands(self.bot.app.id, int(scope.strip()))
@@ -132,12 +132,12 @@ class DebugAppCMD(Scale):
                 e.description = f"**Listing Commands Registered in {scope}**\n\n" + "\n".join(
                     [f"`{c['id']}` : `{c['name']}`" for c in cmds]
                 )
-                await ctx.send(embeds=e)
+                return await ctx.send(embeds=e)
             else:
                 return await ctx.send(f"No commands found in `{scope.strip()}`")
         except Exception:
             return await ctx.send(f"No commands found in `{scope.strip()}`")
 
 
-def setup(bot):
+def setup(bot) -> None:
     DebugAppCMD(bot)

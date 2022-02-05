@@ -50,7 +50,7 @@ class GlobalLock:
             while not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
-    async def lock(self, delta: float):
+    async def lock(self, delta: float) -> None:
         """
         Lock the global lock for a given duration.
 

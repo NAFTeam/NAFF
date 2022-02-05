@@ -646,7 +646,7 @@ def context_menu(
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
-):
+) -> Callable[[Coroutine], ContextMenu]:
     """
     A decorator to declare a coroutine as a Context Menu.
 
@@ -772,7 +772,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
 
     """
 
-    def wrapper(func):
+    def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
             raise Exception("slash_permission decorators must be positioned under a slash_command decorator")
 
