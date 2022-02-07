@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models import User
 
+__all__ = ["Application"]
+
 
 @attr.s(slots=True, kw_only=True)
 class Application(DiscordObject):

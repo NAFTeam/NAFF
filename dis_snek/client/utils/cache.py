@@ -5,6 +5,8 @@ from typing import Any
 
 import attr
 
+__all__ = ["TTLItem", "TTLCache"]
+
 
 @attr.s(slots=True)
 class TTLItem:
@@ -38,7 +40,7 @@ class TTLCache(OrderedDict):
         # self._reset_expiration(key, item)
         return item.value
 
-    def pop(self, key, default=attr.NOTHING):
+    def pop(self, key, default=attr.NOTHING) -> Any:
         if key in self:
             item = self[key]
             del self[key]
@@ -49,7 +51,7 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def get(self, key, default=None, reset_expiration=True):
+    def get(self, key, default=None, reset_expiration=True) -> Any:
         item = super().get(key, default)
         if item is not default:
             if reset_expiration:
@@ -58,10 +60,10 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def values(self):
+    def values(self) -> ValuesView:
         return _CacheValuesView(self)
 
-    def items(self):
+    def items(self) -> ItemsView:
         return _CacheItemsView(self)
 
     def _reset_expiration(self, key: Any, item: TTLItem):

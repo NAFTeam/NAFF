@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.channel import TYPE_THREAD_CHANNEL
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["ThreadMember", "ThreadList"]
+
 
 @define()
 class ThreadMember(DiscordObject, SendMixin):

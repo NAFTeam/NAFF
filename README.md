@@ -47,7 +47,7 @@ For more examples check out [our examples repo](https://github.com/Discord-Snake
 
 
 ## "Can I contribute to this project?"
-Of course, we welcome all contributions to this library. Just ensure you follow our [requirements]().
+Of course, we welcome all contributions to this library. Just ensure you follow our [requirements](/CONTRIBUTING.md).
 If youre stuck for things to contribute, check out our [Trello](https://trello.com/b/LVjnmYKt/dev-board) for inspiration.
 
 ## Links:

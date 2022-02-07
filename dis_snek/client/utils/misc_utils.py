@@ -3,6 +3,8 @@ import inspect
 import re
 from typing import Callable, Iterable, List, Optional, Any
 
+__all__ = ["escape_mentions", "find", "wrap_partial", "get_parameters"]
+
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
 
 
@@ -119,7 +121,7 @@ def get_all(sequence: Iterable, **kwargs: Any) -> List[Any]:
     return matches
 
 
-def wrap_partial(obj, cls):
+def wrap_partial(obj, cls) -> Callable:
     """
     🎁 Wraps a commands callback objects into partials.
 

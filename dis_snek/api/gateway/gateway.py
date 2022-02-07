@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
+__all__ = ["WebsocketClient"]
+
 log = logging.getLogger(logger_name)
 
 
@@ -35,11 +37,14 @@ class GatewayRateLimit:
     def __init__(self) -> None:
         self.lock = asyncio.Lock()
         # docs state 120 calls per 60 seconds, this is set conservatively to 110 per 60 seconds.
-        self.cooldown_system = CooldownSystem(110, 60)
+        rate = 110
+        interval = 60
+        self.cooldown_system = CooldownSystem(1, interval / rate)
+        # hacky way to throttle how frequently we send messages to the gateway
 
     async def rate_limit(self) -> None:
         async with self.lock:
-            if not self.cooldown_system.acquire_token():
+            while not self.cooldown_system.acquire_token():
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 

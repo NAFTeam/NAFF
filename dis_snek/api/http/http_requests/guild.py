@@ -276,7 +276,7 @@ class GuildRequests:
         self,
         guild_id: "Snowflake_Type",
         days: int = 7,
-        include_roles: List["Snowflake_Type"] = None,
+        include_roles: Optional[List["Snowflake_Type"]] = None,
         compute_prune_count: bool = True,
         reason: Absent[str] = MISSING,
     ) -> dict:
@@ -290,7 +290,7 @@ class GuildRequests:
             compute_prune_count: whether 'pruned' is returned, discouraged for large guilds
             reason: The reason for this action
         returns:
-            {"pruned": int}
+            {"pruned": Optional[int]}
 
         """
         payload = {"days": days, "compute_prune_count": compute_prune_count}

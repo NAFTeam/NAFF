@@ -32,6 +32,37 @@ if TYPE_CHECKING:
     from aiohttp import FormData
     from dis_snek import Snake
 
+__all__ = [
+    "ChannelHistory",
+    "PermissionOverwrite",
+    "MessageableMixin",
+    "InvitableMixin",
+    "ThreadableMixin",
+    "WebhookMixin",
+    "BaseChannel",
+    "DMChannel",
+    "DM",
+    "DMGroup",
+    "GuildChannel",
+    "GuildCategory",
+    "GuildStore",
+    "GuildNews",
+    "GuildText",
+    "ThreadChannel",
+    "GuildNewsThread",
+    "GuildPublicThread",
+    "GuildPrivateThread",
+    "GuildVoice",
+    "GuildStageVoice",
+    "TYPE_ALL_CHANNEL",
+    "TYPE_DM_CHANNEL",
+    "TYPE_GUILD_CHANNEL",
+    "TYPE_THREAD_CHANNEL",
+    "TYPE_VOICE_CHANNEL",
+    "TYPE_CHANNEL_MAPPING",
+    "TYPE_MESSAGEABLE_CHANNEL",
+]
+
 
 class ChannelHistory(AsyncIterator):
     """
@@ -942,7 +973,7 @@ class GuildCategory(GuildChannel):
         channel_type: Union[ChannelTypes, int],
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
@@ -992,7 +1023,7 @@ class GuildCategory(GuildChannel):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         nsfw: bool = False,
         rate_limit_per_user: int = 0,
@@ -1029,7 +1060,7 @@ class GuildCategory(GuildChannel):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
@@ -1069,7 +1100,7 @@ class GuildCategory(GuildChannel):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         bitrate: int = 64000,
         user_limit: int = 0,

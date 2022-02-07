@@ -1,27 +1,65 @@
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 from urllib.parse import quote as _uriquote
 
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
+
+__all__ = ["Route"]
 
 
 class Route:
     BASE: ClassVar[str] = "https://discord.com/api/v9"
+    path: str
+    params: dict[str, str | int]
+
+    webhook_id: Optional["Snowflake_Type"]
+    webhook_token: Optional[str]
 
     def __init__(self, method: str, path: str, **parameters: Any):
         self.path: str = path
         self.method: str = method
+        self.params = parameters
 
-        url = f"{self.BASE}{self.path}"
-        if parameters:
-            url = url.format_map({k: _uriquote(v) if isinstance(v, str) else v for k, v in parameters.items()})
-        self.url: str = url
+        self.channel_id = parameters.get("channel_id")
+        self.guild_id = parameters.get("guild_id")
+        self.webhook_id = parameters.get("webhook_id")
+        self.webhook_token = parameters.get("webhook_token")
 
-        self.channel_id: Optional["Snowflake_Type"] = parameters.get("channel_id")
-        self.guild_id: Optional["Snowflake_Type"] = parameters.get("guild_id")
-        self.webhook_id: Optional["Snowflake_Type"] = parameters.get("webhook_id")
-        self.webhook_token: Optional[str] = parameters.get("webhook_token")
+        self.known_bucket: Optional[str] = None
+
+    def __eq__(self, other):
+        if isinstance(other, Route):
+            return self.rl_bucket == other.rl_bucket
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.rl_bucket)
+
+    def __repr__(self):
+        return f"<Route {self.endpoint}>"
+
+    def __str__(self):
+        return self.endpoint
 
     @property
     def rl_bucket(self) -> str:
-        return f"{self.channel_id}:{self.guild_id}:{self.path}"
+        """This route's full rate limit bucket"""
+        if self.known_bucket:
+            return self.known_bucket
+
+        if self.webhook_token:
+            return f"{self.webhook_id}{self.webhook_token}:{self.channel_id}:{self.guild_id}:{self.endpoint}"
+        return f"{self.channel_id}:{self.guild_id}:{self.endpoint}"
+
+    @property
+    def endpoint(self) -> str:
+        """The endpoint for this route"""
+        return f"{self.method} {self.path}"
+
+    @property
+    def url(self) -> str:
+        """The full url for this route"""
+        return f"{self.BASE}{self.path}".format_map(
+            {k: _uriquote(v) if isinstance(v, str) else v for k, v in self.params.items()}
+        )

@@ -1,7 +1,6 @@
 from typing import Callable, Union, TYPE_CHECKING, TypeVar
 
 from dis_snek.client.utils.misc_utils import get_parameters
-
 from dis_snek.models.snek.context import Context, MessageContext
 from dis_snek.models.snek.scale import Scale
 

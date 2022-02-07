@@ -4,17 +4,19 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
 import attr
 
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.models.discord.color import Color
-from .base import DiscordObject
-from dis_snek.models.discord.enums import Permissions
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import dict_filter_missing
+from dis_snek.models.discord.color import Color
+from dis_snek.models.discord.enums import Permissions
+from .base import DiscordObject
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord.guild import Guild
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
+
+__all__ = ["Role"]
 
 T = TypeVar("T")
 
@@ -98,6 +100,7 @@ class Role(DiscordObject):
 
     @property
     def members(self) -> list["Member"]:
+        """List of members with this role"""
         return [member for member in self.guild.members if member.has_role(self)]
 
     @property
@@ -105,8 +108,8 @@ class Role(DiscordObject):
         """
         Can this role be assigned or removed by this bot?
 
-        !!! note:     This does not account for permissions, only the
-        role hierarchy
+        Note:
+            This does not account for permissions, only the role hierarchy
 
         """
         return (self.default or self.guild.me.top_role > self) and not self.managed

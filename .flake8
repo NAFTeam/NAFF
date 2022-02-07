@@ -14,7 +14,6 @@ extend-ignore =
     ANN001, # Missing type annotation for function argument 'token'
     ANN002, # Missing type annotation for *args
     ANN003, # Missing type annotation for **kwargs
-    ANN201, # Missing return type annotation for public function
     ANN202, # Missing return type annotation for protected function
     B009, # Do not call getattr with a constant attribute value, it is not any safer than normal property access.
     B010, # Do not call setattr with a constant attribute value, it is not any safer than normal property access.
@@ -26,5 +25,9 @@ extend-ignore =
     # Plugins we don't currently include: flake8-return
     R503, # missing explicit return at the  end of function ableto return non-None value.
     R504, # unecessary variable assignement before return statement.
+
+    # Plugins we don't currently include: flake8-unused-arguments
+    U100, # Unused argument
+    U101, # Unused argument starting with an underscore
 
 max-line-length=120

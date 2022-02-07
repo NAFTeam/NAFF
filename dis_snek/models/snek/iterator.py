@@ -7,6 +7,8 @@ from typing import List, Any
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.models.discord.snowflake import to_snowflake, Snowflake_Type
 
+__all__ = ["AsyncIterator"]
+
 
 class AsyncIterator(_AsyncIterator, ABC):
     def __init__(self, limit: int = 50):

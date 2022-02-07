@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import importlib.util
 import inspect
 import json
@@ -8,6 +7,7 @@ import re
 import sys
 import time
 import traceback
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
@@ -74,6 +74,8 @@ if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
+
+__all__ = ["Snake"]
 
 
 class Snake(
@@ -406,7 +408,7 @@ class Snake(
         self._user = SnakeBotUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
-        self._mention_reg = re.compile(fr"^(<@!?{self.user.id}*>\s)")
+        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
         await self._connection_state.start()
