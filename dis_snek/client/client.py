@@ -638,7 +638,7 @@ class Snake(
                 if result:
                     index_to_remove.append(i)
 
-            for idx in index_to_remove:
+            for idx in sorted(index_to_remove, reverse=True):
                 _waits.pop(idx)
 
     async def wait_until_ready(self) -> None:
