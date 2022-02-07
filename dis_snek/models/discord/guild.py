@@ -31,6 +31,17 @@ from .enums import (
 )
 from .snowflake import to_snowflake, Snowflake_Type
 
+__all__ = [
+    "GuildBan",
+    "BaseGuild",
+    "GuildWelcome",
+    "GuildPreview",
+    "Guild",
+    "GuildTemplate",
+    "GuildWelcomeChannel",
+    "GuildIntegration",
+]
+
 log = logging.getLogger(logger_name)
 
 
@@ -204,7 +215,7 @@ class Guild(BaseGuild):
 
     @property
     def members(self) -> List["models.Member"]:
-        """A generator that yields all members of this guild."""
+        """Returns a list of all members within this guild."""
         return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
 
     @property
@@ -523,7 +534,7 @@ class Guild(BaseGuild):
         channel_type: Union[ChannelTypes, int],
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -578,7 +589,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -618,7 +629,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
@@ -661,7 +672,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         category: Absent[Union[Snowflake_Type, "models.GuildCategory"]] = MISSING,
         bitrate: int = 64000,
@@ -700,7 +711,7 @@ class Guild(BaseGuild):
     async def create_category(
         self,
         name: str,
-        position: int = 0,
+        position: Absent[Optional[int]] = MISSING,
         permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.GuildCategory":
@@ -987,9 +998,7 @@ class Guild(BaseGuild):
         result = await self._client.http.create_guild_role(guild_id=self.id, payload=payload, reason=reason)
         return self._client.cache.place_role_data(guild_id=self.id, data=[result])[to_snowflake(result["id"])]
 
-    def get_channel(
-        self, channel_id: Snowflake_Type
-    ) -> Optional[Union["models.TYPE_GUILD_CHANNEL", "models.TYPE_THREAD_CHANNEL"]]:
+    def get_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
         """
         Returns a channel with the given `channel_id`.
 
@@ -1000,16 +1009,15 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+        channel_id = to_snowflake(channel_id)
+        if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(to_snowflake(channel_id))
+            return self._client.cache.channel_cache.get(channel_id)
         return None
 
-    async def fetch_channel(
-        self, channel_id: Snowflake_Type
-    ) -> Optional[Union["models.TYPE_GUILD_CHANNEL", "models.TYPE_THREAD_CHANNEL"]]:
+    async def fetch_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
         """
         Returns a channel with the given `channel_id` from the API.
 
@@ -1020,7 +1028,8 @@ class Guild(BaseGuild):
             Channel object if found, otherwise None
 
         """
-        if channel_id in self._channel_ids and channel_id not in self._thread_ids:
+        channel_id = to_snowflake(channel_id)
+        if channel_id in self._channel_ids:
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
@@ -1035,12 +1044,12 @@ class Guild(BaseGuild):
             thread_id: The ID of the thread to get
 
         Returns:
-            Channel object if found, otherwise None
+            Thread object if found, otherwise None
 
         """
-        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
+        thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
-            return self.get_channel(thread_id)
+            return self._client.cache.channel_cache.get(thread_id)
         return None
 
     async def fetch_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
@@ -1051,18 +1060,18 @@ class Guild(BaseGuild):
             thread_id: The ID of the thread to get
 
         Returns:
-            Channel object if found, otherwise None
+            Thread object if found, otherwise None
 
         """
-        # get_channel can retrieve threads, so this is basically an alias with extra steps for that
+        thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
-            return await self.fetch_channel(thread_id)
+            return await self._client.get_channel(thread_id)
         return None
 
     async def prune_members(
         self,
         days: int = 7,
-        roles: Absent[List[Union[Snowflake_Type, "models.Role"]]] = MISSING,
+        roles: Optional[List[Snowflake_Type]] = None,
         compute_prune_count: bool = True,
         reason: Absent[str] = MISSING,
     ) -> Optional[int]:
@@ -1079,10 +1088,8 @@ class Guild(BaseGuild):
             The total number of members pruned, if `compute_prune_count` is set to True, otherwise None
 
         """
-        if roles is not MISSING:
-            roles = [r.id if isinstance(r, models.Role) else r for r in roles]
-        else:
-            roles = []
+        if roles:
+            roles = [str(to_snowflake(r)) for r in roles]
 
         resp = await self._client.http.begin_guild_prune(
             self.id, days, include_roles=roles, compute_prune_count=compute_prune_count, reason=reason

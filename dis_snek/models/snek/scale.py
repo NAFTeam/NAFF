@@ -1,18 +1,21 @@
 import asyncio
 import inspect
 import logging
-from typing import List, TYPE_CHECKING, Callable, Coroutine
+from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine
 
-from dis_snek.client.const import logger_name, MISSING
 import dis_snek.models.snek as snek
-from dis_snek.ext.tasks import Task
+from dis_snek.client.const import logger_name, MISSING
 from dis_snek.client.utils.misc_utils import wrap_partial
+from dis_snek.ext.tasks import Task
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.snek import AutoDefer, BaseCommand, Listener
+    from dis_snek.models.snek import Context
 
 log = logging.getLogger(logger_name)
+
+__all__ = ["Scale"]
 
 
 class Scale:
@@ -50,7 +53,6 @@ class Scale:
     scale_checks: List
     scale_prerun: List
     scale_postrun: List
-    listeners: List
     _commands: List
     auto_defer: "AutoDefer"
 
@@ -150,7 +152,7 @@ class Scale:
         """
         self.auto_defer = snek.AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
 
-    def add_scale_check(self, coroutine: Callable[..., Coroutine]) -> None:
+    def add_scale_check(self, coroutine: Callable[["Context"], Awaitable[bool]]) -> None:
         """
         Add a coroutine as a check for all commands in this scale to run. This coroutine must take **only** the parameter `context`.
 

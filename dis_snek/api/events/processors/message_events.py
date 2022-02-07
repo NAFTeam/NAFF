@@ -10,6 +10,9 @@ from dis_snek.models import to_snowflake, BaseMessage
 
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
+
+__all__ = ["MessageEvents"]
+
 log = logging.getLogger(logger_name)
 
 

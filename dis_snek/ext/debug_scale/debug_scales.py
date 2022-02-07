@@ -3,9 +3,10 @@ from dis_snek.client.errors import ScaleLoadException, CommandCheckFailure, Exte
 from dis_snek.models import (
     message_command,
     MessageContext,
-    checks,
     Context,
 )
+
+__all__ = ["DebugScales"]
 
 
 class DebugScales(Scale):
@@ -38,5 +39,5 @@ class DebugScales(Scale):
         raise
 
 
-def setup(bot):
+def setup(bot) -> None:
     DebugScales(bot)

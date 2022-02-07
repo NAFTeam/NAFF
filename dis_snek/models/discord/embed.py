@@ -21,6 +21,17 @@ from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.timestamp import Timestamp
 
+__all__ = [
+    "EmbedField",
+    "EmbedAuthor",
+    "EmbedAttachment",
+    "EmbedAuthor",
+    "EmbedFooter",
+    "EmbedProvider",
+    "Embed",
+    "process_embeds",
+]
+
 
 @attr.s(slots=True)
 class EmbedField(DictSerializationMixin):

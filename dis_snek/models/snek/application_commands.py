@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Option
 
 import attr
 
+import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
     GLOBAL_SCOPE,
     CONTEXT_MENU_NAME_LENGTH,
@@ -19,20 +20,40 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.models.snek.auto_defer import AutoDefer
-from dis_snek.models.snek.command import BaseCommand
-import dis_snek.models.discord.channel as channel
-from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.user import BaseUser
-from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
-from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.client.utils.attr_utils import docs
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
+from dis_snek.models.discord.role import Role
+from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
+from dis_snek.models.discord.user import BaseUser
+from dis_snek.models.snek.auto_defer import AutoDefer
+from dis_snek.models.snek.command import BaseCommand
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.snek.context import Context
+
+__all__ = [
+    "OptionTypes",
+    "PermissionTypes",
+    "CallbackTypes",
+    "Permission",
+    "InteractionCommand",
+    "ContextMenu",
+    "SlashCommandChoice",
+    "SlashCommand",
+    "ComponentCommand",
+    "slash_command",
+    "subcommand",
+    "context_menu",
+    "component_callback",
+    "slash_option",
+    "slash_permission",
+    "auto_defer",
+    "application_commands_to_dict",
+    "sync_needed",
+]
 
 log = logging.getLogger(logger_name)
 
@@ -456,19 +477,24 @@ class SlashCommand(InteractionCommand):
         sub_cmd_name: str,
         group_name: str = None,
         group_description: str = "No Description Set",
-        sub_cmd_description: str = "No Description Set",
+        sub_cmd_description: Absent[str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("Subcommand must be coroutine")
+
+            _description = sub_cmd_description
+            if _description is MISSING:
+                _description = call.__doc__ if call.__doc__ else "No Description Set"
+
             return SlashCommand(
                 name=self.name,
                 description=self.description,
                 group_name=group_name,
                 group_description=group_description,
                 sub_cmd_name=sub_cmd_name,
-                sub_cmd_description=sub_cmd_description,
+                sub_cmd_description=_description,
                 options=options,
                 callback=call,
             )
@@ -620,7 +646,7 @@ def context_menu(
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
-):
+) -> Callable[[Coroutine], ContextMenu]:
     """
     A decorator to declare a coroutine as a Context Menu.
 
@@ -746,7 +772,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
 
     """
 
-    def wrapper(func):
+    def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
             raise Exception("slash_permission decorators must be positioned under a slash_command decorator")
 
@@ -813,7 +839,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 groups[subcommand.group_name]["options"].append(
                     subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)}
                 )
-            else:
+            elif subcommand.is_subcommand:
                 sub_cmds.append(subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)})
         options = list(groups.values()) + sub_cmds
         output_data["options"] = options

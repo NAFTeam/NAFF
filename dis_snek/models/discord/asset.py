@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
 
+__all__ = ["Asset"]
+
 
 @attr.s(slots=True)
 class Asset:
@@ -35,7 +37,8 @@ class Asset:
 
     @property
     def url(self) -> str:
-        return f"{self._url}?size=4096"
+        ext = ".gif" if self.animated else ".png"
+        return f"{self._url}{ext}?size=4096"
 
     @property
     def animated(self) -> bool:
@@ -62,7 +65,7 @@ class Asset:
         if not extension:
             extension = ".gif" if self.animated else ".png"
 
-        url = self.url
+        url = self._url + extension
 
         if size:
             if not ((size != 0) and (size & (size - 1) == 0)):  # if not power of 2
@@ -72,7 +75,6 @@ class Asset:
 
             url = f"{url}?size={size}"
 
-        url = url + extension
         return await self._client.http.request_cdn(url, self)
 
     async def save(

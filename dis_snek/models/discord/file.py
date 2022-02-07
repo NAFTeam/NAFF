@@ -1,9 +1,12 @@
 from typing import Optional, TYPE_CHECKING, Union
+
 import attr
 
 if TYPE_CHECKING:
     from io import IOBase
     from pathlib import Path
+
+__all__ = ["File"]
 
 
 @attr.s()

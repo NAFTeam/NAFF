@@ -3,8 +3,10 @@ import typing
 from datetime import datetime
 from typing import Callable, Union
 
-from dis_snek.client.const import Absent, MISSING
+from dis_snek.client.const import MISSING
 from dis_snek.models.discord.timestamp import Timestamp
+
+__all__ = ["timestamp_converter", "list_converter", "optional"]
 
 
 def timestamp_converter(value: Union[datetime, int, float, str]) -> Timestamp:
@@ -38,7 +40,7 @@ def optional(converter: typing.Callable) -> typing.Any:
         converter: The convertor that is used for the non-None or MISSING
     """
 
-    def optional_converter(val):
+    def optional_converter(val) -> typing.Any:
         if val is None or val is MISSING:
             return val
         return converter(val)

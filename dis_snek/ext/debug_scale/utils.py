@@ -2,11 +2,13 @@ import datetime
 import inspect
 from typing import TYPE_CHECKING
 
-from dis_snek.models import Embed, MaterialColors
 from dis_snek.client.utils.cache import TTLCache
+from dis_snek.models import Embed, MaterialColors
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
+
+__all__ = ["debug_embed", "get_cache_state", "strf_delta"]
 
 
 def debug_embed(title: str, **kwargs) -> Embed:
@@ -39,6 +41,9 @@ def get_cache_state(bot: "Snake") -> str:
             string.append(f"{c_text}: {len(val)} / {val.hard_limit}({val.soft_limit}) ttl:`{val.ttl}`s")
         else:
             string.append(f"{c_text}: {len(val)} / ∞ (no_expire)")
+    # http caches
+    string.append(f"`{'Endpoint - Hashes'.ljust(length)}`: {len(bot.http._endpoints)} / ∞ (no_expire)")
+    string.append(f"`{'Ratelimit Buckets'.ljust(length)}`: {len(bot.http.ratelimit_locks)} / ∞ (weakref expire)")
 
     return "\n".join(string)
 

@@ -8,6 +8,8 @@ from dis_snek.client.errors import AlreadyDeferred, NotFound
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import InteractionContext
 
+__all__ = ["AutoDefer"]
+
 
 @attr.s(kw_only=True, slots=True)
 class AutoDefer:

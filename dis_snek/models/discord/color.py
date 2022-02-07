@@ -5,6 +5,17 @@ from typing import Tuple
 
 import attr
 
+__all__ = [
+    "Color",
+    "BrandColors",
+    "MaterialColors",
+    "FlatUIColors",
+    "Colour",
+    "BrandColours",
+    "MaterialColours",
+    "FlatUIColours",
+]
+
 
 @attr.s(init=False, slots=True)
 class Color:
@@ -60,7 +71,7 @@ class Color:
 
     @property
     def r(self) -> int:
-        return self._get_byte(0)
+        return self._get_byte(2)
 
     @property
     def g(self) -> int:
@@ -68,22 +79,22 @@ class Color:
 
     @property
     def b(self) -> int:
-        return self._get_byte(2)
+        return self._get_byte(0)
 
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        return self._get_byte(0), self._get_byte(1), self._get_byte(2)
-
-    @property
-    def rgb_float(self) -> Tuple[float, float, float]:
-        # noinspection PyTypeChecker
-        return tuple(v / 255 for v in self.rgb)
+        return self.r, self.g, self.b
 
     @rgb.setter
     def rgb(self, value: Tuple[int, int, int]) -> None:
         # noinspection PyTypeChecker
         r, g, b = (self.clamp(v) for v in value)
         self.value = (r << 16) + (g << 8) + b
+
+    @property
+    def rgb_float(self) -> Tuple[float, float, float]:
+        # noinspection PyTypeChecker
+        return tuple(v / 255 for v in self.rgb)
 
     @property
     def hex(self) -> str:

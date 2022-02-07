@@ -10,6 +10,8 @@ from dis_snek.models import PartialEmoji, Reaction
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
+__all__ = ["ReactionEvents"]
+
 log = logging.getLogger(logger_name)
 
 

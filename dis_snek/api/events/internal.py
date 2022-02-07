@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from dis_snek import Snake
     from dis_snek.models.snek.context import ComponentContext
     from dis_snek.models.discord.snowflake import Snowflake_Type
+    from dis_snek.models.discord.guild import Guild
 
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
@@ -55,6 +56,11 @@ class GuildEvent:
     """A base event that adds guild_id."""
 
     guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"), converter=to_snowflake)
+
+    @property
+    def guild(self) -> "Guild":
+        """Guild related to event"""
+        return self.bot.cache.guild_cache.get(self.guild_id)
 
 
 @attr.s(slots=True)
