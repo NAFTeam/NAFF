@@ -1,1 +1,2 @@
-from . import tasks
+from .tasks import *
+from .debug_scale import *
