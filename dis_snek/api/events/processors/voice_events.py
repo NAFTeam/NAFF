@@ -20,4 +20,5 @@ class VoiceEvents(EventMixinTemplate):
     async def _on_raw_voice_state_update(self, event: "RawGatewayEvent") -> None:
         before = copy.copy(self.cache.get_voice_state(event.data["user_id"])) or None
         after = self.cache.place_voice_state_data(event.data)
+
         self.dispatch(events.VoiceStateUpdate(before, after))
