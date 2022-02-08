@@ -23,10 +23,10 @@ class ReactionEvents(EventMixinTemplate):
         if member := event.data.get("member"):
             author = self.cache.place_member_data(event.data.get("guild_id"), member)
         else:
-            author = await self.cache.get_user(event.data.get("user_id"))
+            author = await self.cache.fetch_user(event.data.get("user_id"))
 
         emoji = PartialEmoji.from_dict(event.data.get("emoji"))  # type: ignore
-        message = await self.cache.get_message(
+        message = await self.cache.fetch_message(
             event.data.get("channel_id"), event.data.get("message_id"), request_fallback=False
         )
 
@@ -60,7 +60,7 @@ class ReactionEvents(EventMixinTemplate):
 
             self.cache.message_cache[(message.channel.id, message.id)] = message
         else:
-            message = await self.cache.get_message(event.data.get("channel_id"), event.data.get("message_id"))
+            message = await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("message_id"))
 
         if add:
             self.dispatch(events.MessageReactionAdd(message=message, emoji=emoji, author=author))
@@ -76,6 +76,6 @@ class ReactionEvents(EventMixinTemplate):
         self.dispatch(
             events.MessageReactionRemoveAll(
                 event.data.get("guild_id"),
-                await self.cache.get_message(event.data["channel_id"], event.data["message_id"]),
+                await self.cache.fetch_message(event.data["channel_id"], event.data["message_id"]),
             )
         )

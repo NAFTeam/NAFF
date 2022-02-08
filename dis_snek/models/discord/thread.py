@@ -51,7 +51,7 @@ class ThreadMember(DiscordObject, SendMixin):
         return await self._client.get_user(self._user_id)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = await self._client.cache.get_dm_channel_id(self._user_id)
+        dm_id = await self._client.cache.fetch_dm_channel_id(self._user_id)
         return await self._client.http.create_message(message_payload, dm_id)
 
 

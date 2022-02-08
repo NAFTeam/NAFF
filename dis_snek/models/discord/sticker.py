@@ -71,7 +71,7 @@ class Sticker(StickerItem):
             User object
 
         """
-        return await self._client.cache.get_user(self._user_id)
+        return await self._client.cache.fetch_user(self._user_id)
 
     async def get_guild(self) -> "Guild":
         """
@@ -81,7 +81,7 @@ class Sticker(StickerItem):
             Guild object
 
         """
-        return await self._client.cache.get_guild(self._guild_id)
+        return await self._client.cache.fetch_guild(self._guild_id)
 
     async def edit(
         self,

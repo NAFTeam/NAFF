@@ -62,7 +62,7 @@ class ScheduledEvent(DiscordObject):
         have a creator.
 
         """
-        return await self._client.cache.get_user(self._creator_id) if self._creator_id else None
+        return await self._client.cache.fetch_user(self._creator_id) if self._creator_id else None
 
     @property
     def guild(self) -> "Guild":

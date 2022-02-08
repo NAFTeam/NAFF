@@ -71,7 +71,7 @@ class Role(DiscordObject):
         """
         if self._bot_id is None:
             return None
-        return await self._client.cache.get_member(self._guild_id, self._bot_id)
+        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
 
     @property
     def guild(self) -> "Guild":

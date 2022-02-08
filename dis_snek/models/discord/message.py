@@ -226,12 +226,12 @@ class Message(BaseMessage):
     @property
     async def mention_users(self) -> AsyncGenerator["models.Member", None]:
         for u_id in self._mention_ids:
-            yield await self._client.cache.get_member(self._guild_id, u_id)
+            yield await self._client.cache.fetch_member(self._guild_id, u_id)
 
     @property
     async def mention_roles(self) -> AsyncGenerator["models.Role", None]:
         for r_id in self._mention_roles:
-            yield await self._client.cache.get_role(self._guild_id, r_id)
+            yield await self._client.cache.fetch_role(self._guild_id, r_id)
 
     async def get_referenced_message(self) -> Optional["Message"]:
         """
@@ -243,7 +243,7 @@ class Message(BaseMessage):
         """
         if self._referenced_message_id is None:
             return None
-        return await self._client.cache.get_message(self._channel_id, self._referenced_message_id)
+        return await self._client.cache.fetch_message(self._channel_id, self._referenced_message_id)
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:

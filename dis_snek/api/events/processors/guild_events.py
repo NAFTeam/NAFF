@@ -48,7 +48,7 @@ class GuildEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_guild_update(self, event: "RawGatewayEvent") -> None:
-        before = copy.copy(await self.cache.get_guild(event.data.get("id")))
+        before = copy.copy(await self.cache.fetch_guild(event.data.get("id")))
         self.dispatch(events.GuildUpdate(before or MISSING, self.cache.place_guild_data(event.data)))
 
     @Processor.define()
@@ -57,7 +57,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildUnavailable(
                     event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    await self.cache.fetch_guild(event.data.get("id"), False) or MISSING,
                 )
             )
         else:
@@ -66,7 +66,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildLeft(
                     event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    await self.cache.fetch_guild(event.data.get("id"), False) or MISSING,
                 )
             )
 
@@ -101,7 +101,7 @@ class GuildEvents(EventMixinTemplate):
             GuildEmojisUpdate(
                 guild_id=guild_id,
                 before=[
-                    copy.copy(await self.cache.get_emoji(guild_id, emoji["id"], request_fallback=False))
+                    copy.copy(await self.cache.fetch_emoji(guild_id, emoji["id"], request_fallback=False))
                     for emoji in emojis
                 ]
                 if self.cache.enable_emoji_cache
