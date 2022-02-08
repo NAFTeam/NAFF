@@ -6,7 +6,7 @@ import attr
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
 from dis_snek.models import VoiceState
-from dis_snek.models.discord.channel import BaseChannel, GuildChannel
+from dis_snek.models.discord.channel import BaseChannel, GuildChannel, VoiceChannel
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role
@@ -504,7 +504,7 @@ class GlobalCache:
 
         return self.voice_state_cache.get(user_id)
 
-    def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
+    async def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
         """
         Take json data representing a VoiceState, process it, and cache it.
 
@@ -514,17 +514,33 @@ class GlobalCache:
         Returns:
             The processed VoiceState object
         """
-        # check if the channel_id is None. If that is the case, the user disconnected, and we can delete them from the cache
-        if not data["channel_id"]:
-            user_id = to_snowflake(data["user_id"])
+        user_id = to_snowflake(data["user_id"])
 
+        # try to remove the user from the _voice_member_ids list of the old channel obj, if that exists
+        old_state = self.get_voice_state(user_id)
+        if old_state:
+            old_channel = await self.get_channel(old_state._channel_id, request_fallback=False)
+            if old_channel:
+                try:
+                    old_channel._voice_member_ids.remove(user_id)
+                except ValueError:
+                    pass
+
+        # check if the channel_id is None
+        # if that is the case, the user disconnected, and we can delete them from the cache
+        if not data["channel_id"]:
             if user_id in self.voice_state_cache:
                 self.voice_state_cache.pop(user_id)
             voice_state = None
 
+        # this means the user swapped / joined a channel
         else:
+            # update the _voice_member_ids of the new channel
+            new_channel = await self.get_channel(data["channel_id"])
+            new_channel._voice_member_ids.append(user_id)
+
             voice_state = VoiceState.from_dict(data, self._client)
-            self.voice_state_cache[voice_state.user_id] = voice_state
+            self.voice_state_cache[user_id] = voice_state
 
         return voice_state
 

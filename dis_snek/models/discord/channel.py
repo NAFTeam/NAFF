@@ -1427,6 +1427,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     user_limit: int = attr.ib()
     rtc_region: str = attr.ib(default="auto")
     video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
+    _voice_member_ids: list[Snowflake_Type] = attr.ib(factory=list)
 
     async def edit(
         self,
@@ -1470,8 +1471,12 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     @property
     def members(self) -> List["models.Member"]:
         """Returns a list of members that have access to this voice channel"""
-        # todo: when we support voice states, check if user is within channel
         return [m for m in self.guild.members if Permissions.CONNECT in m.channel_permissions(self)]  # type: ignore
+
+    @property
+    def voice_members(self) -> List["models.Member"]:
+        """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
+        return [self._client.cache.member_cache.get((self.guild.id, member_id)) for member_id in self._voice_member_ids]
 
 
 @define()
