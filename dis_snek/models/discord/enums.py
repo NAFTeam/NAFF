@@ -372,6 +372,7 @@ class Permissions(DiscordIntFlag):  # type: ignore
         | MANAGE_WEBHOOKS
         | MANAGE_EMOJIS_AND_STICKERS
         | MANAGE_THREADS
+        | MODERATE_MEMBERS
     )
 
     # Special members
