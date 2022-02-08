@@ -504,7 +504,7 @@ class GlobalCache:
 
         return self.voice_state_cache.get(user_id)
 
-    def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
+    async def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
         """
         Take json data representing a VoiceState, process it, and cache it.
 
@@ -517,12 +517,14 @@ class GlobalCache:
         user_id = to_snowflake(data["user_id"])
 
         # try to remove the user from the _voice_member_ids list of the old channel obj, if that exists
-        old_state = self.voice_state_cache.get(user_id, None)
+        old_state = self.get_voice_state(user_id)
         if old_state:
-            try:
-                old_state.channel._voice_member_ids.remove(user_id)
-            except ValueError:
-                pass
+            old_channel = await self.get_channel(old_state._channel_id, request_fallback=False)
+            if old_channel:
+                try:
+                    old_channel._voice_member_ids.remove(user_id)
+                except ValueError:
+                    pass
 
         # check if the channel_id is None
         # if that is the case, the user disconnected, and we can delete them from the cache
@@ -533,11 +535,12 @@ class GlobalCache:
 
         # this means the user swapped / joined a channel
         else:
+            # update the _voice_member_ids of the new channel
+            new_channel = await self.get_channel(data["channel_id"])
+            new_channel._voice_member_ids.append(user_id)
+
             voice_state = VoiceState.from_dict(data, self._client)
             self.voice_state_cache[user_id] = voice_state
-
-            # update the _voice_member_ids of the new channel
-            voice_state.channel._voice_member_ids.append(user_id)
 
         return voice_state
 

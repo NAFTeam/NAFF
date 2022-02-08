@@ -1,3 +1,4 @@
+import copy
 from typing import TYPE_CHECKING, Optional, Dict, Any
 
 from dis_snek.client.const import MISSING
@@ -43,7 +44,16 @@ class VoiceState(ClientObject):
     @property
     def channel(self) -> "TYPE_VOICE_CHANNEL":
         """The channel the user is connected to."""
-        return self._client.cache.channel_cache.get(self._channel_id)
+        channel = self._client.cache.channel_cache.get(self._channel_id)
+
+        # make sure the member is showing up as a part of the channel
+        # this is relevant for VoiceStateUpdate.before
+        if self._member_id not in channel._voice_member_ids:
+            # create a copy and add the member to that list
+            channel = copy.copy(channel)
+            channel._voice_member_ids.append(self._member_id)
+
+        return channel
 
     @property
     def member(self) -> "Member":
