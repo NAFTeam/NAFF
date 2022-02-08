@@ -514,7 +514,6 @@ class GlobalCache:
         Returns:
             The processed VoiceState object
         """
-
         user_id = to_snowflake(data["user_id"])
 
         # try to remove the user from the _voice_member_ids list of the old channel obj, if that exists
