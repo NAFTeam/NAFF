@@ -273,7 +273,7 @@ class Guild(BaseGuild):
     @property
     def bitrate_limit(self) -> int:
         """The maximum bitrate for this guild."""
-        base = 128000 if "VIP_REGIONS" in self.features else 9600024
+        base = 128000 if "VIP_REGIONS" in self.features else 96000
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
 
     @property
