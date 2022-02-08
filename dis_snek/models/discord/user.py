@@ -439,11 +439,7 @@ class Member(DiscordObject, _SendDMMixin):
             roles: The role(s) to check whether the user has it.
 
         """
-        for role in roles:
-            role_id = to_snowflake(role)
-            if role_id not in self._role_ids:
-                return False
-        return True
+        return all(to_snowflake(role) in self._role_ids for role in roles)
 
     async def timeout(
         self,
