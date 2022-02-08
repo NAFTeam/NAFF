@@ -125,7 +125,7 @@ class SnakeBotUser(User):
     bio: Optional[str] = field(default=None, metadata={"docs": ""})
     flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": ""})
 
-    _guild_ids: Set[str] = field(factory=set, metadata={"docs": ""})
+    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": ""})
 
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
