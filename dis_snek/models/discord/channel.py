@@ -159,7 +159,7 @@ class MessageableMixin(SendMixin):
 
         """
         message_id = to_snowflake(message_id)
-        message: "models.Message" = await self._client.cache.get_message(self.id, message_id)
+        message: "models.Message" = await self._client.cache.fetch_message(self.id, message_id)
         return message
 
     def history(
@@ -721,7 +721,7 @@ class DMGroup(DMChannel):
 
     async def get_owner(self) -> "models.User":
         """Get the owner of this DM group"""
-        return await self._client.cache.get_user(self.owner_id)
+        return await self._client.cache.fetch_user(self.owner_id)
 
     async def add_recipient(
         self, user: Union["models.User", Snowflake_Type], access_token: str, nickname: Absent[Optional[str]] = MISSING
@@ -734,7 +734,7 @@ class DMGroup(DMChannel):
             access_token: access token of a user that has granted your app the gdm.join scope
             nickname: nickname to apply to the user being added
         """
-        user = await self._client.cache.get_user(user)
+        user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
         self.recipients.append(user)
 
@@ -745,7 +745,7 @@ class DMGroup(DMChannel):
         Args:
             user: The user to remove
         """
-        user = await self._client.cache.get_user(user)
+        user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_remove_recipient(self.id, user.id)
         self.recipients.remove(user)
 

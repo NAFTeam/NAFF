@@ -36,7 +36,7 @@ class _SendDMMixin(SendMixin):
     id: "Snowflake_Type"
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = await self._client.cache.get_dm_channel_id(self.id)
+        dm_id = await self._client.cache.fetch_dm_channel_id(self.id)
         return await self._client.http.create_message(message_payload, dm_id)
 
 
@@ -77,7 +77,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     async def get_dm(self) -> "DM":
         """Get the DM channel associated with this user."""
-        return await self._client.cache.get_channel(self.id)  # noqa
+        return await self._client.cache.fetch_channel(self.id)  # noqa
 
     @property
     def mutual_guilds(self) -> List["Guild"]:

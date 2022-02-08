@@ -1120,12 +1120,12 @@ class Snake(
                     cls = self.interaction_context.from_dict(data, self)
 
             if not cls.channel:
-                cls.channel = await self.cache.get_channel(data["channel_id"])
+                cls.channel = await self.cache.fetch_channel(data["channel_id"])
 
         else:
             cls = self.message_context.from_message(self, data)
             if not cls.channel:
-                cls.channel = await self.cache.get_channel(data._channel_id)
+                cls.channel = await self.cache.fetch_channel(data._channel_id)
 
         return cls
 
@@ -1395,7 +1395,7 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_guild(guild_id)
+            return await self.cache.fetch_guild(guild_id)
         except NotFound:
             return None
 
@@ -1438,7 +1438,7 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_channel(channel_id)
+            return await self.cache.fetch_channel(channel_id)
         except NotFound:
             return None
 
@@ -1458,7 +1458,7 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_user(user_id)
+            return await self.cache.fetch_user(user_id)
         except NotFound:
             return None
 
@@ -1479,7 +1479,7 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_member(guild_id, user_id)
+            return await self.cache.fetch_member(guild_id, user_id)
         except NotFound:
             return None
 

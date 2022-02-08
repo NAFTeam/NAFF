@@ -31,11 +31,11 @@ class UserEvents(EventMixinTemplate):
 
         if member := event.data.get("member"):
             author = self.cache.place_member_data(event.data.get("guild_id"), member)
-            guild = await self.cache.get_guild(event.data.get("guild_id"))
+            guild = await self.cache.fetch_guild(event.data.get("guild_id"))
         else:
-            author = await self.cache.get_user(event.data.get("user_id"))
+            author = await self.cache.fetch_user(event.data.get("user_id"))
 
-        channel = await self.cache.get_channel(event.data.get("channel_id"))
+        channel = await self.cache.fetch_channel(event.data.get("channel_id"))
 
         self.dispatch(
             events.TypingStart(
@@ -49,7 +49,7 @@ class UserEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_presence_update(self, event: "RawGatewayEvent") -> None:
         g_id = to_snowflake(event.data["guild_id"])
-        user = await self.cache.get_user(event.data["user"]["id"], request_fallback=False)
+        user = await self.cache.fetch_user(event.data["user"]["id"], request_fallback=False)
         if user:
             status = Status[event.data["status"].upper()]
             activities = [Activity.from_dict(a) for a in event.data.get("activities")]

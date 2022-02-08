@@ -317,11 +317,11 @@ class Guild(BaseGuild):
         Returns:
             Member object or None
         """
-        return await self._client.cache.get_member(self.id, member_id)
+        return await self._client.cache.fetch_member(self.id, member_id)
 
     async def get_owner(self) -> "models.Member":
         # maybe precache owner instead of using `get_owner`
-        return await self._client.cache.get_member(self.id, self._owner_id)
+        return await self._client.cache.fetch_member(self.id, self._owner_id)
 
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
@@ -531,7 +531,7 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-        return await self._client.cache.get_emoji(self.id, emoji_id)
+        return await self._client.cache.fetch_emoji(self.id, emoji_id)
 
     async def create_channel(
         self,
@@ -942,7 +942,7 @@ class Guild(BaseGuild):
             A role object or None if the role is not found.
 
         """
-        return await self._client.cache.get_role(self.id, role_id)
+        return await self._client.cache.fetch_role(self.id, role_id)
 
     async def create_role(
         self,
