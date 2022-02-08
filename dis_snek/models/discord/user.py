@@ -391,15 +391,19 @@ class Member(DiscordObject, _SendDMMixin):
 
         return permissions
 
-    async def edit_nickname(self, new_nickname: str) -> dict:
+    async def edit_nickname(self, new_nickname: Absent[str] = MISSING, reason: Absent[str] = MISSING) -> None:
         """
         Change the user's nickname.
 
         Args:
-            new_nickname: The new nickname to apply.
+            new_nickname: The new nickname to apply
+            reason: The reason for this change
+
+        Note:
+            Leave `new_nickname` empty to clean user's nickname
 
         """
-        return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
+        await self._client.http.modify_current_member(self._guild_id, nickname=new_nickname, reason=reason)
 
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """

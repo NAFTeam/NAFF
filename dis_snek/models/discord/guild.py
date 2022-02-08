@@ -335,6 +335,10 @@ class Guild(BaseGuild):
         """
         return self._owner_id == to_snowflake(user)
 
+    async def edit_nickname(self, new_nickname: Absent[str] = MISSING, reason: Absent[str] = MISSING) -> None:
+        """Alias for me.edit_nickname"""
+        await self.me.edit_nickname(new_nickname, reason=reason)
+
     async def chunk_guild(self, wait=True, presences=False) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
