@@ -161,7 +161,7 @@ class GlobalCache:
         """
         guild_id = to_snowflake(guild_id)
         is_user = "member" in data
-        user_id = to_snowflake(data["id"] if is_user else data["user"]["id"])
+        user_id = to_snowflake(data["user"]["id"] if "user" in data else data["id"])
 
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
