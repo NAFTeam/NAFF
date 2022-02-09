@@ -30,8 +30,17 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.message import MessageReference
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
+    from dis_snek.models.discord.modal import Modal
 
-__all__ = ["Resolved", "Context", "InteractionContext", "ComponentContext", "AutocompleteContext", "MessageContext"]
+__all__ = [
+    "Resolved",
+    "Context",
+    "InteractionContext",
+    "ComponentContext",
+    "AutocompleteContext",
+    "ModalContext",
+    "MessageContext",
+]
 
 log = logging.getLogger(logger_name)
 
@@ -186,7 +195,6 @@ class _BaseInteractionContext(Context):
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
-
             for option in options:
                 value = option.get("value")
 
@@ -221,6 +229,24 @@ class _BaseInteractionContext(Context):
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
+        """
+        Respond using a modal.
+
+        Args:
+            modal: The modal to respond with
+
+        Returns:
+            The modal used.
+
+        """
+        payload = modal.to_dict() if not isinstance(modal, dict) else modal
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+        self.responded = True
+        return modal
 
 
 @define
@@ -523,6 +549,31 @@ class AutocompleteContext(_BaseInteractionContext):
 
         payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": processed_choices}}
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+
+@define
+class ModalContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+        new_cls = super().from_dict(data, client)
+
+        new_cls.kwargs = {
+            comp["components"][0]["custom_id"]: comp["components"][0]["value"] for comp in data["data"]["components"]
+        }
+        new_cls.custom_id = data["data"]["custom_id"]
+        return new_cls
+
+    @property
+    def responses(self) -> dict[str, str]:
+        """
+        Get the responses to this modal.
+
+        Returns:
+            A dictionary of responses. Keys are the custom_ids of your components.
+        """
+        return self.kwargs
 
 
 @define

@@ -124,6 +124,7 @@ class CallbackTypes(IntEnum):
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
     AUTOCOMPLETE_RESULT = 8
+    MODAL = 9
 
 
 @attr.s(slots=True, hash=True)
