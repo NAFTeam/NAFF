@@ -1214,6 +1214,9 @@ class Snake(
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
 
+        if not message.content:
+            return
+        
         if not message.author.bot:
             prefix = await self.get_prefix(message)
 
