@@ -64,7 +64,7 @@ class EmbedField(DictSerializationMixin):
 
 
 @attr.s(slots=True)
-class EmbedAuthor:
+class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
 
@@ -91,7 +91,7 @@ class EmbedAuthor:
 
 
 @attr.s(slots=True)
-class EmbedAttachment:  # thumbnail or image or video
+class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
 
@@ -134,7 +134,7 @@ class EmbedFooter(DictSerializationMixin):
 
 
 @attr.s(slots=True)
-class EmbedProvider:
+class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
 
@@ -173,20 +173,20 @@ class Embed(DictSerializationMixin):
     """Timestamp of embed content"""
     fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField.from_dict), repr=True)
     """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
-    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
+    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
-    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The thumbnail of the embed"""
-    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The image of the embed"""
     video: Optional[EmbedAttachment] = field(
-        default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
+        default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
     footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.from_dict))
     """The footer of the embed"""
     provider: Optional[EmbedProvider] = field(
-        default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta
+        default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
 
