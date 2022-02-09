@@ -386,9 +386,20 @@ class GuildRequests:
         before: Optional["Snowflake_Type"],
         after: Optional["Snowflake_Type"],
         limit: int = 100,
-    ):
+    ) -> dict:
         """
-        Returns a list of audit log objects n shit
+        Returns a list of audit log objects
+
+        parameters:
+            guild_id: The ID of the guild to query
+            user_id: filter by user ID
+            action_type: filter by action type
+            before: snowflake to get entries before
+            after: snowflake to get entries after
+            limit: max number of entries to get
+
+        returns:
+            List of audit log objects
         """
         query_params = urlencode(
             dict_filter_missing(

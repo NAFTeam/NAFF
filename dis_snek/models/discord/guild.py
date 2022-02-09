@@ -443,11 +443,10 @@ class Guild(BaseGuild):
 
         ??? Hint "Example Usage:"
             ```python
-                async for entry in guild.audit_log_history(limit=0):
-                    entry: "AuditLogEntry"
-                    if entry.changes:
-                        for change in entry.changes:
-                            print(change)
+            async for entry in guild.audit_log_history(limit=0):
+                entry: "AuditLogEntry"
+                if entry.changes:
+                    # ...
             ```
             or
             ```python
@@ -460,7 +459,6 @@ class Guild(BaseGuild):
             AuditLogHistory (AsyncIterator)
 
         """
-
         return AuditLogHistory(self, user_id, action_type, before, after, limit)
 
     async def edit(
