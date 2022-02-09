@@ -7,7 +7,7 @@ from dis_snek.models.snek.application_commands import SlashCommandOption
 
 if TYPE_CHECKING:
     from dis_snek.models.snek import SlashCommandChoice
-    from dis_snek.models.discord import User, Member, Role, BaseChannel, ChannelTypes
+    from dis_snek.models.discord import User, Member, Role, BaseChannel, ChannelTypes, Attachment
 
 
 def slash_str_option(
@@ -229,4 +229,22 @@ def slash_mentionable_option(
         choices=choices,
         type=models.OptionTypes.MENTIONABLE,
     )
+    return option  # type: ignore
+
+
+def slash_attachment_option(
+    description: str,
+    required: bool = False,
+) -> Type["Attachment"]:
+    """
+    Annotates an argument as an attachment type slash command option.
+
+    Args:
+        description: The description of your option
+        required: Is this option required?
+    """
+    option = SlashCommandOption(
+        name="placeholder", description=description, required=required, type=models.OptionTypes.ATTACHMENT
+    )
+
     return option  # type: ignore
