@@ -13,6 +13,7 @@ from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
+from dis_snek.models.discord.message import Attachment
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
 
@@ -54,6 +55,9 @@ class Resolved:
     messages: Dict["Snowflake_Type", "Message"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
     )
+    attachments: Dict["Snowflake_Type", "Attachment"] = attr.ib(
+        factory=dict, metadata=docs("A dictionary of attachments tied to the interaction")
+    )
 
     @classmethod
     def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
@@ -80,6 +84,10 @@ class Resolved:
         if messages := data.get("messages"):
             for key, _msg in messages.items():
                 new_cls.messages[key] = client.cache.place_message_data(_msg)
+
+        if attachments := data.get("attachments"):
+            for key, _attach in attachments.items():
+                new_cls.attachments[key] = Attachment.from_dict(_attach, client)
 
         return new_cls
 
@@ -204,6 +212,9 @@ class _BaseInteractionContext(Context):
                             value = user
                         elif role := self._client.cache.role_cache.get(snow):
                             value = role
+
+                    case OptionTypes.ATTACHMENT:
+                        value = self.resolved.attachments.get(value)
 
                 if option.get("focused", False):
                     self.focussed_option = option.get("name")
