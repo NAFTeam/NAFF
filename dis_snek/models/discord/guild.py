@@ -1436,6 +1436,7 @@ class AuditLogChange(ClientObject):
 
 @define()
 class AuditLogEntry(ClientObject):
+    
     id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
     target_id: Optional["Snowflake_Type"] = attr.ib(converter=optional(to_snowflake))
     user_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
@@ -1453,6 +1454,7 @@ class AuditLogEntry(ClientObject):
 
 @define()
 class AuditLog(ClientObject):
+    """ Contains entries and other data given from selected """
     entries: Optional[List["AuditLogEntry"]] = attr.ib(default=MISSING)
     scheduled_events: Optional[List["models.ScheduledEvent"]] = attr.ib(default=MISSING)
     integrations: Optional[List["GuildIntegration"]] = attr.ib(default=MISSING)

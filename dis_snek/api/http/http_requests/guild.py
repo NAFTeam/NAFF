@@ -388,7 +388,7 @@ class GuildRequests:
         limit: int = 100,
     ) -> dict:
         """
-        Returns a list of audit log objects
+        Get the audit log for a guild.
 
         parameters:
             guild_id: The ID of the guild to query
@@ -399,7 +399,7 @@ class GuildRequests:
             limit: max number of entries to get
 
         returns:
-            List of audit log objects
+            audit log object for the guild
         """
         query_params = urlencode(
             dict_filter_missing(
