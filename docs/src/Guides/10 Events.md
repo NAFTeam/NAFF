@@ -56,6 +56,11 @@ There are two ways to register events. **Decorators** are the recommended way to
     async def my_function(event: ChannelCreate):
         # you can also pass the event name as a string
         ...
+
+    @listen()
+    async def my_function(event: ChannelCreate):
+        # you can also use the typehint of `event`
+        ...
     ```
 
 === ":two: Manual Registration"
