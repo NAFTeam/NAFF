@@ -1216,7 +1216,7 @@ class Snake(
 
         if not message.content:
             return
-        
+
         if not message.author.bot:
             prefix = await self.get_prefix(message)
 
