@@ -57,7 +57,7 @@ class Modal(DictSerializationMixin):
         if self.custom_id is MISSING:
             self.custom_id = str(uuid.uuid4())
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         data = super().to_dict()
         components = [{"type": ComponentTypes.ACTION_ROW, "components": [c]} for c in data.get("components", [])]
         return {

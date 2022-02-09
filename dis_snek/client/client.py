@@ -692,7 +692,7 @@ class Snake(
         """
         author = to_snowflake(author) if author else None
 
-        def predicate(event):
+        def predicate(event) -> bool:
             if modal.custom_id != event.context.custom_id:
                 return False
             if author and author != to_snowflake(event.context.author):
