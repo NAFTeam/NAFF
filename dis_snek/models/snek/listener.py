@@ -32,7 +32,14 @@ class Listener:
             name = event_name
 
             if name is MISSING:
-                name = coro.__name__
+                if not coro.__name__.startswith("_"):
+                    for typehint in coro.__annotations__.values():
+                        if inspect.isclass(typehint) and issubclass(typehint, BaseEvent):
+                            name = typehint.__name__
+                            break
+
+                if not name:
+                    name = coro.__name__
 
             elif inspect.isclass(name) and issubclass(name, BaseEvent):
                 name = name.__name__
