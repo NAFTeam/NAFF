@@ -1,7 +1,7 @@
 # Creating Context Menus
 
 Context menus are interactions under the hood. Defining them is very similar.
-Context menus work of `ctx.target_id` which contains the id of the object the user interacted with.
+Context menus work of `ctx.target` which contains the object the user interacted with.
 
 You can also define `scopes` and `permissions` for them, just like with interactions.
 
@@ -16,7 +16,7 @@ This example repeats the selected the message:
 ```python
 @context_menu(name="repeat", context_type=CommandTypes.MESSAGE)
 async def repeat(ctx: InteractionContext):
-    message = await ctx.channel.fetch_message(ctx.target_id)
+    message: Message = ctx.target
     await ctx.send(message.content)
 ```
 
@@ -29,6 +29,6 @@ This example pings the user:
 ```python
 @context_menu(name="ping", context_type=CommandTypes.USER)
 async def ping(ctx: InteractionContext):
-    member = await ctx.guild.fetch_member(ctx.target_id)
+    member: Member = ctx.target
     await ctx.send(member.mention)
 ```

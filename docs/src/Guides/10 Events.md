@@ -44,6 +44,20 @@ There are two ways to register events. **Decorators** are the recommended way to
     bot.start("Put your token here")
     ```
 
+    You can also use `@listen` with any function names:
+
+    ```python
+    @listen(ChannelCreate)
+    async def my_function(event: ChannelCreate):
+        # you can pass the event
+        ...
+
+    @listen("on_channel_create")
+    async def my_function(event: ChannelCreate):
+        # you can also pass the event name as a string
+        ...
+    ```
+
 === ":two: Manual Registration"
     You can also register the events manually. This gives you the most flexibility, but it's not the cleanest.
 

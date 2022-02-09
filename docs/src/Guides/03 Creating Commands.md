@@ -88,16 +88,17 @@ This will show up in discord as `/base group command`. There are two ways to add
 
 Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.OptionTypes):
 
-| Option Type | Return Type | Description |
-| ------------ | ------------- | ------------- |
-| `OptionTypes.STRING` | `str` | Limit the input to a string.  |
-| `OptionTypes.INTEGER` | `int` |  Limit the input to a integer.  |
-| `OptionTypes.NUMBER` | `float` |  Limit the input to a float. |
-| `OptionTypes.BOOLEAN` | `bool` |  Let the user choose either `True` or `False`. |
-| `OptionTypes.USER` | `Member` in guilds, else `User` |  Let the user choose a discord user from an automatically-generated list of options.  |
-| `OptionTypes.CHANNEL` | `GuildChannel` in guilds, else `DMChannel` |  Let the user choose a discord channel from an automatically-generated list of options.  |
-| `OptionTypes.ROLE` | `Role` |  Let the user choose a discord role from an automatically-generated list of options.  |
-| `OptionTypes.MENTIONABLE` | `DiscordObject` |  Let the user chose any discord mentionable from an automatically generated list of options.  |
+| Option Type               | Return Type                                | Description                                                                                 |
+|---------------------------|--------------------------------------------|---------------------------------------------------------------------------------------------|
+| `OptionTypes.STRING`      | `str`                                      | Limit the input to a string.                                                                |
+| `OptionTypes.INTEGER`     | `int`                                      | Limit the input to a integer.                                                               |
+| `OptionTypes.NUMBER`      | `float`                                    | Limit the input to a float.                                                                 |
+| `OptionTypes.BOOLEAN`     | `bool`                                     | Let the user choose either `True` or `False`.                                               |
+| `OptionTypes.USER`        | `Member` in guilds, else `User`            | Let the user choose a discord user from an automatically-generated list of options.         |
+| `OptionTypes.CHANNEL`     | `GuildChannel` in guilds, else `DMChannel` | Let the user choose a discord channel from an automatically-generated list of options.      |
+| `OptionTypes.ROLE`        | `Role`                                     | Let the user choose a discord role from an automatically-generated list of options.         |
+| `OptionTypes.MENTIONABLE` | `DiscordObject`                            | Let the user chose any discord mentionable from an automatically generated list of options. |
+| `OptionTypes.ATTACHMENT`  | `Attachment`                               | Let the user upload an attachment.                                                          |
 
 Now that you know all the options you have for options, you can opt into adding options to your interaction.
 
