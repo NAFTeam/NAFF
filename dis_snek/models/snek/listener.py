@@ -32,11 +32,14 @@ class Listener:
             name = event_name
 
             if name is MISSING:
-                if not coro.__name__.startswith("_"):
-                    for typehint in coro.__annotations__.values():
-                        if inspect.isclass(typehint) and issubclass(typehint, BaseEvent):
-                            name = typehint.__name__
-                            break
+                for typehint in coro.__annotations__.values():
+                    if (
+                        inspect.isclass(typehint)
+                        and issubclass(typehint, BaseEvent)
+                        and typehint.__name__ != "RawGatewayEvent"
+                    ):
+                        name = typehint.__name__
+                        break
 
                 if not name:
                     name = coro.__name__
