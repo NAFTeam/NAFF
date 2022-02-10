@@ -115,6 +115,14 @@ class User(BaseUser):
 
         return data
 
+    @property
+    def member_instances(self) -> List["Member"]:
+        """Returns the member object for all guilds both the bot and the user are in. Note: This will only be accurate if the guild members are cached internally"""
+        member_objs = [
+            self._client.cache.get_member(guild_id=guild.id, user_id=self.id) for guild in self._client.guilds
+        ]
+        return [member for member in member_objs if member]
+
 
 @define()
 class SnakeBotUser(User):
