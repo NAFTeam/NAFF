@@ -727,7 +727,7 @@ class GlobalCache:
         # this means the user swapped / joined a channel
         else:
             # update the _voice_member_ids of the new channel
-            new_channel = await self.get_channel(data["channel_id"])
+            new_channel = self.get_channel(data["channel_id"])
             # noinspection PyProtectedMember
             new_channel._voice_member_ids.append(user_id)
 
