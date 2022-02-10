@@ -81,9 +81,10 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @property
     def mutual_guilds(self) -> List["Guild"]:
-        """Get a list of mutual guilds shared between this user and the client."""
-        # should user_guilds be its own property?
-        return [g for g in self._client.guilds if g.id in self.user_guilds]
+        """Get a list of mutual guilds shared between this user and the client. Note: This will only be accurate if the guild members are cached internally"""
+        return [
+            guild for guild in self._client.guilds if self._client.cache.get_member(guild_id=guild.id, user_id=self.id)
+        ]
 
 
 @define()
