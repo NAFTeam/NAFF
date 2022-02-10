@@ -44,7 +44,7 @@ As with `bot.wait_for_component()`, `bot.wait_for_modal()` supports timeouts. Ch
 ```python
 ...
 modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
-await ctx.send(f"""You input {modal_ctx.responses["short_text"]} and {modal_ctx.responses["long_text"]}""")
+await modal_ctx.send(f"""You input {modal_ctx.responses["short_text"]} and {modal_ctx.responses["long_text"]}""")
 ```
 
 `bot.wait_for_modal()` returns `ModalContext` which, to nobodies surprise, you need to respond to as well. Respond to it by utilising `modal_ctx.send()`, as you are probably already used to.
