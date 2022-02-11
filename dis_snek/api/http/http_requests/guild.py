@@ -1,12 +1,15 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.client.const import Absent, MISSING
-from dis_snek.client.utils.serializer import dict_filter_none
+from dis_snek.client.utils.serializer import dict_filter_missing, dict_filter_none
+
+from urllib.parse import urlencode
 
 from ..route import Route
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
+    from dis_snek.models.discord.enums import AuditLogEventType
 
 
 class GuildRequests:
@@ -374,6 +377,38 @@ class GuildRequests:
 
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/roles/{role_id}"), reason=reason)
+
+    async def get_audit_log(
+        self,
+        guild_id: "Snowflake_Type",
+        user_id: Optional["Snowflake_Type"],
+        action_type: Optional["AuditLogEventType"],
+        before: Optional["Snowflake_Type"],
+        after: Optional["Snowflake_Type"],
+        limit: int = 100,
+    ) -> dict:
+        """
+        Get the audit log for a guild.
+
+        parameters:
+            guild_id: The ID of the guild to query
+            user_id: filter by user ID
+            action_type: filter by action type
+            before: snowflake to get entries before
+            after: snowflake to get entries after
+            limit: max number of entries to get
+
+        returns:
+            audit log object for the guild
+        """
+        query_params = urlencode(
+            dict_filter_missing(
+                dict_filter_none(
+                    {"action_type": action_type, "user_id": user_id, "limit": limit, "before": before, "after": after}
+                )
+            )
+        )
+        return await self.request(Route("GET", f"/guilds/{guild_id}/audit-logs?{query_params}"))
 
     async def get_guild_voice_regions(self, guild_id: "Snowflake_Type") -> List[dict]:
         """
