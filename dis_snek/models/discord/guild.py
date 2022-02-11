@@ -78,12 +78,12 @@ class BaseGuild(DiscordObject):
     @classmethod
     def _process_dict(cls, data, client):
         if icon_hash := data.pop("icon", None):
-            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}.png", icon_hash)
+            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
         if splash_hash := data.pop("splash", None):
-            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}.png", splash_hash)
+            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}", splash_hash)
         if disco_splash := data.pop("discovery_splash", None):
             data["discovery_splash"] = models.Asset.from_path_hash(
-                client, f"discovery-splashes/{data['id']}/{{}}.png", disco_splash
+                client, f"discovery-splashes/{data['id']}/{{}}", disco_splash
             )
         return data
 
