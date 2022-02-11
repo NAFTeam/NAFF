@@ -432,7 +432,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["Guild"]:
+    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on its ID.
 
