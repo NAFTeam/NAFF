@@ -81,7 +81,12 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     @property
     def mutual_guilds(self) -> List["Guild"]:
-        """Get a list of mutual guilds shared between this user and the client. Note: This will only be accurate if the guild members are cached internally"""
+        """
+        Get a list of mutual guilds shared between this user and the client.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
         return [
             guild for guild in self._client.guilds if self._client.cache.get_member(guild_id=guild.id, user_id=self.id)
         ]
@@ -118,7 +123,12 @@ class User(BaseUser):
 
     @property
     def member_instances(self) -> List["Member"]:
-        """Returns the member object for all guilds both the bot and the user are in. Note: This will only be accurate if the guild members are cached internally"""
+        """
+        Returns the member object for all guilds both the bot and the user are in.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
         member_objs = [
             self._client.cache.get_member(guild_id=guild.id, user_id=self.id) for guild in self._client.guilds
         ]
