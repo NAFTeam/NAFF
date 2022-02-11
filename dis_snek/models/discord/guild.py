@@ -1,9 +1,12 @@
 import asyncio
+from collections import namedtuple
 import logging
 import time
 from io import IOBase
 from pathlib import Path
 from typing import List, Optional, Union, Set
+from dis_snek.models.snek import AsyncIterator
+
 
 import attr
 from aiohttp import FormData
@@ -28,6 +31,7 @@ from .enums import (
     IntegrationExpireBehaviour,
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
+    AuditLogEventType,
 )
 from .snowflake import to_snowflake, Snowflake_Type
 
@@ -40,6 +44,10 @@ __all__ = [
     "GuildTemplate",
     "GuildWelcomeChannel",
     "GuildIntegration",
+    "AuditLogChange",
+    "AuditLogEntry",
+    "AuditLog",
+    "AuditLogHistory",
 ]
 
 log = logging.getLogger(logger_name)
@@ -70,12 +78,12 @@ class BaseGuild(DiscordObject):
     @classmethod
     def _process_dict(cls, data, client):
         if icon_hash := data.pop("icon", None):
-            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}.png", icon_hash)
+            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
         if splash_hash := data.pop("splash", None):
-            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}.png", splash_hash)
+            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}", splash_hash)
         if disco_splash := data.pop("discovery_splash", None):
             data["discovery_splash"] = models.Asset.from_path_hash(
-                client, f"discovery-splashes/{data['id']}/{{}}.png", disco_splash
+                client, f"discovery-splashes/{data['id']}/{{}}", disco_splash
             )
         return data
 
@@ -389,6 +397,69 @@ class Guild(BaseGuild):
             self.chunk_cache = []
             log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
+
+    async def get_audit_log(
+        self,
+        user_id: Optional["Snowflake_Type"] = MISSING,
+        action_type: Optional["AuditLogEventType"] = MISSING,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        limit: int = 100,
+    ) -> "AuditLog":
+        """
+        Get section of the audit log for this guild.
+
+        Args:
+            user_id: The ID of the user to filter by
+            action_type: The type of action to filter by
+            before: The ID of the entry to start at
+            after: The ID of the entry to end at
+            limit: The number of entries to return
+
+        Returns:
+            An AuditLog object
+        """
+        data = await self._client.http.get_audit_log(self.id, user_id, action_type, before, after, limit)
+        return AuditLog.from_dict(data, self._client)
+
+    def audit_log_history(
+        self,
+        user_id: Optional["Snowflake_Type"] = MISSING,
+        action_type: Optional["AuditLogEventType"] = MISSING,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        limit: int = 100,
+    ) -> "AuditLogHistory":
+        """
+        Get an async iterator for the history of the audit log.
+
+        Parameters:
+            guild (:class:`Guild`): The guild to search through.
+            user_id (:class:`Snowflake_Type`): The user ID to search for.
+            action_type (:class:`AuditLogEventType`): The action type to search for.
+            before: get entries before this message ID
+            after: get entries after this message ID
+            limit: The maximum number of entries to return (set to 0 for no limit)
+
+        ??? Hint "Example Usage:"
+            ```python
+            async for entry in guild.audit_log_history(limit=0):
+                entry: "AuditLogEntry"
+                if entry.changes:
+                    # ...
+            ```
+            or
+            ```python
+            history = guild.audit_log_history(limit=250)
+            # Flatten the async iterator into a list
+            entries = await history.flatten()
+            ```
+
+        Returns:
+            AuditLogHistory (AsyncIterator)
+
+        """
+        return AuditLogHistory(self, user_id, action_type, before, after, limit)
 
     async def edit(
         self,
@@ -1354,3 +1425,96 @@ class GuildIntegration(DiscordObject):
     async def delete(self, reason: Absent[str] = MISSING) -> None:
         """Delete this guild integration."""
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)
+
+
+@define()
+class AuditLogChange(ClientObject):
+    key: str = attr.ib()
+    new_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attr.ib(default=MISSING)
+    old_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attr.ib(default=MISSING)
+
+
+@define()
+class AuditLogEntry(ClientObject):
+
+    id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    target_id: Optional["Snowflake_Type"] = attr.ib(converter=optional(to_snowflake))
+    user_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    action_type: "AuditLogEventType" = attr.ib(converter=to_snowflake)
+    changes: Optional[List[AuditLogChange]] = attr.ib(default=MISSING)
+    options: Optional[Union["Snowflake_Type", str]] = attr.ib(default=MISSING)
+    reason: Optional[str] = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data, client) -> "AuditLogEntry":
+        if changes := data.get("changes", None):
+            data["changes"] = AuditLogChange.from_list(changes, client)
+        return super().from_dict(data, client)
+
+
+@define()
+class AuditLog(ClientObject):
+    """Contains entries and other data given from selected"""
+
+    entries: Optional[List["AuditLogEntry"]] = attr.ib(default=MISSING)
+    scheduled_events: Optional[List["models.ScheduledEvent"]] = attr.ib(default=MISSING)
+    integrations: Optional[List["GuildIntegration"]] = attr.ib(default=MISSING)
+    threads: Optional[List["models.ThreadChannel"]] = attr.ib(default=MISSING)
+    users: Optional[List["models.User"]] = attr.ib(default=MISSING)
+    webhooks: Optional[List["models.Webhook"]] = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data, client) -> "AuditLog":
+        if entries := data.get("audit_log_entries", None):
+            data["entries"] = AuditLogEntry.from_list(entries, client)
+        if scheduled_events := data.get("guild_scheduled_events", None):
+            data["scheduled_events"] = models.ScheduledEvent.from_list(scheduled_events, client)
+        if integrations := data.get("integrations", None):
+            data["integrations"] = GuildIntegration.from_list(integrations, client)
+        if threads := data.get("threads", None):
+            data["threads"] = models.ThreadChannel.from_list(threads, client)
+        if users := data.get("users", None):
+            data["users"] = models.User.from_list(users, client)
+        if webhooks := data.get("webhooks", None):
+            data["webhooks"] = models.Webhook.from_list(webhooks, client)
+        return super().from_dict(data, client)
+
+
+class AuditLogHistory(AsyncIterator):
+    """
+    An async iterator for searching through a audit log's entry history.
+
+    Args:
+        guild (:class:`Guild`): The guild to search through.
+        user_id (:class:`Snowflake_Type`): The user ID to search for.
+        action_type (:class:`AuditLogEventType`): The action type to search for.
+        before: get messages before this message ID
+        after: get messages after this message ID
+        limit: The maximum number of entries to return (set to 0 for no limit)
+
+    """
+
+    def __init__(self, guild, user_id=None, action_type=None, before=None, after=None, limit=50):
+        self.guild: "Guild" = guild
+        self.user_id: Snowflake_Type = user_id
+        self.action_type: "AuditLogEventType" = action_type
+        self.before: Snowflake_Type = before
+        self.after: Snowflake_Type = after
+        super().__init__(limit)
+
+    async def fetch(self) -> List["AuditLog"]:
+        if self.after:
+            if not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.after
+            log = await self.guild.get_audit_log(limit=self.get_limit, after=self.last.id)
+            entries = log.entries if log.entries else []
+
+        else:
+            if self.before and not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.before
+
+            log = await self.guild.get_audit_log(limit=self.get_limit, before=self.last.id)
+            entries = log.entries if log.entries else []
+        return entries

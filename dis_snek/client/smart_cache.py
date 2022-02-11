@@ -306,11 +306,11 @@ class GlobalCache:
 
         return False
 
-    async def get_user_guild_ids(
+    async def fetch_user_guild_ids(
         self, user_id: "Snowflake_Type", calculation_fallback: bool = True, request_fallback: bool = True
     ) -> List["Snowflake_Type"]:
         """
-        Get a list of IDs for the guilds a user has joined.
+        Fetch a list of IDs for the guilds a user has joined.
 
         Args:
             user_id: The ID of the user
@@ -330,6 +330,18 @@ class GlobalCache:
             ]
             self.user_guilds[user_id] = set(guild_ids)
         return guild_ids
+
+    def get_user_guild_ids(self, user_id: "Snowflake_Type") -> List["Snowflake_Type"]:
+        """
+        Get a list of IDs for the guilds the user has joined.
+
+        Args:
+            user_id: The ID of the user
+
+        Returns:
+            A list of snowflakes for the guilds the client can see the user is within
+        """
+        return list(self.user_guilds.get(user_id))
 
     # endregion Member cache
 
@@ -432,7 +444,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["Guild"]:
+    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on its ID.
 
@@ -727,7 +739,7 @@ class GlobalCache:
         # this means the user swapped / joined a channel
         else:
             # update the _voice_member_ids of the new channel
-            new_channel = await self.get_channel(data["channel_id"])
+            new_channel = await self.fetch_channel(data["channel_id"])
             # noinspection PyProtectedMember
             new_channel._voice_member_ids.append(user_id)
 

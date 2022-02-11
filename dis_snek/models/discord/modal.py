@@ -13,8 +13,8 @@ from dis_snek.client.utils.attr_utils import str_validator
 
 
 class TextStyles(IntEnum):
-    short = 1
-    paragraph = 2
+    SHORT = 1
+    PARAGRAPH = 2
 
 
 @attr.s()
@@ -38,12 +38,12 @@ class InputText(InteractiveComponent):
 
 @attr.s()
 class ShortText(InputText):
-    style: Union[TextStyles, int] = attr.ib(default=TextStyles.short, kw_only=True)
+    style: Union[TextStyles, int] = attr.ib(default=TextStyles.SHORT, kw_only=True)
 
 
 @attr.s()
 class ParagraphText(InputText):
-    style: Union[TextStyles, int] = attr.ib(default=TextStyles.paragraph, kw_only=True)
+    style: Union[TextStyles, int] = attr.ib(default=TextStyles.PARAGRAPH, kw_only=True)
 
 
 @attr.s()

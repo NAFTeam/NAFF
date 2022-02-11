@@ -59,6 +59,8 @@ class DictSerializationMixin:
             data: The json data received from discord api.
 
         """
+        if isinstance(data, cls):
+            return data
         data = cls._process_dict(data)
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 

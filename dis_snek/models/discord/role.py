@@ -6,6 +6,7 @@ import attr
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import dict_filter_missing
+from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions
 from .base import DiscordObject
@@ -37,6 +38,7 @@ class Role(DiscordObject):
     name: str = field(repr=True)
     color: "Color" = field(converter=Color)
     hoist: bool = field(default=False)
+    icon: Optional[Asset] = field(default=None)
     position: int = field(repr=True)
     permissions: "Permissions" = field(converter=Permissions)
     managed: bool = field(default=False)
@@ -59,6 +61,10 @@ class Role(DiscordObject):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data.update(data.pop("tags", {}))
+
+        if icon_hash := data.get("icon"):
+            data["icon"] = Asset.from_path_hash(client, f"role-icons/{data['id']}/{{}}", icon_hash)
+
         return data
 
     async def get_bot(self) -> Optional["Member"]:
