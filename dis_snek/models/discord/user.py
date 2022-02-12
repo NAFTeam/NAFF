@@ -57,7 +57,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
             if data["avatar"]:
                 data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
             else:
-                data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}.png")
+                data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}")
         return data
 
     @property
@@ -80,10 +80,20 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return await self._client.cache.fetch_channel(self.id)  # noqa
 
     @property
+    def user_guilds(self) -> List["Guild"]:
+        """Get a list of guilds the client knows this user is in.
+
+        !!! note:
+            This will not be a comprehensive list of **all** guilds a user is in
+        """
+        guilds = self._client.cache.get_user_guild_ids(self.id)
+        return [self._client.cache.get_guild(g_id) for g_id in guilds]
+
+    @property
     def mutual_guilds(self) -> List["Guild"]:
         """Get a list of mutual guilds shared between this user and the client."""
         # should user_guilds be its own property?
-        return [g for g in self._client.guilds if g.id in self.user_guilds]
+        return [g for g in self._client.guilds if g in self.user_guilds]
 
 
 @define()

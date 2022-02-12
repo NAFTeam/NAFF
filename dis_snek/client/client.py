@@ -55,6 +55,7 @@ from dis_snek.models import (
     to_snowflake_list,
     ComponentContext,
     InteractionContext,
+    ModalContext,
     MessageContext,
     AutocompleteContext,
     ComponentCommand,
@@ -65,6 +66,7 @@ from dis_snek.models import (
 from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
+from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.auto_defer import AutoDefer
 from .smart_cache import GlobalCache
 
@@ -668,6 +670,38 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
+    async def wait_for_modal(
+        self,
+        modal: "Modal",
+        author: Optional["Snowflake_Type"] = None,
+        timeout: Optional[float] = None,
+    ) -> ModalContext:
+        """
+        Wait for a modal response.
+
+        Args:
+            modal: The modal we're waiting for.
+            author: The user we're waiting for to reply
+            timeout: A timeout in seconds to stop waiting
+
+        Returns:
+            The context of the modal response
+        Raises:
+           ` asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+
+        """
+        author = to_snowflake(author) if author else None
+
+        def predicate(event) -> bool:
+            if modal.custom_id != event.context.custom_id:
+                return False
+            if author and author != to_snowflake(event.context.author):
+                return False
+            return True
+
+        resp = await self.wait_for("modal_response", predicate, timeout)
+        return resp.context
+
     async def wait_for_component(
         self,
         messages: Union[Message, int, list] = None,
@@ -1116,6 +1150,9 @@ class Snake(
                 case InteractionTypes.AUTOCOMPLETE:
                     cls = self.autocomplete_context.from_dict(data, self)
 
+                case InteractionTypes.MODAL_RESPONSE:
+                    cls = ModalContext.from_dict(data, self)
+
                 case _:
                     cls = self.interaction_context.from_dict(data, self)
 
@@ -1206,6 +1243,9 @@ class Snake(
             if component_type == ComponentTypes.SELECT:
                 self.dispatch(events.Select(ctx))
 
+        elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
+            ctx = await self.get_context(interaction_data, True)
+            self.dispatch(events.ModalResponse(ctx))
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
@@ -1213,6 +1253,9 @@ class Snake(
     async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
+
+        if not message.content:
+            return
 
         if not message.author.bot:
             prefix = await self.get_prefix(message)

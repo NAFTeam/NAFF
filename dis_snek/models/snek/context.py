@@ -13,6 +13,7 @@ from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
+from dis_snek.models.discord.message import Attachment
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
 
@@ -29,8 +30,17 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.message import MessageReference
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
+    from dis_snek.models.discord.modal import Modal
 
-__all__ = ["Resolved", "Context", "InteractionContext", "ComponentContext", "AutocompleteContext", "MessageContext"]
+__all__ = [
+    "Resolved",
+    "Context",
+    "InteractionContext",
+    "ComponentContext",
+    "AutocompleteContext",
+    "ModalContext",
+    "MessageContext",
+]
 
 log = logging.getLogger(logger_name)
 
@@ -53,6 +63,9 @@ class Resolved:
     )
     messages: Dict["Snowflake_Type", "Message"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
+    )
+    attachments: Dict["Snowflake_Type", "Attachment"] = attr.ib(
+        factory=dict, metadata=docs("A dictionary of attachments tied to the interaction")
     )
 
     @classmethod
@@ -80,6 +93,10 @@ class Resolved:
         if messages := data.get("messages"):
             for key, _msg in messages.items():
                 new_cls.messages[key] = client.cache.place_message_data(_msg)
+
+        if attachments := data.get("attachments"):
+            for key, _attach in attachments.items():
+                new_cls.attachments[key] = Attachment.from_dict(_attach, client)
 
         return new_cls
 
@@ -178,7 +195,6 @@ class _BaseInteractionContext(Context):
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
-
             for option in options:
                 value = option.get("value")
 
@@ -205,11 +221,32 @@ class _BaseInteractionContext(Context):
                         elif role := self._client.cache.role_cache.get(snow):
                             value = role
 
+                    case OptionTypes.ATTACHMENT:
+                        value = self.resolved.attachments.get(value)
+
                 if option.get("focused", False):
                     self.focussed_option = option.get("name")
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
+        """
+        Respond using a modal.
+
+        Args:
+            modal: The modal to respond with
+
+        Returns:
+            The modal used.
+
+        """
+        payload = modal.to_dict() if not isinstance(modal, dict) else modal
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+        self.responded = True
+        return modal
 
 
 @define
@@ -512,6 +549,31 @@ class AutocompleteContext(_BaseInteractionContext):
 
         payload = {"type": CallbackTypes.AUTOCOMPLETE_RESULT, "data": {"choices": processed_choices}}
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+
+@define
+class ModalContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+        new_cls = super().from_dict(data, client)
+
+        new_cls.kwargs = {
+            comp["components"][0]["custom_id"]: comp["components"][0]["value"] for comp in data["data"]["components"]
+        }
+        new_cls.custom_id = data["data"]["custom_id"]
+        return new_cls
+
+    @property
+    def responses(self) -> dict[str, str]:
+        """
+        Get the responses to this modal.
+
+        Returns:
+            A dictionary of responses. Keys are the custom_ids of your components.
+        """
+        return self.kwargs
 
 
 @define

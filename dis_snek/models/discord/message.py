@@ -50,14 +50,17 @@ __all__ = [
 @define()
 class Attachment(DiscordObject):
     filename: str = attr.ib()
+    description: Optional[str] = attr.ib(default=None)
     content_type: Optional[str] = attr.ib(default=None)
+    size: int = attr.ib()
     url: str = attr.ib()
     proxy_url: str = attr.ib()
     height: Optional[int] = attr.ib(default=None)
     width: Optional[int] = attr.ib(default=None)
+    ephemeral: bool = attr.ib(default=False)
 
     @property
-    def size(self) -> tuple[Optional[int], Optional[int]]:
+    def resolution(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
 
 

@@ -11,6 +11,7 @@ from .file import *
 from .guild import *
 from .invite import *
 from .message import *
+from .modal import *
 from .reaction import *
 from .role import *
 from .scheduled_event import *
