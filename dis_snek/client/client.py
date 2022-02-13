@@ -31,7 +31,7 @@ from dis_snek.client.errors import (
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial
 from dis_snek.client.utils.serializer import to_image_data
-from dis_snek.ext.tasks.task import Task
+from dis_snek.models.snek.tasks import Task
 from dis_snek.models import (
     Activity,
     Application,
