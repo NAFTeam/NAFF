@@ -99,8 +99,8 @@ class MessageReference(DictSerializationMixin):
     def for_message(cls, message: "Message", fail_if_not_exists: bool = True) -> "MessageReference":
         return cls(
             message_id=message.id,
-            channel_id=message.channel.id,
-            guild_id=message.guild.id if message.guild else None,
+            channel_id=message._channel_id,
+            guild_id=message._guild_id,
             fail_if_not_exists=fail_if_not_exists,
         )
 
@@ -510,7 +510,7 @@ class Message(BaseMessage):
 
     async def clear_all_reactions(self) -> None:
         """Clear all emojis from a message."""
-        await self._client.http.clear_reactions(self.channel.id, self.id)
+        await self._client.http.clear_reactions(self._channel_id, self.id)
 
     async def pin(self) -> None:
         """Pin message."""

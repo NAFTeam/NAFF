@@ -328,7 +328,7 @@ class MessageableMixin(SendMixin):
                 continue
 
             if avoid_loading_msg:
-                if message.author.id == self._client.user.id and MessageFlags.LOADING in message.flags:
+                if message._author_id == self._client.user.id and MessageFlags.LOADING in message.flags:
                     continue
 
             if message.id < fourteen_days_ago:
@@ -537,7 +537,7 @@ class ThreadableMixin:
 
     async def get_active_threads(self) -> "models.ThreadList":
         """Returns all active threads in the channel, including public and private threads."""
-        threads_data = await self._client.http.list_active_threads(guild_id=self.guild.id)
+        threads_data = await self._client.http.list_active_threads(guild_id=self._guild_id)
 
         # delete the items where the channel_id does not match
         removed_thread_ids = []
@@ -1004,7 +1004,7 @@ class GuildCategory(GuildChannel):
             permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
 
         channel_data = await self._client.http.create_guild_channel(
-            self.guild.id,
+            self._guild_id,
             name,
             channel_type,
             topic,
@@ -1476,7 +1476,9 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     @property
     def voice_members(self) -> List["models.Member"]:
         """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
-        return [self._client.cache.member_cache.get((self.guild.id, member_id)) for member_id in self._voice_member_ids]
+        return [
+            self._client.cache.member_cache.get((self._guild_id, member_id)) for member_id in self._voice_member_ids
+        ]
 
 
 @define()

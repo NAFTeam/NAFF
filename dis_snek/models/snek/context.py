@@ -587,7 +587,7 @@ class MessageContext(Context, SendMixin):
             message=message,
             author=message.author,
             channel=message.channel,
-            guild_id=message.guild.id if message.guild else None,
+            guild_id=message._guild_id,
         )
         return new_cls
 

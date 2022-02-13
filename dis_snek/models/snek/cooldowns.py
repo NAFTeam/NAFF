@@ -36,13 +36,13 @@ class Buckets(IntEnum):
         if self is Buckets.USER:
             return context.author.id
         elif self is Buckets.GUILD:
-            return context.guild.id if context.guild else context.author.id
+            return context.guild_id if context.guild else context.author.id
         elif self is Buckets.CHANNEL:
             return context.channel.id
         elif self is Buckets.MEMBER:
-            return (context.guild.id, context.author.id) if context.guild else context.author.id
+            return (context.guild_id, context.author.id) if context.guild else context.author.id
         elif self is Buckets.CATEGORY:
-            return await context.channel.parent.id if context.channel.parent else context.channel.id
+            return await context.channel.parent_id if context.channel.parent else context.channel.id
         elif self is Buckets.ROLE:
             return context.channel.id if not context.guild else context.author.top_role.id
         else:
