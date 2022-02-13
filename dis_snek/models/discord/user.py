@@ -80,20 +80,16 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return await self._client.cache.fetch_channel(self.id)  # noqa
 
     @property
-    def user_guilds(self) -> List["Guild"]:
-        """Get a list of guilds the client knows this user is in.
-
-        !!! note:
-            This will not be a comprehensive list of **all** guilds a user is in
-        """
-        guilds = self._client.cache.get_user_guild_ids(self.id)
-        return [self._client.cache.get_guild(g_id) for g_id in guilds]
-
-    @property
     def mutual_guilds(self) -> List["Guild"]:
-        """Get a list of mutual guilds shared between this user and the client."""
-        # should user_guilds be its own property?
-        return [g for g in self._client.guilds if g in self.user_guilds]
+        """
+        Get a list of mutual guilds shared between this user and the client.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
+        return [
+            guild for guild in self._client.guilds if self._client.cache.get_member(guild_id=guild.id, user_id=self.id)
+        ]
 
 
 @define()
@@ -124,6 +120,19 @@ class User(BaseUser):
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
         return data
+
+    @property
+    def member_instances(self) -> List["Member"]:
+        """
+        Returns the member object for all guilds both the bot and the user are in.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
+        member_objs = [
+            self._client.cache.get_member(guild_id=guild.id, user_id=self.id) for guild in self._client.guilds
+        ]
+        return [member for member in member_objs if member]
 
 
 @define()
