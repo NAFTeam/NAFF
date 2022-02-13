@@ -52,13 +52,13 @@ class ReactionEvents(EventMixinTemplate):
                             "me": author.id == self.user.id,  # type: ignore
                             "emoji": emoji.to_dict(),
                             "message_id": message.id,
-                            "channel_id": message.channel.id,
+                            "channel_id": message._channel_id,
                         },
                         self,  # type: ignore
                     )
                 )
 
-            self.cache.message_cache[(message.channel.id, message.id)] = message
+            self.cache.message_cache[(message._channel_id, message.id)] = message
         else:
             message = await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("message_id"))
 
