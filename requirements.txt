@@ -1,4 +1,4 @@
 aiohttp
 attrs
-tomli
 discord-typings
+tomli
