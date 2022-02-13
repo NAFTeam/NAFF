@@ -1476,7 +1476,9 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     @property
     def voice_members(self) -> List["models.Member"]:
         """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
-        return [self._client.cache.member_cache.get((self._guild_id, member_id)) for member_id in self._voice_member_ids]
+        return [
+            self._client.cache.member_cache.get((self._guild_id, member_id)) for member_id in self._voice_member_ids
+        ]
 
 
 @define()
