@@ -9,7 +9,7 @@ python = "^3.10"
 aiohttp = "^3.7.4"
 attrs = "^21.2.0"
 mypy = "^0.910"
-sentinel = {version = "^0.3.0", extras=["varname"]}
+discord-typings = "^0.1.0"
 tomli = "1.2.2"
 
 [tool.poetry.dev-dependencies]
@@ -20,3 +20,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 120
+
+[tool.isort]
+profile = "black"
