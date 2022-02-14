@@ -230,7 +230,10 @@ class MessageableMixin(SendMixin):
             after = to_snowflake(after)
 
         messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
-        return [self._client.cache.place_message_data(message_data) for message_data in messages_data]
+        for m in messages_data:
+            m["guild_id"] = self._guild_id
+
+        return [self._client.cache.place_message_data(m) for m in messages_data]
 
     async def get_pinned_messages(self) -> List["models.Message"]:
         """
