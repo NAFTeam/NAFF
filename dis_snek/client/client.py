@@ -712,7 +712,7 @@ class Snake(
         timeout: Optional[float] = None,
     ) -> "Component":
         """
-        Waits for a message to be sent to the bot.
+        Waits for a component to be sent to the bot.
 
         Args:
             messages: The message object to check for.
