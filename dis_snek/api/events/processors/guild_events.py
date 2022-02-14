@@ -36,7 +36,7 @@ class GuildEvents(EventMixinTemplate):
         """
         guild = self.cache.place_guild_data(event.data)
 
-        self.user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
+        self._user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
 
         self._guild_event.set()
 
@@ -61,8 +61,10 @@ class GuildEvents(EventMixinTemplate):
                 )
             )
         else:
-            if event.data.get("id") in self.user._guild_ids:
-                self.user._guild_ids.remove(event.data.get("id"))
+            # noinspection PyProtectedMember
+            if event.data.get("id") in self._user._guild_ids:
+                # noinspection PyProtectedMember
+                self._user._guild_ids.remove(event.data.get("id"))
             self.dispatch(
                 events.GuildLeft(
                     event.data.get("id"),
