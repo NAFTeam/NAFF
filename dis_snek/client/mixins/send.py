@@ -62,8 +62,10 @@ class SendMixin:
             New message object that was sent.
 
         """
-        if not content and not (embeds or embed) and not file:
-            raise errors.EmptyMessageException("You cannot send a message without any content or embeds")
+        if not content and not (embeds or embed) and not file and not stickers:
+            raise errors.EmptyMessageException(
+                "You cannot send a message without any content, embeds, files, or stickers"
+            )
         message_payload = models.discord.message.process_message_payload(
             content=content,
             embeds=embeds or embed,
