@@ -43,6 +43,7 @@ __all__ = [
     "ScheduledEventPrivacyLevel",
     "ScheduledEventType",
     "ScheduledEventStatus",
+    "AuditLogEventType",
 ]
 
 
