@@ -103,15 +103,17 @@ class GuildEvents(EventMixinTemplate):
         guild_id = event.data.get("guild_id")
         emojis = event.data.get("emojis")
 
+        if self.cache.emoji_cache:
+            before = [copy.copy(self.cache.get_emoji(emoji["id"])) for emoji in emojis]
+        else:
+            before = []
+
+        after = [self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis]
+
         self.dispatch(
             GuildEmojisUpdate(
                 guild_id=guild_id,
-                before=[
-                    copy.copy(await self.cache.fetch_emoji(guild_id, emoji["id"], request_fallback=False))
-                    for emoji in emojis
-                ]
-                if self.cache.enable_emoji_cache
-                else [],
-                after=[self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis],
+                before=before,
+                after=after,
             )
         )
