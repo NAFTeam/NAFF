@@ -300,6 +300,8 @@ class Message(BaseMessage):
 
         ref_message_data = data.pop("referenced_message", None)
         if ref_message_data:
+            if not ref_message_data.get("guild_id"):
+                ref_message_data["guild_id"] = data["guild_id"]
             data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
 
         if "interaction" in data:
