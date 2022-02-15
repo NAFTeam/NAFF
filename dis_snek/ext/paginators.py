@@ -108,7 +108,7 @@ class Paginator:
             ComponentCommand(
                 name=f"Paginator:{self._uuid}",
                 callback=self._on_button,
-                listeners=list(get_components_ids(self.create_components(all=True))),
+                listeners=list(get_components_ids(self.create_components())),
             )
         )
 
