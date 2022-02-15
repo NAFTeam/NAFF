@@ -5,13 +5,14 @@ import attr
 from aiohttp import FormData
 
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.client.errors import ForeignWebhookException
+from dis_snek.client.errors import ForeignWebhookException, EmptyMessageException
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define
 from dis_snek.client.utils.input_utils import _bytes_to_base64_data
 from dis_snek.models.discord.message import process_message_payload
-from dis_snek.models.discord.snowflake import to_snowflake
+from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
+from ... import models
 
 if TYPE_CHECKING:
     from io import IOBase
@@ -123,12 +124,6 @@ class Webhook(DiscordObject, SendMixin):
         """Delete this webhook."""
         await self._client.http.delete_webhook(self.id, self.token)
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        if not self.token:
-            raise ForeignWebhookException("You cannot send messages with a webhook without a token!")
-        wait = message_payload.pop("wait")
-        return await self._client.http.execute_webhook(self.id, self.token, message_payload, wait)
-
     async def send(
         self,
         content: Optional[str] = None,
@@ -146,6 +141,8 @@ class Webhook(DiscordObject, SendMixin):
         username: str = None,
         avatar_url: str = None,
         wait: bool = False,
+        thread: "Snowflake_Type" = None,
+        **kwargs,
     ) -> Optional["Message"]:
         """
         Send a message as this webhook.
@@ -164,15 +161,20 @@ class Webhook(DiscordObject, SendMixin):
             username: The username to use
             avatar_url: The url of an image to use as the avatar
             wait: Waits for confirmation of delivery. Set this to True if you intend to edit the message
+            thread: Send this webhook to a thread channel
 
         Returns:
             New message object that was sent if `wait` is set to True
 
         """
-        return await super().send(
+        if not self.token:
+            raise ForeignWebhookException("You cannot send messages with a webhook without a token!")
+
+        if not content and not (embeds or embed) and not file and not stickers:
+            raise EmptyMessageException("You cannot send a message without any content, embeds, files, or stickers")
+        message_payload = models.discord.message.process_message_payload(
             content=content,
-            embed=embed,
-            embeds=embeds,
+            embeds=embeds or embed,
             components=components,
             stickers=stickers,
             allowed_mentions=allowed_mentions,
@@ -180,10 +182,14 @@ class Webhook(DiscordObject, SendMixin):
             file=file,
             tts=tts,
             flags=flags,
-            username=username,
-            avatar_url=avatar_url,
-            wait=wait,
+            **kwargs,
         )
+
+        message_data = await self._client.http.execute_webhook(
+            self.id, self.token, message_payload, wait, to_optional_snowflake(thread)
+        )
+        if message_data:
+            return self._client.cache.place_message_data(message_data)
 
     async def edit_message(
         self,

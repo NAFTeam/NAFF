@@ -76,10 +76,8 @@ class SendMixin:
             file=file,
             tts=tts,
             flags=flags,
+            **kwargs,
         )
-        if kwargs:
-            for key, value in kwargs.items():
-                message_payload[key] = value
 
         message_data = await self._send_http_request(message_payload)
         if message_data:
