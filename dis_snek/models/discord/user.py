@@ -390,9 +390,9 @@ class Member(DiscordObject, _SendDMMixin):
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 
-        # Find (@everyone) role overwrite and apply it.
         overwrites = {overwrite.id: overwrite for overwrite in channel.permission_overwrites}
 
+        # Find (@everyone) role overwrite and apply it.
         if overwrite_everyone := overwrites.get(channel._guild_id):
             permissions &= ~overwrite_everyone.deny
             permissions |= overwrite_everyone.allow
