@@ -43,9 +43,7 @@ class Asset:
     @property
     def animated(self) -> bool:
         """True if this asset is animated."""
-        if not self.hash:
-            return None
-        return self.hash.startswith("a_")
+        return bool(self.hash) and self.hash.startswith("a_")
 
     async def get(self, extension: Optional[str] = None, size: Optional[int] = None) -> bytes:
         """
