@@ -7,6 +7,7 @@ import attr
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
 from dis_snek.client.mixins.send import SendMixin
+from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
@@ -120,11 +121,12 @@ class ChannelHistory(AsyncIterator):
 
 
 @define()
-class PermissionOverwrite(SnowflakeObject):
+class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
     Attributes:
+        id: Overwrited instance's ID
         type: Permission overwrite type (role or member)
         allow: Permissions to allow
         deny: Permissions to deny
@@ -779,9 +781,9 @@ class GuildChannel(BaseChannel):
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    permission_overwrites: list[PermissionOverwrite] = attr.ib(factory=list)
 
     _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    _permission_overwrites: Dict[Snowflake_Type, "PermissionOverwrite"] = attr.ib(factory=list)
     _original_permission_overwrites: List[Union["PermissionOverwrite", dict]] = attr.ib(factory=list)
 
     @property
@@ -797,10 +799,9 @@ class GuildChannel(BaseChannel):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data["original_permission_overwrites"] = data.get("permission_overwrites", [])
-        data["permission_overwrites"] = {
-            obj.id: obj
-            for obj in (PermissionOverwrite(**permission) for permission in data["original_permission_overwrites"])
-        }
+        data["permission_overwrites"] = [
+            PermissionOverwrite.from_dict(overwrite) for overwrite in data["permission_overwrites"]
+        ]
         return data
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
