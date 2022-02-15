@@ -11,7 +11,7 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_image_data
+from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.snek import AsyncIterator
 from .base import DiscordObject, SnowflakeObject
 from .enums import (
@@ -785,7 +785,6 @@ class GuildChannel(BaseChannel):
     """A list of the overwrited permissions for the members and roles"""
 
     _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    _original_permission_overwrites: List[Union["PermissionOverwrite", dict]] = attr.ib(factory=list)
 
     @property
     def guild(self) -> "models.Guild":
@@ -799,7 +798,6 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data["original_permission_overwrites"] = data.get("permission_overwrites", [])
         data["permission_overwrites"] = [
             PermissionOverwrite.from_dict(overwrite) for overwrite in data["permission_overwrites"]
         ]
@@ -907,7 +905,7 @@ class GuildChannel(BaseChannel):
             name=name if name else self.name,
             topic=getattr(self, "topic", MISSING),
             position=self.position,
-            permission_overwrites=self._original_permission_overwrites,
+            permission_overwrites=self.permission_overwrites,
             category=self.category,
             nsfw=self.nsfw,
             bitrate=getattr(self, "bitrate", 64000),
@@ -1022,8 +1020,8 @@ class GuildCategory(GuildChannel):
             The newly created channel.
 
         """
-        if permission_overwrites is not MISSING:
-            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
+        if permission_overwrites:
+            permission_overwrites = list(map(lambda overwrite: to_dict(overwrite), permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self._guild_id,
