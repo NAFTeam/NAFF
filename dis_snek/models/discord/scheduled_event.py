@@ -93,14 +93,21 @@ class ScheduledEvent(DiscordObject):
             return self.entity_metadata["location"]
         return None
 
-    async def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
+    async def fetch_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
         """Returns the channel this event is scheduled in if it is scheduled in a channel."""
         if self._channel_id:
-            channel = await self._client.get_channel(self._channel_id)
+            channel = await self._client.cache.fetch_channel(self._channel_id)
             return channel
         return None
 
-    async def get_event_users(
+    def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
+        """Returns the channel this event is scheduled in if it is scheduled in a channel."""
+        if self._channel_id:
+            channel = self._client.cache.get_channel(self._channel_id)
+            return channel
+        return None
+
+    async def fetch_event_users(
         self,
         limit: Optional[int] = 100,
         with_member_data: bool = False,
@@ -108,7 +115,7 @@ class ScheduledEvent(DiscordObject):
         after: Absent[Optional["Snowflake_Type"]] = MISSING,
     ) -> List[Union["Member", "User"]]:
         """
-        Get event users.
+        Fetch event users.
 
         Args:
             limit: Discord defualts to 100

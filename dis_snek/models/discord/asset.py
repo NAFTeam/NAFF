@@ -47,9 +47,9 @@ class Asset:
             return None
         return self.hash.startswith("a_")
 
-    async def get(self, extension: Optional[str] = None, size: Optional[int] = None) -> bytes:
+    async def fetch(self, extension: Optional[str] = None, size: Optional[int] = None) -> bytes:
         """
-        Get the asset from the Discord CDN.
+        Fetch the asset from the Discord CDN.
 
         Args:
             extension: File extension

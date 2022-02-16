@@ -63,9 +63,9 @@ class Sticker(StickerItem):
     _user_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
     _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
 
-    async def get_creator(self) -> "User":
+    async def fetch_creator(self) -> "User":
         """
-        Get the user who created this emoji.
+        Fetch the user who created this emoji.
 
         Returns:
             User object
@@ -73,7 +73,27 @@ class Sticker(StickerItem):
         """
         return await self._client.cache.fetch_user(self._user_id)
 
-    async def get_guild(self) -> "Guild":
+    def get_creator(self) -> "User":
+        """
+        Get the user who created this emoji.
+
+        Returns:
+            User object
+
+        """
+        return self._client.cache.get_user(self._user_id)
+
+    async def fetch_guild(self) -> "Guild":
+        """
+        Fetch the guild associated with this emoji.
+
+        Returns:
+            Guild object
+
+        """
+        return await self._client.cache.fetch_guild(self._guild_id)
+
+    def get_guild(self) -> "Guild":
         """
         Get the guild associated with this emoji.
 
@@ -81,7 +101,7 @@ class Sticker(StickerItem):
             Guild object
 
         """
-        return await self._client.cache.fetch_guild(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     async def edit(
         self,

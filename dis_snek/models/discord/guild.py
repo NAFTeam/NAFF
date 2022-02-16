@@ -316,9 +316,9 @@ class Guild(BaseGuild):
         """Alias for me.guild_permissions"""
         return self.me.guild_permissions
 
-    async def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
+    async def fetch_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
-        Return the Member with the given discord ID.
+        Return the Member with the given discord ID, fetching from the API if necessary.
 
         Args:
             member_id: The ID of the member:
@@ -327,9 +327,35 @@ class Guild(BaseGuild):
         """
         return await self._client.cache.fetch_member(self.id, member_id)
 
-    async def get_owner(self) -> "models.Member":
-        # maybe precache owner instead of using `get_owner`
+    def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
+        """
+        Return the Member with the given discord ID.
+
+        Args:
+            member_id: The ID of the member:
+        Returns:
+            Member object or None
+        """
+        return self._client.cache.get_member(self.id, member_id)
+
+    async def fetch_owner(self) -> "models.Member":
+        """
+        Return the Guild owner
+
+        Returns:
+            Member object or None
+        """
+        # TODO: maybe precache owner instead of using `fetch_owner`
         return await self._client.cache.fetch_member(self.id, self._owner_id)
+
+    def get_owner(self) -> "models.Member":
+        """
+        Return the Guild owner
+
+        Returns:
+            Member object or None
+        """
+        return self._client.cache.get_member(self.id, self._owner_id)
 
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
@@ -398,7 +424,7 @@ class Guild(BaseGuild):
             log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
-    async def get_audit_log(
+    async def fetch_audit_log(
         self,
         user_id: Optional["Snowflake_Type"] = MISSING,
         action_type: Optional["AuditLogEventType"] = MISSING,
@@ -407,7 +433,7 @@ class Guild(BaseGuild):
         limit: int = 100,
     ) -> "AuditLog":
         """
-        Get section of the audit log for this guild.
+        Fetch section of the audit log for this guild.
 
         Args:
             user_id: The ID of the user to filter by
@@ -576,11 +602,11 @@ class Guild(BaseGuild):
         template = await self._client.http.create_guild_template(self.id, name, description)
         return GuildTemplate.from_dict(template, self._client)
 
-    async def get_guild_templates(self) -> List["models.GuildTemplate"]:
+    async def fetch_guild_templates(self) -> List["models.GuildTemplate"]:
         templates = await self._client.http.get_guild_templates(self.id)
         return [GuildTemplate.from_dict(t, self._client) for t in templates]
 
-    async def get_all_custom_emojis(self) -> List["models.CustomEmoji"]:
+    async def fetch_all_custom_emojis(self) -> List["models.CustomEmoji"]:
         """
         Gets all the custom emoji present for this guild.
 
@@ -591,7 +617,20 @@ class Guild(BaseGuild):
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
         return [self._client.cache.place_emoji_data(self.id, emoji_data) for emoji_data in emojis_data]
 
-    async def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+    async def fetch_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+        """
+        Fetches the custom emoji present for this guild, based on the emoji id.
+
+        parameters:
+            emoji_id: The target emoji to get data of.
+
+        returns:
+            The custom emoji object.
+
+        """
+        return await self._client.cache.fetch_emoji(self.id, emoji_id)
+
+    def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
         """
         Gets the custom emoji present for this guild, based on the emoji id.
 
@@ -602,7 +641,7 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-        return await self._client.cache.fetch_emoji(self.id, emoji_id)
+        return self._client.cache.get_emoji(self.id, emoji_id)
 
     async def create_channel(
         self,
@@ -848,7 +887,7 @@ class Guild(BaseGuild):
         scheduled_events_data = await self._client.http.list_schedules_events(self.id, with_user_count)
         return models.ScheduledEvent.from_list(scheduled_events_data, self._client)
 
-    async def get_scheduled_event(
+    async def fetch_scheduled_event(
         self, scheduled_event_id: Snowflake_Type, with_user_count: bool = False
     ) -> "models.ScheduledEvent":
         """
@@ -966,9 +1005,9 @@ class Guild(BaseGuild):
         sticker_data = await self._client.http.create_guild_sticker(payload, self.id, reason)
         return models.Sticker.from_dict(sticker_data, self._client)
 
-    async def get_all_custom_stickers(self) -> List["models.Sticker"]:
+    async def fetch_all_custom_stickers(self) -> List["models.Sticker"]:
         """
-        Gets all custom stickers for a guild.
+        Fetches all custom stickers for a guild.
 
         Returns:
             List of Sticker objects
@@ -977,9 +1016,9 @@ class Guild(BaseGuild):
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return models.Sticker.from_list(stickers_data, self._client)
 
-    async def get_custom_sticker(self, sticker_id: Snowflake_Type) -> "models.Sticker":
+    async def fetch_custom_sticker(self, sticker_id: Snowflake_Type) -> "models.Sticker":
         """
-        Gets a specific custom sticker for a guild.
+        Fetches a specific custom sticker for a guild.
 
         Args:
             sticker_id: ID of sticker to get
@@ -991,9 +1030,9 @@ class Guild(BaseGuild):
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return models.Sticker.from_dict(sticker_data, self._client)
 
-    async def get_active_threads(self) -> "models.ThreadList":
+    async def fetch_active_threads(self) -> "models.ThreadList":
         """
-        Gets all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
+        Fetches all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
 
         returns:
             List of active threads and thread member object for each returned thread the bot user has joined.
@@ -1002,7 +1041,20 @@ class Guild(BaseGuild):
         threads_data = await self._client.http.list_active_threads(self.id)
         return models.ThreadList.from_dict(threads_data, self._client)
 
-    async def get_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
+    async def fetch_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
+        """
+        Fetch the specified role by ID.
+
+        Args:
+            role_id: The ID of the role to get
+
+        Returns:
+            A role object or None if the role is not found.
+
+        """
+        return await self._client.cache.fetch_role(self.id, role_id)
+
+    def get_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
         """
         Get the specified role by ID.
 
@@ -1013,7 +1065,7 @@ class Guild(BaseGuild):
             A role object or None if the role is not found.
 
         """
-        return await self._client.cache.fetch_role(self.id, role_id)
+        return self._client.cache.get_role(self.id, role_id)
 
     async def create_role(
         self,
@@ -1089,7 +1141,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(channel_id)
+            return self._client.cache.get_channel(channel_id)
         return None
 
     async def fetch_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
@@ -1108,7 +1160,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return await self._client.get_channel(channel_id)
+            return await self._client.fetch_channel(channel_id)
         return None
 
     def get_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
@@ -1238,9 +1290,9 @@ class Guild(BaseGuild):
         """
         await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
 
-    async def get_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> GuildBan:
+    async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> GuildBan:
         """
-        Get's the ban information for the specified user in the guild. You must have the `ban members` permission.
+        Fetches the ban information for the specified user in the guild. You must have the `ban members` permission.
 
         Args:
             user: The user to look up.
@@ -1255,9 +1307,9 @@ class Guild(BaseGuild):
         ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
         return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
-    async def get_bans(self) -> list[GuildBan]:
+    async def fetch_bans(self) -> list[GuildBan]:
         """
-        Get's all bans for the guild. You must have the `ban members` permission.
+        Fetches all bans for the guild. You must have the `ban members` permission.
 
         Returns:
             A list containing all bans and information about them.
@@ -1283,9 +1335,9 @@ class Guild(BaseGuild):
         """
         await self._client.http.remove_guild_ban(self.id, to_snowflake(user), reason=reason)
 
-    async def get_widget_image(self, style: str = None) -> str:
+    async def fetch_widget_image(self, style: str = None) -> str:
         """
-        Get a guilds widget image.
+        Fetch a guilds widget image.
 
         For a list of styles, look here: https://discord.com/developers/docs/resources/guild#get-guild-widget-image-widget-style-options
 
@@ -1295,8 +1347,8 @@ class Guild(BaseGuild):
         """
         return await self._client.http.get_guild_widget_image(self.id, style)
 
-    async def get_widget(self) -> dict:
-        """Gets the guilds widget."""
+    async def fetch_widget(self) -> dict:
+        """Fetches the guilds widget."""
         # todo: Guild widget object
         return await self._client.http.get_guild_widget(self.id)
 
@@ -1316,11 +1368,11 @@ class Guild(BaseGuild):
                 channel = channel.id
         return await self._client.http.modify_guild_widget(self.id, enabled, channel)
 
-    async def get_invites(self) -> List["models.Invite"]:
+    async def fetch_invites(self) -> List["models.Invite"]:
         invites_data = await self._client.http.get_guild_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
 
-    async def get_guild_integrations(self) -> List["models.GuildIntegration"]:
+    async def fetch_guild_integrations(self) -> List["models.GuildIntegration"]:
         data = await self._client.http.get_guild_integrations(self.id)
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
