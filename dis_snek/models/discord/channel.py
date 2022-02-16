@@ -798,9 +798,8 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data["permission_overwrites"] = [
-            PermissionOverwrite.from_dict(overwrite) for overwrite in data["permission_overwrites"]
-        ]
+        if overwrites := data.get("permission_overwrites"):
+            data["permission_overwrites"] = [PermissionOverwrite.from_dict(overwrite) for overwrite in overwrites]
         return data
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
