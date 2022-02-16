@@ -126,7 +126,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     Channel Permissions Overwrite object.
 
     Note:
-        `id` here is not an attribute of the overwrite, it is the ID of the overwrited instance
+        `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """
 
@@ -782,7 +782,7 @@ class GuildChannel(BaseChannel):
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
     permission_overwrites: list[PermissionOverwrite] = attr.ib(factory=list)
-    """A list of the overwrited permissions for the members and roles"""
+    """A list of the overwritten permissions for the members and roles"""
 
     _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
 
