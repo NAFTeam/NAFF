@@ -641,7 +641,10 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-        return self._client.cache.get_emoji(self.id, emoji_id)
+        emoji = self._client.cache.get_emoji(emoji_id)
+        if emoji._guild_id != self.id:
+            return None
+        return emoji
 
     async def create_channel(
         self,
@@ -1065,7 +1068,10 @@ class Guild(BaseGuild):
             A role object or None if the role is not found.
 
         """
-        return self._client.cache.get_role(self.id, role_id)
+        role = self._client.cache.get_role(role_id)
+        if role._guild_id != self.id:
+            return None
+        return role
 
     async def create_role(
         self,
