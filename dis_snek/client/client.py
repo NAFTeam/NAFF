@@ -1456,10 +1456,7 @@ class Snake(
             Guild Object if found, otherwise None
 
         """
-        try:
-            return self.cache.get_guild(guild_id)
-        except NotFound:
-            return None
+        return self.cache.get_guild(guild_id)
 
     async def create_guild_from_guild_template(
         self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
@@ -1517,10 +1514,7 @@ class Snake(
         Returns:
             Channel Object if found, otherwise None
         """
-        try:
-            return self.cache.get_channel(channel_id)
-        except NotFound:
-            return None
+        return self.cache.get_channel(channel_id)
 
     async def fetch_user(self, user_id: "Snowflake_Type") -> Optional[User]:
         """
@@ -1556,10 +1550,7 @@ class Snake(
             User Object if found, otherwise None
 
         """
-        try:
-            return self.cache.get_user(user_id)
-        except NotFound:
-            return None
+        return self.cache.get_user(user_id)
 
     async def fetch_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
         """
@@ -1597,10 +1588,7 @@ class Snake(
             Member object if found, otherwise None
 
         """
-        try:
-            return self.cache.get_member(guild_id, user_id)
-        except NotFound:
-            return None
+        return self.cache.get_member(guild_id, user_id)
 
     async def fetch_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
