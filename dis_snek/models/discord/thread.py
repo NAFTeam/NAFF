@@ -45,7 +45,7 @@ class ThreadMember(DiscordObject, SendMixin):
         Gets the thread associated with with this member.
 
         Returns:
-        The thread in question
+            The thread in question
 
         """
         return self._client.cache.get_channel(self.id)
@@ -55,7 +55,7 @@ class ThreadMember(DiscordObject, SendMixin):
         Fetch the user associated with this thread member.
 
         Returns:
-        The user object
+            The user object
 
         """
         return await self._client.cache.fetch_user(self._user_id)
