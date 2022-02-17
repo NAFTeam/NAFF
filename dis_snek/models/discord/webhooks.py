@@ -2,7 +2,6 @@ from enum import IntEnum
 from typing import Optional, TYPE_CHECKING, Union, Dict, Any, List
 
 import attr
-from aiohttp import FormData
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import ForeignWebhookException, EmptyMessageException
@@ -12,7 +11,6 @@ from dis_snek.client.utils.input_utils import _bytes_to_base64_data
 from dis_snek.models.discord.message import process_message_payload
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
-from ... import models
 
 if TYPE_CHECKING:
     from io import IOBase
@@ -172,7 +170,7 @@ class Webhook(DiscordObject, SendMixin):
 
         if not content and not (embeds or embed) and not file and not stickers:
             raise EmptyMessageException("You cannot send a message without any content, embeds, files, or stickers")
-        message_payload = models.discord.message.process_message_payload(
+        message_payload = process_message_payload(
             content=content,
             embeds=embeds or embed,
             components=components,
