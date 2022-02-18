@@ -390,31 +390,28 @@ class Member(DiscordObject, _SendDMMixin):
 
         """
         permissions = self.guild_permissions
+
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 
-        overwrites = {overwrite.id: overwrite for overwrite in channel.permission_overwrites}
+        overwrites = tuple(
+            filter(
+                lambda overwrite: overwrite.id in (self._guild_id, self.id, *self._role_ids),
+                channel.permission_overwrites,
+            )
+        )
 
-        # Find (@everyone) role overwrite and apply it.
-        if overwrite_everyone := overwrites.get(channel._guild_id):
-            permissions &= ~overwrite_everyone.deny
-            permissions |= overwrite_everyone.allow
+        for everyone_overwrite in filter(lambda overwrite: overwrite.id == self._guild_id, overwrites):
+            permissions &= ~everyone_overwrite.deny
+            permissions |= everyone_overwrite.allow
 
-        # Apply role specific overwrites.
-        allow = Permissions.NONE
-        deny = Permissions.NONE
-        for role_id in self._role_ids:
-            if overwrite_role := overwrites.get(role_id):
-                allow |= overwrite_role.allow
-                deny |= overwrite_role.deny
+        for role_overwrite in filter(lambda overwrite: overwrite.id not in (self._guild_id, self.id), overwrites):
+            permissions &= ~role_overwrite.deny
+            permissions |= role_overwrite.allow
 
-        permissions &= ~deny
-        permissions |= allow
-
-        # Apply member specific overwrite if it exist.
-        if overwrite_member := overwrites.get(self.id):
-            permissions &= ~overwrite_member.deny
-            permissions |= overwrite_member.allow
+        for member_overwrite in filter(lambda overwrite: overwrite.id == self.id, overwrites):
+            permissions &= ~member_overwrite.deny
+            permissions |= member_overwrite.allow
 
         return permissions
 
