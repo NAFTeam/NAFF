@@ -385,6 +385,9 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             Permissions data
 
+        ??? note
+            This method is used in `Channel.permissions_for`
+
         """
         permissions = self.guild_permissions
         if Permissions.ADMINISTRATOR in permissions:

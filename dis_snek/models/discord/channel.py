@@ -802,6 +802,49 @@ class GuildChannel(BaseChannel):
             data["permission_overwrites"] = [PermissionOverwrite.from_dict(overwrite) for overwrite in overwrites]
         return data
 
+    def permissions_for(self, instance: Snowflake_Type) -> Permissions:
+        """
+        Calculates permissions for an instance
+
+        Args:
+            instance: Member or Role instance (or its ID)
+
+        Returns:
+            Permissions data
+
+        Raises:
+            ValueError: If could not find any member or role by given ID
+            RuntimeError: If given instance is from another guild
+
+        """
+        if (is_member := isinstance(instance, models.Member)) or isinstance(instance, models.Role):
+            if instance._guild_id != self._guild_id:
+                raise RuntimeError("Unable to calculate permissions for the instance from different guild")
+
+            if is_member:
+                return instance.channel_permissions(self)
+
+            else:
+                permissions = instance.permissions
+
+                for overwrite in self.permission_overwrites:
+                    if overwrite.id == instance.id:
+                        permissions &= ~overwrite.deny
+                        permissions |= overwrite.allow
+                        break
+
+                return permissions
+
+        else:
+            instance = to_snowflake(instance)
+            instance = self._client.cache.get_member(self._guild_id, instance) or self._client.cache.get_role(instance)
+            # Will be replaced with `Guild.get_` just after #289 merge!
+
+            if not instance:
+                raise ValueError("Unable to find any member or role by given instance ID")
+
+            return self.permissions_for(instance)
+
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
         Edit the permissions for this channel.
