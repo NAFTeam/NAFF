@@ -499,6 +499,7 @@ class SlashCommand(InteractionCommand):
                 sub_cmd_description=_description,
                 options=options,
                 callback=call,
+                scopes=self.scopes,
             )
 
         return wrapper
