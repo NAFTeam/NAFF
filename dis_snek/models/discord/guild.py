@@ -642,7 +642,7 @@ class Guild(BaseGuild):
 
         """
         emoji = self._client.cache.get_emoji(emoji_id)
-        if emoji._guild_id == self.id:
+        if emoji and emoji._guild_id == self.id:
             return emoji
         return None
 
