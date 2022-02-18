@@ -1343,6 +1343,20 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
         """Leave this thread."""
         await self._client.http.leave_thread(self.id)
 
+    async def archive(self, locked: bool = False, reason: Absent[str] = MISSING) -> None:
+        """
+        Helper method to archive this thread.
+
+        Args:
+            locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+            reason: The reason for this archive
+        """
+        payload = {
+            "archived": True,
+            "locked": locked,
+        }
+        await self._edit(payload=payload, reason=reason)
+
 
 @define()
 class GuildNewsThread(ThreadChannel):
