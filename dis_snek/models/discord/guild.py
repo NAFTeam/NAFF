@@ -641,6 +641,7 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
+        emoji_id = to_snowflake(emoji_id)
         emoji = self._client.cache.get_emoji(emoji_id)
         if emoji and emoji._guild_id == self.id:
             return emoji
