@@ -642,9 +642,9 @@ class Guild(BaseGuild):
 
         """
         emoji = self._client.cache.get_emoji(emoji_id)
-        if emoji._guild_id != self.id:
-            return None
-        return emoji
+        if emoji._guild_id == self.id:
+            return emoji
+        return None
 
     async def create_channel(
         self,
@@ -1068,10 +1068,10 @@ class Guild(BaseGuild):
             A role object or None if the role is not found.
 
         """
-        role = self._client.cache.get_role(role_id)
-        if role._guild_id != self.id:
-            return None
-        return role
+        role_id = to_snowflake(role_id)
+        if role_id in self._role_ids:
+            return self._client.cache.get_role(role_id)
+        return None
 
     async def create_role(
         self,
