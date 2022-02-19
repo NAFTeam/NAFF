@@ -12,7 +12,7 @@ from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.user import Member, User
 from dis_snek.models.discord.emoji import CustomEmoji
-from dis_snek.models.discord.snowflake import to_snowflake
+from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.client.utils.attr_utils import field
 from dis_snek.client.utils.cache import TTLCache
 
@@ -525,7 +525,7 @@ class GlobalCache:
             guild_id: A guild to delete references of this channel from.
         """
         channel_id = to_snowflake(channel_id)
-        guild_id = to_snowflake(guild_id)
+        guild_id = to_optional_snowflake(guild_id)
         if guild_id:
             guild = self.guild_cache.get(guild_id)
             # noinspection PyProtectedMember
