@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from datetime import datetime
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
@@ -140,7 +141,7 @@ class Snake(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        default_prefix: str = MENTION_PREFIX,
+        default_prefix: str | Iterable[str] = MENTION_PREFIX,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = False,
         delete_unused_application_cmds: bool = False,
@@ -376,7 +377,7 @@ class Snake(
         if len(self.processors) == 0:
             log.warning("No Processors are loaded! This means no events will be processed!")
 
-    async def generate_prefixes(self, message: Message) -> str:
+    async def generate_prefixes(self, message: Message) -> str | Iterable[str]:
         """
         A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
