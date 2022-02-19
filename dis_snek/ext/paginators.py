@@ -108,7 +108,14 @@ class Paginator:
             ComponentCommand(
                 name=f"Paginator:{self._uuid}",
                 callback=self._on_button,
-                listeners=list(get_components_ids(self.create_components(all=True))),
+                listeners=[
+                    f"{self._uuid}|select",
+                    f"{self._uuid}|first",
+                    f"{self._uuid}|back",
+                    f"{self._uuid}|callback",
+                    f"{self._uuid}|next",
+                    f"{self._uuid}|last",
+                ],
             )
         )
 
@@ -140,13 +147,12 @@ class Paginator:
         pages = [Page(c, prefix=prefix, suffix=suffix) for c in content_pages]
         return cls(client, pages=pages, timeout_interval=timeout)
 
-    def create_components(self, disable=False, all=False) -> List[ActionRow]:
+    def create_components(self, disable=False) -> List[ActionRow]:
         """
         Create the components for the paginator message.
 
         Args:
             disable: Should all the components be disabled?
-            all: Force all components to be enabled
 
         Returns:
             A list of ActionRows
@@ -154,7 +160,7 @@ class Paginator:
         """
         output = []
 
-        if self.show_select_menu or all:
+        if self.show_select_menu:
             current = self.pages[self.page_index]
             output.append(
                 Select(
@@ -169,7 +175,7 @@ class Paginator:
                 )
             )
 
-        if self.show_first_button or all:
+        if self.show_first_button:
             output.append(
                 Button(
                     ButtonStyles.BLURPLE,
@@ -178,7 +184,7 @@ class Paginator:
                     disabled=disable or self.page_index == 0,
                 )
             )
-        if self.show_back_button or all:
+        if self.show_back_button:
             output.append(
                 Button(
                     ButtonStyles.BLURPLE,
@@ -188,10 +194,10 @@ class Paginator:
                 )
             )
 
-        if self.show_callback_button or all:
+        if self.show_callback_button:
             output.append(Button(ButtonStyles.BLURPLE, emoji="✅", custom_id=f"{self._uuid}|callback", disabled=disable))
 
-        if self.show_next_button or all:
+        if self.show_next_button:
             output.append(
                 Button(
                     ButtonStyles.BLURPLE,
@@ -200,7 +206,7 @@ class Paginator:
                     disabled=disable or self.page_index >= len(self.pages) - 1,
                 )
             )
-        if self.show_last_button or all:
+        if self.show_last_button:
             output.append(
                 Button(
                     ButtonStyles.BLURPLE,
