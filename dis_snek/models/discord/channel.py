@@ -837,8 +837,8 @@ class GuildChannel(BaseChannel):
 
         else:
             instance = to_snowflake(instance)
-            instance = self._client.cache.get_member(self._guild_id, instance) or self._client.cache.get_role(instance)
-            # Will be replaced with `Guild.get_` just after #289 merge!
+            guild = self.guild
+            instance = guild.get_member(instance) or guild.get_role(instance)
 
             if not instance:
                 raise ValueError("Unable to find any member or role by given instance ID")
