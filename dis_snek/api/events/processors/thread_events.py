@@ -27,11 +27,9 @@ class ThreadEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_thread_delete(self, event: "RawGatewayEvent") -> None:
-        self.dispatch(
-            events.ThreadDelete(
-                await self.cache.fetch_channel(event.data.get("id"), request_fallback=False) or event.data.get("id")
-            )
-        )
+        thread = self.cache.get_channel(event.data.get("id")) or event.data.get("id")
+        self.cache.delete_channel(event.data.get("id"))
+        self.dispatch(events.ThreadDelete(thread))
 
     @Processor.define()
     async def _on_raw_thread_list_sync(self, event: "RawGatewayEvent") -> None:
