@@ -392,29 +392,6 @@ class Snake(
         """
         return self.default_prefix
 
-    async def login(self, token) -> None:
-        """
-        Login to discord.
-
-        Args:
-            token str: Your bot's token
-
-        """
-        # i needed somewhere to put this call,
-        # login will always run after initialisation
-        # so im gathering commands here
-        self._gather_commands()
-
-        log.debug("Attempting to login")
-        me = await self.http.login(token.strip())
-        self._user = SnakeBotUser.from_dict(me, self)
-        self.cache.place_user_data(me)
-        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
-        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
-        self.dispatch(events.Login())
-
-        await self._connection_state.start()
-
     def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
             try:
@@ -591,6 +568,30 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
+    async def login(self, token, start_gateway=False) -> None:
+        """
+        Login to discord via http.
+
+        !!! note
+            You will need to run Snake.start_gateway() before you start receiving gateway events.
+
+        Args:
+            token str: Your bot's token
+
+        """
+        # i needed somewhere to put this call,
+        # login will always run after initialisation
+        # so im gathering commands here
+        self._gather_commands()
+
+        log.debug("Attempting to login")
+        me = await self.http.login(token.strip())
+        self._user = SnakeBotUser.from_dict(me, self)
+        self.cache.place_user_data(me)
+        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
+        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
+        self.dispatch(events.Login())
+
     def start(self, token) -> None:
         """
         Start the bot.
@@ -604,6 +605,14 @@ class Snake(
         """
         try:
             self.loop.run_until_complete(self.login(token))
+            self.loop.run_until_complete(self._connection_state.start())
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.stop())
+
+    def start_gateway(self) -> None:
+        """Starts the gateway connection."""
+        try:
+            self.loop.run_until_complete(self._connection_state.start())
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
