@@ -341,7 +341,7 @@ class GlobalCache:
         Returns:
             A list of snowflakes for the guilds the client can see the user is within
         """
-        return list(self.user_guilds.get(user_id))
+        return list(self.user_guilds.get(to_snowflake(user_id)))
 
     # endregion Member cache
 
@@ -524,6 +524,8 @@ class GlobalCache:
             channel_id: The channel to be deleted
             guild_id: A guild to delete references of this channel from.
         """
+        channel_id = to_snowflake(channel_id)
+        guild_id = to_snowflake(guild_id)
         if guild_id:
             guild = self.guild_cache.get(guild_id)
             # noinspection PyProtectedMember
