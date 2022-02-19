@@ -75,9 +75,13 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """The users display name, will return nickname if one is set, otherwise will return username."""
         return self.username  # for duck-typing compatibility with Member
 
-    async def get_dm(self) -> "DM":
-        """Get the DM channel associated with this user."""
+    async def fetch_dm(self) -> "DM":
+        """Fetch the DM channel associated with this user."""
         return await self._client.cache.fetch_channel(self.id)  # noqa
+
+    def get_dm(self) -> "DM":
+        """Get the DM channel associated with this user."""
+        return self._client.cache.get_channel(self.id)  # noqa
 
     @property
     def mutual_guilds(self) -> List["Guild"]:

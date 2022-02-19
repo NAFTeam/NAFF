@@ -67,7 +67,19 @@ class Role(DiscordObject):
 
         return data
 
-    async def get_bot(self) -> Optional["Member"]:
+    async def fetch_bot(self) -> Optional["Member"]:
+        """
+        Fetch the bot associated with this role if any.
+
+        Returns:
+            Member object if any
+
+        """
+        if self._bot_id is None:
+            return None
+        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
+
+    def get_bot(self) -> Optional["Member"]:
         """
         Get the bot associated with this role if any.
 
@@ -77,7 +89,7 @@ class Role(DiscordObject):
         """
         if self._bot_id is None:
             return None
-        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
+        return self._client.cache.get_member(self._guild_id, self._bot_id)
 
     @property
     def guild(self) -> "Guild":
