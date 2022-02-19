@@ -463,6 +463,20 @@ class Message(BaseMessage):
         )
         return self._client.cache.place_channel_data(thread_data)
 
+    async def suppress_embeds(self) -> "Message":
+        """
+        Suppress embeds for this message.
+
+        Note:
+            Requires the `Permissions.MANAGE_MESSAGES` permission.
+
+        """
+        message_data = await self._client.http.edit_message(
+            {"flags": MessageFlags.SUPPRESS_EMBEDS}, self._channel_id, self.id
+        )
+        if message_data:
+            return self._client.cache.place_message_data(message_data)
+
     async def fetch_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
         """
         Fetches reactions of a specific emoji from this message.
