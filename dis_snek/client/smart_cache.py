@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import attr
+import discord_typings
 
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
@@ -116,7 +117,7 @@ class GlobalCache:
         """
         return self.user_cache.get(to_snowflake(user_id))
 
-    def place_user_data(self, data: dict) -> User:
+    def place_user_data(self, data: discord_typings.UserData) -> User:
         """
         Take json data representing a User, process it, and cache it.
 
@@ -186,7 +187,9 @@ class GlobalCache:
         """
         return self.member_cache.get((to_snowflake(guild_id), to_snowflake(user_id)))
 
-    def place_member_data(self, guild_id: "Snowflake_Type", data: dict) -> Member:
+    def place_member_data(
+        self, guild_id: "Snowflake_Type", data: discord_typings.resources.guild.GuildMemberData
+    ) -> Member:
         """
         Take json data representing a User, process it, and cache it.
 
@@ -388,7 +391,7 @@ class GlobalCache:
         """
         return self.message_cache.get((to_snowflake(channel_id), to_snowflake(message_id)))
 
-    def place_message_data(self, data: dict) -> Message:
+    def place_message_data(self, data: discord_typings.MessageData) -> Message:
         """
         Take json data representing a message, process it, and cache it.
 
@@ -456,7 +459,7 @@ class GlobalCache:
         """
         return self.channel_cache.get(to_snowflake(channel_id))
 
-    def place_channel_data(self, data: dict) -> "TYPE_ALL_CHANNEL":
+    def place_channel_data(self, data: discord_typings.ChannelData) -> "TYPE_ALL_CHANNEL":
         """
         Take json data representing a channel, process it, and cache it.
 
@@ -567,7 +570,7 @@ class GlobalCache:
         """
         return self.guild_cache.get(to_snowflake(guild_id))
 
-    def place_guild_data(self, data) -> Guild:
+    def place_guild_data(self, data: discord_typings.GuildData) -> Guild:
         """
         Take json data representing a guild, process it, and cache it.
 
@@ -578,7 +581,7 @@ class GlobalCache:
             The processed guild
         """
         guild_id = to_snowflake(data["id"])
-        guild = self.guild_cache.get(guild_id)
+        guild: Guild = self.guild_cache.get(guild_id)
         if guild is None:
             guild = Guild.from_dict(data, self._client)
             self.guild_cache[guild_id] = guild
@@ -707,7 +710,7 @@ class GlobalCache:
 
         return self.voice_state_cache.get(user_id)
 
-    async def place_voice_state_data(self, data: dict) -> Optional[VoiceState]:
+    async def place_voice_state_data(self, data: discord_typings.VoiceStateData) -> Optional[VoiceState]:
         """
         Take json data representing a VoiceState, process it, and cache it.
 
@@ -801,7 +804,7 @@ class GlobalCache:
         """
         return self.emoji_cache.get(to_snowflake(emoji_id)) if self.emoji_cache is not None else None
 
-    def place_emoji_data(self, guild_id: "Snowflake_Type", data: dict) -> "CustomEmoji":
+    def place_emoji_data(self, guild_id: "Snowflake_Type", data: discord_typings.EmojiData) -> "CustomEmoji":
         """
         Take json data representing an emoji, process it, and cache it. This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
