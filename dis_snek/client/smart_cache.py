@@ -631,7 +631,7 @@ class GlobalCache:
 
     def get_role(self, role_id: "Snowflake_Type") -> Optional[Role]:
         """
-        Get a role based on the guild and its own ID.
+        Get a role based on the role ID.
 
         Args:
             role_id: The ID of the role
@@ -787,7 +787,7 @@ class GlobalCache:
 
     def get_emoji(self, emoji_id: "Snowflake_Type") -> Optional["CustomEmoji"]:
         """
-        Get an emoji based on the guild and its own ID.
+        Get an emoji based on the emoji ID.
 
         This cache is disabled by default, start your bot with `Snake(enable_emoji_cache=True)` to enable it.
 
