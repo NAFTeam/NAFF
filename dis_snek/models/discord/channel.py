@@ -7,10 +7,11 @@ import attr
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
 from dis_snek.client.mixins.send import SendMixin
+from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_image_data
+from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.snek import AsyncIterator
 from .base import DiscordObject, SnowflakeObject
 from .enums import (
@@ -120,20 +121,21 @@ class ChannelHistory(AsyncIterator):
 
 
 @define()
-class PermissionOverwrite(SnowflakeObject):
+class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
-    Attributes:
-        type: Permission overwrite type (role or member)
-        allow: Permissions to allow
-        deny: Permissions to deny
+    Note:
+        `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """
 
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
+    """Permission overwrite type (role or member)"""
     allow: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    """Permissions to allow"""
     deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    """Permissions to deny"""
 
 
 @define(slots=False)
@@ -779,10 +781,10 @@ class GuildChannel(BaseChannel):
     position: Optional[int] = attr.ib(default=0)
     nsfw: bool = attr.ib(default=False)
     parent_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    permission_overwrites: list[PermissionOverwrite] = attr.ib(factory=list)
+    """A list of the overwritten permissions for the members and roles"""
 
     _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    _permission_overwrites: Dict[Snowflake_Type, "PermissionOverwrite"] = attr.ib(factory=list)
-    _original_permission_overwrites: List[Union["PermissionOverwrite", dict]] = attr.ib(factory=list)
 
     @property
     def guild(self) -> "models.Guild":
@@ -796,12 +798,52 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data["original_permission_overwrites"] = data.get("permission_overwrites", [])
-        data["permission_overwrites"] = {
-            obj.id: obj
-            for obj in (PermissionOverwrite(**permission) for permission in data["original_permission_overwrites"])
-        }
+        if overwrites := data.get("permission_overwrites"):
+            data["permission_overwrites"] = [PermissionOverwrite.from_dict(overwrite) for overwrite in overwrites]
         return data
+
+    def permissions_for(self, instance: Snowflake_Type) -> Permissions:
+        """
+        Calculates permissions for an instance
+
+        Args:
+            instance: Member or Role instance (or its ID)
+
+        Returns:
+            Permissions data
+
+        Raises:
+            ValueError: If could not find any member or role by given ID
+            RuntimeError: If given instance is from another guild
+
+        """
+        if (is_member := isinstance(instance, models.Member)) or isinstance(instance, models.Role):
+            if instance._guild_id != self._guild_id:
+                raise RuntimeError("Unable to calculate permissions for the instance from different guild")
+
+            if is_member:
+                return instance.channel_permissions(self)
+
+            else:
+                permissions = instance.permissions
+
+                for overwrite in self.permission_overwrites:
+                    if overwrite.id == instance.id:
+                        permissions &= ~overwrite.deny
+                        permissions |= overwrite.allow
+                        break
+
+                return permissions
+
+        else:
+            instance = to_snowflake(instance)
+            guild = self.guild
+            instance = guild.get_member(instance) or guild.get_role(instance)
+
+            if not instance:
+                raise ValueError("Unable to find any member or role by given instance ID")
+
+            return self.permissions_for(instance)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
@@ -905,7 +947,7 @@ class GuildChannel(BaseChannel):
             name=name if name else self.name,
             topic=getattr(self, "topic", MISSING),
             position=self.position,
-            permission_overwrites=self._original_permission_overwrites,
+            permission_overwrites=self.permission_overwrites,
             category=self.category,
             nsfw=self.nsfw,
             bitrate=getattr(self, "bitrate", 64000),
@@ -1020,8 +1062,8 @@ class GuildCategory(GuildChannel):
             The newly created channel.
 
         """
-        if permission_overwrites is not MISSING:
-            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
+        if permission_overwrites:
+            permission_overwrites = list(map(to_dict, permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self._guild_id,

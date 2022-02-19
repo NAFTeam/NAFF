@@ -17,7 +17,7 @@ from dis_snek.client.errors import EventLocationNotProvided
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_image_data, dict_filter_none, no_export_meta
+from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_none, no_export_meta
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,
@@ -684,8 +684,8 @@ class Guild(BaseGuild):
         if category:
             category = to_snowflake(category)
 
-        if permission_overwrites is not MISSING:
-            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
+        if permission_overwrites:
+            permission_overwrites = list(map(to_dict, permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self.id,

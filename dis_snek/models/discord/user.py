@@ -385,32 +385,33 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             Permissions data
 
+        ??? note
+            This method is used in `Channel.permissions_for`
+
         """
         permissions = self.guild_permissions
+
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 
-        # Find (@everyone) role overwrite and apply it.
-        overwrites = channel._permission_overwrites
-        if overwrite_everyone := overwrites.get(channel._guild_id):
-            permissions &= ~overwrite_everyone.deny
-            permissions |= overwrite_everyone.allow
+        overwrites = tuple(
+            filter(
+                lambda overwrite: overwrite.id in (self._guild_id, self.id, *self._role_ids),
+                channel.permission_overwrites,
+            )
+        )
 
-        # Apply role specific overwrites.
-        allow = Permissions.NONE
-        deny = Permissions.NONE
-        for role_id in self._role_ids:
-            if overwrite_role := overwrites.get(role_id):
-                allow |= overwrite_role.allow
-                deny |= overwrite_role.deny
+        for everyone_overwrite in filter(lambda overwrite: overwrite.id == self._guild_id, overwrites):
+            permissions &= ~everyone_overwrite.deny
+            permissions |= everyone_overwrite.allow
 
-        permissions &= ~deny
-        permissions |= allow
+        for role_overwrite in filter(lambda overwrite: overwrite.id not in (self._guild_id, self.id), overwrites):
+            permissions &= ~role_overwrite.deny
+            permissions |= role_overwrite.allow
 
-        # Apply member specific overwrite if it exist.
-        if overwrite_member := overwrites.get(self.id):
-            permissions &= ~overwrite_member.deny
-            permissions |= overwrite_member.allow
+        for member_overwrite in filter(lambda overwrite: overwrite.id == self.id, overwrites):
+            permissions &= ~member_overwrite.deny
+            permissions |= member_overwrite.allow
 
         return permissions
 
