@@ -1063,7 +1063,7 @@ class GuildCategory(GuildChannel):
 
         """
         if permission_overwrites:
-            permission_overwrites = list(map(lambda overwrite: to_dict(overwrite), permission_overwrites))
+            permission_overwrites = list(map(to_dict, permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self._guild_id,

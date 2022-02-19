@@ -685,7 +685,7 @@ class Guild(BaseGuild):
             category = to_snowflake(category)
 
         if permission_overwrites:
-            permission_overwrites = list(map(lambda overwrite: to_dict(overwrite), permission_overwrites))
+            permission_overwrites = list(map(to_dict, permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self.id,
