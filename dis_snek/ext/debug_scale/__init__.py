@@ -3,7 +3,7 @@ import logging
 import platform
 import tracemalloc
 
-from dis_snek import Scale, listen, slash_command, InteractionContext, Timestamp, Intents
+from dis_snek import Scale, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from dis_snek.client.const import logger_name, __version__, __py_version__
 from dis_snek.models.snek import checks
 from .debug_application_cmd import DebugAppCMD
@@ -41,17 +41,14 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
     async def debug_info(self, ctx: InteractionContext) -> None:
         await ctx.defer()
 
-        uptime = datetime.datetime.now() - self.bot.start_time
+        uptime = Timestamp.fromdatetime(self.bot.start_time)
         e = debug_embed("General")
         e.set_thumbnail(self.bot.user.avatar.url)
         e.add_field("Operating System", platform.platform())
 
         e.add_field("Version Info", f"Dis-Snek@{__version__} | Py@{__py_version__}")
 
-        e.add_field(
-            "Start Time",
-            f"{Timestamp.fromdatetime(self.bot.start_time)}\n({strf_delta(uptime)} ago)",
-        )
+        e.add_field("Start Time", f"{uptime.format(TimestampStyles.RelativeTime)}")
 
         privileged_intents = [i.name for i in self.bot.intents if i in Intents.PRIVILEGED]
         if privileged_intents:
