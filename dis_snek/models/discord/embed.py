@@ -14,7 +14,7 @@ from dis_snek.client.const import (
     EMBED_FIELD_VALUE_LENGTH,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import field
+from dis_snek.client.utils.attr_utils import field, str_validator
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
 from dis_snek.client.utils.serializer import no_export_meta
@@ -56,6 +56,9 @@ class EmbedField(DictSerializationMixin):
 
     @value.validator
     def _value_validation(self, attribute: str, value: Any) -> None:
+        if not isinstance(value, str):
+            str_validator(self, attribute, value)
+            value = self.value
         if len(value) > EMBED_FIELD_VALUE_LENGTH:
             raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
 
@@ -311,7 +314,7 @@ class Embed(DictSerializationMixin):
             inline: Should this field be inline with other fields?
 
         """
-        self.fields.append(EmbedField(name, str(value), inline))
+        self.fields.append(EmbedField(name, value, inline))
         self._fields_validation("fields", self.fields)
 
 
