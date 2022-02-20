@@ -44,7 +44,7 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-
+    unicode_emoji: str = field(default=None)
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
     _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
