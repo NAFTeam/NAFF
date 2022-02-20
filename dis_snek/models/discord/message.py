@@ -236,9 +236,9 @@ class Message(BaseMessage):
         for r_id in self._mention_roles:
             yield await self._client.cache.fetch_role(self._guild_id, r_id)
 
-    async def get_referenced_message(self) -> Optional["Message"]:
+    async def fetch_referenced_message(self) -> Optional["Message"]:
         """
-        Get the message this message is referencing, if any.
+        Fetch the message this message is referencing, if any.
 
         Returns:
             The referenced message, if found
@@ -247,6 +247,17 @@ class Message(BaseMessage):
         if self._referenced_message_id is None:
             return None
         return await self._client.cache.fetch_message(self._channel_id, self._referenced_message_id)
+
+    def get_referenced_message(self) -> Optional["Message"]:
+        """
+        Get the message this message is referencing, if any.
+
+        Returns:
+            The referenced message, if found
+        """
+        if self._referenced_message_id is None:
+            return None
+        return self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
@@ -452,9 +463,23 @@ class Message(BaseMessage):
         )
         return self._client.cache.place_channel_data(thread_data)
 
-    async def get_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+    async def suppress_embeds(self) -> "Message":
         """
-        Get reactions of a specific emoji from this message.
+        Suppress embeds for this message.
+
+        Note:
+            Requires the `Permissions.MANAGE_MESSAGES` permission.
+
+        """
+        message_data = await self._client.http.edit_message(
+            {"flags": MessageFlags.SUPPRESS_EMBEDS}, self._channel_id, self.id
+        )
+        if message_data:
+            return self._client.cache.place_message_data(message_data)
+
+    async def fetch_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+        """
+        Fetches reactions of a specific emoji from this message.
 
         Args:
             emoji: The emoji to get
@@ -614,6 +639,7 @@ def process_message_payload(
     file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
+    **kwargs,
 ) -> Union[Dict, FormData]:
     """
     Format message content for it to be ready to send discord.
@@ -657,6 +683,7 @@ def process_message_payload(
             "attachments": attachments,
             "tts": tts,
             "flags": flags,
+            **kwargs,
         }
     )
 

@@ -393,29 +393,6 @@ class Snake(
         """
         return self.default_prefix
 
-    async def login(self, token) -> None:
-        """
-        Login to discord.
-
-        Args:
-            token str: Your bot's token
-
-        """
-        # i needed somewhere to put this call,
-        # login will always run after initialisation
-        # so im gathering commands here
-        self._gather_commands()
-
-        log.debug("Attempting to login")
-        me = await self.http.login(token.strip())
-        self._user = SnakeBotUser.from_dict(me, self)
-        self.cache.place_user_data(me)
-        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
-        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
-        self.dispatch(events.Login())
-
-        await self._connection_state.start()
-
     def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
             try:
@@ -592,6 +569,30 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
+    async def login(self, token, start_gateway=False) -> None:
+        """
+        Login to discord via http.
+
+        !!! note
+            You will need to run Snake.start_gateway() before you start receiving gateway events.
+
+        Args:
+            token str: Your bot's token
+
+        """
+        # i needed somewhere to put this call,
+        # login will always run after initialisation
+        # so im gathering commands here
+        self._gather_commands()
+
+        log.debug("Attempting to login")
+        me = await self.http.login(token.strip())
+        self._user = SnakeBotUser.from_dict(me, self)
+        self.cache.place_user_data(me)
+        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
+        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
+        self.dispatch(events.Login())
+
     def start(self, token) -> None:
         """
         Start the bot.
@@ -605,6 +606,14 @@ class Snake(
         """
         try:
             self.loop.run_until_complete(self.login(token))
+            self.loop.run_until_complete(self._connection_state.start())
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.stop())
+
+    def start_gateway(self) -> None:
+        """Starts the gateway connection."""
+        try:
+            self.loop.run_until_complete(self._connection_state.start())
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
@@ -1436,9 +1445,9 @@ class Snake(
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
 
-    async def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+    async def fetch_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
         """
-        Get a guild.
+        Fetch a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1455,6 +1464,22 @@ class Snake(
             return await self.cache.fetch_guild(guild_id)
         except NotFound:
             return None
+
+    def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+        """
+        Get a guild.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            guild_id: The ID of the guild to get
+
+        Returns:
+            Guild Object if found, otherwise None
+
+        """
+        return self.cache.get_guild(guild_id)
 
     async def create_guild_from_guild_template(
         self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
@@ -1479,9 +1504,9 @@ class Snake(
         guild_data = await self.http.create_guild_from_guild_template(template_code, name, icon)
         return Guild.from_dict(guild_data, self)
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+    async def fetch_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
-        Get a channel.
+        Fetch a channel.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1499,9 +1524,24 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
-        Get a user.
+        Get a channel.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel Object if found, otherwise None
+        """
+        return self.cache.get_channel(channel_id)
+
+    async def fetch_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+        """
+        Fetch a user.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1519,9 +1559,25 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+    def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
         """
-        Get a member from a guild.
+        Get a user.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            user_id: The ID of the user to get
+
+        Returns:
+            User Object if found, otherwise None
+
+        """
+        return self.cache.get_user(user_id)
+
+    async def fetch_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+        """
+        Fetch a member from a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1540,11 +1596,28 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_scheduled_event(
+    def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+        """
+        Get a member from a guild.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            user_id: The ID of the member
+            guild_id: The ID of the guild to get the member from
+
+        Returns:
+            Member object if found, otherwise None
+
+        """
+        return self.cache.get_member(guild_id, user_id)
+
+    async def fetch_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
     ) -> Optional["ScheduledEvent"]:
         """
-        Get a scheduled event by id.
+        Fetch a scheduled event by id.
 
         parameters:
             event_id: The id of the scheduled event.
@@ -1559,9 +1632,9 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
+    async def fetch_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
         """
-        Get a sticker by ID.
+        Fetch a sticker by ID.
 
         Args:
             sticker_id: The ID of the sticker.
@@ -1576,7 +1649,7 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_nitro_packs(self) -> Optional[List["StickerPack"]]:
+    async def fetch_nitro_packs(self) -> Optional[List["StickerPack"]]:
         """
         List the sticker packs available to Nitro subscribers.
 

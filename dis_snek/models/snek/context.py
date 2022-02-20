@@ -140,6 +140,13 @@ class _BaseInteractionContext(Context):
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
         converter=optional(to_snowflake),
     )
+    locale: str = attr.ib(
+        default=None,
+        metadata=docs(
+            "The selected language of the invoking user \n(https://discord.com/developers/docs/reference#locales)"
+        ),
+    )
+    guild_locale: str = attr.ib(default=None, metadata=docs("The guild's preferred locale"))
 
     deferred: bool = attr.ib(default=False, metadata=docs("Is this interaction deferred?"))
     responded: bool = attr.ib(default=False, metadata=docs("Have we responded to the interaction?"))
@@ -160,6 +167,8 @@ class _BaseInteractionContext(Context):
             invoked_name=data["data"].get("name"),
             guild_id=data.get("guild_id"),
             context_type=data["data"].get("type", 0),
+            locale=data.get("locale"),
+            guild_locale=data.get("guild_locale"),
         )
         new_cls.data = data
 

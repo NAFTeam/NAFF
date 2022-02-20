@@ -44,7 +44,7 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-
+    unicode_emoji: str = field(default=None)
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
     _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
@@ -67,7 +67,19 @@ class Role(DiscordObject):
 
         return data
 
-    async def get_bot(self) -> Optional["Member"]:
+    async def fetch_bot(self) -> Optional["Member"]:
+        """
+        Fetch the bot associated with this role if any.
+
+        Returns:
+            Member object if any
+
+        """
+        if self._bot_id is None:
+            return None
+        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
+
+    def get_bot(self) -> Optional["Member"]:
         """
         Get the bot associated with this role if any.
 
@@ -77,7 +89,7 @@ class Role(DiscordObject):
         """
         if self._bot_id is None:
             return None
-        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
+        return self._client.cache.get_member(self._guild_id, self._bot_id)
 
     @property
     def guild(self) -> "Guild":
