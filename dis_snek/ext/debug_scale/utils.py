@@ -14,7 +14,7 @@ __all__ = ["debug_embed", "get_cache_state", "strf_delta"]
 def debug_embed(title: str, **kwargs) -> Embed:
     e = Embed(
         f"Dis-Snek Debug: {title}",
-        url="https://github.com/Discord-Snake-Pit/Dis-Snek/blob/master/dis_snek/debug_scale",
+        url="https://github.com/Discord-Snake-Pit/Dis-Snek/tree/master/dis_snek/ext/debug_scale",
         color=MaterialColors.BLUE_GREY,
         **kwargs,
     )
