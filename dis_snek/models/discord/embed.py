@@ -91,7 +91,7 @@ class EmbedAuthor:
 
 
 @attr.s(slots=True)
-class EmbedAttachment:  # thumbnail or image or video
+class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
 
@@ -107,6 +107,12 @@ class EmbedAttachment:  # thumbnail or image or video
     proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
     height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
     width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any]):
+        if isinstance(data, str):
+            return {"url": data}
+        return data
 
     @property
     def size(self) -> tuple[Optional[int], Optional[int]]:
@@ -175,12 +181,12 @@ class Embed(DictSerializationMixin):
     """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
     """The author of the embed"""
-    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The thumbnail of the embed"""
-    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The image of the embed"""
     video: Optional[EmbedAttachment] = field(
-        default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
+        default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
     footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.from_dict))
