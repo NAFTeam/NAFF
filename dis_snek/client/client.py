@@ -142,7 +142,7 @@ class Snake(
         loop: Optional[asyncio.AbstractEventLoop] = None,
         default_prefix: str = MENTION_PREFIX,
         get_prefix: Absent[Callable[..., Coroutine]] = MISSING,
-        sync_interactions: bool = False,
+        sync_interactions: bool = True,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
