@@ -1062,24 +1062,19 @@ class GuildCategory(GuildChannel):
             The newly created channel.
 
         """
-        if permission_overwrites:
-            permission_overwrites = list(map(to_dict, permission_overwrites))
-
-        channel_data = await self._client.http.create_guild_channel(
-            self._guild_id,
-            name,
-            channel_type,
-            topic,
-            position,
-            permission_overwrites,
-            to_snowflake(self),
-            nsfw,
-            bitrate,
-            user_limit,
-            rate_limit_per_user,
-            reason,
+        return await self.guild.create_channel(
+            channel_type=channel_type,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=self.id,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
         )
-        return self._client.cache.place_channel_data(channel_data)
 
     async def create_text_channel(
         self,
