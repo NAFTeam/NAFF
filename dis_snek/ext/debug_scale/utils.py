@@ -1,6 +1,6 @@
 import datetime
 import inspect
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from dis_snek.client.utils.cache import TTLCache
 from dis_snek.models import Embed, MaterialColors
@@ -31,21 +31,29 @@ def get_cache_state(bot: "Snake") -> str:
         for c in inspect.getmembers(bot.cache, predicate=lambda x: isinstance(x, dict))
         if not c[0].startswith("__")
     ]
-    string = []
-    length = len(max(caches, key=len))
+    table = []
 
     for cache in caches:
         val = getattr(bot.cache, cache)
-        c_text = f"`{cache.ljust(length)}`"
-        if isinstance(val, TTLCache):
-            string.append(f"{c_text}: {len(val)} / {val.hard_limit}({val.soft_limit}) ttl:`{val.ttl}`s")
-        else:
-            string.append(f"{c_text}: {len(val)} / ∞ (no_expire)")
-    # http caches
-    string.append(f"`{'Endpoint - Hashes'.ljust(length)}`: {len(bot.http._endpoints)} / ∞ (no_expire)")
-    string.append(f"`{'Ratelimit Buckets'.ljust(length)}`: {len(bot.http.ratelimit_locks)} / ∞ (weakref expire)")
 
-    return "\n".join(string)
+        if isinstance(val, TTLCache):
+            amount = [len(val), f"{val.hard_limit}({val.soft_limit})"]
+            expire = f"{val.ttl}s"
+        else:
+            amount = [len(val), "∞"]
+            expire = "none"
+
+        row = [cache.removesuffix("_cache"), amount, expire]
+        table.append(row)
+
+    # http caches
+    table.append(["endpoints", [len(bot.http._endpoints), "∞"], "none"])
+    table.append(["ratelimits", [len(bot.http.ratelimit_locks), "∞"], "w_ref"])
+
+    adjust_subcolumn(table, 1, aligns=[">", "<"])
+
+    labels = ["Cache", "Amount", "Expire"]
+    return make_table(table, labels)
 
 
 def strf_delta(time_delta: datetime.timedelta, show_seconds: bool = True) -> str:
@@ -69,3 +77,72 @@ def strf_delta(time_delta: datetime.timedelta, show_seconds: bool = True) -> str
     if show_seconds:
         return f"{minutes_fmt} and {seconds_fmt}"
     return f"{minutes_fmt}"
+
+
+def _make_solid_line(
+    column_widths: list[int],
+    left_char: str,
+    middle_char: str,
+    right_char: str,
+) -> str:
+    return f"{left_char}{middle_char.join('─' * (width + 2) for width in column_widths)}{right_char}"
+
+
+def _make_data_line(
+    column_widths: list[int],
+    line: list[Any],
+    left_char: str,
+    middle_char: str,
+    right_char: str,
+    aligns: Union[list[str], str] = "<",
+) -> str:
+    if isinstance(aligns, str):
+        aligns = [aligns for _ in column_widths]
+
+    line = (f"{str(value): {align}{width}}" for width, align, value in zip(column_widths, aligns, line))
+    return f"{left_char}{f'{middle_char}'.join(line)}{right_char}"
+
+
+def _get_column_widths(columns):
+    return [max(len(str(value)) for value in column) for column in columns]
+
+
+def adjust_subcolumn(
+    rows: list[list[Any]], column_index: int, separator: str = "/", aligns: Union[list[str], str] = "<"
+) -> None:
+    column = list(zip(*rows))[column_index]
+    subcolumn_widths = _get_column_widths(zip(*column))
+    if isinstance(aligns, str):
+        aligns = [aligns for _ in subcolumn_widths]
+
+    column = [_make_data_line(subcolumn_widths, row, "", separator, "", aligns) for row in column]
+    for row, new_item in zip(rows, column):
+        row[column_index] = new_item
+
+
+def make_table(rows: list[list[Any]], labels: Optional[list[Any]] = None, centered: bool = False) -> str:
+    """
+    Converts 2D list to str representation as table
+
+    :param rows: 2D list containing objects that have a single-line representation (via `str`). All rows must be of the same length.
+    :param labels: List containing the column labels. If present, the length must equal to that of each row.
+    :param centered: If the items should be aligned to the center, else they are left aligned.
+    :return: A table representing the rows passed in.
+    """
+    columns = zip(*rows) if labels is None else zip(*rows, labels)
+    column_widths = _get_column_widths(columns)
+    align = "^" if centered else "<"
+    align = [align for _ in column_widths]
+
+    lines = [_make_solid_line(column_widths, "╭", "┬", "╮")]
+
+    data_left = "│ "
+    data_middle = " │ "
+    data_right = " │"
+    if labels is not None:
+        lines.append(_make_data_line(column_widths, labels, data_left, data_middle, data_right, align))
+        lines.append(_make_solid_line(column_widths, "├", "┼", "┤"))
+    for row in rows:
+        lines.append(_make_data_line(column_widths, row, data_left, data_middle, data_right, align))
+    lines.append(_make_solid_line(column_widths, "╰", "┴", "╯"))
+    return "\n".join(lines)

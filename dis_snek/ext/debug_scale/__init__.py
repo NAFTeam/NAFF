@@ -65,7 +65,7 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         await ctx.defer()
         e = debug_embed("Cache")
 
-        e.description = get_cache_state(self.bot)
+        e.description = f"```prolog\n{get_cache_state(self.bot)}\n```"
         await ctx.send(embeds=[e])
 
     @debug_info.subcommand("shutdown", sub_cmd_description="Shutdown the bot.")
