@@ -108,6 +108,12 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
     width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
 
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any]):
+        if isinstance(data, str):
+            return {"url": data}
+        return data
+
     @property
     def size(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
