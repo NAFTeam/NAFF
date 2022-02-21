@@ -78,7 +78,7 @@ def to_image_data(imagefile: Optional[Union["File", "IOBase", "Path", str, bytes
             with open(str(imagefile), "rb") as image_buffer:
                 image_data = image_buffer.read()
         case File():
-            with open(imagefile.file, "rb") as image_buffer:  # todo: use open_file method from PR #310
+            with imagefile.open_file() as image_buffer:
                 image_data = image_buffer.read()
         case _:
             return imagefile
