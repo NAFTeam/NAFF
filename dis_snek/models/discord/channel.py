@@ -578,10 +578,10 @@ class ThreadableMixin:
 
     async def fetch_all_threads(self) -> "models.ThreadList":
         """Returns all threads in the channel. Active and archived, including public and private threads."""
-        threads = await self.get_active_threads()
+        threads = await self.fetch_active_threads()
 
         # update that data with the archived threads
-        archived_threads = await self.get_archived_threads()
+        archived_threads = await self.fetch_archived_threads()
         threads.threads.extend(archived_threads.threads)
         threads.members.extend(archived_threads.members)
 
