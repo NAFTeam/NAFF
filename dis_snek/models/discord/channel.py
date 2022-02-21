@@ -997,7 +997,7 @@ class GuildCategory(GuildChannel):
         return [channel for channel in self.channels if isinstance(channel, GuildStageVoice)]
 
     @property
-    def text_channels(self) -> List["TYPE_MESSAGEABLE_CHANNEL"]:
+    def text_channels(self) -> List["GuildText"]:
         """
         Get all text channels within the category.
 
@@ -1643,7 +1643,9 @@ TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThre
 TYPE_VOICE_CHANNEL = Union[GuildVoice, GuildStageVoice]
 
 
-TYPE_MESSAGEABLE_CHANNEL = Union[DM, DMGroup, GuildNews, GuildText, ThreadChannel]
+TYPE_MESSAGEABLE_CHANNEL = Union[
+    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread
+]
 
 
 TYPE_CHANNEL_MAPPING = {
