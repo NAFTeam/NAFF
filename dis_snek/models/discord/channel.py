@@ -1007,6 +1007,17 @@ class GuildCategory(GuildChannel):
         """
         return [channel for channel in self.channels if isinstance(channel, GuildText)]
 
+    @property
+    def news_channels(self) -> List["GuildNews"]:
+        """
+        Get all news channels within the category.
+
+        Returns:
+            The list of news channels
+
+        """
+        return [channel for channel in self.channels if isinstance(channel, GuildNews)]
+
     async def edit(
         self,
         name: Absent[Optional[str]] = MISSING,
