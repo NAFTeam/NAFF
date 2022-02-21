@@ -357,7 +357,9 @@ class Message(BaseMessage):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        files: Optional[List[Union["models.File", "IOBase", "Path", str]]] = None,
+        files: Optional[
+            Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+        ] = None,
         file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -638,7 +640,9 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    files: Optional[List[Union["models.File", "IOBase", "Path", str]]] = None,
+    files: Optional[
+        Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+    ] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
     **kwargs,

@@ -38,7 +38,7 @@ class SendMixin:
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[List[Union["File", "IOBase", "Path", str]]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
