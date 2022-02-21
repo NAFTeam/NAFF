@@ -102,4 +102,3 @@ def get_first_word(text: str) -> Optional[str]:
     if len(found) == 0:
         return None
     return found[0]
-

@@ -160,7 +160,9 @@ class SnakeBotUser(User):
     def guilds(self) -> List["Guild"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING) -> None:
+    async def edit(
+        self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
+    ) -> None:
         """
         Edit the client's user.
 
