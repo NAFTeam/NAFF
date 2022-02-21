@@ -81,13 +81,13 @@ class DebugExec(Scale):
 
         if isinstance(result, Paginator):
             return await result.send(ctx)
-        
+
         if not isinstance(result, str):
             result = repr(result)
 
         # prevent token leak
-        result = result.replace(self.bot.http.token, '[REDACTED TOKEN]')
-            
+        result = result.replace(self.bot.http.token, "[REDACTED TOKEN]")
+
         if len(result) <= 2000:
             return await ctx.message.reply(f"```py\n{result}```")
 
