@@ -1283,7 +1283,7 @@ class Snake(
                     if mention:
                         prefix = mention.group()
                     else:
-                        return
+                        continue
 
                 if message.content.startswith(prefix):
                     prefix_used = prefix
