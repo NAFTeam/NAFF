@@ -15,7 +15,7 @@ from dis_snek.client.utils.attr_utils import define
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
-from dis_snek.client.utils.serializer import dict_filter_none
+from dis_snek.client.utils.serializer import dict_filter_none, to_dict
 from .base import DiscordObject
 from .enums import (
     ChannelTypes,
@@ -670,7 +670,7 @@ def process_message_payload(
     allowed_mentions = process_allowed_mentions(allowed_mentions)
     message_reference = process_message_reference(reply_to)
     if attachments:
-        attachments = [attachment.to_dict() for attachment in attachments]
+        attachments = list(map(to_dict, attachments))
 
     message_data = dict_filter_none(
         {

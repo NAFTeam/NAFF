@@ -17,7 +17,7 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import field
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
-from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.client.utils.serializer import no_export_meta, to_dict
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.timestamp import Timestamp
 
@@ -338,6 +338,6 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
 
     if isinstance(embeds, list):
         # A list of embeds, convert Embed to dict representation if needed.
-        return [embed.to_dict() if isinstance(embed, Embed) else embed for embed in embeds]
+        return list(map(to_dict, embeds))
 
     raise ValueError(f"Invalid embeds: {embeds}")
