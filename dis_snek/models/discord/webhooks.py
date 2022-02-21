@@ -8,6 +8,7 @@ from dis_snek.client.errors import ForeignWebhookException, EmptyMessageExceptio
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define
 from dis_snek.client.utils.input_utils import _bytes_to_base64_data
+from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.message import process_message_payload
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
@@ -117,6 +118,32 @@ class Webhook(DiscordObject, SendMixin):
             user = client.cache.place_user_data(data.pop("user"))
             data["user_id"] = user.id
         return data
+
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
+        channel_id: Absent["Snowflake_Type"] = MISSING,
+    ) -> None:
+        """
+        Edit this webhook.
+
+        Args:
+            name: The default name of the webhook.
+            avatar: The image for the default webhook avatar.
+            channel_id: The new channel id this webhook should be moved to.
+
+        Raises:
+            ValueError: If you try to name the webhook "Clyde"
+
+        """
+        if name.lower() == "clyde":
+            raise ValueError('Webhook names cannot be "Clyde"')
+
+        data = await self._client.http.modify_webhook(
+            self.id, name, to_image_data(avatar), to_optional_snowflake(channel_id), self.token
+        )
+        self.update_from_dict(data)
 
     async def delete(self) -> None:
         """Delete this webhook."""
