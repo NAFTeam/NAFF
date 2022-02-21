@@ -180,6 +180,8 @@ class Webhook(DiscordObject, SendMixin):
             file=file,
             tts=tts,
             flags=flags,
+            username=username,
+            avatar_url=avatar_url,
             **kwargs,
         )
 
