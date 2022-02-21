@@ -52,7 +52,7 @@ def code_block(text: str, language: Optional[str]) -> str:
     return f"```{language or ''}\n" f"{text}" f"```"
 
 
-def ansi_colors_block(text: str) -> str:
+def ansi_block(text: str) -> str:
     """Formats text for discord message as code block that allows for arbitrary coloring and formatting"""
     return code_block(text, "ansi")
 
@@ -100,7 +100,7 @@ def ansi_format(
     return f"[{text_style}m"
 
 
-ansi_style_escape = "[0m"
+ansi_escape = "[0m"
 
 
 def ansi_styled(
@@ -110,4 +110,4 @@ def ansi_styled(
     background: Optional[AnsiBackgroundColors] = None,
 ) -> str:
     """Formats text for ansi code block with selected styles"""
-    return f"{ansi_format(style, color, background)}{text}{ansi_style_escape}"
+    return f"{ansi_format(style, color, background)}{text}{ansi_escape}"
