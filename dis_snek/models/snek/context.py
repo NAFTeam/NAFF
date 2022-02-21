@@ -604,5 +604,15 @@ class MessageContext(Context, SendMixin):
     def content_parameters(self) -> str:
         return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
 
+    async def reply(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
+        **kwargs,
+    ) -> "Message":
+        """Reply to this message, takes all the same attributes as `send`."""
+        return await self.send(content=content, reply_to=self.message, embeds=embeds or embed, **kwargs)
+
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id)
