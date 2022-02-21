@@ -1273,7 +1273,7 @@ class Snake(
             if isinstance(prefixes, str):
                 # its easier to treat everything as if it may be an iterable
                 # rather than building a special case for strings
-                prefixes = {prefixes}
+                prefixes = (prefixes,)
 
             prefix_used = None
 
