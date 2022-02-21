@@ -85,7 +85,7 @@ class DebugExec(Scale):
         if hasattr(result, "__iter__"):
             l_result = list(result)
             if all([isinstance(r, Embed) for r in result]):
-                paginator = Paginator.create_from_embeds(self.bot, *l_results)
+                paginator = Paginator.create_from_embeds(self.bot, *l_result)
                 return await paginator.send(ctx)
             del l_result
 
