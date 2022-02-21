@@ -590,7 +590,7 @@ class ThreadableMixin:
 
 @define(slots=False)
 class WebhookMixin:
-    async def create_webhook(self, name: str, avatar: Absent[Optional[bytes]] = MISSING) -> "models.Webhook":
+    async def create_webhook(self, name: str, avatar: Absent[Union["models.File", "IOBase", "Path", str, bytes]] = MISSING) -> "models.Webhook":
         """
         Create a webhook in this channel.
 

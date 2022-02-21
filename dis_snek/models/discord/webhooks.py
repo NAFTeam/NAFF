@@ -7,7 +7,7 @@ from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import ForeignWebhookException, EmptyMessageException
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define
-from dis_snek.client.utils.input_utils import _bytes_to_base64_data
+from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.message import process_message_payload
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
@@ -78,7 +78,7 @@ class Webhook(DiscordObject, SendMixin):
         client: "Snake",
         channel: Union["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"],
         name: str,
-        avatar: Absent[Optional[bytes]] = MISSING,
+        avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
     ) -> "Webhook":
         """
         Create a webhook.
@@ -103,7 +103,7 @@ class Webhook(DiscordObject, SendMixin):
             channel = to_snowflake(channel)
 
         if avatar:
-            avatar = _bytes_to_base64_data(avatar)
+            avatar = to_image_data(avatar)
 
         data = await client.http.create_webhook(channel, name, avatar)
 
