@@ -85,6 +85,11 @@ def _make_solid_line(
     middle_char: str,
     right_char: str,
 ) -> str:
+    """
+    Internal helper function.
+
+    Constructs a "solid" line for the table (top, bottom, line between labels and table)
+    """
     return f"{left_char}{middle_char.join('─' * (width + 2) for width in column_widths)}{right_char}"
 
 
@@ -96,6 +101,11 @@ def _make_data_line(
     right_char: str,
     aligns: Union[list[str], str] = "<",
 ) -> str:
+    """
+    Internal helper function.
+
+    Constructs a line with data for the table
+    """
     if isinstance(aligns, str):
         aligns = [aligns for _ in column_widths]
 
@@ -103,13 +113,19 @@ def _make_data_line(
     return f"{left_char}{f'{middle_char}'.join(line)}{right_char}"
 
 
-def _get_column_widths(columns):
+def _get_column_widths(columns) -> list[int]:
+    """
+    Internal helper function.
+
+    Calculates max width of each column
+    """
     return [max(len(str(value)) for value in column) for column in columns]
 
 
 def adjust_subcolumn(
     rows: list[list[Any]], column_index: int, separator: str = "/", aligns: Union[list[str], str] = "<"
 ) -> None:
+    """Converts column composed of list of subcolumns into aligned str representation."""
     column = list(zip(*rows))[column_index]
     subcolumn_widths = _get_column_widths(zip(*column))
     if isinstance(aligns, str):
