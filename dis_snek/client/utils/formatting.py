@@ -39,7 +39,7 @@ def link_in_embed(text: str, url: str) -> str:
 
 def quote_line(line: str) -> str:
     """Formats a text line for discord message as quote"""
-    return f">{line}"
+    return f"> {line}"
 
 
 def inline_code(text: str) -> str:
