@@ -121,6 +121,8 @@ class Paginator:
     """The default title to show on the embeds"""
     default_color: Color = attr.ib(default=BrandColors.BLURPLE)
     """The default colour to show on the embeds"""
+    default_button_color: Union[ButtonStyles, int] = attr.ib(default=ButtonStyles.BLURPLE)
+    """The color of the buttons"""
 
     _uuid: str = attr.ib(factory=uuid.uuid4)
     _message: Message = attr.ib(default=MISSING)
@@ -202,7 +204,7 @@ class Paginator:
         if self.show_first_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
+                    self.default_button_color,
                     emoji=self.first_button_emoji,
                     custom_id=f"{self._uuid}|first",
                     disabled=disable or self.page_index == 0,
@@ -211,7 +213,7 @@ class Paginator:
         if self.show_back_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
+                    self.default_button_color,
                     emoji=self.back_button_emoji,
                     custom_id=f"{self._uuid}|back",
                     disabled=disable or self.page_index == 0,
@@ -221,7 +223,7 @@ class Paginator:
         if self.show_callback_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
+                    self.default_button_color,
                     emoji=self.callback_button_emoji,
                     custom_id=f"{self._uuid}|callback",
                     disabled=disable,
@@ -231,7 +233,7 @@ class Paginator:
         if self.show_next_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
+                    self.default_button_color,
                     emoji=self.next_button_emoji,
                     custom_id=f"{self._uuid}|next",
                     disabled=disable or self.page_index >= len(self.pages) - 1,
@@ -240,7 +242,7 @@ class Paginator:
         if self.show_last_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
+                    self.default_button_color,
                     emoji=self.last_button_emoji,
                     custom_id=f"{self._uuid}|last",
                     disabled=disable or self.page_index >= len(self.pages) - 1,
