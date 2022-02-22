@@ -1311,6 +1311,7 @@ class Snake(
                 ctx = await self.get_context(interaction_data, True)
 
                 command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                ctx.command = command
                 log.debug(f"{scope} :: {command.name} should be called")
 
                 if command.auto_defer:
@@ -1349,6 +1350,7 @@ class Snake(
 
             self.dispatch(events.Component(ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
+                ctx.command = callback
                 try:
                     if self.pre_run_callback:
                         await self.pre_run_callback(ctx)
@@ -1406,6 +1408,7 @@ class Snake(
 
                 if command and command.enabled:
                     context = await self.get_context(message)
+                    context.command = command
                     context.invoked_name = invoked_name
                     context.prefix = prefix_used
                     context.args = get_args(context.content_parameters)
