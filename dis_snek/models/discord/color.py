@@ -195,7 +195,7 @@ class FlatUIColors(Color, Enum):
     ASBESTOS = "#7F8C8D"
 
 
-def process_color(color: Union[Color, tuple, list, str, int]) -> int:
+def process_color(color: Union[Color, dict, tuple, list, str, int]) -> int:
     if not color:
         return color
     elif isinstance(color, Color):

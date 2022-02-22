@@ -165,7 +165,7 @@ class Embed(DictSerializationMixin):
     """The title of the embed"""
     description: Optional[str] = field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[Union[Color, tuple, list, str, int]] = field(
+    color: Optional[Union[Color, dict, tuple, list, str, int]] = field(
         default=None, repr=True, metadata=export_converter(process_color)
     )
     """The colour of the embed"""
