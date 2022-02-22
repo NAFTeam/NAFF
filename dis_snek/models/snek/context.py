@@ -321,6 +321,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
@@ -337,7 +338,8 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
             ephemeral bool: Should this message be sent as ephemeral (hidden)
@@ -358,6 +360,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
+            files=files,
             file=file,
             tts=tts,
             flags=flags,
@@ -458,6 +461,7 @@ class ComponentContext(InteractionContext):
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
     ) -> "Message":
@@ -471,14 +475,15 @@ class ComponentContext(InteractionContext):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
 
         returns:
             The message after it was edited.
 
         """
-        if not self.responded and not self.deferred and file:
+        if not self.responded and not self.deferred and (files or file):
             # Discord doesn't allow files at initial response, so we defer then edit.
             await self.defer(edit_origin=True)
 
@@ -487,7 +492,7 @@ class ComponentContext(InteractionContext):
             embeds=embeds or embed,
             components=components,
             allowed_mentions=allowed_mentions,
-            file=file,
+            files=files or file,
             tts=tts,
         )
 

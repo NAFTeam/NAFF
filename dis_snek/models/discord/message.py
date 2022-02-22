@@ -357,6 +357,9 @@ class Message(BaseMessage):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
+        files: Optional[
+            Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+        ] = None,
         file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -371,7 +374,8 @@ class Message(BaseMessage):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
@@ -385,7 +389,7 @@ class Message(BaseMessage):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            file=file,
+            files=files or file,
             tts=tts,
             flags=flags,
         )
@@ -637,7 +641,9 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
+    files: Optional[
+        Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+    ] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
     **kwargs,
@@ -653,7 +659,7 @@ def process_message_payload(
         allowed_mentions: Allowed mentions for the message.
         reply_to: Message to reference, must be from the same channel.
         attachments: The attachments to keep, only used when editing message.
-        file: Location of file to send, defaults to None.
+        files: Files to send, defaults to None. You may send up to 10 files.
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
@@ -688,19 +694,22 @@ def process_message_payload(
         }
     )
 
-    if file:
+    if files:
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", OverriddenJson.dumps(message_data))
-        if isinstance(file, models.File):
-            if isinstance(file.file, IOBase):
-                form.add_field("file", file.file, filename=file.file_name)
+
+        if not isinstance(files, list):
+            files = [files]
+
+        for index, file in enumerate(files):
+            if isinstance(file, models.File):
+                form.add_field(f"files[{index}]", file.open_file(), filename=file.file_name)
+            elif isinstance(file, IOBase):
+                form.add_field(f"files[{index}]", file)
             else:
-                form.add_field("file", open(str(file.file), "rb"), filename=file.file_name)
-        elif isinstance(file, IOBase):
-            form.add_field("file", file)
-        else:
-            form.add_field("file", open(str(file), "rb"))
+                form.add_field(f"files[{index}]", open(str(file), "rb"))
+
         return form
     else:
         return message_data
