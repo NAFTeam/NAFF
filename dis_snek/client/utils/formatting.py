@@ -2,6 +2,30 @@ import enum
 from typing import Optional
 
 
+__all__ = [
+    "bold",
+    "italic",
+    "underline",
+    "strikethrough",
+    "spoiler",
+    "no_embed_link",
+    "link_in_embed",
+    "quote_line",
+    "inline_code",
+    "code_block",
+    "ansi_block",
+    "AnsiStyles",
+    "AnsiColors",
+    "AnsiBackgrounds",
+    "styles",
+    "colors",
+    "bg_colors",
+    "ansi_format",
+    "ansi_escape",
+    "ansi_styled",
+]
+
+
 def bold(text: str) -> str:
     """Formats text for discord message as bold"""
     return f"**{text}**"
@@ -33,7 +57,7 @@ def no_embed_link(url: str) -> str:
 
 
 def link_in_embed(text: str, url: str) -> str:
-    """Makes a clickable link inside embed"""
+    """Makes a clickable link inside Embed object"""
     return f"[{text}]({url})"
 
 
@@ -63,7 +87,7 @@ class AnsiStyles(enum.IntEnum):
     UNDERLINE = 4
 
 
-class AnsiTextColors(enum.IntEnum):
+class AnsiColors(enum.IntEnum):
     GRAY = 30
     RED = 31
     GREEN = 32
@@ -74,7 +98,7 @@ class AnsiTextColors(enum.IntEnum):
     WHITE = 37
 
 
-class AnsiBackgroundColors(enum.IntEnum):
+class AnsiBackgrounds(enum.IntEnum):
     SOME_VERY_DARK_BLUE = 40
     ORANGE = 41
     GRAY = 42
@@ -85,15 +109,16 @@ class AnsiBackgroundColors(enum.IntEnum):
     WHITE = 47
 
 
+# Just short aliases
 styles = AnsiStyles
-colors = AnsiTextColors
-bg_colors = AnsiBackgroundColors
+colors = AnsiColors
+bg_colors = AnsiBackgrounds
 
 
 def ansi_format(
     style: Optional[AnsiStyles] = None,
-    color: Optional[AnsiTextColors] = None,
-    background: Optional[AnsiBackgroundColors] = None,
+    color: Optional[AnsiColors] = None,
+    background: Optional[AnsiBackgrounds] = None,
 ) -> str:
     """Gives format prefix for ansi code block with selected styles"""
     text_style = ";".join(str(_style.value) for _style in (style, color, background) if _style)
@@ -106,8 +131,8 @@ ansi_escape = "[0m"
 def ansi_styled(
     text: str,
     style: Optional[AnsiStyles] = None,
-    color: Optional[AnsiTextColors] = None,
-    background: Optional[AnsiBackgroundColors] = None,
+    color: Optional[AnsiColors] = None,
+    background: Optional[AnsiBackgrounds] = None,
 ) -> str:
     """Formats text for ansi code block with selected styles"""
     return f"{ansi_format(style, color, background)}{text}{ansi_escape}"
