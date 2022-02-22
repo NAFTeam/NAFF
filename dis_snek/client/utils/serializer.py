@@ -19,9 +19,6 @@ def export_converter(converter) -> dict:
 
 
 def to_dict(inst) -> dict:
-    if isinstance(inst, dict):
-        return inst
-
     if (converter := getattr(inst, "as_dict", None)) is not None:
         return converter()
 
