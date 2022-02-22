@@ -1,7 +1,7 @@
 import colorsys
 import re
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, Union
 
 import attr
 
@@ -10,10 +10,12 @@ __all__ = [
     "BrandColors",
     "MaterialColors",
     "FlatUIColors",
+    "process_color",
     "Colour",
     "BrandColours",
     "MaterialColours",
     "FlatUIColours",
+    "process_colour",
 ]
 
 
@@ -193,8 +195,22 @@ class FlatUIColors(Color, Enum):
     ASBESTOS = "#7F8C8D"
 
 
+def process_color(color: Union[Color, tuple, list, str, int]) -> int:
+    if not color:
+        return color
+    elif isinstance(color, Color):
+        return color.value
+    elif isinstance(color, dict):
+        return color["value"]
+    elif isinstance(color, (tuple, list, str, int)):
+        return Color(color).value
+
+    raise ValueError(f"Invalid color: {type(color)}")
+
+
 # aliases
 Colour = Color
 BrandColours = BrandColors
 MaterialColours = MaterialColors
 FlatUIColours = FlatUIColors
+process_colour = process_color
