@@ -1,7 +1,7 @@
 import colorsys
 import re
 from enum import Enum
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import attr
 
@@ -195,7 +195,7 @@ class FlatUIColors(Color, Enum):
     ASBESTOS = "#7F8C8D"
 
 
-def process_color(color: Union[Color, dict, tuple, list, str, int]) -> int:
+def process_color(color: Optional[Union[Color, dict, tuple, list, str, int]]) -> Optional[int]:
     if not color:
         return color
     elif isinstance(color, Color):
