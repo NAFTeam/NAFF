@@ -1270,9 +1270,9 @@ class Snake(
         if not message.author.bot:
             prefixes = await self.generate_prefixes(message)
 
-            if isinstance(prefixes, str):
+            if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
                 # its easier to treat everything as if it may be an iterable
-                # rather than building a special case for strings
+                # rather than building a special case for this
                 prefixes = (prefixes,)
 
             prefix_used = None
