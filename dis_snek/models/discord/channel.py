@@ -11,9 +11,11 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.input_utils import _bytes_to_base64_data
 from dis_snek.client.utils.serializer import to_dict, to_image_data
+from dis_snek.models.discord.base import DiscordObject
+from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
 from dis_snek.models.snek import AsyncIterator
-from .base import DiscordObject, SnowflakeObject
 from .enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -24,7 +26,6 @@ from .enums import (
     MessageFlags,
     InviteTargetTypes,
 )
-from .snowflake import to_snowflake, Snowflake_Type
 
 if TYPE_CHECKING:
     from io import IOBase
@@ -671,6 +672,47 @@ class BaseChannel(DiscordObject):
 
         self.update_from_dict(channel_data)
 
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        type: Absent[ChannelTypes] = MISSING,
+        position: Absent[int] = MISSING,
+        topic: Absent[str] = MISSING,
+        nsfw: Absent[bool] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        bitrate: Absent[int] = MISSING,
+        user_limit: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        parent_id: Absent[Snowflake_Type] = MISSING,
+        rtc_region: Absent[str] = MISSING,  # todo: voice region object
+        video_quality_mode: Absent[VideoQualityModes] = MISSING,
+        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> None:
+        payload = {
+            "name": name,
+            "icon": to_image_data(icon),
+            "type": type,
+            "position": position,
+            "topic": topic,
+            "nsfw": nsfw,
+            "rate_limit_per_user": rate_limit_per_user,
+            "bitrate": bitrate,
+            "user_limit": user_limit,
+            "permission_overwrites": process_permission_overwrites(permission_overwrites),
+            "parent_id": to_optional_snowflake(parent_id),
+            "rtc_region": rtc_region,
+            "video_quality_mode": video_quality_mode,
+            "default_auto_archive_duration": default_auto_archive_duration,
+            **kwargs,
+        }
+        channel_data = await self._client.http.modify_channel(self.id, payload, reason)
+        self.update_from_dict(channel_data)
+
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """
         Delete this channel.
@@ -696,23 +738,6 @@ class DMChannel(BaseChannel, MessageableMixin):
         data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
         return data
 
-    async def edit(
-        self,
-        name: Absent[Optional[str]] = MISSING,
-        icon: Optional[Union[str, "Path", "IOBase"]] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
-    ) -> None:
-        """
-        Edit this DM Channel.
-
-        Args:
-            name: 1-100 character channel name
-            icon: An icon to use
-            reason: The reason for this change
-        """
-        payload = {"name": name, "icon": to_image_data(icon)}
-        await self._edit(payload=payload, reason=reason)
-
     @property
     def members(self) -> List["models.User"]:
         """Returns a list of users that are in this DM channel."""
@@ -736,6 +761,23 @@ class DMGroup(DMChannel):
     owner_id: Snowflake_Type = attr.ib()
     application_id: Optional[Snowflake_Type] = attr.ib(default=None)
     recipients: List["models.User"] = field(factory=list)
+
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> None:
+        """
+        Edit this DM Channel.
+
+        Args:
+            name: 1-100 character channel name
+            icon: An icon to use
+            reason: The reason for this change
+        """
+        await super().edit(name=name, icon=icon, reason=reason, **kwargs)
 
     async def fetch_owner(self) -> "models.User":
         """Fetch the owner of this DM group"""
@@ -1020,10 +1062,13 @@ class GuildCategory(GuildChannel):
 
     async def edit(
         self,
-        name: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
+        name: Absent[str] = MISSING,
+        position: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
     ) -> None:
         """
         Edit this channel.
@@ -1034,12 +1079,9 @@ class GuildCategory(GuildChannel):
             permission_overwrites: channel or category-specific permissions
             reason: the reason for this change
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "position": position,
-            "permission_overwrites": permission_overwrites,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name, position=position, permission_overwrites=permission_overwrites, reason=reason, **kwargs
+        )
 
     async def create_channel(
         self,
@@ -1211,12 +1253,15 @@ class GuildCategory(GuildChannel):
 class GuildStore(GuildChannel):
     async def edit(
         self,
-        name: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        parent_id: Optional[Snowflake_Type] = MISSING,
-        nsfw: Absent[Optional[bool]] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
+        name: Absent[str] = MISSING,
+        position: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        parent_id: Absent[Snowflake_Type] = MISSING,
+        nsfw: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
     ) -> None:
         """
         Edit this channel.
@@ -1229,14 +1274,15 @@ class GuildStore(GuildChannel):
             nsfw: whether the channel is nsfw
             reason: The reason for this change
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "position": position,
-            "permission_overwrites": permission_overwrites,
-            "parent_id": parent_id,
-            "nsfw": nsfw,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+            reason=reason,
+            **kwargs,
+        )
 
 
 @define()
@@ -1245,15 +1291,18 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        parent_id: Optional[Snowflake_Type] = MISSING,
-        nsfw: Absent[Optional[bool]] = MISSING,
-        topic: Absent[Optional[str]] = MISSING,
-        channel_type: Optional["ChannelTypes"] = MISSING,
-        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
+        name: Absent[str] = MISSING,
+        position: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        parent_id: Absent[Snowflake_Type] = MISSING,
+        nsfw: Absent[bool] = MISSING,
+        topic: Absent[str] = MISSING,
+        channel_type: Absent["ChannelTypes"] = MISSING,
+        default_auto_archive_duration: Absent["AutoArchiveDuration"] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
     ) -> None:
         """
         Edit the guild text channel.
@@ -1270,17 +1319,18 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "position": position,
-            "permission_overwrites": permission_overwrites,
-            "parent_id": parent_id,
-            "nsfw": nsfw,
-            "topic": topic,
-            "channel_type": channel_type,
-            "default_auto_archive_duration": default_auto_archive_duration,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+            topic=topic,
+            channel_type=channel_type,
+            default_auto_archive_duration=default_auto_archive_duration,
+            reason=reason,
+            **kwargs,
+        )
 
     async def follow(self, webhook_channel_id: Snowflake_Type) -> None:
         """
@@ -1299,16 +1349,19 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
-        name: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        parent_id: Optional[Snowflake_Type] = MISSING,
-        nsfw: Absent[Optional[bool]] = MISSING,
-        topic: Absent[Optional[str]] = MISSING,
-        channel_type: Optional[Union["ChannelTypes", int]] = MISSING,
-        default_auto_archive_duration: Optional["AutoArchiveDuration"] = MISSING,
-        rate_limit_per_user: Absent[Optional[int]] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
+        name: Absent[str] = MISSING,
+        position: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        parent_id: Absent[Snowflake_Type] = MISSING,
+        nsfw: Absent[bool] = MISSING,
+        topic: Absent[str] = MISSING,
+        channel_type: Absent["ChannelTypes"] = MISSING,
+        default_auto_archive_duration: Absent["AutoArchiveDuration"] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
     ) -> None:
         """
         Edit the guild text channel.
@@ -1326,18 +1379,18 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "position": position,
-            "permission_overwrites": permission_overwrites,
-            "parent_id": parent_id,
-            "nsfw": nsfw,
-            "topic": topic,
-            "channel_type": channel_type,
-            "rate_limit_per_user": rate_limit_per_user,
-            "default_auto_archive_duration": default_auto_archive_duration,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            nsfw=nsfw,
+            topic=topic,
+            channel_type=channel_type,
+            default_auto_archive_duration=default_auto_archive_duration,
+            reason=reason,
+            **kwargs,
+        )
 
 
 ################################################################
@@ -1430,78 +1483,109 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
 
 @define()
 class GuildNewsThread(ThreadChannel):
-    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason) -> None:
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        archived: Absent[bool] = MISSING,
+        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> None:
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "archived": archived,
-            "auto_archive_duration": auto_archive_duration,
-            "locked": locked,
-            "rate_limit_per_user": rate_limit_per_user,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            archived=archived,
+            default_auto_archive_duration=default_auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
+            **kwargs,
+        )
 
 
 @define()
 class GuildPublicThread(ThreadChannel):
-    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, reason) -> None:
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        archived: Absent[bool] = MISSING,
+        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> None:
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "archived": archived,
-            "auto_archive_duration": auto_archive_duration,
-            "locked": locked,
-            "rate_limit_per_user": rate_limit_per_user,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            archived=archived,
+            default_auto_archive_duration=default_auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
+            **kwargs,
+        )
 
 
 @define()
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
 
-    async def edit(self, name, archived, auto_archive_duration, locked, rate_limit_per_user, invitable, reason) -> None:
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        archived: Absent[bool] = MISSING,
+        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        invitable: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> None:
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             invitable: whether non-moderators can add other non-moderators to a thread; only available on private threads
             reason: The reason for this change
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "archived": archived,
-            "auto_archive_duration": auto_archive_duration,
-            "locked": locked,
-            "rate_limit_per_user": rate_limit_per_user,
-            "invitable": invitable,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            archived=archived,
+            default_auto_archive_duration=default_auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+            invitable=invitable,
+            reason=reason,
+            **kwargs,
+        )
 
 
 ################################################################
@@ -1518,15 +1602,18 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     async def edit(
         self,
-        name: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Optional[List["PermissionOverwrite"]] = MISSING,
-        parent_id: Optional[Snowflake_Type] = MISSING,
-        bitrate: Absent[Optional[int]] = MISSING,
-        user_limit: Absent[Optional[int]] = MISSING,
-        rtc_region: Absent[Optional[str]] = MISSING,
-        video_quality_mode: Absent[Optional[Union[VideoQualityModes, int]]] = MISSING,
-        reason: Absent[Optional[str]] = MISSING,
+        name: Absent[str] = MISSING,
+        position: Absent[int] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        parent_id: Absent[Snowflake_Type] = MISSING,
+        bitrate: Absent[int] = MISSING,
+        user_limit: Absent[int] = MISSING,
+        rtc_region: Absent[str] = MISSING,
+        video_quality_mode: Absent[VideoQualityModes] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
     ) -> None:
         """
         Edit guild voice channel.
@@ -1543,17 +1630,18 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             reason: optional reason for audit logs
 
         """
-        payload = {  # TODO Proper processing
-            "name": name,
-            "position": position,
-            "permission_overwrites": permission_overwrites,
-            "parent_id": parent_id,
-            "bitrate": bitrate,
-            "user_limit": user_limit,
-            "rtc_region": rtc_region,
-            "video_quality_mode": video_quality_mode,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            parent_id=parent_id,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            rtc_region=rtc_region,
+            video_quality_mode=video_quality_mode,
+            reason=reason,
+            **kwargs,
+        )
 
     @property
     def members(self) -> List["models.Member"]:
@@ -1625,6 +1713,24 @@ class GuildStageVoice(GuildVoice):
                 raise ValueError("No stage instance found")
 
         await self.stage_instance.delete(reason=reason)
+
+
+def process_permission_overwrites(
+    overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+) -> List[dict]:
+    if not overwrites:
+        return overwrites
+
+    if isinstance(overwrites, dict):
+        return [overwrites]
+
+    if isinstance(overwrites, list):
+        return list(map(to_dict, overwrites))
+
+    if isinstance(overwrites, PermissionOverwrite):
+        return [overwrites.to_dict()]
+
+    raise ValueError(f"Invalid overwrites: {overwrites}")
 
 
 TYPE_ALL_CHANNEL = Union[
