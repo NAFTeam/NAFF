@@ -170,7 +170,7 @@ class Webhook(DiscordObject, SendMixin):
         if not self.token:
             raise ForeignWebhookException("You cannot send messages with a webhook without a token!")
 
-        if not content and not (embeds or embed) and not file and not stickers:
+        if not content and not (embeds or embed) and not (files or file) and not stickers:
             raise EmptyMessageException("You cannot send a message without any content, embeds, files, or stickers")
         message_payload = process_message_payload(
             content=content,

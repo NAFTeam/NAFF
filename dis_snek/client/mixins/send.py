@@ -64,7 +64,7 @@ class SendMixin:
             New message object that was sent.
 
         """
-        if not content and not (embeds or embed) and not file and not stickers:
+        if not content and not (embeds or embed) and not (files or file) and not stickers:
             raise errors.EmptyMessageException(
                 "You cannot send a message without any content, embeds, files, or stickers"
             )
