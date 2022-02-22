@@ -87,7 +87,6 @@ class DebugExec(Scale):
             if all([isinstance(r, Embed) for r in result]):
                 paginator = Paginator.create_from_embeds(self.bot, *l_result)
                 return await paginator.send(ctx)
-            del l_result
 
         if not isinstance(result, str):
             result = repr(result)
