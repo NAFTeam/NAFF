@@ -313,7 +313,8 @@ class Message(BaseMessage):
         if ref_message_data:
             if not ref_message_data.get("guild_id"):
                 ref_message_data["guild_id"] = data.get("guild_id")
-            data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
+            _m = client.cache.place_message_data(ref_message_data)
+            data["referenced_message_id"] = _m.id
 
         if "interaction" in data:
             data["interaction"] = MessageInteraction.from_dict(data["interaction"], client)
