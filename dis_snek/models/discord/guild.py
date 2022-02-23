@@ -501,7 +501,7 @@ class Guild(BaseGuild):
         # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
         icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
-        splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        splash: Absent[Optional[Union["models.File", "IOBase", "Path", str, bytes]]] = MISSING,
         discovery_splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
         banner: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
         rules_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
@@ -568,7 +568,7 @@ class Guild(BaseGuild):
     async def create_custom_emoji(
         self,
         name: str,
-        imagefile: Union[str, "Path", "IOBase"],
+        imagefile: Union["models.File", "IOBase", "Path", str, bytes],
         roles: Optional[List[Union[Snowflake_Type, "models.Role"]]] = None,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.CustomEmoji":
