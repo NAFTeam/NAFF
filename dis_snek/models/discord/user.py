@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+from io import IOBase
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 import attr
@@ -11,7 +13,7 @@ from dis_snek.client.utils.attr_utils import define, field, class_defaults, docs
 from dis_snek.client.utils.converters import list_converter
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.input_utils import _bytes_to_base64_data
+from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
     from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM
+    from dis_snek.models.discord.file import File
 
 __all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
 
@@ -157,7 +160,9 @@ class SnakeBotUser(User):
     def guilds(self) -> List["Guild"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING) -> None:
+    async def edit(
+        self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
+    ) -> None:
         """
         Edit the client's user.
 
@@ -166,8 +171,7 @@ class SnakeBotUser(User):
 
         ??? Hint "Example Usage:"
             ```python
-            f = open("path_to_file", "rb")
-            await self.user.edit(avatar=f.read())
+            await self.user.edit(avatar="path_to_file")
             ```
             or
             ```python
@@ -176,7 +180,7 @@ class SnakeBotUser(User):
 
         Args:
             username: The username you want to use
-            avatar: The avatar to use, must be `bytes` (see example)
+            avatar: The avatar to use. Can be a image file, path, or `bytes` (see example)
 
         Raises:
             TooManyChanges: If you change the profile too many times
@@ -186,7 +190,7 @@ class SnakeBotUser(User):
         if username:
             payload["username"] = username
         if avatar:
-            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa : w0212
+            payload["avatar"] = to_image_data(avatar)
         elif avatar is None:
             payload["avatar"] = None
 

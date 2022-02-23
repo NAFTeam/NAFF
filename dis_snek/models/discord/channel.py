@@ -11,6 +11,7 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.misc_utils import get
 from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.discord.base import DiscordObject
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
@@ -590,7 +591,9 @@ class ThreadableMixin:
 
 @define(slots=False)
 class WebhookMixin:
-    async def create_webhook(self, name: str, avatar: Absent[Optional[bytes]] = MISSING) -> "models.Webhook":
+    async def create_webhook(
+        self, name: str, avatar: Absent[Union["models.File", "IOBase", "Path", str, bytes]] = MISSING
+    ) -> "models.Webhook":
         """
         Create a webhook in this channel.
 
@@ -885,6 +888,62 @@ class GuildChannel(BaseChannel):
                 raise ValueError("Unable to find any member or role by given instance ID")
 
             return self.permissions_for(instance)
+
+        async def add_permission(
+            self,
+            target: "PermissionOverwrite" | "models.Role" | "models.User" | "models.Member",
+            type: "OverwriteTypes",
+            allow: Optional[List["Permissions"] | int] = None,
+            deny: Optional[List["Permissions"] | int] = None,
+            reason: Optional[str] = None,
+        ) -> None:
+            """
+            Add a permission to this channel.
+
+            Args:
+                target: The permission target
+                type: The type of permission overwrite
+                allow: List of permissions to allow
+                deny: List of permissions to deny
+                reason: The reason for this change
+
+            Raises:
+                ValueError: Invalid target for permission
+            """
+            allow = allow or []
+            deny = deny or []
+            if not isinstance(target, PermissionOverwrite):
+                target_type = None
+                if isinstance(target, (models.User, models.Member)):
+                    target_type = OverwriteTypes.MEMBER
+                elif isinstance(target, models.Role):
+                    target_type = OverwriteTypes.ROLE
+                else:
+                    raise ValueError("Invalid target for permission")
+                overwrite = PermissionOverwrite(
+                    id=target.id, type=target_type, allow=Permissions.NONE, deny=Permissions.NONE
+                )
+                if isinstance(allow, int):
+                    overwrite.allow |= allow
+                else:
+                    for perm in allow:
+                        overwrite.allow |= perm
+                if isinstance(deny, int):
+                    overwrite.deny |= deny
+                else:
+                    for perm in deny:
+                        overwrite.deny |= perm
+            else:
+                overwrite = target
+            if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
+                exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
+                exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
+                return await self.edit_permission(exists, reason)
+
+            permission_overwrites = self.permission_overwrites
+            permission_overwrites.append(overwrite)
+
+            return await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
