@@ -13,7 +13,7 @@ from aiohttp import FormData
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
-from dis_snek.client.errors import EventLocationNotProvided
+from dis_snek.client.errors import EventLocationNotProvided, NotFound
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
@@ -321,11 +321,14 @@ class Guild(BaseGuild):
         Return the Member with the given discord ID, fetching from the API if necessary.
 
         Args:
-            member_id: The ID of the member:
+            member_id: The ID of the member.
         Returns:
-            Member object or None
+            The member object fetched. If the member is not in this guild, returns None.
         """
-        return await self._client.cache.fetch_member(self.id, member_id)
+        try:
+            return await self._client.cache.fetch_member(self.id, member_id)
+        except NotFound:
+            return None
 
     def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
@@ -617,7 +620,7 @@ class Guild(BaseGuild):
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
         return [self._client.cache.place_emoji_data(self.id, emoji_data) for emoji_data in emojis_data]
 
-    async def fetch_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+    async def fetch_custom_emoji(self, emoji_id: Snowflake_Type) -> Optional["models.CustomEmoji"]:
         """
         Fetches the custom emoji present for this guild, based on the emoji id.
 
@@ -625,10 +628,13 @@ class Guild(BaseGuild):
             emoji_id: The target emoji to get data of.
 
         returns:
-            The custom emoji object.
+            The custom emoji object. If the emoji is not found, returns None.
 
         """
-        return await self._client.cache.fetch_emoji(self.id, emoji_id)
+        try:
+            return await self._client.cache.fetch_emoji(self.id, emoji_id)
+        except NotFound:
+            return None
 
     def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
         """
@@ -893,7 +899,7 @@ class Guild(BaseGuild):
 
     async def fetch_scheduled_event(
         self, scheduled_event_id: Snowflake_Type, with_user_count: bool = False
-    ) -> "models.ScheduledEvent":
+    ) -> Optional["models.ScheduledEvent"]:
         """
         Get a scheduled event by id.
 
@@ -901,10 +907,15 @@ class Guild(BaseGuild):
             event_id: The id of the scheduled event.
 
         returns:
-            The scheduled event.
+            The scheduled event. If the event does not exist, returns None.
 
         """
-        scheduled_event_data = await self._client.http.get_scheduled_event(self.id, scheduled_event_id, with_user_count)
+        try:
+            scheduled_event_data = await self._client.http.get_scheduled_event(
+                self.id, scheduled_event_id, with_user_count
+            )
+        except NotFound:
+            return None
         return models.ScheduledEvent.from_dict(scheduled_event_data, self._client)
 
     async def create_scheduled_event(
@@ -1020,7 +1031,7 @@ class Guild(BaseGuild):
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return models.Sticker.from_list(stickers_data, self._client)
 
-    async def fetch_custom_sticker(self, sticker_id: Snowflake_Type) -> "models.Sticker":
+    async def fetch_custom_sticker(self, sticker_id: Snowflake_Type) -> Optional["models.Sticker"]:
         """
         Fetches a specific custom sticker for a guild.
 
@@ -1028,10 +1039,13 @@ class Guild(BaseGuild):
             sticker_id: ID of sticker to get
 
         Returns:
-            Requested Sticker
+            The custom sticker object. If the sticker does not exist, returns None.
 
         """
-        sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
+        try:
+            sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
+        except NotFound:
+            return None
         return models.Sticker.from_dict(sticker_data, self._client)
 
     async def fetch_active_threads(self) -> "models.ThreadList":
@@ -1053,10 +1067,13 @@ class Guild(BaseGuild):
             role_id: The ID of the role to get
 
         Returns:
-            A role object or None if the role is not found.
+            The role object. If the role does not exist, returns None.
 
         """
-        return await self._client.cache.fetch_role(self.id, role_id)
+        try:
+            return await self._client.cache.fetch_role(self.id, role_id)
+        except NotFound:
+            return None
 
     def get_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
         """
@@ -1159,7 +1176,7 @@ class Guild(BaseGuild):
             channel_id: The ID of the channel to get
 
         Returns:
-            Channel object if found, otherwise None
+            The channel object. If the channel does not exist, returns None.
 
         """
         channel_id = to_snowflake(channel_id)
@@ -1167,7 +1184,11 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return await self._client.fetch_channel(channel_id)
+            try:
+                return await self._client.fetch_channel(channel_id)
+            except NotFound:
+                return None
+
         return None
 
     def get_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
@@ -1199,7 +1220,10 @@ class Guild(BaseGuild):
         """
         thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
-            return await self._client.get_channel(thread_id)
+            try:
+                return await self._client.fetch_channel(thread_id)
+            except NotFound:
+                return None
         return None
 
     async def prune_members(
@@ -1297,21 +1321,21 @@ class Guild(BaseGuild):
         """
         await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
 
-    async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> GuildBan:
+    async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> Optional[GuildBan]:
         """
         Fetches the ban information for the specified user in the guild. You must have the `ban members` permission.
 
         Args:
             user: The user to look up.
 
-        Raises:
-            NotFound: If the user is not banned in the guild.
-
         Returns:
-            The ban information.
+            The ban information. If the user is not banned, returns None.
 
         """
-        ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
+        try:
+            ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
+        except NotFound:
+            return None
         return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
     async def fetch_bans(self) -> list[GuildBan]:

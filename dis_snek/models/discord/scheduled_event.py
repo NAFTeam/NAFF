@@ -96,8 +96,7 @@ class ScheduledEvent(DiscordObject):
     async def fetch_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
         """Returns the channel this event is scheduled in if it is scheduled in a channel."""
         if self._channel_id:
-            channel = await self._client.cache.fetch_channel(self._channel_id)
-            return channel
+            return await self._client.cache.fetch_channel(self._channel_id)
         return None
 
     def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
