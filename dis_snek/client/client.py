@@ -1176,6 +1176,14 @@ class Snake(
 
         return cls
 
+    async def _run_slash_command(self, command: SlashCommand, ctx: InteractionContext) -> Any:
+        """Overrideable method that executes slash commands, can be used to wrap callback execution"""
+        return await command(ctx, **ctx.kwargs)
+
+    async def _run_message_command(self, command: MessageCommand, ctx: MessageContext) -> Any:
+        """Overrideable method that executes message commands, can be used to wrap callback execution"""
+        return await command(ctx)
+
     @processors.Processor.define("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
         """
@@ -1221,7 +1229,7 @@ class Snake(
                         await auto_defer(ctx)
                         if self.pre_run_callback:
                             await self.pre_run_callback(ctx, **ctx.kwargs)
-                        await command(ctx, **ctx.kwargs)
+                        await self._run_slash_command(command, ctx)
                         if self.post_run_callback:
                             await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
@@ -1301,7 +1309,7 @@ class Snake(
                     try:
                         if self.pre_run_callback:
                             await self.pre_run_callback(context)
-                        await command(context)
+                        await self._run_message_command(command, context)
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:
