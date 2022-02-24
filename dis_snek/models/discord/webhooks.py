@@ -84,11 +84,11 @@ class Webhook(DiscordObject, SendMixin):
             url: Webhook URL
 
         """
-        m = re.search(r"discord(?:app)?\.com/api/webhooks/(?P<id>[0-9]{17,})/(?P<token>[\w\-.]{60,68})", url)
-        if m is None:
+        match = re.search(r"discord(?:app)?\.com/api/webhooks/(?P<id>[0-9]{17,})/(?P<token>[\w\-.]{60,68})", url)
+        if match is None:
             raise ValueError("Invalid webhook URL given.")
 
-        data: Dict[str, Any] = m.groupdict()
+        data: Dict[str, Any] = match.groupdict()
         data["type"] = WebhookTypes.INCOMING
         return cls.from_dict(data, client)
 
