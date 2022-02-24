@@ -1387,6 +1387,20 @@ class Guild(BaseGuild):
         data = await self._client.http.search_guild_members(guild_id=self.id, query=query, limit=limit)
         return [self._client.cache.place_member_data(self.id, _d) for _d in data]
 
+    async def fetch_voice_regions(self) -> List["models.VoiceRegion"]:
+        """
+        Fetches the voice regions for the guild.
+
+        Unlike the `Snake.fetch_voice_regions` method, this will returns VIP servers when the guild is VIP-enabled.
+
+        Returns:
+            A list of voice regions.
+
+        """
+        regions_data = await self._client.http.get_guild_voice_regions(self.id)
+        regions = models.VoiceRegion.from_list(regions_data)
+        return regions
+
 
 @define()
 class GuildTemplate(ClientObject):

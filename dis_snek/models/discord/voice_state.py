@@ -5,6 +5,7 @@ from dis_snek.client.const import MISSING
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
 from .base import ClientObject
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["VoiceState"]
+__all__ = ["VoiceState", "VoiceRegion"]
 
 
 @define()
@@ -67,3 +68,18 @@ class VoiceState(ClientObject):
             data["member_id"] = member.id
 
         return data
+
+
+@define()
+class VoiceRegion(DictSerializationMixin):
+    """A voice region."""
+
+    id: str = field(repr=True)
+    name: str = field(repr=True)
+    vip: bool = field(default=False, repr=True)
+    optimal: bool = field(default=False)
+    deprecated: bool = field(default=False)
+    custom: bool = field(default=False)
+
+    def __str__(self) -> str:
+        return self.name
