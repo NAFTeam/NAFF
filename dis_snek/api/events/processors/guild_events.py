@@ -36,7 +36,7 @@ class GuildEvents(EventMixinTemplate):
         """
         guild = self.cache.place_guild_data(event.data)
 
-        self.user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
+        self._user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
 
         self._guild_event.set()
 
@@ -48,25 +48,31 @@ class GuildEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_guild_update(self, event: "RawGatewayEvent") -> None:
-        before = copy.copy(await self.cache.get_guild(event.data.get("id")))
+        before = copy.copy(await self.cache.fetch_guild(event.data.get("id")))
         self.dispatch(events.GuildUpdate(before or MISSING, self.cache.place_guild_data(event.data)))
 
     @Processor.define()
     async def _on_raw_guild_delete(self, event: "RawGatewayEvent") -> None:
+        guild_id = int(event.data.get("id"))
         if event.data.get("unavailable", False):
             self.dispatch(
                 events.GuildUnavailable(
-                    event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    guild_id,
+                    await self.cache.fetch_guild(guild_id, False) or MISSING,
                 )
             )
         else:
-            if event.data.get("id") in self.user._guild_ids:
-                self.user._guild_ids.remove(event.data.get("id"))
+            # noinspection PyProtectedMember
+            if guild_id in self._user._guild_ids:
+                # noinspection PyProtectedMember
+                self._user._guild_ids.remove(guild_id)
+
+            self.cache.delete_guild(guild_id)
+
             self.dispatch(
                 events.GuildLeft(
-                    event.data.get("id"),
-                    await self.cache.get_guild(event.data.get("id"), False) or MISSING,
+                    guild_id,
+                    await self.cache.fetch_guild(guild_id, False) or MISSING,
                 )
             )
 
@@ -97,15 +103,17 @@ class GuildEvents(EventMixinTemplate):
         guild_id = event.data.get("guild_id")
         emojis = event.data.get("emojis")
 
+        if self.cache.emoji_cache:
+            before = [copy.copy(self.cache.get_emoji(emoji["id"])) for emoji in emojis]
+        else:
+            before = []
+
+        after = [self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis]
+
         self.dispatch(
             GuildEmojisUpdate(
                 guild_id=guild_id,
-                before=[
-                    copy.copy(await self.cache.get_emoji(guild_id, emoji["id"], request_fallback=False))
-                    for emoji in emojis
-                ]
-                if self.cache.enable_emoji_cache
-                else [],
-                after=[self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis],
+                before=before,
+                after=after,
             )
         )

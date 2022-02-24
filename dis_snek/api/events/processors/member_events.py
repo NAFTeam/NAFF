@@ -26,10 +26,10 @@ class MemberEvents(EventMixinTemplate):
     async def _on_raw_guild_member_remove(self, event: "RawGatewayEvent") -> None:
         g_id = event.data.pop("guild_id")
         user = self.cache.place_user_data(event.data["user"])
-        self.dispatch(events.MemberRemove(g_id, await self.cache.get_member(g_id, user.id, False) or user))
+        self.dispatch(events.MemberRemove(g_id, await self.cache.fetch_member(g_id, user.id, False) or user))
 
     @Processor.define()
     async def _on_raw_guild_member_update(self, event: "RawGatewayEvent") -> None:
         g_id = event.data.pop("guild_id")
-        before = copy.copy(await self.cache.get_member(g_id, event.data["user"]["id"], False)) or MISSING
+        before = copy.copy(await self.cache.fetch_member(g_id, event.data["user"]["id"], False)) or MISSING
         self.dispatch(events.MemberUpdate(g_id, before, self.cache.place_member_data(g_id, event.data)))

@@ -102,6 +102,27 @@ class MemberRequests:
             reason=reason,
         )
 
+    async def modify_current_member(
+        self,
+        guild_id: "Snowflake_Type",
+        nickname: Absent[str] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> None:
+        """
+        Modify attributes of the user
+
+        parameters:
+            nickname: The new nickname to apply
+            reason: An optional reason for the audit log
+        """
+        await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/members/@me"),
+            data={
+                "nick": nickname or None,
+            },
+            reason=reason,
+        )
+
     async def add_guild_member_role(
         self,
         guild_id: "Snowflake_Type",

@@ -9,4 +9,5 @@
 - [Iterator](iterator)
 - [Listeners](listener)
 - [Scales](scale)
+- [Tasks](tasks.md)
 - [Waits](wait)

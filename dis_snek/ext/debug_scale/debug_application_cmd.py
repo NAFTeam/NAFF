@@ -98,7 +98,7 @@ class DebugAppCMD(Scale):
                 try:
                     perm_scope = scope
                     if scope == GLOBAL_SCOPE:
-                        perm_scope = ctx.guild.id
+                        perm_scope = ctx.guild_id
                     perms = await self.bot.http.get_application_command_permissions(self.bot.app.id, perm_scope, cmd_id)
                 except HTTPException:
                     perms = None

@@ -50,14 +50,17 @@ __all__ = [
 @define()
 class Attachment(DiscordObject):
     filename: str = attr.ib()
+    description: Optional[str] = attr.ib(default=None)
     content_type: Optional[str] = attr.ib(default=None)
+    size: int = attr.ib()
     url: str = attr.ib()
     proxy_url: str = attr.ib()
     height: Optional[int] = attr.ib(default=None)
     width: Optional[int] = attr.ib(default=None)
+    ephemeral: bool = attr.ib(default=False)
 
     @property
-    def size(self) -> tuple[Optional[int], Optional[int]]:
+    def resolution(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
 
 
@@ -96,8 +99,8 @@ class MessageReference(DictSerializationMixin):
     def for_message(cls, message: "Message", fail_if_not_exists: bool = True) -> "MessageReference":
         return cls(
             message_id=message.id,
-            channel_id=message.channel.id,
-            guild_id=message.guild.id if message.guild else None,
+            channel_id=message._channel_id,
+            guild_id=message._guild_id,
             fail_if_not_exists=fail_if_not_exists,
         )
 
@@ -226,16 +229,16 @@ class Message(BaseMessage):
     @property
     async def mention_users(self) -> AsyncGenerator["models.Member", None]:
         for u_id in self._mention_ids:
-            yield await self._client.cache.get_member(self._guild_id, u_id)
+            yield await self._client.cache.fetch_member(self._guild_id, u_id)
 
     @property
     async def mention_roles(self) -> AsyncGenerator["models.Role", None]:
         for r_id in self._mention_roles:
-            yield await self._client.cache.get_role(self._guild_id, r_id)
+            yield await self._client.cache.fetch_role(self._guild_id, r_id)
 
-    async def get_referenced_message(self) -> Optional["Message"]:
+    async def fetch_referenced_message(self) -> Optional["Message"]:
         """
-        Get the message this message is referencing, if any.
+        Fetch the message this message is referencing, if any.
 
         Returns:
             The referenced message, if found
@@ -243,7 +246,18 @@ class Message(BaseMessage):
         """
         if self._referenced_message_id is None:
             return None
-        return await self._client.cache.get_message(self._channel_id, self._referenced_message_id)
+        return await self._client.cache.fetch_message(self._channel_id, self._referenced_message_id)
+
+    def get_referenced_message(self) -> Optional["Message"]:
+        """
+        Get the message this message is referencing, if any.
+
+        Returns:
+            The referenced message, if found
+        """
+        if self._referenced_message_id is None:
+            return None
+        return self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
@@ -297,7 +311,10 @@ class Message(BaseMessage):
 
         ref_message_data = data.pop("referenced_message", None)
         if ref_message_data:
-            data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
+            if not ref_message_data.get("guild_id"):
+                ref_message_data["guild_id"] = data.get("guild_id")
+            _m = client.cache.place_message_data(ref_message_data)
+            data["referenced_message_id"] = _m.id
 
         if "interaction" in data:
             data["interaction"] = MessageInteraction.from_dict(data["interaction"], client)
@@ -341,6 +358,9 @@ class Message(BaseMessage):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
+        files: Optional[
+            Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+        ] = None,
         file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -355,7 +375,8 @@ class Message(BaseMessage):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
@@ -369,7 +390,7 @@ class Message(BaseMessage):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            file=file,
+            files=files or file,
             tts=tts,
             flags=flags,
         )
@@ -447,9 +468,23 @@ class Message(BaseMessage):
         )
         return self._client.cache.place_channel_data(thread_data)
 
-    async def get_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+    async def suppress_embeds(self) -> "Message":
         """
-        Get reactions of a specific emoji from this message.
+        Suppress embeds for this message.
+
+        Note:
+            Requires the `Permissions.MANAGE_MESSAGES` permission.
+
+        """
+        message_data = await self._client.http.edit_message(
+            {"flags": MessageFlags.SUPPRESS_EMBEDS}, self._channel_id, self.id
+        )
+        if message_data:
+            return self._client.cache.place_message_data(message_data)
+
+    async def fetch_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+        """
+        Fetches reactions of a specific emoji from this message.
 
         Args:
             emoji: The emoji to get
@@ -490,8 +525,9 @@ class Message(BaseMessage):
             member = self._client.user
         user_id = to_snowflake(member)
         if user_id == self._client.user.id:
-            return await self._client.http.remove_self_reaction(self._channel_id, self.id, emoji_str)
-        return await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
+            await self._client.http.remove_self_reaction(self._channel_id, self.id, emoji_str)
+        else:
+            await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
@@ -507,7 +543,7 @@ class Message(BaseMessage):
 
     async def clear_all_reactions(self) -> None:
         """Clear all emojis from a message."""
-        await self._client.http.clear_reactions(self.channel.id, self.id)
+        await self._client.http.clear_reactions(self._channel_id, self.id)
 
     async def pin(self) -> None:
         """Pin message."""
@@ -606,9 +642,12 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
+    files: Optional[
+        Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+    ] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
+    **kwargs,
 ) -> Union[Dict, FormData]:
     """
     Format message content for it to be ready to send discord.
@@ -621,7 +660,7 @@ def process_message_payload(
         allowed_mentions: Allowed mentions for the message.
         reply_to: Message to reference, must be from the same channel.
         attachments: The attachments to keep, only used when editing message.
-        file: Location of file to send, defaults to None.
+        files: Files to send, defaults to None. You may send up to 10 files.
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
@@ -652,22 +691,26 @@ def process_message_payload(
             "attachments": attachments,
             "tts": tts,
             "flags": flags,
+            **kwargs,
         }
     )
 
-    if file:
+    if files:
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", OverriddenJson.dumps(message_data))
-        if isinstance(file, models.File):
-            if isinstance(file.file, IOBase):
-                form.add_field("file", file.file, filename=file.file_name)
+
+        if not isinstance(files, list):
+            files = [files]
+
+        for index, file in enumerate(files):
+            if isinstance(file, models.File):
+                form.add_field(f"files[{index}]", file.open_file(), filename=file.file_name)
+            elif isinstance(file, IOBase):
+                form.add_field(f"files[{index}]", file)
             else:
-                form.add_field("file", open(str(file.file), "rb"), filename=file.file_name)
-        elif isinstance(file, IOBase):
-            form.add_field("file", file)
-        else:
-            form.add_field("file", open(str(file), "rb"))
+                form.add_field(f"files[{index}]", open(str(file), "rb"))
+
         return form
     else:
         return message_data

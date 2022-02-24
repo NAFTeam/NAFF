@@ -27,11 +27,9 @@ class ThreadEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_thread_delete(self, event: "RawGatewayEvent") -> None:
-        self.dispatch(
-            events.ThreadDelete(
-                await self.cache.get_channel(event.data.get("id"), request_fallback=False) or event.data.get("id")
-            )
-        )
+        thread = self.cache.get_channel(event.data.get("id")) or event.data.get("id")
+        self.cache.delete_channel(event.data.get("id"))
+        self.dispatch(events.ThreadDelete(thread))
 
     @Processor.define()
     async def _on_raw_thread_list_sync(self, event: "RawGatewayEvent") -> None:
@@ -49,7 +47,7 @@ class ThreadEvents(EventMixinTemplate):
             events.ThreadMembersUpdate(
                 event.data.get("id"),
                 event.data.get("member_count"),
-                [await self.cache.get_member(g_id, m["user_id"]) for m in event.data.get("added_members", [])],
+                [await self.cache.fetch_member(g_id, m["user_id"]) for m in event.data.get("added_members", [])],
                 event.data.get("removed_member_ids", []),
             )
         )

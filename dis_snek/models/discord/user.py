@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+from io import IOBase
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 import attr
@@ -11,7 +13,7 @@ from dis_snek.client.utils.attr_utils import define, field, class_defaults, docs
 from dis_snek.client.utils.converters import list_converter
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.input_utils import _bytes_to_base64_data
+from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
     from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM
+    from dis_snek.models.discord.file import File
 
 __all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
 
@@ -36,7 +39,7 @@ class _SendDMMixin(SendMixin):
     id: "Snowflake_Type"
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = await self._client.cache.get_dm_channel_id(self.id)
+        dm_id = await self._client.cache.fetch_dm_channel_id(self.id)
         return await self._client.http.create_message(message_payload, dm_id)
 
 
@@ -57,7 +60,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
             if data["avatar"]:
                 data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
             else:
-                data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}.png")
+                data["avatar"] = Asset(client, f"{Asset.BASE}/embed/avatars/{int(data['discriminator']) % 5}")
         return data
 
     @property
@@ -75,15 +78,25 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """The users display name, will return nickname if one is set, otherwise will return username."""
         return self.username  # for duck-typing compatibility with Member
 
-    async def get_dm(self) -> "DM":
+    async def fetch_dm(self) -> "DM":
+        """Fetch the DM channel associated with this user."""
+        return await self._client.cache.fetch_channel(self.id)  # noqa
+
+    def get_dm(self) -> "DM":
         """Get the DM channel associated with this user."""
-        return await self._client.cache.get_channel(self.id)  # noqa
+        return self._client.cache.get_channel(self.id)  # noqa
 
     @property
     def mutual_guilds(self) -> List["Guild"]:
-        """Get a list of mutual guilds shared between this user and the client."""
-        # should user_guilds be its own property?
-        return [g for g in self._client.guilds if g.id in self.user_guilds]
+        """
+        Get a list of mutual guilds shared between this user and the client.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
+        return [
+            guild for guild in self._client.guilds if self._client.cache.get_member(guild_id=guild.id, user_id=self.id)
+        ]
 
 
 @define()
@@ -115,6 +128,19 @@ class User(BaseUser):
 
         return data
 
+    @property
+    def member_instances(self) -> List["Member"]:
+        """
+        Returns the member object for all guilds both the bot and the user are in.
+
+        !!! Note
+            This will only be accurate if the guild members are cached internally
+        """
+        member_objs = [
+            self._client.cache.get_member(guild_id=guild.id, user_id=self.id) for guild in self._client.guilds
+        ]
+        return [member for member in member_objs if member]
+
 
 @define()
 class SnakeBotUser(User):
@@ -125,7 +151,7 @@ class SnakeBotUser(User):
     bio: Optional[str] = field(default=None, metadata={"docs": ""})
     flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": ""})
 
-    _guild_ids: Set[str] = field(factory=set, metadata={"docs": ""})
+    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": ""})
 
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
         self._guild_ids |= guild_ids
@@ -134,7 +160,9 @@ class SnakeBotUser(User):
     def guilds(self) -> List["Guild"]:
         return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Optional[str] = None, avatar: Optional[bytes] = MISSING) -> None:
+    async def edit(
+        self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
+    ) -> None:
         """
         Edit the client's user.
 
@@ -143,8 +171,7 @@ class SnakeBotUser(User):
 
         ??? Hint "Example Usage:"
             ```python
-            f = open("path_to_file", "rb")
-            await self.user.edit(avatar=f.read())
+            await self.user.edit(avatar="path_to_file")
             ```
             or
             ```python
@@ -153,7 +180,7 @@ class SnakeBotUser(User):
 
         Args:
             username: The username you want to use
-            avatar: The avatar to use, must be `bytes` (see example)
+            avatar: The avatar to use. Can be a image file, path, or `bytes` (see example)
 
         Raises:
             TooManyChanges: If you change the profile too many times
@@ -163,7 +190,7 @@ class SnakeBotUser(User):
         if username:
             payload["username"] = username
         if avatar:
-            payload["avatar"] = _bytes_to_base64_data(avatar)  # noqa : w0212
+            payload["avatar"] = to_image_data(avatar)
         elif avatar is None:
             payload["avatar"] = None
 
@@ -362,44 +389,49 @@ class Member(DiscordObject, _SendDMMixin):
         Returns:
             Permissions data
 
+        ??? note
+            This method is used in `Channel.permissions_for`
+
         """
         permissions = self.guild_permissions
+
         if Permissions.ADMINISTRATOR in permissions:
             return Permissions.ALL
 
-        # Find (@everyone) role overwrite and apply it.
-        overwrites = channel._permission_overwrites
-        if overwrite_everyone := overwrites.get(channel._guild_id):
-            permissions &= ~overwrite_everyone.deny
-            permissions |= overwrite_everyone.allow
+        overwrites = tuple(
+            filter(
+                lambda overwrite: overwrite.id in (self._guild_id, self.id, *self._role_ids),
+                channel.permission_overwrites,
+            )
+        )
 
-        # Apply role specific overwrites.
-        allow = Permissions.NONE
-        deny = Permissions.NONE
-        for role_id in self._role_ids:
-            if overwrite_role := overwrites.get(role_id):
-                allow |= overwrite_role.allow
-                deny |= overwrite_role.deny
+        for everyone_overwrite in filter(lambda overwrite: overwrite.id == self._guild_id, overwrites):
+            permissions &= ~everyone_overwrite.deny
+            permissions |= everyone_overwrite.allow
 
-        permissions &= ~deny
-        permissions |= allow
+        for role_overwrite in filter(lambda overwrite: overwrite.id not in (self._guild_id, self.id), overwrites):
+            permissions &= ~role_overwrite.deny
+            permissions |= role_overwrite.allow
 
-        # Apply member specific overwrite if it exist.
-        if overwrite_member := overwrites.get(self.id):
-            permissions &= ~overwrite_member.deny
-            permissions |= overwrite_member.allow
+        for member_overwrite in filter(lambda overwrite: overwrite.id == self.id, overwrites):
+            permissions &= ~member_overwrite.deny
+            permissions |= member_overwrite.allow
 
         return permissions
 
-    async def edit_nickname(self, new_nickname: str) -> dict:
+    async def edit_nickname(self, new_nickname: Absent[str] = MISSING, reason: Absent[str] = MISSING) -> None:
         """
         Change the user's nickname.
 
         Args:
-            new_nickname: The new nickname to apply.
+            new_nickname: The new nickname to apply
+            reason: The reason for this change
+
+        Note:
+            Leave `new_nickname` empty to clean user's nickname
 
         """
-        return await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname)
+        await self._client.http.modify_current_member(self._guild_id, nickname=new_nickname, reason=reason)
 
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
@@ -439,11 +471,7 @@ class Member(DiscordObject, _SendDMMixin):
             roles: The role(s) to check whether the user has it.
 
         """
-        for role in roles:
-            role_id = to_snowflake(role)
-            if role_id not in self._role_ids:
-                return False
-        return True
+        return all(to_snowflake(role) in self._role_ids for role in roles)
 
     async def timeout(
         self,

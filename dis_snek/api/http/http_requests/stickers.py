@@ -43,7 +43,7 @@ class StickerRequests:
             List of Stickers or None
 
         """
-        return await self.request(Route("GET", f"/guild/{guild_id}/stickers"))
+        return await self.request(Route("GET", f"/guilds/{guild_id}/stickers"))
 
     async def get_guild_sticker(self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type") -> dict:
         """
@@ -56,7 +56,7 @@ class StickerRequests:
             Sticker or None
 
         """
-        return await self.request(Route("GET", f"/guild/{guild_id}/stickers/{sticker_id}"))
+        return await self.request(Route("GET", f"/guilds/{guild_id}/stickers/{sticker_id}"))
 
     async def create_guild_sticker(
         self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = MISSING

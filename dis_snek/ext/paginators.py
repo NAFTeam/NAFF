@@ -1,7 +1,7 @@
 import asyncio
 import textwrap
 import uuid
-from typing import List, TYPE_CHECKING, Optional, Callable, Coroutine
+from typing import List, TYPE_CHECKING, Optional, Callable, Coroutine, Union
 
 import attr
 
@@ -23,9 +23,12 @@ from dis_snek import (
     Color,
     BrandColors,
 )
+from dis_snek.client.utils.serializer import export_converter
+from dis_snek.models.discord.emoji import process_emoji
 
 if TYPE_CHECKING:
     from dis_snek import Snake
+    from dis_snek.models.discord.emoji import PartialEmoji
 
 __all__ = ["Paginator"]
 
@@ -90,6 +93,27 @@ class Paginator:
     show_select_menu: bool = attr.ib(default=False)
     """Should a select menu be shown for navigation"""
 
+    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+        default="⏮️", metadata=export_converter(process_emoji)
+    )
+    """The emoji to use for the first button"""
+    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+        default="⬅️", metadata=export_converter(process_emoji)
+    )
+    """The emoji to use for the back button"""
+    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+        default="➡️", metadata=export_converter(process_emoji)
+    )
+    """The emoji to use for the next button"""
+    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+        default="⏩", metadata=export_converter(process_emoji)
+    )
+    """The emoji to use for the last button"""
+    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+        default="✅", metadata=export_converter(process_emoji)
+    )
+    """The emoji to use for the callback button"""
+
     wrong_user_message: str = attr.ib(default="This paginator is not for you")
     """The message to be sent when the wrong user uses this paginator"""
 
@@ -97,6 +121,8 @@ class Paginator:
     """The default title to show on the embeds"""
     default_color: Color = attr.ib(default=BrandColors.BLURPLE)
     """The default colour to show on the embeds"""
+    default_button_color: Union[ButtonStyles, int] = attr.ib(default=ButtonStyles.BLURPLE)
+    """The color of the buttons"""
 
     _uuid: str = attr.ib(factory=uuid.uuid4)
     _message: Message = attr.ib(default=MISSING)
@@ -108,7 +134,14 @@ class Paginator:
             ComponentCommand(
                 name=f"Paginator:{self._uuid}",
                 callback=self._on_button,
-                listeners=list(get_components_ids(self.create_components(all=True))),
+                listeners=[
+                    f"{self._uuid}|select",
+                    f"{self._uuid}|first",
+                    f"{self._uuid}|back",
+                    f"{self._uuid}|callback",
+                    f"{self._uuid}|next",
+                    f"{self._uuid}|last",
+                ],
             )
         )
 
@@ -140,13 +173,12 @@ class Paginator:
         pages = [Page(c, prefix=prefix, suffix=suffix) for c in content_pages]
         return cls(client, pages=pages, timeout_interval=timeout)
 
-    def create_components(self, disable=False, all=False) -> List[ActionRow]:
+    def create_components(self, disable=False) -> List[ActionRow]:
         """
         Create the components for the paginator message.
 
         Args:
             disable: Should all the components be disabled?
-            all: Force all components to be enabled
 
         Returns:
             A list of ActionRows
@@ -154,7 +186,7 @@ class Paginator:
         """
         output = []
 
-        if self.show_select_menu or all:
+        if self.show_select_menu:
             current = self.pages[self.page_index]
             output.append(
                 Select(
@@ -169,42 +201,49 @@ class Paginator:
                 )
             )
 
-        if self.show_first_button or all:
+        if self.show_first_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
-                    emoji="⏮️",
+                    self.default_button_color,
+                    emoji=self.first_button_emoji,
                     custom_id=f"{self._uuid}|first",
                     disabled=disable or self.page_index == 0,
                 )
             )
-        if self.show_back_button or all:
+        if self.show_back_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
-                    emoji="⬅️",
+                    self.default_button_color,
+                    emoji=self.back_button_emoji,
                     custom_id=f"{self._uuid}|back",
                     disabled=disable or self.page_index == 0,
                 )
             )
 
-        if self.show_callback_button or all:
-            output.append(Button(ButtonStyles.BLURPLE, emoji="✅", custom_id=f"{self._uuid}|callback", disabled=disable))
-
-        if self.show_next_button or all:
+        if self.show_callback_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
-                    emoji="➡️",
+                    self.default_button_color,
+                    emoji=self.callback_button_emoji,
+                    custom_id=f"{self._uuid}|callback",
+                    disabled=disable,
+                )
+            )
+
+        if self.show_next_button:
+            output.append(
+                Button(
+                    self.default_button_color,
+                    emoji=self.next_button_emoji,
                     custom_id=f"{self._uuid}|next",
                     disabled=disable or self.page_index >= len(self.pages) - 1,
                 )
             )
-        if self.show_last_button or all:
+        if self.show_last_button:
             output.append(
                 Button(
-                    ButtonStyles.BLURPLE,
-                    emoji="⏭️",
+                    self.default_button_color,
+                    emoji=self.last_button_emoji,
                     custom_id=f"{self._uuid}|last",
                     disabled=disable or self.page_index >= len(self.pages) - 1,
                 )

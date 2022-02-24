@@ -5,7 +5,10 @@ import attr
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
+from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.serializer import dict_filter_missing
+from dis_snek.models.discord.asset import Asset
+from dis_snek.models.discord.emoji import PartialEmoji
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions
 from .base import DiscordObject
@@ -42,7 +45,8 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-
+    _icon: Optional[Asset] = field(default=None)
+    _unicode_emoji: Optional[PartialEmoji] = field(default=None, converter=optional_c(PartialEmoji.from_str))
     _guild_id: "Snowflake_Type" = field()
     _bot_id: Optional["Snowflake_Type"] = field(default=None)
     _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
@@ -59,9 +63,25 @@ class Role(DiscordObject):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data.update(data.pop("tags", {}))
+
+        if icon_hash := data.get("icon"):
+            data["icon"] = Asset.from_path_hash(client, f"role-icons/{data['id']}/{{}}", icon_hash)
+
         return data
 
-    async def get_bot(self) -> Optional["Member"]:
+    async def fetch_bot(self) -> Optional["Member"]:
+        """
+        Fetch the bot associated with this role if any.
+
+        Returns:
+            Member object if any
+
+        """
+        if self._bot_id is None:
+            return None
+        return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
+
+    def get_bot(self) -> Optional["Member"]:
         """
         Get the bot associated with this role if any.
 
@@ -71,7 +91,7 @@ class Role(DiscordObject):
         """
         if self._bot_id is None:
             return None
-        return await self._client.cache.get_member(self._guild_id, self._bot_id)
+        return self._client.cache.get_member(self._guild_id, self._bot_id)
 
     @property
     def guild(self) -> "Guild":
@@ -102,6 +122,16 @@ class Role(DiscordObject):
     def members(self) -> list["Member"]:
         """List of members with this role"""
         return [member for member in self.guild.members if member.has_role(self)]
+
+    @property
+    def icon(self) -> Optional[Asset | PartialEmoji]:
+        """
+        The icon of this role
+
+        Note:
+            You have to use this method instead of the `_icon` attribute, because the first does account for unicode emojis
+        """
+        return self._icon or self._unicode_emoji
 
     @property
     def is_assignable(self) -> bool:

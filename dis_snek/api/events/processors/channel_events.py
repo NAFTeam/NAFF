@@ -3,6 +3,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import dis_snek.api.events as events
+from dis_snek.models.discord.channel import BaseChannel
 from dis_snek.models.discord.invite import Invite
 from dis_snek.client.const import MISSING, logger_name
 from ._template import EventMixinTemplate, Processor
@@ -19,9 +20,12 @@ class ChannelEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_channel_create(self, event: "RawGatewayEvent") -> None:
 
-        channel = self.cache.place_channel_data(event.data)
+        channel = BaseChannel.from_dict_factory(event.data, self)
         if guild := channel.guild:
+            # delete references to this channel in the parent guild
             guild._channel_ids.add(channel.id)
+        # delete this channel from the cache
+        self.cache.channel_cache.pop(channel.id, None)
         self.dispatch(events.ChannelCreate(channel))
 
     @Processor.define()
@@ -35,12 +39,12 @@ class ChannelEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_channel_update(self, event: "RawGatewayEvent") -> None:
-        before = copy.copy(await self.cache.get_channel(channel_id=event.data.get("id"), request_fallback=False))
+        before = copy.copy(await self.cache.fetch_channel(channel_id=event.data.get("id"), request_fallback=False))
         self.dispatch(events.ChannelUpdate(before=before or MISSING, after=self.cache.place_channel_data(event.data)))
 
     @Processor.define()
     async def _on_raw_channel_pins_update(self, event: "RawGatewayEvent") -> None:
-        channel = await self.cache.get_channel(event.data.get("channel_id"))
+        channel = await self.cache.fetch_channel(event.data.get("channel_id"))
         channel.last_pin_timestamp = event.data.get("last_pin_timestamp")
         self.cache.channel_cache[channel.id] = channel
         self.dispatch(events.ChannelPinsUpdate(channel, channel.last_pin_timestamp))

@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from datetime import datetime
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
@@ -31,7 +32,7 @@ from dis_snek.client.errors import (
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial
 from dis_snek.client.utils.serializer import to_image_data
-from dis_snek.ext.tasks.task import Task
+from dis_snek.models.snek.tasks import Task
 from dis_snek.models import (
     Activity,
     Application,
@@ -55,6 +56,7 @@ from dis_snek.models import (
     to_snowflake_list,
     ComponentContext,
     InteractionContext,
+    ModalContext,
     MessageContext,
     AutocompleteContext,
     ComponentCommand,
@@ -65,6 +67,7 @@ from dis_snek.models import (
 from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
+from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.auto_defer import AutoDefer
 from .smart_cache import GlobalCache
 
@@ -100,8 +103,8 @@ class Snake(
         intents: Union[int, Intents]: The intents to use
         loop: Optional[asyncio.AbstractEventLoop]: An event loop to use, normally leave this undefined
 
-        default_prefix: str: The default_prefix to use for message commands, defaults to your bot being mentioned
-        get_prefix: Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
+        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
+        generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
         status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
         activity: Union[Activity, str]: The activity the bot should log in "playing"
 
@@ -138,9 +141,9 @@ class Snake(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        default_prefix: str = MENTION_PREFIX,
-        get_prefix: Absent[Callable[..., Coroutine]] = MISSING,
-        sync_interactions: bool = False,
+        default_prefix: str | Iterable[str] = MENTION_PREFIX,
+        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
+        sync_interactions: bool = True,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
@@ -178,8 +181,8 @@ class Snake(
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
         """The default prefix to be used for message commands"""
-        self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
-        """A coroutine that returns a prefix, for dynamic prefixes"""
+        self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
+        """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
         self.auto_defer = auto_defer or AutoDefer()
         """A system to automatically defer commands after a set duration"""
 
@@ -374,44 +377,21 @@ class Snake(
         if len(self.processors) == 0:
             log.warning("No Processors are loaded! This means no events will be processed!")
 
-    async def get_prefix(self, message: Message) -> str:
+    async def generate_prefixes(self, message: Message) -> str | Iterable[str]:
         """
         A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
         !!! note
-            To easily override this method, simply use the `get_prefix` parameter when instantiating the client
+            To easily override this method, simply use the `generate_prefixes` parameter when instantiating the client
 
         Args:
             message: A message to determine the prefix from.
 
         Returns:
-            A string to use as a prefix, by default will return `client.default_prefix`
+            A string or an iterable of strings to use as a prefix. By default, this will return `client.default_prefix`
 
         """
         return self.default_prefix
-
-    async def login(self, token) -> None:
-        """
-        Login to discord.
-
-        Args:
-            token str: Your bot's token
-
-        """
-        # i needed somewhere to put this call,
-        # login will always run after initialisation
-        # so im gathering commands here
-        self._gather_commands()
-
-        log.debug("Attempting to login")
-        me = await self.http.login(token.strip())
-        self._user = SnakeBotUser.from_dict(me, self)
-        self.cache.place_user_data(me)
-        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
-        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
-        self.dispatch(events.Login())
-
-        await self._connection_state.start()
 
     def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
@@ -589,6 +569,30 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
+    async def login(self, token, start_gateway=False) -> None:
+        """
+        Login to discord via http.
+
+        !!! note
+            You will need to run Snake.start_gateway() before you start receiving gateway events.
+
+        Args:
+            token str: Your bot's token
+
+        """
+        # i needed somewhere to put this call,
+        # login will always run after initialisation
+        # so im gathering commands here
+        self._gather_commands()
+
+        log.debug("Attempting to login")
+        me = await self.http.login(token.strip())
+        self._user = SnakeBotUser.from_dict(me, self)
+        self.cache.place_user_data(me)
+        self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
+        self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
+        self.dispatch(events.Login())
+
     def start(self, token) -> None:
         """
         Start the bot.
@@ -602,6 +606,14 @@ class Snake(
         """
         try:
             self.loop.run_until_complete(self.login(token))
+            self.loop.run_until_complete(self._connection_state.start())
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.stop())
+
+    def start_gateway(self) -> None:
+        """Starts the gateway connection."""
+        try:
+            self.loop.run_until_complete(self._connection_state.start())
         except KeyboardInterrupt:
             self.loop.run_until_complete(self.stop())
 
@@ -638,7 +650,7 @@ class Snake(
                 if result:
                     index_to_remove.append(i)
 
-            for idx in index_to_remove:
+            for idx in sorted(index_to_remove, reverse=True):
                 _waits.pop(idx)
 
     async def wait_until_ready(self) -> None:
@@ -668,6 +680,38 @@ class Snake(
 
         return asyncio.wait_for(future, timeout)
 
+    async def wait_for_modal(
+        self,
+        modal: "Modal",
+        author: Optional["Snowflake_Type"] = None,
+        timeout: Optional[float] = None,
+    ) -> ModalContext:
+        """
+        Wait for a modal response.
+
+        Args:
+            modal: The modal we're waiting for.
+            author: The user we're waiting for to reply
+            timeout: A timeout in seconds to stop waiting
+
+        Returns:
+            The context of the modal response
+        Raises:
+           ` asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+
+        """
+        author = to_snowflake(author) if author else None
+
+        def predicate(event) -> bool:
+            if modal.custom_id != event.context.custom_id:
+                return False
+            if author and author != to_snowflake(event.context.author):
+                return False
+            return True
+
+        resp = await self.wait_for("modal_response", predicate, timeout)
+        return resp.context
+
     async def wait_for_component(
         self,
         messages: Union[Message, int, list] = None,
@@ -678,7 +722,7 @@ class Snake(
         timeout: Optional[float] = None,
     ) -> "Component":
         """
-        Waits for a message to be sent to the bot.
+        Waits for a component to be sent to the bot.
 
         Args:
             messages: The message object to check for.
@@ -1116,16 +1160,19 @@ class Snake(
                 case InteractionTypes.AUTOCOMPLETE:
                     cls = self.autocomplete_context.from_dict(data, self)
 
+                case InteractionTypes.MODAL_RESPONSE:
+                    cls = ModalContext.from_dict(data, self)
+
                 case _:
                     cls = self.interaction_context.from_dict(data, self)
 
             if not cls.channel:
-                cls.channel = await self.cache.get_channel(data["channel_id"])
+                cls.channel = await self.cache.fetch_channel(data["channel_id"])
 
         else:
             cls = self.message_context.from_message(self, data)
             if not cls.channel:
-                cls.channel = await self.cache.get_channel(data._channel_id)
+                cls.channel = await self.cache.fetch_channel(data._channel_id)
 
         return cls
 
@@ -1206,6 +1253,9 @@ class Snake(
             if component_type == ComponentTypes.SELECT:
                 self.dispatch(events.Select(ctx))
 
+        elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
+            ctx = await self.get_context(interaction_data, True)
+            self.dispatch(events.ModalResponse(ctx))
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
@@ -1214,23 +1264,39 @@ class Snake(
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
 
+        if not message.content:
+            return
+
         if not message.author.bot:
-            prefix = await self.get_prefix(message)
+            prefixes = await self.generate_prefixes(message)
 
-            if prefix == MENTION_PREFIX:
-                mention = self._mention_reg.search(message.content)
-                if mention:
-                    prefix = mention.group()
-                else:
-                    return
+            if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
+                # its easier to treat everything as if it may be an iterable
+                # rather than building a special case for this
+                prefixes = (prefixes,)
 
-            if message.content.startswith(prefix):
-                invoked_name = get_first_word(message.content.removeprefix(prefix))
+            prefix_used = None
+
+            for prefix in prefixes:
+                if prefix == MENTION_PREFIX:
+                    mention = self._mention_reg.search(message.content)
+                    if mention:
+                        prefix = mention.group()
+                    else:
+                        continue
+
+                if message.content.startswith(prefix):
+                    prefix_used = prefix
+                    break
+
+            if prefix_used:
+                invoked_name = get_first_word(message.content.removeprefix(prefix_used))
                 command = self.commands.get(invoked_name)
+
                 if command and command.enabled:
                     context = await self.get_context(message)
                     context.invoked_name = invoked_name
-                    context.prefix = prefix
+                    context.prefix = prefix_used
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:
@@ -1379,9 +1445,9 @@ class Snake(
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
 
-    async def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+    async def fetch_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
         """
-        Get a guild.
+        Fetch a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1395,9 +1461,25 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_guild(guild_id)
+            return await self.cache.fetch_guild(guild_id)
         except NotFound:
             return None
+
+    def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+        """
+        Get a guild.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            guild_id: The ID of the guild to get
+
+        Returns:
+            Guild Object if found, otherwise None
+
+        """
+        return self.cache.get_guild(guild_id)
 
     async def create_guild_from_guild_template(
         self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
@@ -1422,9 +1504,9 @@ class Snake(
         guild_data = await self.http.create_guild_from_guild_template(template_code, name, icon)
         return Guild.from_dict(guild_data, self)
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+    async def fetch_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
-        Get a channel.
+        Fetch a channel.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1438,13 +1520,28 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_channel(channel_id)
+            return await self.cache.fetch_channel(channel_id)
         except NotFound:
             return None
 
-    async def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
         """
-        Get a user.
+        Get a channel.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            channel_id: The ID of the channel to get
+
+        Returns:
+            Channel Object if found, otherwise None
+        """
+        return self.cache.get_channel(channel_id)
+
+    async def fetch_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+        """
+        Fetch a user.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1458,13 +1555,29 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_user(user_id)
+            return await self.cache.fetch_user(user_id)
         except NotFound:
             return None
 
-    async def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+    def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
         """
-        Get a member from a guild.
+        Get a user.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            user_id: The ID of the user to get
+
+        Returns:
+            User Object if found, otherwise None
+
+        """
+        return self.cache.get_user(user_id)
+
+    async def fetch_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+        """
+        Fetch a member from a guild.
 
         Note:
             This method is an alias for the cache which will either return a cached object, or query discord for the object
@@ -1479,15 +1592,32 @@ class Snake(
 
         """
         try:
-            return await self.cache.get_member(guild_id, user_id)
+            return await self.cache.fetch_member(guild_id, user_id)
         except NotFound:
             return None
 
-    async def get_scheduled_event(
+    def get_member(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[Member]:
+        """
+        Get a member from a guild.
+
+        Note:
+            This method is an alias for the cache which will return a cached object.
+
+        Args:
+            user_id: The ID of the member
+            guild_id: The ID of the guild to get the member from
+
+        Returns:
+            Member object if found, otherwise None
+
+        """
+        return self.cache.get_member(guild_id, user_id)
+
+    async def fetch_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
     ) -> Optional["ScheduledEvent"]:
         """
-        Get a scheduled event by id.
+        Fetch a scheduled event by id.
 
         parameters:
             event_id: The id of the scheduled event.
@@ -1502,9 +1632,9 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
+    async def fetch_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
         """
-        Get a sticker by ID.
+        Fetch a sticker by ID.
 
         Args:
             sticker_id: The ID of the sticker.
@@ -1519,7 +1649,7 @@ class Snake(
         except NotFound:
             return None
 
-    async def get_nitro_packs(self) -> Optional[List["StickerPack"]]:
+    async def fetch_nitro_packs(self) -> Optional[List["StickerPack"]]:
         """
         List the sticker packs available to Nitro subscribers.
 

@@ -17,8 +17,8 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import field
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
-from dis_snek.client.utils.serializer import no_export_meta
-from dis_snek.models.discord.color import Color
+from dis_snek.client.utils.serializer import no_export_meta, export_converter
+from dis_snek.models.discord.color import Color, process_color
 from dis_snek.models.discord.timestamp import Timestamp
 
 __all__ = [
@@ -64,7 +64,7 @@ class EmbedField(DictSerializationMixin):
 
 
 @attr.s(slots=True)
-class EmbedAuthor:
+class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
 
@@ -91,7 +91,7 @@ class EmbedAuthor:
 
 
 @attr.s(slots=True)
-class EmbedAttachment:  # thumbnail or image or video
+class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
 
@@ -107,6 +107,12 @@ class EmbedAttachment:  # thumbnail or image or video
     proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
     height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
     width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any]):
+        if isinstance(data, str):
+            return {"url": data}
+        return data
 
     @property
     def size(self) -> tuple[Optional[int], Optional[int]]:
@@ -134,7 +140,7 @@ class EmbedFooter(DictSerializationMixin):
 
 
 @attr.s(slots=True)
-class EmbedProvider:
+class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
 
@@ -159,7 +165,9 @@ class Embed(DictSerializationMixin):
     """The title of the embed"""
     description: Optional[str] = field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[Union[str, int, Color]] = field(default=None, repr=True)
+    color: Optional[Union[Color, dict, tuple, list, str, int]] = field(
+        default=None, repr=True, metadata=export_converter(process_color)
+    )
     """The colour of the embed"""
     url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
     """The url the embed should direct to when clicked"""
@@ -173,20 +181,20 @@ class Embed(DictSerializationMixin):
     """Timestamp of embed content"""
     fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField.from_dict), repr=True)
     """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
-    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor))
+    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
-    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The thumbnail of the embed"""
-    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment))
+    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The image of the embed"""
     video: Optional[EmbedAttachment] = field(
-        default=None, converter=c_optional(EmbedAttachment), metadata=no_export_meta
+        default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
     footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.from_dict))
     """The footer of the embed"""
     provider: Optional[EmbedProvider] = field(
-        default=None, converter=c_optional(EmbedProvider), metadata=no_export_meta
+        default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
 
@@ -226,16 +234,6 @@ class Embed(DictSerializationMixin):
             raise ValueError(
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
-
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        if color := data.get("color"):
-            if isinstance(color, dict):
-                color = color["value"]
-            elif not isinstance(color, int):
-                color = Color(color).value
-            data["color"] = color
-        return data or None
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this

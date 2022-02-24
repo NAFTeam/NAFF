@@ -30,7 +30,17 @@ class ThreadMember(DiscordObject, SendMixin):
 
     _user_id: "Snowflake_Type" = field(converter=optional(to_snowflake))
 
-    async def get_thread(self) -> "TYPE_THREAD_CHANNEL":
+    async def fetch_thread(self) -> "TYPE_THREAD_CHANNEL":
+        """
+        Fetches the thread associated with with this member.
+
+        Returns:
+            The thread in question
+
+        """
+        return await self._client.cache.fetch_channel(self.id)
+
+    def get_thread(self) -> "TYPE_THREAD_CHANNEL":
         """
         Gets the thread associated with with this member.
 
@@ -38,9 +48,19 @@ class ThreadMember(DiscordObject, SendMixin):
             The thread in question
 
         """
-        return await self._client.get_channel(self.id)
+        return self._client.cache.get_channel(self.id)
 
-    async def get_user(self) -> "User":
+    async def fetch_user(self) -> "User":
+        """
+        Fetch the user associated with this thread member.
+
+        Returns:
+            The user object
+
+        """
+        return await self._client.cache.fetch_user(self._user_id)
+
+    def get_user(self) -> "User":
         """
         Get the user associated with this thread member.
 
@@ -48,10 +68,10 @@ class ThreadMember(DiscordObject, SendMixin):
             The user object
 
         """
-        return await self._client.get_user(self._user_id)
+        return self._client.cache.get_user(self._user_id)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        dm_id = await self._client.cache.get_dm_channel_id(self._user_id)
+        dm_id = await self._client.cache.fetch_dm_channel_id(self._user_id)
         return await self._client.http.create_message(message_payload, dm_id)
 
 

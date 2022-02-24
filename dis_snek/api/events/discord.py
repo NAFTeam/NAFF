@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, List, Union, Optional
 import attr
 
 import dis_snek.models
-from dis_snek.client.const import MISSING
+from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import docs
 from .internal import BaseEvent, GuildEvent
 
@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.voice_state import VoiceState
     from dis_snek.models.discord.stage_instance import StageInstance
+    from dis_snek.models.snek.context import ModalContext
 
 
 @attr.s(slots=True)
@@ -258,7 +259,7 @@ class RoleCreate(BaseEvent, GuildEvent):
 class RoleUpdate(BaseEvent, GuildEvent):
     """Dispatched when a role is updated."""
 
-    before: "Role" = attr.ib()
+    before: Absent["Role"] = attr.ib()
     """The role before this event"""
     after: "Role" = attr.ib()
     """The role after this event"""
@@ -268,8 +269,10 @@ class RoleUpdate(BaseEvent, GuildEvent):
 class RoleDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild role is deleted."""
 
-    role_id: "Snowflake_Type" = attr.ib()
+    id: "Snowflake_Type" = attr.ib()
     """The ID of the deleted role"""
+    role: Absent["Role"] = attr.ib()
+    """The deleted role"""
 
 
 # todo implementation missing
@@ -449,6 +452,13 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = attr.ib()
+
+
+@attr.s(slots=True)
+class ModalResponse(BaseEvent):
+    """Dispatched when a modal receives a response"""
+
+    context: "ModalContext" = attr.ib()
 
 
 @attr.s(slots=True)

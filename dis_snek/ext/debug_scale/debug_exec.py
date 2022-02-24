@@ -79,11 +79,23 @@ class DebugExec(Scale):
         if isinstance(result, File):
             return await ctx.message.reply(file=result)
 
+        if isinstance(result, Paginator):
+            return await result.send(ctx)
+
+        if hasattr(result, "__iter__"):
+            l_result = list(result)
+            if all([isinstance(r, Embed) for r in result]):
+                paginator = Paginator.create_from_embeds(self.bot, *l_result)
+                return await paginator.send(ctx)
+
         if not isinstance(result, str):
             result = repr(result)
 
+        # prevent token leak
+        result = result.replace(self.bot.http.token, "[REDACTED TOKEN]")
+
         if len(result) <= 2000:
-            return await ctx.message.reply(f"```py\n{result.replace(self.bot.http.token, '[REDACTED TOKEN]')}```")
+            return await ctx.message.reply(f"```py\n{result}```")
 
         else:
             paginator = Paginator.create_from_string(self.bot, result, prefix="```py", suffix="```", page_size=4000)

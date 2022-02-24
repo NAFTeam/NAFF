@@ -13,6 +13,7 @@ from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
+from dis_snek.models.discord.message import Attachment
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
 
@@ -29,8 +30,17 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.message import MessageReference
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
+    from dis_snek.models.discord.modal import Modal
 
-__all__ = ["Resolved", "Context", "InteractionContext", "ComponentContext", "AutocompleteContext", "MessageContext"]
+__all__ = [
+    "Resolved",
+    "Context",
+    "InteractionContext",
+    "ComponentContext",
+    "AutocompleteContext",
+    "ModalContext",
+    "MessageContext",
+]
 
 log = logging.getLogger(logger_name)
 
@@ -53,6 +63,9 @@ class Resolved:
     )
     messages: Dict["Snowflake_Type", "Message"] = attr.ib(
         factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
+    )
+    attachments: Dict["Snowflake_Type", "Attachment"] = attr.ib(
+        factory=dict, metadata=docs("A dictionary of attachments tied to the interaction")
     )
 
     @classmethod
@@ -80,6 +93,10 @@ class Resolved:
         if messages := data.get("messages"):
             for key, _msg in messages.items():
                 new_cls.messages[key] = client.cache.place_message_data(_msg)
+
+        if attachments := data.get("attachments"):
+            for key, _attach in attachments.items():
+                new_cls.attachments[key] = Attachment.from_dict(_attach, client)
 
         return new_cls
 
@@ -123,6 +140,13 @@ class _BaseInteractionContext(Context):
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
         converter=optional(to_snowflake),
     )
+    locale: str = attr.ib(
+        default=None,
+        metadata=docs(
+            "The selected language of the invoking user \n(https://discord.com/developers/docs/reference#locales)"
+        ),
+    )
+    guild_locale: str = attr.ib(default=None, metadata=docs("The guild's preferred locale"))
 
     deferred: bool = attr.ib(default=False, metadata=docs("Is this interaction deferred?"))
     responded: bool = attr.ib(default=False, metadata=docs("Have we responded to the interaction?"))
@@ -143,6 +167,8 @@ class _BaseInteractionContext(Context):
             invoked_name=data["data"].get("name"),
             guild_id=data.get("guild_id"),
             context_type=data["data"].get("type", 0),
+            locale=data.get("locale"),
+            guild_locale=data.get("guild_locale"),
         )
         new_cls.data = data
 
@@ -178,7 +204,6 @@ class _BaseInteractionContext(Context):
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
-
             for option in options:
                 value = option.get("value")
 
@@ -205,11 +230,32 @@ class _BaseInteractionContext(Context):
                         elif role := self._client.cache.role_cache.get(snow):
                             value = role
 
+                    case OptionTypes.ATTACHMENT:
+                        value = self.resolved.attachments.get(value)
+
                 if option.get("focused", False):
                     self.focussed_option = option.get("name")
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
+        """
+        Respond using a modal.
+
+        Args:
+            modal: The modal to respond with
+
+        Returns:
+            The modal used.
+
+        """
+        payload = modal.to_dict() if not isinstance(modal, dict) else modal
+
+        await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+
+        self.responded = True
+        return modal
 
 
 @define
@@ -275,6 +321,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
@@ -291,7 +338,8 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
             ephemeral bool: Should this message be sent as ephemeral (hidden)
@@ -312,6 +360,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
+            files=files,
             file=file,
             tts=tts,
             flags=flags,
@@ -412,6 +461,7 @@ class ComponentContext(InteractionContext):
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
     ) -> "Message":
@@ -425,14 +475,15 @@ class ComponentContext(InteractionContext):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
 
         returns:
             The message after it was edited.
 
         """
-        if not self.responded and not self.deferred and file:
+        if not self.responded and not self.deferred and (files or file):
             # Discord doesn't allow files at initial response, so we defer then edit.
             await self.defer(edit_origin=True)
 
@@ -441,7 +492,7 @@ class ComponentContext(InteractionContext):
             embeds=embeds or embed,
             components=components,
             allowed_mentions=allowed_mentions,
-            file=file,
+            files=files or file,
             tts=tts,
         )
 
@@ -515,6 +566,31 @@ class AutocompleteContext(_BaseInteractionContext):
 
 
 @define
+class ModalContext(InteractionContext):
+    custom_id: str = attr.ib(default="")
+
+    @classmethod
+    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+        new_cls = super().from_dict(data, client)
+
+        new_cls.kwargs = {
+            comp["components"][0]["custom_id"]: comp["components"][0]["value"] for comp in data["data"]["components"]
+        }
+        new_cls.custom_id = data["data"]["custom_id"]
+        return new_cls
+
+    @property
+    def responses(self) -> dict[str, str]:
+        """
+        Get the responses to this modal.
+
+        Returns:
+            A dictionary of responses. Keys are the custom_ids of your components.
+        """
+        return self.kwargs
+
+
+@define
 class MessageContext(Context, SendMixin):
     prefix: str = attr.ib(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
@@ -525,13 +601,23 @@ class MessageContext(Context, SendMixin):
             message=message,
             author=message.author,
             channel=message.channel,
-            guild_id=message.guild.id if message.guild else None,
+            guild_id=message._guild_id,
         )
         return new_cls
 
     @property
     def content_parameters(self) -> str:
         return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
+
+    async def reply(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
+        **kwargs,
+    ) -> "Message":
+        """Reply to this message, takes all the same attributes as `send`."""
+        return await self.send(content=content, reply_to=self.message, embeds=embeds or embed, **kwargs)
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id)

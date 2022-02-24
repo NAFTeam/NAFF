@@ -38,6 +38,7 @@ class SendMixin:
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
@@ -54,7 +55,8 @@ class SendMixin:
             stickers: IDs of up to 3 stickers in the server to send in the message.
             allowed_mentions: Allowed mentions for the message.
             reply_to: Message to reference, must be from the same channel.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
@@ -62,8 +64,10 @@ class SendMixin:
             New message object that was sent.
 
         """
-        if not content and not (embeds or embed) and not file:
-            raise errors.EmptyMessageException("You cannot send a message without any content or embeds")
+        if not content and not (embeds or embed) and not (files or file) and not stickers:
+            raise errors.EmptyMessageException(
+                "You cannot send a message without any content, embeds, files, or stickers"
+            )
         message_payload = models.discord.message.process_message_payload(
             content=content,
             embeds=embeds or embed,
@@ -71,13 +75,11 @@ class SendMixin:
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
-            file=file,
+            files=files or file,
             tts=tts,
             flags=flags,
+            **kwargs,
         )
-        if kwargs:
-            for key, value in kwargs.items():
-                message_payload[key] = value
 
         message_data = await self._send_http_request(message_payload)
         if message_data:

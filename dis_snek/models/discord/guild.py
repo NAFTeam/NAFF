@@ -1,9 +1,12 @@
 import asyncio
+from collections import namedtuple
 import logging
 import time
 from io import IOBase
 from pathlib import Path
 from typing import List, Optional, Union, Set
+from dis_snek.models.snek import AsyncIterator
+
 
 import attr
 from aiohttp import FormData
@@ -14,7 +17,7 @@ from dis_snek.client.errors import EventLocationNotProvided
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_image_data, dict_filter_none, no_export_meta
+from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_none, no_export_meta
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,
@@ -28,6 +31,7 @@ from .enums import (
     IntegrationExpireBehaviour,
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
+    AuditLogEventType,
 )
 from .snowflake import to_snowflake, Snowflake_Type
 
@@ -40,6 +44,10 @@ __all__ = [
     "GuildTemplate",
     "GuildWelcomeChannel",
     "GuildIntegration",
+    "AuditLogChange",
+    "AuditLogEntry",
+    "AuditLog",
+    "AuditLogHistory",
 ]
 
 log = logging.getLogger(logger_name)
@@ -70,12 +78,12 @@ class BaseGuild(DiscordObject):
     @classmethod
     def _process_dict(cls, data, client):
         if icon_hash := data.pop("icon", None):
-            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}.png", icon_hash)
+            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
         if splash_hash := data.pop("splash", None):
-            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}.png", splash_hash)
+            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}", splash_hash)
         if disco_splash := data.pop("discovery_splash", None):
             data["discovery_splash"] = models.Asset.from_path_hash(
-                client, f"discovery-splashes/{data['id']}/{{}}.png", disco_splash
+                client, f"discovery-splashes/{data['id']}/{{}}", disco_splash
             )
         return data
 
@@ -273,7 +281,7 @@ class Guild(BaseGuild):
     @property
     def bitrate_limit(self) -> int:
         """The maximum bitrate for this guild."""
-        base = 128000 if "VIP_REGIONS" in self.features else 9600024
+        base = 128000 if "VIP_REGIONS" in self.features else 96000
         return max(base, PREMIUM_GUILD_LIMITS[self.premium_tier]["bitrate"])
 
     @property
@@ -308,7 +316,18 @@ class Guild(BaseGuild):
         """Alias for me.guild_permissions"""
         return self.me.guild_permissions
 
-    async def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
+    async def fetch_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
+        """
+        Return the Member with the given discord ID, fetching from the API if necessary.
+
+        Args:
+            member_id: The ID of the member:
+        Returns:
+            Member object or None
+        """
+        return await self._client.cache.fetch_member(self.id, member_id)
+
+    def get_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
         Return the Member with the given discord ID.
 
@@ -317,11 +336,26 @@ class Guild(BaseGuild):
         Returns:
             Member object or None
         """
-        return await self._client.cache.get_member(self.id, member_id)
+        return self._client.cache.get_member(self.id, member_id)
 
-    async def get_owner(self) -> "models.Member":
-        # maybe precache owner instead of using `get_owner`
-        return await self._client.cache.get_member(self.id, self._owner_id)
+    async def fetch_owner(self) -> "models.Member":
+        """
+        Return the Guild owner
+
+        Returns:
+            Member object or None
+        """
+        # TODO: maybe precache owner instead of using `fetch_owner`
+        return await self._client.cache.fetch_member(self.id, self._owner_id)
+
+    def get_owner(self) -> "models.Member":
+        """
+        Return the Guild owner
+
+        Returns:
+            Member object or None
+        """
+        return self._client.cache.get_member(self.id, self._owner_id)
 
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
@@ -334,6 +368,10 @@ class Guild(BaseGuild):
             the `user` argument can be any type that meets `Snowflake_Type`
         """
         return self._owner_id == to_snowflake(user)
+
+    async def edit_nickname(self, new_nickname: Absent[str] = MISSING, reason: Absent[str] = MISSING) -> None:
+        """Alias for me.edit_nickname"""
+        await self.me.edit_nickname(new_nickname, reason=reason)
 
     async def chunk_guild(self, wait=True, presences=False) -> None:
         """
@@ -386,6 +424,69 @@ class Guild(BaseGuild):
             log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
+    async def fetch_audit_log(
+        self,
+        user_id: Optional["Snowflake_Type"] = MISSING,
+        action_type: Optional["AuditLogEventType"] = MISSING,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        limit: int = 100,
+    ) -> "AuditLog":
+        """
+        Fetch section of the audit log for this guild.
+
+        Args:
+            user_id: The ID of the user to filter by
+            action_type: The type of action to filter by
+            before: The ID of the entry to start at
+            after: The ID of the entry to end at
+            limit: The number of entries to return
+
+        Returns:
+            An AuditLog object
+        """
+        data = await self._client.http.get_audit_log(self.id, user_id, action_type, before, after, limit)
+        return AuditLog.from_dict(data, self._client)
+
+    def audit_log_history(
+        self,
+        user_id: Optional["Snowflake_Type"] = MISSING,
+        action_type: Optional["AuditLogEventType"] = MISSING,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        limit: int = 100,
+    ) -> "AuditLogHistory":
+        """
+        Get an async iterator for the history of the audit log.
+
+        Parameters:
+            guild (:class:`Guild`): The guild to search through.
+            user_id (:class:`Snowflake_Type`): The user ID to search for.
+            action_type (:class:`AuditLogEventType`): The action type to search for.
+            before: get entries before this message ID
+            after: get entries after this message ID
+            limit: The maximum number of entries to return (set to 0 for no limit)
+
+        ??? Hint "Example Usage:"
+            ```python
+            async for entry in guild.audit_log_history(limit=0):
+                entry: "AuditLogEntry"
+                if entry.changes:
+                    # ...
+            ```
+            or
+            ```python
+            history = guild.audit_log_history(limit=250)
+            # Flatten the async iterator into a list
+            entries = await history.flatten()
+            ```
+
+        Returns:
+            AuditLogHistory (AsyncIterator)
+
+        """
+        return AuditLogHistory(self, user_id, action_type, before, after, limit)
+
     async def edit(
         self,
         name: Absent[Optional[str]] = MISSING,
@@ -400,7 +501,7 @@ class Guild(BaseGuild):
         # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
         icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
-        splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        splash: Absent[Optional[Union["models.File", "IOBase", "Path", str, bytes]]] = MISSING,
         discovery_splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
         banner: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
         rules_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
@@ -467,7 +568,7 @@ class Guild(BaseGuild):
     async def create_custom_emoji(
         self,
         name: str,
-        imagefile: Union[str, "Path", "IOBase"],
+        imagefile: Union["models.File", "IOBase", "Path", str, bytes],
         roles: Optional[List[Union[Snowflake_Type, "models.Role"]]] = None,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.CustomEmoji":
@@ -501,11 +602,11 @@ class Guild(BaseGuild):
         template = await self._client.http.create_guild_template(self.id, name, description)
         return GuildTemplate.from_dict(template, self._client)
 
-    async def get_guild_templates(self) -> List["models.GuildTemplate"]:
+    async def fetch_guild_templates(self) -> List["models.GuildTemplate"]:
         templates = await self._client.http.get_guild_templates(self.id)
         return [GuildTemplate.from_dict(t, self._client) for t in templates]
 
-    async def get_all_custom_emojis(self) -> List["models.CustomEmoji"]:
+    async def fetch_all_custom_emojis(self) -> List["models.CustomEmoji"]:
         """
         Gets all the custom emoji present for this guild.
 
@@ -516,7 +617,20 @@ class Guild(BaseGuild):
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
         return [self._client.cache.place_emoji_data(self.id, emoji_data) for emoji_data in emojis_data]
 
-    async def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+    async def fetch_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+        """
+        Fetches the custom emoji present for this guild, based on the emoji id.
+
+        parameters:
+            emoji_id: The target emoji to get data of.
+
+        returns:
+            The custom emoji object.
+
+        """
+        return await self._client.cache.fetch_emoji(self.id, emoji_id)
+
+    def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
         """
         Gets the custom emoji present for this guild, based on the emoji id.
 
@@ -527,7 +641,11 @@ class Guild(BaseGuild):
             The custom emoji object.
 
         """
-        return await self._client.cache.get_emoji(self.id, emoji_id)
+        emoji_id = to_snowflake(emoji_id)
+        emoji = self._client.cache.get_emoji(emoji_id)
+        if emoji and emoji._guild_id == self.id:
+            return emoji
+        return None
 
     async def create_channel(
         self,
@@ -566,8 +684,8 @@ class Guild(BaseGuild):
         if category:
             category = to_snowflake(category)
 
-        if permission_overwrites is not MISSING:
-            permission_overwrites = [attr.asdict(p) if not isinstance(p, dict) else p for p in permission_overwrites]
+        if permission_overwrites:
+            permission_overwrites = list(map(to_dict, permission_overwrites))
 
         channel_data = await self._client.http.create_guild_channel(
             self.id,
@@ -773,7 +891,7 @@ class Guild(BaseGuild):
         scheduled_events_data = await self._client.http.list_schedules_events(self.id, with_user_count)
         return models.ScheduledEvent.from_list(scheduled_events_data, self._client)
 
-    async def get_scheduled_event(
+    async def fetch_scheduled_event(
         self, scheduled_event_id: Snowflake_Type, with_user_count: bool = False
     ) -> "models.ScheduledEvent":
         """
@@ -891,9 +1009,9 @@ class Guild(BaseGuild):
         sticker_data = await self._client.http.create_guild_sticker(payload, self.id, reason)
         return models.Sticker.from_dict(sticker_data, self._client)
 
-    async def get_all_custom_stickers(self) -> List["models.Sticker"]:
+    async def fetch_all_custom_stickers(self) -> List["models.Sticker"]:
         """
-        Gets all custom stickers for a guild.
+        Fetches all custom stickers for a guild.
 
         Returns:
             List of Sticker objects
@@ -902,9 +1020,9 @@ class Guild(BaseGuild):
         stickers_data = await self._client.http.list_guild_stickers(self.id)
         return models.Sticker.from_list(stickers_data, self._client)
 
-    async def get_custom_sticker(self, sticker_id: Snowflake_Type) -> "models.Sticker":
+    async def fetch_custom_sticker(self, sticker_id: Snowflake_Type) -> "models.Sticker":
         """
-        Gets a specific custom sticker for a guild.
+        Fetches a specific custom sticker for a guild.
 
         Args:
             sticker_id: ID of sticker to get
@@ -916,9 +1034,9 @@ class Guild(BaseGuild):
         sticker_data = await self._client.http.get_guild_sticker(self.id, to_snowflake(sticker_id))
         return models.Sticker.from_dict(sticker_data, self._client)
 
-    async def get_active_threads(self) -> "models.ThreadList":
+    async def fetch_active_threads(self) -> "models.ThreadList":
         """
-        Gets all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
+        Fetches all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
 
         returns:
             List of active threads and thread member object for each returned thread the bot user has joined.
@@ -927,7 +1045,20 @@ class Guild(BaseGuild):
         threads_data = await self._client.http.list_active_threads(self.id)
         return models.ThreadList.from_dict(threads_data, self._client)
 
-    async def get_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
+    async def fetch_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
+        """
+        Fetch the specified role by ID.
+
+        Args:
+            role_id: The ID of the role to get
+
+        Returns:
+            A role object or None if the role is not found.
+
+        """
+        return await self._client.cache.fetch_role(self.id, role_id)
+
+    def get_role(self, role_id: Snowflake_Type) -> Optional["models.Role"]:
         """
         Get the specified role by ID.
 
@@ -938,7 +1069,10 @@ class Guild(BaseGuild):
             A role object or None if the role is not found.
 
         """
-        return await self._client.cache.get_role(self.id, role_id)
+        role_id = to_snowflake(role_id)
+        if role_id in self._role_ids:
+            return self._client.cache.get_role(role_id)
+        return None
 
     async def create_role(
         self,
@@ -1014,7 +1148,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return self._client.cache.channel_cache.get(channel_id)
+            return self._client.cache.get_channel(channel_id)
         return None
 
     async def fetch_channel(self, channel_id: Snowflake_Type) -> Optional["models.TYPE_GUILD_CHANNEL"]:
@@ -1033,7 +1167,7 @@ class Guild(BaseGuild):
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
-            return await self._client.get_channel(channel_id)
+            return await self._client.fetch_channel(channel_id)
         return None
 
     def get_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:
@@ -1163,9 +1297,9 @@ class Guild(BaseGuild):
         """
         await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
 
-    async def get_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> GuildBan:
+    async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> GuildBan:
         """
-        Get's the ban information for the specified user in the guild. You must have the `ban members` permission.
+        Fetches the ban information for the specified user in the guild. You must have the `ban members` permission.
 
         Args:
             user: The user to look up.
@@ -1180,9 +1314,9 @@ class Guild(BaseGuild):
         ban_info = await self._client.http.get_guild_ban(self.id, to_snowflake(user))
         return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
-    async def get_bans(self) -> list[GuildBan]:
+    async def fetch_bans(self) -> list[GuildBan]:
         """
-        Get's all bans for the guild. You must have the `ban members` permission.
+        Fetches all bans for the guild. You must have the `ban members` permission.
 
         Returns:
             A list containing all bans and information about them.
@@ -1208,9 +1342,9 @@ class Guild(BaseGuild):
         """
         await self._client.http.remove_guild_ban(self.id, to_snowflake(user), reason=reason)
 
-    async def get_widget_image(self, style: str = None) -> str:
+    async def fetch_widget_image(self, style: str = None) -> str:
         """
-        Get a guilds widget image.
+        Fetch a guilds widget image.
 
         For a list of styles, look here: https://discord.com/developers/docs/resources/guild#get-guild-widget-image-widget-style-options
 
@@ -1220,8 +1354,8 @@ class Guild(BaseGuild):
         """
         return await self._client.http.get_guild_widget_image(self.id, style)
 
-    async def get_widget(self) -> dict:
-        """Gets the guilds widget."""
+    async def fetch_widget(self) -> dict:
+        """Fetches the guilds widget."""
         # todo: Guild widget object
         return await self._client.http.get_guild_widget(self.id)
 
@@ -1241,11 +1375,11 @@ class Guild(BaseGuild):
                 channel = channel.id
         return await self._client.http.modify_guild_widget(self.id, enabled, channel)
 
-    async def get_invites(self) -> List["models.Invite"]:
+    async def fetch_invites(self) -> List["models.Invite"]:
         invites_data = await self._client.http.get_guild_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
 
-    async def get_guild_integrations(self) -> List["models.GuildIntegration"]:
+    async def fetch_guild_integrations(self) -> List["models.GuildIntegration"]:
         data = await self._client.http.get_guild_integrations(self.id)
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
@@ -1350,3 +1484,96 @@ class GuildIntegration(DiscordObject):
     async def delete(self, reason: Absent[str] = MISSING) -> None:
         """Delete this guild integration."""
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)
+
+
+@define()
+class AuditLogChange(ClientObject):
+    key: str = attr.ib()
+    new_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attr.ib(default=MISSING)
+    old_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attr.ib(default=MISSING)
+
+
+@define()
+class AuditLogEntry(ClientObject):
+
+    id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    target_id: Optional["Snowflake_Type"] = attr.ib(converter=optional(to_snowflake))
+    user_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    action_type: "AuditLogEventType" = attr.ib(converter=to_snowflake)
+    changes: Optional[List[AuditLogChange]] = attr.ib(default=MISSING)
+    options: Optional[Union["Snowflake_Type", str]] = attr.ib(default=MISSING)
+    reason: Optional[str] = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data, client) -> "AuditLogEntry":
+        if changes := data.get("changes", None):
+            data["changes"] = AuditLogChange.from_list(changes, client)
+        return super().from_dict(data, client)
+
+
+@define()
+class AuditLog(ClientObject):
+    """Contains entries and other data given from selected"""
+
+    entries: Optional[List["AuditLogEntry"]] = attr.ib(default=MISSING)
+    scheduled_events: Optional[List["models.ScheduledEvent"]] = attr.ib(default=MISSING)
+    integrations: Optional[List["GuildIntegration"]] = attr.ib(default=MISSING)
+    threads: Optional[List["models.ThreadChannel"]] = attr.ib(default=MISSING)
+    users: Optional[List["models.User"]] = attr.ib(default=MISSING)
+    webhooks: Optional[List["models.Webhook"]] = attr.ib(default=MISSING)
+
+    @classmethod
+    def from_dict(cls, data, client) -> "AuditLog":
+        if entries := data.get("audit_log_entries", None):
+            data["entries"] = AuditLogEntry.from_list(entries, client)
+        if scheduled_events := data.get("guild_scheduled_events", None):
+            data["scheduled_events"] = models.ScheduledEvent.from_list(scheduled_events, client)
+        if integrations := data.get("integrations", None):
+            data["integrations"] = GuildIntegration.from_list(integrations, client)
+        if threads := data.get("threads", None):
+            data["threads"] = models.ThreadChannel.from_list(threads, client)
+        if users := data.get("users", None):
+            data["users"] = models.User.from_list(users, client)
+        if webhooks := data.get("webhooks", None):
+            data["webhooks"] = models.Webhook.from_list(webhooks, client)
+        return super().from_dict(data, client)
+
+
+class AuditLogHistory(AsyncIterator):
+    """
+    An async iterator for searching through a audit log's entry history.
+
+    Args:
+        guild (:class:`Guild`): The guild to search through.
+        user_id (:class:`Snowflake_Type`): The user ID to search for.
+        action_type (:class:`AuditLogEventType`): The action type to search for.
+        before: get messages before this message ID
+        after: get messages after this message ID
+        limit: The maximum number of entries to return (set to 0 for no limit)
+
+    """
+
+    def __init__(self, guild, user_id=None, action_type=None, before=None, after=None, limit=50):
+        self.guild: "Guild" = guild
+        self.user_id: Snowflake_Type = user_id
+        self.action_type: "AuditLogEventType" = action_type
+        self.before: Snowflake_Type = before
+        self.after: Snowflake_Type = after
+        super().__init__(limit)
+
+    async def fetch(self) -> List["AuditLog"]:
+        if self.after:
+            if not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.after
+            log = await self.guild.get_audit_log(limit=self.get_limit, after=self.last.id)
+            entries = log.entries if log.entries else []
+
+        else:
+            if self.before and not self.last:
+                self.last = namedtuple("temp", "id")
+                self.last.id = self.before
+
+            log = await self.guild.get_audit_log(limit=self.get_limit, before=self.last.id)
+            entries = log.entries if log.entries else []
+        return entries

@@ -411,7 +411,7 @@ class WebsocketClient:
                 self.sequence = seq
                 self.session_id = data["session_id"]
                 log.info("Connected to gateway!")
-                log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
+                log.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":

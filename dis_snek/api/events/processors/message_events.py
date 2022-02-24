@@ -33,12 +33,12 @@ class MessageEvents(EventMixinTemplate):
 
         if not msg.author:
             # sometimes discord will only send an author ID, not the author. this catches that
-            await self.cache.get_channel(to_snowflake(msg._channel_id)) if not msg.channel else msg.channel
+            await self.cache.fetch_channel(to_snowflake(msg._channel_id)) if not msg.channel else msg.channel
             if msg._guild_id:
-                await self.cache.get_guild(msg._guild_id) if not msg.guild else msg.guild
-                await self.cache.get_member(msg._guild_id, msg._author_id)
+                await self.cache.fetch_guild(msg._guild_id) if not msg.guild else msg.guild
+                await self.cache.fetch_member(msg._guild_id, msg._author_id)
             else:
-                await self.cache.get_user(to_snowflake(msg._author_id))
+                await self.cache.fetch_user(to_snowflake(msg._author_id))
 
         self.dispatch(events.MessageCreate(msg))
 
@@ -51,7 +51,7 @@ class MessageEvents(EventMixinTemplate):
             event: raw message deletion event
 
         """
-        message = await self.cache.get_message(
+        message = await self.cache.fetch_message(
             event.data.get("channel_id"), event.data.get("id"), request_fallback=False
         )
 
@@ -72,7 +72,7 @@ class MessageEvents(EventMixinTemplate):
         """
         # a copy is made because the cache will update the original object in memory
         before = copy.copy(
-            await self.cache.get_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
+            await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
         )
         after = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageUpdate(before=before, after=after))
