@@ -704,12 +704,11 @@ def process_message_payload(
             files = [files]
 
         for index, file in enumerate(files):
+            file_buffer = models.open_file(file)
             if isinstance(file, models.File):
-                form.add_field(f"files[{index}]", file.open_file(), filename=file.file_name)
-            elif isinstance(file, IOBase):
-                form.add_field(f"files[{index}]", file)
+                form.add_field(f"files[{index}]", file_buffer, filename=file.file_name)
             else:
-                form.add_field(f"files[{index}]", open(str(file), "rb"))
+                form.add_field(f"files[{index}]", file_buffer)
 
         return form
     else:
