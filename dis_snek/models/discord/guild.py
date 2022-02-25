@@ -4,7 +4,7 @@ import logging
 import time
 from io import IOBase
 from pathlib import Path
-from typing import List, Optional, Union, Set
+from typing import List, Optional, Union, Set, Dict, Any
 from dis_snek.models.snek import AsyncIterator
 
 
@@ -14,6 +14,7 @@ from aiohttp import FormData
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
 from dis_snek.client.errors import EventLocationNotProvided
+from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
@@ -33,7 +34,7 @@ from .enums import (
     ScheduledEventType,
     AuditLogEventType,
 )
-from .snowflake import to_snowflake, Snowflake_Type
+from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake
 
 __all__ = [
     "GuildBan",
@@ -44,6 +45,7 @@ __all__ = [
     "GuildTemplate",
     "GuildWelcomeChannel",
     "GuildIntegration",
+    "GuildWidget",
     "AuditLogChange",
     "AuditLogEntry",
     "AuditLog",
@@ -1354,13 +1356,19 @@ class Guild(BaseGuild):
         """
         return await self._client.http.get_guild_widget_image(self.id, style)
 
-    async def fetch_widget(self) -> dict:
+    async def fetch_widget_settings(self) -> "GuildWidgetSettings":
+        """Fetches the guilds widget settings."""
+        return await GuildWidgetSettings.from_dict(await self._client.http.get_guild_widget_settings(self.id))
+
+    async def fetch_widget(self) -> "GuildWidget":
         """Fetches the guilds widget."""
-        # todo: Guild widget object
-        return await self._client.http.get_guild_widget(self.id)
+        return GuildWidget.from_dict(await self._client.http.get_guild_widget(self.id), self._client)
 
     async def modify_widget(
-        self, enabled: bool = None, channel: Union["models.TYPE_GUILD_CHANNEL", Snowflake_Type] = None
+        self,
+        enabled: Absent[bool] = MISSING,
+        channel: Absent[Union["models.TYPE_GUILD_CHANNEL", Snowflake_Type]] = MISSING,
+        settings: Absent["GuildWidgetSettings"] = MISSING,
     ) -> dict:
         """
         Modify the guild's widget.
@@ -1368,12 +1376,15 @@ class Guild(BaseGuild):
         Args:
             enabled: Should the widget be enabled?
             channel: The channel to use in the widget
+            settings: The settings to use for the widget
 
         """
-        if channel:
-            if isinstance(channel, DiscordObject):
-                channel = channel.id
-        return await self._client.http.modify_guild_widget(self.id, enabled, channel)
+        if isinstance(settings, GuildWidgetSettings):
+            enabled = settings.enabled
+            channel = settings.channel_id
+
+        channel = to_optional_snowflake(channel)
+        return GuildWidget.from_dict(await self._client.http.modify_guild_widget(self.id, enabled, channel), self._client)
 
     async def fetch_invites(self) -> List["models.Invite"]:
         invites_data = await self._client.http.get_guild_invites(self.id)
@@ -1484,6 +1495,47 @@ class GuildIntegration(DiscordObject):
     async def delete(self, reason: Absent[str] = MISSING) -> None:
         """Delete this guild integration."""
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)
+
+
+class GuildWidgetSettings(DictSerializationMixin):
+    enabled: bool = attr.ib(default=False)
+    """Whether the widget is enabled."""
+    channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_optional_snowflake)
+    """The widget channel id. None if widget is not enabled."""
+
+
+class GuildWidget(DiscordObject):
+    name: str = attr.ib()
+    """Guild name (2-100 characters)"""
+    instant_invite: str = attr.ib(default=None)
+    """Instant invite for the guilds specified widget invite channel"""
+    presence_count: int = attr.ib(default=0)
+    """Number of online members in this guild"""
+
+    _channel_ids: List["Snowflake_Type"] = attr.ib(default=[])
+    """Voice and stage channels which are accessible by @everyone"""
+    _member_ids: List["Snowflake_Type"] = attr.ib(default=[])
+    """Special widget user objects that includes users presence (Limit 100)"""
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        if channels := data.get("channels"):
+            data["channel_ids"] = [channel["id"] for channel in channels]
+        if members := data.get("members"):
+            data["member_ids"] = [member["id"] for member in members]
+        return data
+
+    def get_channels(self) -> List["models.TYPE_VOICE_CHANNEL"]:
+        return [self._client.get_channel(channel_id) for channel_id in self._channel_ids]
+
+    async def fetch_channels(self) -> List["models.TYPE_VOICE_CHANNEL"]:
+        return [await self._client.fetch_channel(channel_id) for channel_id in self._channel_ids]
+
+    def get_members(self) -> List["models.User"]:
+        return [self._client.get_user(member_id) for member_id in self._member_ids]
+
+    async def fetch_members(self) -> List["models.User"]:
+        return [await self._client.fetch_user(member_id) for member_id in self._member_ids]
 
 
 @define()
