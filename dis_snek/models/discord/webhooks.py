@@ -3,6 +3,8 @@ from typing import Optional, TYPE_CHECKING, Union, Dict, Any, List
 
 import attr
 
+import re
+
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import ForeignWebhookException, EmptyMessageException
 from dis_snek.client.mixins.send import SendMixin
@@ -71,6 +73,24 @@ class Webhook(DiscordObject, SendMixin):
     """the guild of the channel that this webhook is following (returned for Channel Follower Webhooks)"""
     source_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
     """the channel that this webhook is following (returned for Channel Follower Webhooks)"""
+
+    @classmethod
+    def from_url(cls, url: str, client: "Snake") -> "Webhook":
+        """
+        Webhook object from a URL.
+
+        Args:
+            client: The client to use to make the request.
+            url: Webhook URL
+
+        """
+        match = re.search(r"discord(?:app)?\.com/api/webhooks/(?P<id>[0-9]{17,})/(?P<token>[\w\-.]{60,68})", url)
+        if match is None:
+            raise ValueError("Invalid webhook URL given.")
+
+        data: Dict[str, Any] = match.groupdict()
+        data["type"] = WebhookTypes.INCOMING
+        return cls.from_dict(data, client)
 
     @classmethod
     async def create(
