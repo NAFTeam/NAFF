@@ -45,6 +45,7 @@ __all__ = [
     "GuildTemplate",
     "GuildWelcomeChannel",
     "GuildIntegration",
+    "GuildWidgetSettings",
     "GuildWidget",
     "AuditLogChange",
     "AuditLogEntry",
