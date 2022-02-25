@@ -116,7 +116,7 @@ class ChannelHistory(AsyncIterator):
                 self.last = namedtuple("temp", "id")
                 self.last.id = self.before
 
-            messages = await self.channel.get_messages(limit=self.get_limit, before=self.last.id)
+            messages = await self.channel.fetch_messages(limit=self.get_limit, before=self.last.id)
             messages.sort(key=lambda x: x.id, reverse=True)
         return messages
 
