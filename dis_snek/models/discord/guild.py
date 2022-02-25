@@ -1385,7 +1385,9 @@ class Guild(BaseGuild):
             channel = settings.channel_id
 
         channel = to_optional_snowflake(channel)
-        return GuildWidget.from_dict(await self._client.http.modify_guild_widget(self.id, enabled, channel), self._client)
+        return GuildWidget.from_dict(
+            await self._client.http.modify_guild_widget(self.id, enabled, channel), self._client
+        )
 
     async def fetch_invites(self) -> List["models.Invite"]:
         invites_data = await self._client.http.get_guild_invites(self.id)
