@@ -4,7 +4,7 @@ import logging
 import time
 from io import IOBase
 from pathlib import Path
-from typing import List, Optional, Union, Set, Dict, Any
+from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from dis_snek.models.snek import AsyncIterator
 
 
@@ -35,6 +35,9 @@ from .enums import (
     AuditLogEventType,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake
+
+if TYPE_CHECKING:
+    from dis_snek.client.client import Snake
 
 __all__ = [
     "GuildBan",
