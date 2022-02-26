@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import attr
 
-__all__ = ["File"]
+__all__ = ["File", "open_file"]
 
 
 @attr.s()
@@ -26,3 +26,15 @@ class File:
             return self.file
         else:
             return open(str(self.file), "rb")
+
+
+def open_file(file: Union[File, "IOBase", "Path", str]) -> IOBase:
+    match file:
+        case File():
+            return file.open_file()
+        case IOBase():
+            return file
+        case Path() | str():
+            return open(str(file), "rb")
+        case _:
+            raise ValueError(f"{file} is not a valid file")

@@ -978,7 +978,7 @@ class Guild(BaseGuild):
     async def create_custom_sticker(
         self,
         name: str,
-        imagefile: Union[str, "Path", "IOBase"],
+        imagefile: Union["models.File", "IOBase", "Path", str],
         description: Absent[Optional[str]] = MISSING,
         tags: Absent[Optional[str]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
@@ -1001,10 +1001,11 @@ class Guild(BaseGuild):
         payload.add_field("name", name)
 
         # TODO Validate image type?
-        if isinstance(imagefile, IOBase):
-            payload.add_field("file", name)
+        file_buffer = models.open_file(imagefile)
+        if isinstance(imagefile, models.File):
+            payload.add_field("file", file_buffer, filename=imagefile.file_name)
         else:
-            payload.add_field("file", open(str(imagefile)))
+            payload.add_field("file", file_buffer)
 
         if description:
             payload.add_field("description", description)
