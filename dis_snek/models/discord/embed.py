@@ -17,8 +17,8 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import field
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
-from dis_snek.client.utils.serializer import no_export_meta
-from dis_snek.models.discord.color import Color
+from dis_snek.client.utils.serializer import no_export_meta, export_converter
+from dis_snek.models.discord.color import Color, process_color
 from dis_snek.models.discord.timestamp import Timestamp
 
 __all__ = [
@@ -108,6 +108,12 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
     width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
 
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any]):
+        if isinstance(data, str):
+            return {"url": data}
+        return data
+
     @property
     def size(self) -> tuple[Optional[int], Optional[int]]:
         return self.height, self.width
@@ -159,7 +165,9 @@ class Embed(DictSerializationMixin):
     """The title of the embed"""
     description: Optional[str] = field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[Union[str, int, Color]] = field(default=None, repr=True)
+    color: Optional[Union[Color, dict, tuple, list, str, int]] = field(
+        default=None, repr=True, metadata=export_converter(process_color)
+    )
     """The colour of the embed"""
     url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
     """The url the embed should direct to when clicked"""
@@ -226,16 +234,6 @@ class Embed(DictSerializationMixin):
             raise ValueError(
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
-
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        if color := data.get("color"):
-            if isinstance(color, dict):
-                color = color["value"]
-            elif not isinstance(color, int):
-                color = Color(color).value
-            data["color"] = color
-        return data or None
 
     def __len__(self):
         # yes i know there are far more optimal ways to write this

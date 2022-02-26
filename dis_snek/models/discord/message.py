@@ -313,7 +313,8 @@ class Message(BaseMessage):
         if ref_message_data:
             if not ref_message_data.get("guild_id"):
                 ref_message_data["guild_id"] = data.get("guild_id")
-            data["referenced_message_id"] = client.cache.place_message_data(ref_message_data)
+            _m = client.cache.place_message_data(ref_message_data)
+            data["referenced_message_id"] = _m.id
 
         if "interaction" in data:
             data["interaction"] = MessageInteraction.from_dict(data["interaction"], client)
@@ -357,6 +358,9 @@ class Message(BaseMessage):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
+        files: Optional[
+            Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+        ] = None,
         file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -371,7 +375,8 @@ class Message(BaseMessage):
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
             attachments: The attachments to keep, only used when editing message.
-            file: Location of file to send, the bytes or the File() instance, defaults to None.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
@@ -385,7 +390,7 @@ class Message(BaseMessage):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            file=file,
+            files=files or file,
             tts=tts,
             flags=flags,
         )
@@ -477,18 +482,27 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def fetch_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+    async def fetch_reaction(
+        self,
+        emoji: Union["models.PartialEmoji", dict, str],
+        limit: Absent[int] = MISSING,
+        after: Absent["Snowflake_Type"] = MISSING,
+    ) -> List["models.User"]:
         """
         Fetches reactions of a specific emoji from this message.
 
         Args:
             emoji: The emoji to get
+            limit: Max number of users to return (1-100)
+            after: Get users after this user ID
 
         Returns:
             list of users who have reacted with that emoji
 
         """
-        reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
+        reaction_data = await self._client.http.get_reactions(
+            self._channel_id, self.id, emoji, limit, to_optional_snowflake(after)
+        )
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
 
     async def add_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
@@ -520,8 +534,9 @@ class Message(BaseMessage):
             member = self._client.user
         user_id = to_snowflake(member)
         if user_id == self._client.user.id:
-            return await self._client.http.remove_self_reaction(self._channel_id, self.id, emoji_str)
-        return await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
+            await self._client.http.remove_self_reaction(self._channel_id, self.id, emoji_str)
+        else:
+            await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
         # TODO Should we combine this with clear_all_reactions?
@@ -636,7 +651,9 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
+    files: Optional[
+        Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
+    ] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
     **kwargs,
@@ -652,7 +669,7 @@ def process_message_payload(
         allowed_mentions: Allowed mentions for the message.
         reply_to: Message to reference, must be from the same channel.
         attachments: The attachments to keep, only used when editing message.
-        file: Location of file to send, defaults to None.
+        files: Files to send, defaults to None. You may send up to 10 files.
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
@@ -687,19 +704,21 @@ def process_message_payload(
         }
     )
 
-    if file:
+    if files:
         # We need to use multipart/form-data for file sending here.
         form = FormData()
         form.add_field("payload_json", OverriddenJson.dumps(message_data))
-        if isinstance(file, models.File):
-            if isinstance(file.file, IOBase):
-                form.add_field("file", file.file, filename=file.file_name)
+
+        if not isinstance(files, list):
+            files = [files]
+
+        for index, file in enumerate(files):
+            file_buffer = models.open_file(file)
+            if isinstance(file, models.File):
+                form.add_field(f"files[{index}]", file_buffer, filename=file.file_name)
             else:
-                form.add_field("file", open(str(file.file), "rb"), filename=file.file_name)
-        elif isinstance(file, IOBase):
-            form.add_field("file", file)
-        else:
-            form.add_field("file", open(str(file), "rb"))
+                form.add_field(f"files[{index}]", file_buffer)
+
         return form
     else:
         return message_data

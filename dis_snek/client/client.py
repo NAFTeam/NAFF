@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from datetime import datetime
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
@@ -62,6 +63,7 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
+    VoiceRegion,
 )
 from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
@@ -102,8 +104,8 @@ class Snake(
         intents: Union[int, Intents]: The intents to use
         loop: Optional[asyncio.AbstractEventLoop]: An event loop to use, normally leave this undefined
 
-        default_prefix: str: The default_prefix to use for message commands, defaults to your bot being mentioned
-        get_prefix: Callable[..., Coroutine]: A coroutine that returns a string to determine prefixes
+        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
+        generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
         status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
         activity: Union[Activity, str]: The activity the bot should log in "playing"
 
@@ -140,8 +142,8 @@ class Snake(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        default_prefix: str = MENTION_PREFIX,
-        get_prefix: Absent[Callable[..., Coroutine]] = MISSING,
+        default_prefix: str | Iterable[str] = MENTION_PREFIX,
+        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = True,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
@@ -180,8 +182,8 @@ class Snake(
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
         """The default prefix to be used for message commands"""
-        self.get_prefix = get_prefix if get_prefix is not MISSING else self.get_prefix
-        """A coroutine that returns a prefix, for dynamic prefixes"""
+        self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
+        """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
         self.auto_defer = auto_defer or AutoDefer()
         """A system to automatically defer commands after a set duration"""
 
@@ -376,18 +378,18 @@ class Snake(
         if len(self.processors) == 0:
             log.warning("No Processors are loaded! This means no events will be processed!")
 
-    async def get_prefix(self, message: Message) -> str:
+    async def generate_prefixes(self, message: Message) -> str | Iterable[str]:
         """
         A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
         !!! note
-            To easily override this method, simply use the `get_prefix` parameter when instantiating the client
+            To easily override this method, simply use the `generate_prefixes` parameter when instantiating the client
 
         Args:
             message: A message to determine the prefix from.
 
         Returns:
-            A string to use as a prefix, by default will return `client.default_prefix`
+            A string or an iterable of strings to use as a prefix. By default, this will return `client.default_prefix`
 
         """
         return self.default_prefix
@@ -1175,6 +1177,14 @@ class Snake(
 
         return cls
 
+    async def _run_slash_command(self, command: SlashCommand, ctx: InteractionContext) -> Any:
+        """Overrideable method that executes slash commands, can be used to wrap callback execution"""
+        return await command(ctx, **ctx.kwargs)
+
+    async def _run_message_command(self, command: MessageCommand, ctx: MessageContext) -> Any:
+        """Overrideable method that executes message commands, can be used to wrap callback execution"""
+        return await command(ctx)
+
     @processors.Processor.define("raw_interaction_create")
     async def _dispatch_interaction(self, event: RawGatewayEvent) -> None:
         """
@@ -1220,7 +1230,7 @@ class Snake(
                         await auto_defer(ctx)
                         if self.pre_run_callback:
                             await self.pre_run_callback(ctx, **ctx.kwargs)
-                        await command(ctx, **ctx.kwargs)
+                        await self._run_slash_command(command, ctx)
                         if self.post_run_callback:
                             await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
@@ -1267,27 +1277,40 @@ class Snake(
             return
 
         if not message.author.bot:
-            prefix = await self.get_prefix(message)
+            prefixes = await self.generate_prefixes(message)
 
-            if prefix == MENTION_PREFIX:
-                mention = self._mention_reg.search(message.content)
-                if mention:
-                    prefix = mention.group()
-                else:
-                    return
+            if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
+                # its easier to treat everything as if it may be an iterable
+                # rather than building a special case for this
+                prefixes = (prefixes,)
 
-            if message.content.startswith(prefix):
-                invoked_name = get_first_word(message.content.removeprefix(prefix))
+            prefix_used = None
+
+            for prefix in prefixes:
+                if prefix == MENTION_PREFIX:
+                    mention = self._mention_reg.search(message.content)
+                    if mention:
+                        prefix = mention.group()
+                    else:
+                        continue
+
+                if message.content.startswith(prefix):
+                    prefix_used = prefix
+                    break
+
+            if prefix_used:
+                invoked_name = get_first_word(message.content.removeprefix(prefix_used))
                 command = self.commands.get(invoked_name)
+
                 if command and command.enabled:
                     context = await self.get_context(message)
                     context.invoked_name = invoked_name
-                    context.prefix = prefix
+                    context.prefix = prefix_used
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:
                             await self.pre_run_callback(context)
-                        await command(context)
+                        await self._run_message_command(command, context)
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:
@@ -1651,6 +1674,18 @@ class Snake(
             return packs
         except NotFound:
             return None
+
+    async def fetch_voice_regions(self) -> List["VoiceRegion"]:
+        """
+        List the voice regions available on Discord.
+
+        Returns:
+            A list of voice regions.
+
+        """
+        regions_data = await self.http.list_voice_regions()
+        regions = VoiceRegion.from_list(regions_data)
+        return regions
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None

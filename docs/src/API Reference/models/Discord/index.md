@@ -15,6 +15,7 @@
 - [Index](index)
 - [Invite](invite)
 - [Message](message)
+- [Modals](modals)
 - [Reaction](reaction)
 - [Role](role)
 - [Scheduled event](scheduled_event)
