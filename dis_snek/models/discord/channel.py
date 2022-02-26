@@ -6,6 +6,7 @@ import attr
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
+from dis_snek.client.errors import NotFound
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
@@ -150,7 +151,7 @@ class MessageableMixin(SendMixin):
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.id)
 
-    async def fetch_message(self, message_id: Snowflake_Type) -> "models.Message":
+    async def fetch_message(self, message_id: Snowflake_Type) -> Optional["models.Message"]:
         """
         Fetch a message from the channel.
 
@@ -158,11 +159,12 @@ class MessageableMixin(SendMixin):
             message_id: ID of message to retrieve.
 
         Returns:
-            The message object fetched.
+            The message object fetched. If the message is not found, returns None.
         """
-        message_id = to_snowflake(message_id)
-        message: "models.Message" = await self._client.cache.fetch_message(self.id, message_id)
-        return message
+        try:
+            return await self._client.cache.fetch_message(self.id, message_id)
+        except NotFound:
+            return None
 
     def get_message(self, message_id: Snowflake_Type) -> "models.Message":
         """
