@@ -16,19 +16,14 @@ log = logging.getLogger(logger_name)
 
 
 class ReactionEvents(EventMixinTemplate):
-    @Processor.define()
-    async def _on_raw_message_reaction_add(self, event: "RawGatewayEvent") -> None:
-        add = event.override_name == "raw_message_reaction_add"
-
+    async def _handle_message_reaction_change(self, event: "RawGatewayEvent", add: bool) -> None:
         if member := event.data.get("member"):
             author = self.cache.place_member_data(event.data.get("guild_id"), member)
         else:
             author = await self.cache.fetch_user(event.data.get("user_id"))
 
         emoji = PartialEmoji.from_dict(event.data.get("emoji"))  # type: ignore
-        message = await self.cache.fetch_message(
-            event.data.get("channel_id"), event.data.get("message_id"), request_fallback=False
-        )
+        message = self.cache.get_message(event.data.get("channel_id"), event.data.get("message_id"))
 
         if message:
             for i in range(len(message.reactions)):
@@ -68,8 +63,12 @@ class ReactionEvents(EventMixinTemplate):
             self.dispatch(events.MessageReactionRemove(message=message, emoji=emoji, author=author))
 
     @Processor.define()
+    async def _on_raw_message_reaction_add(self, event: "RawGatewayEvent") -> None:
+        await self._handle_message_reaction_change(event, add=True)
+
+    @Processor.define()
     async def _on_raw_message_reaction_remove(self, event: "RawGatewayEvent") -> None:
-        await self._on_raw_message_reaction_add.callback(self, event)
+        await self._handle_message_reaction_change(event, add=False)
 
     @Processor.define()
     async def _on_raw_message_reaction_remove_all(self, event: "RawGatewayEvent") -> None:
