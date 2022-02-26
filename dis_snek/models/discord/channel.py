@@ -691,7 +691,7 @@ class BaseChannel(DiscordObject):
             Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
         ] = MISSING,
         parent_id: Absent[Snowflake_Type] = MISSING,
-        rtc_region: Absent[str] = MISSING,  # todo: voice region object
+        rtc_region: Absent[Union["models.VoiceRegion", str]] = MISSING,
         video_quality_mode: Absent[VideoQualityModes] = MISSING,
         default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
         reason: Absent[str] = MISSING,
@@ -709,7 +709,7 @@ class BaseChannel(DiscordObject):
             "user_limit": user_limit,
             "permission_overwrites": process_permission_overwrites(permission_overwrites),
             "parent_id": to_optional_snowflake(parent_id),
-            "rtc_region": rtc_region,
+            "rtc_region": rtc_region.id if isinstance(rtc_region, models.VoiceRegion) else rtc_region,
             "video_quality_mode": video_quality_mode,
             "default_auto_archive_duration": default_auto_archive_duration,
             **kwargs,

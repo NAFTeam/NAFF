@@ -63,6 +63,7 @@ from dis_snek.models import (
     Context,
     application_commands_to_dict,
     sync_needed,
+    VoiceRegion,
 )
 from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
@@ -1673,6 +1674,18 @@ class Snake(
             return packs
         except NotFound:
             return None
+
+    async def fetch_voice_regions(self) -> List["VoiceRegion"]:
+        """
+        List the voice regions available on Discord.
+
+        Returns:
+            A list of voice regions.
+
+        """
+        regions_data = await self.http.list_voice_regions()
+        regions = VoiceRegion.from_list(regions_data)
+        return regions
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
