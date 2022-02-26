@@ -482,18 +482,27 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def fetch_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> List["models.User"]:
+    async def fetch_reaction(
+        self,
+        emoji: Union["models.PartialEmoji", dict, str],
+        limit: Absent[int] = MISSING,
+        after: Absent["Snowflake_Type"] = MISSING,
+    ) -> List["models.User"]:
         """
         Fetches reactions of a specific emoji from this message.
 
         Args:
             emoji: The emoji to get
+            limit: Max number of users to return (1-100)
+            after: Get users after this user ID
 
         Returns:
             list of users who have reacted with that emoji
 
         """
-        reaction_data = await self._client.http.get_reactions(self._channel_id, self.id, emoji)
+        reaction_data = await self._client.http.get_reactions(
+            self._channel_id, self.id, emoji, limit, to_optional_snowflake(after)
+        )
         return [self._client.cache.place_user_data(user_data) for user_data in reaction_data]
 
     async def add_reaction(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
