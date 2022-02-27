@@ -1243,7 +1243,7 @@ class GuildCategory(GuildChannel):
         reason: Absent[Optional[str]] = MISSING,
     ) -> "GuildText":
         """
-        Create a text channel in this guild within this category.
+        Create a news channel in this guild within this category.
 
         parameters:
             name: The name of the channel

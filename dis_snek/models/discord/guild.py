@@ -768,7 +768,7 @@ class Guild(BaseGuild):
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.GuildNews":
         """
-        Create a text channel in this guild.
+        Create a news channel in this guild.
 
         parameters:
             name: The name of the channel
