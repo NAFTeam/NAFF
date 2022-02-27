@@ -1203,7 +1203,7 @@ class GuildCategory(GuildChannel):
         nsfw: bool = False,
         rate_limit_per_user: int = 0,
         reason: Absent[Optional[str]] = MISSING,
-    ) -> "GuildText":
+    ) -> "GuildNews":
         """
         Create a text channel in this guild within this category.
 

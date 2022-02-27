@@ -766,7 +766,7 @@ class Guild(BaseGuild):
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
         reason: Absent[Optional[str]] = MISSING,
-    ) -> "models.GuildText":
+    ) -> "models.GuildNews":
         """
         Create a text channel in this guild.
 
