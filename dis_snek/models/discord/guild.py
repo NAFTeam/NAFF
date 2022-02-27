@@ -693,20 +693,14 @@ class Guild(BaseGuild):
             The newly created channel.
 
         """
-        if category:
-            category = to_snowflake(category)
-
-        if permission_overwrites:
-            permission_overwrites = list(map(to_dict, permission_overwrites))
-
         channel_data = await self._client.http.create_guild_channel(
             self.id,
             name,
             channel_type,
             topic,
             position,
-            permission_overwrites,
-            category,
+            models.process_permission_overwrites(permission_overwrites),
+            to_optional_snowflake(category),
             nsfw,
             bitrate,
             user_limit,

@@ -57,6 +57,7 @@ __all__ = [
     "GuildPrivateThread",
     "GuildVoice",
     "GuildStageVoice",
+    "process_permission_overwrites",
     "TYPE_ALL_CHANNEL",
     "TYPE_DM_CHANNEL",
     "TYPE_GUILD_CHANNEL",
