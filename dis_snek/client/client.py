@@ -36,6 +36,7 @@ from dis_snek.models.snek.tasks import Task
 from dis_snek.models import (
     Activity,
     Application,
+    CustomEmoji,
     Guild,
     Listener,
     listen,
@@ -1640,6 +1641,40 @@ class Snake(
             return ScheduledEvent.from_dict(scheduled_event_data, self)
         except NotFound:
             return None
+
+    async def fetch_custom_emoji(self, emoji_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> Optional[CustomEmoji]:
+        """
+        Fetch a custom emoji by id.
+
+        parameters:
+            emoji_id: The id of the custom emoji.
+            guild_id: The id of the guild the emoji belongs to.
+
+        returns:
+            The custom emoji if found, otherwise None.
+
+        """
+        try:
+            return await self.cache.fetch_emoji(guild_id, emoji_id)
+        except NotFound:
+            return None
+
+    def get_custom_emoji(self, emoji_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None) -> Optional[CustomEmoji]:
+        """
+        Get a custom emoji by id.
+
+        parameters:
+            emoji_id: The id of the custom emoji.
+            guild_id: The id of the guild the emoji belongs to.
+
+        returns:
+            The custom emoji if found, otherwise None.
+
+        """
+        emoji = self.cache.get_emoji(emoji_id)
+        if emoji and (not guild_id or emoji._guild_id == to_snowflake(guild_id)):
+            return emoji
+        return None
 
     async def fetch_sticker(self, sticker_id: "Snowflake_Type") -> Optional[Sticker]:
         """
