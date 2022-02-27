@@ -1659,7 +1659,9 @@ class Snake(
         except NotFound:
             return None
 
-    def get_custom_emoji(self, emoji_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None) -> Optional[CustomEmoji]:
+    def get_custom_emoji(
+        self, emoji_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None
+    ) -> Optional[CustomEmoji]:
         """
         Get a custom emoji by id.
 
