@@ -642,7 +642,7 @@ class Guild(BaseGuild):
         except NotFound:
             return None
 
-    def get_custom_emoji(self, emoji_id: Snowflake_Type) -> "models.CustomEmoji":
+    def get_custom_emoji(self, emoji_id: Snowflake_Type) -> Optional["models.CustomEmoji"]:
         """
         Gets the custom emoji present for this guild, based on the emoji id.
 
