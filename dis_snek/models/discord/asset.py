@@ -90,6 +90,6 @@ class Asset:
             Status code
 
         """
-        content = await self.get(extension=extension, size=size)
+        content = await self.fetch(extension=extension, size=size)
         with open(fd, "wb") as f:
             return f.write(content)
