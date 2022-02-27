@@ -12,13 +12,14 @@
   - Scales already define `self.bot`, you don't need to do that in your `__init__` function.
   - For a full example, see [here](/Guides/20 Scales/)
 4. Event handlers
-  - Register event handlers with `@listen`
+  - Register event handlers with `@dis_snek.listen`
   - Where possible, we use the official names for events, most notably `on_message_create` instead of dpy's `on_message`.
     - A full list can be found [here](/API Reference/events/discord/).
   - Event details are stored on a model, passed as a single parameter. (eg: `on_member_update(before, after)` becomes `on_member_update(event)`, where event has a `.before` and `.after`.
   - For more details, read [the Events guide](/Guides/10 Events).
 5. Migrating your commands
-  - If you were already using dpy's command extension, migrating to slash commands is fairly simple.  You just need to convert the decorators as per the [Slash Commands guide](/Guides/03 Creating Commands/) (or keep them as message commands with the `message_command` decorator)
+  - If you were already using dpy's command extension, migrating to slash commands is fairly simple.  You just need to convert the decorators as per the [Slash Commands guide](/Guides/03 Creating Commands/)
+  - If you wish to keep using message commands, you can get simple support (no converters) with the `@dis_snek.message_command` decorator, or use [our experimental message command extension](https://github.com/Discord-Snake-Pit/molter)
   - If you were manually handling commands with `on_message`, you'll probably need to figure it out yourself, as this guide doesn't know how you wrote your parser.  Consider using the provided command handlers.
 
 ??? Note
