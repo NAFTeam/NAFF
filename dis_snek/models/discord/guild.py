@@ -665,7 +665,9 @@ class Guild(BaseGuild):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
         bitrate: int = 64000,
@@ -714,7 +716,9 @@ class Guild(BaseGuild):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
         rate_limit_per_user: int = 0,
@@ -754,7 +758,9 @@ class Guild(BaseGuild):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
         category: Union[Snowflake_Type, "models.GuildCategory"] = None,
         nsfw: bool = False,
         bitrate: int = 64000,
@@ -797,7 +803,9 @@ class Guild(BaseGuild):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
         category: Absent[Union[Snowflake_Type, "models.GuildCategory"]] = MISSING,
         bitrate: int = 64000,
         user_limit: int = 0,
@@ -836,7 +844,9 @@ class Guild(BaseGuild):
         self,
         name: str,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.GuildCategory":
         """

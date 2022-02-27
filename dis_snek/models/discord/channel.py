@@ -1150,7 +1150,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
@@ -1200,7 +1202,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         rate_limit_per_user: int = 0,
         reason: Absent[Optional[str]] = MISSING,
@@ -1237,7 +1241,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
@@ -1277,7 +1283,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         bitrate: int = 64000,
         user_limit: int = 0,
         reason: Absent[Optional[str]] = MISSING,
