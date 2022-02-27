@@ -145,7 +145,7 @@ class Guild(BaseGuild):
     """The required MFA (Multi Factor Authentication) level for the guild."""
     system_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
     """The id of the channel where guild notices such as welcome messages and boost events are posted."""
-    system_channel_flags: Union[SystemChannelFlags, int] = attr.ib(default=SystemChannelFlags.NONE)
+    system_channel_flags: SystemChannelFlags = attr.ib(default=SystemChannelFlags.NONE, converter=SystemChannelFlags)
     """The system channel flags."""
     rules_channel_id: Optional[Snowflake_Type] = attr.ib(default=None)
     """The id of the channel where Community guilds can display rules and/or guidelines."""
@@ -506,7 +506,7 @@ class Guild(BaseGuild):
         afk_channel: Absent[Optional[Union["models.GuildVoice", Snowflake_Type]]] = MISSING,
         afk_timeout: Absent[Optional[int]] = MISSING,
         system_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
-        system_channel_flags: Absent[Optional[SystemChannelFlags]] = MISSING,
+        system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
         # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
         icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
