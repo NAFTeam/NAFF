@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 import importlib.util
 import inspect
 import json
@@ -142,7 +143,6 @@ class Snake(
     def __init__(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = True,
@@ -150,7 +150,6 @@ class Snake(
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
         debug_scope: Absent["Snowflake_Type"] = MISSING,
-        asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
         auto_defer: Optional[AutoDefer] = None,
@@ -164,16 +163,8 @@ class Snake(
         shard_id: int = 0,
         **kwargs,
     ) -> None:
-        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
 
         # Configuration
-
-        if asyncio_debug:
-            log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
-            import tracemalloc
-
-            tracemalloc.start()
-            self.loop.set_debug(True)
 
         self.sync_interactions = sync_interactions
         """Should application commands be synced"""
@@ -190,7 +181,7 @@ class Snake(
 
         # resources
 
-        self.http: HTTPClient = HTTPClient(loop=self.loop)
+        self.http: HTTPClient = HTTPClient()
         """The HTTP client to use when interacting with discord endpoints"""
 
         # context objects
@@ -577,7 +568,7 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
-    async def login(self, token, start_gateway=False) -> None:
+    async def login(self, token) -> None:
         """
         Login to discord via http.
 
@@ -601,7 +592,7 @@ class Snake(
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
-    def start(self, token) -> None:
+    async def start(self, token) -> None:
         """
         Start the bot.
 
@@ -612,18 +603,18 @@ class Snake(
             token str: Your bot's token
 
         """
+        await self.login(token)
         try:
-            self.loop.run_until_complete(self.login(token))
-            self.loop.run_until_complete(self._connection_state.start())
-        except KeyboardInterrupt:
-            self.loop.run_until_complete(self.stop())
+            await self._connection_state.start()
+        finally:
+            await self.stop()
 
-    def start_gateway(self) -> None:
+    async def start_gateway(self) -> None:
         """Starts the gateway connection."""
         try:
-            self.loop.run_until_complete(self._connection_state.start())
-        except KeyboardInterrupt:
-            self.loop.run_until_complete(self.stop())
+            await self._connection_state.start()
+        finally:
+            await self.stop()
 
     async def stop(self) -> None:
         log.debug("Stopping the bot.")
@@ -683,7 +674,7 @@ class Snake(
         if event not in self.waits:
             self.waits[event] = []
 
-        future = self.loop.create_future()
+        future = asyncio.get_running_loop().create_future()
         self.waits[event].append(Wait(event, checks, future))
 
         return asyncio.wait_for(future, timeout)
