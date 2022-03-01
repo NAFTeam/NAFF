@@ -674,7 +674,7 @@ class Snake(
         if event not in self.waits:
             self.waits[event] = []
 
-        future = asyncio.get_running_loop().create_future()
+        future = asyncio.Event()
         self.waits[event].append(Wait(event, checks, future))
 
         return asyncio.wait_for(future, timeout)
@@ -696,7 +696,7 @@ class Snake(
         Returns:
             The context of the modal response
         Raises:
-           ` asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+            `asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
 
         """
         author = to_snowflake(author) if author else None
