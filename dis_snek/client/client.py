@@ -1,5 +1,4 @@
 import asyncio
-from contextlib import asynccontextmanager
 import importlib.util
 import inspect
 import json
@@ -619,6 +618,7 @@ class Snake(
     async def stop(self) -> None:
         log.debug("Stopping the bot.")
         self._ready.clear()
+        await self.http.close()
         await self._connection_state.stop()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs) -> None:

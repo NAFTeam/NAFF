@@ -17,8 +17,8 @@ class Wait:
         if self.checks:
             try:
                 check_result = self.checks(*args, **kwargs)
-            except Exception:
-                return True
+            except Exception as exc:
+                raise exc
         else:
             check_result = True
 
