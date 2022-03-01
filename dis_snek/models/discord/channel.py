@@ -1226,6 +1226,42 @@ class GuildCategory(GuildChannel):
             reason=reason,
         )
 
+    async def create_news_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        nsfw: bool = False,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "GuildNews":
+        """
+        Create a news channel in this guild within this category.
+
+        parameters:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            nsfw: Should this channel be marked nsfw
+            reason: The reason for creating this channel
+
+        returns:
+           The newly created news channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_NEWS,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            nsfw=nsfw,
+            reason=reason,
+        )
+
     async def create_voice_channel(
         self,
         name: str,
