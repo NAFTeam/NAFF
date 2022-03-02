@@ -1230,13 +1230,19 @@ class Guild(BaseGuild):
 
         """
         channel_id = to_snowflake(channel_id)
-        if channel_id in self._channel_ids:
+        if channel_id in self._channel_ids or self._client.start_time is MISSING:
+            # The latter check here is to see if the bot is running with the gateway.
+            # If not, then we need to check the API since only the gateway
+            # populates the channel IDs
+
             # theoretically, this could get any channel the client can see,
             # but to make it less confusing to new programmers,
             # i intentionally check that the guild contains the channel first
             try:
-                return await self._client.fetch_channel(channel_id)
-            except NotFound:
+                channel = await self._client.fetch_channel(channel_id)
+                if channel.guild.id == self.id:
+                    return channel
+            except (NotFound, AttributeError):
                 return None
 
         return None
