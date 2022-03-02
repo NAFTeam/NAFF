@@ -39,6 +39,8 @@ class ConnectionState:
     gateway_url: str = MISSING
     """The URL that the gateway should connect to."""
 
+    gateway_started: bool = False
+
     _shard_task: asyncio.Task | None = None
 
     @property
@@ -65,6 +67,8 @@ class ConnectionState:
         log.debug(f"Starting Shard ID {self.shard_id}")
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
+
+        self.gateway_started = True
 
         # Historically this method didn't return until the connection closed
         # so we need to wait for the task to exit.

@@ -1230,7 +1230,7 @@ class Guild(BaseGuild):
 
         """
         channel_id = to_snowflake(channel_id)
-        if channel_id in self._channel_ids or self._client.start_time is MISSING:
+        if channel_id in self._channel_ids or not self._client.gateway_started:
             # The latter check here is to see if the bot is running with the gateway.
             # If not, then we need to check the API since only the gateway
             # populates the channel IDs

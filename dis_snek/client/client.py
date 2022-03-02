@@ -295,6 +295,11 @@ class Snake(
         return self._connection_state.start_time
 
     @property
+    def gateway_started(self) -> bool:
+        """Returns if the gateway has been started."""
+        return self._connection_state.gateway_started
+
+    @property
     def intents(self) -> Intents:
         """The intents being used by this bot."""
         return self._connection_state.intents
