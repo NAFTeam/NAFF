@@ -1240,7 +1240,7 @@ class Guild(BaseGuild):
             # i intentionally check that the guild contains the channel first
             try:
                 channel = await self._client.fetch_channel(channel_id)
-                if channel.guild.id == self.id:
+                if channel._guild_id == self.id:
                     return channel
             except (NotFound, AttributeError):
                 return None
