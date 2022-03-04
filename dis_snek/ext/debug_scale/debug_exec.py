@@ -57,7 +57,7 @@ class DebugExec(Scale):
             return await self.handle_exec_result(ctx, ret, stdout.getvalue())
 
     async def handle_exec_result(self, ctx: MessageContext, result: Any, value: Any) -> None:
-        if not result:
+        if result is None:
             result = value or "No Output!"
 
         await ctx.message.add_reaction("✅")
@@ -74,7 +74,7 @@ class DebugExec(Scale):
                 return await ctx.message.reply(result.jump_url)
 
         if isinstance(result, Embed):
-            return await ctx.message.reply(embeds=result)
+            return await ctx.message.reply(embeds=[result])
 
         if isinstance(result, File):
             return await ctx.message.reply(file=result)
