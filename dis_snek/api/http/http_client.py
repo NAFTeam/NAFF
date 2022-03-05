@@ -198,6 +198,7 @@ class HTTPClient(
         route: Route,
         data: Absent[Union[dict, FormData]] = MISSING,
         reason: Absent[str] = MISSING,
+        params: Absent[dict] = MISSING,
         **kwargs: Dict[str, Any],
     ) -> Any:
         """
@@ -226,6 +227,9 @@ class HTTPClient(
             kwargs["json"] = dict_filter_missing(data)
         elif isinstance(data, FormData):
             kwargs["data"] = data
+
+        if isinstance(params, dict):
+            kwargs["params"] = dict_filter_missing(params)
 
         lock = self.get_ratelimit(route)
         # this gets a BucketLock for this route.
