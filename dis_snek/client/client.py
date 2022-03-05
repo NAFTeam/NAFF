@@ -591,7 +591,15 @@ class Snake(
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
-    async def start(self, token) -> None:
+
+    async def astart(self, token):
+        await self.login(token)
+        try:
+            await self._connection_state.start()
+        finally:
+            await self.stop()
+
+    def start(self, token) -> None:
         """
         Start the bot.
 
@@ -602,11 +610,12 @@ class Snake(
             token str: Your bot's token
 
         """
-        await self.login(token)
         try:
-            await self._connection_state.start()
-        finally:
-            await self.stop()
+            asyncio.run(self.astart(token))
+        except KeyboardInterrupt:
+            # ignore, cus this is useless and can be misleading to the
+            # user
+            pass
 
     async def start_gateway(self) -> None:
         """Starts the gateway connection."""
