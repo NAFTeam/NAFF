@@ -892,61 +892,61 @@ class GuildChannel(BaseChannel):
 
             return self.permissions_for(instance)
 
-        async def add_permission(
-            self,
-            target: "PermissionOverwrite" | "models.Role" | "models.User" | "models.Member",
-            type: "OverwriteTypes",
-            allow: Optional[List["Permissions"] | int] = None,
-            deny: Optional[List["Permissions"] | int] = None,
-            reason: Optional[str] = None,
-        ) -> None:
-            """
-            Add a permission to this channel.
+    async def add_permission(
+        self,
+        target: "PermissionOverwrite" | "models.Role" | "models.User" | "models.Member",
+        type: "OverwriteTypes",
+        allow: Optional[List["Permissions"] | int] = None,
+        deny: Optional[List["Permissions"] | int] = None,
+        reason: Optional[str] = None,
+    ) -> None:
+        """
+        Add a permission to this channel.
 
-            Args:
-                target: The permission target
-                type: The type of permission overwrite
-                allow: List of permissions to allow
-                deny: List of permissions to deny
-                reason: The reason for this change
+        Args:
+            target: The permission target
+            type: The type of permission overwrite
+            allow: List of permissions to allow
+            deny: List of permissions to deny
+            reason: The reason for this change
 
-            Raises:
-                ValueError: Invalid target for permission
-            """
-            allow = allow or []
-            deny = deny or []
-            if not isinstance(target, PermissionOverwrite):
-                target_type = None
-                if isinstance(target, (models.User, models.Member)):
-                    target_type = OverwriteTypes.MEMBER
-                elif isinstance(target, models.Role):
-                    target_type = OverwriteTypes.ROLE
-                else:
-                    raise ValueError("Invalid target for permission")
-                overwrite = PermissionOverwrite(
-                    id=target.id, type=target_type, allow=Permissions.NONE, deny=Permissions.NONE
-                )
-                if isinstance(allow, int):
-                    overwrite.allow |= allow
-                else:
-                    for perm in allow:
-                        overwrite.allow |= perm
-                if isinstance(deny, int):
-                    overwrite.deny |= deny
-                else:
-                    for perm in deny:
-                        overwrite.deny |= perm
+        Raises:
+            ValueError: Invalid target for permission
+        """
+        allow = allow or []
+        deny = deny or []
+        if not isinstance(target, PermissionOverwrite):
+            target_type = None
+            if isinstance(target, (models.User, models.Member)):
+                target_type = OverwriteTypes.MEMBER
+            elif isinstance(target, models.Role):
+                target_type = OverwriteTypes.ROLE
             else:
-                overwrite = target
-            if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
-                exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
-                exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
-                return await self.edit_permission(exists, reason)
+                raise ValueError("Invalid target for permission")
+            overwrite = PermissionOverwrite(
+                id=target.id, type=target_type, allow=Permissions.NONE, deny=Permissions.NONE
+            )
+            if isinstance(allow, int):
+                overwrite.allow |= allow
+            else:
+                for perm in allow:
+                    overwrite.allow |= perm
+            if isinstance(deny, int):
+                overwrite.deny |= deny
+            else:
+                for perm in deny:
+                    overwrite.deny |= perm
+        else:
+            overwrite = target
+        if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
+            exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
+            exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
+            return await self.edit_permission(exists, reason)
 
-            permission_overwrites = self.permission_overwrites
-            permission_overwrites.append(overwrite)
+        permission_overwrites = self.permission_overwrites
+        permission_overwrites.append(overwrite)
 
-            return await self.edit(permission_overwrites=permission_overwrites)
+        return await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
