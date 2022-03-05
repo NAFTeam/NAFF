@@ -39,7 +39,8 @@ class ConnectionState:
     gateway_url: str = MISSING
     """The URL that the gateway should connect to."""
 
-    gateway_started: bool = False
+    gateway_started: asyncio.Event = asyncio.Event()
+    """Event to check if the gateway has been started."""
 
     _shard_task: asyncio.Task | None = None
 
@@ -68,7 +69,7 @@ class ConnectionState:
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
 
-        self.gateway_started = True
+        self.gateway_started.set()
 
         # Historically this method didn't return until the connection closed
         # so we need to wait for the task to exit.
@@ -83,6 +84,8 @@ class ConnectionState:
         if self._shard_task is not None:
             await self._shard_task
             self._shard_task = None
+
+        self.gateway_started.clear()
 
     async def _ws_connect(self) -> None:
         log.info("Attempting to initially connect to gateway...")
