@@ -84,7 +84,9 @@ class Button(InteractiveComponent):
 
     style: Union[ButtonStyles, int] = field(repr=True)
     label: Optional[str] = field(default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = field(repr=True, default=None, metadata=export_converter(process_emoji))
+    emoji: Optional[Union["PartialEmoji", dict, str]] = field(
+        repr=True, default=None, metadata=export_converter(process_emoji)
+    )
     custom_id: Optional[str] = field(repr=True, default=MISSING, validator=str_validator)
     url: Optional[str] = field(repr=True, default=None)
     disabled: bool = field(repr=True, default=False)
@@ -134,7 +136,9 @@ class SelectOption(BaseComponent):
     label: str = field(repr=True, validator=str_validator)
     value: str = field(repr=True, validator=str_validator)
     description: Optional[str] = field(repr=True, default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = field(repr=True, default=None, metadata=export_converter(process_emoji))
+    emoji: Optional[Union["PartialEmoji", dict, str]] = field(
+        repr=True, default=None, metadata=export_converter(process_emoji)
+    )
     default: bool = field(repr=True, default=False)
 
     @label.validator

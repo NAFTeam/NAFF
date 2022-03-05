@@ -1560,9 +1560,7 @@ class GuildIntegration(DiscordObject):
     syncing: Optional[bool] = field(default=MISSING)
     role_id: Optional[Snowflake_Type] = field(default=MISSING)
     enable_emoticons: bool = field(default=MISSING)
-    expire_behavior: IntegrationExpireBehaviour = field(
-        default=MISSING, converter=optional(IntegrationExpireBehaviour)
-    )
+    expire_behavior: IntegrationExpireBehaviour = field(default=MISSING, converter=optional(IntegrationExpireBehaviour))
     expire_grace_period: int = field(default=MISSING)
     user: "models.BaseUser" = field(default=MISSING)
     synced_at: "models.Timestamp" = field(default=MISSING, converter=optional(timestamp_converter))

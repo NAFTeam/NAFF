@@ -143,7 +143,9 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
 
 @define(slots=False)
 class MessageableMixin(SendMixin):
-    last_message_id: Optional[Snowflake_Type] = field(default=None)  # TODO May need to think of dynamically updating this.
+    last_message_id: Optional[Snowflake_Type] = field(
+        default=None
+    )  # TODO May need to think of dynamically updating this.
     default_auto_archive_duration: int = field(default=AutoArchiveDuration.ONE_DAY)
     last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
 
