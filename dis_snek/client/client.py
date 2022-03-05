@@ -592,7 +592,7 @@ class Snake(
         self.dispatch(events.Login())
 
 
-    async def astart(self, token):
+    async def astart(self, token) -> None:
         await self.login(token)
         try:
             await self._connection_state.start()
