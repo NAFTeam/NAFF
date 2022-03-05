@@ -7,7 +7,7 @@ authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 aiohttp = "^3.7.4"
-attrs = "^21.2.0"
+attrs = "^21.4.0"
 mypy = "^0.910"
 discord-typings = "^0.2.2"
 tomli = "1.2.2"
