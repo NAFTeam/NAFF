@@ -75,7 +75,7 @@ class ThreadMember(DiscordObject, SendMixin):
         return await self._client.http.create_message(message_payload, dm_id)
 
 
-@define
+@define()
 class ThreadList(ClientObject):
     """Represents a list of one or more threads."""
 

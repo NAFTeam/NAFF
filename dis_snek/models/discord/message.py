@@ -3,15 +3,13 @@ from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
 from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
-
-import attr
-from aiohttp.formdata import FormData
+from aiohttp import FormData
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
@@ -49,15 +47,15 @@ __all__ = [
 
 @define()
 class Attachment(DiscordObject):
-    filename: str = attr.ib()
-    description: Optional[str] = attr.ib(default=None)
-    content_type: Optional[str] = attr.ib(default=None)
-    size: int = attr.ib()
-    url: str = attr.ib()
-    proxy_url: str = attr.ib()
-    height: Optional[int] = attr.ib(default=None)
-    width: Optional[int] = attr.ib(default=None)
-    ephemeral: bool = attr.ib(default=False)
+    filename: str = field()
+    description: Optional[str] = field(default=None)
+    content_type: Optional[str] = field(default=None)
+    size: int = field()
+    url: str = field()
+    proxy_url: str = field()
+    height: Optional[int] = field(default=None)
+    width: Optional[int] = field(default=None)
+    ephemeral: bool = field(default=False)
 
     @property
     def resolution(self) -> tuple[Optional[int], Optional[int]]:
@@ -66,9 +64,9 @@ class Attachment(DiscordObject):
 
 @define()
 class ChannelMention(DiscordObject):
-    guild_id: "Snowflake_Type" = attr.ib()
-    type: ChannelTypes = attr.ib(converter=ChannelTypes)
-    name: str = attr.ib()
+    guild_id: "Snowflake_Type" = field()
+    type: ChannelTypes = field(converter=ChannelTypes)
+    name: str = field()
 
 
 @dataclass
@@ -77,7 +75,7 @@ class MessageActivity:
     party_id: str = None
 
 
-@attr.s(slots=True)
+@define()
 class MessageReference(DictSerializationMixin):
     """
     Reference to an originating message.
@@ -86,13 +84,13 @@ class MessageReference(DictSerializationMixin):
 
     """
 
-    message_id: int = attr.ib(default=None, converter=optional_c(to_snowflake))
+    message_id: int = field(default=None, converter=optional_c(to_snowflake))
     """id of the originating message."""
-    channel_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    channel_id: Optional[int] = field(default=None, converter=optional_c(to_snowflake))
     """id of the originating message's channel."""
-    guild_id: Optional[int] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    guild_id: Optional[int] = field(default=None, converter=optional_c(to_snowflake))
     """id of the originating message's guild."""
-    fail_if_not_exists: bool = attr.ib(default=True)
+    fail_if_not_exists: bool = field(default=True)
     """When sending a message, whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message, default true."""
 
     @classmethod
@@ -105,12 +103,12 @@ class MessageReference(DictSerializationMixin):
         )
 
 
-@define
+@define()
 class MessageInteraction(DiscordObject):
-    type: InteractionTypes = attr.ib(converter=InteractionTypes)
-    name: str = attr.ib()
+    type: InteractionTypes = field(converter=InteractionTypes)
+    name: str = field()
 
-    _user_id: "Snowflake_Type" = attr.ib()
+    _user_id: "Snowflake_Type" = field()
 
     @classmethod
     def _process_dict(cls, data, client):
@@ -123,7 +121,7 @@ class MessageInteraction(DiscordObject):
         return await self.get_user(self._user_id)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class AllowedMentions(DictSerializationMixin):
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
@@ -133,13 +131,13 @@ class AllowedMentions(DictSerializationMixin):
 
     """
 
-    parse: Optional[List[str]] = attr.ib(factory=list)
+    parse: Optional[List[str]] = field(factory=list)
     """An array of allowed mention types to parse from the content."""
-    roles: Optional[List["Snowflake_Type"]] = attr.ib(factory=list, converter=to_snowflake_list)
+    roles: Optional[List["Snowflake_Type"]] = field(factory=list, converter=to_snowflake_list)
     """Array of role_ids to mention. (Max size of 100)"""
-    users: Optional[List["Snowflake_Type"]] = attr.ib(factory=list, converter=to_snowflake_list)
+    users: Optional[List["Snowflake_Type"]] = field(factory=list, converter=to_snowflake_list)
     """Array of user_ids to mention. (Max size of 100)"""
-    replied_user = attr.ib(default=False)
+    replied_user = field(default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
     def add_parse(self, *mention_types: Union["MentionTypes", str]) -> None:
@@ -167,10 +165,10 @@ class AllowedMentions(DictSerializationMixin):
 
 @define()
 class BaseMessage(DiscordObject):
-    _channel_id: "Snowflake_Type" = attr.ib(default=MISSING, converter=to_optional_snowflake)
-    _thread_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_optional_snowflake)
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=to_optional_snowflake)
-    _author_id: "Snowflake_Type" = attr.ib(default=MISSING, converter=to_optional_snowflake)
+    _channel_id: "Snowflake_Type" = field(default=MISSING, converter=to_optional_snowflake)
+    _thread_channel_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    _author_id: "Snowflake_Type" = field(default=MISSING, converter=to_optional_snowflake)
 
     @property
     def guild(self) -> "models.Guild":
@@ -196,35 +194,35 @@ class BaseMessage(DiscordObject):
 
 @define()
 class Message(BaseMessage):
-    content: str = attr.ib(default=MISSING)
-    timestamp: "models.Timestamp" = attr.ib(default=MISSING, converter=optional_c(timestamp_converter))
-    edited_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
-    tts: bool = attr.ib(default=False)
-    mention_everyone: bool = attr.ib(default=False)
-    mention_channels: Optional[List[ChannelMention]] = attr.ib(default=None)
-    attachments: List[Attachment] = attr.ib(factory=list)
-    embeds: List["models.Embed"] = attr.ib(factory=list)
-    reactions: List["models.Reaction"] = attr.ib(factory=list)
-    nonce: Optional[Union[int, str]] = attr.ib(default=None)
-    pinned: bool = attr.ib(default=False)
-    webhook_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    type: MessageTypes = attr.ib(default=MISSING, converter=optional_c(MessageTypes))
-    activity: Optional[MessageActivity] = attr.ib(default=None, converter=optional_c(MessageActivity))
-    application: Optional["models.Application"] = attr.ib(default=None)  # TODO: partial application
-    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    message_reference: Optional[MessageReference] = attr.ib(
+    content: str = field(default=MISSING)
+    timestamp: "models.Timestamp" = field(default=MISSING, converter=optional_c(timestamp_converter))
+    edited_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    tts: bool = field(default=False)
+    mention_everyone: bool = field(default=False)
+    mention_channels: Optional[List[ChannelMention]] = field(default=None)
+    attachments: List[Attachment] = field(factory=list)
+    embeds: List["models.Embed"] = field(factory=list)
+    reactions: List["models.Reaction"] = field(factory=list)
+    nonce: Optional[Union[int, str]] = field(default=None)
+    pinned: bool = field(default=False)
+    webhook_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    type: MessageTypes = field(default=MISSING, converter=optional_c(MessageTypes))
+    activity: Optional[MessageActivity] = field(default=None, converter=optional_c(MessageActivity))
+    application: Optional["models.Application"] = field(default=None)  # TODO: partial application
+    application_id: Optional["Snowflake_Type"] = field(default=None)
+    message_reference: Optional[MessageReference] = field(
         default=None, converter=optional_c(MessageReference.from_dict)
     )
-    flags: Optional[MessageFlags] = attr.ib(default=None, converter=optional_c(MessageFlags))
-    interaction: Optional["MessageInteraction"] = attr.ib(default=None)
-    components: Optional[List["models.ActionRow"]] = attr.ib(default=None)
-    sticker_items: Optional[List["models.StickerItem"]] = attr.ib(
+    flags: Optional[MessageFlags] = field(default=None, converter=optional_c(MessageFlags))
+    interaction: Optional["MessageInteraction"] = field(default=None)
+    components: Optional[List["models.ActionRow"]] = field(default=None)
+    sticker_items: Optional[List["models.StickerItem"]] = field(
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
 
-    _mention_ids: List["Snowflake_Type"] = attr.ib(factory=list)
-    _mention_roles: List["Snowflake_Type"] = attr.ib(factory=list)
-    _referenced_message_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    _mention_ids: List["Snowflake_Type"] = field(factory=list)
+    _mention_roles: List["Snowflake_Type"] = field(factory=list)
+    _referenced_message_id: Optional["Snowflake_Type"] = field(default=None)
 
     @property
     async def mention_users(self) -> AsyncGenerator["models.Member", None]:

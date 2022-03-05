@@ -5,12 +5,10 @@ import logging
 import re
 from typing import Awaitable, Callable, Coroutine, Any, TYPE_CHECKING
 
-import attr
-
 from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
@@ -26,7 +24,7 @@ kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class BaseCommand(DictSerializationMixin):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
@@ -42,32 +40,32 @@ class BaseCommand(DictSerializationMixin):
 
     """
 
-    scale: Any = attr.ib(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
+    scale: Any = field(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
 
-    enabled: bool = attr.ib(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
-    checks: list = attr.ib(
+    enabled: bool = field(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
+    checks: list = field(
         factory=list, metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta
     )
-    cooldown: Cooldown = attr.ib(
+    cooldown: Cooldown = field(
         default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
     )
-    max_concurrency: MaxConcurrency = attr.ib(
+    max_concurrency: MaxConcurrency = field(
         default=MISSING,
         metadata=docs("An optional maximum number of concurrent instances to apply to the command") | no_export_meta,
     )
 
-    callback: Callable[..., Coroutine] = attr.ib(
+    callback: Callable[..., Coroutine] = field(
         default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
     )
-    error_callback: Callable[..., Coroutine] = attr.ib(
+    error_callback: Callable[..., Coroutine] = field(
         default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
     )
-    pre_run_callback: Callable[..., Coroutine] = attr.ib(
+    pre_run_callback: Callable[..., Coroutine] = field(
         default=None,
         metadata=no_export_meta
         | docs("The coroutine to be called before the command is executed, **but** after the checks"),
     )
-    post_run_callback: Callable[..., Coroutine] = attr.ib(
+    post_run_callback: Callable[..., Coroutine] = field(
         default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
     )
 
@@ -232,11 +230,11 @@ class BaseCommand(DictSerializationMixin):
         return call
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class MessageCommand(BaseCommand):
     """Represents a command triggered by standard message."""
 
-    name: str = attr.ib(metadata=docs("The name of the command"))
+    name: str = field(metadata=docs("The name of the command"))
 
 
 def message_command(

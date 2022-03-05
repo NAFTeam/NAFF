@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
-import attr
 import discord_typings
 
 from dis_snek.client.const import MISSING, logger_name, Absent
@@ -14,7 +13,7 @@ from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.user import Member, User
 from dis_snek.models.discord.emoji import CustomEmoji
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
-from dis_snek.client.utils.attr_utils import field
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.cache import TTLCache
 
 if TYPE_CHECKING:
@@ -50,7 +49,7 @@ def create_cache(
         return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
-@attr.define()
+@define(kw_only=False)
 class GlobalCache:
     _client: "Snake" = field()
 

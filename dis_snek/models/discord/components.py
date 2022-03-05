@@ -1,11 +1,11 @@
 import uuid
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Iterator
 
-import attr
+import attrs
 
 from dis_snek.client.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import str_validator
+from dis_snek.client.utils.attr_utils import define, field, str_validator
 from dis_snek.client.utils.serializer import export_converter
 from dis_snek.models.discord.emoji import process_emoji
 from dis_snek.models.discord.enums import ButtonStyles, ComponentTypes
@@ -51,6 +51,7 @@ class BaseComponent(DictSerializationMixin):
         return component_class.from_dict(data)
 
 
+@define(slots=False)
 class InteractiveComponent(BaseComponent):
     """
     A base interactive component class.
@@ -66,7 +67,7 @@ class InteractiveComponent(BaseComponent):
         return False
 
 
-@attr.s(slots=True, eq=False)
+@define(kw_only=False)
 class Button(InteractiveComponent):
     """
     Represents a discord ui button.
@@ -81,14 +82,14 @@ class Button(InteractiveComponent):
 
     """
 
-    style: Union[ButtonStyles, int] = attr.ib()
-    label: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
-    custom_id: Optional[str] = attr.ib(default=MISSING, validator=str_validator)
-    url: Optional[str] = attr.ib(default=None)
-    disabled: bool = attr.ib(default=False)
-    type: Union[ComponentTypes, int] = attr.ib(
-        default=ComponentTypes.BUTTON, init=False, on_setattr=attr.setters.frozen
+    style: Union[ButtonStyles, int] = field(repr=True)
+    label: Optional[str] = field(default=None)
+    emoji: Optional[Union["PartialEmoji", dict, str]] = field(repr=True, default=None, metadata=export_converter(process_emoji))
+    custom_id: Optional[str] = field(repr=True, default=MISSING, validator=str_validator)
+    url: Optional[str] = field(repr=True, default=None)
+    disabled: bool = field(repr=True, default=False)
+    type: Union[ComponentTypes, int] = field(
+        repr=True, default=ComponentTypes.BUTTON, init=False, on_setattr=attrs.setters.frozen
     )
 
     @style.validator
@@ -116,7 +117,7 @@ class Button(InteractiveComponent):
             raise TypeError("You must have at least a label or emoji on a button.")
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class SelectOption(BaseComponent):
     """
     Represents a select option.
@@ -130,11 +131,11 @@ class SelectOption(BaseComponent):
 
     """
 
-    label: str = attr.ib(validator=str_validator)
-    value: str = attr.ib(validator=str_validator)
-    description: Optional[str] = attr.ib(default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(default=None, metadata=export_converter(process_emoji))
-    default: bool = attr.ib(default=False)
+    label: str = field(repr=True, validator=str_validator)
+    value: str = field(repr=True, validator=str_validator)
+    description: Optional[str] = field(repr=True, default=None)
+    emoji: Optional[Union["PartialEmoji", dict, str]] = field(repr=True, default=None, metadata=export_converter(process_emoji))
+    default: bool = field(repr=True, default=False)
 
     @label.validator
     def _label_validator(self, attribute: str, value: str):
@@ -152,7 +153,7 @@ class SelectOption(BaseComponent):
             raise ValueError("Description length must be 100 or lower.")
 
 
-@attr.s(slots=True, eq=False)
+@define(kw_only=False)
 class Select(InteractiveComponent):
     """
     Represents a select component.
@@ -168,14 +169,14 @@ class Select(InteractiveComponent):
 
     """
 
-    options: List[Union[SelectOption, Dict]] = attr.ib(factory=list)
-    custom_id: str = attr.ib(factory=lambda: str(uuid.uuid4()), validator=str_validator)
-    placeholder: str = attr.ib(default=None)
-    min_values: Optional[int] = attr.ib(default=1)
-    max_values: Optional[int] = attr.ib(default=1)
-    disabled: bool = attr.ib(default=False)
-    type: Union[ComponentTypes, int] = attr.ib(
-        default=ComponentTypes.SELECT, init=False, on_setattr=attr.setters.frozen
+    options: List[Union[SelectOption, Dict]] = field(repr=True, factory=list)
+    custom_id: str = field(repr=True, factory=lambda: str(uuid.uuid4()), validator=str_validator)
+    placeholder: str = field(repr=True, default=None)
+    min_values: Optional[int] = field(repr=True, default=1)
+    max_values: Optional[int] = field(repr=True, default=1)
+    disabled: bool = field(repr=True, default=False)
+    type: Union[ComponentTypes, int] = field(
+        repr=True, default=ComponentTypes.SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
     def __len__(self) -> int:
@@ -220,7 +221,7 @@ class Select(InteractiveComponent):
         self.options.append(option)
 
 
-@attr.s(slots=True, init=False)
+@define(kw_only=False)
 class ActionRow(BaseComponent):
     """
     Represents an action row.
@@ -233,9 +234,9 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: List[Union[dict, Select, Button]] = attr.ib(factory=list)
-    type: Union[ComponentTypes, int] = attr.ib(
-        default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attr.setters.frozen
+    components: List[Union[dict, Select, Button]] = field(repr=True, factory=list)
+    type: Union[ComponentTypes, int] = field(
+        default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
 
     def __init__(self, *components: Union[dict, Select, Button]) -> None:

@@ -1,10 +1,8 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING, List, Optional, Union
 
-import attr
-
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -37,9 +35,9 @@ class StickerFormatTypes(IntEnum):
 
 @define(kw_only=False)
 class StickerItem(DiscordObject):
-    name: str = attr.ib()
+    name: str = field(repr=True)
     """Name of the sticker."""
-    format_type: StickerFormatTypes = attr.ib(converter=StickerFormatTypes)
+    format_type: StickerFormatTypes = field(repr=True, converter=StickerFormatTypes)
     """Type of sticker image format."""
 
 
@@ -47,21 +45,21 @@ class StickerItem(DiscordObject):
 class Sticker(StickerItem):
     """Represents a sticker that can be sent in messages."""
 
-    pack_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+    pack_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
     """For standard stickers, id of the pack the sticker is from."""
-    description: Optional[str] = attr.ib(default=None)
+    description: Optional[str] = field(default=None)
     """Description of the sticker."""
-    tags: str = attr.ib()
+    tags: str = field()
     """autocomplete/suggestion tags for the sticker (max 200 characters)"""
-    type: Union[StickerTypes, int] = attr.ib(converter=StickerTypes)
+    type: Union[StickerTypes, int] = field(converter=StickerTypes)
     """Type of sticker."""
-    available: Optional[bool] = attr.ib(default=True)
+    available: Optional[bool] = field(default=True)
     """Whether this guild sticker can be used, may be false due to loss of Server Boosts."""
-    sort_value: Optional[int] = attr.ib(default=None)
+    sort_value: Optional[int] = field(default=None)
     """The standard sticker's sort order within its pack."""
 
-    _user_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
-    _guild_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+    _user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
+    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
 
     async def fetch_creator(self) -> "User":
         """
@@ -151,15 +149,15 @@ class Sticker(StickerItem):
 class StickerPack(DiscordObject):
     """Represents a pack of standard stickers."""
 
-    stickers: List["Sticker"] = attr.ib(factory=list)
+    stickers: List["Sticker"] = field(factory=list)
     """The stickers in the pack."""
-    name: str = attr.ib()
+    name: str = field(repr=True)
     """Name of the sticker pack."""
-    sku_id: "Snowflake_Type" = attr.ib()
+    sku_id: "Snowflake_Type" = field(repr=True)
     """id of the pack's SKU."""
-    cover_sticker_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    cover_sticker_id: Optional["Snowflake_Type"] = field(default=None)
     """id of a sticker in the pack which is shown as the pack's icon."""
-    description: str = attr.ib()
+    description: str = field()
     """Description of the sticker pack."""
-    banner_asset_id: "Snowflake_Type" = attr.ib()  # TODO CDN Asset
+    banner_asset_id: "Snowflake_Type" = field()  # TODO CDN Asset
     """id of the sticker pack's banner image."""

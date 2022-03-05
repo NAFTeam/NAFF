@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from typing import Tuple, Union, Optional
 
-import attr
+from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = [
     "Color",
@@ -19,11 +19,11 @@ __all__ = [
 ]
 
 
-@attr.s(init=False, slots=True)
+@define(init=False)
 class Color:
     hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
-    value: int = attr.ib()
+    value: int = field(repr=True)
 
     def __init__(self, color=None):
         color = color or (0, 0, 0)

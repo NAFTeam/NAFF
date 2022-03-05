@@ -2,10 +2,8 @@ from asyncio import QueueEmpty
 from collections import namedtuple
 from typing import TYPE_CHECKING, List
 
-import attr
-
 from dis_snek.client.const import MISSING
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.emoji import PartialEmoji
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.snek.iterator import AsyncIterator
@@ -61,12 +59,12 @@ class ReactionUsers(AsyncIterator):
 
 @define()
 class Reaction(ClientObject):
-    count: int = attr.ib()
-    me: bool = attr.ib(default=False)
-    emoji: "PartialEmoji" = attr.ib(converter=PartialEmoji.from_dict)
+    count: int = field()
+    me: bool = field(default=False)
+    emoji: "PartialEmoji" = field(converter=PartialEmoji.from_dict)
 
-    _channel_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    _message_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
+    _message_id: "Snowflake_Type" = field(converter=to_snowflake)
 
     def users(self, limit: int = 0, after=None) -> ReactionUsers:
         return ReactionUsers(self, limit, after)

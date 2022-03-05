@@ -1,7 +1,7 @@
 from functools import partial, total_ordering
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
 
-import attr
+import attrs
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
@@ -24,7 +24,7 @@ __all__ = ["Role"]
 T = TypeVar("T")
 
 
-def sentinel_converter(value: Optional[bool | T], sentinel: T = attr.NOTHING) -> bool:
+def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool:
     if value is sentinel:
         return False
     elif value is None:

@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import attr
-from attr import setters
-from attr.validators import instance_of
-from attr.validators import optional as v_optional
+from attrs.validators import instance_of
+from attrs.validators import optional as v_optional
 
 from dis_snek.client.const import (
     EMBED_MAX_NAME_LENGTH,
@@ -14,7 +12,7 @@ from dis_snek.client.const import (
     EMBED_FIELD_VALUE_LENGTH,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import field
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
 from dis_snek.client.utils.serializer import no_export_meta, export_converter
@@ -33,7 +31,7 @@ __all__ = [
 ]
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedField(DictSerializationMixin):
     """
     Representation of an embed field.
@@ -45,9 +43,9 @@ class EmbedField(DictSerializationMixin):
 
     """
 
-    name: str = attr.ib()
-    value: str = attr.ib()
-    inline: bool = attr.ib(default=False)
+    name: str = field()
+    value: str = field()
+    inline: bool = field(default=False)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -63,7 +61,7 @@ class EmbedField(DictSerializationMixin):
         return len(self.name) + len(self.value)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
@@ -76,10 +74,10 @@ class EmbedAuthor(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attr.ib(default=None)
-    url: Optional[str] = attr.ib(default=None)
-    icon_url: Optional[str] = attr.ib(default=None)
-    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+    name: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
+    icon_url: Optional[str] = field(default=None)
+    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -90,7 +88,7 @@ class EmbedAuthor(DictSerializationMixin):
         return len(self.name)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
@@ -103,10 +101,10 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
 
     """
 
-    url: Optional[str] = attr.ib(default=None)
-    proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
-    height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
-    width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+    url: Optional[str] = field(default=None)
+    proxy_url: Optional[str] = field(default=None, metadata=no_export_meta)
+    height: Optional[int] = field(default=None, metadata=no_export_meta)
+    width: Optional[int] = field(default=None, metadata=no_export_meta)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any]):
@@ -119,7 +117,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
         return self.height, self.width
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedFooter(DictSerializationMixin):
     """
     Representation of an Embed Footer.
@@ -131,15 +129,15 @@ class EmbedFooter(DictSerializationMixin):
 
     """
 
-    text: str = attr.ib()
-    icon_url: Optional[str] = attr.ib(default=None)
-    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+    text: str = field()
+    icon_url: Optional[str] = field(default=None)
+    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
     def __len__(self):
         return len(self.text)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
@@ -153,11 +151,11 @@ class EmbedProvider(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attr.ib(default=None)
-    url: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Embed(DictSerializationMixin):
     """Represents a discord embed object."""
 
@@ -174,7 +172,6 @@ class Embed(DictSerializationMixin):
     timestamp: Optional[Timestamp] = field(
         default=None,
         converter=c_optional(timestamp_converter),
-        on_setattr=setters.convert,
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )

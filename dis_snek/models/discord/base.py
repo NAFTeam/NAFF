@@ -1,9 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List
 
-import attr
-
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import field
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.discord.snowflake import SnowflakeObject
 
@@ -13,7 +11,7 @@ if TYPE_CHECKING:
 __all__ = ["ClientObject", "DiscordObject"]
 
 
-@attr.s()
+@define(slots=False)
 class ClientObject(DictSerializationMixin):
     _client: "Snake" = field(metadata=no_export_meta)
 
@@ -37,6 +35,6 @@ class ClientObject(DictSerializationMixin):
             setattr(self, key, value)
 
 
-@attr.s()
+@define(slots=False)
 class DiscordObject(SnowflakeObject, ClientObject):
     pass

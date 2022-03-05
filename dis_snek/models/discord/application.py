@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any
 
-import attr
-
 from dis_snek.client.const import MISSING
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.enums import ApplicationFlags
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ["Application"]
 
 
-@attr.s(slots=True, kw_only=True)
+@define()
 class Application(DiscordObject):
     """
     Represents a discord application.
@@ -43,23 +42,23 @@ class Application(DiscordObject):
 
     """
 
-    name: str = attr.ib()
-    icon: Optional[Asset] = attr.ib(default=None)
-    description: Optional[str] = attr.ib()
-    rpc_origins: Optional[List[str]] = attr.ib(default=None)
-    bot_public: bool = attr.ib(default=True)
-    bot_require_code_grant: bool = attr.ib(default=False)
-    terms_of_service_url: Optional[str] = attr.ib(default=None)
-    privacy_policy_url: Optional[str] = attr.ib(default=None)
-    owner_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional(to_snowflake))
-    summary: str = attr.ib()
-    verify_key: Optional[str] = attr.ib(default=MISSING)
-    team: Optional["Team"] = attr.ib(default=None)
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    primary_sku_id: Optional["Snowflake_Type"] = attr.ib(default=None)
-    slug: Optional[str] = attr.ib(default=None)
-    cover_image: Optional[str] = attr.ib(default=None)
-    flags: Optional["ApplicationFlags"] = attr.ib(default=None, converter=optional(ApplicationFlags))
+    name: str = field(repr=True)
+    icon: Optional[Asset] = field(default=None)
+    description: Optional[str] = field(default=None)
+    rpc_origins: Optional[List[str]] = field(default=None)
+    bot_public: bool = field(default=True)
+    bot_require_code_grant: bool = field(default=False)
+    terms_of_service_url: Optional[str] = field(default=None)
+    privacy_policy_url: Optional[str] = field(default=None)
+    owner_id: Optional[Snowflake_Type] = field(default=None, converter=optional(to_snowflake))
+    summary: str = field()
+    verify_key: Optional[str] = field(default=MISSING)
+    team: Optional["Team"] = field(default=None)
+    guild_id: Optional["Snowflake_Type"] = field(default=None)
+    primary_sku_id: Optional["Snowflake_Type"] = field(default=None)
+    slug: Optional[str] = field(default=None)
+    cover_image: Optional[str] = field(default=None)
+    flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
