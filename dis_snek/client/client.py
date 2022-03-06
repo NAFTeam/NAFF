@@ -384,7 +384,7 @@ class Snake(
         if len(self.processors) == 0:
             log.warning("No Processors are loaded! This means no events will be processed!")
 
-    async def generate_prefixes(self, message: Message) -> str | Iterable[str]:
+    async def generate_prefixes(self, bot: "Snake", message: Message) -> str | Iterable[str]:
         """
         A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 
@@ -392,6 +392,7 @@ class Snake(
             To easily override this method, simply use the `generate_prefixes` parameter when instantiating the client
 
         Args:
+            bot: A reference to the client
             message: A message to determine the prefix from.
 
         Returns:
@@ -1283,7 +1284,7 @@ class Snake(
             return
 
         if not message.author.bot:
-            prefixes = await self.generate_prefixes(message)
+            prefixes = await self.generate_prefixes(self, message)
 
             if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
                 # its easier to treat everything as if it may be an iterable
