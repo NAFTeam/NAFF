@@ -19,13 +19,7 @@ log = logging.getLogger(logger_name)
 class ChannelEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_channel_create(self, event: "RawGatewayEvent") -> None:
-
-        channel = BaseChannel.from_dict_factory(event.data, self)
-        if guild := channel.guild:
-            # delete references to this channel in the parent guild
-            guild._channel_ids.add(channel.id)
-        # delete this channel from the cache
-        self.cache.channel_cache.pop(channel.id, None)
+        channel = self.cache.place_channel_data(event.data)
         self.dispatch(events.ChannelCreate(channel))
 
     @Processor.define()

@@ -511,7 +511,7 @@ def slash_command(
     group_name: str = None,
     sub_cmd_description: str = "No Description Set",
     group_description: str = "No Description Set",
-) -> Callable[[Coroutine], SlashCommand]:
+) -> Callable[[Callable[..., Coroutine]], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
 
