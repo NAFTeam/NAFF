@@ -1,9 +1,10 @@
 import logging
 from typing import Any, Dict, List, TypeVar
 
-import attr
+import attrs
 
 import dis_snek.client.const as const
+from dis_snek.client.utils.attr_utils import define
 import dis_snek.client.utils.serializer as serializer
 
 __all__ = ["DictSerializationMixin"]
@@ -13,19 +14,19 @@ log = logging.getLogger(const.logger_name)
 T = TypeVar("T")
 
 
-@attr.s()
+@define(slots=False)
 class DictSerializationMixin:
     @classmethod
     def _get_keys(cls) -> frozenset:
         if (keys := getattr(cls, "_keys", None)) is None:
-            keys = frozenset(field.name for field in attr.fields(cls))
+            keys = frozenset(field.name for field in attrs.fields(cls))
             setattr(cls, "_keys", keys)
         return keys
 
     @classmethod
     def _get_init_keys(cls) -> frozenset:
         if (init_keys := getattr(cls, "_init_keys", None)) is None:
-            init_keys = frozenset(field.name.removeprefix("_") for field in attr.fields(cls) if field.init)
+            init_keys = frozenset(field.name.removeprefix("_") for field in attrs.fields(cls) if field.init)
             setattr(cls, "_init_keys", init_keys)
         return init_keys
 

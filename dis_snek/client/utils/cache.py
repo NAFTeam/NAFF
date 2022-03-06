@@ -3,15 +3,17 @@ from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
 from typing import Any
 
-import attr
+import attrs
+
+from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = ["TTLItem", "TTLCache"]
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class TTLItem:
-    value: Any = attr.ib()
-    expire: float = attr.ib()
+    value: Any = field()
+    expire: float = field()
 
     def is_expired(self, timestamp) -> bool:
         return timestamp >= self.expire
@@ -40,13 +42,13 @@ class TTLCache(OrderedDict):
         # self._reset_expiration(key, item)
         return item.value
 
-    def pop(self, key, default=attr.NOTHING) -> Any:
+    def pop(self, key, default=attrs.NOTHING) -> Any:
         if key in self:
             item = self[key]
             del self[key]
             return item.value
 
-        if default is attr.NOTHING:
+        if default is attrs.NOTHING:
             raise KeyError(key)
 
         return default
@@ -116,8 +118,8 @@ class _CacheValuesView(ValuesView):
 class _CacheItemsView(ItemsView):
     def __contains__(self, item):
         key, value = item
-        v = self._mapping.get(key, default=attr.NOTHING, reset_expiration=False)
-        if v is attr.NOTHING:
+        v = self._mapping.get(key, default=attrs.NOTHING, reset_expiration=False)
+        if v is attrs.NOTHING:
             return False
         else:
             return v is value or v == value

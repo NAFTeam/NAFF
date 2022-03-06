@@ -2,7 +2,7 @@ import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
-import attr
+import attrs
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
@@ -143,11 +143,11 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
 
 @define(slots=False)
 class MessageableMixin(SendMixin):
-    last_message_id: Optional[Snowflake_Type] = attr.ib(
+    last_message_id: Optional[Snowflake_Type] = field(
         default=None
     )  # TODO May need to think of dynamically updating this.
-    default_auto_archive_duration: int = attr.ib(default=AutoArchiveDuration.ONE_DAY)
-    last_pin_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
+    default_auto_archive_duration: int = field(default=AutoArchiveDuration.ONE_DAY)
+    last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.id)
@@ -634,8 +634,8 @@ class WebhookMixin:
 
 @define(slots=False)
 class BaseChannel(DiscordObject):
-    name: Optional[str] = field(default=None)
-    type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
+    name: Optional[str] = field(repr=True, default=None)
+    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes)
 
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
@@ -735,7 +735,7 @@ class BaseChannel(DiscordObject):
 # DMs
 
 
-@define()
+@define(slots=False)
 class DMChannel(BaseChannel, MessageableMixin):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -751,7 +751,7 @@ class DMChannel(BaseChannel, MessageableMixin):
 
 @define()
 class DM(DMChannel):
-    recipient: "models.User" = field()
+    recipient: "models.User" = field(repr=True)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -763,8 +763,8 @@ class DM(DMChannel):
 
 @define()
 class DMGroup(DMChannel):
-    owner_id: Snowflake_Type = attr.ib()
-    application_id: Optional[Snowflake_Type] = attr.ib(default=None)
+    owner_id: Snowflake_Type = field(repr=True)
+    application_id: Optional[Snowflake_Type] = field(default=None)
     recipients: List["models.User"] = field(factory=list)
 
     async def edit(
@@ -823,15 +823,15 @@ class DMGroup(DMChannel):
 # Guild
 
 
-@define()
+@define(slots=False)
 class GuildChannel(BaseChannel):
-    position: Optional[int] = attr.ib(default=0)
-    nsfw: bool = attr.ib(default=False)
-    parent_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    permission_overwrites: list[PermissionOverwrite] = attr.ib(factory=list)
+    position: Optional[int] = field(default=0)
+    nsfw: bool = field(default=False)
+    parent_id: Optional[Snowflake_Type] = field(default=None, converter=optional_c(to_snowflake))
+    permission_overwrites: list[PermissionOverwrite] = field(factory=list)
     """A list of the overwritten permissions for the members and roles"""
 
-    _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    _guild_id: Optional[Snowflake_Type] = field(default=None, converter=optional_c(to_snowflake))
 
     @property
     def guild(self) -> "models.Guild":
@@ -1387,7 +1387,7 @@ class GuildStore(GuildChannel):
 
 @define()
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
-    topic: Optional[str] = attr.ib(default=None)
+    topic: Optional[str] = field(default=None)
 
     async def edit(
         self,
@@ -1444,8 +1444,8 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
 @define()
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
-    topic: Optional[str] = attr.ib(default=None)
-    rate_limit_per_user: int = attr.ib(default=0)
+    topic: Optional[str] = field(default=None)
+    rate_limit_per_user: int = field(default=0)
 
     async def edit(
         self,
@@ -1497,18 +1497,18 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 # Guild Threads
 
 
-@define()
+@define(slots=False)
 class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
-    owner_id: Snowflake_Type = attr.ib(default=None)
-    topic: Optional[str] = attr.ib(default=None)
-    message_count: int = attr.ib(default=0)
-    member_count: int = attr.ib(default=0)
-    archived: bool = attr.ib(default=False)
-    auto_archive_duration: int = attr.ib(
-        default=attr.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
+    owner_id: Snowflake_Type = field(default=None)
+    topic: Optional[str] = field(default=None)
+    message_count: int = field(default=0)
+    member_count: int = field(default=0)
+    archived: bool = field(default=False)
+    auto_archive_duration: int = field(
+        default=attrs.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
     )
-    locked: bool = attr.ib(default=False)
-    archive_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
+    locked: bool = field(default=False)
+    archive_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1692,13 +1692,13 @@ class GuildPrivateThread(ThreadChannel):
 # Guild Voices
 
 
-@define()
+@define(slots=False)
 class VoiceChannel(GuildChannel):  # May not be needed, can be directly just GuildVoice.
-    bitrate: int = attr.ib()
-    user_limit: int = attr.ib()
-    rtc_region: str = attr.ib(default="auto")
-    video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
-    _voice_member_ids: list[Snowflake_Type] = attr.ib(factory=list)
+    bitrate: int = field()
+    user_limit: int = field()
+    rtc_region: str = field(default="auto")
+    video_quality_mode: Union[VideoQualityModes, int] = field(default=VideoQualityModes.AUTO)
+    _voice_member_ids: list[Snowflake_Type] = field(factory=list)
 
     async def edit(
         self,
@@ -1763,7 +1763,7 @@ class GuildVoice(VoiceChannel, InvitableMixin):
 
 @define()
 class GuildStageVoice(GuildVoice):
-    stage_instance: "models.StageInstance" = attr.ib(default=MISSING)
+    stage_instance: "models.StageInstance" = field(default=MISSING)
 
     # todo: Listeners and speakers properties (needs voice state caching)
 

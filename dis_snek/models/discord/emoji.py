@@ -1,8 +1,6 @@
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import attr
-
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import list_converter
@@ -22,17 +20,17 @@ __all__ = ["PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_e
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
 
-@define()
+@define(kw_only=False)
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic ("partial") emoji used in discord."""
 
-    id: Optional["Snowflake_Type"] = attr.ib(
-        default=None, converter=optional(to_snowflake)
+    id: Optional["Snowflake_Type"] = field(
+        repr=True, default=None, converter=optional(to_snowflake)
     )  # can be None for Standard Emoji
     """The custom emoji id. Leave empty if you are using standard unicode emoji."""
-    name: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = field(repr=True, default=None)
     """The custom emoji name, or standard unicode emoji in string"""
-    animated: bool = attr.ib(default=False)
+    animated: bool = field(repr=True, default=False)
     """Whether this emoji is animated"""
 
     @classmethod
@@ -91,16 +89,16 @@ class CustomEmoji(PartialEmoji):
 
     _client: "Snake" = field(metadata=no_export_meta)
 
-    require_colons: bool = attr.ib(default=False)
+    require_colons: bool = field(default=False)
     """Whether this emoji must be wrapped in colons"""
-    managed: bool = attr.ib(default=False)
+    managed: bool = field(default=False)
     """Whether this emoji is managed"""
-    available: bool = attr.ib(default=False)
+    available: bool = field(default=False)
     """Whether this emoji can be used, may be false due to loss of Server Boosts."""
 
-    _creator_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
-    _role_ids: List["Snowflake_Type"] = attr.ib(factory=list, converter=optional(list_converter(to_snowflake)))
-    _guild_id: "Snowflake_Type" = attr.ib(default=None, converter=to_snowflake)
+    _creator_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
+    _role_ids: List["Snowflake_Type"] = field(factory=list, converter=optional(list_converter(to_snowflake)))
+    _guild_id: "Snowflake_Type" = field(default=None, converter=to_snowflake)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

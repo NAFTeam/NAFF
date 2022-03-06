@@ -4,12 +4,11 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
-import attr
-
 from dis_snek.models.discord.enums import Intents, Status, ActivityType
 from dis_snek.models.discord.activity import Activity
 from dis_snek.client.errors import SnakeException, WebSocketClosed
 from dis_snek.client.const import logger_name, MISSING, Absent
+from dis_snek.client.utils.attr_utils import define
 from .gateway import WebsocketClient
 from dis_snek.api import events
 
@@ -21,7 +20,7 @@ __all__ = ["ConnectionState"]
 log = logging.getLogger(logger_name)
 
 
-@attr.s(auto_attribs=True)
+@define(kw_only=False)
 class ConnectionState:
     client: "Snake"
     """The bot's client"""

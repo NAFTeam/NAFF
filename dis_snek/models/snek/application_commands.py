@@ -5,8 +5,6 @@ import re
 from enum import IntEnum
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
 
-import attr
-
 import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
     GLOBAL_SCOPE,
@@ -20,9 +18,9 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_parameters
-from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
@@ -127,8 +125,8 @@ class CallbackTypes(IntEnum):
     MODAL = 9
 
 
-@attr.s(slots=True, hash=True)
-class Permission:
+@define(kw_only=False)
+class Permission(DictSerializationMixin):
     """
     Represents a interaction permission.
 
@@ -140,27 +138,13 @@ class Permission:
 
     """
 
-    id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake, metadata=no_export_meta)
-    type: Union[PermissionTypes, int] = attr.ib(converter=PermissionTypes)
-    permission: bool = attr.ib(default=True)
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        returns:
-            Representation of this object
-
-        """
-        data = attr.asdict(self)
-        data.pop("guild_id", None)
-        data["id"] = str(data["id"])
-
-        return data
+    id: "Snowflake_Type" = field(converter=to_snowflake, metadata=export_converter(str))
+    guild_id: "Snowflake_Type" = field(converter=to_snowflake, metadata=no_export_meta)
+    type: Union[PermissionTypes, int] = field(converter=PermissionTypes)
+    permission: bool = field(default=True)
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
@@ -174,27 +158,27 @@ class InteractionCommand(BaseCommand):
 
     """
 
-    name: str = attr.ib(metadata=docs("1-32 character name") | no_export_meta)
-    scopes: List["Snowflake_Type"] = attr.ib(
+    name: str = field(metadata=docs("1-32 character name") | no_export_meta)
+    scopes: List["Snowflake_Type"] = field(
         default=[GLOBAL_SCOPE],
         converter=to_snowflake_list,
         metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
 
-    default_permission: bool = attr.ib(
+    default_permission: bool = field(
         default=True, metadata=docs("whether this command is enabled by default when the app is added to a guild")
     )
-    permissions: Optional[List[Union[Permission, Dict]]] = attr.ib(
+    permissions: Optional[List[Union[Permission, Dict]]] = field(
         factory=dict, metadata=docs("The permissions of this interaction")
     )
 
-    cmd_id: Dict[str, "Snowflake_Type"] = attr.ib(
+    cmd_id: Dict[str, "Snowflake_Type"] = field(
         factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
     )  # scope: cmd_id
-    callback: Callable[..., Coroutine] = attr.ib(
+    callback: Callable[..., Coroutine] = field(
         default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
     )
-    auto_defer: "AutoDefer" = attr.ib(
+    auto_defer: "AutoDefer" = field(
         default=MISSING,
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
@@ -238,7 +222,7 @@ class InteractionCommand(BaseCommand):
         return self.default_permission
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
@@ -249,8 +233,8 @@ class ContextMenu(InteractionCommand):
 
     """
 
-    name: str = attr.ib(metadata=docs("1-32 character name"))
-    type: CommandTypes = attr.ib(metadata=docs("The type of command, defaults to 1 if not specified"))
+    name: str = field(metadata=docs("1-32 character name"))
+    type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -268,7 +252,7 @@ class ContextMenu(InteractionCommand):
             )
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
@@ -279,11 +263,11 @@ class SlashCommandChoice(DictSerializationMixin):
 
     """
 
-    name: str = attr.ib()
-    value: Union[str, int, float] = attr.ib()
+    name: str = field()
+    value: Union[str, int, float] = field()
 
 
-@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define(kw_only=False)
 class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
@@ -300,15 +284,15 @@ class SlashCommandOption(DictSerializationMixin):
 
     """
 
-    name: str = attr.ib()
-    type: Union[OptionTypes, int] = attr.ib()
-    description: str = attr.ib(default="No Description Set")
-    required: bool = attr.ib(default=True)
-    autocomplete: bool = attr.ib(default=False)
-    choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)
-    channel_types: Optional[list[Union[ChannelTypes, int]]] = attr.ib(default=None)
-    min_value: Optional[float] = attr.ib(default=None)
-    max_value: Optional[float] = attr.ib(default=None)
+    name: str = field()
+    type: Union[OptionTypes, int] = field()
+    description: str = field(default="No Description Set")
+    required: bool = field(default=True)
+    autocomplete: bool = field(default=False)
+    choices: List[Union[SlashCommandChoice, Dict]] = field(factory=list)
+    channel_types: Optional[list[Union[ChannelTypes, int]]] = field(default=None)
+    min_value: Optional[float] = field(default=None)
+    max_value: Optional[float] = field(default=None)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -370,19 +354,19 @@ class SlashCommandOption(DictSerializationMixin):
                     raise ValueError("`min_value` needs to be <= than `max_value`")
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class SlashCommand(InteractionCommand):
-    name: str = attr.ib()
-    description: str = attr.ib("No Description Set")
+    name: str = field()
+    description: str = field(default="No Description Set")
 
-    group_name: str = attr.ib(default=None, metadata=no_export_meta)
-    group_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+    group_name: str = field(default=None, metadata=no_export_meta)
+    group_description: str = field(default="No Description Set", metadata=no_export_meta)
 
-    sub_cmd_name: str = attr.ib(default=None, metadata=no_export_meta)
-    sub_cmd_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+    sub_cmd_name: str = field(default=None, metadata=no_export_meta)
+    sub_cmd_description: str = field(default="No Description Set", metadata=no_export_meta)
 
-    options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
-    autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
+    options: List[Union[SlashCommandOption, Dict]] = field(factory=list)
+    autocomplete_callbacks: dict = field(factory=dict, metadata=no_export_meta)
 
     @property
     def resolved_name(self) -> str:
@@ -505,10 +489,10 @@ class SlashCommand(InteractionCommand):
         return wrapper
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
-    listeners: list[str] = attr.ib(factory=list)
+    listeners: list[str] = field(factory=list)
 
 
 ##############

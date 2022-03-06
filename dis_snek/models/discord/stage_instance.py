@@ -1,9 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
-import attr
-
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.enums import StagePrivacyLevel
 from dis_snek.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
@@ -16,12 +14,12 @@ __all__ = ["StageInstance"]
 
 @define
 class StageInstance(DiscordObject):
-    topic: str = attr.ib()
-    privacy_level: StagePrivacyLevel = attr.ib()
-    discoverable_disabled: bool = attr.ib()
+    topic: str = field()
+    privacy_level: StagePrivacyLevel = field()
+    discoverable_disabled: bool = field()
 
-    _guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    _channel_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    _guild_id: "Snowflake_Type" = field(converter=to_snowflake)
+    _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
 
     @property
     def guild(self) -> "Guild":

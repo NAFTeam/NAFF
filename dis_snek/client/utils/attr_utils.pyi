@@ -1,4 +1,4 @@
-import attr
+import attrs
 import logging
 from typing import Any, TypeVar, Callable, Tuple, Union, Optional
 
@@ -22,8 +22,8 @@ log: logging.Logger
 class_defaults: dict[str, bool | list[Callable]]
 field_defaults: dict[str, bool]
 
-@__dataclass_transform__(field_descriptors=(attr.attrib, attr.field))
+@__dataclass_transform__(field_descriptors=(attrs.define, attrs.field))
 def define(f: Optional[Callable] = None, **kwargs): ...
 def field(**kwargs) -> Any: ...
 def docs(doc_string: str) -> dict[str, str]: ...
-def str_validator(self, attribute: attr.Attribute, value: Any) -> None: ...
+def str_validator(self, attribute: attrs.Attribute, value: Any) -> None: ...

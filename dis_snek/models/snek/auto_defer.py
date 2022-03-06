@@ -1,9 +1,8 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-import attr
-
 from dis_snek.client.errors import AlreadyDeferred, NotFound
+from dis_snek.client.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import InteractionContext
@@ -11,17 +10,17 @@ if TYPE_CHECKING:
 __all__ = ["AutoDefer"]
 
 
-@attr.s(kw_only=True, slots=True)
+@define()
 class AutoDefer:
     """Automatically defer application commands for you!"""
 
-    enabled: bool = attr.ib(default=False)
+    enabled: bool = field(default=False)
     """Whether or not auto-defer is enabled"""
 
-    ephemeral: bool = attr.ib(default=False)
+    ephemeral: bool = field(default=False)
     """Should the command be deferred as ephemeral or not"""
 
-    time_until_defer: float = attr.ib(default=1.5)
+    time_until_defer: float = field(default=1.5)
     """How long to wait before automatically deferring"""
 
     async def __call__(self, ctx: "InteractionContext"):

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 import attr
+import attrs
 
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
@@ -204,7 +205,7 @@ class SnakeBotUser(User):
             self._client.cache.place_user_data(resp)
 
 
-@attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
+@attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})  # todo any better solution?
 class Member(DiscordObject, _SendDMMixin):
     bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
@@ -283,8 +284,8 @@ class Member(DiscordObject, _SendDMMixin):
     def __setattr__(self, key, value):
         # this allows for transparent access to user attributes
         if attrib := getattr(self.__attrs_attrs__, key):
-            value = attr.setters.convert(self, attrib, value)
-            value = attr.setters.validate(self, attrib, value)
+            value = attrs.setters.convert(self, attrib, value)
+            value = attrs.setters.validate(self, attrib, value)
         super(Member, self).__setattr__(key, value)
 
     @property

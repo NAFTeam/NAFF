@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Union
 
-import attr
-
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 __all__ = ["Asset"]
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Asset:
     """
     Represents a discord asset.
@@ -26,9 +25,9 @@ class Asset:
 
     BASE = "https://cdn.discordapp.com"
 
-    _client: "Snake" = attr.field(metadata=no_export_meta)
-    _url: str = attr.field()
-    hash: Optional[str] = attr.field(default=None)
+    _client: "Snake" = field(metadata=no_export_meta)
+    _url: str = field(repr=True)
+    hash: Optional[str] = field(repr=True, default=None)
 
     @classmethod
     def from_path_hash(cls, client: "Snake", path: str, asset_hash: str) -> "Asset":

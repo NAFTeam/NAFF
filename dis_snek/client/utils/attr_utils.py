@@ -2,7 +2,7 @@ import logging
 from functools import partial
 from typing import Any, Dict, TypeVar
 
-import attr
+import attrs
 from dis_snek.client.const import logger_name, MISSING
 
 __all__ = ["define", "field", "docs", "str_validator"]
@@ -16,13 +16,12 @@ class_defaults = {
     "hash": False,
     "slots": True,
     "kw_only": True,
-    "on_setattr": [attr.setters.convert, attr.setters.validate],
 }
 field_defaults = {"repr": False}
 
 
-define = partial(attr.define, **class_defaults)  # type: ignore
-field = partial(attr.field, **field_defaults)  # type: ignore
+define = partial(attrs.define, **class_defaults)  # type: ignore
+field = partial(attrs.field, **field_defaults)  # type: ignore
 
 
 def copy_converter(value: T) -> T:
@@ -44,7 +43,7 @@ def docs(doc_string: str) -> Dict[str, str]:
 #     return decorator
 
 
-def str_validator(self, attribute: attr.Attribute, value: Any) -> None:
+def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
     if not isinstance(value, str):
         if value is MISSING:
             return

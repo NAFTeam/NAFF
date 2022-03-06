@@ -2,12 +2,12 @@ from io import IOBase
 from pathlib import Path
 from typing import Optional, Union
 
-import attr
+from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = ["File", "open_file"]
 
 
-@attr.s()
+@define(kw_only=False)
 class File:
     """
     Representation of a file.
@@ -16,9 +16,9 @@ class File:
 
     """
 
-    file: Union["IOBase", "Path", str] = attr.field()
+    file: Union["IOBase", "Path", str] = field(repr=True)
     """Location of file to send or the bytes."""
-    file_name: Optional[str] = attr.field(default=None)
+    file_name: Optional[str] = field(repr=True, default=None)
     """Set a filename that will be displayed when uploaded to discord. If you leave this empty, the file will be called `file` by default"""
 
     def open_file(self) -> "IOBase":

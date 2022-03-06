@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any, Union
 
-import attr
-
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.enums import TeamMembershipState
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -18,10 +16,10 @@ __all__ = ["TeamMember", "Team"]
 
 @define()
 class TeamMember(DiscordObject):
-    membership_state: TeamMembershipState = attr.ib(converter=TeamMembershipState)
-    # permissions: List[str] = attr.ib(default=["*"])  # disabled until discord adds more team roles
-    team_id: "Snowflake_Type" = attr.ib()
-    user: "User" = attr.ib()  # TODO: cache partial user (avatar, discrim, id, username)
+    membership_state: TeamMembershipState = field(converter=TeamMembershipState)
+    # permissions: List[str] = field(default=["*"])  # disabled until discord adds more team roles
+    team_id: "Snowflake_Type" = field(repr=True)
+    user: "User" = field()  # TODO: cache partial user (avatar, discrim, id, username)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -32,10 +30,10 @@ class TeamMember(DiscordObject):
 
 @define()
 class Team(DiscordObject):
-    icon: Optional[Asset] = attr.ib(default=None)
-    members: List[TeamMember] = attr.ib(factory=list)
-    name: str = attr.ib()
-    owner_user_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    icon: Optional[Asset] = field(default=None)
+    members: List[TeamMember] = field(factory=list)
+    name: str = field(repr=True)
+    owner_user_id: "Snowflake_Type" = field(converter=to_snowflake)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

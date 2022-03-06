@@ -3,8 +3,6 @@ import textwrap
 import uuid
 from typing import List, TYPE_CHECKING, Optional, Callable, Coroutine, Union
 
-import attr
-
 from dis_snek import (
     Embed,
     ComponentContext,
@@ -23,6 +21,7 @@ from dis_snek import (
     Color,
     BrandColors,
 )
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import export_converter
 from dis_snek.models.discord.emoji import process_emoji
 
@@ -33,10 +32,10 @@ if TYPE_CHECKING:
 __all__ = ["Paginator"]
 
 
-@attr.s()
+@define(kw_only=False)
 class Timeout:
-    paginator: "Paginator" = attr.ib()
-    run: bool = attr.ib(default=True)
+    paginator: "Paginator" = field()
+    run: bool = field(default=True)
     ping: asyncio.Event = asyncio.Event()
 
     async def __call__(self) -> None:
@@ -51,12 +50,12 @@ class Timeout:
                 self.ping.clear()
 
 
-@attr.s(auto_detect=True)
+@define(kw_only=False)
 class Page:
-    content: str = attr.ib()
-    title: Optional[str] = attr.ib(default=None)
-    prefix: str = attr.ib(kw_only=True, default="")
-    suffix: str = attr.ib(kw_only=True, default="")
+    content: str = field()
+    title: Optional[str] = field(default=None)
+    prefix: str = field(kw_only=True, default="")
+    suffix: str = field(kw_only=True, default="")
 
     @property
     def get_summary(self) -> str:
@@ -66,68 +65,68 @@ class Page:
         return Embed(description=f"{self.prefix}\n{self.content}\n{self.suffix}", title=self.title)
 
 
-@attr.s(auto_detect=True)
+@define(kw_only=False)
 class Paginator:
-    client: "Snake" = attr.ib()
+    client: "Snake" = field()
     """The snake client to hook listeners into"""
 
-    page_index: int = attr.ib(kw_only=True, default=0)
+    page_index: int = field(kw_only=True, default=0)
     """The index of the current page being displayed"""
-    pages: List[Page | Embed] = attr.ib(factory=list, kw_only=True)
+    pages: List[Page | Embed] = field(factory=list, kw_only=True)
     """The pages this paginator holds"""
-    timeout_interval: int = attr.ib(default=0, kw_only=True)
+    timeout_interval: int = field(default=0, kw_only=True)
     """How long until this paginator disables itself"""
-    callback: Callable[..., Coroutine] = attr.ib(default=None)
+    callback: Callable[..., Coroutine] = field(default=None)
     """A coroutine to call should the select button be pressed"""
 
-    show_first_button: bool = attr.ib(default=True)
+    show_first_button: bool = field(default=True)
     """Should a `First` button be shown"""
-    show_back_button: bool = attr.ib(default=True)
+    show_back_button: bool = field(default=True)
     """Should a `Back` button be shown"""
-    show_next_button: bool = attr.ib(default=True)
+    show_next_button: bool = field(default=True)
     """Should a `Next` button be shown"""
-    show_last_button: bool = attr.ib(default=True)
+    show_last_button: bool = field(default=True)
     """Should a `Last` button be shown"""
-    show_callback_button: bool = attr.ib(default=False)
+    show_callback_button: bool = field(default=False)
     """Show a button which will call the `callback`"""
-    show_select_menu: bool = attr.ib(default=False)
+    show_select_menu: bool = field(default=False)
     """Should a select menu be shown for navigation"""
 
-    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⏮️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the first button"""
-    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⬅️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the back button"""
-    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="➡️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the next button"""
-    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⏩", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the last button"""
-    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="✅", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the callback button"""
 
-    wrong_user_message: str = attr.ib(default="This paginator is not for you")
+    wrong_user_message: str = field(default="This paginator is not for you")
     """The message to be sent when the wrong user uses this paginator"""
 
-    default_title: Optional[str] = attr.ib(default=None)
+    default_title: Optional[str] = field(default=None)
     """The default title to show on the embeds"""
-    default_color: Color = attr.ib(default=BrandColors.BLURPLE)
+    default_color: Color = field(default=BrandColors.BLURPLE)
     """The default colour to show on the embeds"""
-    default_button_color: Union[ButtonStyles, int] = attr.ib(default=ButtonStyles.BLURPLE)
+    default_button_color: Union[ButtonStyles, int] = field(default=ButtonStyles.BLURPLE)
     """The color of the buttons"""
 
-    _uuid: str = attr.ib(factory=uuid.uuid4)
-    _message: Message = attr.ib(default=MISSING)
-    _timeout_task: Timeout = attr.ib(default=MISSING)
-    _author_id: Snowflake_Type = attr.ib(default=MISSING)
+    _uuid: str = field(factory=uuid.uuid4)
+    _message: Message = field(default=MISSING)
+    _timeout_task: Timeout = field(default=MISSING)
+    _author_id: Snowflake_Type = field(default=MISSING)
 
     def __attrs_post_init__(self) -> None:
         self.client.add_component_callback(
