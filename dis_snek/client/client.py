@@ -37,6 +37,7 @@ from dis_snek.models import (
     Activity,
     Application,
     CustomEmoji,
+    File,
     Guild,
     Listener,
     listen,
@@ -1498,7 +1499,7 @@ class Snake(
         return self.cache.get_guild(guild_id)
 
     async def create_guild_from_guild_template(
-        self, template_code: str, name: str, icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING
+        self, template_code: str, name: str, icon: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
     ) -> Optional[Guild]:
         """
         Creates a new guild based on a template.
