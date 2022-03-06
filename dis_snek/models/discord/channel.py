@@ -894,7 +894,7 @@ class GuildChannel(BaseChannel):
 
     async def add_permission(
         self,
-        target: "PermissionOverwrite" | "models.Role" | "models.User" | "models.Member",
+        target: Union["PermissionOverwrite", "models.Role", "models.User", "models.Member"],
         type: "OverwriteTypes",
         allow: Optional[List["Permissions"] | int] = None,
         deny: Optional[List["Permissions"] | int] = None,
