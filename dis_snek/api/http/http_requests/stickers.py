@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
+import discord_typings
+
 from dis_snek.client.const import MISSING
 from ..route import Route
 
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 class StickerRequests:
     request: Any
 
-    async def get_sticker(self, sticker_id: "Snowflake_Type") -> dict:
+    async def get_sticker(self, sticker_id: "Snowflake_Type") -> discord_typings.StickerData:
         """
         Get a specific sticker.
 
@@ -23,7 +25,7 @@ class StickerRequests:
         """
         return await self.request(Route("GET", f"/stickers/{sticker_id}"))
 
-    async def list_nitro_sticker_packs(self) -> list:
+    async def list_nitro_sticker_packs(self) -> List[discord_typings.StickerPackData]:
         """
         Gets the list of sticker packs available to Nitro subscribers.
 
@@ -33,7 +35,7 @@ class StickerRequests:
         """
         return await self.request(Route("GET", "/sticker-packs"))
 
-    async def list_guild_stickers(self, guild_id: "Snowflake_Type") -> List[dict]:
+    async def list_guild_stickers(self, guild_id: "Snowflake_Type") -> List[discord_typings.StickerData]:
         """
         Get the stickers for a guild.
 
@@ -45,7 +47,9 @@ class StickerRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/stickers"))
 
-    async def get_guild_sticker(self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type") -> dict:
+    async def get_guild_sticker(
+        self, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type"
+    ) -> discord_typings.StickerData:
         """
         Get a sticker from a guild.
 
@@ -60,7 +64,7 @@ class StickerRequests:
 
     async def create_guild_sticker(
         self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.StickerData:
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
@@ -77,7 +81,7 @@ class StickerRequests:
 
     async def modify_guild_sticker(
         self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.StickerData:
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 

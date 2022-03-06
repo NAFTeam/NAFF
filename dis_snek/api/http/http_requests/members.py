@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
+import discord_typings
+
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.models.discord.timestamp import Timestamp
@@ -12,7 +14,9 @@ if TYPE_CHECKING:
 class MemberRequests:
     request: Any
 
-    async def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Dict:
+    async def get_member(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
+    ) -> discord_typings.GuildMemberData:
         """
         Get a member of a guild by ID.
 
@@ -25,7 +29,7 @@ class MemberRequests:
 
     async def list_members(
         self, guild_id: "Snowflake_Type", limit: int = 1, after: "Snowflake_Type" = MISSING
-    ) -> List[Dict]:
+    ) -> List[discord_typings.GuildMemberData]:
         """
         List the members of a guild.
 
@@ -35,13 +39,12 @@ class MemberRequests:
             after: Get IDs after this snowflake
 
         """
-        payload = {"limit": limit}
-        if after is not MISSING:
-            payload["after"] = after
-
+        payload = {"limit": limit, "after": after}
         return await self.request(Route("GET", f"/guilds/{guild_id}/members"), params=payload)
 
-    async def search_guild_members(self, guild_id: "Snowflake_Type", query: str, limit: int = 1) -> List[Dict]:
+    async def search_guild_members(
+        self, guild_id: "Snowflake_Type", query: str, limit: int = 1
+    ) -> List[discord_typings.GuildMemberData]:
         """
         Search a guild for members who's username or nickname starts with provided string.
 
@@ -66,7 +69,7 @@ class MemberRequests:
         channel_id: "Snowflake_Type" = MISSING,
         communication_disabled_until: Absent[Union[Timestamp, None]] = MISSING,
         reason: Absent[str] = MISSING,
-    ) -> Dict:
+    ) -> discord_typings.GuildMemberData:
         """
         Modify attributes of a guild member.
 

@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, List
 
+import discord_typings
+
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 
@@ -10,17 +12,20 @@ if TYPE_CHECKING:
 class MessageRequests:
     request: Any
 
-    async def create_message(self, payload: dict, channel_id: "Snowflake_Type") -> dict:
+    async def create_message(self, payload: dict, channel_id: "Snowflake_Type") -> discord_typings.MessageData:
         """Send a message to the specified channel."""
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
     async def delete_message(
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: Absent[str] = MISSING
-    ) -> Any:
+    ) -> None:
         """
         Deletes a message from the specified channel.
 
-        Incomplete.
+        parameters:
+            channel_id: The id of the channel to delete the message from
+            message_id: The id of the message to delete
+            reason: The reason for this action
 
         """
         await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
@@ -41,7 +46,9 @@ class MessageRequests:
             Route("POST", f"/channels/{channel_id}/messages/bulk-delete"), data={"messages": message_ids}, reason=reason
         )
 
-    async def get_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> dict:
+    async def get_message(
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type"
+    ) -> discord_typings.MessageData:
         """
         Get a specific message in the channel. Returns a message object on success.
 
@@ -81,7 +88,7 @@ class MessageRequests:
         payload: dict,
         channel_id: "Snowflake_Type",
         message_id: "Snowflake_Type",
-    ) -> dict:
+    ) -> discord_typings.MessageData:
         """
         Edit an existing message.
 
@@ -96,7 +103,9 @@ class MessageRequests:
         """
         return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), data=payload)
 
-    async def crosspost_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> dict:
+    async def crosspost_message(
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type"
+    ) -> discord_typings.MessageData:
         """
         Crosspost a message in a News Channel to following channels.
 
