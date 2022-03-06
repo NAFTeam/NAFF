@@ -1,7 +1,5 @@
-import datetime
 import logging
 import platform
-import tracemalloc
 
 from dis_snek import Scale, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from dis_snek.client.const import logger_name, __version__, __py_version__
@@ -20,12 +18,7 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
     def __init__(self, bot):
         self.add_scale_check(checks.is_owner())
 
-        log.info("Debug Scale is growing! Activating memory allocation trace and asyncio debug...")
-
-        if not tracemalloc.is_tracing():
-            tracemalloc.start()
-        if not self.bot.loop.get_debug():
-            self.bot.loop.set_debug(True)
+        log.info("Debug Scale is growing!")
 
     @listen()
     async def on_startup(self) -> None:

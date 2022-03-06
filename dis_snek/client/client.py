@@ -103,7 +103,6 @@ class Snake(
 
     Args:
         intents: Union[int, Intents]: The intents to use
-        loop: Optional[asyncio.AbstractEventLoop]: An event loop to use, normally leave this undefined
 
         default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
         generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
