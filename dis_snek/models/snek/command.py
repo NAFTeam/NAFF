@@ -241,7 +241,7 @@ class MessageCommand(BaseCommand):
 
 def message_command(
     name: str = None,
-) -> Callable[[Coroutine], MessageCommand]:
+) -> Callable[[Callable[..., Coroutine]], MessageCommand]:
     """
     A decorator to declare a coroutine as a message command.
 
