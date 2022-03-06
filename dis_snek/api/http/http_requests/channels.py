@@ -121,8 +121,6 @@ class ChannelRequests:
                 user_limit=user_limit,
             )
 
-        # clean up payload
-        payload = dict_filter_missing(payload)
         return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
     async def move_channel(

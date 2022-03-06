@@ -34,7 +34,7 @@ from .enums import (
     ScheduledEventType,
     AuditLogEventType,
 )
-from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake
+from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
     from dis_snek.client.client import Snake
@@ -578,7 +578,7 @@ class Guild(BaseGuild):
         self,
         name: str,
         imagefile: Union["models.File", "IOBase", "Path", str, bytes],
-        roles: Optional[List[Union[Snowflake_Type, "models.Role"]]] = None,
+        roles: Absent[List[Union[Snowflake_Type, "models.Role"]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.CustomEmoji":
         """
@@ -594,20 +594,16 @@ class Guild(BaseGuild):
             The new custom emoji created.
 
         """
-        data_payload = dict_filter_none(
-            {
-                "name": name,
-                "image": to_image_data(imagefile),
-                "roles": roles,
-            }
-        )
+        data_payload = {
+            "name": name,
+            "image": to_image_data(imagefile),
+            "roles": to_snowflake_list(roles) if roles else MISSING,
+        }
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
-        emoji_data["guild_id"] = self.id
         return self._client.cache.place_emoji_data(self.id, emoji_data)
 
-    async def create_guild_template(self, name: str, description: str = None) -> "models.GuildTemplate":
-
+    async def create_guild_template(self, name: str, description: Absent[str] = MISSING) -> "models.GuildTemplate":
         template = await self._client.http.create_guild_template(self.id, name, description)
         return GuildTemplate.from_dict(template, self._client)
 
@@ -1526,7 +1522,7 @@ class GuildTemplate(ClientObject):
         self.update_from_dict(data)
         return self
 
-    async def modify(self, name: Optional[str] = None, description: Optional[str] = None) -> "models.GuildTemplate":
+    async def modify(self, name: Absent[str] = MISSING, description: Absent[str] = MISSING) -> "models.GuildTemplate":
         """
         Modify the template's metadata.
 

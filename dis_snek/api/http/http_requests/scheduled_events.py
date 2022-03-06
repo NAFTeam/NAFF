@@ -135,12 +135,8 @@ class ScheduledEventsRequests:
             List of Scheduled Event Users or None
 
         """
-        query_params = urlencode(
-            dict_filter_missing({"limit": limit, "with_member": with_member, "before": before, "after": after})
-        )
+        params = {"limit": limit, "with_member": with_member, "before": before, "after": after}
         return await self.request(
-            Route(
-                "GET",
-                f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users?{query_params}",
-            )
+            Route("GET", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users"),
+            params=params,
         )

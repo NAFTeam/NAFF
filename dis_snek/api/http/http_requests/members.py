@@ -92,16 +92,14 @@ class MemberRequests:
 
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"),
-            data=dict_filter_missing(
-                {
-                    "nick": nickname,
-                    "roles": roles,
-                    "mute": mute,
-                    "deaf": deaf,
-                    "channel_id": channel_id,
-                    "communication_disabled_until": communication_disabled_until,
-                }
-            ),
+            data={
+                "nick": nickname,
+                "roles": roles,
+                "mute": mute,
+                "deaf": deaf,
+                "channel_id": channel_id,
+                "communication_disabled_until": communication_disabled_until,
+            },
             reason=reason,
         )
 

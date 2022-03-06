@@ -389,10 +389,10 @@ class GuildRequests:
     async def get_audit_log(
         self,
         guild_id: "Snowflake_Type",
-        user_id: Optional["Snowflake_Type"],
-        action_type: Optional["AuditLogEventType"],
-        before: Optional["Snowflake_Type"],
-        after: Optional["Snowflake_Type"],
+        user_id: Absent["Snowflake_Type"] = MISSING,
+        action_type: Absent["AuditLogEventType"] = MISSING,
+        before: Absent["Snowflake_Type"] = MISSING,
+        after: Absent["Snowflake_Type"] = MISSING,
         limit: int = 100,
     ) -> discord_typings.AuditLogData:
         """
@@ -409,14 +409,14 @@ class GuildRequests:
         returns:
             audit log object for the guild
         """
-        query_params = urlencode(
-            dict_filter_missing(
-                dict_filter_none(
-                    {"action_type": action_type, "user_id": user_id, "limit": limit, "before": before, "after": after}
-                )
-            )
-        )
-        return await self.request(Route("GET", f"/guilds/{guild_id}/audit-logs?{query_params}"))
+        params = {
+            "action_type": action_type,
+            "user_id": user_id,
+            "limit": limit,
+            "before": before,
+            "after": after,
+        }
+        return await self.request(Route("GET", f"/guilds/{guild_id}/audit-logs"), params=params)
 
     async def get_guild_voice_regions(self, guild_id: "Snowflake_Type") -> List[discord_typings.VoiceRegionData]:
         """
@@ -640,7 +640,7 @@ class GuildRequests:
         return await self.request(Route("GET", f"/guilds/{guild_id}/templates"))
 
     async def create_guild_template(
-        self, guild_id: "Snowflake_Type", name: str, description: str = None
+        self, guild_id: "Snowflake_Type", name: str, description: Absent[str] = MISSING
     ) -> discord_typings.GuildTemplateData:
         """
         Create a guild template for the guild.
