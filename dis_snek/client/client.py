@@ -590,7 +590,6 @@ class Snake(
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
-
     async def astart(self, token) -> None:
         await self.login(token)
         try:
