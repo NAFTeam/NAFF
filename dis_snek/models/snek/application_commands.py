@@ -808,11 +808,13 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         sub_cmds = []
         for subcommand in subcommands:
             if not output_data:
+                perms = [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions]
+                perms_filtered = [dict(t) for t in {tuple(d.items()) for d in perms}]
                 output_data = {
                     "name": subcommand.name,
                     "description": subcommand.description,
                     "options": [],
-                    "permissions": [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions],
+                    "permissions": perms_filtered,
                     "default_permission": subcommand.default_permission,
                 }
             if subcommand.group_name:
