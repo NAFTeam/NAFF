@@ -266,7 +266,7 @@ class Member(DiscordObject, _SendDMMixin):
     @property
     def user(self) -> "User":
         """Returns this member's user object."""
-        return self._client.cache.user_cache.get(self.id)
+        return self._client.cache.get_user(self.id)
 
     def __str__(self):
         return self.user.tag
