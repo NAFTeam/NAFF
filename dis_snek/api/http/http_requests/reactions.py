@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List
+
+import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
@@ -115,7 +117,7 @@ class ReactionRequests:
         emoji: str,
         limit: Absent[int] = MISSING,
         after: "Snowflake_Type" = MISSING,
-    ) -> list:
+    ) -> List[discord_typings.UserData]:
         """
         Gets specific reaction from a message.
 
@@ -123,6 +125,9 @@ class ReactionRequests:
             channel_id: The channel this is taking place in.
             message_id: The message to get the reaction.
             emoji: The emoji to get. (format: `name:id`)
+
+        returns:
+            List of users who reacted with the emoji.
 
         """
         return await self.request(
