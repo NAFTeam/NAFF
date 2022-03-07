@@ -403,13 +403,12 @@ class SlashCommand(InteractionCommand):
                 for ann in typing.get_args(val.annotation):
                     if isinstance(ann, SlashCommandOption):
                         annotation = ann
-            
+
             if annotation:
                 if not self.options:
                     self.options = []
                 ann.name = name
                 self.options.append(ann)
-
 
         if self.callback is not None:
             if hasattr(self.callback, "options"):
