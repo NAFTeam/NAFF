@@ -40,7 +40,6 @@ from dis_snek.models import (
     File,
     Guild,
     Listener,
-    listen,
     Message,
     Scale,
     SnakeBotUser,
@@ -139,6 +138,8 @@ class Snake(
         Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
     """
+
+    listen = Listener.create
 
     def __init__(
         self,
@@ -783,7 +784,7 @@ class Snake(
         """
 
         def wrapper(coro: Callable[..., Coroutine]) -> Listener:
-            listener = listen(event_name)(coro)
+            listener = Listener.create(event_name)(coro)
             self.add_listener(listener)
             return listener
 
