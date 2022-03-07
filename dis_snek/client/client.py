@@ -39,6 +39,7 @@ from dis_snek.models import (
     CustomEmoji,
     File,
     Guild,
+    GuildTemplate,
     Listener,
     listen,
     Message,
@@ -1499,7 +1500,10 @@ class Snake(
         return self.cache.get_guild(guild_id)
 
     async def create_guild_from_template(
-        self, template_code: str, name: str, icon: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
+        self,
+        template_code: Union["GuildTemplate", str],
+        name: str,
+        icon: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
     ) -> Optional[Guild]:
         """
         Creates a new guild based on a template.
@@ -1516,6 +1520,9 @@ class Snake(
             The newly created guild object
 
         """
+        if isinstance(template_code, GuildTemplate):
+            template_code = template_code.code
+
         if icon:
             icon = to_image_data(icon)
         guild_data = await self.http.create_guild_from_guild_template(template_code, name, icon)
