@@ -93,9 +93,6 @@ class ThreadList(ClientObject):
             threads.append(client.cache.place_channel_data(thread_data))
         data["threads"] = threads
 
-        members = []
-        for member_data in data["members"]:
-            members.append(ThreadMember.from_dict(member_data, client))
-        data["members"] = threads
+        data["members"] = ThreadMember.from_list(data["members"], client)
 
         return data

@@ -37,7 +37,7 @@ class Team(DiscordObject):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data["members"] = [TeamMember.from_dict(member, client) for member in data["members"]]
+        data["members"] = TeamMember.from_list(data["members"], client)
         if data["icon"]:
             data["icon"] = Asset.from_path_hash(client, f"team-icons/{data['id']}/{{}}", data["icon"])
         return data

@@ -846,7 +846,7 @@ class GuildChannel(BaseChannel):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if overwrites := data.get("permission_overwrites"):
-            data["permission_overwrites"] = [PermissionOverwrite.from_dict(overwrite) for overwrite in overwrites]
+            data["permission_overwrites"] = PermissionOverwrite.from_list(overwrites)
         return data
 
     def permissions_for(self, instance: Snowflake_Type) -> Permissions:
@@ -1535,10 +1535,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
         members_data = await self._client.http.list_thread_members(self.id)
-        members = []
-        for member_data in members_data:
-            members.append(models.ThreadMember.from_dict(member_data, self._client))
-        return members
+        return models.ThreadMember.from_list(members_data, self._client)
 
     async def add_member(self, member: Union["models.Member", Snowflake_Type]) -> None:
         """
