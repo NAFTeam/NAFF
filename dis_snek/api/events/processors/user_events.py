@@ -52,6 +52,6 @@ class UserEvents(EventMixinTemplate):
         user = await self.cache.fetch_user(event.data["user"]["id"], request_fallback=False)
         if user:
             status = Status[event.data["status"].upper()]
-            activities = [Activity.from_dict(a) for a in event.data.get("activities")]
+            activities = Activity.from_list(event.data.get("activities"))
 
             self.dispatch(events.PresenceUpdate(user, status, activities, event.data.get("client_status", None), g_id))

@@ -610,7 +610,7 @@ class Guild(BaseGuild):
 
     async def fetch_guild_templates(self) -> List["models.GuildTemplate"]:
         templates = await self._client.http.get_guild_templates(self.id)
-        return [GuildTemplate.from_dict(t, self._client) for t in templates]
+        return GuildTemplate.from_list(templates, self._client)
 
     async def fetch_all_custom_emojis(self) -> List["models.CustomEmoji"]:
         """
