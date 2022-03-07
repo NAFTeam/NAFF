@@ -1,9 +1,11 @@
+from __future__ import annotations
 import asyncio
 import copy
 import functools
 import logging
 import re
-from typing import Awaitable, Callable, Coroutine, Any, TYPE_CHECKING
+import typing
+from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
 import attr
 
@@ -120,6 +122,18 @@ class BaseCommand(DictSerializationMixin):
             return value
         return await converter(context, value)
 
+    def param_config(self, annotation: Any, name: str) -> Tuple[Callable, Optional[dict]]:
+        # This thing is complicated. Snek-annotations can either be annotated directly, or they can be annotated with Annotated[str, CMD_*]
+        # This helper function handles both cases, and returns a tuple of the converter and its config (if any)
+        if annotation is None:
+            return None
+        if typing.get_origin(annotation) is Annotated and (args := typing.get_args(annotation)):
+            for ann in args:
+                v = getattr(ann, name, None)
+                if v is not None:
+                    return (ann, v)
+        return (annotation, getattr(annotation, name, None))
+
     async def call_callback(self, callback: Callable, context: "Context") -> None:
         callback = functools.partial(callback, context)  # first param must be ctx
         parameters = get_parameters(callback)
@@ -132,14 +146,15 @@ class BaseCommand(DictSerializationMixin):
         c_args = copy.copy(context.args)
         for param in parameters.values():
             convert = functools.partial(self.try_convert, getattr(param.annotation, "convert", None), context)
-            if config := getattr(param.annotation, "_annotation_dat", None):
+            func, config = self.param_config(param.annotation, "_annotation_dat")
+            if config:
                 # if user has used an snek-annotation, run the annotation, and pass the result to the user
                 local = {"context": context, "scale": self.scale, "param": param.name}
                 ano_args = [local[c] for c in config["args"]]
                 if param.kind != param.POSITIONAL_ONLY:
-                    kwargs[param.name] = param.annotation(*ano_args)
+                    kwargs[param.name] = func(*ano_args)
                 else:
-                    args.append(param.annotation(*ano_args))
+                    args.append(func(*ano_args))
                 continue
             elif param.name in context.kwargs:
                 # if parameter is in kwargs, user obviously wants it, pass it
