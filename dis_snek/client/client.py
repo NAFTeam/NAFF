@@ -1498,7 +1498,7 @@ class Snake(
         """
         return self.cache.get_guild(guild_id)
 
-    async def create_guild_from_guild_template(
+    async def create_guild_from_template(
         self, template_code: str, name: str, icon: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
     ) -> Optional[Guild]:
         """
