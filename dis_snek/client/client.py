@@ -1032,9 +1032,10 @@ class Snake(
                         if perm.guild_id == cmd_scope:
                             if perm.guild_id not in guild_perms:
                                 guild_perms[perm.guild_id] = []
+                            payload = [perm.to_dict() for perm in local_cmd.permissions]
                             perm_json = {
                                 "id": local_cmd.get_cmd_id(perm.guild_id),
-                                "permissions": [perm.to_dict() for perm in local_cmd.permissions],
+                                "permissions": [dict(tup) for tup in {tuple(d.items()) for d in payload}],
                             }
                             if perm_json not in guild_perms[perm.guild_id]:
                                 guild_perms[perm.guild_id].append(perm_json)
