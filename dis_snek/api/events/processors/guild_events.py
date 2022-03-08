@@ -58,7 +58,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildUnavailable(
                     guild_id,
-                    await self.cache.fetch_guild(guild_id, False) or MISSING,
+                    self.cache.get_guild(guild_id) or MISSING,
                 )
             )
         else:
@@ -72,7 +72,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildLeft(
                     guild_id,
-                    await self.cache.fetch_guild(guild_id, False) or MISSING,
+                    self.cache.get_guild(guild_id) or MISSING,
                 )
             )
 
