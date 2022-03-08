@@ -58,7 +58,7 @@ class Timestamp(datetime):
     def fromtimestamp(cls, t: float, tz=None) -> "Timestamp":
         try:
             timestamp = super().fromtimestamp(t, tz=tz)
-        except:
+        except Exception:
             # May be in milliseconds instead of seconds
             timestamp = super().fromtimestamp(t / 1000, tz=tz)
 
