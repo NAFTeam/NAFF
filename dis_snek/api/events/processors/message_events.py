@@ -51,8 +51,9 @@ class MessageEvents(EventMixinTemplate):
             event: raw message deletion event
 
         """
-        message = await self.cache.fetch_message(
-            event.data.get("channel_id"), event.data.get("id"), request_fallback=False
+        message = self.cache.get_message(
+            event.data.get("channel_id"),
+            event.data.get("id"),
         )
 
         if not message:
@@ -71,8 +72,6 @@ class MessageEvents(EventMixinTemplate):
 
         """
         # a copy is made because the cache will update the original object in memory
-        before = copy.copy(
-            await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
-        )
+        before = copy.copy(self.cache.get_message(event.data.get("channel_id"), event.data.get("id")))
         after = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageUpdate(before=before, after=after))
