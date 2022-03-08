@@ -347,7 +347,7 @@ class GlobalCache:
         self,
         channel_id: "Snowflake_Type",
         message_id: "Snowflake_Type",
-    ) -> Optional[Message]:
+    ) -> Message:
         """
         Fetch a message from a channel based on their IDs.
 
