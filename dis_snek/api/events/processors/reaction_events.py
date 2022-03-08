@@ -72,6 +72,8 @@ class ReactionEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_message_reaction_remove_all(self, event: "RawGatewayEvent") -> None:
+        if message := self.cache.get_message(event.data["channel_id"], event.data["message_id"]):
+            message.reactions = []
         self.dispatch(
             events.MessageReactionRemoveAll(
                 event.data.get("guild_id"),
