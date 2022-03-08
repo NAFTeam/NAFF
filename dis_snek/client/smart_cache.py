@@ -295,7 +295,7 @@ class GlobalCache:
         if guild and (user_id in guild._member_ids):
             return True
 
-        # If no such guild in cache, try to get member directly. May send requests
+        # If no such guild in cache or member not in guild cache, try to get member directly. May send requests
         try:
             member = await self.fetch_member(guild_id, user_id)
         except (NotFound, Forbidden):  # there is no such member in the guild (as per request)
