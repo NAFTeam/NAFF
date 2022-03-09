@@ -518,6 +518,19 @@ class GlobalCache:
         channel = await self.fetch_channel(channel_id)
         return channel
 
+    def get_dm_channel(self, user_id) -> Optional["DM"]:
+        """
+        Get the DM channel for a user.
+
+        Args:
+            user_id: The ID of the user
+        """
+        user_id = to_snowflake(user_id)
+        channel_id = self.dm_channels.get(user_id)
+        if channel_id is None:
+            return None
+        return self.get_channel(channel_id)
+
     def delete_channel(self, channel_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None) -> None:
         """
         Delete a channel from the cache.

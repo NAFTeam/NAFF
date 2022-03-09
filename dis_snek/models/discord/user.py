@@ -78,11 +78,11 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     async def fetch_dm(self) -> "DM":
         """Fetch the DM channel associated with this user."""
-        return await self._client.cache.fetch_channel(self.id)  # noqa
+        return await self._client.cache.fetch_dm_channel(self.id)  # noqa
 
-    def get_dm(self) -> "DM":
+    def get_dm(self) -> Optional["DM"]:
         """Get the DM channel associated with this user."""
-        return self._client.cache.get_channel(self.id)  # noqa
+        return self._client.cache.get_dm_channel(self.id)  # noqa
 
     @property
     def mutual_guilds(self) -> List["Guild"]:
