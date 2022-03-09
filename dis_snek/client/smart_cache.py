@@ -232,7 +232,7 @@ class GlobalCache:
         user_id = to_snowflake(user_id)
         guild_id = to_snowflake(guild_id)
 
-        self.member_cache.pop((guild_id, user_id))
+        self.member_cache.pop((guild_id, user_id), None)
         self.delete_user_guild(user_id, guild_id)
 
     def place_user_guild(self, user_id: "Snowflake_Type", guild_id: "Snowflake_Type") -> None:
