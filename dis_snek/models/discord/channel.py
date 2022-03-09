@@ -720,8 +720,6 @@ class BaseChannel(DiscordObject):
 
         """
         await self._client.http.delete_channel(self.id, reason)
-        if guild := getattr(self, "guild"):
-            guild._channel_ids.discard(self.id)
 
 
 ################################################################

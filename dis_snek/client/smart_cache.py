@@ -6,7 +6,7 @@ import discord_typings
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
 from dis_snek.models import VoiceState
-from dis_snek.models.discord.channel import BaseChannel, GuildChannel, VoiceChannel
+from dis_snek.models.discord.channel import BaseChannel, GuildChannel, VoiceChannel, ThreadChannel
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role
@@ -474,7 +474,10 @@ class GlobalCache:
             channel = BaseChannel.from_dict_factory(data, self._client)
             self.channel_cache[channel_id] = channel
             if guild := getattr(channel, "guild", None):
-                guild._channel_ids.add(channel.id)
+                if isinstance(channel, ThreadChannel):
+                    guild._thread_ids.add(channel.id)
+                elif isinstance(channel, GuildChannel):
+                    guild._channel_ids.add(channel.id)
         else:
             channel.update_from_dict(data)
 
@@ -531,7 +534,7 @@ class GlobalCache:
             return None
         return self.get_channel(channel_id)
 
-    def delete_channel(self, channel_id: "Snowflake_Type", guild_id: Optional["Snowflake_Type"] = None) -> None:
+    def delete_channel(self, channel_id: "Snowflake_Type") -> None:
         """
         Delete a channel from the cache.
 
@@ -540,13 +543,12 @@ class GlobalCache:
             guild_id: A guild to delete references of this channel from.
         """
         channel_id = to_snowflake(channel_id)
-        guild_id = to_optional_snowflake(guild_id)
-        if guild_id:
-            guild = self.guild_cache.get(guild_id)
-            # noinspection PyProtectedMember
-            guild._channel_ids.discard(channel_id)
-
-        self.channel_cache.pop(channel_id, None)
+        channel = self.channel_cache.pop(channel_id, None)
+        if guild := getattr(channel, "guild", None):
+            if isinstance(channel, ThreadChannel):
+                guild._thread_ids.discard(channel.id)
+            elif isinstance(channel, GuildChannel):
+                guild._channel_ids.discard(channel.id)
 
     # endregion Channel cache
 
