@@ -662,21 +662,6 @@ class BaseChannel(DiscordObject):
         """Returns a string that would mention the channel."""
         return f"<#{self.id}>"
 
-    async def _edit(self, payload: dict, reason: Absent[Optional[str]] = MISSING) -> None:
-        """
-        # TODO
-
-        Args:
-            payload:
-            reason:
-
-        Returns:
-
-        """
-        channel_data = await self._client.http.modify_channel(self.id, payload, reason)
-
-        self.update_from_dict(channel_data)
-
     async def edit(
         self,
         name: Absent[str] = MISSING,
@@ -695,6 +680,10 @@ class BaseChannel(DiscordObject):
         rtc_region: Absent[Union["models.VoiceRegion", str]] = MISSING,
         video_quality_mode: Absent[VideoQualityModes] = MISSING,
         default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        archived: Absent[bool] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        invitable: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
     ) -> None:
@@ -713,6 +702,10 @@ class BaseChannel(DiscordObject):
             "rtc_region": rtc_region.id if isinstance(rtc_region, models.VoiceRegion) else rtc_region,
             "video_quality_mode": video_quality_mode,
             "default_auto_archive_duration": default_auto_archive_duration,
+            "archived": archived,
+            "auto_archive_duration": auto_archive_duration,
+            "locked": locked,
+            "invitable": invitable,
             **kwargs,
         }
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
@@ -1571,11 +1564,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             reason: The reason for this archive
         """
-        payload = {
-            "archived": True,
-            "locked": locked,
-        }
-        await self._edit(payload=payload, reason=reason)
+        await super().edit(locked=locked, archived=True, reason=reason)
 
 
 @define()
