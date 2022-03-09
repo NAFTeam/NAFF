@@ -56,7 +56,11 @@ class Timestamp(datetime):
 
     @classmethod
     def fromtimestamp(cls, t: float, tz=None) -> "Timestamp":
-        timestamp = super().fromtimestamp(t, tz=tz)
+        try:
+            timestamp = super().fromtimestamp(t, tz=tz)
+        except Exception:
+            # May be in milliseconds instead of seconds
+            timestamp = super().fromtimestamp(t / 1000, tz=tz)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
             return timestamp.astimezone()

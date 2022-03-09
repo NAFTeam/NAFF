@@ -36,6 +36,7 @@ __all__ = [
     "VideoQualityModes",
     "AutoArchiveDuration",
     "ActivityType",
+    "ActivityFlags",
     "Status",
     "StagePrivacyLevel",
     "IntegrationExpireBehaviour",
@@ -577,6 +578,18 @@ class ActivityType(IntEnum):
     COMPETING = 5  # "Competing in Arena World Champions"
 
     PLAYING = GAME
+
+
+class ActivityFlags(DiscordIntFlag):
+    INSTANCE = 1 << 0
+    JOIN = 1 << 1
+    SPECTATE = 1 << 2
+    JOIN_REQUEST = 1 << 3
+    SYNC = 1 << 4
+    PLAY = 1 << 5
+    PARTY_PRIVACY_FRIENDS = 1 << 6
+    PARTY_PRIVACY_VOICE_CHANNEL = 1 << 7
+    EMBEDDED = 1 << 8
 
 
 class Status(str, Enum):
