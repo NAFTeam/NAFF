@@ -37,10 +37,6 @@ class Task:
         self.iteration = 0
 
     @property
-    def _loop(self) -> AbstractEventLoop:
-        return asyncio.get_event_loop()
-
-    @property
     def next_run(self) -> Optional[datetime]:
         """Get the next datetime this task will run."""
         if not self.task.done():
@@ -67,7 +63,7 @@ class Task:
     def _fire(self, fire_time: datetime) -> None:
         """Called when the task is being fired."""
         self.trigger.last_call_time = fire_time
-        self._loop.create_task(self())
+        asyncio.create_task(self())
         self.iteration += 1
 
     async def _task_loop(self):
@@ -88,8 +84,7 @@ class Task:
     def start(self) -> None:
         """Start this task."""
         self._stop.clear()
-        if self._loop:
-            self.task = asyncio.create_task(self._task_loop())
+        self.task = asyncio.create_task(self._task_loop())
 
     def stop(self) -> None:
         """End this task."""

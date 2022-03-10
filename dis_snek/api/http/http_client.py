@@ -137,9 +137,8 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(self, connector: Optional[BaseConnector] = None):
         self.connector: Optional[BaseConnector] = connector
-        self.loop = asyncio.get_event_loop() if loop is None else loop
         self.__session: Absent[Optional[ClientSession]] = MISSING
         self.token: Optional[str] = None
         self.global_lock: GlobalLock = GlobalLock()
@@ -151,10 +150,6 @@ class HTTPClient(
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
         )
-
-    def __del__(self):
-        if self.__session and not self.__session.closed:
-            self.loop.run_until_complete(self.__session.close())
 
     def get_ratelimit(self, route: Route) -> BucketLock:
         """
@@ -335,7 +330,7 @@ class HTTPClient(
 
     async def close(self) -> None:
         """Close the session."""
-        if self.__session:
+        if self.__session and not self.__session.closed:
             await self.__session.close()
 
     async def get_gateway(self) -> str:

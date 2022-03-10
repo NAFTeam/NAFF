@@ -115,10 +115,6 @@ class WebsocketClient:
         # Santity check, it is extremely important that an instance isn't reused.
         self._entered = False
 
-    @property
-    def loop(self) -> asyncio.AbstractEventLoop:
-        return self.state.client.loop
-
     async def __aenter__(self: SELF) -> SELF:
         if self._entered:
             raise RuntimeError("An instance of 'WebsocketClient' cannot be re-used!")
@@ -419,7 +415,7 @@ class WebsocketClient:
                 return self.state.client.dispatch(events.Resume())
 
             case "GUILD_MEMBERS_CHUNK":
-                return self.loop.create_task(self._process_member_chunk(data))
+                return asyncio.create_task(self._process_member_chunk(data))
 
             case _:
                 # the above events are "special", and are handled by the gateway itself, the rest can be dispatched
@@ -523,5 +519,5 @@ class WebsocketClient:
 
         guild = self.state.client.cache.guild_cache.get(to_snowflake(chunk.get("guild_id")))
         if guild:
-            return self.loop.create_task(guild.process_member_chunk(chunk))
+            return asyncio.create_task(guild.process_member_chunk(chunk))
         raise ValueError(f"No guild exists for {chunk.get('guild_id')}")

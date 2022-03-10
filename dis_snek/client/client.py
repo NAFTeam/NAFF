@@ -105,7 +105,6 @@ class Snake(
 
     Args:
         intents: Union[int, Intents]: The intents to use
-        loop: Optional[asyncio.AbstractEventLoop]: An event loop to use, normally leave this undefined
 
         default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
         generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
@@ -144,7 +143,6 @@ class Snake(
     def __init__(
         self,
         intents: Union[int, Intents] = Intents.DEFAULT,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
         sync_interactions: bool = True,
@@ -152,7 +150,6 @@ class Snake(
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
         debug_scope: Absent["Snowflake_Type"] = MISSING,
-        asyncio_debug: bool = False,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
         auto_defer: Optional[AutoDefer] = None,
@@ -166,16 +163,8 @@ class Snake(
         shard_id: int = 0,
         **kwargs,
     ) -> None:
-        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
 
         # Configuration
-
-        if asyncio_debug:
-            log.warning("Asyncio Debug is enabled, Your log will contain additional errors and warnings")
-            import tracemalloc
-
-            tracemalloc.start()
-            self.loop.set_debug(True)
 
         self.sync_interactions = sync_interactions
         """Should application commands be synced"""
@@ -192,7 +181,7 @@ class Snake(
 
         # resources
 
-        self.http: HTTPClient = HTTPClient(loop=self.loop)
+        self.http: HTTPClient = HTTPClient()
         """The HTTP client to use when interacting with discord endpoints"""
 
         # context objects
@@ -579,7 +568,7 @@ class Snake(
             self.dispatch(events.Startup())
         self.dispatch(events.Ready())
 
-    async def login(self, token, start_gateway=False) -> None:
+    async def login(self, token) -> None:
         """
         Login to discord via http.
 
@@ -603,6 +592,13 @@ class Snake(
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
+    async def astart(self, token) -> None:
+        await self.login(token)
+        try:
+            await self._connection_state.start()
+        finally:
+            await self.stop()
+
     def start(self, token) -> None:
         """
         Start the bot.
@@ -615,21 +611,23 @@ class Snake(
 
         """
         try:
-            self.loop.run_until_complete(self.login(token))
-            self.loop.run_until_complete(self._connection_state.start())
+            asyncio.run(self.astart(token))
         except KeyboardInterrupt:
-            self.loop.run_until_complete(self.stop())
+            # ignore, cus this is useless and can be misleading to the
+            # user
+            pass
 
-    def start_gateway(self) -> None:
+    async def start_gateway(self) -> None:
         """Starts the gateway connection."""
         try:
-            self.loop.run_until_complete(self._connection_state.start())
-        except KeyboardInterrupt:
-            self.loop.run_until_complete(self.stop())
+            await self._connection_state.start()
+        finally:
+            await self.stop()
 
     async def stop(self) -> None:
         log.debug("Stopping the bot.")
         self._ready.clear()
+        await self.http.close()
         await self._connection_state.stop()
 
     def dispatch(self, event: events.BaseEvent, *args, **kwargs) -> None:
@@ -685,7 +683,7 @@ class Snake(
         if event not in self.waits:
             self.waits[event] = []
 
-        future = self.loop.create_future()
+        future = asyncio.Event()
         self.waits[event].append(Wait(event, checks, future))
 
         return asyncio.wait_for(future, timeout)
@@ -707,7 +705,7 @@ class Snake(
         Returns:
             The context of the modal response
         Raises:
-           ` asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+            `asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
 
         """
         author = to_snowflake(author) if author else None
