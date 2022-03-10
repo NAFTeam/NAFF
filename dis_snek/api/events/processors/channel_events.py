@@ -33,7 +33,7 @@ class ChannelEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_channel_update(self, event: "RawGatewayEvent") -> None:
-        before = copy.copy(await self.cache.fetch_channel(channel_id=event.data.get("id"), request_fallback=False))
+        before = copy.copy(self.cache.get_channel(event.data.get("id")))
         self.dispatch(events.ChannelUpdate(before=before or MISSING, after=self.cache.place_channel_data(event.data)))
 
     @Processor.define()
