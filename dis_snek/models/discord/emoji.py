@@ -123,7 +123,9 @@ class CustomEmoji(PartialEmoji):
     @property
     def creator(self) -> Optional[Union["Member", "User"]]:
         """The member that created this emoji."""
-        return self._client.cache.get_member(self._creator_id, self._guild_id) or self._client.cache.get_user(self._creator_id)
+        return self._client.cache.get_member(self._creator_id, self._guild_id) or self._client.cache.get_user(
+            self._creator_id
+        )
 
     @property
     def roles(self) -> List["Role"]:
