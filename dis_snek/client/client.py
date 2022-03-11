@@ -1831,6 +1831,12 @@ class Snake(
         regions = VoiceRegion.from_list(regions_data)
         return regions
 
+    async def connect_to_vc(self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type"):
+        return await self._connection_state.voice_connect(guild_id, channel_id)
+
+    def get_bot_voice_state(self, guild_id: "Snowflake_Type"):
+        return self._connection_state.get_voice_state(guild_id)
+
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
     ) -> None:

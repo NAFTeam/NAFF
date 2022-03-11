@@ -23,6 +23,7 @@ __all__ = [
     "RateLimited",
     "TooManyChanges",
     "WebSocketClosed",
+    "VoiceWebSocketClosed",
     "WebSocketRestart",
     "ExtensionException",
     "ExtensionNotFound",
@@ -203,6 +204,33 @@ class WebSocketClosed(SnakeException):
     }
 
     def __init__(self, code: int) -> None:
+        self.code = code
+        super().__init__(f"The Websocket closed with code: {code} - {self.codes.get(code, 'Unknown Error')}")
+
+
+class VoiceWebSocketClosed(SnakeException):
+    """The voice websocket was closed."""
+
+    code: int = 0
+    codes: Dict[int, str] = {
+        1000: "Normal Closure",
+        4000: "Unknown Error",
+        4001: "Unknown OpCode",
+        4002: "Decode Error",
+        4003: "Not Authenticated",
+        4004: "Authentication Failed",
+        4005: "Already Authenticated",
+        4006: "Sesssion no longer valid",
+        4007: "Invalid seq",
+        4009: "Session Timed Out",
+        4011: "Server not found",
+        4012: "Unknown protocol",
+        4014: "Disconnected",
+        4015: "Voice Server Crashed",
+        4016: "Unknown encryption mode",
+    }
+
+    def __init__(self, code: int):
         self.code = code
         super().__init__(f"The Websocket closed with code: {code} - {self.codes.get(code, 'Unknown Error')}")
 

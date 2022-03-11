@@ -124,6 +124,10 @@ class Context:
         """A reference to the bot instance."""
         return self._client
 
+    @property
+    def voice_state(self):
+        return self._client.cache.get_bot_voice_state(self.guild_id)
+
 
 @define()
 class _BaseInteractionContext(Context):

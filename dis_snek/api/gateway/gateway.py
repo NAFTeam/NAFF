@@ -1,31 +1,27 @@
 """This file outlines the interaction between snek and Discord's Gateway API."""
 import asyncio
-import collections
 import logging
-import random
 import sys
 import time
 import zlib
 from types import TracebackType
 from typing import TypeVar, TYPE_CHECKING
 
-from aiohttp import WSMsgType
-
 from dis_snek.api import events
 from dis_snek.client.const import logger_name
-from dis_snek.client.errors import WebSocketClosed
 from dis_snek.client.utils.input_utils import OverriddenJson
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.enums import Status
 from dis_snek.models.discord.enums import WebSocketOPCodes as OPCODE
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.snek.cooldowns import CooldownSystem
+from .websocket import WebsocketClient
 
 if TYPE_CHECKING:
     from .state import ConnectionState
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["WebsocketClient"]
+__all__ = ["GatewayClient"]
 
 log = logging.getLogger(logger_name)
 
@@ -48,7 +44,7 @@ class GatewayRateLimit:
                 await asyncio.sleep(self.cooldown_system.get_cooldown_time())
 
 
-class WebsocketClient:
+class GatewayClient(WebsocketClient):
     """
     Abstraction over one gateway connection.
 
@@ -61,42 +57,18 @@ class WebsocketClient:
 
     """
 
-    __slots__ = (
-        "state",
-        "ws",
-        "shard",
-        "_zlib",
-        "rl_manager",
-        "chunk_cache",
-        "_trace",
-        "heartbeat_interval",
-        "sequence",
-        "session_id",
-        "latency",
-        "_race_lock",
-        "_closed",
-        "_keep_alive",
-        "_kill_bee_gees",
-        "_last_heartbeat",
-        "_acknowledged",
-        "_close_gateway",
-        "_entered",
-    )
-
     def __init__(self, state: "ConnectionState", shard: tuple[int, int]) -> None:
-        self.state = state
-        self.ws = None
+        super().__init__(state)
+
         self.shard = shard
 
-        self.rl_manager = GatewayRateLimit()
         self.chunk_cache = {}
 
         self._trace = []
-        self.heartbeat_interval = None
         self.sequence = None
         self.session_id = None
 
-        self.latency = collections.deque(maxlen=10)
+        self.ws_url = state.gateway_url
 
         # This lock needs to be held to send something over the gateway, but is also held when
         # reconnecting. That way there's no race conditions between sending and reconnecting.
@@ -165,174 +137,6 @@ class WebsocketClient:
             return sum(self.latency) / len(self.latency)
         else:
             return float("inf")
-
-    async def send(self, data: str, bypass: bool = False) -> None:
-        """
-        Send data to the gateway.
-
-        Parameters:
-            data: The data to send
-            bypass: Should the rate limit be ignored for this send (used for heartbeats)
-
-        """
-        log.debug(f"Sending data to gateway: {data}")
-        async with self._race_lock:
-            if self.ws is None:
-                raise RuntimeError
-            if not bypass:
-                await self.rl_manager.rate_limit()
-
-            await self.ws.send_str(data)
-
-    async def send_json(self, data: dict, bypass: bool = False) -> None:
-        """
-        Send json data to the gateway.
-
-        Parameters:
-            data: The data to send
-            bypass: Should the rate limit be ignored for this send (used for heartbeats)
-
-        """
-        serialized = OverriddenJson.dumps(data)
-        await self.send(serialized, bypass)
-
-    async def receive(self, force: bool = False) -> dict:
-        """
-        Receive a full event payload from the WebSocket.
-
-        Parameters:
-            force:
-                Whether to force the receiving, ignoring safety measures such as the read-lock.
-                This option also means that exceptions are raised when a reconnection would normally
-                be tried.
-
-        """
-        buffer = bytearray()
-
-        while True:
-            if not force:
-                # If we are currently reconnecting in another task, wait for it to complete.
-                await self._closed.wait()
-
-            resp = await self.ws.receive()
-
-            if resp.type == WSMsgType.CLOSE:
-                log.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
-                if resp.data >= 4000:
-                    # This should propogate to __aexit__() which will forcefully shutdown everything
-                    # and cleanup correctly.
-                    raise WebSocketClosed(resp.data)
-
-                if force:
-                    raise RuntimeError("Discord unexpectedly wants to close the WebSocket during force receive!")
-
-                await self.reconnect(code=resp.data, resume=resp.data != 1000)
-                continue
-
-            elif resp.type is WSMsgType.CLOSED:
-                if force:
-                    raise RuntimeError("Discord unexpectedly closed the underlying socket during force receive!")
-
-                if not self._closed.is_set():
-                    # Because we are waiting for the even before we receive, this shouldn't be
-                    # possible - the CLOSING message should be returned instead. Either way, if this
-                    # is possible after all we can just wait for the event to be set.
-                    await self._closed.wait()
-                else:
-                    # This is an odd corner-case where the underlying socket connection was closed
-                    # unexpectedly without communicating the WebSocket closing handshake. We'll have
-                    # to reconnect ourselves.
-                    await self.reconnect(resume=True)
-
-            elif resp.type is WSMsgType.CLOSING:
-                if force:
-                    raise RuntimeError("WebSocket is unexpectedly closing during force receive!")
-
-                # This happens when the keep-alive handler is reconnecting the connection even
-                # though we waited for the event before hand, because it got to run while we waited
-                # for data to come in. We can just wait for the event again.
-                await self._closed.wait()
-                continue
-
-            if isinstance(resp.data, bytes):
-                buffer.extend(resp.data)
-
-            if resp.data is None:
-                continue
-
-            if len(resp.data) < 4 or resp.data[-4:] != b"\x00\x00\xff\xff":
-                # message isn't complete yet, wait
-                continue
-
-            msg = self._zlib.decompress(buffer)
-
-            msg = msg.decode("utf-8")
-            msg = OverriddenJson.loads(msg)
-
-            return msg
-
-    async def reconnect(self, *, resume: bool = False, code: int = 1012) -> None:
-        async with self._race_lock:
-            self._closed.clear()
-
-            if self.ws is not None:
-                await self.ws.close(code=code)
-
-            self.ws = None
-            self._zlib = zlib.decompressobj()
-
-            self.ws = await self.state.client.http.websocket_connect(self.state.gateway_url)
-
-            hello = await self.receive(force=True)
-            self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
-
-            if not resume:
-                await self._identify()
-            else:
-                await self._resume_connection()
-
-            self._closed.set()
-            self._acknowledged.set()
-
-    async def run_bee_gees(self) -> None:
-        try:
-            await self._start_bee_gees()
-        except Exception:
-            self.close()
-            log.error("The heartbeater raised an exception!", exc_info=True)
-
-    async def _start_bee_gees(self) -> None:
-        if self.heartbeat_interval is None:
-            raise RuntimeError
-
-        try:
-            await asyncio.wait_for(self._kill_bee_gees.wait(), timeout=self.heartbeat_interval * random.uniform(0, 0.5))
-        except asyncio.TimeoutError:
-            pass
-        else:
-            return
-
-        log.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
-        while not self._kill_bee_gees.is_set():
-            if not self._acknowledged.is_set():
-                log.warning(
-                    f"Heartbeat has not been acknowledged for {self.heartbeat_interval} seconds,"
-                    " likely zombied connection. Reconnect!"
-                )
-
-                await self.reconnect(resume=True)
-
-            self._acknowledged.clear()
-            await self.send_heartbeat()
-            self._last_heartbeat = time.perf_counter()
-
-            try:
-                # wait for next iteration, accounting for latency
-                await asyncio.wait_for(self._kill_bee_gees.wait(), timeout=self.heartbeat_interval)
-            except asyncio.TimeoutError:
-                continue
-            else:
-                return
 
     async def run(self) -> None:
         """Start receiving events from the websocket."""
@@ -407,9 +211,8 @@ class WebsocketClient:
                 self.sequence = seq
                 self.session_id = data["session_id"]
                 log.info("Connected to gateway!")
-                log.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
-                self.state.client.dispatch(events.WebsocketReady(data))
-                return
+                log.debug(f" Session ID: {self.session_id} Trace: {self._trace}")
+                return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
                 log.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
@@ -433,6 +236,7 @@ class WebsocketClient:
                     log.debug(f"No processor for `{event_name}`")
 
         self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_socket_receive"))
+        self.state.client.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{event.lower()}"))
 
     def close(self) -> None:
         self._close_gateway.set()
@@ -441,7 +245,6 @@ class WebsocketClient:
         """Send an identify payload to the gateway."""
         if self.ws is None:
             raise RuntimeError
-
         payload = {
             "op": OPCODE.IDENTIFY,
             "d": {
@@ -524,3 +327,12 @@ class WebsocketClient:
         if guild:
             return asyncio.create_task(guild.process_member_chunk(chunk))
         raise ValueError(f"No guild exists for {chunk.get('guild_id')}")
+
+    async def voice_state_update(
+        self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
+    ):
+        payload = {
+            "op": OPCODE.VOICE_STATE,
+            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": False, "self_deaf": False},
+        }
+        await self.send_json(payload)

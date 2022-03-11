@@ -15,6 +15,7 @@ from dis_snek.models.discord.emoji import CustomEmoji
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.cache import TTLCache
+from dis_snek.models.snek.VoiceState import ActiveVoiceState
 
 __all__ = ["GlobalCache", "create_cache"]
 
@@ -66,6 +67,7 @@ class GlobalCache:
     message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
     role_cache: TTLCache = field(factory=dict)  # key: role_id
     voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
+    bot_voice_state_cache: dict = field(factory=dict)  # key: guild_id
 
     enable_emoji_cache: bool = field(default=False)
     """If the emoji cache should be enabled. Default: False"""
@@ -774,6 +776,41 @@ class GlobalCache:
         self.voice_state_cache.pop(to_snowflake(user_id), None)
 
     # endregion Voice cache
+
+    # region Bot Voice cache
+
+    def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> Optional[ActiveVoiceState]:
+        """
+        Get a voice state for the bot, by the guild id.
+
+        Args:
+            guild_id: The id of the guild
+
+        Returns:
+            ActiveVoiceState if found
+        """
+        return self.bot_voice_state_cache.get(to_snowflake(guild_id))
+
+    def place_bot_voice_state(self, state: ActiveVoiceState) -> None:
+        """
+        Place an ActiveVoiceState into the cache.
+
+        Args:
+            state: The voice state to cache
+        """
+        # noinspection PyProtectedMember
+        self.bot_voice_state_cache[to_snowflake(state._guild_id)] = state
+
+    def delete_bot_voice_state(self, guild_id: "Snowflake_Type") -> None:
+        """
+        Delete an ActiveVoiceState from the cache.
+
+        Args:
+            guild_id: The id of the guild
+        """
+        self.bot_voice_state_cache.pop(to_snowflake(guild_id), None)
+
+    # endregion Bot Voice cache
 
     # region Emoji cache
 

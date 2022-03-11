@@ -1944,6 +1944,16 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
         """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
         return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
 
+    @property
+    def voice_state(self):
+        return self._client.get_bot_voice_state(self._guild_id)
+
+    async def connect(self):
+        if not self.voice_state:
+            return await self._client.connect_to_vc(self._guild_id, self.id)
+        await self.voice_state.move(self.id)
+        return self.voice_state
+
 
 @define()
 class GuildVoice(VoiceChannel, InvitableMixin):
