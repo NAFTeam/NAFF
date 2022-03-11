@@ -836,12 +836,12 @@ class GuildChannel(BaseChannel):
     @property
     def guild(self) -> "models.Guild":
         """The guild this channel belongs to."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def category(self) -> Optional["GuildCategory"]:
         """The parent category of this channel."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_channel(self.parent_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1525,7 +1525,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     @property
     def parent_channel(self) -> GuildText:
         """The channel this thread is a child of."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_channel(self.parent_id)
 
     @property
     def mention(self) -> str:
@@ -1749,7 +1749,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     def voice_members(self) -> List["models.Member"]:
         """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
         return [
-            self._client.cache.member_cache.get((self._guild_id, member_id)) for member_id in self._voice_member_ids
+            self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids
         ]
 
 

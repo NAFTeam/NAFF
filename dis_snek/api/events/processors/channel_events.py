@@ -40,7 +40,6 @@ class ChannelEvents(EventMixinTemplate):
     async def _on_raw_channel_pins_update(self, event: "RawGatewayEvent") -> None:
         channel = await self.cache.fetch_channel(event.data.get("channel_id"))
         channel.last_pin_timestamp = event.data.get("last_pin_timestamp")
-        self.cache.channel_cache[channel.id] = channel
         self.dispatch(events.ChannelPinsUpdate(channel, channel.last_pin_timestamp))
 
     @Processor.define()

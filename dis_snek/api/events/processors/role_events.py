@@ -21,7 +21,7 @@ class RoleEvents(EventMixinTemplate):
         g_id = int(event.data.get("guild_id"))
         r_id = int(event.data["role"]["id"])
 
-        guild = self.cache.guild_cache.get(g_id)
+        guild = self.cache.get_guild(g_id)
         guild._role_ids.add(r_id)
 
         role = self.cache.place_role_data(g_id, [event.data.get("role")])[r_id]
@@ -43,10 +43,10 @@ class RoleEvents(EventMixinTemplate):
         g_id = int(event.data.get("guild_id"))
         r_id = int(event.data.get("role_id"))
 
-        guild = self.cache.guild_cache.get(g_id)
-        role = self.cache.role_cache.pop(r_id, MISSING)
+        guild = self.cache.get_guild(g_id)
+        role = self.cache.get_role(r_id)
 
-        guild._role_ids.discard(r_id)
+        self.cache.delete_role(r_id)
 
         role_members = (member for member in guild.members if member.has_role(r_id))
         for member in role_members:

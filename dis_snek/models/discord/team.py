@@ -44,7 +44,7 @@ class Team(DiscordObject):
 
     @property
     def owner(self) -> "User":
-        return self._client.cache.user_cache.get(self.owner_user_id)
+        return self._client.cache.get_user(self.owner_user_id)
 
     def is_in_team(self, user: Union["SnowflakeObject", "Snowflake_Type"]) -> bool:
         """
