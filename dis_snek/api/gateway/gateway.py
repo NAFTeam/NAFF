@@ -330,7 +330,7 @@ class GatewayClient(WebsocketClient):
 
     async def voice_state_update(
         self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
-    ):
+    ) -> None:
         payload = {
             "op": OPCODE.VOICE_STATE,
             "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": False, "self_deaf": False},

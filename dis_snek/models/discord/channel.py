@@ -32,6 +32,7 @@ from .enums import (
 if TYPE_CHECKING:
     from aiohttp import FormData
     from dis_snek import Snake
+    from dis_snek.models.snek.VoiceState import ActiveVoiceState
 
 __all__ = [
     "ChannelHistory",
@@ -1945,10 +1946,10 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
         return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
 
     @property
-    def voice_state(self):
+    def voice_state(self) -> "ActiveVoiceState":
         return self._client.get_bot_voice_state(self._guild_id)
 
-    async def connect(self):
+    async def connect(self) -> "ActiveVoiceState":
         if not self.voice_state:
             return await self._client.connect_to_vc(self._guild_id, self.id)
         await self.voice_state.move(self.id)

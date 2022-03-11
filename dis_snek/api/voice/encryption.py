@@ -11,7 +11,7 @@ class Encryption:
     def __init__(self, secret_key):
         self.box: secret.SecretBox = secret.SecretBox(bytes(secret_key))
 
-    def encrypt(self, mode: str, header: bytes, data):
+    def encrypt(self, mode: str, header: bytes, data) -> bytes:
         match mode:
             # case "xsalsa20_poly1305_lite":
             #     return self.xsalsa20_poly1305_lite(header, data)
