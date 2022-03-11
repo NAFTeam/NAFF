@@ -74,6 +74,7 @@ class Player(threading.Thread):
                     asyncio.run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
                     log.debug("Voice playback has been resumed!")
                     start = time.perf_counter()
+                    loops = 0
 
                 data = self.current_audio.read(self._encoder.frame_size)
                 if not data:
