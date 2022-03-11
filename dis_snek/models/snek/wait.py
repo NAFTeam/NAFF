@@ -1,26 +1,30 @@
-from asyncio import Event
+from asyncio import Future
 from typing import Callable, Optional
 
 __all__ = ["Wait"]
 
 
 class Wait:
-    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Event):
+    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future):
         self.event = event
         self.checks = checks
         self.future = future
 
     def __call__(self, *args, **kwargs) -> bool:
-        if self.future.is_set():
+        if self.future.cancelled():
             return True
 
         if self.checks:
-            check_result = self.checks(*args, **kwargs)
+            try:
+                check_result = self.checks(*args, **kwargs)
+            except Exception as exc:
+                self.future.set_exception(exc)
+                return True
         else:
             check_result = True
 
         if check_result:
-            self.future.set()
+            self.future.set_result(*args, **kwargs)
             return True
 
         return False

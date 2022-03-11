@@ -684,7 +684,7 @@ class Snake(
         if event not in self.waits:
             self.waits[event] = []
 
-        future = asyncio.Event()
+        future = asyncio.Future()
         self.waits[event].append(Wait(event, checks, future))
 
         return asyncio.wait_for(future, timeout)
