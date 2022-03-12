@@ -74,6 +74,11 @@ class ActiveVoiceState(VoiceState):
     def stopped(self) -> bool:
         return self.player.stopped
 
+    async def wait_for_stopped(self) -> None:
+        """Wait for the player to stop playing."""
+        # noinspection PyProtectedMember
+        await self.player._stopped.wait()
+
     async def _ws_connect(self) -> None:
         async with self.ws:
             try:
