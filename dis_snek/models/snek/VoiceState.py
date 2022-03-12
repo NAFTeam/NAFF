@@ -79,7 +79,7 @@ class ActiveVoiceState(VoiceState):
             try:
                 await self.ws.run()
             finally:
-                if self._playing:
+                if self.playing:
                     await self.stop()
 
     async def ws_connect(self) -> None:
@@ -120,10 +120,10 @@ class ActiveVoiceState(VoiceState):
         await self.player._stopped.wait()
 
     def pause(self) -> None:
-        self._resume.clear()
+        self.player.resume.clear()
 
     def resume(self) -> None:
-        self._resume.set()
+        self.player.resume.set()
 
     async def play(self, audio: BaseAudio) -> None:
         if self.player:
