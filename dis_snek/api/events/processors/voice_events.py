@@ -23,10 +23,11 @@ class VoiceEvents(EventMixinTemplate):
 
         self.dispatch(events.VoiceStateUpdate(before, after))
 
-        if after is None and before.user_id == self.user.id:
-            if vc := self.cache.get_bot_voice_state(before._guild_id):
-                if vc.ws._closed:
-                    self.cache.delete_bot_voice_state(before._guild_id)
+        if before:
+            if after is None and before.user_id == self.user.id:
+                if vc := self.cache.get_bot_voice_state(before._guild_id):
+                    if vc.ws._closed:
+                        self.cache.delete_bot_voice_state(before._guild_id)
 
     @Processor.define()
     async def on_raw_voice_server_update(self, event: "RawGatewayEvent") -> None:
