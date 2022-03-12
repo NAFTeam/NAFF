@@ -217,17 +217,17 @@ class Guild(BaseGuild):
     @property
     def channels(self) -> List["models.TYPE_GUILD_CHANNEL"]:
         """Returns a list of channels associated with this guild."""
-        return [self._client.cache.channel_cache.get(c_id) for c_id in self._channel_ids]
+        return [self._client.cache.get_channel(c_id) for c_id in self._channel_ids]
 
     @property
     def threads(self) -> List["models.TYPE_THREAD_CHANNEL"]:
         """Returns a list of threads associated with this guild."""
-        return [self._client.cache.channel_cache.get(t_id) for t_id in self._thread_ids]
+        return [self._client.cache.get_channel(t_id) for t_id in self._thread_ids]
 
     @property
     def members(self) -> List["models.Member"]:
         """Returns a list of all members within this guild."""
-        return [self._client.cache.member_cache.get((self.id, m_id)) for m_id in self._member_ids]
+        return [self._client.cache.get_member(self.id, m_id) for m_id in self._member_ids]
 
     @property
     def premium_subscribers(self) -> List["models.Member"]:
@@ -247,27 +247,27 @@ class Guild(BaseGuild):
     @property
     def roles(self) -> List["models.Role"]:
         """Returns a list of roles associated with this guild."""
-        return [self._client.cache.role_cache.get(r_id) for r_id in self._role_ids]
+        return [self._client.cache.get_role(r_id) for r_id in self._role_ids]
 
     @property
     def me(self) -> "models.Member":
         """Returns this bots member object within this guild."""
-        return self._client.cache.member_cache.get((self.id, self._client.user.id))
+        return self._client.cache.get_member(self.id, self._client.user.id)
 
     @property
     def system_channel(self) -> Optional["models.GuildText"]:
         """Returns the channel this guild uses for system messages."""
-        return self._client.cache.channel_cache.get(self.system_channel_id)
+        return self._client.cache.get_channel(self.system_channel_id)
 
     @property
     def rules_channel(self) -> Optional["models.GuildText"]:
         """Returns the channel declared as a rules channel."""
-        return self._client.cache.channel_cache.get(self.rules_channel_id)
+        return self._client.cache.get_channel(self.rules_channel_id)
 
     @property
     def public_updates_channel(self) -> Optional["models.GuildText"]:
         """Returns the channel where server staff receive notices from Discord."""
-        return self._client.cache.channel_cache.get(self.public_updates_channel_id)
+        return self._client.cache.get_channel(self.public_updates_channel_id)
 
     @property
     def emoji_limit(self) -> int:
@@ -295,7 +295,7 @@ class Guild(BaseGuild):
     @property
     def default_role(self) -> "models.Role":
         """The `@everyone` role in this guild."""
-        return self._client.cache.role_cache.get(self.id)  # type: ignore
+        return self._client.cache.get_role(self.id)  # type: ignore
 
     @property
     def premium_subscriber_role(self) -> Optional["models.Role"]:
@@ -1253,7 +1253,7 @@ class Guild(BaseGuild):
         """
         thread_id = to_snowflake(thread_id)
         if thread_id in self._thread_ids:
-            return self._client.cache.channel_cache.get(thread_id)
+            return self._client.cache.get_channel(thread_id)
         return None
 
     async def fetch_thread(self, thread_id: Snowflake_Type) -> Optional["models.TYPE_THREAD_CHANNEL"]:

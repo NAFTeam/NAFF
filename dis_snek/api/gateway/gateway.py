@@ -517,7 +517,7 @@ class WebsocketClient:
 
     async def _process_member_chunk(self, chunk: dict):
 
-        guild = self.state.client.cache.guild_cache.get(to_snowflake(chunk.get("guild_id")))
+        guild = self.state.client.cache.get_guild(to_snowflake(chunk.get("guild_id")))
         if guild:
             return asyncio.create_task(guild.process_member_chunk(chunk))
         raise ValueError(f"No guild exists for {chunk.get('guild_id')}")

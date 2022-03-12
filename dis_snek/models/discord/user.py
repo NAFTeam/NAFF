@@ -156,7 +156,7 @@ class SnakeBotUser(User):
 
     @property
     def guilds(self) -> List["Guild"]:
-        return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
+        return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
     async def edit(
         self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
@@ -290,7 +290,7 @@ class Member(DiscordObject, _SendDMMixin):
     @property
     def guild(self) -> "Guild":
         """The guild object this member is from."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:

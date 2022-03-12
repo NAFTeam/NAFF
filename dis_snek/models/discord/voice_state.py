@@ -40,12 +40,12 @@ class VoiceState(ClientObject):
     @property
     def guild(self) -> "Guild":
         """The guild this voice state is for."""
-        return self._client.cache.guild_cache.get(self._guild_id) if self._guild_id else None
+        return self._client.cache.get_guild(self._guild_id) if self._guild_id else None
 
     @property
     def channel(self) -> "TYPE_VOICE_CHANNEL":
         """The channel the user is connected to."""
-        channel = self._client.cache.channel_cache.get(self._channel_id)
+        channel = self._client.cache.get_channel(self._channel_id)
 
         # make sure the member is showing up as a part of the channel
         # this is relevant for VoiceStateUpdate.before
@@ -59,7 +59,7 @@ class VoiceState(ClientObject):
     @property
     def member(self) -> "Member":
         """The member this voice state is for."""
-        return self._client.cache.member_cache.get((self._guild_id, self._member_id)) if self._guild_id else None
+        return self._client.cache.get_member(self._guild_id, self._member_id) if self._guild_id else None
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

@@ -87,7 +87,7 @@ class Resolved:
 
         if roles := data.get("roles"):
             for key, _role in roles.items():
-                new_cls.roles[key] = client.cache.role_cache.get(to_snowflake(key))
+                new_cls.roles[key] = client.cache.get_role(to_snowflake(key))
 
         if messages := data.get("messages"):
             for key, _msg in messages.items():
@@ -119,7 +119,7 @@ class Context:
 
     @property
     def guild(self) -> Optional["Guild"]:
-        return self._client.cache.guild_cache.get(self.guild_id)
+        return self._client.cache.get_guild(self.guild_id)
 
     @property
     def bot(self) -> "Snake":
@@ -177,10 +177,10 @@ class _BaseInteractionContext(Context):
         if new_cls.guild_id:
             new_cls.author = client.cache.place_member_data(new_cls.guild_id, data["member"].copy())
             client.cache.place_user_data(data["member"]["user"])
-            new_cls.channel = client.cache.channel_cache.get(to_snowflake(data["channel_id"]))
+            new_cls.channel = client.cache.get_channel(to_snowflake(data["channel_id"]))
         else:
             new_cls.author = client.cache.place_user_data(data["user"])
-            new_cls.channel = client.cache.channel_cache.get(new_cls.author.id)
+            new_cls.channel = client.cache.get_channel(new_cls.author.id)
 
         new_cls.target_id = data["data"].get("target_id")
 
@@ -190,6 +190,8 @@ class _BaseInteractionContext(Context):
 
     def _process_options(self, data: dict):
         kwargs = {}
+        guild_id = to_snowflake(data.get("guild_id", 0))
+
         if options := data["data"].get("options"):
             o_type = options[0]["type"]
             if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
@@ -210,23 +212,21 @@ class _BaseInteractionContext(Context):
                 match option["type"]:
                     case OptionTypes.USER:
                         value = (
-                            self._client.cache.member_cache.get(
-                                (to_snowflake(data.get("guild_id", 0)), to_snowflake(value))
-                            )
-                            or self._client.cache.user_cache.get(to_snowflake(value))
+                            self._client.cache.get_member(guild_id, to_snowflake(value))
+                            or self._client.cache.get_user(to_snowflake(value))
                         ) or value
 
                     case OptionTypes.CHANNEL:
-                        value = self._client.cache.channel_cache.get(to_snowflake(value)) or value
+                        value = self._client.cache.get_channel(to_snowflake(value)) or value
 
                     case OptionTypes.ROLE:
-                        value = self._client.cache.role_cache.get(to_snowflake(value)) or value
+                        value = self._client.cache.get_role(to_snowflake(value)) or value
 
                     case OptionTypes.MENTIONABLE:
                         snow = to_snowflake(value)
-                        if user := self._client.cache.member_cache.get(snow) or self._client.cache.user_cache.get(snow):
+                        if user := self._client.cache.get_member(guild_id, snow) or self._client.cache.get_user(snow):
                             value = user
-                        elif role := self._client.cache.role_cache.get(snow):
+                        elif role := self._client.cache.get_role(snow):
                             value = role
 
                     case OptionTypes.ATTACHMENT:
@@ -376,27 +376,27 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             case CommandTypes.USER:
                 # This can only be in the member or user cache
                 caches = [
-                    (self._client.cache.member_cache, (self.guild_id, self.target_id)),
-                    (self._client.cache.user_cache, self.target_id),
+                    (self._client.cache.get_member, (self.guild_id, self.target_id)),
+                    (self._client.cache.get_user, self.target_id),
                 ]
             case CommandTypes.MESSAGE:
                 # This can only be in the message cache
-                caches = [(self._client.cache.message_cache, (self.channel.id, self.target_id))]
+                caches = [(self._client.cache.get_message, (self.channel.id, self.target_id))]
             case _:
                 # Most likely a new context type, check all rational caches for the target_id
                 log.warning(f"New Context Type Detected. Please Report: {self._context_type}")
                 caches = [
-                    (self._client.cache.message_cache, (self.channel.id, self.target_id)),
-                    (self._client.cache.member_cache, (self.guild_id, self.target_id)),
-                    (self._client.cache.user_cache, self.target_id),
-                    (self._client.cache.channel_cache, self.target_id),
-                    (self._client.cache.role_cache, self.target_id),
-                    (self._client.cache.emoji_cache, self.target_id),  # unlikely, so check last
+                    (self._client.cache.get_message, (self.channel.id, self.target_id)),
+                    (self._client.cache.get_member, (self.guild_id, self.target_id)),
+                    (self._client.cache.get_user, self.target_id),
+                    (self._client.cache.get_channel, self.target_id),
+                    (self._client.cache.get_role, self.target_id),
+                    (self._client.cache.get_emoji, self.target_id),  # unlikely, so check last
                 ]
 
-        for cache, key in caches:
-            thing = cache.get(key, MISSING)
-            if thing is not MISSING:
+        for cache, keys in caches:
+            thing = cache(*keys)
+            if thing is not None:
                 break
         return thing
 

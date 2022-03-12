@@ -23,11 +23,11 @@ class StageInstance(DiscordObject):
 
     @property
     def guild(self) -> "Guild":
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def channel(self) -> "GuildStageVoice":
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_channel(self._channel_id)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """

@@ -51,17 +51,17 @@ class Invite(ClientObject):
     @property
     def channel(self) -> "TYPE_GUILD_CHANNEL":
         """The channel the invite is for."""
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_channel(self._channel_id)
 
     @property
     def inviter(self) -> Optional["User"]:
         """The user that created the invite or None."""
-        return self._client.cache.user_cache.get(self._inviter_id) if self._inviter_id else None
+        return self._client.cache.get_user(self._inviter_id) if self._inviter_id else None
 
     @property
     def target_user(self) -> Optional["User"]:
         """The user whose stream to display for this voice channel stream invite or None."""
-        return self._client.cache.user_cache.get(self._target_user_id) if self._target_user_id else None
+        return self._client.cache.get_user(self._target_user_id) if self._target_user_id else None
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:

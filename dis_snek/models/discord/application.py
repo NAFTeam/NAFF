@@ -76,4 +76,4 @@ class Application(DiscordObject):
 
     @property
     def owner(self) -> "User":
-        return self._client.cache.user_cache.get(self.owner_id)
+        return self._client.cache.get_user(self.owner_id)

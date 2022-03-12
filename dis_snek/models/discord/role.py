@@ -96,7 +96,7 @@ class Role(DiscordObject):
     @property
     def guild(self) -> "Guild":
         """The guild object this role is from."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def default(self) -> bool:

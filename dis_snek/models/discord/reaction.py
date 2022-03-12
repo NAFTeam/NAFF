@@ -71,11 +71,11 @@ class Reaction(ClientObject):
 
     @property
     def message(self) -> "Message":
-        return self._client.cache.message_cache.get((self._channel_id, self._message_id))
+        return self._client.cache.get_message((self._channel_id, self._message_id))
 
     @property
     def channel(self) -> "TYPE_ALL_CHANNEL":
-        return self._client.cache.channel_cache.get(self._channel_id)
+        return self._client.cache.get_channel(self._channel_id)
 
     async def remove(self) -> None:
         """Remove all this emoji's reactions from the message."""

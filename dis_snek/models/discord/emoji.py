@@ -118,19 +118,19 @@ class CustomEmoji(PartialEmoji):
     @property
     def guild(self) -> "Guild":
         """The guild this emoji belongs to."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def creator(self) -> Optional[Union["Member", "User"]]:
         """The member that created this emoji."""
-        return self._client.cache.member_cache.get(
-            (self._creator_id, self._guild_id)
-        ) or self._client.cache.user_cache.get(self._creator_id)
+        return self._client.cache.get_member(self._creator_id, self._guild_id) or self._client.cache.get_user(
+            self._creator_id
+        )
 
     @property
     def roles(self) -> List["Role"]:
         """The roles allowed to use this emoji."""
-        return [self._client.cache.role_cache.get(role_id) for role_id in self._role_ids]
+        return [self._client.cache.get_role(role_id) for role_id in self._role_ids]
 
     @property
     def is_usable(self) -> bool:

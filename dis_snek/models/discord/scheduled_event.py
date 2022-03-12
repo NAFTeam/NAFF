@@ -64,7 +64,7 @@ class ScheduledEvent(DiscordObject):
 
     @property
     def guild(self) -> "Guild":
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -72,7 +72,7 @@ class ScheduledEvent(DiscordObject):
             data["creator"] = client.cache.place_user_data(data["creator"])
 
         if data.get("channel_id"):
-            data["channel"] = client.cache.channel_cache.get(data["channel_id"])
+            data["channel"] = client.cache.get_channel(data["channel_id"])
 
         data["start_time"] = data.get("scheduled_start_time")
 

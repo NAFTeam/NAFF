@@ -58,7 +58,7 @@ class GuildEvent:
     @property
     def guild(self) -> "Guild":
         """Guild related to event"""
-        return self.bot.cache.guild_cache.get(self.guild_id)
+        return self.bot.cache.get_guild(self.guild_id)
 
 
 @define(kw_only=False)

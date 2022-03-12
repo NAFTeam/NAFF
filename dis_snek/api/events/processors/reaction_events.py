@@ -53,7 +53,6 @@ class ReactionEvents(EventMixinTemplate):
                     )
                 )
 
-            self.cache.message_cache[(message._channel_id, message.id)] = message
         else:
             message = await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("message_id"))
 
