@@ -92,7 +92,7 @@ from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
 from .smart_cache import GlobalCache
-from ..models.snek.VoiceState import ActiveVoiceState
+from ..models.snek.active_voice_state import ActiveVoiceState
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL

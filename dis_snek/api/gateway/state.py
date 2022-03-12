@@ -11,7 +11,7 @@ from dis_snek.client.const import logger_name, MISSING, Absent
 from dis_snek.client.utils.attr_utils import define
 from .gateway import WebsocketClient, GatewayClient
 from dis_snek.api import events
-from ...models.snek.VoiceState import ActiveVoiceState
+from ...models.snek.active_voice_state import ActiveVoiceState
 
 if TYPE_CHECKING:
     from dis_snek import Snake, Snowflake_Type

@@ -10,7 +10,7 @@ from dis_snek.api.voice.audio import BaseAudio, AudioVolume
 from dis_snek.api.voice.opus import Encoder
 
 if TYPE_CHECKING:
-    from dis_snek.models.snek.VoiceState import ActiveVoiceState
+    from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 log = logging.getLogger(logger_name)
 

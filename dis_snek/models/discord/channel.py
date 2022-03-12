@@ -32,7 +32,7 @@ from .enums import (
 if TYPE_CHECKING:
     from aiohttp import FormData
     from dis_snek import Snake
-    from dis_snek.models.snek.VoiceState import ActiveVoiceState
+    from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
     "ChannelHistory",

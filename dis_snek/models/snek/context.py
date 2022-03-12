@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.modal import Modal
-    from dis_snek.models.snek.VoiceState import ActiveVoiceState
+    from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
     "Resolved",
