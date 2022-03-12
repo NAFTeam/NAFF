@@ -65,7 +65,8 @@ class ActiveVoiceState(VoiceState):
 
     @property
     def playing(self) -> bool:
-        if not self.current_audio or self.player.stopped or self.player.resume.is_set():
+        if not self.current_audio or self.player.stopped or not self.player.resume.is_set():
+            # if any of the above are truthy, we aren't playing
             return False
         return True
 
