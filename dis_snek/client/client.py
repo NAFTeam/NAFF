@@ -72,6 +72,7 @@ from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.auto_defer import AutoDefer
+from dis_snek.models.snek.listener import listen
 from .smart_cache import GlobalCache
 
 if TYPE_CHECKING:
@@ -138,8 +139,6 @@ class Snake(
         Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
     """
-
-    listen = Listener.create
 
     def __init__(
         self,
@@ -773,7 +772,7 @@ class Snake(
 
         return await self.wait_for("component", checks=_check, timeout=timeout)
 
-    def fallback_listen(self, event_name: Absent[str] = MISSING) -> Listener:
+    def listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
         A decorator to be used in situations that snek can't automatically hook your listeners. Ideally, the standard listen decorator should be used, not this.
 
