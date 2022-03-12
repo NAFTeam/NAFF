@@ -311,6 +311,8 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
     HAS_THREAD = 1 << 5
     EPHEMERAL = 1 << 6
     LOADING = 1 << 7
+    FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
+    """this message failed to mention some roles and add their members to the thread"""
 
     # Special members
     NONE = 0
