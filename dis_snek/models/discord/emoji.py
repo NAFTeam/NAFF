@@ -111,9 +111,9 @@ class CustomEmoji(PartialEmoji):
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: "Snake", guild_id: int) -> "CustomEmoji":
+    def from_dict(cls, data: Dict[str, Any], client: "Snake") -> "CustomEmoji":
         data = cls._process_dict(data, client)
-        return cls(client=client, guild_id=guild_id, **cls._filter_kwargs(data, cls._get_init_keys()))
+        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
 
     @property
     def guild(self) -> "Guild":
