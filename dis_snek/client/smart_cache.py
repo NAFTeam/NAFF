@@ -113,7 +113,7 @@ class GlobalCache:
         Returns:
             User object if found
         """
-        return self.user_cache.get(to_snowflake(user_id))
+        return self.user_cache.get(to_optional_snowflake(user_id))
 
     def place_user_data(self, data: discord_typings.UserData) -> User:
         """
@@ -180,7 +180,7 @@ class GlobalCache:
         Returns:
             Member object if found
         """
-        return self.member_cache.get((to_snowflake(guild_id), to_snowflake(user_id)))
+        return self.member_cache.get((to_optional_snowflake(guild_id), to_optional_snowflake(user_id)))
 
     def place_member_data(
         self, guild_id: "Snowflake_Type", data: discord_typings.resources.guild.GuildMemberData
@@ -383,7 +383,7 @@ class GlobalCache:
         Returns:
             The message if found
         """
-        return self.message_cache.get((to_snowflake(channel_id), to_snowflake(message_id)))
+        return self.message_cache.get((to_optional_snowflake(channel_id), to_optional_snowflake(message_id)))
 
     def place_message_data(self, data: discord_typings.MessageData) -> Message:
         """
@@ -448,7 +448,7 @@ class GlobalCache:
         Returns:
             The channel if found
         """
-        return self.channel_cache.get(to_snowflake(channel_id))
+        return self.channel_cache.get(to_optional_snowflake(channel_id))
 
     def place_channel_data(self, data: discord_typings.ChannelData) -> "TYPE_ALL_CHANNEL":
         """
@@ -520,7 +520,7 @@ class GlobalCache:
         Args:
             user_id: The ID of the user
         """
-        user_id = to_snowflake(user_id)
+        user_id = to_optional_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
             return None
@@ -573,7 +573,7 @@ class GlobalCache:
         Returns:
             The guild if found
         """
-        return self.guild_cache.get(to_snowflake(guild_id))
+        return self.guild_cache.get(to_optional_snowflake(guild_id))
 
     def place_guild_data(self, data: discord_typings.GuildData) -> Guild:
         """
@@ -647,7 +647,7 @@ class GlobalCache:
         Returns:
             The role if found
         """
-        return self.role_cache.get(to_snowflake(role_id))
+        return self.role_cache.get(to_optional_snowflake(role_id))
 
     def place_role_data(
         self, guild_id: "Snowflake_Type", data: List[Dict["Snowflake_Type", Any]]
@@ -709,9 +709,7 @@ class GlobalCache:
             VoiceState object if found
 
         """
-        user_id = to_snowflake(user_id)
-
-        return self.voice_state_cache.get(user_id)
+        return self.voice_state_cache.get(to_optional_snowflake(user_id))
 
     async def place_voice_state_data(self, data: discord_typings.VoiceStateData) -> Optional[VoiceState]:
         """
@@ -806,7 +804,7 @@ class GlobalCache:
         Returns:
             The Emoji if found
         """
-        return self.emoji_cache.get(to_snowflake(emoji_id)) if self.emoji_cache is not None else None
+        return self.emoji_cache.get(to_optional_snowflake(emoji_id)) if self.emoji_cache is not None else None
 
     def place_emoji_data(self, data: discord_typings.EmojiData) -> "CustomEmoji":
         """
