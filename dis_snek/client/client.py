@@ -7,8 +7,8 @@ import re
 import sys
 import time
 import traceback
-from datetime import datetime
 from collections.abc import Iterable
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
 
 import dis_snek.api.events as events
@@ -32,7 +32,6 @@ from dis_snek.client.errors import (
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial
 from dis_snek.client.utils.serializer import to_image_data
-from dis_snek.models.snek.tasks import Task
 from dis_snek.models import (
     Activity,
     Application,
@@ -40,7 +39,6 @@ from dis_snek.models import (
     File,
     Guild,
     GuildTemplate,
-    Listener,
     Message,
     Scale,
     SnakeBotUser,
@@ -72,7 +70,8 @@ from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.auto_defer import AutoDefer
-from dis_snek.models.snek.listener import listen
+from dis_snek.models.snek.listener import Listener
+from dis_snek.models.snek.tasks import Task
 from .smart_cache import GlobalCache
 
 if TYPE_CHECKING:
@@ -522,11 +521,11 @@ class Snake(
         symbol = "$"
         log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
-    @listen()
+    @Listener.create()
     async def on_resume(self) -> None:
         self._ready.set()
 
-    @listen()
+    @Listener.create()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
@@ -1276,7 +1275,7 @@ class Snake(
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @listen("message_create")
+    @Listener.create("message_create")
     async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
         """Determine if a command is being triggered, and dispatch it."""
         message = event.message
@@ -1326,7 +1325,7 @@ class Snake(
                     finally:
                         await self.on_command(context)
 
-    @listen("disconnect")
+    @Listener.create("disconnect")
     async def _disconnect(self) -> None:
         self._ready.clear()
 
