@@ -108,6 +108,10 @@ class Audio(BaseAudio):
     """How many seconds of audio should be buffered"""
     read_ahead_task: threading.Thread
     """A thread that reads ahead to create the buffer"""
+    ffmpeg_args: str
+    """Args to pass to ffmpeg"""
+    ffmpeg_before_args: str
+    """Args to pass to ffmpeg before the source"""
 
     def __init__(self, src: Union[str, Path]):
         self.source = src
@@ -120,6 +124,9 @@ class Audio(BaseAudio):
         self.buffer_seconds = 3
         self.read_ahead_task = threading.Thread(target=self._read_ahead, daemon=True)
 
+        self.ffmpeg_before_args = ""
+        self.ffmpeg_args = ""
+
     def __repr__(self):
         return f"<{type(self).__name__}: {self.source}>"
 
@@ -129,8 +136,13 @@ class Audio(BaseAudio):
         return 192 * (self.buffer_seconds * 1000)
 
     def _create_process(self):
-        cmd = f"ffmpeg -i {self.source} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1 -vn"
-        self.process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
+        cmd = (
+            f"ffmpeg {self.ffmpeg_before_args} "
+            f"-i {self.source} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1 -vn "
+            f"{self.ffmpeg_args}".split()
+        )
+
+        self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         self.read_ahead_task.start()
 
     def _read_ahead(self) -> None:
@@ -210,4 +222,9 @@ class YTDLAudio(AudioVolume):
 
         filename = data["url"] if stream else ytdl.prepare_filename(data)
 
-        return cls(filename)
+        new_cls = cls(filename)
+
+        if stream:
+            new_cls.ffmpeg_before_args = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+
+        return new_cls
