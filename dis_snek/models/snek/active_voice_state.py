@@ -1,15 +1,10 @@
 import asyncio
 import logging
-import threading
-import time
-from asyncio import AbstractEventLoop
-from threading import Thread
 from typing import Optional
 
-from pip._internal.resolution.resolvelib import factory
+from discord_typings import VoiceStateData
 
 from dis_snek.api.voice.audio import BaseAudio, AudioVolume
-from dis_snek.api.voice.opus import Encoder
 from dis_snek.api.voice.player import Player
 from dis_snek.api.voice.voice_gateway import VoiceGateway
 from dis_snek.client.const import logger_name, MISSING
@@ -27,7 +22,7 @@ class ActiveVoiceState(VoiceState):
     """The websocket for this voice state"""
     player: Optional[Player] = field(default=None)
     """The playback task that broadcasts audio data to discord"""
-    _volume: float = 0.5
+    _volume: float = field(default=0.5)
 
     # standard voice states expect this data, this voice state lacks it initially; so we make them optional
     user_id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
@@ -41,6 +36,9 @@ class ActiveVoiceState(VoiceState):
     def __del__(self):
         asyncio.create_task(self.disconnect())
         self.player.stop()
+
+    def __repr__(self):
+        return f"<ActiveVoiceState: channel={self.channel} guild={self.guild} volume={self.volume} playing={self.playing} audio={self.current_audio}>"
 
     @property
     def current_audio(self) -> Optional[BaseAudio]:
@@ -138,5 +136,31 @@ class ActiveVoiceState(VoiceState):
 
         self.player.play()
 
-    async def update_voice_server(self, data) -> None:
+    async def _voice_server_update(self, data) -> None:
+        """
+        An internal receiver for voice server events.
+
+        Args:
+            data: voice server data
+        """
         self.ws.set_new_voice_server(data)
+
+    async def _voice_state_update(
+        self, before: Optional[VoiceState], after: Optional[VoiceState], data: Optional[VoiceStateData]
+    ) -> None:
+        """
+        An internal receiver for voice server state events.
+
+        Args:
+            before: The previous voice state
+            after: The current voice state
+            data: Raw data from gateway
+        """
+        if after is None:
+            # bot disconnected
+            log.info("Disconnecting from voice channel due to manual disconnection")
+            await self.disconnect()
+            self._client.cache.delete_bot_voice_state(self._guild_id)
+            return
+
+        self.update_from_dict(data)
