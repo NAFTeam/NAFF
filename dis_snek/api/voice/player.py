@@ -59,7 +59,8 @@ class Player(threading.Thread):
 
         asyncio.run_coroutine_threadsafe(self.state.ws.speaking(True), self.loop)
         log.debug(f"Now playing {self.current_audio!r}")
-        start = time.perf_counter()
+        start = None
+
         try:
             while not self._stop_event.is_set():
                 if not self.state.ws.ready.is_set() or not self.resume.is_set():
@@ -73,24 +74,22 @@ class Player(threading.Thread):
 
                     asyncio.run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
                     log.debug("Voice playback has been resumed!")
-                    start = time.perf_counter()
+                    start = None
                     loops = 0
 
-                data = self.current_audio.read(self._encoder.frame_size)
-                if not data:
-                    break
-
-                if not data and self.current_audio.locked_stream:
-                    self.state.ws.send_packet(b"\xF8\xFF\xFE", self._encoder, needs_encode=False)
-
-                elif not data:
-                    log.warning("No audio data!")
-                    break
-                else:
+                if data := self.current_audio.read(self._encoder.frame_size):
                     self.state.ws.send_packet(data, self._encoder, needs_encode=self.current_audio.needs_encode)
+                else:
+                    if self.current_audio.locked_stream:
+                        self.state.ws.send_packet(b"\xF8\xFF\xFE", self._encoder, needs_encode=False)
+                    else:
+                        break
+
+                if not start:
+                    start = time.perf_counter()
 
                 loops += 1
-                time.sleep(max(0.0, (start + (self._encoder.delay * loops)) - time.perf_counter()))
+                time.sleep(max(0.0, start + (self._encoder.delay * loops) - time.perf_counter()))
         finally:
             asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
             self.loop.call_soon_threadsafe(self._stopped.set)
