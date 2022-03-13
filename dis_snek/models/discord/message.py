@@ -1,4 +1,5 @@
 import asyncio
+import re
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
@@ -43,6 +44,8 @@ __all__ = [
     "process_message_reference",
     "process_message_payload",
 ]
+
+channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
 
 
 @define()
@@ -279,10 +282,20 @@ class Message(BaseMessage):
                 mention_ids.append(client.cache.place_user_data(user_data).id)
         data["mention_ids"] = mention_ids
 
-        if "mention_channels" in data:
+        extra = channel_mention.findall(data["content"])
+        if "mention_channels" in data or len(extra) > 0:
             mention_channels = []
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
+            for channel_id in extra:
+                if channel := client.get_channel(channel_id):
+                    channel_data = {
+                        "id": channel.id,
+                        "guild_id": channel._guild_id,
+                        "type": channel.type,
+                        "name": channel.name,
+                    }
+                    mention_channels.append(ChannelMention.from_dict(channel_data, client))
             data["mention_channels"] = mention_channels
 
         data["attachments"] = Attachment.from_list(data.get("attachments", []), client)
