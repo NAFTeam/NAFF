@@ -818,7 +818,6 @@ class GlobalCache:
         Returns:
             The processed emoji
         """
-
         emoji = CustomEmoji.from_dict(data, self._client)
         if self.emoji_cache is not None:
             self.emoji_cache[emoji.id] = emoji
