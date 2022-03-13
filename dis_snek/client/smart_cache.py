@@ -103,7 +103,7 @@ class GlobalCache:
             user = self.place_user_data(data)
         return user
 
-    def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+    def get_user(self, user_id: Optional["Snowflake_Type"]) -> Optional[User]:
         """
         Get a user by their ID.
 
@@ -169,7 +169,7 @@ class GlobalCache:
             member = self.place_member_data(guild_id, data)
         return member
 
-    def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Optional[Member]:
+    def get_member(self, guild_id: Optional["Snowflake_Type"], user_id: Optional["Snowflake_Type"]) -> Optional[Member]:
         """
         Get a member by their guild and user IDs.
 
@@ -372,7 +372,9 @@ class GlobalCache:
                 message._guild_id = message.channel._guild_id
         return message
 
-    def get_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> Optional[Message]:
+    def get_message(
+        self, channel_id: Optional["Snowflake_Type"], message_id: Optional["Snowflake_Type"]
+    ) -> Optional[Message]:
         """
         Get a message from a channel based on their IDs.
 
@@ -438,7 +440,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+    def get_channel(self, channel_id: Optional["Snowflake_Type"]) -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on its ID.
 
@@ -513,7 +515,7 @@ class GlobalCache:
         channel = await self.fetch_channel(channel_id)
         return channel
 
-    def get_dm_channel(self, user_id) -> Optional["DM"]:
+    def get_dm_channel(self, user_id: Optional["Snowflake_Type"]) -> Optional["DM"]:
         """
         Get the DM channel for a user.
 
@@ -563,7 +565,7 @@ class GlobalCache:
             guild = self.place_guild_data(data)
         return guild
 
-    def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+    def get_guild(self, guild_id: Optional["Snowflake_Type"]) -> Optional[Guild]:
         """
         Get a guild based on its ID.
 
@@ -637,7 +639,7 @@ class GlobalCache:
             role = self.place_role_data(guild_id, data)[role_id]
         return role
 
-    def get_role(self, role_id: "Snowflake_Type") -> Optional[Role]:
+    def get_role(self, role_id: Optional["Snowflake_Type"]) -> Optional[Role]:
         """
         Get a role based on the role ID.
 
@@ -698,7 +700,7 @@ class GlobalCache:
 
     # region Voice cache
 
-    def get_voice_state(self, user_id: "Snowflake_Type") -> Optional[VoiceState]:
+    def get_voice_state(self, user_id: Optional["Snowflake_Type"]) -> Optional[VoiceState]:
         """
         Get a voice state by their guild and user IDs.
 
@@ -792,7 +794,7 @@ class GlobalCache:
 
         return emoji
 
-    def get_emoji(self, emoji_id: "Snowflake_Type") -> Optional["CustomEmoji"]:
+    def get_emoji(self, emoji_id: Optional["Snowflake_Type"]) -> Optional["CustomEmoji"]:
         """
         Get an emoji based on the emoji ID.
 
