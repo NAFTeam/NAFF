@@ -31,6 +31,7 @@ class AudioBuffer:
     def __init__(self):
         self._buffer = bytearray()
         self._lock = threading.Lock()
+        self.initialised = threading.Event()
 
     def __len__(self) -> int:
         return len(self._buffer)
@@ -44,12 +45,12 @@ class AudioBuffer:
         """
         with self._lock:
             self._buffer.extend(data)
+        if not self.initialised.is_set():
+            self.initialised.set()
 
     def read(self, total_bytes: int) -> bytearray:
         """
         Read `total_bytes` bytes of audio from the buffer.
-
-        Should the buffer lack enough bytes, this will block until enough are available
 
         Args:
             total_bytes: Amount of bytes to read.
@@ -57,14 +58,14 @@ class AudioBuffer:
         Returns:
             Desired amount of bytes
         """
-        while len(self._buffer) < total_bytes:
-            # buffer isn't populated, block until it is
-            time.sleep(0.02)
-
         with self._lock:
             view = memoryview(self._buffer)
             self._buffer = bytearray(view[total_bytes:])
-            return bytearray(view[:total_bytes])
+            data = bytearray(view[:total_bytes])
+            if 0 < len(data) < total_bytes:
+                # pad incomplete frames with 0's
+                data.extend(b"\0" * (total_bytes - len(data)))
+            return data
 
 
 class BaseAudio(ABC):
@@ -145,14 +146,15 @@ class Audio(BaseAudio):
         self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         self.read_ahead_task.start()
 
+        # block until some data is in the buffer
+        self.buffer.initialised.wait()
+
     def _read_ahead(self) -> None:
         while self.process:
             if not len(self.buffer) > self._max_buffer_size:
                 self.buffer.extend(self.process.stdout.read(3840))
             else:
                 time.sleep(0.1)
-        # reset buffer as soon as the process ends
-        self.buffer = AudioBuffer()
 
     def read(self, frame_size: int) -> bytes:
         """
