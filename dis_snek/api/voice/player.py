@@ -36,7 +36,7 @@ class Player(threading.Thread):
 
     @property
     def stopped(self) -> bool:
-        return self._stop_event.is_set()
+        return self._stopped.is_set()
 
     def play(self) -> None:
         self._stop_event.clear()
