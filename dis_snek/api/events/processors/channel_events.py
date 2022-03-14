@@ -27,7 +27,7 @@ class ChannelEvents(EventMixinTemplate):
         # for some reason this event returns the deleted object?
         # so we cache it regardless
         channel = self.cache.place_channel_data(event.data)
-        if guild := channel.guild:
+        if guild := getattr(channel, "guild", None):
             guild._channel_ids.discard(channel.id)
         self.dispatch(events.ChannelDelete(channel))
 
