@@ -4,7 +4,7 @@ import logging
 import time
 from io import IOBase
 from pathlib import Path
-from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
+from typing import BinaryIO, List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from dis_snek.models.snek import AsyncIterator
 from aiohttp import FormData
 
@@ -574,7 +574,7 @@ class Guild(BaseGuild):
     async def create_custom_emoji(
         self,
         name: str,
-        imagefile: Union["models.File", "IOBase", "Path", str, bytes],
+        imagefile: Union["models.File", "IOBase", BinaryIO, "Path", str, bytes],
         roles: Absent[List[Union[Snowflake_Type, "models.Role"]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.CustomEmoji":
