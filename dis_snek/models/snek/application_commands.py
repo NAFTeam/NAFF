@@ -3,7 +3,7 @@ import inspect
 import logging
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
+from typing import TYPE_CHECKING, Annotated, Callable, Coroutine, Dict, List, Union, Optional, Any
 import typing
 
 import attr
@@ -399,7 +399,7 @@ class SlashCommand(InteractionCommand):
             annotation = None
             if val.annotation and isinstance(val.annotation, SlashCommandOption):
                 annotation = val.annotation
-            elif typing.get_origin(val.annotation) is typing.Annotated:
+            elif typing.get_origin(val.annotation) is Annotated:
                 for ann in typing.get_args(val.annotation):
                     if isinstance(ann, SlashCommandOption):
                         annotation = ann
