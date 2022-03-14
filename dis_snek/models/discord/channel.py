@@ -728,10 +728,13 @@ class BaseChannel(DiscordObject):
 
 @define(slots=False)
 class DMChannel(BaseChannel, MessageableMixin):
+    recipients: List["models.User"] = field(factory=list)
+
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
-        data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
+        if recipients := data.get("recipients", None):
+            data["recipients"] = [client.cache.place_user_data(recipient) for recipient in recipients]
         return data
 
     @property
@@ -742,21 +745,15 @@ class DMChannel(BaseChannel, MessageableMixin):
 
 @define()
 class DM(DMChannel):
-    recipient: "models.User" = field(repr=True)
-
-    @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data = super()._process_dict(data, client)
-        data["recipient"] = data.pop("recipients")[0]
-        client.cache.place_dm_channel_id(data["recipient"], data["id"])
-        return data
+    @property
+    def recipient(self) -> "models.User":
+        return self.recipients[0]
 
 
 @define()
 class DMGroup(DMChannel):
     owner_id: Snowflake_Type = field(repr=True)
     application_id: Optional[Snowflake_Type] = field(default=None)
-    recipients: List["models.User"] = field(factory=list)
 
     async def edit(
         self,
