@@ -103,7 +103,7 @@ class GlobalCache:
             user = self.place_user_data(data)
         return user
 
-    def get_user(self, user_id: "Snowflake_Type") -> Optional[User]:
+    def get_user(self, user_id: Optional["Snowflake_Type"]) -> Optional[User]:
         """
         Get a user by their ID.
 
@@ -113,7 +113,7 @@ class GlobalCache:
         Returns:
             User object if found
         """
-        return self.user_cache.get(to_snowflake(user_id))
+        return self.user_cache.get(to_optional_snowflake(user_id))
 
     def place_user_data(self, data: discord_typings.UserData) -> User:
         """
@@ -169,7 +169,7 @@ class GlobalCache:
             member = self.place_member_data(guild_id, data)
         return member
 
-    def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Optional[Member]:
+    def get_member(self, guild_id: Optional["Snowflake_Type"], user_id: Optional["Snowflake_Type"]) -> Optional[Member]:
         """
         Get a member by their guild and user IDs.
 
@@ -180,7 +180,7 @@ class GlobalCache:
         Returns:
             Member object if found
         """
-        return self.member_cache.get((to_snowflake(guild_id), to_snowflake(user_id)))
+        return self.member_cache.get((to_optional_snowflake(guild_id), to_optional_snowflake(user_id)))
 
     def place_member_data(
         self, guild_id: "Snowflake_Type", data: discord_typings.resources.guild.GuildMemberData
@@ -372,7 +372,9 @@ class GlobalCache:
                 message._guild_id = message.channel._guild_id
         return message
 
-    def get_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> Optional[Message]:
+    def get_message(
+        self, channel_id: Optional["Snowflake_Type"], message_id: Optional["Snowflake_Type"]
+    ) -> Optional[Message]:
         """
         Get a message from a channel based on their IDs.
 
@@ -383,7 +385,7 @@ class GlobalCache:
         Returns:
             The message if found
         """
-        return self.message_cache.get((to_snowflake(channel_id), to_snowflake(message_id)))
+        return self.message_cache.get((to_optional_snowflake(channel_id), to_optional_snowflake(message_id)))
 
     def place_message_data(self, data: discord_typings.MessageData) -> Message:
         """
@@ -438,7 +440,7 @@ class GlobalCache:
             channel = self.place_channel_data(data)
         return channel
 
-    def get_channel(self, channel_id: "Snowflake_Type") -> Optional["TYPE_ALL_CHANNEL"]:
+    def get_channel(self, channel_id: Optional["Snowflake_Type"]) -> Optional["TYPE_ALL_CHANNEL"]:
         """
         Get a channel based on its ID.
 
@@ -448,7 +450,7 @@ class GlobalCache:
         Returns:
             The channel if found
         """
-        return self.channel_cache.get(to_snowflake(channel_id))
+        return self.channel_cache.get(to_optional_snowflake(channel_id))
 
     def place_channel_data(self, data: discord_typings.ChannelData) -> "TYPE_ALL_CHANNEL":
         """
@@ -513,14 +515,14 @@ class GlobalCache:
         channel = await self.fetch_channel(channel_id)
         return channel
 
-    def get_dm_channel(self, user_id) -> Optional["DM"]:
+    def get_dm_channel(self, user_id: Optional["Snowflake_Type"]) -> Optional["DM"]:
         """
         Get the DM channel for a user.
 
         Args:
             user_id: The ID of the user
         """
-        user_id = to_snowflake(user_id)
+        user_id = to_optional_snowflake(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
             return None
@@ -563,7 +565,7 @@ class GlobalCache:
             guild = self.place_guild_data(data)
         return guild
 
-    def get_guild(self, guild_id: "Snowflake_Type") -> Optional[Guild]:
+    def get_guild(self, guild_id: Optional["Snowflake_Type"]) -> Optional[Guild]:
         """
         Get a guild based on its ID.
 
@@ -573,7 +575,7 @@ class GlobalCache:
         Returns:
             The guild if found
         """
-        return self.guild_cache.get(to_snowflake(guild_id))
+        return self.guild_cache.get(to_optional_snowflake(guild_id))
 
     def place_guild_data(self, data: discord_typings.GuildData) -> Guild:
         """
@@ -637,7 +639,7 @@ class GlobalCache:
             role = self.place_role_data(guild_id, data)[role_id]
         return role
 
-    def get_role(self, role_id: "Snowflake_Type") -> Optional[Role]:
+    def get_role(self, role_id: Optional["Snowflake_Type"]) -> Optional[Role]:
         """
         Get a role based on the role ID.
 
@@ -647,7 +649,7 @@ class GlobalCache:
         Returns:
             The role if found
         """
-        return self.role_cache.get(to_snowflake(role_id))
+        return self.role_cache.get(to_optional_snowflake(role_id))
 
     def place_role_data(
         self, guild_id: "Snowflake_Type", data: List[Dict["Snowflake_Type", Any]]
@@ -698,7 +700,7 @@ class GlobalCache:
 
     # region Voice cache
 
-    def get_voice_state(self, user_id: "Snowflake_Type") -> Optional[VoiceState]:
+    def get_voice_state(self, user_id: Optional["Snowflake_Type"]) -> Optional[VoiceState]:
         """
         Get a voice state by their guild and user IDs.
 
@@ -709,9 +711,7 @@ class GlobalCache:
             VoiceState object if found
 
         """
-        user_id = to_snowflake(user_id)
-
-        return self.voice_state_cache.get(user_id)
+        return self.voice_state_cache.get(to_optional_snowflake(user_id))
 
     async def place_voice_state_data(self, data: discord_typings.VoiceStateData) -> Optional[VoiceState]:
         """
@@ -794,7 +794,7 @@ class GlobalCache:
 
         return emoji
 
-    def get_emoji(self, emoji_id: "Snowflake_Type") -> Optional["CustomEmoji"]:
+    def get_emoji(self, emoji_id: Optional["Snowflake_Type"]) -> Optional["CustomEmoji"]:
         """
         Get an emoji based on the emoji ID.
 
@@ -806,7 +806,7 @@ class GlobalCache:
         Returns:
             The Emoji if found
         """
-        return self.emoji_cache.get(to_snowflake(emoji_id)) if self.emoji_cache is not None else None
+        return self.emoji_cache.get(to_optional_snowflake(emoji_id)) if self.emoji_cache is not None else None
 
     def place_emoji_data(self, guild_id: "Snowflake_Type", data: discord_typings.EmojiData) -> "CustomEmoji":
         """
