@@ -285,15 +285,9 @@ class Message(BaseMessage):
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
             data["mention_channels"] = mention_channels
 
-        attachments = []
-        for attachment_data in data.get("attachments", []):
-            attachments.append(Attachment.from_dict(attachment_data, client))
-        data["attachments"] = attachments
+        data["attachments"] = Attachment.from_list(data.get("attachments", []), client)
 
-        embeds = []
-        for embed_data in data.get("embeds", []):
-            embeds.append(models.Embed.from_dict(embed_data))
-        data["embeds"] = embeds
+        data["embeds"] = models.Embed.from_list(data.get("embeds", []))
 
         if "reactions" in data:
             reactions = []
