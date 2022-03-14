@@ -108,7 +108,7 @@ class GuildEvents(EventMixinTemplate):
         else:
             before = []
 
-        after = [self.cache.place_emoji_data(emoji) for emoji in emojis]
+        after = [self.cache.place_emoji_data(guild_id, emoji) for emoji in emojis]
 
         self.dispatch(
             GuildEmojisUpdate(
