@@ -598,7 +598,7 @@ class Guild(BaseGuild):
         }
 
         emoji_data = await self._client.http.create_guild_emoji(data_payload, self.id, reason=reason)
-        return self._client.cache.place_emoji_data(emoji_data)
+        return self._client.cache.place_emoji_data(self.id, emoji_data)
 
     async def create_guild_template(self, name: str, description: Absent[str] = MISSING) -> "models.GuildTemplate":
         template = await self._client.http.create_guild_template(self.id, name, description)
@@ -617,7 +617,7 @@ class Guild(BaseGuild):
 
         """
         emojis_data = await self._client.http.get_all_guild_emoji(self.id)
-        return [self._client.cache.place_emoji_data(emoji_data) for emoji_data in emojis_data]
+        return [self._client.cache.place_emoji_data(self.id, emoji_data) for emoji_data in emojis_data]
 
     async def fetch_custom_emoji(self, emoji_id: Snowflake_Type) -> Optional["models.CustomEmoji"]:
         """
