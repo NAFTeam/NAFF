@@ -473,7 +473,13 @@ class GlobalCache:
                 elif isinstance(channel, GuildChannel):
                     guild._channel_ids.add(channel.id)
         else:
-            channel.update_from_dict(data)
+            # Create entire new channel object if the type changes
+            channel_type = data.get("type", None)
+            if channel_type and channel_type != channel.type:
+                self.channel_cache.pop(channel_id)
+                channel = BaseChannel.from_dict_factory(data, self._client)
+            else:
+                channel.update_from_dict(data)
 
         return channel
 
