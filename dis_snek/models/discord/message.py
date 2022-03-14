@@ -282,13 +282,17 @@ class Message(BaseMessage):
                 mention_ids.append(client.cache.place_user_data(user_data).id)
         data["mention_ids"] = mention_ids
 
-        extra = channel_mention.findall(data["content"])
-        if "mention_channels" in data or len(extra) > 0:
+        found_ids = []
+        if "mention_channels" in data:
             mention_channels = []
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
+                found_ids.append(channel_data["id"])
+            data["mention_channels"] = mention_channels
+
+        if len(extra := channel_mention.findall(data["content"])) > 0:
             for channel_id in extra:
-                if channel := client.get_channel(channel_id):
+                if channel_id not in found_ids and (channel := client.get_channel(channel_id)):
                     channel_data = {
                         "id": channel.id,
                         "guild_id": channel._guild_id,
@@ -296,7 +300,6 @@ class Message(BaseMessage):
                         "name": channel.name,
                     }
                     mention_channels.append(ChannelMention.from_dict(channel_data, client))
-            data["mention_channels"] = mention_channels
 
         data["attachments"] = Attachment.from_list(data.get("attachments", []), client)
 
