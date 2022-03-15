@@ -941,7 +941,7 @@ class GuildChannel(BaseChannel):
             reason: The reason for this change
         """
         await self._client.http.edit_channel_permission(
-            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
+            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason
         )
 
     async def delete_permission(

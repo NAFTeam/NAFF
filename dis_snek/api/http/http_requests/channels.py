@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel
+from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permissions, OverwriteTypes
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_none, dict_filter_missing
 
@@ -278,9 +278,9 @@ class ChannelRequests:
         self,
         channel_id: "Snowflake_Type",
         overwrite_id: "Snowflake_Type",
-        allow: str,
-        deny: str,
-        perm_type: int,
+        allow: Union["Permissions", int],
+        deny: Union["Permissions", int],
+        perm_type: Union["OverwriteTypes", int],
         reason: Absent[str] = MISSING,
     ) -> None:
         """
