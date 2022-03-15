@@ -216,6 +216,12 @@ class Guild(BaseGuild):
 
         if welcome_screen := data.get("welcome_screen"):
             data["welcome_screen"] = GuildWelcome.from_dict(welcome_screen, client)
+
+        if voice_states := data.get("voice_states"):
+            [
+                asyncio.create_task(client.cache.place_voice_state_data(state | {"guild_id": guild_id}))
+                for state in voice_states
+            ]
         return data
 
     @classmethod

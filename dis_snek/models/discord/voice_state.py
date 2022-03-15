@@ -76,7 +76,8 @@ class VoiceState(ClientObject):
         if member := data.pop("member", None):
             member = client.cache.place_member_data(data["guild_id"], member)
             data["member_id"] = member.id
-
+        else:
+            data["member_id"] = data["user_id"]
         return data
 
 
