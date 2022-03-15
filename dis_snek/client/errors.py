@@ -230,7 +230,7 @@ class VoiceWebSocketClosed(SnakeException):
         4016: "Unknown encryption mode",
     }
 
-    def __init__(self, code: int):
+    def __init__(self, code: int) -> None:
         self.code = code
         super().__init__(f"The Websocket closed with code: {code} - {self.codes.get(code, 'Unknown Error')}")
 
