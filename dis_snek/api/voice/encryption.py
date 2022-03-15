@@ -1,5 +1,7 @@
 from nacl import secret, utils
 
+__all__ = ["Encryption"]
+
 
 class Encryption:
     SUPPORTED = (

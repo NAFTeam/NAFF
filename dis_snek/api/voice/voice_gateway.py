@@ -6,7 +6,6 @@ import struct
 import time
 from enum import IntEnum
 from threading import Event
-from typing import TYPE_CHECKING, Optional
 
 from aiohttp import WSMsgType
 
@@ -16,10 +15,9 @@ from dis_snek.client.const import logger_name
 from dis_snek.client.errors import VoiceWebSocketClosed
 from dis_snek.client.utils.input_utils import OverriddenJson
 
-log = logging.getLogger(logger_name)
+__all__ = ["VoiceGateway"]
 
-if TYPE_CHECKING:
-    pass
+log = logging.getLogger(logger_name)
 
 
 class OP(IntEnum):

@@ -10,6 +10,8 @@ from typing import Union, Optional
 from _cffi_backend import buffer
 from yt_dlp import YoutubeDL
 
+__all__ = ["AudioBuffer", "BaseAudio", "Audio", "AudioVolume", "YTDLAudio"]
+
 ytdl = YoutubeDL(
     {
         "format": "bestaudio/best",

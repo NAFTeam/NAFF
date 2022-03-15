@@ -12,6 +12,9 @@ import attr
 
 from dis_snek.client.const import MISSING
 
+__all__ = ["Encoder"]
+
+
 c_int_ptr = ctypes.POINTER(ctypes.c_int)
 c_int16_ptr = ctypes.POINTER(ctypes.c_int16)
 c_float_ptr = ctypes.POINTER(ctypes.c_float)
