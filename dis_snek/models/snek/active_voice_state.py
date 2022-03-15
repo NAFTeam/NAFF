@@ -36,8 +36,10 @@ class ActiveVoiceState(VoiceState):
         self._member_id = self.user_id = self._client.user.id
 
     def __del__(self):
-        asyncio.create_task(self.disconnect())
-        self.player.stop()
+        if self.connected:
+            self.ws.close()
+        if self.player:
+            self.player.stop()
 
     def __repr__(self):
         return f"<ActiveVoiceState: channel={self.channel} guild={self.guild} volume={self.volume} playing={self.playing} audio={self.current_audio}>"
@@ -118,7 +120,8 @@ class ActiveVoiceState(VoiceState):
 
     async def disconnect(self) -> None:
         await self.stop()
-        self.ws.close()
+        if self.connected:
+            self.ws.close()
         await self._client.ws.voice_state_update(self._guild_id, None)
 
     async def move(self, channel: SnowflakeObject) -> None:
