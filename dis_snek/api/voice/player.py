@@ -31,12 +31,19 @@ class Player(threading.Thread):
         self._stop_event: threading.Event = threading.Event()
         self._stopped: asyncio.Event = asyncio.Event()
 
+        self._sent_payloads: int = 0
+
     def stop(self) -> None:
         self._stop_event.set()
 
     @property
     def stopped(self) -> bool:
         return self._stopped.is_set()
+
+    @property
+    def elapsed_time(self) -> float:
+        """How many seconds of audio the player has sent."""
+        return self._sent_payloads * self._encoder.delay
 
     def play(self) -> None:
         self._stop_event.clear()
@@ -89,6 +96,7 @@ class Player(threading.Thread):
                     start = time.perf_counter()
 
                 loops += 1
+                self._sent_payloads += 1  # used for duration calc
                 time.sleep(max(0.0, start + (self._encoder.delay * loops) - time.perf_counter()))
         finally:
             asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
