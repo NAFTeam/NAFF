@@ -1,6 +1,6 @@
 import attrs
 import logging
-from typing import Any, TypeVar, Callable, Tuple, Union, Optional
+from typing import Any, TypeVar, Callable, Tuple, Union
 
 # this took way too lonk to solve
 # but this solution is based on https://www.attrs.org/en/stable/extending.html
@@ -22,8 +22,8 @@ log: logging.Logger
 class_defaults: dict[str, bool | list[Callable]]
 field_defaults: dict[str, bool]
 
-@__dataclass_transform__(field_descriptors=(attrs.define, attrs.field))
-def define(f: Optional[Callable] = None, **kwargs): ...
 def field(**kwargs) -> Any: ...
+@__dataclass_transform__(eq_default=False, kw_only_default=True, field_descriptors=(field, attrs.field))
+def define(**kwargs) -> Callable[[_T], _T]: ...
 def docs(doc_string: str) -> dict[str, str]: ...
 def str_validator(self, attribute: attrs.Attribute, value: Any) -> None: ...
