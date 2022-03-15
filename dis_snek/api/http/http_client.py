@@ -137,7 +137,7 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(self, connector: Optional[BaseConnector] = None):
+    def __init__(self, connector: Optional[BaseConnector] = None) -> None:
         self.connector: Optional[BaseConnector] = connector
         self.__session: Absent[Optional[ClientSession]] = MISSING
         self.token: Optional[str] = None

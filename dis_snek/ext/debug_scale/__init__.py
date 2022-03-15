@@ -15,7 +15,7 @@ log = logging.getLogger(logger_name)
 
 
 class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         self.add_scale_check(checks.is_owner())
 
         log.info("Debug Scale is growing!")

@@ -14,11 +14,11 @@ class Listener:
     event: str
     callback: Coroutine
 
-    def __init__(self, func: Coroutine, event: str):
+    def __init__(self, func: Coroutine, event: str) -> None:
         self.event = event
         self.callback = func
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs) -> None:
         return await self.callback(*args, **kwargs)
 
     @classmethod

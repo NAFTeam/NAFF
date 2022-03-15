@@ -28,7 +28,7 @@ class ReactionUsers(AsyncIterator):
 
     """
 
-    def __init__(self, reaction: "Reaction", limit=50, after=None):
+    def __init__(self, reaction: "Reaction", limit=50, after=None) -> None:
         self.reaction: "Reaction" = reaction
         self.after: "Snowflake_Type" = after
         self._more = True

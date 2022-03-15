@@ -71,7 +71,7 @@ class Timestamp(datetime):
         return super().fromordinal(n).astimezone()
 
     @classmethod
-    def now(cls, tz=None):
+    def now(cls, tz=None) -> "Timestamp":
         """
         Construct a datetime from time.time() and optional time zone info.
 
@@ -82,7 +82,7 @@ class Timestamp(datetime):
         return cls.fromtimestamp(t, tz)
 
     @classmethod
-    def utcnow(cls):
+    def utcnow(cls) -> "Timestamp":
         """Construct a timezone-aware UTC datetime from time.time()."""
         t = time.time()
         return cls.utcfromtimestamp(t)
@@ -114,5 +114,5 @@ class Timestamp(datetime):
         else:
             return f"<t:{self.timestamp():.0f}:{style}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.format()

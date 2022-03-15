@@ -100,7 +100,7 @@ EMBED_FIELD_VALUE_LENGTH = 1024
 class Singleton(type):
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args, **kwargs) -> "Singleton":
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -114,39 +114,39 @@ class Sentinel(metaclass=Singleton):
         caller = stack[2][0]
         return caller.f_globals.get("__name__")
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__module__ = self._get_caller_module()
         self.name = type(self).__name__
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __reduce__(self):
+    def __reduce__(self) -> str:
         return self.name
 
-    def __copy__(self):
+    def __copy__(self) -> "Sentinel":
         return self
 
-    def __deepcopy__(self, _):
+    def __deepcopy__(self, _) -> "Sentinel":
         return self
 
 
 class GlobalScope(Sentinel, int):
-    def __getattr__(self, _):
+    def __getattr__(self, _) -> "GlobalScope":
         return 0
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return 0
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 
 class Missing(Sentinel):
-    def __getattr__(self, *_):
+    def __getattr__(self, *_) -> None:
         return None
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 

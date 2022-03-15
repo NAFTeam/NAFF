@@ -79,7 +79,7 @@ class ChannelHistory(AsyncIterator):
 
     """
 
-    def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None):
+    def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None) -> None:
         self.channel: "BaseChannel" = channel
         self.before: Snowflake_Type = before
         self.after: Snowflake_Type = after

@@ -23,7 +23,7 @@ class AutoDefer:
     time_until_defer: float = field(default=1.5)
     """How long to wait before automatically deferring"""
 
-    async def __call__(self, ctx: "InteractionContext"):
+    async def __call__(self, ctx: "InteractionContext") -> None:
         if self.enabled:
             if self.time_until_defer > 0:
                 loop = asyncio.get_event_loop()

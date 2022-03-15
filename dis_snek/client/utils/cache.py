@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
-from typing import Any
+from typing import Any, Iterator, Tuple
 
 import attrs
 
@@ -20,7 +20,7 @@ class TTLItem:
 
 
 class TTLCache(OrderedDict):
-    def __init__(self, ttl=600, soft_limit=50, hard_limit=250, on_expire=None):
+    def __init__(self, ttl=600, soft_limit=50, hard_limit=250, on_expire=None) -> None:
         super().__init__()
 
         self.ttl = ttl
@@ -28,7 +28,7 @@ class TTLCache(OrderedDict):
         self.soft_limit = min(soft_limit, hard_limit)
         self.on_expire = on_expire
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         expire = time.monotonic() + self.ttl
         item = TTLItem(value, expire)
         super().__setitem__(key, item)
@@ -36,7 +36,7 @@ class TTLCache(OrderedDict):
 
         self.expire()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Any:
         # Will not (should not) reset expiration!
         item = super().__getitem__(key)
         # self._reset_expiration(key, item)
@@ -99,24 +99,24 @@ class TTLCache(OrderedDict):
 
 
 class _CacheValuesView(ValuesView):
-    def __contains__(self, value):
+    def __contains__(self, value) -> bool:
         for key in self._mapping:
             v = self._mapping.get(key, reset_expiration=False)
             if v is value or v == value:
                 return True
         return False
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         for key in self._mapping:
             yield self._mapping.get(key, reset_expiration=False)
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[Any]:
         for key in reversed(self._mapping):
             yield self._mapping.get(key, reset_expiration=False)
 
 
 class _CacheItemsView(ItemsView):
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         key, value = item
         v = self._mapping.get(key, default=attrs.NOTHING, reset_expiration=False)
         if v is attrs.NOTHING:
@@ -124,10 +124,10 @@ class _CacheItemsView(ItemsView):
         else:
             return v is value or v == value
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[Any, Any]]:
         for key in self._mapping:
             yield key, self._mapping.get(key, reset_expiration=False)
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[Tuple[Any, Any]]:
         for key in reversed(self._mapping):
             yield key, self._mapping.get(key, reset_expiration=False)

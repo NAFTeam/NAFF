@@ -29,7 +29,7 @@ class Task:
     _stop: asyncio.Event
     iteration: int
 
-    def __init__(self, callback: Callable, trigger: BaseTrigger):
+    def __init__(self, callback: Callable, trigger: BaseTrigger) -> None:
         self.callback = callback
         self.trigger = trigger
         self._stop = asyncio.Event()

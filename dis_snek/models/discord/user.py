@@ -48,7 +48,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
     discriminator: int = field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
     avatar: "Asset" = field(metadata=docs("The user's default avatar"))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.tag
 
     @classmethod
@@ -265,10 +265,10 @@ class Member(DiscordObject, _SendDMMixin):
         """Returns this member's user object."""
         return self._client.cache.get_user(self.id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.user.tag
 
-    def __getattr__(self, name):
+    def __getattr__(self, name) -> Any:
         # this allows for transparent access to user attributes
         try:
             return getattr(self.user, name)

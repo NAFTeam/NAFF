@@ -53,7 +53,7 @@ class Modal(DictSerializationMixin):
     components: List[InputText] = field()
     custom_id: Optional[str] = field(factory=lambda: str(uuid.uuid4()), validator=str_validator)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         if self.custom_id is MISSING:
             self.custom_id = str(uuid.uuid4())
 
