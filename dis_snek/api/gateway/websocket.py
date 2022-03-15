@@ -136,7 +136,7 @@ class WebsocketClient:
 
         async with self._race_lock:
             if self.ws is None:
-                raise RuntimeError
+                return log.warning("Attempted to send data while websocket is not connected!")
             if not bypass:
                 await self.rl_manager.rate_limit()
 
