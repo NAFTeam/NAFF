@@ -199,7 +199,7 @@ class Message(BaseMessage):
     edited_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     tts: bool = field(default=False)
     mention_everyone: bool = field(default=False)
-    mention_channels: Optional[List[ChannelMention]] = field(default=None)
+    mention_channels: List[ChannelMention] = field(factory=list)
     attachments: List[Attachment] = field(factory=list)
     embeds: List["models.Embed"] = field(factory=list)
     reactions: List["models.Reaction"] = field(factory=list)
