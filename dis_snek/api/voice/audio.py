@@ -213,6 +213,7 @@ class YTDLAudio(AudioVolume):
 
     def __init__(self, src, volume: float = 1.0):
         super().__init__(src, volume)
+        self.entry: Optional[dict] = None
 
     @classmethod
     async def from_url(cls, url, stream=True):
@@ -229,4 +230,5 @@ class YTDLAudio(AudioVolume):
         if stream:
             new_cls.ffmpeg_before_args = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
+        new_cls.entry = data
         return new_cls
