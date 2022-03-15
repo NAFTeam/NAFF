@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn
 import dis_snek.api.events as events
 from dis_snek.api.events import RawGatewayEvent, MessageCreate
 from dis_snek.api.events import processors
-from dis_snek.api.events.internal import Component
+from dis_snek.api.events.internal import Component, BaseEvent
 from dis_snek.api.gateway.gateway import WebsocketClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
@@ -30,7 +30,7 @@ from dis_snek.client.errors import (
     NotFound,
 )
 from dis_snek.client.utils.input_utils import get_first_word, get_args
-from dis_snek.client.utils.misc_utils import wrap_partial
+from dis_snek.client.utils.misc_utils import wrap_partial, get_event_name
 from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models import (
     Activity,
@@ -663,7 +663,10 @@ class Snake(
         await self._ready.wait()
 
     def wait_for(
-        self, event: str, checks: Absent[Optional[Callable[..., bool]]] = MISSING, timeout: Optional[float] = None
+        self,
+        event: Union[str, "BaseEvent"],
+        checks: Absent[Optional[Callable[..., bool]]] = MISSING,
+        timeout: Optional[float] = None,
     ) -> Any:
         """
         Waits for a WebSocket event to be dispatched.
@@ -677,6 +680,8 @@ class Snake(
             The event object.
 
         """
+        event = get_event_name(event)
+
         if event not in self.waits:
             self.waits[event] = []
 

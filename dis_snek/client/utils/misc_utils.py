@@ -1,11 +1,14 @@
 import functools
 import inspect
 import re
-from typing import Callable, Iterable, List, Optional, Any
+from typing import Callable, Iterable, List, Optional, Any, Union
 
-__all__ = ["escape_mentions", "find", "find_all", "get", "get_all", "wrap_partial", "get_parameters"]
+import dis_snek.api.events as events
+
+__all__ = ["escape_mentions", "find", "find_all", "get", "get_all", "wrap_partial", "get_parameters", "get_event_name"]
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
+camel_to_snake = re.compile(r"([A-Z]+)")
 
 
 def escape_mentions(content: str) -> str:
@@ -157,3 +160,28 @@ def wrap_partial(obj, cls) -> Callable:
 
 def get_parameters(callback: Callable) -> dict[str, inspect.Parameter]:
     return {p.name: p for p in inspect.signature(callback).parameters.values()}
+
+
+def get_event_name(event: Union[str, "events.BaseEvent"]) -> str:
+    """
+    Get the event name smartly from an event class or string name.
+
+    Args:
+        event: The event to parse the name of
+
+    Returns:
+        The event name
+    """
+    name = event
+
+    if inspect.isclass(name) and issubclass(name, events.BaseEvent):
+        name = name.__name__
+
+    # convert CamelCase to snake_case
+    name = camel_to_snake.sub(r"_\1", name).lower()
+    # remove any leading underscores
+    name = name.lstrip("_")
+    # remove any `on_` prefixes
+    name = name.removeprefix("on_")
+
+    return name
