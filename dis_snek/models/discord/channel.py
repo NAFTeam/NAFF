@@ -139,7 +139,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """Permissions to deny"""
 
     @classmethod
-    def for_target(cls, target_type: Union["models.Role", "models.Member", "models.User"]):
+    def for_target(cls, target_type: Union["models.Role", "models.Member", "models.User"]) -> "PermissionOverwrite":
         """
         Create a PermissionOverwrite for a role or member.
 
@@ -157,7 +157,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
         else:
             raise TypeError("target_type must be a Role, Member or User")
 
-    def add_allows(self, *perms: "Permissions"):
+    def add_allows(self, *perms: "Permissions") -> None:
         """
         Add permissions to allow.
 
@@ -169,7 +169,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
         for perm in perms:
             self.allow |= perm
 
-    def add_denies(self, *perms: "Permissions"):
+    def add_denies(self, *perms: "Permissions") -> None:
         """
         Add permissions to deny.
 
