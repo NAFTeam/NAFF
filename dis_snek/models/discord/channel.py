@@ -138,6 +138,49 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
     """Permissions to deny"""
 
+    @classmethod
+    def for_target(cls, target_type: Union["models.Role", "models.Member", "models.User"]):
+        """
+        Create a PermissionOverwrite for a role or member.
+
+        Args:
+            target_type: The type of the target (role or member)
+
+        Returns:
+            PermissionOverwrite
+
+        """
+        if isinstance(target_type, models.Role):
+            return cls(type=OverwriteTypes.ROLE, id=target_type.id)
+        elif isinstance(target_type, (models.Member, models.User)):
+            return cls(type=OverwriteTypes.MEMBER, id=target_type.id)
+        else:
+            raise TypeError("target_type must be a Role, Member or User")
+
+    def add_allows(self, *perms: "Permissions"):
+        """
+        Add permissions to allow.
+
+        Args:
+            *perms: Permissions to add
+        """
+        if not self.allow:
+            self.allow = Permissions.NONE
+        for perm in perms:
+            self.allow |= perm
+
+    def add_denies(self, *perms: "Permissions"):
+        """
+        Add permissions to deny.
+
+        Args:
+            *perms: Permissions to add
+        """
+        if not self.deny:
+            self.deny = Permissions.NONE
+        for perm in perms:
+            self.deny |= perm
+
 
 @define(slots=False)
 class MessageableMixin(SendMixin):
