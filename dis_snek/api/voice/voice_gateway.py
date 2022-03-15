@@ -6,7 +6,7 @@ import struct
 import time
 from enum import IntEnum
 from threading import Event
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from aiohttp import WSMsgType
 
@@ -111,9 +111,12 @@ class VoiceGateway(WebsocketClient):
 
             if resp.type == WSMsgType.CLOSE:
                 log.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
-                if resp.data == 4014:
+                if resp.data in (4006, 4009, 4014, 4015):
+                    # these are all recoverable close codes, anything else means we're foobared
+                    # codes: session expired, session timeout, disconnected, server crash
                     self.ready.clear()
-                    await self.reconnect()
+                    # docs state only resume on 4015
+                    await self.reconnect(resume=resp.data == 4015)
                     continue
                 raise VoiceWebSocketClosed(resp.data)
 
@@ -189,7 +192,7 @@ class VoiceGateway(WebsocketClient):
                 await self.establish_voice_socket()
 
             case OP.SESSION_DESCRIPTION:
-                log.debug(f"Voice connection established; using {data['mode']}")
+                log.info(f"Voice connection established; using {data['mode']}")
                 self.encryptor = Encryption(data["secret_key"])
                 self.ready.set()
 
@@ -231,7 +234,14 @@ class VoiceGateway(WebsocketClient):
             self._acknowledged.set()
 
     async def _resume_connection(self) -> None:
-        raise NotImplementedError
+        if self.ws is None:
+            raise RuntimeError
+
+        payload = {
+            "op": OP.RESUME,
+            "d": {"server_id": {self.guild_id}, "session_id": {self.session_id}, "token": {self.token}},
+        }
+        await self.ws.send_json(payload)
 
     async def establish_voice_socket(self) -> None:
         """Establish the socket connection to discord"""
