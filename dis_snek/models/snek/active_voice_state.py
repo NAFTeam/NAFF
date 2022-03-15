@@ -31,17 +31,17 @@ class ActiveVoiceState(VoiceState):
     _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
     _member_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         # jank line to handle the two inherently incompatible data structures
         self._member_id = self.user_id = self._client.user.id
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.connected:
             self.ws.close()
         if self.player:
             self.player.stop()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ActiveVoiceState: channel={self.channel} guild={self.guild} volume={self.volume} playing={self.playing} audio={self.current_audio}>"
 
     @property
