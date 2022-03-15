@@ -13,6 +13,8 @@ from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.snowflake import Snowflake_Type, SnowflakeObject, to_snowflake
 from dis_snek.models.discord.voice_state import VoiceState
 
+__all__ = ["ActiveVoiceState"]
+
 log = logging.getLogger(logger_name)
 
 
