@@ -288,7 +288,6 @@ class Message(BaseMessage):
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
                 found_ids.append(channel_data["id"])
-            data["mention_channels"] = mention_channels
 
         if len(extra := channel_mention.findall(data["content"])) > 0:
             for channel_id in extra:
@@ -300,6 +299,7 @@ class Message(BaseMessage):
                         "name": channel.name,
                     }
                     mention_channels.append(ChannelMention.from_dict(channel_data, client))
+        data["mention_channels"] = mention_channels
 
         data["attachments"] = Attachment.from_list(data.get("attachments", []), client)
 
