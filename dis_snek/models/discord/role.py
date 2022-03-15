@@ -58,7 +58,20 @@ class Role(DiscordObject):
         if self._guild_id != other._guild_id:
             raise RuntimeError("Unable to compare Roles from different guilds.")
 
-        return self.position < other.position
+        if self.id == self._guild_id:  # everyone role
+            # everyone role is on the bottom, so check if the other role is, well, not it
+            # because then it must be higher than it
+            return other.id != self.id
+
+        if self.position < other.position:
+            return True
+
+        if self.position == other.position:
+            # if two roles have the same position, which can happen thanks to discord, then
+            # we can thankfully use their ids to determine which one is lower
+            return self.id < other.id
+
+        return False
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
