@@ -2,9 +2,9 @@ import asyncio
 from collections import namedtuple
 import logging
 import time
+from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from io import IOBase
-from pathlib import Path
-from typing import BinaryIO, List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from dis_snek.models.snek import AsyncIterator
 from aiohttp import FormData
 
@@ -506,10 +506,10 @@ class Guild(BaseGuild):
         system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
         # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
-        icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
-        splash: Absent[Optional[Union["models.File", "IOBase", "Path", str, bytes]]] = MISSING,
-        discovery_splash: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
-        banner: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
+        splash: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
+        discovery_splash: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
+        banner: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         rules_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         public_updates_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         preferred_locale: Absent[Optional[str]] = MISSING,
@@ -574,7 +574,7 @@ class Guild(BaseGuild):
     async def create_custom_emoji(
         self,
         name: str,
-        imagefile: Union["models.File", "IOBase", BinaryIO, "Path", str, bytes],
+        imagefile: UPLOADABLE_TYPE,
         roles: Absent[List[Union[Snowflake_Type, "models.Role"]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.CustomEmoji":
@@ -1025,7 +1025,7 @@ class Guild(BaseGuild):
     async def create_custom_sticker(
         self,
         name: str,
-        imagefile: Union["models.File", "IOBase", "Path", str],
+        imagefile: UPLOADABLE_TYPE,
         description: Absent[Optional[str]] = MISSING,
         tags: Absent[Optional[str]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
@@ -1143,7 +1143,7 @@ class Guild(BaseGuild):
         hoist: Optional[bool] = False,
         mentionable: Optional[bool] = False,
         # ToDo: icon needs testing. I have to access to that
-        icon: Absent[Optional[Union[str, "Path", "IOBase"]]] = MISSING,
+        icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.Role":
         """

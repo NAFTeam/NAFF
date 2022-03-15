@@ -4,13 +4,10 @@ import dis_snek.client.errors as errors
 import dis_snek.models as models
 
 if TYPE_CHECKING:
-    from io import IOBase
-    from pathlib import Path
-
     from aiohttp.formdata import FormData
 
     from dis_snek.client import Snake
-    from dis_snek.models import File
+    from dis_snek.models.discord.file import UPLOADABLE_TYPE
     from dis_snek.models.discord.components import BaseComponent
     from dis_snek.models.discord.embed import Embed
     from dis_snek.models.discord.message import AllowedMentions, Message, MessageReference
@@ -38,8 +35,8 @@ class SendMixin:
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         **kwargs,

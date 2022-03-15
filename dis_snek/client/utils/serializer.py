@@ -2,12 +2,12 @@ from base64 import b64encode
 from datetime import datetime, timezone
 from io import IOBase
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from attr import fields, has
 
 from dis_snek.client.const import MISSING
-from dis_snek.models.discord.file import File
+from dis_snek.models.discord.file import UPLOADABLE_TYPE, File
 
 __all__ = ["no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter_missing", "to_image_data"]
 
@@ -68,7 +68,7 @@ def dict_filter_missing(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not MISSING}
 
 
-def to_image_data(imagefile: Optional[Union["File", "IOBase", "Path", str, bytes]]) -> Optional[str]:
+def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
     match imagefile:
         case bytes():
             image_data = imagefile

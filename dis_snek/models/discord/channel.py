@@ -15,6 +15,7 @@ from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.misc_utils import get
 from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.discord.base import DiscordObject
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
 from dis_snek.models.snek import AsyncIterator
 from .enums import (
@@ -29,9 +30,6 @@ from .enums import (
 )
 
 if TYPE_CHECKING:
-    from io import IOBase
-    from pathlib import Path
-
     from aiohttp import FormData
     from dis_snek import Snake
 
@@ -594,9 +592,7 @@ class ThreadableMixin:
 
 @define(slots=False)
 class WebhookMixin:
-    async def create_webhook(
-        self, name: str, avatar: Absent[Union["models.File", "IOBase", "Path", str, bytes]] = MISSING
-    ) -> "models.Webhook":
+    async def create_webhook(self, name: str, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> "models.Webhook":
         """
         Create a webhook in this channel.
 
@@ -665,7 +661,7 @@ class BaseChannel(DiscordObject):
     async def edit(
         self,
         name: Absent[str] = MISSING,
-        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        icon: Absent[UPLOADABLE_TYPE] = MISSING,
         type: Absent[ChannelTypes] = MISSING,
         position: Absent[int] = MISSING,
         topic: Absent[str] = MISSING,
@@ -758,7 +754,7 @@ class DMGroup(DMChannel):
     async def edit(
         self,
         name: Absent[str] = MISSING,
-        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        icon: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
     ) -> "DMGroup":
@@ -1129,7 +1125,11 @@ class GuildCategory(GuildChannel):
             reason: the reason for this change
         """
         return await super().edit(
-            name=name, position=position, permission_overwrites=permission_overwrites, reason=reason, **kwargs
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            reason=reason,
+            **kwargs,
         )
 
     async def create_channel(

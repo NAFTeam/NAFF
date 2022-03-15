@@ -1,9 +1,8 @@
 import logging
-from io import IOBase
-from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from aiohttp import FormData
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 
 import dis_snek.models.discord.message as message
 from dis_snek.client.const import MISSING, logger_name, Absent
@@ -18,7 +17,6 @@ from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
     from dis_snek.client import Snake
-    from dis_snek.models import File
     from dis_snek.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord.components import BaseComponent
     from dis_snek.models.discord.embed import Embed
@@ -320,8 +318,8 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         ephemeral: bool = False,
@@ -460,8 +458,8 @@ class ComponentContext(InteractionContext):
             Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
     ) -> "Message":
         """
