@@ -910,9 +910,7 @@ class GuildChannel(BaseChannel):
                 target = to_snowflake(target)
             else:
                 raise ValueError("Invalid target and/or type for permission")
-            overwrite = PermissionOverwrite(
-                id=target, type=type, allow=Permissions.NONE, deny=Permissions.NONE
-            )
+            overwrite = PermissionOverwrite(id=target, type=type, allow=Permissions.NONE, deny=Permissions.NONE)
             if isinstance(allow, int):
                 overwrite.allow |= allow
             else:
