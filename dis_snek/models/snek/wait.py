@@ -5,7 +5,7 @@ __all__ = ["Wait"]
 
 
 class Wait:
-    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future):
+    def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future) -> None:
         self.event = event
         self.checks = checks
         self.future = future

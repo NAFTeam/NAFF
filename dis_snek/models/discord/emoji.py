@@ -69,7 +69,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             s = f"<{'a:' if self.animated else ':'}{s}>"
         return s
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if self.id:
             return self.id == other.id
         return self.name == other.name

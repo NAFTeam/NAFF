@@ -54,9 +54,10 @@ class Scale:
     scale_prerun: List
     scale_postrun: List
     _commands: List
+    _listeners: List
     auto_defer: "AutoDefer"
 
-    def __new__(cls, bot: "Snake", *args, **kwargs):
+    def __new__(cls, bot: "Snake", *args, **kwargs) -> "Scale":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
         new_cls.__name = cls.__name__
@@ -105,7 +106,7 @@ class Scale:
         return new_cls
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return self.name
 
     @property

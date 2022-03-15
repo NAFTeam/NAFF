@@ -22,7 +22,7 @@ class Processor:
     callback: Coroutine
     event_name: str
 
-    def __init__(self, callback: Coroutine, name: str):
+    def __init__(self, callback: Coroutine, name: str) -> None:
         self.callback = callback
         self.event_name = name
 

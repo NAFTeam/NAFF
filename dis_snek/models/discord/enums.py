@@ -2,7 +2,7 @@ import logging
 from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
-from typing import Tuple
+from typing import Iterator, Tuple
 
 from dis_snek.client.const import logger_name
 
@@ -49,10 +49,10 @@ __all__ = [
 
 
 class AntiFlag:
-    def __init__(self, anti=0):
+    def __init__(self, anti=0) -> None:
         self.anti = anti
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance, cls) -> int:
         negative = ~cls(self.anti)
         positive = cls(reduce(or_, negative))
         return positive
@@ -63,16 +63,16 @@ def _distinct(source) -> Tuple:
 
 
 class DistinctFlag(EnumMeta):
-    def __iter__(cls):
+    def __iter__(cls) -> Iterator:
         yield from _distinct(super().__iter__())
 
-    def __call__(cls, value, names=None, *, module=None, qualname=None, type=None, start=1):
+    def __call__(cls, value, names=None, *, module=None, qualname=None, type=None, start=1) -> "DistinctFlag":
         # To automatically convert string values into ints (eg for permissions)
         return super().__call__(int(value), names, module=module, qualname=qualname, type=type, start=start)
 
 
 class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         yield from _decompose(self.__class__, self)[0]
 
 

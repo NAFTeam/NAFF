@@ -57,7 +57,7 @@ class EmbedField(DictSerializationMixin):
         if len(value) > EMBED_FIELD_VALUE_LENGTH:
             raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.name) + len(self.value)
 
 
@@ -84,7 +84,7 @@ class EmbedAuthor(DictSerializationMixin):
         if len(value) > EMBED_MAX_NAME_LENGTH:
             raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.name)
 
 
@@ -133,7 +133,7 @@ class EmbedFooter(DictSerializationMixin):
     icon_url: Optional[str] = field(default=None)
     proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.text)
 
 
@@ -232,7 +232,7 @@ class Embed(DictSerializationMixin):
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         # yes i know there are far more optimal ways to write this
         # its written like this for readability
         total: int = 0

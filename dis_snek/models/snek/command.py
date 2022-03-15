@@ -80,7 +80,7 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
-    async def __call__(self, context, *args, **kwargs):
+    async def __call__(self, context, *args, **kwargs) -> None:
         """
         Calls this command.
 

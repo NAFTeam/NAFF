@@ -25,7 +25,7 @@ class Color:
 
     value: int = field(repr=True)
 
-    def __init__(self, color=None):
+    def __init__(self, color=None) -> None:
         color = color or (0, 0, 0)
         if isinstance(color, int):
             self.value = color

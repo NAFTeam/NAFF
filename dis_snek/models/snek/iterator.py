@@ -11,7 +11,7 @@ __all__ = ["AsyncIterator"]
 
 
 class AsyncIterator(_AsyncIterator, ABC):
-    def __init__(self, limit: int = 50):
+    def __init__(self, limit: int = 50) -> None:
         self._queue: asyncio.Queue = asyncio.Queue()
         """The queue of items in the iterator"""
 
@@ -62,7 +62,7 @@ class AsyncIterator(_AsyncIterator, ABC):
         else:
             raise QueueEmpty
 
-    async def __anext__(self):
+    async def __anext__(self) -> Any:
         try:
             if self._queue.empty():
                 await self._get_items()

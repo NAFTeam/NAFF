@@ -16,7 +16,7 @@ class Route:
     webhook_id: Optional["Snowflake_Type"]
     webhook_token: Optional[str]
 
-    def __init__(self, method: str, path: str, **parameters: Any):
+    def __init__(self, method: str, path: str, **parameters: Any) -> None:
         self.path: str = path
         self.method: str = method
         self.params = parameters
@@ -28,18 +28,18 @@ class Route:
 
         self.known_bucket: Optional[str] = None
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Route):
             return self.rl_bucket == other.rl_bucket
         return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.rl_bucket)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Route {self.endpoint}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.endpoint
 
     @property

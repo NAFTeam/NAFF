@@ -77,7 +77,13 @@ class HTTPException(SnakeException):
 
     """
 
-    def __init__(self, response: aiohttp.ClientResponse, text=const.MISSING, discord_code=const.MISSING, **kwargs):
+    def __init__(
+        self,
+        response: aiohttp.ClientResponse,
+        text=const.MISSING,
+        discord_code=const.MISSING,
+        **kwargs,
+    ) -> None:
         self.response: aiohttp.ClientResponse = response
         self.status: int = response.status
         self.code: int = discord_code
@@ -196,7 +202,7 @@ class WebSocketClosed(SnakeException):
         4014: "Disallowed Intents",
     }
 
-    def __init__(self, code: int):
+    def __init__(self, code: int) -> None:
         self.code = code
         super().__init__(f"The Websocket closed with code: {code} - {self.codes.get(code, 'Unknown Error')}")
 
@@ -206,7 +212,7 @@ class WebSocketRestart(SnakeException):
 
     resume: bool = False
 
-    def __init__(self, resume: bool = False):
+    def __init__(self, resume: bool = False) -> None:
         self.resume = resume
         super().__init__("Websocket connection closed... reconnecting")
 
@@ -241,7 +247,7 @@ class CommandOnCooldown(CommandException):
 
     """
 
-    def __init__(self, command: "BaseCommand", cooldown: "CooldownSystem"):
+    def __init__(self, command: "BaseCommand", cooldown: "CooldownSystem") -> None:
         self.command: "BaseCommand" = command
         self.cooldown: "CooldownSystem" = cooldown
 
@@ -251,7 +257,7 @@ class CommandOnCooldown(CommandException):
 class MaxConcurrencyReached(CommandException):
     """A command has exhausted the max concurrent requests."""
 
-    def __init__(self, command: "BaseCommand", max_conc: "MaxConcurrency"):
+    def __init__(self, command: "BaseCommand", max_conc: "MaxConcurrency") -> None:
         self.command: "BaseCommand" = command
         self.max_conc: "MaxConcurrency" = max_conc
 
@@ -268,7 +274,7 @@ class CommandCheckFailure(CommandException):
 
     """
 
-    def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context"):
+    def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context") -> None:
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
         self.context = context
@@ -313,7 +319,7 @@ class InteractionException(BotException):
 class InteractionMissingAccess(InteractionException):
     """The bot does not have access to the specified scope."""
 
-    def __init__(self, scope: "Snowflake_Type"):
+    def __init__(self, scope: "Snowflake_Type") -> None:
         self.scope: "Snowflake_Type" = scope
 
         if scope == const.GLOBAL_SCOPE:
