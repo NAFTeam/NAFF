@@ -3,7 +3,8 @@ import inspect
 import logging
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
+from typing import TYPE_CHECKING, Annotated, Callable, Coroutine, Dict, List, Union, Optional, Any
+import typing
 
 import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
@@ -379,12 +380,19 @@ class SlashCommand(InteractionCommand):
     def __attrs_post_init__(self) -> None:
         params = get_parameters(self.callback)
         for name, val in params.items():
+            annotation = None
             if val.annotation and isinstance(val.annotation, SlashCommandOption):
+                annotation = val.annotation
+            elif typing.get_origin(val.annotation) is Annotated:
+                for ann in typing.get_args(val.annotation):
+                    if isinstance(ann, SlashCommandOption):
+                        annotation = ann
 
+            if annotation:
                 if not self.options:
                     self.options = []
-                val.annotation.name = name
-                self.options.append(val.annotation)
+                ann.name = name
+                self.options.append(ann)
 
         if self.callback is not None:
             if hasattr(self.callback, "options"):
