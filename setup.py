@@ -1,3 +1,4 @@
+import itertools
 from pathlib import Path
 
 import tomli
@@ -5,6 +6,9 @@ from setuptools import find_packages, setup
 
 with open("pyproject.toml", "rb") as f:
     pyproject = tomli.load(f)
+
+extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6", "yt-dlp"]}
+extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
 
 setup(
     name=pyproject["tool"]["poetry"]["name"],
@@ -39,5 +43,5 @@ setup(
         "Documentation": "https://dis-snek.readthedocs.io",
         "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },
-    extras_require={"voice": ["PyNaCl>=1.5.0,>1.6" "yt-dlp"]},
+    extras_require=extras_require,
 )
