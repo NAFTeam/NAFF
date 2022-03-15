@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from aiohttp import FormData
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
@@ -66,7 +66,7 @@ class Resolved:
     )
 
     @classmethod
-    def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None):
+    def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None) -> "Resolved":
         new_cls = cls()
 
         if channels := data.get("channels"):
@@ -154,7 +154,7 @@ class _BaseInteractionContext(Context):
     data: Dict = field(factory=dict, metadata=docs("The raw data of this interaction"))
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake"):
+    def from_dict(cls, data: Dict, client: "Snake") -> "Context":
         """Create a context object from a dictionary."""
         new_cls = cls(
             client=client,
@@ -592,7 +592,7 @@ class MessageContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
     @classmethod
-    def from_message(cls, client: "Snake", message: "Message"):
+    def from_message(cls, client: "Snake", message: "Message") -> "MessageContext":
         new_cls = cls(
             client=client,
             message=message,

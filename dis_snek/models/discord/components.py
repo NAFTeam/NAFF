@@ -251,7 +251,7 @@ class ActionRow(BaseComponent):
         return len(self.components)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data) -> "ActionRow":
         return cls(*data["components"])
 
     def _component_checks(self, component: Union[dict, Select, Button]):

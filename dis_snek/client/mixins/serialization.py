@@ -52,7 +52,7 @@ class DictSerializationMixin:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls: T, data: Dict[str, Any]) -> T:
         """
         Process and converts dictionary data received from discord api to object class instance.
 
@@ -66,7 +66,7 @@ class DictSerializationMixin:
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def from_list(cls, datas: List[Dict[str, Any]]):
+    def from_list(cls: T, datas: List[Dict[str, Any]]) -> List[T]:
         """
         Process and converts list data received from discord api to object class instances.
 

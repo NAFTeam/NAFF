@@ -79,7 +79,7 @@ class BaseGuild(DiscordObject):
     """The features of this guild"""
 
     @classmethod
-    def _process_dict(cls, data, client):
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if icon_hash := data.pop("icon", None):
             data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
         if splash_hash := data.pop("splash", None):
@@ -109,7 +109,7 @@ class GuildPreview(BaseGuild):
     """Approximate number of online members in this guild"""
 
     @classmethod
-    def _process_dict(cls, data, client):
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         return super()._process_dict(data, client)
 
 
@@ -191,7 +191,7 @@ class Guild(BaseGuild):
     _chunk_cache: list = field(factory=list)
 
     @classmethod
-    def _process_dict(cls, data, client):
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         # todo: find a away to prevent this loop from blocking the event loop
         data = super()._process_dict(data, client)
         guild_id = data["id"]
@@ -1506,7 +1506,7 @@ class GuildTemplate(ClientObject):
     is_dirty: bool = field(default=False, metadata=docs("Whether this template has un-synced changes"))
 
     @classmethod
-    def _process_dict(cls, data, client):
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data["creator"] = client.cache.place_user_data(data["creator"])
 
         # todo: partial guild obj that **isn't** cached
