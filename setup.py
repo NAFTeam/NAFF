@@ -39,4 +39,5 @@ setup(
         "Documentation": "https://dis-snek.readthedocs.io",
         "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },
+    extras_require={"voice": ["PyNaCl>=1.5.0,>1.6" "yt-dlp"]},
 )
