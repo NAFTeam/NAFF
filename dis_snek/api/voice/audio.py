@@ -28,7 +28,7 @@ ytdl = YoutubeDL(
 
 
 class AudioBuffer:
-    def __init__(self):
+    def __init__(self) -> None:
         self._buffer = bytearray()
         self._lock = threading.Lock()
         self.initialised = threading.Event()
@@ -76,7 +76,7 @@ class BaseAudio(ABC):
     bitrate: Optional[int]
     """Optionally specify a specific bitrate to encode this audio data with"""
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.cleanup()
 
     def cleanup(self) -> None:
@@ -112,7 +112,7 @@ class Audio(BaseAudio):
     ffmpeg_before_args: str
     """Args to pass to ffmpeg before the source"""
 
-    def __init__(self, src: Union[str, Path]):
+    def __init__(self, src: Union[str, Path]) -> None:
         self.source = src
         self.needs_encode = True
         self.locked_stream = False
@@ -126,7 +126,7 @@ class Audio(BaseAudio):
         self.ffmpeg_before_args = ""
         self.ffmpeg_args = ""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__}: {self.source}>"
 
     @property
@@ -185,7 +185,7 @@ class AudioVolume(Audio):
     _volume: float
     """The internal volume level of the audio"""
 
-    def __init__(self, src: Union[str, Path], volume: float = 1.0):
+    def __init__(self, src: Union[str, Path], volume: float = 1.0) -> None:
         super().__init__(src)
         self._volume = volume
 
@@ -211,7 +211,7 @@ class AudioVolume(Audio):
 class YTDLAudio(AudioVolume):
     """An audio object to play sources supported by YTDLP"""
 
-    def __init__(self, src, volume: float = 1.0):
+    def __init__(self, src, volume: float = 1.0) -> None:
         super().__init__(src, volume)
         self.entry: Optional[dict] = None
 

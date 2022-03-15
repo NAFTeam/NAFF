@@ -16,7 +16,7 @@ log = logging.getLogger(logger_name)
 
 
 class Player(threading.Thread):
-    def __init__(self, audio, v_state, loop):
+    def __init__(self, audio, v_state, loop) -> None:
         super().__init__()
         self.daemon = True
 

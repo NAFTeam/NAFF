@@ -53,7 +53,7 @@ class VoiceGateway(WebsocketClient):
     socket: socket.socket
     ready: Event
 
-    def __init__(self, state, voice_state: dict, voice_server: dict):
+    def __init__(self, state, voice_state: dict, voice_server: dict) -> None:
         super().__init__(state)
 
         self._voice_server_update = asyncio.Event()
