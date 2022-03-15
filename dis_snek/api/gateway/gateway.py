@@ -515,7 +515,7 @@ class WebsocketClient:
         }
         await self.send_json(payload)
 
-    async def _process_member_chunk(self, chunk: dict):
+    async def _process_member_chunk(self, chunk: dict) -> None:
 
         guild = self.state.client.cache.get_guild(to_snowflake(chunk.get("guild_id")))
         if guild:

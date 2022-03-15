@@ -68,11 +68,11 @@ class TTLCache(OrderedDict):
     def items(self) -> ItemsView:
         return _CacheItemsView(self)
 
-    def _reset_expiration(self, key: Any, item: TTLItem):
+    def _reset_expiration(self, key: Any, item: TTLItem) -> None:
         self.move_to_end(key)
         item.expire = time.monotonic() + self.ttl
 
-    def _first_item(self):
+    def _first_item(self) -> Tuple[Any, TTLItem]:
         return next(super().items().__iter__())
 
     def expire(self) -> None:

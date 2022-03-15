@@ -290,7 +290,7 @@ class HTTPClient(
                         continue
                     raise
 
-    async def _raise_exception(self, response, route, result):
+    async def _raise_exception(self, response, route, result) -> None:
         log.error(f"{route.method}::{route.url}: {response.status}")
 
         if response.status == 403:

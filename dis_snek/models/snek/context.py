@@ -186,7 +186,7 @@ class _BaseInteractionContext(Context):
 
         return new_cls
 
-    def _process_options(self, data: dict):
+    def _process_options(self, data: dict) -> None:
         kwargs = {}
         guild_id = to_snowflake(data.get("guild_id", 0))
 

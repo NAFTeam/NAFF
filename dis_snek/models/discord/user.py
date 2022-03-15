@@ -150,7 +150,7 @@ class SnakeBotUser(User):
 
     _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": ""})
 
-    def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
+    def _add_guilds(self, guild_ids: Set["Snowflake_Type"]) -> None:
         self._guild_ids |= guild_ids
 
     @property

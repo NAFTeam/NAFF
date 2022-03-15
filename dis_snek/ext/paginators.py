@@ -301,7 +301,7 @@ class Paginator:
         """
         await self._message.edit(**self.to_dict())
 
-    async def _on_button(self, ctx: ComponentContext, *args, **kwargs):
+    async def _on_button(self, ctx: ComponentContext, *args, **kwargs) -> Optional[Message]:
         if ctx.author.id == self.author_id:
             if self._timeout_task:
                 self._timeout_task.ping.set()
