@@ -220,7 +220,7 @@ class VoiceWebSocketClosed(SnakeException):
         4003: "Not Authenticated",
         4004: "Authentication Failed",
         4005: "Already Authenticated",
-        4006: "Sesssion no longer valid",
+        4006: "Session no longer valid",
         4007: "Invalid seq",
         4009: "Session Timed Out",
         4011: "Server not found",
