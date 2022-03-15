@@ -45,8 +45,6 @@ class AudioBuffer:
         """
         with self._lock:
             self._buffer.extend(data)
-        if not self.initialised.is_set():
-            self.initialised.set()
 
     def read(self, total_bytes: int) -> bytearray:
         """
@@ -151,9 +149,11 @@ class Audio(BaseAudio):
 
     def _read_ahead(self) -> None:
         while self.process:
-            if not len(self.buffer) > self._max_buffer_size:
+            if not len(self.buffer) >= self._max_buffer_size:
                 self.buffer.extend(self.process.stdout.read(3840))
             else:
+                if not self.buffer.initialised.is_set():
+                    self.buffer.initialised.set()
                 time.sleep(0.1)
 
     def read(self, frame_size: int) -> bytes:
