@@ -14,7 +14,6 @@ __all__ = [
     "ActivityParty",
     "ActivityAssets",
     "ActivitySecrets",
-    "ActivityButton",
     "Activity",
 ]
 
@@ -46,12 +45,6 @@ class ActivitySecrets(DictSerializationMixin):
     match: Optional[str] = field(default=None)
 
 
-@define()
-class ActivityButton(DictSerializationMixin):
-    label: str = field()
-    url: str = field()
-
-
 @define(kw_only=False)
 class Activity(DictSerializationMixin):
     name: str = field(repr=True)
@@ -68,7 +61,7 @@ class Activity(DictSerializationMixin):
     secrets: Optional[ActivitySecrets] = field(default=None, converter=optional(ActivitySecrets.from_dict))
     instance: Optional[bool] = field(default=False)
     flags: Optional[ActivityFlags] = field(default=None, converter=optional(ActivityFlags))
-    buttons: List[ActivitySecrets] = field(factory=list, converter=optional(ActivityButton.from_list))
+    buttons: List[str] = field(factory=list)
 
     @classmethod
     def create(cls, name: str, type: ActivityType = ActivityType.GAME, url: Optional[str] = None) -> "Activity":
