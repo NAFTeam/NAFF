@@ -1,7 +1,5 @@
 import logging
 from datetime import datetime
-from io import IOBase
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
 from dis_snek.client.const import MISSING, logger_name, Absent
@@ -15,6 +13,7 @@ from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.snowflake import Snowflake_Type
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -158,9 +157,7 @@ class SnakeBotUser(User):
     def guilds(self) -> List["Guild"]:
         return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
-    async def edit(
-        self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
-    ) -> None:
+    async def edit(self, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
         """
         Edit the client's user.
 

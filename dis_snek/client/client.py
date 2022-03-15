@@ -36,7 +36,6 @@ from dis_snek.models import (
     Activity,
     Application,
     CustomEmoji,
-    File,
     Guild,
     GuildTemplate,
     Message,
@@ -68,6 +67,7 @@ from dis_snek.models import (
 from dis_snek.models import Wait
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
@@ -75,8 +75,6 @@ from dis_snek.models.snek.tasks import Task
 from .smart_cache import GlobalCache
 
 if TYPE_CHECKING:
-    from io import IOBase
-    from pathlib import Path
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
@@ -1501,7 +1499,7 @@ class Snake(
         self,
         template_code: Union["GuildTemplate", str],
         name: str,
-        icon: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
+        icon: Absent[UPLOADABLE_TYPE] = MISSING,
     ) -> Optional[Guild]:
         """
         Creates a new guild based on a template.

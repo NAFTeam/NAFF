@@ -1,8 +1,6 @@
 import asyncio
 import re
 from dataclasses import dataclass
-from io import IOBase
-from pathlib import Path
 from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
 from aiohttp import FormData
 
@@ -15,6 +13,7 @@ from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
 from dis_snek.client.utils.serializer import dict_filter_none
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from .base import DiscordObject
 from .enums import (
     ChannelTypes,
@@ -366,10 +365,8 @@ class Message(BaseMessage):
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
         attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        files: Optional[
-            Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
-        ] = None,
-        file: Optional[Union["models.File", "IOBase", "Path", str]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
     ) -> "Message":
@@ -659,9 +656,7 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    files: Optional[
-        Union["models.File", "IOBase", "Path", str, List[Union["models.File", "IOBase", "Path", str]]]
-    ] = None,
+    files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
     **kwargs,
