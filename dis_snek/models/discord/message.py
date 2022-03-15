@@ -283,8 +283,8 @@ class Message(BaseMessage):
         data["mention_ids"] = mention_ids
 
         found_ids = []
+        mention_channels = []
         if "mention_channels" in data:
-            mention_channels = []
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
                 found_ids.append(channel_data["id"])
