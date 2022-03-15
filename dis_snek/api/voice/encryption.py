@@ -8,7 +8,7 @@ class Encryption:
         "xsalsa20_poly1305",
     )
 
-    def __init__(self, secret_key):
+    def __init__(self, secret_key) -> None:
         self.box: secret.SecretBox = secret.SecretBox(bytes(secret_key))
 
     def encrypt(self, mode: str, header: bytes, data) -> bytes:

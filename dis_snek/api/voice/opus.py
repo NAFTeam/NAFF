@@ -126,7 +126,7 @@ exported_functions: dict[str, FuncData] = {
 
 
 class Encoder:
-    def __init__(self):
+    def __init__(self) -> None:
         if sys.platform == "win32":
             architecture = "x64" if sys.maxsize > 32**2 else "x86"
             directory = os.path.dirname(os.path.abspath(__file__))
@@ -161,7 +161,7 @@ class Encoder:
         self.set_bandwidth("FULL")
         self.set_signal_type("AUTO")
 
-    def __del__(self):
+    def __del__(self) -> None:
         if hasattr(self, "encoder"):
             self.lib_opus.opus_encoder_destroy(self.encoder)
             self.encoder = None

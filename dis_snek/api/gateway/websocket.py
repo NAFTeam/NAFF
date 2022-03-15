@@ -39,7 +39,7 @@ class WebsocketRateLimit:
 
 
 class WebsocketClient:
-    def __init__(self, state: "ConnectionState"):
+    def __init__(self, state: "ConnectionState") -> None:
         self.state = state
         self.ws = None
         self.ws_url = None
