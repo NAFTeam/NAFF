@@ -162,7 +162,7 @@ class Encoder:
         self.set_signal_type("AUTO")
 
     def __del__(self):
-        if self.encoder:
+        if hasattr(self, "encoder"):
             self.lib_opus.opus_encoder_destroy(self.encoder)
             self.encoder = None
 
