@@ -208,15 +208,15 @@ class Message(BaseMessage):
     reactions: List["models.Reaction"] = field(factory=list)
     nonce: Optional[Union[int, str]] = field(default=None)
     pinned: bool = field(default=False)
-    webhook_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    webhook_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
     type: MessageTypes = field(default=MISSING, converter=optional_c(MessageTypes))
     activity: Optional[MessageActivity] = field(default=None, converter=optional_c(MessageActivity))
     application: Optional["models.Application"] = field(default=None)  # TODO: partial application
-    application_id: Optional["Snowflake_Type"] = field(default=None)
+    application_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
     message_reference: Optional[MessageReference] = field(
         default=None, converter=optional_c(MessageReference.from_dict)
     )
-    flags: Optional[MessageFlags] = field(default=None, converter=optional_c(MessageFlags))
+    flags: MessageFlags = field(default=MessageFlags.NONE, converter=MessageFlags)
     interaction: Optional["MessageInteraction"] = field(default=None)
     components: Optional[List["models.ActionRow"]] = field(default=None)
     sticker_items: Optional[List["models.StickerItem"]] = field(
@@ -262,25 +262,21 @@ class Message(BaseMessage):
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Snake") -> dict:
-
-        try:
-            author_data = data.pop("author")
-        except KeyError:
-            # todo: properly handle message updates that change flags (ie recipient add)
-            return data
-        if "guild_id" in data and "member" in data:
-            author_data["member"] = data.pop("member")
-            data["author_id"] = client.cache.place_member_data(data["guild_id"], author_data).id
-        else:
-            data["author_id"] = client.cache.place_user_data(author_data).id
-
-        mention_ids = []
-        for user_data in data.pop("mentions", {}):
-            if "guild_id" in data and "member" in user_data:
-                mention_ids.append(client.cache.place_member_data(data["guild_id"], user_data).id)
+        if author_data := data.pop("author", None):
+            if "guild_id" in data and "member" in data:
+                author_data["member"] = data.pop("member")
+                data["author_id"] = client.cache.place_member_data(data["guild_id"], author_data).id
             else:
-                mention_ids.append(client.cache.place_user_data(user_data).id)
-        data["mention_ids"] = mention_ids
+                data["author_id"] = client.cache.place_user_data(author_data).id
+
+        if mentions_data := data.pop("mentions", None):
+            mention_ids = []
+            for user_data in mentions_data:
+                if "guild_id" in data and "member" in user_data:
+                    mention_ids.append(client.cache.place_member_data(data["guild_id"], user_data).id)
+                else:
+                    mention_ids.append(client.cache.place_user_data(user_data).id)
+            data["mention_ids"] = mention_ids
 
         found_ids = []
         mention_channels = []
@@ -288,9 +284,8 @@ class Message(BaseMessage):
             for channel_data in data["mention_channels"]:
                 mention_channels.append(ChannelMention.from_dict(channel_data, client))
                 found_ids.append(channel_data["id"])
-
-        if len(extra := channel_mention.findall(data["content"])) > 0:
-            for channel_id in extra:
+        if "content" in data:
+            for channel_id in channel_mention.findall(data["content"]):
                 if channel_id not in found_ids and (channel := client.get_channel(channel_id)):
                     channel_data = {
                         "id": channel.id,
@@ -299,11 +294,14 @@ class Message(BaseMessage):
                         "name": channel.name,
                     }
                     mention_channels.append(ChannelMention.from_dict(channel_data, client))
-        data["mention_channels"] = mention_channels
+        if len(mention_channels) > 0:
+            data["mention_channels"] = mention_channels
 
-        data["attachments"] = Attachment.from_list(data.get("attachments", []), client)
+        if "attachments" in data:
+            data["attachments"] = Attachment.from_list(data.get("attachments"), client)
 
-        data["embeds"] = models.Embed.from_list(data.get("embeds", []))
+        if "embeds" in data:
+            data["embeds"] = models.Embed.from_list(data.get("embeds"))
 
         if "reactions" in data:
             reactions = []
@@ -317,8 +315,7 @@ class Message(BaseMessage):
 
         # TODO: Convert to application object
 
-        ref_message_data = data.pop("referenced_message", None)
-        if ref_message_data:
+        if ref_message_data := data.pop("referenced_message", None):
             if not ref_message_data.get("guild_id"):
                 ref_message_data["guild_id"] = data.get("guild_id")
             _m = client.cache.place_message_data(ref_message_data)
@@ -327,8 +324,7 @@ class Message(BaseMessage):
         if "interaction" in data:
             data["interaction"] = MessageInteraction.from_dict(data["interaction"], client)
 
-        thread_data = data.pop("thread", None)
-        if thread_data:
+        if thread_data := data.pop("thread", None):
             data["thread_channel_id"] = client.cache.place_channel_data(thread_data).id
 
         if "components" in data:
@@ -339,6 +335,7 @@ class Message(BaseMessage):
 
         if "sticker_items" in data:
             data["sticker_items"] = models.StickerItem.from_list(data["sticker_items"], client)
+
         return data
 
     @property
