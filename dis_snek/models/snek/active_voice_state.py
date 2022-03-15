@@ -161,6 +161,7 @@ class ActiveVoiceState(VoiceState):
 
         Args:
             audio: The audio object to play
+            wait: Should we wait for the playback to complete
         """
         if self.player:
             await self.stop()
@@ -168,6 +169,9 @@ class ActiveVoiceState(VoiceState):
         self.player = Player(audio, self, asyncio.get_running_loop())
 
         self.player.play()
+
+        if wait:
+            await self.wait_for_stopped()
 
     async def _voice_server_update(self, data) -> None:
         """
