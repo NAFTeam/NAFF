@@ -686,7 +686,7 @@ class BaseChannel(DiscordObject):
         invitable: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "TYPE_ALL_CHANNEL":
         payload = {
             "name": name,
             "icon": to_image_data(icon),
@@ -709,7 +709,7 @@ class BaseChannel(DiscordObject):
             **kwargs,
         }
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
-        self.update_from_dict(channel_data)
+        return self._client.cache.place_channel_data(channel_data)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """
@@ -761,7 +761,7 @@ class DMGroup(DMChannel):
         icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "DMGroup":
         """
         Edit this DM Channel.
 
@@ -770,7 +770,7 @@ class DMGroup(DMChannel):
             icon: An icon to use
             reason: The reason for this change
         """
-        await super().edit(name=name, icon=icon, reason=reason, **kwargs)
+        return await super().edit(name=name, icon=icon, reason=reason, **kwargs)
 
     async def fetch_owner(self) -> "models.User":
         """Fetch the owner of this DM group"""
@@ -1118,7 +1118,7 @@ class GuildCategory(GuildChannel):
         ] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildCategory":
         """
         Edit this channel.
 
@@ -1128,7 +1128,7 @@ class GuildCategory(GuildChannel):
             permission_overwrites: channel or category-specific permissions
             reason: the reason for this change
         """
-        await super().edit(
+        return await super().edit(
             name=name, position=position, permission_overwrites=permission_overwrites, reason=reason, **kwargs
         )
 
@@ -1350,7 +1350,7 @@ class GuildStore(GuildChannel):
         nsfw: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildStore":
         """
         Edit this channel.
 
@@ -1362,7 +1362,7 @@ class GuildStore(GuildChannel):
             nsfw: whether the channel is nsfw
             reason: The reason for this change
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
@@ -1391,7 +1391,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         default_auto_archive_duration: Absent["AutoArchiveDuration"] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildNews", "GuildText"]:
         """
         Edit the guild text channel.
 
@@ -1407,14 +1407,14 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
             parent_id=parent_id,
             nsfw=nsfw,
             topic=topic,
-            channel_type=channel_type,
+            type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
             **kwargs,
@@ -1450,7 +1450,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildText", "GuildNews"]:
         """
         Edit the guild text channel.
 
@@ -1467,14 +1467,14 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             reason: An optional reason for the audit log
 
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
             parent_id=parent_id,
             nsfw=nsfw,
             topic=topic,
-            channel_type=channel_type,
+            type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
             **kwargs,
@@ -1551,7 +1551,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
         """Leave this thread."""
         await self._client.http.leave_thread(self.id)
 
-    async def archive(self, locked: bool = False, reason: Absent[str] = MISSING) -> None:
+    async def archive(self, locked: bool = False, reason: Absent[str] = MISSING) -> "TYPE_THREAD_CHANNEL":
         """
         Helper method to archive this thread.
 
@@ -1559,7 +1559,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             reason: The reason for this archive
         """
-        await super().edit(locked=locked, archived=True, reason=reason)
+        return await super().edit(locked=locked, archived=True, reason=reason)
 
 
 @define()
@@ -1573,7 +1573,7 @@ class GuildNewsThread(ThreadChannel):
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildNewsThread":
         """
         Edit this thread.
 
@@ -1585,7 +1585,7 @@ class GuildNewsThread(ThreadChannel):
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
             auto_archive_duration=auto_archive_duration,
@@ -1607,7 +1607,7 @@ class GuildPublicThread(ThreadChannel):
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildPublicThread":
         """
         Edit this thread.
 
@@ -1619,7 +1619,7 @@ class GuildPublicThread(ThreadChannel):
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
             auto_archive_duration=auto_archive_duration,
@@ -1644,7 +1644,7 @@ class GuildPrivateThread(ThreadChannel):
         invitable: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildPrivateThread":
         """
         Edit this thread.
 
@@ -1657,7 +1657,7 @@ class GuildPrivateThread(ThreadChannel):
             invitable: whether non-moderators can add other non-moderators to a thread; only available on private threads
             reason: The reason for this change
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
             auto_archive_duration=auto_archive_duration,
@@ -1695,7 +1695,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
         video_quality_mode: Absent[VideoQualityModes] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildVoice", "GuildStageVoice"]:
         """
         Edit guild voice channel.
 
@@ -1711,7 +1711,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             reason: optional reason for audit logs
 
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
