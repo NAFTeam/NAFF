@@ -133,9 +133,9 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
 
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
     """Permission overwrite type (role or member)"""
-    allow: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    allow: Optional["Permissions"] = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
     """Permissions to allow"""
-    deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    deny: Optional["Permissions"] = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
     """Permissions to deny"""
 
 
