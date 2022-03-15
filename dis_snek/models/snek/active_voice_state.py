@@ -46,15 +46,18 @@ class ActiveVoiceState(VoiceState):
 
     @property
     def current_audio(self) -> Optional[BaseAudio]:
+        """The current audio being played"""
         if self.player:
             return self.player.current_audio
 
     @property
     def volume(self) -> float:
+        """Get the volume of the player"""
         return self._volume
 
     @volume.setter
     def volume(self, value) -> None:
+        """Set the volume of the player"""
         if value < 0.0:
             raise ValueError("Volume may not be negative.")
         self._volume = value
@@ -63,10 +66,12 @@ class ActiveVoiceState(VoiceState):
 
     @property
     def paused(self) -> bool:
+        """Is the player currently paused"""
         return not self.player.resume.is_set()
 
     @property
     def playing(self) -> bool:
+        """Are we currently playing something?"""
         if not self.current_audio or self.player.stopped or not self.player.resume.is_set():
             # if any of the above are truthy, we aren't playing
             return False
@@ -74,6 +79,7 @@ class ActiveVoiceState(VoiceState):
 
     @property
     def stopped(self) -> bool:
+        """Is the player stopped?"""
         return self.player.stopped
 
     @property
@@ -119,27 +125,43 @@ class ActiveVoiceState(VoiceState):
         await self.ws_connect()
 
     async def disconnect(self) -> None:
+        """Disconnect from the voice channel."""
         await self.stop()
         if self.connected:
             self.ws.close()
         await self._client.ws.voice_state_update(self._guild_id, None)
 
     async def move(self, channel: SnowflakeObject) -> None:
+        """
+        Move to another voice channel.
+
+        Args:
+            channel: The channel to move to
+        """
         self.ws.close()
         self._channel_id = to_snowflake(channel)
         await self.connect()
 
     async def stop(self) -> None:
+        """Stop playback."""
         self.player.stop()
         await self.player._stopped.wait()
 
     def pause(self) -> None:
+        """Pause playback"""
         self.player.resume.clear()
 
     def resume(self) -> None:
+        """Resume playback."""
         self.player.resume.set()
 
-    async def play(self, audio: BaseAudio) -> None:
+    async def play(self, audio: BaseAudio, wait: bool = False) -> None:
+        """
+        Start playing an audio object.
+
+        Args:
+            audio: The audio object to play
+        """
         if self.player:
             await self.stop()
 
