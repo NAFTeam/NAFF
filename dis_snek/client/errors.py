@@ -78,7 +78,11 @@ class HTTPException(SnakeException):
     """
 
     def __init__(
-        self, response: aiohttp.ClientResponse, text=const.MISSING, discord_code=const.MISSING, **kwargs,
+        self,
+        response: aiohttp.ClientResponse,
+        text=const.MISSING,
+        discord_code=const.MISSING,
+        **kwargs,
     ) -> None:
         self.response: aiohttp.ClientResponse = response
         self.status: int = response.status
