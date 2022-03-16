@@ -220,8 +220,12 @@ class VoiceGateway(WebsocketClient):
 
             self.ws = await self.state.client.http.websocket_connect(self.ws_url)
 
-            hello = await self.receive(force=True)
-            self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
+            try:
+                hello = await self.receive(force=True)
+                self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
+            except RuntimeError:
+                # sometimes the initial connection fails with voice gateways, handle that
+                return await self.reconnect(resume=resume, code=code)
 
             if not resume:
                 await self._identify()
