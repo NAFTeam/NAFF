@@ -2,18 +2,16 @@ from base64 import b64encode
 from datetime import datetime, timezone
 from io import IOBase
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Optional
 
 from attr import fields, has
 
-from dis_snek.client.const import MISSING
+from dis_snek.client.const import MISSING, T
 from dis_snek.models.discord.file import UPLOADABLE_TYPE, File
 
 __all__ = ["no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter_missing", "to_image_data"]
 
 no_export_meta = {"no_export": True}
-
-T = TypeVar("T")
 
 
 def export_converter(converter) -> dict:

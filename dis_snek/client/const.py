@@ -65,6 +65,7 @@ __all__ = [
     "MENTION_PREFIX",
     "PREMIUM_GUILD_LIMITS",
     "Absent",
+    "T",
 ]
 
 _ver_info = sys.version_info

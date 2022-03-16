@@ -3,12 +3,11 @@ from functools import partial
 from typing import Any, Dict, TypeVar
 
 import attrs
-from dis_snek.client.const import logger_name, MISSING
+from dis_snek.client.const import logger_name, MISSING, T
 
 __all__ = ["define", "field", "docs", "str_validator"]
 
 log = logging.getLogger(logger_name)
-T = TypeVar("T")
 
 class_defaults = {
     "eq": False,

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, TypeVar
+from typing import Any, Dict, List, TypeVar, Type
 
 import attrs
 
@@ -10,8 +10,6 @@ import dis_snek.client.utils.serializer as serializer
 __all__ = ["DictSerializationMixin"]
 
 log = logging.getLogger(const.logger_name)
-
-T = TypeVar("T")
 
 
 @define(slots=False)
@@ -52,7 +50,7 @@ class DictSerializationMixin:
         return data
 
     @classmethod
-    def from_dict(cls: T, data: Dict[str, Any]) -> T:
+    def from_dict(cls: Type[const.T], data: Dict[str, Any]) -> const.T:
         """
         Process and converts dictionary data received from discord api to object class instance.
 
@@ -66,7 +64,7 @@ class DictSerializationMixin:
         return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
 
     @classmethod
-    def from_list(cls: T, datas: List[Dict[str, Any]]) -> List[T]:
+    def from_list(cls: Type[const.T], datas: List[Dict[str, Any]]) -> List[const.T]:
         """
         Process and converts list data received from discord api to object class instances.
 
@@ -76,7 +74,7 @@ class DictSerializationMixin:
         """
         return [cls.from_dict(data) for data in datas]
 
-    def update_from_dict(self: T, data: Dict[str, Any]) -> T:
+    def update_from_dict(self: Type[const.T], data: Dict[str, Any]) -> const.T:
         """Updates object attribute(s) with new json data received from discord api."""
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
