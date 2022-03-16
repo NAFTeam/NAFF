@@ -4,7 +4,7 @@ from typing import BinaryIO, Optional, Union
 
 from dis_snek.client.utils.attr_utils import define, field
 
-__all__ = ["File", "open_file"]
+__all__ = ["File", "open_file", "UPLOADABLE_TYPE"]
 
 
 @define(kw_only=False)
