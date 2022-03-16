@@ -149,7 +149,7 @@ class Snake(
         debug_scope: Absent["Snowflake_Type"] = MISSING,
         status: Status = Status.ONLINE,
         activity: Union[Activity, str] = None,
-        auto_defer: Optional[AutoDefer] = None,
+        auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
         interaction_context: Type[InteractionContext] = InteractionContext,
         message_context: Type[MessageContext] = MessageContext,
         component_context: Type[ComponentContext] = ComponentContext,
@@ -173,7 +173,11 @@ class Snake(
         """The default prefix to be used for message commands"""
         self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
         """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
-        self.auto_defer = auto_defer or AutoDefer()
+        if auto_defer is True:
+            auto_defer = AutoDefer(enabled=True)
+        else:
+            auto_defer = auto_defer or AutoDefer()
+        self.auto_defer = auto_defer
         """A system to automatically defer commands after a set duration"""
 
         # resources
