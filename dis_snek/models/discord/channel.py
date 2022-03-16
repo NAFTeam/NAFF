@@ -1443,8 +1443,9 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
 
 @define(slots=False)
-class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
-    owner_id: Snowflake_Type = field(default=None)
+class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
+    parent_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    owner_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
     topic: Optional[str] = field(default=None)
     message_count: int = field(default=0)
     member_count: int = field(default=0)
@@ -1454,6 +1455,8 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     )
     locked: bool = field(default=False)
     archive_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+
+    _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1466,6 +1469,11 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     def is_private(self) -> bool:
         """Is this a private thread?"""
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
+
+    @property
+    def guild(self) -> "models.Guild":
+        """The guild this channel belongs to."""
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def parent_channel(self) -> GuildText:
