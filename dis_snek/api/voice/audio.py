@@ -187,9 +187,9 @@ class AudioVolume(Audio):
     _volume: float
     """The internal volume level of the audio"""
 
-    def __init__(self, src: Union[str, Path], volume: float = 1.0) -> None:
+    def __init__(self, src: Union[str, Path]) -> None:
         super().__init__(src)
-        self._volume = volume
+        self._volume = 0.5
 
     @property
     def volume(self) -> float:
