@@ -30,8 +30,8 @@ class DictSerializationMixin:
 
     @classmethod
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
-        unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-        if unused and const.kwarg_spam:
+        if const.kwarg_spam:
+            unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
             log.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
@@ -61,7 +61,21 @@ class DictSerializationMixin:
         if isinstance(data, cls):
             return data
         data = cls._process_dict(data)
-        return cls(**cls._filter_kwargs(data, cls._get_init_keys()))
+
+        parsed = {}
+        for _field in attrs.fields(cls):
+            field_name = _field.name.removeprefix("_")
+            name = _field.metadata.get("data_key")
+            if not name:
+                name = field_name
+            if name in data:
+                value = data[name]
+                if deserializer := _field.metadata.get("deserializer", None):
+                    value = deserializer(value, data)
+                parsed[field_name] = value
+
+        print(parsed)
+        return cls(**parsed)
 
     @classmethod
     def from_list(cls: Type[const.T], datas: List[Dict[str, Any]]) -> List[const.T]:

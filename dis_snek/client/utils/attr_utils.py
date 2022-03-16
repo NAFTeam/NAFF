@@ -20,7 +20,25 @@ field_defaults = {"repr": False}
 
 
 define = partial(attrs.define, **class_defaults)  # type: ignore
-field = partial(attrs.field, **field_defaults)  # type: ignore
+
+
+def field(
+    data_key=MISSING,
+    deserializer=None,
+    docs=None,
+    no_export=False,
+    metadata=None,
+    **kwargs
+) -> attrs.Attribute:
+    data = {
+        "data_key": data_key,
+        "deserializer": deserializer,
+        "docs": docs,
+        "no_export": no_export,
+    }
+    if metadata:
+        data |= metadata
+    return attrs.field(metadata=data, **kwargs)
 
 
 def copy_converter(value: T) -> T:

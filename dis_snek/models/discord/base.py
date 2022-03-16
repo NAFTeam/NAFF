@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Type
 
+import attrs
+
 from dis_snek.client.const import T
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
@@ -22,8 +24,31 @@ class ClientObject(DictSerializationMixin):
 
     @classmethod
     def from_dict(cls: Type[T], data: Dict[str, Any], client: "Snake") -> T:
+        """
+        Process and converts dictionary data received from discord api to object class instance.
+
+        parameters:
+            data: The json data received from discord api.
+
+        """
+        if isinstance(data, cls):
+            return data
         data = cls._process_dict(data, client)
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+
+        parsed = {}
+        for _field in attrs.fields(cls):
+            field_name = _field.name.removeprefix("_")
+            name = _field.metadata.get("data_key")
+            if not name:
+                name = field_name
+            if name in data:
+                value = data[name]
+                if deserializer := _field.metadata.get("deserializer", None):
+                    value = deserializer(value, data, client)
+                parsed[field_name] = value
+
+        print(parsed)
+        return cls(**parsed, client=client)
 
     @classmethod
     def from_list(cls: Type[T], datas: List[Dict[str, Any]], client: "Snake") -> List[T]:
