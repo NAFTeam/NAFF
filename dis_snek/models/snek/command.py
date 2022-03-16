@@ -80,7 +80,7 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
-    async def __call__(self, context, *args, **kwargs) -> None:
+    async def __call__(self, context: "Context", *args, **kwargs) -> None:
         """
         Calls this command.
 
@@ -115,7 +115,7 @@ class BaseCommand(DictSerializationMixin):
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
-    async def try_convert(self, converter: Callable, context: "Context", value) -> Any:
+    async def try_convert(self, converter: Callable, context: "Context", value: Any) -> Any:
         if converter is None:
             return value
         return await converter(context, value)
@@ -185,7 +185,7 @@ class BaseCommand(DictSerializationMixin):
             args = args + [await convert(c) for c in c_args]
         return await callback(*args, **kwargs)
 
-    async def _can_run(self, context) -> bool:
+    async def _can_run(self, context: Context) -> bool:
         """
         Determines if this command can be run.
 

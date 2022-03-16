@@ -269,7 +269,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
     """
 
-    async def defer(self, ephemeral=False) -> None:
+    async def defer(self, ephemeral: bool = False) -> None:
         """
         Defers the response, showing a loading state.
 
@@ -421,7 +421,7 @@ class ComponentContext(InteractionContext):
 
         return new_cls
 
-    async def defer(self, ephemeral=False, edit_origin: bool = False) -> None:
+    async def defer(self, ephemeral: bool = False, edit_origin: bool = False) -> None:
         """
         Defers the response, showing a loading state.
 

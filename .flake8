@@ -31,6 +31,11 @@ extend-ignore =
     U100, # Unused argument
     U101, # Unused argument starting with an underscore
 
+    # Plugins we don't currently include: flake8-todos
+    T002, # add author into TODO
+    T003, # add link on issue into TODO
+    T004, # missed colon in TODO
+    T006, # write TODO instead of ToDo
 max-line-length=120
 
 per-file-ignores =

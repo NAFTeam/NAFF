@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
-from typing import Any, Iterator, Tuple
+from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
 import attrs
 
@@ -9,18 +9,21 @@ from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = ["TTLItem", "TTLCache"]
 
+KT = TypeVar("KT")
+VT = TypeVar("VT")
+
 
 @define(kw_only=False)
-class TTLItem:
-    value: Any = field()
+class TTLItem(Generic[VT]):
+    value: VT = field()
     expire: float = field()
 
-    def is_expired(self, timestamp) -> bool:
+    def is_expired(self, timestamp: float) -> bool:
         return timestamp >= self.expire
 
 
-class TTLCache(OrderedDict):
-    def __init__(self, ttl=600, soft_limit=50, hard_limit=250, on_expire=None) -> None:
+class TTLCache(OrderedDict[KT, TTLItem[VT]]):
+    def __init__(self, ttl: int = 600, soft_limit: int = 50, hard_limit: int = 250, on_expire: Optional[Callable] = None) -> None:
         super().__init__()
 
         self.ttl = ttl
@@ -28,7 +31,7 @@ class TTLCache(OrderedDict):
         self.soft_limit = min(soft_limit, hard_limit)
         self.on_expire = on_expire
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: KT, value: VT) -> None:
         expire = time.monotonic() + self.ttl
         item = TTLItem(value, expire)
         super().__setitem__(key, item)
@@ -36,13 +39,13 @@ class TTLCache(OrderedDict):
 
         self.expire()
 
-    def __getitem__(self, key) -> Any:
+    def __getitem__(self, key: KT) -> VT:
         # Will not (should not) reset expiration!
         item = super().__getitem__(key)
         # self._reset_expiration(key, item)
         return item.value
 
-    def pop(self, key, default=attrs.NOTHING) -> Any:
+    def pop(self, key: KT, default=attrs.NOTHING) -> VT:
         if key in self:
             item = self[key]
             del self[key]
@@ -53,7 +56,7 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def get(self, key, default=None, reset_expiration=True) -> Any:
+    def get(self, key: KT, default: Optional[VT] = None, reset_expiration: bool = True) -> VT:
         item = super().get(key, default)
         if item is not default:
             if reset_expiration:
@@ -62,17 +65,17 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def values(self) -> ValuesView:
+    def values(self) -> ValuesView[VT]:
         return _CacheValuesView(self)
 
     def items(self) -> ItemsView:
         return _CacheItemsView(self)
 
-    def _reset_expiration(self, key: Any, item: TTLItem) -> None:
+    def _reset_expiration(self, key: KT, item: TTLItem) -> None:
         self.move_to_end(key)
         item.expire = time.monotonic() + self.ttl
 
-    def _first_item(self) -> Tuple[Any, TTLItem]:
+    def _first_item(self) -> Tuple[KT, TTLItem[VT]]:
         return next(super().items().__iter__())
 
     def expire(self) -> None:

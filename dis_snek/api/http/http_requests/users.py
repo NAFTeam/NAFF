@@ -50,7 +50,7 @@ class UserRequests:
         """
         return await self.request(Route("GET", "/users/@me/guilds"))
 
-    async def leave_guild(self, guild_id) -> None:
+    async def leave_guild(self, guild_id: "Snowflake_Type") -> None:
         """
         Leave a guild. Returns a 204 empty response on success.
 
@@ -60,7 +60,7 @@ class UserRequests:
         """
         return await self.request(Route("DELETE", f"/users/@me/guilds/{guild_id}"))
 
-    async def create_dm(self, recipient_id) -> discord_typings.DMChannelData:
+    async def create_dm(self, recipient_id: "Snowflake_Type") -> discord_typings.DMChannelData:
         """
         Create a new DM channel with a user. Returns a DM channel object.
 

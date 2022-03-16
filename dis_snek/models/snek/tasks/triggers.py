@@ -13,7 +13,7 @@ class BaseTrigger(ABC):
         new_cls.last_call_time = datetime.now()
         return new_cls
 
-    def __or__(self, other) -> "OrTrigger":
+    def __or__(self, other: "BaseTrigger") -> "OrTrigger":
         return OrTrigger(self, other)
 
     @abstractmethod
@@ -115,7 +115,7 @@ class OrTrigger(BaseTrigger):
             return float("inf")
         return abs(next_fire - self.last_call_time)
 
-    def __or__(self, other) -> "OrTrigger":
+    def __or__(self, other: "BaseTrigger") -> "OrTrigger":
         self.triggers.append(other)
         return self
 

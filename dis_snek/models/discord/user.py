@@ -268,7 +268,7 @@ class Member(DiscordObject, _SendDMMixin):
     def __str__(self) -> str:
         return self.user.tag
 
-    def __getattr__(self, name) -> Any:
+    def __getattr__(self, name: str) -> Any:
         # this allows for transparent access to user attributes
         try:
             return getattr(self.user, name)
@@ -281,7 +281,7 @@ class Member(DiscordObject, _SendDMMixin):
         return self.nick
 
     @nickname.setter
-    def nickname(self, nickname) -> None:
+    def nickname(self, nickname: str) -> None:
         self.nick = nickname
 
     @property
@@ -499,7 +499,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
 
-    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING) -> None:
+    async def ban(self, delete_message_days: int = 0, reason: Absent[str] = MISSING) -> None:
         """
         Ban a member from the guild.
 

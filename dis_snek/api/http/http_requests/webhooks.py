@@ -115,7 +115,7 @@ class WebhookRequests:
         webhook_id: "Snowflake_Type",
         webhook_token: str,
         payload: dict,
-        wait=False,
+        wait: bool = False,
         thread_id: "Snowflake_Type" = None,
     ) -> Optional[discord_typings.MessageData]:
         """
