@@ -878,8 +878,8 @@ class GuildChannel(BaseChannel):
 
     async def add_permission(
         self,
-        target: Union["PermissionOverwrite", "models.Role", "models.User", "models.Member"],
-        type: "OverwriteTypes",
+        target: Union["PermissionOverwrite", "models.Role", "models.User", "models.Member", "Snowflake_Type"],
+        type: Optional["OverwriteTypes"] = None,
         allow: Optional[List["Permissions"] | int] = None,
         deny: Optional[List["Permissions"] | int] = None,
         reason: Optional[str] = None,
@@ -888,10 +888,10 @@ class GuildChannel(BaseChannel):
         Add a permission to this channel.
 
         Args:
-            target: The permission target
-            type: The type of permission overwrite
-            allow: List of permissions to allow
-            deny: List of permissions to deny
+            target: The updated PermissionOverwrite object, or the Role or User object/id to update
+            type: The type of permission overwrite. Only applicable if target is an id
+            allow: List of permissions to allow. Only applicable if target is not an PermissionOverwrite object
+            deny: List of permissions to deny. Only applicable if target is not an PermissionOverwrite object
             reason: The reason for this change
 
         Raises:
@@ -900,16 +900,17 @@ class GuildChannel(BaseChannel):
         allow = allow or []
         deny = deny or []
         if not isinstance(target, PermissionOverwrite):
-            target_type = None
             if isinstance(target, (models.User, models.Member)):
-                target_type = OverwriteTypes.MEMBER
+                target = target.id
+                type = OverwriteTypes.MEMBER
             elif isinstance(target, models.Role):
-                target_type = OverwriteTypes.ROLE
+                target = target.id
+                type = OverwriteTypes.ROLE
+            elif type and isinstance(target, Snowflake_Type):
+                target = to_snowflake(target)
             else:
-                raise ValueError("Invalid target for permission")
-            overwrite = PermissionOverwrite(
-                id=target.id, type=target_type, allow=Permissions.NONE, deny=Permissions.NONE
-            )
+                raise ValueError("Invalid target and/or type for permission")
+            overwrite = PermissionOverwrite(id=target, type=type, allow=Permissions.NONE, deny=Permissions.NONE)
             if isinstance(allow, int):
                 overwrite.allow |= allow
             else:
@@ -922,15 +923,14 @@ class GuildChannel(BaseChannel):
                     overwrite.deny |= perm
         else:
             overwrite = target
+
         if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
             exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
             exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
-            return await self.edit_permission(exists, reason)
-
-        permission_overwrites = self.permission_overwrites
-        permission_overwrites.append(overwrite)
-
-        return await self.edit(permission_overwrites=permission_overwrites)
+            await self.edit_permission(exists, reason)
+        else:
+            permission_overwrites = self.permission_overwrites
+            await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
