@@ -61,7 +61,7 @@ class ActiveVoiceState(VoiceState):
         if value < 0.0:
             raise ValueError("Volume may not be negative.")
         self._volume = value
-        if isinstance(self.player.current_audio, AudioVolume):
+        if self.player and isinstance(self.player.current_audio, AudioVolume):
             self.player.current_audio.volume = value
 
     @property
