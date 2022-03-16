@@ -16,6 +16,9 @@ from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflak
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.cache import TTLCache
 
+__all__ = ["GlobalCache", "create_cache"]
+
+
 if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models.discord.channel import DM, TYPE_ALL_CHANNEL

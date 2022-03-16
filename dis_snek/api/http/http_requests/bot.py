@@ -4,6 +4,8 @@ import discord_typings
 
 from ..route import Route
 
+__all__ = ["BotRequests"]
+
 
 class BotRequests:
     request: Any

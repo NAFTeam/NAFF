@@ -7,6 +7,9 @@ from ..route import Route
 from dis_snek.models.discord.timestamp import Timestamp
 from dis_snek.client.utils.serializer import dict_filter_missing
 
+__all__ = ["MemberRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 

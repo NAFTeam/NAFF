@@ -6,6 +6,9 @@ from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.client.utils.converters import timestamp_converter
 
+__all__ = ["ThreadRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 

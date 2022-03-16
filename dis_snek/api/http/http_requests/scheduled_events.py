@@ -7,6 +7,9 @@ from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_missing
 
+__all__ = ["ScheduledEventsRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 

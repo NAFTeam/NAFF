@@ -9,6 +9,9 @@ from urllib.parse import urlencode
 
 from ..route import Route
 
+__all__ = ["GuildRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.discord.enums import AuditLogEventType

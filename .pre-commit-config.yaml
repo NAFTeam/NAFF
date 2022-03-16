@@ -34,6 +34,7 @@ repos:
           - flake8-raise
           - flake8-deprecated
           - flake8-print
+          - flake8-dunder-all
         language_version: python3.10
 ci:
   autoupdate_branch: 'dev'

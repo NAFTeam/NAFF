@@ -7,6 +7,9 @@ from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permi
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_none, dict_filter_missing
 
+__all__ = ["ChannelRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.channel import PermissionOverwrite
     from dis_snek.models.discord.snowflake import Snowflake_Type
