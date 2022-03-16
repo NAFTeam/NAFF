@@ -378,23 +378,23 @@ class SlashCommand(InteractionCommand):
         return self.sub_cmd_name is not None
 
     def __attrs_post_init__(self) -> None:
-        params = get_parameters(self.callback)
-        for name, val in params.items():
-            annotation = None
-            if val.annotation and isinstance(val.annotation, SlashCommandOption):
-                annotation = val.annotation
-            elif typing.get_origin(val.annotation) is Annotated:
-                for ann in typing.get_args(val.annotation):
-                    if isinstance(ann, SlashCommandOption):
-                        annotation = ann
-
-            if annotation:
-                if not self.options:
-                    self.options = []
-                ann.name = name
-                self.options.append(ann)
-
         if self.callback is not None:
+            params = get_parameters(self.callback)
+            for name, val in params.items():
+                annotation = None
+                if val.annotation and isinstance(val.annotation, SlashCommandOption):
+                    annotation = val.annotation
+                elif typing.get_origin(val.annotation) is Annotated:
+                    for ann in typing.get_args(val.annotation):
+                        if isinstance(ann, SlashCommandOption):
+                            annotation = ann
+
+                if annotation:
+                    if not self.options:
+                        self.options = []
+                    ann.name = name
+                    self.options.append(ann)
+
             if hasattr(self.callback, "options"):
                 if not self.options:
                     self.options = []
