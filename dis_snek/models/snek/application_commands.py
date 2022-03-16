@@ -243,7 +243,7 @@ class ContextMenu(InteractionCommand):
             raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
 
     @type.validator
-    def _type_validator(self, attribute: str, value: int):
+    def _type_validator(self, attribute: str, value: int) -> None:
         if not isinstance(value, CommandTypes):
             if value not in CommandTypes.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
@@ -884,7 +884,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
     return output
 
 
-def _compare_options(local_opt_list: dict, remote_opt_list: dict):
+def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
     if local_opt_list != remote_opt_list:
         if len(local_opt_list) != len(remote_opt_list):
             return False

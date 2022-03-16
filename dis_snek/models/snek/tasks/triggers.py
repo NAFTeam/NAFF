@@ -109,7 +109,7 @@ class OrTrigger(BaseTrigger):
     def __init__(self, *trigger: BaseTrigger) -> None:
         self.triggers: List[BaseTrigger] = list(trigger)
 
-    def _get_delta(self, d: BaseTrigger):
+    def _get_delta(self, d: BaseTrigger) -> timedelta:
         next_fire = d.next_fire()
         if not next_fire:
             return float("inf")

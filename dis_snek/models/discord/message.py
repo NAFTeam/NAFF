@@ -1,7 +1,7 @@
 import asyncio
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
 from aiohttp import FormData
 
 import dis_snek.models as models
@@ -113,7 +113,7 @@ class MessageInteraction(DiscordObject):
     _user_id: "Snowflake_Type" = field()
 
     @classmethod
-    def _process_dict(cls, data, client):
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         user_data = data["user"]
         data["user_id"] = client.cache.place_user_data(user_data).id
         return data

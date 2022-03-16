@@ -95,7 +95,7 @@ class Button(InteractiveComponent):
     )
 
     @style.validator
-    def _style_validator(self, attribute: str, value: int):
+    def _style_validator(self, attribute: str, value: int) -> None:
         if not isinstance(value, ButtonStyles) and value not in ButtonStyles.__members__.values():
             raise ValueError(f'Button style type of "{value}" not recognized, please consult the docs.')
 
@@ -142,17 +142,17 @@ class SelectOption(BaseComponent):
     default: bool = field(repr=True, default=False)
 
     @label.validator
-    def _label_validator(self, attribute: str, value: str):
+    def _label_validator(self, attribute: str, value: str) -> None:
         if not value or len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Label length should be between 1 and 100.")
 
     @value.validator
-    def _value_validator(self, attribute: str, value: str):
+    def _value_validator(self, attribute: str, value: str) -> None:
         if not value or len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Value length should be between 1 and 100.")
 
     @description.validator
-    def _description_validator(self, attribute: str, value: str):
+    def _description_validator(self, attribute: str, value: str) -> None:
         if value is not None and len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Description length must be 100 or lower.")
 
@@ -187,22 +187,22 @@ class Select(InteractiveComponent):
         return len(self.options)
 
     @placeholder.validator
-    def _placeholder_validator(self, attribute: str, value: str):
+    def _placeholder_validator(self, attribute: str, value: str) -> None:
         if value is not None and len(value) > SELECT_MAX_NAME_LENGTH:
             raise ValueError("Placeholder length must be 100 or lower.")
 
     @min_values.validator
-    def _min_values_validator(self, attribute: str, value: int):
+    def _min_values_validator(self, attribute: str, value: int) -> None:
         if value < 0:
             raise ValueError("Select min value cannot be a negative number.")
 
     @max_values.validator
-    def _max_values_validator(self, attribute: str, value: int):
+    def _max_values_validator(self, attribute: str, value: int) -> None:
         if value < 0:
             raise ValueError("Select max value cannot be a negative number.")
 
     @options.validator
-    def _options_validator(self, attribute: str, value: List[Union[SelectOption, Dict]]):
+    def _options_validator(self, attribute: str, value: List[Union[SelectOption, Dict]]) -> None:
         if not all(isinstance(x, (SelectOption, Dict)) for x in value):
             raise ValueError("Select options must be of type `SelectOption`")
 
@@ -251,10 +251,10 @@ class ActionRow(BaseComponent):
         return len(self.components)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data) -> "ActionRow":
         return cls(*data["components"])
 
-    def _component_checks(self, component: Union[dict, Select, Button]):
+    def _component_checks(self, component: Union[dict, Select, Button]) -> Union[Select, Button]:
         if isinstance(component, dict):
             component = BaseComponent.from_dict_factory(component)
 

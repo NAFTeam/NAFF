@@ -123,7 +123,7 @@ class HTTPException(SnakeException):
             except ValueError:
                 return x
 
-        def _parse(_errors: dict, keys: Optional[List[str]] = None):
+        def _parse(_errors: dict, keys: Optional[List[str]] = None) -> None:
             """Search through the entire dictionary for any errors defined"""
             for key, val in _errors.items():
                 if key == "_errors":

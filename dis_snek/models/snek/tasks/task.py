@@ -66,7 +66,7 @@ class Task:
         asyncio.create_task(self())
         self.iteration += 1
 
-    async def _task_loop(self):
+    async def _task_loop(self) -> None:
         while not self._stop.is_set():
             fire_time = self.trigger.next_fire()
             if fire_time is None:

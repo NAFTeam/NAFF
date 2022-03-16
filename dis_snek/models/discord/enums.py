@@ -168,7 +168,7 @@ class Intents(DiscordIntFlag):  # type: ignore
         non_privileged=False,
         default=True,
         all=False,
-    ):
+    ) -> "Intents":
         """Set your desired intents."""
         kwargs = locals()
         del kwargs["cls"]

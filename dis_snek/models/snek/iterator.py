@@ -25,7 +25,7 @@ class AsyncIterator(_AsyncIterator, ABC):
         """All items this iterator has retrieved"""
 
     @property
-    def _continue(self):
+    def _continue(self) -> bool:
         if not self._limit:
             return True
         return not len(self._retrieved_objects) >= self._limit

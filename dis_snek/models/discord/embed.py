@@ -107,7 +107,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     width: Optional[int] = field(default=None, metadata=no_export_meta)
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any]):
+    def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(data, str):
             return {"url": data}
         return data
