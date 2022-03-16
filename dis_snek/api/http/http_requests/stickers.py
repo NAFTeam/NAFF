@@ -5,6 +5,9 @@ import discord_typings
 from dis_snek.client.const import MISSING
 from ..route import Route
 
+__all__ = ["StickerRequests"]
+
+
 if TYPE_CHECKING:
     from aiohttp import FormData
     from dis_snek.models.discord.snowflake import Snowflake_Type

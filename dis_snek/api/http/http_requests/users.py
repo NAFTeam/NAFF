@@ -4,6 +4,9 @@ import discord_typings
 
 from ..route import Route
 
+__all__ = ["UserRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 

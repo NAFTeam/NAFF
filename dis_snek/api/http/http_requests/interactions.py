@@ -5,6 +5,9 @@ import discord_typings
 from dis_snek.client.const import GLOBAL_SCOPE
 from ..route import Route
 
+__all__ = ["InteractionRequests"]
+
+
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
