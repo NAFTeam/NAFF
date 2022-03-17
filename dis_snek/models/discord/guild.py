@@ -1688,7 +1688,15 @@ class AuditLogHistory(AsyncIterator):
 
     """
 
-    def __init__(self, guild: "Guild", user_id: Snowflake_Type = None, action_type: "AuditLogEventType" = None, before: Snowflake_Type = None, after: Snowflake_Type = None, limit: int = 50) -> None:
+    def __init__(
+        self,
+        guild: "Guild",
+        user_id: Snowflake_Type = None,
+        action_type: "AuditLogEventType" = None,
+        before: Snowflake_Type = None,
+        after: Snowflake_Type = None,
+        limit: int = 50,
+    ) -> None:
         self.guild: "Guild" = guild
         self.user_id: Snowflake_Type = user_id
         self.action_type: "AuditLogEventType" = action_type
