@@ -24,14 +24,13 @@ async def my_long_command_function(ctx: InteractionContext):
 
     await ctx.send("Hello World")
 ```
-
-Interactions can either be global or limited to specific guilds.
-Global commands take up to an hour to sync with Discord and show up, so don't worry when you first register a command.
+    ??? note
+        Command names must be lowercase and can only contain `-` and `_` as special symbols and must not contain spaces.
 
 When testing, it is recommended to use non-global commands, as they sync instantly.
 For that, you can either define `scopes` in every command or set `debug_scope` in the bot instantiation which sets the scope automatically for all commands.
 
-You define non-global commands by passing a list of guild ids to `scopes` in the interaction creation.
+You can define non-global commands by passing a list of guild ids to `scopes` in the interaction creation.
 ```python
 @slash_command(name="my_command", description="My first command :)", scopes=[870046872864165888])
 async def my_command_function(ctx: InteractionContext):
@@ -117,7 +116,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 
 Options can either be required or not. If an option is not required, make sure to set a default value for them.
 
-Always make sure to define all required options first, that is a discord requirement!
+Always make sure to define all required options first, this is a Discord requirement!
 ```python
 @slash_command(name="my_command", ...)
 @slash_option(
@@ -212,7 +211,7 @@ async def my_command_function(ctx: InteractionContext, string_option: str):
     await ctx.send(f"You input {string_option}")
 ```
 
-Then you need to register the autocomplete callback, aka the function discord calls when users fill in the option.
+Then you need to register the autocomplete callback, aka the function Discord calls when users fill in the option.
 
 In there, you have three seconds to return whatever choices you want to the user. In this example we will simply return their input with "a", "b" or "c" appended:
 ```python
@@ -352,7 +351,7 @@ client = CustomErrorSnake(...)
 
 There also is `on_command` which you can overwrite too. That fires on every interactions usage.
 
-## I need a custom parameter type
+## I Need A Custom Parameter Type
 
 If your bot is complex enough, you might find yourself wanting to use custom models in your commands.
 To do this, you'll want to use a string option, and define a converter:

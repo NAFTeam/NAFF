@@ -26,6 +26,7 @@ Make an issue on our
 --8<-- "github_link.md"
 and we can have a discussion on it. Or if you want faster responses, join our
 --8<-- "discord_inv.md"
+.
 
 ___
 ### `"I don't understand something"`

@@ -82,7 +82,7 @@ You are in luck, there are a bunch of colours you can choose from.
 
 The colours correspond to the styles found in `ButtonStyles`. Click [here](/API Reference/models/Discord/enums/#dis_snek.models.discord.enums.ButtonStyles) for more information.
 
-If you use `ButtonStyles.URL`, you can pass an url to the button with `url`. User who click the button will get redirected to your url.
+If you use `ButtonStyles.URL`, you can pass an url to the button with `url`. Users who click the button will get redirected to your url.
 ```python
 components = Button(
     style=ButtonStyles.URL,
@@ -97,7 +97,7 @@ await channel.send("Look a Button!", components=components)
 
 ## Select Your Favorite
 
-Sometimes there might be more than a handful options which user need to decide between. That's when a `Select` should probably be used.
+Sometimes there might be more than a handful options which users need to decide between. That's when a `Select` should probably be used.
 
 Selects are very similar to Buttons. The main difference is that they need options, which you supply by passing a list of `SelectOption`.
 
@@ -121,6 +121,8 @@ components = Select(
 
 await channel.send("Look a Select!", components=components)
 ```
+    ??? note
+        You can only have upto 25 options in a Select
 
 For more information, please visit the API reference [here](/API Reference/models/Discord/components/#dis_snek.models.discord.components.Select).
 
@@ -197,11 +199,11 @@ When responding to a component you need to satisfy discord either by responding 
     ```
 
 === ":two: Persistent Callback Option 2"
-    If you have a lot of components, putting everything in the `on_component()` event can get messy really quickly.
+    If you have a lot of components, putting everything in the `on_component()` event can get messy really quick.
 
     Similarly to Option 1, you can define `@component_callback` listeners. This works after restarts too.
 
-    You have to pass your `custom_id` to `@component_callback(custom_id)` for the libary to be able to register the callback function to the wanted component.
+    You have to pass your `custom_id` to `@component_callback(custom_id)` for the library to be able to register the callback function to the wanted component.
 
     ```python
     async def my_command(...):
