@@ -1,7 +1,7 @@
 # Creating Context Menus
 
 Context menus are interactions under the hood. Defining them is very similar.
-Context menus work of `ctx.target` which contains the object the user interacted with.
+Context menus work off `ctx.target` which contains the object the user interacted with.
 
 You can also define `scopes` and `permissions` for them, just like with interactions.
 
@@ -32,3 +32,5 @@ async def ping(ctx: InteractionContext):
     member: Member = ctx.target
     await ctx.send(member.mention)
 ```
+    ??? note
+        Command names must be lowercase and can only contain `-` and `_` as special symbols and must not contain spaces.
