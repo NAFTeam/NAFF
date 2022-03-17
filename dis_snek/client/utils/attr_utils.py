@@ -22,14 +22,7 @@ field_defaults = {"repr": False}
 define = partial(attrs.define, **class_defaults)  # type: ignore
 
 
-def field(
-    data_key=MISSING,
-    deserializer=None,
-    docs=None,
-    no_export=False,
-    metadata=None,
-    **kwargs
-) -> attrs.Attribute:
+def field(data_key=MISSING, deserializer=None, docs=None, no_export=False, metadata=None, **kwargs) -> attrs.Attribute:
     data = {
         "data_key": data_key,
         "deserializer": deserializer,

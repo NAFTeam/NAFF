@@ -30,6 +30,7 @@ def deserialize(cls: Type[T]) -> T:
     Returns:
         The deserialized class
     """
+
     def inner(value: dict, data: Dict[str, Any], client: "Snake") -> T:
         return cls.from_dict(value, client)
 
@@ -60,14 +61,20 @@ class Invite(ClientObject):
     target_type: Optional[InviteTargetTypes] = field(default=None, converter=optional(InviteTargetTypes), repr=True)
     approximate_presence_count: Optional[int] = field(default=MISSING)
     approximate_member_count: Optional[int] = field(default=MISSING)
-    scheduled_event: Optional["Snowflake_Type"] = field(default=None, data_key="target_event_id", converter=to_optional_snowflake, repr=True)
+    scheduled_event: Optional["Snowflake_Type"] = field(
+        default=None, data_key="target_event_id", converter=to_optional_snowflake, repr=True
+    )
     stage_instance: Optional[StageInstance] = field(default=None, deserializer=deserialize(StageInstance))
     target_application: Optional[dict] = field(default=None)
-    guild_preview: Optional[GuildPreview] = field(default=MISSING, data_key="guild", deserializer=deserialize(GuildPreview))
+    guild_preview: Optional[GuildPreview] = field(
+        default=MISSING, data_key="guild", deserializer=deserialize(GuildPreview)
+    )
 
     # internal for props
     _channel_id: Optional["Snowflake_Type"] = field(repr=True, data_key="channel", deserializer=get_id)
-    _inviter_id: Optional["Snowflake_Type"] = field(default=None, data_key="inviter", deserializer=to_user_id, repr=True)
+    _inviter_id: Optional["Snowflake_Type"] = field(
+        default=None, data_key="inviter", deserializer=to_user_id, repr=True
+    )
     _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
 
     @property
