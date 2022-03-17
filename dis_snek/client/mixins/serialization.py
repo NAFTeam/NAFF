@@ -1,42 +1,43 @@
 import logging
-from typing import Any, Dict, List, TypeVar, Type
+from typing import Any, Dict, List, TypeVar, Type, Callable, Union
 
 import attrs
 
-import dis_snek.client.const as const
+from dis_snek.client.const import logger_name, kwarg_spam, T
 from dis_snek.client.utils.attr_utils import define
 import dis_snek.client.utils.serializer as serializer
 
 __all__ = ["DictSerializationMixin"]
 
-log = logging.getLogger(const.logger_name)
+log = logging.getLogger(logger_name)
+
+
+def empty_deserializer(value, *args, **kwargs):
+    return value
 
 
 @define(slots=False)
 class DictSerializationMixin:
     @classmethod
-    def _get_keys(cls) -> frozenset:
-        if (keys := getattr(cls, "_keys", None)) is None:
-            keys = frozenset(field.name for field in attrs.fields(cls))
-            setattr(cls, "_keys", keys)
-        return keys
+    def _get_deserializers(cls: Type[T]) -> Dict[str, Callable]:
+        if (deserializers := getattr(cls, "_deserializers", None)) is None:
+            deserializers = {}
+            for field in attrs.fields(cls):
+                name = field.metadata.get("data_key", None) or field.name.removeprefix("_")
+                deserializers[name] = field.metadata.get("deserializer", None) or empty_deserializer
+            setattr(cls, "_deserializers", deserializers)
+        return deserializers
 
     @classmethod
-    def _get_init_keys(cls) -> frozenset:
-        if (init_keys := getattr(cls, "_init_keys", None)) is None:
-            init_keys = frozenset(field.name.removeprefix("_") for field in attrs.fields(cls) if field.init)
-            setattr(cls, "_init_keys", init_keys)
-        return init_keys
+    def _get_init_deserializers(cls: Type[T]) -> Dict[str, Callable]:
+        if (deserializers := getattr(cls, "_init_deserializers", None)) is None:
+            fields = {field.name.removeprefix("_"): field for field in attrs.fields(cls)}
+            deserializers = {k: v for k, v in cls._get_deserializers().items() if fields[k].init}
+            setattr(cls, "_init_deserializers", deserializers)
+        return deserializers
 
     @classmethod
-    def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
-        if const.kwarg_spam:
-            unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-            log.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
-        return {k: v for k, v in kwargs_dict.items() if k in keys}
-
-    @classmethod
-    def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """
         Process dictionary data received from discord api. Does cleanup and other checks to data.
 
@@ -50,7 +51,7 @@ class DictSerializationMixin:
         return data
 
     @classmethod
-    def from_dict(cls: Type[const.T], data: Dict[str, Any]) -> const.T:
+    def from_dict(cls: Type[T], data: Union[Dict[str, Any], T], **kwargs) -> T:
         """
         Process and converts dictionary data received from discord api to object class instance.
 
@@ -60,25 +61,12 @@ class DictSerializationMixin:
         """
         if isinstance(data, cls):
             return data
-        data = cls._process_dict(data)
-
-        parsed = {}
-        for _field in attrs.fields(cls):
-            field_name = _field.name.removeprefix("_")
-            name = _field.metadata.get("data_key")
-            if not name:
-                name = field_name
-            if name in data:
-                value = data[name]
-                if deserializer := _field.metadata.get("deserializer", None):
-                    value = deserializer(value, data)
-                parsed[field_name] = value
-
-        print(parsed)
-        return cls(**parsed)
+        data |= kwargs
+        data = cls._process_dict(data, **kwargs)
+        return cls(**{k: v(data[k], data, **kwargs) for k, v in cls._get_init_deserializers().items() if k in data})
 
     @classmethod
-    def from_list(cls: Type[const.T], datas: List[Dict[str, Any]]) -> List[const.T]:
+    def from_list(cls: Type[T], data_list: List[Dict[str, Any]], **kwargs) -> List[T]:
         """
         Process and converts list data received from discord api to object class instances.
 
@@ -86,15 +74,15 @@ class DictSerializationMixin:
             data: The json data received from discord api.
 
         """
-        return [cls.from_dict(data) for data in datas]
+        return [cls.from_dict(data, **kwargs) for data in data_list]
 
-    def update_from_dict(self: Type[const.T], data: Dict[str, Any]) -> const.T:
+    def update_from_dict(self: T, data: Dict[str, Any], **kwargs) -> T:
         """Updates object attribute(s) with new json data received from discord api."""
-        data = self._process_dict(data)
-        for key, value in self._filter_kwargs(data, self._get_keys()).items():
-            # todo improve
-            setattr(self, key, value)
-
+        data |= kwargs
+        data = self._process_dict(data, **kwargs)
+        for key, value in self._get_deserializers().items():
+            if key in data:
+                setattr(self, key, value(data[key], data, **kwargs))
         return self
 
     def _check_object(self) -> None:
