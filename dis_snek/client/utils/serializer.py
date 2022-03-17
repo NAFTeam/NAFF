@@ -11,7 +11,14 @@ from attrs import fields, has
 from dis_snek.client.const import MISSING, T
 import dis_snek.models as models
 
-__all__ = ["no_export_meta", "export_converter", "attrs_serializer", "dict_filter_none", "dict_filter_missing", "to_image_data"]
+__all__ = [
+    "no_export_meta",
+    "export_converter",
+    "attrs_serializer",
+    "dict_filter_none",
+    "dict_filter_missing",
+    "to_image_data",
+]
 
 no_export_meta = {"no_export": True}  # TODO: remove this
 
@@ -47,7 +54,13 @@ def attrs_deserializer(cls, data, **kwargs):
         return data
     data |= kwargs
     data = cls._process_dict(data, **kwargs)
-    return cls(**{n: s(data[k], data, **kwargs) if s else data[k] for n, (k, s) in _get_init_deserializers(cls).items() if k in data})
+    return cls(
+        **{
+            n: s(data[k], data, **kwargs) if s else data[k]
+            for n, (k, s) in _get_init_deserializers(cls).items()
+            if k in data
+        }
+    )
 
 
 def default_deserializer(cls, data, **kwargs):
@@ -112,10 +125,14 @@ def _get_serializers(cls):
     if (serializers := getattr(cls, "_serializers", None)) is None:
         serializers = {}
         for field in fields(cls):
-            if not field.metadata.get("serialize", True) or field.metadata.get("no_export", False):  # TODO: remove no_export fallback
+            if not field.metadata.get("serialize", True) or field.metadata.get(
+                "no_export", False
+            ):  # TODO: remove no_export fallback
                 continue
 
-            if (c := field.metadata.get("export_converter", None)) is not None:  # TODO: remove export_converter fallback
+            if (
+                c := field.metadata.get("export_converter", None)
+            ) is not None:  # TODO: remove export_converter fallback
                 serializers[field.name] = c
             else:
                 serializers[field.name] = default_serializer
