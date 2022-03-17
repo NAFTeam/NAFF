@@ -824,8 +824,13 @@ class Snake(
         """
         if self.debug_scope:
             command.scopes = [self.debug_scope]
-        for scope in command.scopes:
 
+        # for SlashCommand objs without callback (like objects made to hold group info etc)
+        # it's not ideal, but we're due command framework rework soon(tm)
+        if command.callback is None:
+            return
+
+        for scope in command.scopes:
             if scope not in self.interactions:
                 self.interactions[scope] = {}
             elif command.resolved_name in self.interactions[scope]:
