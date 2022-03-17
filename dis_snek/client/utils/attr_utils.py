@@ -1,9 +1,9 @@
 import logging
 from functools import partial
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, Callable
 
 import attrs
-from dis_snek.client.const import logger_name, MISSING, T
+from dis_snek.client.const import logger_name, MISSING, T, Absent
 
 __all__ = ["define", "field", "docs", "str_validator"]
 
@@ -22,7 +22,14 @@ field_defaults = {"repr": False}
 define = partial(attrs.define, **class_defaults)  # type: ignore
 
 
-def field(data_key=MISSING, deserializer=None, docs=None, no_export=False, metadata=None, **kwargs) -> attrs.Attribute:
+def field(
+    data_key: Absent[str] = MISSING,
+    deserializer: Absent[Callable] = MISSING,
+    docs: Absent[str] = MISSING,
+    no_export: Absent[bool] = MISSING,
+    metadata: Absent[dict] = MISSING,
+    **kwargs,
+) -> attrs.Attribute:
     data = {
         "data_key": data_key,
         "deserializer": deserializer,
