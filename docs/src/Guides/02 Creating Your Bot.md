@@ -21,7 +21,7 @@ To make a bot on Discord, you must first create an application on Discord. Thank
 
 6. You now have a bot! You're going to want to press `Reset Token` to get your bot's token, so you can start coding
     <br>![A section that shows your bot and its token](../images/CreatingYourBot/BotUserToken.png "The bot display")
-    
+
     ??? note
         You may (or may not) be asked to enter your password or 2FA authentication code to confirm this action.
 
