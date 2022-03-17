@@ -51,4 +51,4 @@ class ClientObject(DictSerializationMixin):
 
 @define(slots=False)
 class DiscordObject(SnowflakeObject, ClientObject):
-    ...
+    pass

@@ -4,6 +4,7 @@ from typing import Any, Dict, Callable
 
 import attrs
 from dis_snek.client.const import logger_name, MISSING, T, Absent
+from dis_snek.client.utils.serializer import dict_filter_missing
 
 __all__ = ["define", "field", "docs", "str_validator"]
 
@@ -25,29 +26,34 @@ define = partial(attrs.define, **class_defaults)  # type: ignore
 def field(
     data_key: Absent[str] = MISSING,
     deserializer: Absent[Callable] = MISSING,
+    serialize: bool = True,
+    serializer: Absent[Callable] = MISSING,
     docs: Absent[str] = MISSING,
-    no_export: Absent[bool] = MISSING,
     metadata: Absent[dict] = MISSING,
     **kwargs,
 ) -> attrs.Attribute:
     data = {
         "data_key": data_key,
         "deserializer": deserializer,
+        "serialize": serialize,
+        "serializer": serializer,
         "docs": docs,
-        "no_export": no_export,
+        "no_export": not serialize,  # TODO: remove this
+        "export_converter": serializer,  # TODO: remove this
     }
     if metadata:
         data |= metadata
-    return attrs.field(metadata=data, **kwargs)
+
+    return attrs.field(metadata=dict_filter_missing(data), **kwargs)
 
 
-def copy_converter(value: T) -> T:
+def copy_converter(value: T) -> T:  # TODO: remove this
     if isinstance(value, (list, set)):
         return value.copy()
     return value
 
 
-def docs(doc_string: str) -> Dict[str, str]:
+def docs(doc_string: str) -> Dict[str, str]:  # TODO: remove this
     """Makes it easier to quickly type attr documentation."""
     return {"docs": doc_string}
 

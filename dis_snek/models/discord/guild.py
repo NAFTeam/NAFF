@@ -15,7 +15,7 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_none, no_export_meta
+from dis_snek.client.utils.serializer import attrs_serializer, to_image_data, dict_filter_none, no_export_meta
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,

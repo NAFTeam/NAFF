@@ -19,24 +19,6 @@ def empty_deserializer(value, *args, **kwargs):
 @define(slots=False)
 class DictSerializationMixin:
     @classmethod
-    def _get_deserializers(cls: Type[T]) -> Dict[str, Callable]:
-        if (deserializers := getattr(cls, "_deserializers", None)) is None:
-            deserializers = {}
-            for field in attrs.fields(cls):
-                name = field.metadata.get("data_key", None) or field.name
-                deserializers[name] = field.metadata.get("deserializer", None) or empty_deserializer
-            setattr(cls, "_deserializers", deserializers)
-        return deserializers
-
-    @classmethod
-    def _get_init_deserializers(cls: Type[T]) -> Dict[str, Callable]:
-        if (deserializers := getattr(cls, "_init_deserializers", None)) is None:
-            fields = attrs.fields_dict(cls)
-            deserializers = {k.removeprefix("_"): v for k, v in cls._get_deserializers().items() if fields[k].init}
-            setattr(cls, "_init_deserializers", deserializers)
-        return deserializers
-
-    @classmethod
     def _process_dict(cls, data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """
         Process dictionary data received from discord api. Does cleanup and other checks to data.
@@ -59,11 +41,7 @@ class DictSerializationMixin:
             data: The json data received from discord api.
 
         """
-        if isinstance(data, cls):
-            return data
-        data |= kwargs
-        data = cls._process_dict(data, **kwargs)
-        return cls(**{k: v(data[k], data, **kwargs) for k, v in cls._get_init_deserializers().items() if k in data})
+        return serializer.attrs_deserializer(cls, data, **kwargs)
 
     @classmethod
     def from_list(cls: Type[T], data_list: List[Dict[str, Any]], **kwargs) -> List[T]:
@@ -80,9 +58,9 @@ class DictSerializationMixin:
         """Updates object attribute(s) with new json data received from discord api."""
         data |= kwargs
         data = self._process_dict(data, **kwargs)
-        for key, value in self._get_deserializers().items():
+        for field_name, (key, func) in serializer._get_deserializers(self.__class__).items():
             if key in data:
-                setattr(self, key, value(data[key], data, **kwargs))
+                setattr(self, field_name, func(data[key], data, **kwargs) if func else data[key])
         return self
 
     def _check_object(self) -> None:
@@ -98,4 +76,4 @@ class DictSerializationMixin:
 
         """
         self._check_object()
-        return serializer.to_dict(self)
+        return serializer.attrs_serializer(self)

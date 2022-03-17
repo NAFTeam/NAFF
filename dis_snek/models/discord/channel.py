@@ -13,7 +13,7 @@ from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.misc_utils import get
-from dis_snek.client.utils.serializer import to_dict, to_image_data
+from dis_snek.client.utils.serializer import attrs_serializer, to_image_data
 from dis_snek.models.discord.base import DiscordObject
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
@@ -1804,7 +1804,7 @@ def process_permission_overwrites(
         return [overwrites]
 
     if isinstance(overwrites, list):
-        return list(map(to_dict, overwrites))
+        return list(map(attrs_serializer, overwrites))
 
     if isinstance(overwrites, PermissionOverwrite):
         return [overwrites.to_dict()]

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Optional, Union, Dict, Any, Type
 
 from dis_snek.client.const import MISSING, Absent, T
+from dis_snek.client.utils.serializer import to_object
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.converters import optional, timestamp_converter
 from dis_snek.models.discord.enums import InviteTargetTypes
 from dis_snek.models.discord.guild import GuildPreview
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
@@ -18,23 +18,6 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
 __all__ = ["Invite"]
-
-
-def deserialize(cls: Type[T]) -> T:
-    """
-    Deserialize a class from a dict.
-
-    Args:
-        cls: The class to deserialize
-
-    Returns:
-        The deserialized class
-    """
-
-    def inner(value: dict, data: Dict[str, Any], client: "Snake") -> T:
-        return cls.from_dict(value, client)
-
-    return inner
 
 
 def to_user_id(value: dict, data: Dict[str, Any], client: "Snake") -> "Snowflake_Type":
@@ -64,10 +47,10 @@ class Invite(ClientObject):
     scheduled_event: Optional["Snowflake_Type"] = field(
         default=None, data_key="target_event_id", converter=to_optional_snowflake, repr=True
     )
-    stage_instance: Optional[StageInstance] = field(default=None, deserializer=deserialize(StageInstance))
+    stage_instance: Optional[StageInstance] = field(default=None, deserializer=to_object(StageInstance))
     target_application: Optional[dict] = field(default=None)
     guild_preview: Optional[GuildPreview] = field(
-        default=MISSING, data_key="guild", deserializer=deserialize(GuildPreview)
+        default=MISSING, data_key="guild", deserializer=to_object(GuildPreview)
     )
 
     # internal for props

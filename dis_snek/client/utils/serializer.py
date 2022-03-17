@@ -1,56 +1,104 @@
+import inspect
 from base64 import b64encode
 from datetime import datetime, timezone
+from functools import partial
 from io import IOBase
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type, Dict, Callable, Any
 
-from attr import fields, has
+from attrs import fields, has
 
 from dis_snek.client.const import MISSING, T
-from dis_snek.models.discord.file import UPLOADABLE_TYPE, File
+import dis_snek.models as models
 
-__all__ = ["no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter_missing", "to_image_data"]
+__all__ = ["no_export_meta", "export_converter", "attrs_serializer", "dict_filter_none", "dict_filter_missing", "to_image_data"]
 
-no_export_meta = {"no_export": True}
+no_export_meta = {"no_export": True}  # TODO: remove this
 
 
-def export_converter(converter) -> dict:
+def export_converter(converter) -> dict:  # TODO: remove this
     return {"export_converter": converter}
 
 
-def to_dict(inst) -> dict:
-    if (converter := getattr(inst, "as_dict", None)) is not None:
-        return converter()
+def to_value(value, data, **kwargs):
+    return value
 
-    attrs = fields(inst.__class__)
-    d = {}
 
-    for a in attrs:
-        if a.metadata.get("no_export", False):
-            continue
+def to_object(cls: Type[T]) -> T:
+    """
+    Deserialize a class from a dict.
 
-        raw_value = getattr(inst, a.name)
+    Args:
+        cls: The class to deserialize
+
+    Returns:
+        The deserialized object
+    """
+
+    def inner(value: dict, data: Dict[str, Any], **kwargs) -> T:
+        from_dict = getattr(cls, "from_dict", None) or partial(default_deserializer, cls)
+        return cls.from_dict(value, **kwargs)
+
+    return inner
+
+
+def attrs_deserializer(cls, data, **kwargs):
+    if isinstance(data, cls):
+        return data
+    data |= kwargs
+    data = cls._process_dict(data, **kwargs)
+    return cls(**{n: s(data[k], data, **kwargs) if s else data[k] for n, (k, s) in _get_init_deserializers(cls).items() if k in data})
+
+
+def default_deserializer(cls, data, **kwargs):
+    if has(cls):
+        return attrs_deserializer(cls, data, **kwargs)
+    return cls(**data, **kwargs)
+
+
+def _get_deserializers(cls: Type[T]) -> Dict[str, Callable]:
+    if (deserializers := getattr(cls, "_deserializers", None)) is None:
+        deserializers = {}
+        for field in fields(cls):
+            name = field.metadata.get("data_key", None) or field.name
+            deserializers[field.name] = (name, field.metadata.get("deserializer", None))
+        setattr(cls, "_deserializers", deserializers)
+    return deserializers
+
+
+def _get_init_deserializers(cls: Type[T]) -> Dict[str, Callable]:
+    if (deserializers := getattr(cls, "_init_deserializers", None)) is None:
+        deserializers = {}
+        for field in fields(cls):
+            if not field.init:
+                continue
+            field_name = field.name.removeprefix("_")
+            name = field.metadata.get("data_key", None) or field_name
+            deserializers[field_name] = (name, field.metadata.get("deserializer", None))
+        setattr(cls, "_init_deserializers", deserializers)
+    return deserializers
+
+
+def attrs_serializer(inst) -> dict:
+    serialized = {}
+    s = _get_serializers(inst.__class__)
+    for field_name, serializer in s.items():
+        raw_value = getattr(inst, field_name)
         if raw_value is MISSING:
             continue
-
-        if (c := a.metadata.get("export_converter", None)) is not None:
-            value = c(raw_value)
-        else:
-            value = _to_dict_any(raw_value)
-
+        value = serializer(raw_value)
         if isinstance(value, (bool, int)) or value:
-            d[a.name] = value
+            serialized[field_name] = value
+    return serialized
 
-    return d
 
-
-def _to_dict_any(inst: T) -> dict | list | str | T:
+def default_serializer(inst: T) -> dict | list | str | T:
     if has(inst.__class__):
-        return to_dict(inst)
+        return attrs_serializer(inst)
     elif isinstance(inst, dict):
-        return {key: _to_dict_any(value) for key, value in inst.items()}
+        return {key: default_serializer(value) for key, value in inst.items()}
     elif isinstance(inst, (list, tuple, set, frozenset)):
-        return [_to_dict_any(item) for item in inst]
+        return [default_serializer(item) for item in inst]
     elif isinstance(inst, datetime):
         if inst.tzinfo:
             return inst.isoformat()
@@ -58,6 +106,22 @@ def _to_dict_any(inst: T) -> dict | list | str | T:
             return inst.replace(tzinfo=timezone.utc).isoformat()
     else:
         return inst
+
+
+def _get_serializers(cls):
+    if (serializers := getattr(cls, "_serializers", None)) is None:
+        serializers = {}
+        for field in fields(cls):
+            if not field.metadata.get("serialize", True) or field.metadata.get("no_export", False):  # TODO: remove no_export fallback
+                continue
+
+            if (c := field.metadata.get("export_converter", None)) is not None:  # TODO: remove export_converter fallback
+                serializers[field.name] = c
+            else:
+                serializers[field.name] = default_serializer
+        setattr(cls, "_serializers", serializers)
+
+    return serializers
 
 
 def dict_filter_none(data: dict) -> dict:
@@ -68,7 +132,7 @@ def dict_filter_missing(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not MISSING}
 
 
-def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
+def to_image_data(imagefile: Optional["models.UPLOADABLE_TYPE"]) -> Optional[str]:
     match imagefile:
         case bytes():
             image_data = imagefile
@@ -77,7 +141,7 @@ def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
         case Path() | str():
             with open(str(imagefile), "rb") as image_buffer:
                 image_data = image_buffer.read()
-        case File():
+        case models.File():
             with imagefile.open_file() as image_buffer:
                 image_data = image_buffer.read()
         case _:
