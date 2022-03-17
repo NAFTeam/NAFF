@@ -23,7 +23,7 @@ class DictSerializationMixin:
         if (deserializers := getattr(cls, "_deserializers", None)) is None:
             deserializers = {}
             for field in attrs.fields(cls):
-                name = field.metadata.get("data_key", None) or field.name.removeprefix("_")
+                name = field.metadata.get("data_key", None) or field.name
                 deserializers[name] = field.metadata.get("deserializer", None) or empty_deserializer
             setattr(cls, "_deserializers", deserializers)
         return deserializers
@@ -31,8 +31,8 @@ class DictSerializationMixin:
     @classmethod
     def _get_init_deserializers(cls: Type[T]) -> Dict[str, Callable]:
         if (deserializers := getattr(cls, "_init_deserializers", None)) is None:
-            fields = {field.name.removeprefix("_"): field for field in attrs.fields(cls)}
-            deserializers = {k: v for k, v in cls._get_deserializers().items() if fields[k].init}
+            fields = attrs.fields_dict(cls)
+            deserializers = {k.removeprefix("_"): v for k, v in cls._get_deserializers().items() if fields[k].init}
             setattr(cls, "_init_deserializers", deserializers)
         return deserializers
 
