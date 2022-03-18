@@ -27,18 +27,41 @@ class Player(threading.Thread):
 
         self._encoder: Encoder = Encoder()
 
-        self.resume: threading.Event = threading.Event()
+        self._resume: threading.Event = threading.Event()
 
         self._stop_event: threading.Event = threading.Event()
         self._stopped: asyncio.Event = asyncio.Event()
 
         self._sent_payloads: int = 0
 
+        self._cond = threading.Condition()
+        self.state.ws.cond = self._cond
+
+    def __del__(self) -> None:
+        try:
+            self.state.ws.cond = None
+        except AttributeError:
+            pass
+
     def stop(self) -> None:
+        """Stop playing completely."""
         self._stop_event.set()
+        with self._cond:
+            self._cond.notify()
+
+    def resume(self) -> None:
+        """Resume playing."""
+        self._resume.set()
+        with self._cond:
+            self._cond.notify()
+
+    def pause(self) -> None:
+        """Pause the player."""
+        self._resume.clear()
 
     @property
     def stopped(self) -> bool:
+        """Is the player currently stopped?"""
         return self._stopped.is_set()
 
     @property
@@ -47,8 +70,9 @@ class Player(threading.Thread):
         return self._sent_payloads * self._encoder.delay
 
     def play(self) -> None:
+        """Start playing."""
         self._stop_event.clear()
-        self.resume.set()
+        self._resume.set()
         try:
             self.start()
         finally:
@@ -71,14 +95,22 @@ class Player(threading.Thread):
 
         try:
             while not self._stop_event.is_set():
-                if not self.state.ws.ready.is_set() or not self.resume.is_set():
+                if not self.state.ws.ready.is_set() or not self._resume.is_set():
                     asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
                     log.debug("Voice playback has been suspended!")
 
+                    wait_for = []
+
                     if not self.state.ws.ready.is_set():
-                        self.state.ws.ready.wait()
-                    if not self.resume.is_set():
-                        self.resume.wait()
+                        wait_for.append(self.state.ws.ready)
+                    if not self._resume.is_set():
+                        wait_for.append(self._resume)
+
+                    with self._cond:
+                        while not (self._stop_event.is_set() or all(x.is_set() for x in wait_for)):
+                            self._cond.wait()
+                    if self._stop_event.is_set():
+                        continue
 
                     asyncio.run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
                     log.debug("Voice playback has been resumed!")

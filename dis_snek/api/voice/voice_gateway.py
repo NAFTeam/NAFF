@@ -63,6 +63,7 @@ class VoiceGateway(WebsocketClient):
         self.sock_sequence = 0
         self.timestamp = 0
         self.ready = Event()
+        self.cond = None
 
     async def wait_until_ready(self) -> None:
         await asyncio.to_thread(self.ready.wait)
@@ -193,6 +194,9 @@ class VoiceGateway(WebsocketClient):
                 log.info(f"Voice connection established; using {data['mode']}")
                 self.encryptor = Encryption(data["secret_key"])
                 self.ready.set()
+                if self.cond:
+                    with self.cond:
+                        self.cond.notify()
 
             case _:
                 return log.debug(f"Unhandled OPCODE: {op} = {data = }")

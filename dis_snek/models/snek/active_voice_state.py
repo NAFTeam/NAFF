@@ -72,7 +72,8 @@ class ActiveVoiceState(VoiceState):
     @property
     def playing(self) -> bool:
         """Are we currently playing something?"""
-        if not self.current_audio or self.player.stopped or not self.player.resume.is_set():
+        # noinspection PyProtectedMember
+        if not self.current_audio or self.player.stopped or not self.player._resume.is_set():
             # if any of the above are truthy, we aren't playing
             return False
         return True
@@ -149,11 +150,11 @@ class ActiveVoiceState(VoiceState):
 
     def pause(self) -> None:
         """Pause playback"""
-        self.player.resume.clear()
+        self.player.pause()
 
     def resume(self) -> None:
         """Resume playback."""
-        self.player.resume.set()
+        self.player.resume()
 
     async def play(self, audio: BaseAudio, wait: bool = False) -> None:
         """
