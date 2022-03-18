@@ -9,7 +9,26 @@ import time
 import traceback
 from collections.abc import Iterable
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, NoReturn, Optional, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    Type,
+    Union,
+    overload,
+    Literal,
+)
+
+from discord_typings.interactions.receiving import (
+    ComponentChannelInteractionData,
+    AutocompleteChannelInteractionData,
+    InteractionData,
+)
 
 import dis_snek.api.events as events
 from dis_snek.api.events import RawGatewayEvent, MessageCreate
@@ -1143,9 +1162,39 @@ class Snake(
                                     scope
                                 ] = int(cmd_data["id"])
 
+    @overload
+    async def get_context(self, data: ComponentChannelInteractionData, interaction: Literal[True]) -> ComponentContext:
+        ...
+
+    @overload
     async def get_context(
-        self, data: Union[dict, Message], interaction: bool = False
-    ) -> Union[MessageContext, InteractionContext, ComponentContext, AutocompleteContext]:
+        self, data: AutocompleteChannelInteractionData, interaction: Literal[True]
+    ) -> AutocompleteContext:
+        ...
+
+    # as of right now, discord_typings doesn't include anything like this
+    # @overload
+    # async def get_context(self, data: ModalSubmitInteractionData, interaction: Literal[True]) -> ModalContext:
+    #     ...
+
+    @overload
+    async def get_context(self, data: InteractionData, interaction: Literal[True]) -> InteractionContext:
+        ...
+
+    @overload
+    async def get_context(
+        self, data: dict, interaction: Literal[True]
+    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext:
+        # fallback case since some data isn't typehinted properly
+        ...
+
+    @overload
+    async def get_context(self, data: Message, interaction: Literal[False] = False) -> MessageContext:
+        ...
+
+    async def get_context(
+        self, data: InteractionData | dict | Message, interaction: bool = False
+    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext:
         """
         Return a context object based on data passed.
 
@@ -1161,7 +1210,7 @@ class Snake(
 
         """
         # this line shuts up IDE warnings
-        cls: Union[MessageContext, ComponentContext, InteractionContext, AutocompleteContext]
+        cls: ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext
 
         if interaction:
             match data["type"]:
