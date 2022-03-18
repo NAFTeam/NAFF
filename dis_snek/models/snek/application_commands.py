@@ -545,7 +545,7 @@ def slash_command(
 
     """
 
-    def wrapper(func) -> SlashCommand:
+    def wrapper(func: Callable[..., Coroutine]) -> SlashCommand:
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 

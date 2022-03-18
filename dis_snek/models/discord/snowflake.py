@@ -56,10 +56,10 @@ def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
 class SnowflakeObject:
     id: int = field(repr=True, converter=to_snowflake)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: "SnowflakeObject") -> bool:
         return self.id == other.id
 
-    def __ne__(self, other) -> bool:
+    def __ne__(self, other: "SnowflakeObject") -> bool:
         return self.id != other.id
 
     def __hash__(self) -> int:

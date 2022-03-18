@@ -232,7 +232,7 @@ class MaxConcurrency:
 
     """
 
-    def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait=False) -> None:
+    def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait: bool = False) -> None:
         self.bucket: Buckets = concurrency_bucket
         self.concurrency_repository: Dict = {}
         self.concurrent: int = concurrent

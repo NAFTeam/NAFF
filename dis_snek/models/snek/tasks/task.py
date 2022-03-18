@@ -48,7 +48,7 @@ class Task:
         if not self.task.done():
             return self.next_run - datetime.now()
 
-    def on_error(self, error) -> None:
+    def on_error(self, error: Exception) -> None:
         dis_snek.Snake.default_error_handler("Task", error)
 
     async def __call__(self) -> None:

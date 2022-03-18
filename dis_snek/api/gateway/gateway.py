@@ -166,7 +166,7 @@ class WebsocketClient:
         else:
             return float("inf")
 
-    async def send(self, data: str, bypass=False) -> None:
+    async def send(self, data: str, bypass: bool = False) -> None:
         """
         Send data to the gateway.
 
@@ -184,7 +184,7 @@ class WebsocketClient:
 
             await self.ws.send_str(data)
 
-    async def send_json(self, data: dict, bypass=False) -> None:
+    async def send_json(self, data: dict, bypass: bool = False) -> None:
         """
         Send json data to the gateway.
 
@@ -408,14 +408,17 @@ class WebsocketClient:
                 self.session_id = data["session_id"]
                 log.info("Connected to gateway!")
                 log.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
-                return self.state.client.dispatch(events.WebsocketReady(data))
+                self.state.client.dispatch(events.WebsocketReady(data))
+                return
 
             case "RESUMED":
                 log.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
-                return self.state.client.dispatch(events.Resume())
+                self.state.client.dispatch(events.Resume())
+                return
 
             case "GUILD_MEMBERS_CHUNK":
-                return asyncio.create_task(self._process_member_chunk(data))
+                asyncio.create_task(self._process_member_chunk(data))
+                return
 
             case _:
                 # the above events are "special", and are handled by the gateway itself, the rest can be dispatched

@@ -28,7 +28,7 @@ class Route:
 
         self.known_bucket: Optional[str] = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: "Route") -> bool:
         if isinstance(other, Route):
             return self.rl_bucket == other.rl_bucket
         return NotImplemented

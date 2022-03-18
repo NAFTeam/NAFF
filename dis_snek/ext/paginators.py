@@ -172,7 +172,7 @@ class Paginator:
         pages = [Page(c, prefix=prefix, suffix=suffix) for c in content_pages]
         return cls(client, pages=pages, timeout_interval=timeout)
 
-    def create_components(self, disable=False) -> List[ActionRow]:
+    def create_components(self, disable: bool = False) -> List[ActionRow]:
         """
         Create the components for the paginator message.
 

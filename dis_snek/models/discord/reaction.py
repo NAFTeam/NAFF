@@ -1,6 +1,6 @@
 from asyncio import QueueEmpty
 from collections import namedtuple
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from dis_snek.client.const import MISSING
 from dis_snek.client.utils.attr_utils import define, field
@@ -28,7 +28,7 @@ class ReactionUsers(AsyncIterator):
 
     """
 
-    def __init__(self, reaction: "Reaction", limit=50, after=None) -> None:
+    def __init__(self, reaction: "Reaction", limit: int = 50, after: Optional["Snowflake_Type"] = None) -> None:
         self.reaction: "Reaction" = reaction
         self.after: "Snowflake_Type" = after
         self._more = True
@@ -66,7 +66,7 @@ class Reaction(ClientObject):
     _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
     _message_id: "Snowflake_Type" = field(converter=to_snowflake)
 
-    def users(self, limit: int = 0, after=None) -> ReactionUsers:
+    def users(self, limit: int = 0, after: "Snowflake_Type" = None) -> ReactionUsers:
         return ReactionUsers(self, limit, after)
 
     @property

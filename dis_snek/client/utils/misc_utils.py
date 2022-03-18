@@ -4,6 +4,7 @@ import re
 from typing import Callable, Iterable, List, Optional, Any, Union
 
 import dis_snek.api.events as events
+from dis_snek.client.const import T
 
 __all__ = ["escape_mentions", "find", "find_all", "get", "get_all", "wrap_partial", "get_parameters", "get_event_name"]
 
@@ -28,7 +29,7 @@ def escape_mentions(content: str) -> str:
     return mention_reg.sub("@\u200b\\1", content)
 
 
-def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
+def find(predicate: Callable[[T], bool], sequence: Iterable[T]) -> Optional[T]:
     """
     Find the first element in a sequence that matches the predicate.
 
@@ -50,7 +51,7 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
     return None
 
 
-def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
+def find_all(predicate: Callable[[T], bool], sequence: Iterable[T]) -> List[T]:
     """
     Find all elements in a sequence that match the predicate.
 
@@ -69,7 +70,7 @@ def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
     return [el for el in sequence if predicate(el)]
 
 
-def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
+def get(sequence: Iterable[T], **kwargs: Any) -> Optional[T]:
     """
     Find the first element in a sequence that matches all attrs.
 
@@ -96,7 +97,7 @@ def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
     return None
 
 
-def get_all(sequence: Iterable, **kwargs: Any) -> List[Any]:
+def get_all(sequence: Iterable[T], **kwargs: Any) -> List[T]:
     """
     Find all elements in a sequence that match all attrs.
 
