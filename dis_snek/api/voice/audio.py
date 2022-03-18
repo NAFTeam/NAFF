@@ -213,8 +213,8 @@ class AudioVolume(Audio):
 class YTDLAudio(AudioVolume):
     """An audio object to play sources supported by YTDLP"""
 
-    def __init__(self, src, volume: float = 1.0) -> None:
-        super().__init__(src, volume)
+    def __init__(self, src) -> None:
+        super().__init__(src)
         self.entry: Optional[dict] = None
 
     @classmethod
