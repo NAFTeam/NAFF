@@ -132,11 +132,11 @@ class Audio(BaseAudio):
         return f"<{type(self).__name__}: {self.source}>"
 
     @property
-    def _max_buffer_size(self):
+    def _max_buffer_size(self) -> int:
         # 1ms of audio * (buffer seconds * 1000)
         return 192 * (self.buffer_seconds * 1000)
 
-    def _create_process(self):
+    def _create_process(self) -> None:
         cmd = (
             f"ffmpeg {self.ffmpeg_before_args} "
             f"-i {self.source} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1 -vn "
@@ -218,7 +218,7 @@ class YTDLAudio(AudioVolume):
         self.entry: Optional[dict] = None
 
     @classmethod
-    async def from_url(cls, url, stream=True):
+    async def from_url(cls, url, stream=True) -> "YTDLAudio":
         """Create this object from a YTDL support url."""
         data = await asyncio.to_thread(lambda: ytdl.extract_info(url, download=not stream))
 
