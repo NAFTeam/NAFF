@@ -1002,49 +1002,6 @@ class GuildChannel(BaseChannel):
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
 
-    async def create_invite(
-        self,
-        max_age: int = 86400,
-        max_uses: int = 0,
-        temporary: bool = False,
-        unique: bool = False,
-        target_type: InviteTargetTypes = None,
-        target_user_id: Snowflake_Type = None,
-        target_event_id: Snowflake_Type = None,
-        target_application_id: Snowflake_Type = None,
-        reason: Absent[str] = MISSING,
-    ) -> "models.Invite":
-        """
-        Create an invite for this channel.
-
-        Args:
-            max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
-            max_uses: max number of uses or 0 for unlimited. between 0 and 100
-            temporary: whether this invite only grants temporary membership
-            unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
-            target_type: the type of target for this voice channel invite
-            target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
-            target_event_id: the channel's scheduled event ID. Only works for events scheduled in a channel.
-            target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
-            reason: An optional reason for the audit log
-
-        Returns:
-            The created invite
-        """
-        resp = await self._client.http.create_channel_invite(
-            self.id,
-            max_age,
-            max_uses,
-            temporary,
-            unique,
-            target_type,
-            target_user_id,
-            target_application_id,
-            reason=reason,
-        )
-        resp["target_event_id"] = target_event_id
-        return models.Invite.from_dict(resp, self._client)
-
     @property
     def members(self) -> List["models.Member"]:
         """Returns a list of members that can see this channel."""
@@ -1529,8 +1486,9 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
 
 @define(slots=False)
-class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
-    owner_id: Snowflake_Type = field(default=None)
+class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
+    parent_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    owner_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
     topic: Optional[str] = field(default=None)
     message_count: int = field(default=0)
     member_count: int = field(default=0)
@@ -1540,6 +1498,8 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     )
     locked: bool = field(default=False)
     archive_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+
+    _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1552,6 +1512,11 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     def is_private(self) -> bool:
         """Is this a private thread?"""
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
+
+    @property
+    def guild(self) -> "models.Guild":
+        """The guild this channel belongs to."""
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def parent_channel(self) -> GuildText:
