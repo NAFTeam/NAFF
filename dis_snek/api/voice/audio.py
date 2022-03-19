@@ -85,6 +85,11 @@ class BaseAudio(ABC):
         """A method to optionally cleanup after this object is no longer required."""
         ...
 
+    @property
+    def audio_complete(self) -> bool:
+        """A property to tell the player if more audio is expected."""
+        return False
+
     @abstractmethod
     def read(self, frame_size: int) -> bytes:
         """
@@ -135,6 +140,14 @@ class Audio(BaseAudio):
     def _max_buffer_size(self) -> int:
         # 1ms of audio * (buffer seconds * 1000)
         return 192 * (self.buffer_seconds * 1000)
+
+    @property
+    def audio_complete(self) -> bool:
+        """Uses the state of the subprocess to determine if more audio is coming"""
+        if self.process:
+            if self.process.poll() is None:
+                return False
+        return True
 
     def _create_process(self) -> None:
         cmd = (
