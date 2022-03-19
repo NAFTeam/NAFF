@@ -51,7 +51,7 @@ class TTLCache(OrderedDict[KT, TTLItem[VT]]):
         if key in self:
             item = self[key]
             del self[key]
-            return item.value
+            return item
 
         if default is attrs.NOTHING:
             raise KeyError(key)
