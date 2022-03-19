@@ -58,6 +58,11 @@ class Player(threading.Thread):
         with self._cond:
             self._cond.notify()
 
+    @property
+    def paused(self) -> bool:
+        """Is the player paused"""
+        return not self._resume.is_set()
+
     def pause(self) -> None:
         """Pause the player."""
         self._resume.clear()
