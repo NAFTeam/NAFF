@@ -469,61 +469,45 @@ class InvitableMixin:
 
 @define(slots=False)
 class ThreadableMixin:
-    async def create_thread_with_message(
+    async def create_thread(
         self,
         name: str,
-        message: Union[Snowflake_Type, "models.Message"],
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildNewsThread", "GuildPublicThread"]:
+        message: Absent[Union[Snowflake_Type]] = MISSING,
+        thread_type: Absent[Union[ChannelTypes]] = MISSING,
+        invitable: Absent[bool] = MISSING,
+        auto_archive_duration: Union[AutoArchiveDuration] = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> Union["GuildNewsThread", "GuildPublicThread", "GuildPrivateThread"]:
         """
-        Create a thread connected to a message.
+        Creates a nee thread in this channel. If a message is provided, it will be used as the initial message.
 
         Args:
             name: 1-100 character thread name
-            message: The message to connect this thread to
-            auto_archive_duration: Time before the thread will be automatically archived
-            reason: The reason for creating this thread
+            message: The message to connect this thread to. Required for news channel.
+            thread_type: Is the thread private or public. Not applicable to news channel, it always be GUILD_NEWS_THREAD.
+            invitable: whether non-moderators can add other non-moderators to a thread. Only applicable when creating a private thread.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
 
         Returns:
             The created thread, if successful
         """
-        thread_data = await self._client.http.create_thread(
-            channel_id=self.id,
-            name=name,
-            auto_archive_duration=auto_archive_duration,
-            message_id=to_snowflake(message),
-            reason=reason,
-        )
-        return self._client.cache.place_channel_data(thread_data)
+        if self.type == ChannelTypes.GUILD_NEWS and not message:
+            raise ValueError("News channel must include message to create thread from.")
 
-    async def create_thread_without_message(
-        self,
-        name: str,
-        thread_type: Union[ChannelTypes, int],
-        invitable: Optional[bool] = None,
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
-        """
-        Creates a thread without a message source.
+        elif message and (thread_type or invitable):
+            raise ValueError("Message cannot be used with thread_type or invitable.")
 
-        Args:
-            name: 	1-100 character thread name
-            thread_type: Is the thread private or public
-            invitable: whether non-moderators can add other non-moderators to a thread; only available when creating a private thread
-            auto_archive_duration: Time before the thread will be automatically archived
-            reason: The reason to create this thread
+        elif thread_type != ChannelTypes.GUILD_PRIVATE_THREAD and invitable:
+            raise ValueError("Invitable only applies to private threads.")
 
-        Returns:
-            The created thread, if successful
-        """
         thread_data = await self._client.http.create_thread(
             channel_id=self.id,
             name=name,
             thread_type=thread_type,
-            auto_archive_duration=auto_archive_duration,
             invitable=invitable,
+            auto_archive_duration=auto_archive_duration,
+            message_id=to_optional_snowflake(message),
             reason=reason,
         )
         return self._client.cache.place_channel_data(thread_data)

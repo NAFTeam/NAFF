@@ -152,9 +152,9 @@ class ThreadRequests:
         channel_id: "Snowflake_Type",
         name: str,
         auto_archive_duration: int,
-        thread_type: int = None,
-        invitable: Optional[bool] = None,
-        message_id: Optional["Snowflake_Type"] = None,
+        thread_type: Absent[int] = MISSING,
+        invitable: Absent[bool] = MISSING,
+        message_id: Absent["Snowflake_Type"] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> discord_typings.ThreadChannelData:
         """
