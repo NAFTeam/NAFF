@@ -35,9 +35,12 @@ class Player(threading.Thread):
         self._sent_payloads: int = 0
 
         self._cond = threading.Condition()
-        self.state.ws.cond = self._cond
 
-    def __del__(self) -> None:
+    def __enter__(self) -> "Player":
+        self.state.ws.cond = self._cond
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         try:
             self.state.ws.cond = None
         except AttributeError:

@@ -156,22 +156,22 @@ class ActiveVoiceState(VoiceState):
         """Resume playback."""
         self.player.resume()
 
-    async def play(self, audio: BaseAudio, wait: bool = False) -> None:
+    async def play(self, audio: BaseAudio) -> None:
         """
         Start playing an audio object.
 
+        Waits for the player to stop before returning.
+
         Args:
             audio: The audio object to play
-            wait: Should we wait for the playback to complete
         """
         if self.player:
             await self.stop()
 
         self.player = Player(audio, self, asyncio.get_running_loop())
 
-        self.player.play()
-
-        if wait:
+        with Player(audio, self, asyncio.get_running_loop()) as self.player:
+            self.player.play()
             await self.wait_for_stopped()
 
     async def _voice_server_update(self, data) -> None:
