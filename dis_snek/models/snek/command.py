@@ -109,6 +109,8 @@ class BaseCommand(DictSerializationMixin):
         except Exception as e:
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
+            elif self.scale and self.scale.scale_error:
+                await self.scale.scale_error(context, *args, **kwargs)
             else:
                 raise
         finally:
