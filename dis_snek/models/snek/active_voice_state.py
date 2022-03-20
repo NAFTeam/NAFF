@@ -73,7 +73,7 @@ class ActiveVoiceState(VoiceState):
     def playing(self) -> bool:
         """Are we currently playing something?"""
         # noinspection PyProtectedMember
-        if not self.current_audio or self.player.stopped or not self.player._resume.is_set():
+        if not self.player or not self.current_audio or self.player.stopped or not self.player._resume.is_set():
             # if any of the above are truthy, we aren't playing
             return False
         return True
@@ -81,7 +81,9 @@ class ActiveVoiceState(VoiceState):
     @property
     def stopped(self) -> bool:
         """Is the player stopped?"""
-        return self.player.stopped
+        if self.player:
+            return self.player.stopped
+        return True
 
     @property
     def connected(self) -> bool:
@@ -91,8 +93,9 @@ class ActiveVoiceState(VoiceState):
 
     async def wait_for_stopped(self) -> None:
         """Wait for the player to stop playing."""
-        # noinspection PyProtectedMember
-        await self.player._stopped.wait()
+        if self.player:
+            # noinspection PyProtectedMember
+            await self.player._stopped.wait()
 
     async def _ws_connect(self) -> None:
         async with self.ws:
