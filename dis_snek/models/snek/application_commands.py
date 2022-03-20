@@ -856,7 +856,12 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             scopes: list[Snowflake_Type] = list({s for c in cmd_list for s in c.scopes})
             permissions: list = list({d for c in cmd_list for d in c.permissions})
             base_description = next(
-                (c.description for c in cmd_list if c.description is not None), "No Description Set"
+                (
+                    c.description
+                    for c in cmd_list
+                    if c.description is not None and c.description != "No Description Set"
+                ),
+                "No Description Set",
             )
 
             if not all(c.description in (base_description, "No Description Set") for c in cmd_list):
