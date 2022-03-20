@@ -78,9 +78,16 @@ class DebugExec(Scale):
         except Exception:
             return await m_ctx.send(f"```py\n{stdout.getvalue()}{traceback.format_exc()}\n```")
         else:
-            return await self.handle_exec_result(m_ctx, ret, stdout.getvalue())
+            return await self.handle_exec_result(m_ctx, ret, stdout.getvalue(), body)
 
-    async def handle_exec_result(self, ctx: ModalContext, result: Any, value: Any) -> Optional[Message]:
+    async def handle_exec_result(self, ctx: ModalContext, result: Any, value: Any, body: str) -> Optional[Message]:
+        if len(body) <= 2000:
+            await ctx.send(f"```py\n{body}```")
+
+        else:
+            paginator = Paginator.create_from_string(self.bot, body, prefix="```py", suffix="```", page_size=4000)
+            await paginator.send(ctx)
+
         if result is None:
             result = value or "No Output!"
 
