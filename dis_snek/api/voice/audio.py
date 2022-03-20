@@ -186,7 +186,7 @@ class Audio(BaseAudio):
         if len(data) != frame_size:
             data = b""
 
-        return data
+        return bytes(data)
 
     def cleanup(self) -> None:
         """Cleans up after this audio object."""
