@@ -174,6 +174,15 @@ class ActiveVoiceState(VoiceState):
             self.player.play()
             await self.wait_for_stopped()
 
+    async def play_no_wait(self, audio: BaseAudio) -> None:
+        """
+        Start playing an audio object, but don't wait for playback to finish.
+
+        Args:
+            audio: The audio object to play
+        """
+        asyncio.create_task(self.play(audio))
+
     async def _voice_server_update(self, data) -> None:
         """
         An internal receiver for voice server events.
