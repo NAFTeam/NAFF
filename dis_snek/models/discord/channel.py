@@ -1946,7 +1946,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
         return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
 
     @property
-    def voice_state(self) -> "ActiveVoiceState":
+    def voice_state(self) -> Optional["ActiveVoiceState"]:
         return self._client.get_bot_voice_state(self._guild_id)
 
     async def connect(self) -> "ActiveVoiceState":
