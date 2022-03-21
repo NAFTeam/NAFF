@@ -1514,7 +1514,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             auto_archive_duration=auto_archive_duration,
             reason=reason,
         )
-    
+
     async def create_private_thread(
         self,
         name: str,
