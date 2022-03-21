@@ -3,6 +3,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import dis_snek.api.events as events
+from dis_snek import Sticker
 
 from dis_snek.client.const import logger_name, MISSING
 from ._template import EventMixinTemplate, Processor
@@ -14,6 +15,7 @@ from dis_snek.api.events.discord import (
     IntegrationDelete,
     BanCreate,
     BanRemove,
+    GuildStickersUpdate, WebhooksUpdate,
 )
 
 if TYPE_CHECKING:
@@ -117,3 +119,13 @@ class GuildEvents(EventMixinTemplate):
                 after=after,
             )
         )
+
+    @Processor.define()
+    async def _on_raw_guild_stickers_update(self, event: "RawGatewayEvent") -> None:
+        self.dispatch(
+            GuildStickersUpdate(event.data.get("guild_id"), Sticker.from_list(event.data.get("stickers", []), self))
+        )
+
+    @Processor.define()
+    async def _on_raw_webhook_update(self, event: "RawGatewayEvent") -> None:
+        self.dispatch(WebhooksUpdate(event.data.get("guild_id"), event.data.get("channel_id")))
