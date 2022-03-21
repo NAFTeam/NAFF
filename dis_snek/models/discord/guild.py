@@ -1570,12 +1570,13 @@ class GuildIntegration(DiscordObject):
     revoked: bool = field(default=MISSING)
 
     @classmethod
-    def from_dict(cls, data, client) -> "GuildIntegration":
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if app := data.get("application", None):
             data["application"] = models.Application.from_dict(app, client)
         if user := data.get("user", None):
             data["user"] = client.cache.place_user_data(user)
-        return super().from_dict(data, client)
+
+        return data
 
     async def delete(self, reason: Absent[str] = MISSING) -> None:
         """Delete this guild integration."""
@@ -1640,10 +1641,11 @@ class AuditLogEntry(DiscordObject):
     reason: Optional[str] = field(default=MISSING)
 
     @classmethod
-    def from_dict(cls, data, client) -> "AuditLogEntry":
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if changes := data.get("changes", None):
             data["changes"] = AuditLogChange.from_list(changes, client)
-        return super().from_dict(data, client)
+
+        return data
 
 
 @define()
@@ -1658,7 +1660,7 @@ class AuditLog(ClientObject):
     webhooks: Optional[List["models.Webhook"]] = field(default=MISSING)
 
     @classmethod
-    def from_dict(cls, data, client) -> "AuditLog":
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if entries := data.get("audit_log_entries", None):
             data["entries"] = AuditLogEntry.from_list(entries, client)
         if scheduled_events := data.get("guild_scheduled_events", None):
@@ -1671,7 +1673,8 @@ class AuditLog(ClientObject):
             data["users"] = models.User.from_list(users, client)
         if webhooks := data.get("webhooks", None):
             data["webhooks"] = models.Webhook.from_list(webhooks, client)
-        return super().from_dict(data, client)
+
+        return data
 
 
 class AuditLogHistory(AsyncIterator):
