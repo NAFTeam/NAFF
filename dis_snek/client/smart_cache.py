@@ -779,7 +779,7 @@ class GlobalCache:
 
     # region Bot Voice cache
 
-    def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> Optional[ActiveVoiceState]:
+    def get_bot_voice_state(self, guild_id: Optional["Snowflake_Type"]) -> Optional[ActiveVoiceState]:
         """
         Get a voice state for the bot, by the guild id.
 
@@ -789,7 +789,7 @@ class GlobalCache:
         Returns:
             ActiveVoiceState if found
         """
-        return self.bot_voice_state_cache.get(to_snowflake(guild_id))
+        return self.bot_voice_state_cache.get(to_optional_snowflake(guild_id))
 
     def place_bot_voice_state(self, state: ActiveVoiceState) -> None:
         """
