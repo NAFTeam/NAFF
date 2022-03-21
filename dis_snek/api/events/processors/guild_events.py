@@ -14,7 +14,8 @@ from dis_snek.api.events.discord import (
     IntegrationDelete,
     BanCreate,
     BanRemove,
-    GuildStickersUpdate, WebhooksUpdate,
+    GuildStickersUpdate,
+    WebhooksUpdate,
 )
 
 if TYPE_CHECKING:
