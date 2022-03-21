@@ -3,11 +3,10 @@ import logging
 from typing import TYPE_CHECKING
 
 import dis_snek.api.events as events
-from dis_snek import Sticker
 
 from dis_snek.client.const import logger_name, MISSING
 from ._template import EventMixinTemplate, Processor
-from dis_snek.models import GuildIntegration, to_snowflake
+from dis_snek.models import GuildIntegration, Sticker, to_snowflake
 from dis_snek.api.events.discord import (
     GuildEmojisUpdate,
     IntegrationCreate,
