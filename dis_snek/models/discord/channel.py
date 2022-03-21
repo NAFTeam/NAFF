@@ -472,12 +472,12 @@ class ThreadableMixin:
     async def create_thread(
         self,
         name: str,
-        message: Absent[Union[Snowflake_Type]] = MISSING,
-        thread_type: Absent[Union[ChannelTypes]] = MISSING,
+        message: Absent[Snowflake_Type] = MISSING,
+        thread_type: Absent[ChannelTypes] = MISSING,
         invitable: Absent[bool] = MISSING,
-        auto_archive_duration: Union[AutoArchiveDuration] = AutoArchiveDuration.ONE_DAY,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
         reason: Absent[str] = None,
-    ) -> Union["GuildNewsThread", "GuildPublicThread", "GuildPrivateThread"]:
+    ) -> "TYPE_THREAD_CHANNEL":
         """
         Creates a nee thread in this channel. If a message is provided, it will be used as the initial message.
 
@@ -1413,6 +1413,32 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         """
         await self._client.http.follow_news_channel(self.id, webhook_channel_id)
 
+    async def create_thread_from_message(
+        self,
+        name: str,
+        message: Snowflake_Type,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildNewsThread":
+        """
+        Creates a new news thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+        """
+        return await self.create_thread(
+            name=name,
+            message=message,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
+
 
 @define()
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
@@ -1462,6 +1488,85 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
             **kwargs,
+        )
+
+    async def create_public_thread(
+        self,
+        name: str,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPublicThread":
+        """
+        Creates a new public thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            thread_type: Is the thread private or public.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+        """
+        return await self.create_thread(
+            name=name,
+            thread_type=ChannelTypes.GUILD_PUBLIC_THREAD,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
+    
+    async def create_private_thread(
+        self,
+        name: str,
+        invitable: Absent[bool] = MISSING,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPrivateThread":
+        """
+        Creates a new private thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            invitable: whether non-moderators can add other non-moderators to a thread.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created thread, if successful
+        """
+        return await self.create_thread(
+            name=name,
+            thread_type=ChannelTypes.GUILD_PRIVATE_THREAD,
+            invitable=invitable,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
+
+    async def create_thread_from_message(
+        self,
+        name: str,
+        message: Snowflake_Type,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPublicThread":
+        """
+        Creates a new public thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+        """
+        return await self.create_thread(
+            name=name,
+            message=message,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
         )
 
 
