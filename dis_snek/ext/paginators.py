@@ -15,6 +15,7 @@ from dis_snek import (
     ComponentCommand,
     get_components_ids,
     Context,
+    MessageContext,
     Message,
     MISSING,
     Snowflake_Type,
@@ -278,6 +279,26 @@ class Paginator:
 
         """
         self._message = await ctx.send(**self.to_dict())
+        self._author_id = ctx.author.id
+
+        if self.timeout_interval > 1:
+            self._timeout_task = Timeout(self)
+            self.client.loop.create_task(self._timeout_task())
+
+        return self._message
+
+    async def reply(self, ctx: MessageContext) -> Message:
+        """
+        Reply this paginator to ctx.
+
+        Args:
+            ctx: The context to reply this paginator with
+
+        Returns:
+            The resulting message
+
+        """
+        self._message = await ctx.reply(**self.to_dict())
         self._author_id = ctx.author.id
 
         if self.timeout_interval > 1:
