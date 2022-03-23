@@ -1,6 +1,7 @@
 import colorsys
 import re
 from enum import Enum
+from random import randint
 from typing import Tuple, Union, Optional
 
 from dis_snek.client.utils.attr_utils import define, field
@@ -65,6 +66,12 @@ class Color:
         instance = cls()
         instance.hsv = h, s, v
         return instance
+
+    @classmethod
+    def random(cls) -> "Color":
+        """Returns random Color instance"""
+        # FFFFFF == 16777215
+        return cls(randint(0, 16777215))
 
     # Properties and setter methods
 
