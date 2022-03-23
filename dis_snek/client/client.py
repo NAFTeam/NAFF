@@ -814,7 +814,7 @@ class Snake(
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
 
-    def add_interaction(self, command: InteractionCommand) -> None:
+    def add_interaction(self, command: InteractionCommand) -> bool:
         """
         Add a slash command to the client.
 
@@ -826,9 +826,8 @@ class Snake(
             command.scopes = [self.debug_scope]
 
         # for SlashCommand objs without callback (like objects made to hold group info etc)
-        # it's not ideal, but we're due command framework rework soon(tm)
         if command.callback is None:
-            return
+            return False
 
         for scope in command.scopes:
             if scope not in self.interactions:
@@ -841,6 +840,8 @@ class Snake(
                 command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
+
+        return True
 
     def add_message_command(self, command: MessageCommand) -> None:
         """
