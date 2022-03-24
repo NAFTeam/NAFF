@@ -75,3 +75,18 @@ class MessageEvents(EventMixinTemplate):
         before = copy.copy(self.cache.get_message(event.data.get("channel_id"), event.data.get("id")))
         after = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageUpdate(before=before, after=after))
+
+    @Processor.define()
+    async def _on_raw_message_delete_bulk(self, event: "RawGatewayEvent") -> None:
+        """
+        Process raw bulk message deletion event and dispatch a processed bulk deletion event.
+
+        Args:
+            event: raw bulk message deletion event
+
+        """
+        self.dispatch(
+            events.MessageDeleteBulk(
+                event.data.get("guild_id", None), event.data.get("channel_id"), event.data.get("ids")
+            )
+        )

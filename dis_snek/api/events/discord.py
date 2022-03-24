@@ -259,14 +259,11 @@ class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """List of emoji after this event"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class GuildStickersUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
-    before: List["Sticker"] = field(factory=list)
-    """List of stickers from before this event"""
-    after: List["Sticker"] = field(factory=list)
+    stickers: List["Sticker"] = field(factory=list)
     """List of stickers from after this event"""
 
 
@@ -405,7 +402,6 @@ class MessageDelete(BaseEvent):
     message: "Message" = field()
 
 
-# todo implementation missing
 @define(kw_only=False)
 class MessageDeleteBulk(BaseEvent, GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
@@ -485,7 +481,6 @@ class TypingStart(BaseEvent):
     """unix time (in seconds) of when the user started typing"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class WebhooksUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
