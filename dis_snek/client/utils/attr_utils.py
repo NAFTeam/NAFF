@@ -23,23 +23,9 @@ define = partial(attrs.define, **class_defaults)  # type: ignore
 field = partial(attrs.field, **field_defaults)  # type: ignore
 
 
-def copy_converter(value: T) -> T:
-    if isinstance(value, (list, set)):
-        return value.copy()
-    return value
-
-
 def docs(doc_string: str) -> Dict[str, str]:
     """Makes it easier to quickly type attr documentation."""
     return {"docs": doc_string}
-
-
-# def converter(attribute):
-#     def decorator(func):
-#         attribute.converter = func
-#         return staticmethod(func)
-#
-#     return decorator
 
 
 def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
