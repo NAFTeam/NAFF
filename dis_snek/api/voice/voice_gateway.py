@@ -245,7 +245,7 @@ class VoiceGateway(WebsocketClient):
 
         payload = {
             "op": OP.RESUME,
-            "d": {"server_id": {self.guild_id}, "session_id": {self.session_id}, "token": {self.token}},
+            "d": {"server_id": self.guild_id, "session_id": self.session_id, "token": self.token},
         }
         await self.ws.send_json(payload)
 
