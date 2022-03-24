@@ -43,6 +43,8 @@ __all__ = [
     "AlreadyDeferred",
     "ForeignWebhookException",
     "EventLocationNotProvided",
+    "VoiceAlreadyConnected",
+    "VoiceConnectionTimeout",
 ]
 
 
