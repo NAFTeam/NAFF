@@ -1832,7 +1832,9 @@ class Snake(
         regions = VoiceRegion.from_list(regions_data)
         return regions
 
-    async def connect_to_vc(self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False) -> ActiveVoiceState:
+    async def connect_to_vc(
+        self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
+    ) -> ActiveVoiceState:
         return await self._connection_state.voice_connect(guild_id, channel_id, muted, deafened)
 
     def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> ActiveVoiceState:
