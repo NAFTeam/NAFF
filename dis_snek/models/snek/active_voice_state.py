@@ -130,9 +130,6 @@ class ActiveVoiceState(VoiceState):
 
     async def disconnect(self) -> None:
         """Disconnect from the voice channel."""
-        await self.stop()
-        if self.connected:
-            self.ws.close()
         await self._client.ws.voice_state_update(self._guild_id, None)
 
     async def move(self, channel: "Snowflake_Type") -> None:
@@ -210,9 +207,15 @@ class ActiveVoiceState(VoiceState):
         """
         if after is None:
             # bot disconnected
-            log.info("Disconnecting from voice channel due to manual disconnection")
-            await self.disconnect()
+            log.info(f"Disconnecting from voice channel {self._channel_id}")
+            await self._close_connection()
             self._client.cache.delete_bot_voice_state(self._guild_id)
             return
 
         self.update_from_dict(data)
+
+    async def _close_connection(self) -> None:
+        if self.playing:
+            await self.stop()
+        if self.connected:
+            self.ws.close()

@@ -99,7 +99,7 @@ class VoiceGateway(WebsocketClient):
             # possible race conditions to consider.
             await self.dispatch_opcode(data, op)
 
-    async def receive(self, force=True) -> str:
+    async def receive(self, force=False) -> str:
         buffer = bytearray()
 
         while True:
@@ -109,7 +109,7 @@ class VoiceGateway(WebsocketClient):
             resp = await self.ws.receive()
 
             if resp.type == WSMsgType.CLOSE:
-                log.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
+                log.debug(f"Disconnecting from voice gateway! Reason: {resp.data}::{resp.extra}")
                 if resp.data in (4006, 4009, 4014, 4015):
                     # these are all recoverable close codes, anything else means we're foobared
                     # codes: session expired, session timeout, disconnected, server crash
