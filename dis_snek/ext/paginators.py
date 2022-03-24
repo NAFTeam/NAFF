@@ -289,6 +289,7 @@ class Paginator:
     async def reply(self, ctx: MessageContext) -> Message:
         """
         Reply this paginator to ctx.
+
         Args:
             ctx: The context to reply this paginator with
         Returns:
