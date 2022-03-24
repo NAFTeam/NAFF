@@ -135,16 +135,18 @@ class ActiveVoiceState(VoiceState):
             self.ws.close()
         await self._client.ws.voice_state_update(self._guild_id, None)
 
-    async def move(self, channel: SnowflakeObject) -> None:
+    async def move(self, channel: "Snowflake_Type") -> None:
         """
         Move to another voice channel.
 
         Args:
             channel: The channel to move to
         """
-        self.ws.close()
-        self._channel_id = to_snowflake(channel)
-        await self.connect()
+        target_channel = to_snowflake(channel)
+        if target_channel != self._channel_id:
+            self.ws.close()
+            self._channel_id = target_channel
+            await self.connect()
 
     async def stop(self) -> None:
         """Stop playback."""
