@@ -1949,9 +1949,9 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     def voice_state(self) -> Optional["ActiveVoiceState"]:
         return self._client.get_bot_voice_state(self._guild_id)
 
-    async def connect(self) -> "ActiveVoiceState":
+    async def connect(self, muted: bool = False, deafened: bool = False) -> "ActiveVoiceState":
         if not self.voice_state:
-            return await self._client.connect_to_vc(self._guild_id, self.id)
+            return await self._client.connect_to_vc(self._guild_id, self.id, muted, deafened)
         await self.voice_state.move(self.id)
         return self.voice_state
 

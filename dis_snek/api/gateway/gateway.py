@@ -333,6 +333,6 @@ class GatewayClient(WebsocketClient):
     ) -> None:
         payload = {
             "op": OPCODE.VOICE_STATE,
-            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": False, "self_deaf": False},
+            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": muted, "self_deaf": deafened},
         }
         await self.send_json(payload)

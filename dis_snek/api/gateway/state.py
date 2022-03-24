@@ -169,8 +169,8 @@ class ConnectionState:
     def get_voice_state(self, guild_id: "Snowflake_Type") -> Optional["dis_snek.ActiveVoiceState"]:
         return self.client.cache.get_bot_voice_state(guild_id)
 
-    async def voice_connect(self, guild_id, channel_id) -> "dis_snek.ActiveVoiceState":
-        voice_state = dis_snek.ActiveVoiceState(client=self.client, guild_id=guild_id, channel_id=channel_id)
+    async def voice_connect(self, guild_id, channel_id, muted: bool = False, deafened: bool = False) -> "dis_snek.ActiveVoiceState":
+        voice_state = dis_snek.ActiveVoiceState(client=self.client, guild_id=guild_id, channel_id=channel_id, self_mute=muted, self_deaf=deafened)
         await voice_state.connect()
         self.client.cache.place_bot_voice_state(voice_state)
         return voice_state

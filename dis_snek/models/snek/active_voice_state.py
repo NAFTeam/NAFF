@@ -117,7 +117,7 @@ class ActiveVoiceState(VoiceState):
         def predicate(event) -> bool:
             return event.data["guild_id"] == str(self._guild_id)
 
-        await self._client.ws.voice_state_update(self._guild_id, self._channel_id)
+        await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
         log.debug("Waiting for voice connection data...")
 
