@@ -96,7 +96,8 @@ class BaseCommand(DictSerializationMixin):
                     await self.pre_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_prerun:
-                    await self.scale.scale_prerun(context, *args, **kwargs)
+                    for prerun in self.scale.scale_prerun:
+                        await prerun(context, *args, **kwargs)
 
                 await self.call_callback(self.callback, context)
 
@@ -104,7 +105,8 @@ class BaseCommand(DictSerializationMixin):
                     await self.post_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_postrun:
-                    await self.scale.scale_postrun(context, *args, **kwargs)
+                    for postrun in self.scale.scale_postrun:
+                        await postrun(context, *args, **kwargs)
 
         except Exception as e:
             if self.error_callback:
