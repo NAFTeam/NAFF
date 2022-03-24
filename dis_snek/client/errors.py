@@ -371,3 +371,17 @@ class ForeignWebhookException(SnakeException):
 
 class EventLocationNotProvided(BotException):
     """Raised when you have entity_type external and no location is provided."""
+
+
+class VoiceAlreadyConnected(BotException):
+    """Raised when you attempt to connect a voice channel that is already connected."""
+
+    def __init__(self) -> None:
+        super().__init__("Bot already connected to the voice channel")
+
+
+class VoiceConnectionTimeout(SnakeException):
+    """Raised when the bot fails to connect to a voice channel."""
+
+    def __init__(self) -> None:
+        super().__init__("Failed to connect to voice channel. Did not receive a response from Discord")

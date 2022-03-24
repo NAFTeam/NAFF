@@ -8,6 +8,7 @@ from dis_snek.api.voice.audio import BaseAudio, AudioVolume
 from dis_snek.api.voice.player import Player
 from dis_snek.api.voice.voice_gateway import VoiceGateway
 from dis_snek.client.const import logger_name, MISSING
+from dis_snek.client.errors import SnakeException, VoiceAlreadyConnected, VoiceConnectionTimeout
 from dis_snek.client.utils import optional
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.snowflake import Snowflake_Type, SnowflakeObject, to_snowflake
@@ -89,6 +90,8 @@ class ActiveVoiceState(VoiceState):
     def connected(self) -> bool:
         """Is this voice state currently connected?"""
         # noinspection PyProtectedMember
+        if self.ws is None:
+            return False
         return self.ws._closed.is_set()
 
     async def wait_for_stopped(self) -> None:
@@ -111,8 +114,10 @@ class ActiveVoiceState(VoiceState):
         asyncio.create_task(self._ws_connect())
         await self.ws.wait_until_ready()
 
-    async def connect(self) -> None:
+    async def connect(self, timeout: int = 5) -> None:
         """Establish the voice connection."""
+        if self.connected:
+            raise VoiceAlreadyConnected
 
         def predicate(event) -> bool:
             return int(event.data["guild_id"]) == self._guild_id
@@ -121,10 +126,14 @@ class ActiveVoiceState(VoiceState):
 
         log.debug("Waiting for voice connection data...")
 
-        self._voice_state, self._voice_server = await asyncio.gather(
-            self._client.wait_for("raw_voice_state_update", predicate),
-            self._client.wait_for("raw_voice_server_update", predicate),
-        )
+        try:
+            self._voice_state, self._voice_server = await asyncio.gather(
+                self._client.wait_for("raw_voice_state_update", predicate, timeout=timeout),
+                self._client.wait_for("raw_voice_server_update", predicate, timeout=timeout),
+            )
+        except asyncio.TimeoutError:
+            raise VoiceConnectionTimeout
+
         log.debug("Attempting to initialise voice gateway...")
         await self.ws_connect()
 
