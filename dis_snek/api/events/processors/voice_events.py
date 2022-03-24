@@ -29,7 +29,7 @@ class VoiceEvents(EventMixinTemplate):
                 await vc._voice_state_update(before, after, event.data)
 
     @Processor.define()
-    async def on_raw_voice_server_update(self, event: "RawGatewayEvent") -> None:
+    async def _on_raw_voice_server_update(self, event: "RawGatewayEvent") -> None:
         if vc := self.cache.get_bot_voice_state(event.data["guild_id"]):
             # noinspection PyProtectedMember
             await vc._voice_server_update(event.data)
