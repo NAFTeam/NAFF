@@ -132,7 +132,7 @@ class ActiveVoiceState(VoiceState):
                 self._client.wait_for("raw_voice_server_update", predicate, timeout=timeout),
             )
         except asyncio.TimeoutError:
-            raise VoiceConnectionTimeout
+            raise VoiceConnectionTimeout from None
 
         log.debug("Attempting to initialise voice gateway...")
         await self.ws_connect()
