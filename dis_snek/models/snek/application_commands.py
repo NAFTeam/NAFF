@@ -52,6 +52,10 @@ __all__ = [
     "auto_defer",
     "application_commands_to_dict",
     "sync_needed",
+    "slash_name_locales",
+    "slash_description_locales",
+    "slash_group_name_locales",
+    "slash_group_description_locales",
 ]
 
 log = logging.getLogger(logger_name)
@@ -360,6 +364,13 @@ class SlashCommand(InteractionCommand):
     name: str = field()
     description: str = field(default="No Description Set")
 
+    name_locales: dict = field(default=None)
+    description_locales: dict = field(default=None)
+    group_name_locales: dict = field(default=None)
+    group_description_locales: dict = field(default=None)
+    sub_cmd_name_locales: dict = field(default=None)
+    sub_cmd_description_locales: dict = field(default=None)
+
     group_name: str = field(default=None, metadata=no_export_meta)
     group_description: str = field(default="No Description Set", metadata=no_export_meta)
 
@@ -402,6 +413,25 @@ class SlashCommand(InteractionCommand):
 
             if hasattr(self.callback, "permissions"):
                 self.permissions = self.callback.permissions
+
+            if hasattr(self.callback, "name_locales"):
+                self.name_locales = self.callback.name_locales
+
+            if hasattr(self.callback, "description_locales"):
+                self.description_locales = self.callback.description_locales
+
+            if hasattr(self.callback, "group_name_locales"):
+                self.group_name_locales = self.callback.group_name_locales
+
+            if hasattr(self.callback, "group_description_locales"):
+                self.group_description_locales = self.callback.group_description_locales
+
+            if hasattr(self.callback, "sub_cmd_name_locales"):
+                self.sub_cmd_name_locales = self.callback.sub_cmd_name_locales
+
+            if hasattr(self.callback, "sub_cmd_description_locales"):
+                self.sub_cmd_description_locales = self.callback.sub_cmd_description_locales
+
         super().__attrs_post_init__()
 
     def to_dict(self) -> dict:
@@ -409,8 +439,15 @@ class SlashCommand(InteractionCommand):
         if self.is_subcommand:
             data["name"] = self.sub_cmd_name
             data["description"] = self.sub_cmd_description
+            data["name_localizations"] = self.sub_cmd_name_locales
+            data["description_localizations"] = self.sub_cmd_description_locales
             data.pop("default_permission", None)
             data.pop("permissions", None)
+        else:
+            data["name_localizations"] = self.name_locales
+            data["description_localizations"] = self.description_locales
+            data["group_name_localizations"] = self.group_name_locales
+            data["group_description_localizations"] = self.group_description_locales
         return data
 
     @name.validator
@@ -519,6 +556,12 @@ def slash_command(
     group_name: str = None,
     sub_cmd_description: str = "No Description Set",
     group_description: str = "No Description Set",
+    name_locales: dict = None,
+    description_locales: dict = None,
+    group_name_locales: dict = None,
+    group_description_locales: dict = None,
+    sub_cmd_name_locales: dict = None,
+    sub_cmd_description_locales: dict = None,
 ) -> Callable[[Callable[..., Coroutine]], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
@@ -565,6 +608,12 @@ def slash_command(
             permissions=permissions or {},
             callback=func,
             options=options,
+            name_locales=name_locales,
+            description_locales=description_locales,
+            group_name_locales=group_name_locales,
+            group_description_locales=group_description_locales,
+            sub_cmd_name_locales=sub_cmd_name_locales,
+            sub_cmd_description_locales=sub_cmd_description_locales,
         )
 
         return cmd
@@ -753,6 +802,80 @@ def slash_option(
         if not hasattr(func, "options"):
             func.options = []
         func.options.insert(0, option)
+        return func
+
+    return wrapper
+
+
+def slash_name_locales(locales: dict) -> Any:
+    """
+    A decorator to add locales to a slash command.
+
+    parameters:
+        locales: A dictionary of locales for the command
+    """
+
+    def wrapper(func: Coroutine) -> Coroutine:
+        if hasattr(func, "cmd_id"):
+            raise Exception("slash_name_locales decorators must be positioned under a slash_command decorator")
+
+        func.name_locales = locales
+        return func
+
+    return wrapper
+
+
+def slash_description_locales(locales: dict) -> Any:
+    """
+    A decorator to add locales to a slash command.
+
+    parameters:
+        locales: A dictionary of locales for the command
+    """
+
+    def wrapper(func: Coroutine) -> Coroutine:
+        if hasattr(func, "cmd_id"):
+            raise Exception("slash_description_locales decorators must be positioned under a slash_command decorator")
+
+        func.description_locales = locales
+        return func
+
+    return wrapper
+
+
+def slash_group_name_locales(locales: dict) -> Any:
+    """
+    A decorator to add locales to a slash command.
+
+    parameters:
+        locales: A dictionary of locales for the command
+    """
+
+    def wrapper(func: Coroutine) -> Coroutine:
+        if hasattr(func, "cmd_id"):
+            raise Exception("slash_group_name_locales decorators must be positioned under a slash_command decorator")
+
+        func.group_name_locales = locales
+        return func
+
+    return wrapper
+
+
+def slash_group_description_locales(locales: dict) -> Any:
+    """
+    A decorator to add locales to a slash command.
+
+    parameters:
+        locales: A dictionary of locales for the command
+    """
+
+    def wrapper(func: Coroutine) -> Coroutine:
+        if hasattr(func, "cmd_id"):
+            raise Exception(
+                "slash_group_description_locales decorators must be positioned under a slash_command decorator"
+            )
+
+        func.group_description_locales = locales
         return func
 
     return wrapper
