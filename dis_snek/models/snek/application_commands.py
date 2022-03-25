@@ -378,23 +378,23 @@ class SlashCommand(InteractionCommand):
         return self.sub_cmd_name is not None
 
     def __attrs_post_init__(self) -> None:
-        params = get_parameters(self.callback)
-        for name, val in params.items():
-            annotation = None
-            if val.annotation and isinstance(val.annotation, SlashCommandOption):
-                annotation = val.annotation
-            elif typing.get_origin(val.annotation) is Annotated:
-                for ann in typing.get_args(val.annotation):
-                    if isinstance(ann, SlashCommandOption):
-                        annotation = ann
-
-            if annotation:
-                if not self.options:
-                    self.options = []
-                ann.name = name
-                self.options.append(ann)
-
         if self.callback is not None:
+            params = get_parameters(self.callback)
+            for name, val in params.items():
+                annotation = None
+                if val.annotation and isinstance(val.annotation, SlashCommandOption):
+                    annotation = val.annotation
+                elif typing.get_origin(val.annotation) is Annotated:
+                    for ann in typing.get_args(val.annotation):
+                        if isinstance(ann, SlashCommandOption):
+                            annotation = ann
+
+                if annotation:
+                    if not self.options:
+                        self.options = []
+                    ann.name = name
+                    self.options.append(ann)
+
             if hasattr(self.callback, "options"):
                 if not self.options:
                     self.options = []
@@ -466,29 +466,40 @@ class SlashCommand(InteractionCommand):
         option_name = option_name.lower()
         return wrapper
 
+    def group(self, name: str = None, description: str = "No Description Set") -> "SlashCommand":
+
+        return SlashCommand(
+            name=self.name,
+            description=self.description,
+            group_name=name,
+            group_description=description,
+            scopes=self.scopes,
+        )
+
     def subcommand(
         self,
         sub_cmd_name: str,
         group_name: str = None,
-        group_description: str = "No Description Set",
         sub_cmd_description: Absent[str] = MISSING,
+        group_description: Absent[str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
+            nonlocal sub_cmd_description
+
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("Subcommand must be coroutine")
 
-            _description = sub_cmd_description
-            if _description is MISSING:
-                _description = call.__doc__ if call.__doc__ else "No Description Set"
+            if sub_cmd_description is MISSING:
+                sub_cmd_description = call.__doc__ or "No Description Set"
 
             return SlashCommand(
                 name=self.name,
                 description=self.description,
-                group_name=group_name,
-                group_description=group_description,
+                group_name=group_name or self.group_name,
+                group_description=group_description or self.group_description,
                 sub_cmd_name=sub_cmd_name,
-                sub_cmd_description=_description,
+                sub_cmd_description=sub_cmd_description,
                 options=options,
                 callback=call,
                 scopes=self.scopes,
