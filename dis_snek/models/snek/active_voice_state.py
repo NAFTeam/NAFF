@@ -179,8 +179,6 @@ class ActiveVoiceState(VoiceState):
         if self.player:
             await self.stop()
 
-        self.player = Player(audio, self, asyncio.get_running_loop())
-
         with Player(audio, self, asyncio.get_running_loop()) as self.player:
             self.player.play()
             await self.wait_for_stopped()
