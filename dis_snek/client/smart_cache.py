@@ -701,9 +701,9 @@ class GlobalCache:
             role_id: The ID of the role
         """
         role = self.role_cache.pop(to_snowflake(role_id))
-        if role:
+        if guild := self.get_guild(role._guild_id):
             # noinspection PyProtectedMember
-            role.guild._role_ids.discard(role_id)
+            guild._role_ids.discard(role_id)
 
     # endregion Role cache
 
