@@ -513,8 +513,6 @@ class Guild(BaseGuild):
         rules_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         public_updates_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         preferred_locale: Absent[Optional[str]] = MISSING,
-        # ToDo: validate voice region
-        region: Absent[Optional[str]] = MISSING,
         # ToDo: Fill in guild features. No idea how this works - https://discord.com/developers/docs/resources/guild#guild-object-guild-features
         features: Absent[Optional[list[str]]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
@@ -525,7 +523,6 @@ class Guild(BaseGuild):
         Parameters:
             name: The new name of the guild.
             description: The new description of the guild.
-            region: ToDo
             verification_level: The new verification level for the guild.
             default_message_notifications: The new notification level for the guild.
             explicit_content_filter: The new explicit content filter level for the guild.
@@ -549,7 +546,6 @@ class Guild(BaseGuild):
             guild_id=self.id,
             name=name,
             description=description,
-            region=region,
             verification_level=int(verification_level) if verification_level else MISSING,
             default_message_notifications=int(default_message_notifications)
             if default_message_notifications
