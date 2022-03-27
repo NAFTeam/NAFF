@@ -214,6 +214,70 @@ class Guild(BaseGuild):
             data["welcome_screen"] = GuildWelcome.from_dict(welcome_screen, client)
         return data
 
+    @classmethod
+    async def create(
+        cls,
+        name: str,
+        client: "Snake",
+        *,
+        icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
+        verification_level: Absent[int] = MISSING,
+        default_message_notifications: Absent[int] = MISSING,
+        explicit_content_filter: Absent[int] = MISSING,
+        roles: Absent[list[dict]] = MISSING,
+        channels: Absent[list[dict]] = MISSING,
+        afk_channel_id: Absent["Snowflake_Type"] = MISSING,
+        afk_timeout: Absent[int] = MISSING,
+        system_channel_id: Absent["Snowflake_Type"] = MISSING,
+        system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
+    ) -> "Guild":
+        """
+        Create a guild.
+
+        !!! note
+            This method will only work for bots in less than 10 guilds.
+
+        ??? note "Param notes"
+            Roles:
+                - When using the `roles` parameter, the first member of the array is used to change properties of the guild's `@everyone` role. If you are trying to bootstrap a guild with additional roles, keep this in mind.
+                - When using the `roles` parameter, the required id field within each role object is an integer placeholder, and will be replaced by the API upon consumption. Its purpose is to allow you to overwrite a role's permissions in a channel when also passing in channels with the channels array.
+
+            Channels:
+                - When using the `channels` parameter, the position field is ignored, and none of the default channels are created.
+                - When using the `channels` parameter, the id field within each channel object may be set to an integer placeholder, and will be replaced by the API upon consumption. Its purpose is to allow you to create `GUILD_CATEGORY` channels by setting the `parent_id` field on any children to the category's id field. Category channels must be listed before any children.
+
+        Args:
+            name: name of the guild (2-100 characters)
+            client: The Snake client
+            icon: An icon for the guild
+            verification_level: The guild's verification level
+            default_message_notifications: The default message notification level
+            explicit_content_filter: The guild's explicit content filter level
+            roles: An array of partial role dictionaries
+            channels: An array of partial channel dictionaries
+            afk_channel_id: id for afk channel
+            afk_timeout: afk timeout in seconds
+            system_channel_id: the id of the channel where guild notices should go
+            system_channel_flags: flags for the system channel
+
+        Returns:
+
+        """
+        data = await client.http.create_guild(
+            name=name,
+            icon=to_image_data(icon) if icon else MISSING,
+            verification_level=verification_level,
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter=explicit_content_filter,
+            roles=roles,
+            channels=channels,
+            afk_channel_id=afk_channel_id,
+            afk_timeout=afk_timeout,
+            system_channel_id=system_channel_id,
+            system_channel_flags=int(system_channel_flags) if system_channel_flags else MISSING,
+        )
+        return client.cache.place_guild_data(data)
+
     @property
     def channels(self) -> List["models.TYPE_GUILD_CHANNEL"]:
         """Returns a list of channels associated with this guild."""

@@ -620,6 +620,39 @@ class GuildRequests:
             data=dict_filter_none({"channel_id": channel_id, "suppress": suppress}),
         )
 
+    async def create_guild(
+        self,
+        name: str,
+        icon: Absent[str] = MISSING,
+        verification_level: Absent[int] = MISSING,
+        default_message_notifications: Absent[int] = MISSING,
+        explicit_content_filter: Absent[int] = MISSING,
+        roles: Absent[list[dict]] = MISSING,
+        channels: Absent[list[dict]] = MISSING,
+        afk_channel_id: Absent["Snowflake_Type"] = MISSING,
+        afk_timeout: Absent[int] = MISSING,
+        system_channel_id: Absent["Snowflake_Type"] = MISSING,
+        system_channel_flags: Absent[int] = MISSING,
+    ) -> dict:
+        return await self.request(
+            Route("POST", "/guilds"),
+            data=dict_filter_missing(
+                {
+                    "name": name,
+                    "icon": icon,
+                    "verification_level": verification_level,
+                    "default_message_notifications": default_message_notifications,
+                    "explicit_content_filter": explicit_content_filter,
+                    "roles": roles,
+                    "channels": channels,
+                    "afk_channel_id": afk_channel_id,
+                    "afk_timeout": afk_timeout,
+                    "system_channel_id": system_channel_id,
+                    "system_channel_flags": system_channel_flags,
+                }
+            ),
+        )
+
     async def create_guild_from_guild_template(
         self, template_code: str, name: str, icon: str
     ) -> discord_typings.GuildData:
