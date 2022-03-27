@@ -351,6 +351,13 @@ class VoiceGateway(WebsocketClient):
         await self.ws.send_json(payload)
 
     def set_new_voice_server(self, payload: dict) -> None:
+        """
+        Set a new voice server to connect to.
+
+        Args:
+            payload: New voice server connection data
+
+        """
         self.ws_url = f"wss://{payload['endpoint']}?v=4"
         self.token = payload["token"]
         self.guild_id = payload["guild_id"]

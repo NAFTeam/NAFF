@@ -206,10 +206,12 @@ class AudioVolume(Audio):
 
     @property
     def volume(self) -> float:
+        """The volume of the audio"""
         return self._volume
 
     @volume.setter
     def volume(self, value: float) -> None:
+        """Sets the volume of the audio. Volume cannot be negative."""
         self._volume = max(value, 0.0)
 
     def read(self, frame_size: int) -> bytes:

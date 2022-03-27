@@ -87,6 +87,7 @@ class Player(threading.Thread):
             self.current_audio.cleanup()
 
     def run(self) -> None:
+        """The main player loop to send audio to the voice websocket."""
         loops = 0
 
         if isinstance(self.current_audio, AudioVolume):

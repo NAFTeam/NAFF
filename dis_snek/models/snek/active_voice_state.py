@@ -101,6 +101,7 @@ class ActiveVoiceState(VoiceState):
             await self.player._stopped.wait()
 
     async def _ws_connect(self) -> None:
+        """Runs the voice gateway connection"""
         async with self.ws:
             try:
                 await self.ws.run()
@@ -109,13 +110,21 @@ class ActiveVoiceState(VoiceState):
                     await self.stop()
 
     async def ws_connect(self) -> None:
+        """Connect to the voice gateway for this voice state"""
         self.ws = VoiceGateway(self._client._connection_state, self._voice_state.data, self._voice_server.data)
 
         asyncio.create_task(self._ws_connect())
         await self.ws.wait_until_ready()
 
     async def connect(self, timeout: int = 5) -> None:
-        """Establish the voice connection."""
+        """
+        Establish the voice connection.
+
+        Raises:
+            VoiceAlreadyConnected: if the voice state is already connected to the voice channel
+            VoiceConnectionTimeout: if the voice state fails to connect
+
+        """
         if self.connected:
             raise VoiceAlreadyConnected
 
@@ -222,6 +231,7 @@ class ActiveVoiceState(VoiceState):
         self.update_from_dict(data)
 
     async def _close_connection(self) -> None:
+        """Close the voice connection."""
         if self.playing:
             await self.stop()
         if self.connected:

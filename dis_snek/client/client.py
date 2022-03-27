@@ -1835,6 +1835,19 @@ class Snake(
     async def connect_to_vc(
         self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
     ) -> ActiveVoiceState:
+        """
+        Connect the bot to a voice channel.
+
+        Args:
+            guild_id: id of the guild the voice channel is in.
+            channel_id: id of the voice channel client wants to join.
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
         return await self._connection_state.voice_connect(guild_id, channel_id, muted, deafened)
 
     def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> ActiveVoiceState:

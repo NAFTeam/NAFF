@@ -1947,9 +1947,21 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     @property
     def voice_state(self) -> Optional["ActiveVoiceState"]:
+        """Returns the voice state of the bot in this channel if it is connected"""
         return self._client.get_bot_voice_state(self._guild_id)
 
     async def connect(self, muted: bool = False, deafened: bool = False) -> "ActiveVoiceState":
+        """
+        Connect the bot to this voice channel, or move the bot to this voice channel if it is already connected in another voice channel.
+
+        Args:
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
         if not self.voice_state:
             return await self._client.connect_to_vc(self._guild_id, self.id, muted, deafened)
         await self.voice_state.move(self.id)

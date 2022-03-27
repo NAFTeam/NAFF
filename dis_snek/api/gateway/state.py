@@ -172,6 +172,19 @@ class ConnectionState:
     async def voice_connect(
         self, guild_id, channel_id, muted: bool = False, deafened: bool = False
     ) -> "dis_snek.ActiveVoiceState":
+        """
+        Connect to a voice channel.
+
+        Args:
+            guild_id: id of the guild the voice channel is in.
+            channel_id: id of the voice channel client wants to join.
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
         voice_state = dis_snek.ActiveVoiceState(
             client=self.client, guild_id=guild_id, channel_id=channel_id, self_mute=muted, self_deaf=deafened
         )
