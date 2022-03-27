@@ -523,6 +523,18 @@ class GuildRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/vanity-url"))
 
+    async def get_guild_channels(self, guild_id: "Snowflake_Type") -> dict:
+        """
+        Gets a list of guild channel objects.
+
+        Args:
+            guild_id: The ID of the guild
+
+        Returns:
+            A list of channels in this guild. Does not include threads.
+        """
+        return await self.request(Route("GET", f"/guilds/{guild_id}/channels"))
+
     async def modify_guild_widget(
         self, guild_id: "Snowflake_Type", enabled: bool = None, channel_id: "Snowflake_Type" = None
     ) -> discord_typings.GuildWidgetData:

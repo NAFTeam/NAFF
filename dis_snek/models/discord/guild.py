@@ -363,6 +363,16 @@ class Guild(BaseGuild):
         """
         return self._client.cache.get_member(self.id, self._owner_id)
 
+    async def fetch_channels(self) -> List["models.TYPE_VOICE_CHANNEL"]:
+        """
+        Fetch this guild's channels.
+
+        Returns:
+            A list of channels in this guild
+        """
+        data = await self._client.http.get_guild_channels(self.id)
+        return [self._client.cache.place_channel_data(channel_data) for channel_data in data]
+
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
         Whether the user is owner of the guild.
