@@ -783,7 +783,6 @@ class BaseChannel(DiscordObject):
             The edited channel. May be a new object if the channel type changes.
 
         """
-
         payload = {
             "name": name,
             "icon": to_image_data(icon),
@@ -2015,6 +2014,7 @@ def process_permission_overwrites(
 ) -> List[dict]:
     """
     Processes a permission overwrite lists into format for sending to discord.
+
     Args:
         overwrites: The permission overwrites to process
 
@@ -2022,7 +2022,6 @@ def process_permission_overwrites(
         The processed permission overwrites
 
     """
-
     if not overwrites:
         return overwrites
 

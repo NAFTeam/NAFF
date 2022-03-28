@@ -222,7 +222,6 @@ def process_emoji(emoji: Optional[Union[PartialEmoji, dict, str]]) -> Optional[d
         formatted dictionary for discord
 
     """
-
     if not emoji:
         return emoji
 

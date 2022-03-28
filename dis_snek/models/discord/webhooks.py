@@ -272,7 +272,6 @@ class Webhook(DiscordObject, SendMixin):
             Updated message object that was sent if `wait` is set to True
 
         """
-
         message_payload = process_message_payload(
             content=content,
             embeds=embeds,

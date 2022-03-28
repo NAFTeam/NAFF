@@ -126,22 +126,22 @@ class Color:
 
     @property
     def r(self) -> int:
-        """red color value"""
+        """Red color value"""
         return self._get_byte(2)
 
     @property
     def g(self) -> int:
-        """green color value"""
+        """Green color value"""
         return self._get_byte(1)
 
     @property
     def b(self) -> int:
-        """blue color value"""
+        """Blue color value"""
         return self._get_byte(0)
 
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        """red, green, blue color values in a tuple"""
+        """The red, green, blue color values in a tuple"""
         return self.r, self.g, self.b
 
     @rgb.setter
@@ -153,13 +153,13 @@ class Color:
 
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
-        """red, green, blue color values in a tuple"""
+        """The red, green, blue color values in a tuple"""
         # noinspection PyTypeChecker
         return tuple(v / 255 for v in self.rgb)
 
     @property
     def hex(self) -> str:
-        """hexadecimal representation of color value"""
+        """Hexadecimal representation of color value"""
         r, g, b = self.rgb
         return f"#{r:02x}{g:02x}{b:02x}"
 
@@ -172,7 +172,7 @@ class Color:
 
     @property
     def hsv(self) -> Tuple[float, float, float]:
-        """hue, saturation, value color values in a tuple"""
+        """The hue, saturation, value color values in a tuple"""
         return colorsys.rgb_to_hsv(*self.rgb_float)
 
     @hsv.setter
