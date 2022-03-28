@@ -162,13 +162,14 @@ class ActiveVoiceState(VoiceState):
         """
         target_channel = to_snowflake(channel)
         if target_channel != self._channel_id:
+            already_paused = self.paused
             if self.player:
                 self.player.pause()
 
             self._channel_id = target_channel
             await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
-            if self.player:
+            if self.player and not already_paused:
                 self.player.resume()
 
     async def stop(self) -> None:
