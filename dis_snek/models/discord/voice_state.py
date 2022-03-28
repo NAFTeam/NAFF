@@ -22,15 +22,25 @@ __all__ = ["VoiceState", "VoiceRegion"]
 @define()
 class VoiceState(ClientObject):
     user_id: "Snowflake_Type" = field(default=MISSING, converter=to_snowflake)
+    """the user id this voice state is for"""
     session_id: str = field(default=MISSING)
+    """the session id for this voice state"""
     deaf: bool = field(default=False)
+    """whether this user is deafened by the server"""
     mute: bool = field(default=False)
+    """whether this user is muted by the server"""
     self_deaf: bool = field(default=False)
+    """whether this user is locally deafened"""
     self_mute: bool = field(default=False)
+    """whether this user is locally muted"""
     self_stream: Optional[bool] = field(default=False)
+    """whether this user is streaming using "Go Live\""""
     self_video: bool = field(default=False)
+    """whether this user's camera is enabled"""
     suppress: bool = field(default=False)
+    """whether this user is muted by the current user"""
     request_to_speak_timestamp: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
+    """the time at which the user requested to speak"""
 
     # internal for props
     _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=to_snowflake)
@@ -75,11 +85,17 @@ class VoiceRegion(DictSerializationMixin):
     """A voice region."""
 
     id: str = field(repr=True)
+    """unique ID for the region"""
     name: str = field(repr=True)
+    """name of the region"""
     vip: bool = field(default=False, repr=True)
+    """whether this is a VIP-only voice region"""
     optimal: bool = field(default=False)
+    """true for a single server that is closest to the current user's client"""
     deprecated: bool = field(default=False)
+    """whether this is a deprecated voice region (avoid switching to these)"""
     custom: bool = field(default=False)
+    """whether this is a custom voice region (used for events/etc)"""
 
     def __str__(self) -> str:
         return self.name

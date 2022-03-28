@@ -142,7 +142,9 @@ class User(BaseUser):
 @define()
 class SnakeBotUser(User):
     verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
-    mfa_enabled: bool = field(default=False, metadata={"docs": "Whether the user has two factor enabled on their account"})
+    mfa_enabled: bool = field(
+        default=False, metadata={"docs": "Whether the user has two factor enabled on their account"}
+    )
     email: Optional[str] = field(default=None, metadata={"docs": "the user's email"})  # needs special permissions?
     locale: Optional[str] = field(default=None, metadata={"docs": "the user's chosen language option"})
     bio: Optional[str] = field(default=None, metadata={"docs": ""})

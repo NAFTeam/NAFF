@@ -6,6 +6,7 @@ __all__ = ["Wait"]
 
 class Wait:
     """Class for waiting for a future event to happen. Internally used by wait_for."""
+
     def __init__(self, event: str, checks: Optional[Callable[..., bool]], future: Future) -> None:
         self.event = event
         self.checks = checks

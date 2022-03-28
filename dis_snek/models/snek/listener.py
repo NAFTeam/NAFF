@@ -35,6 +35,7 @@ class Listener:
             A listener object.
 
         """
+
         def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")

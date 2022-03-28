@@ -36,8 +36,11 @@ __all__ = ["Paginator"]
 @define(kw_only=False)
 class Timeout:
     paginator: "Paginator" = field()
+    """The paginator that this timeout is associated with."""
     run: bool = field(default=True)
+    """Whether or not this timeout is currently running."""
     ping: asyncio.Event = asyncio.Event()
+    """The event that is used to wait the paginator action."""
 
     async def __call__(self) -> None:
         while self.run:
@@ -54,15 +57,21 @@ class Timeout:
 @define(kw_only=False)
 class Page:
     content: str = field()
+    """The content of the page."""
     title: Optional[str] = field(default=None)
+    """The title of the page."""
     prefix: str = field(kw_only=True, default="")
+    """Content that is prepended to the page."""
     suffix: str = field(kw_only=True, default="")
+    """Content that is appended to the page."""
 
     @property
     def get_summary(self) -> str:
+        """Get the short version of the page content."""
         return self.title or textwrap.shorten(self.content, 40, placeholder="...")
 
     def to_embed(self) -> Embed:
+        """Process the page to an embed."""
         return Embed(description=f"{self.prefix}\n{self.content}\n{self.suffix}", title=self.title)
 
 
@@ -147,10 +156,12 @@ class Paginator:
 
     @property
     def message(self) -> Message:
+        """The message this paginator is currently attached to"""
         return self._message
 
     @property
     def author_id(self) -> Snowflake_Type:
+        """The ID of the author of the message this paginator is currently attached to"""
         return self._author_id
 
     @classmethod

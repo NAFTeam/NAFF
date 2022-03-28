@@ -46,6 +46,7 @@ white_space = re.compile(r"\s+")
 
 class OverriddenJson:
     """Uses orjson if available, otherwise uses built-in json library."""
+
     @staticmethod
     def dumps(*args, **kwargs) -> str:
         data = json.dumps(*args, **kwargs)
