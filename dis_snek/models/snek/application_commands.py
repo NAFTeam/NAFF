@@ -1,4 +1,5 @@
 import asyncio
+from email.policy import default
 import inspect
 import logging
 import re
@@ -164,6 +165,7 @@ class InteractionCommand(BaseCommand):
     """
 
     name: str = field(metadata=docs("1-32 character name") | no_export_meta)
+    name_localizations: Optional[dict] = field(default=None, metadata=no_export_meta)
     scopes: List["Snowflake_Type"] = field(
         default=[GLOBAL_SCOPE],
         converter=to_snowflake_list,
@@ -240,6 +242,7 @@ class ContextMenu(InteractionCommand):
 
     name: str = field(metadata=docs("1-32 character name"))
     type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
+    name_localizations: Optional[dict] = field(default=None)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -292,6 +295,8 @@ class SlashCommandOption(DictSerializationMixin):
     name: str = field()
     type: Union[OptionTypes, int] = field()
     description: str = field(default="No Description Set")
+    name_localizations: dict = field(default=None)
+    description_localizations: dict = field(default=None)
     required: bool = field(default=True)
     autocomplete: bool = field(default=False)
     choices: List[Union[SlashCommandChoice, Dict]] = field(factory=list)
@@ -627,6 +632,8 @@ def subcommand(
     subcommand_group: Optional[str] = None,
     name: Optional[str] = None,
     description: Absent[str] = MISSING,
+    name_locales: Optional[dict] = None,
+    description_locales: Optional[dict] = None,
     base_description: Optional[str] = None,
     base_desc: Optional[str] = None,
     base_default_permission: bool = True,
@@ -678,6 +685,8 @@ def subcommand(
             scopes=scopes if scopes else [GLOBAL_SCOPE],
             callback=func,
             options=options,
+            name_locales=name_locales,
+            description_locales=description_locales,
         )
         return cmd
 
@@ -690,6 +699,7 @@ def context_menu(
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
+    name_locales: Optional[dict] = None,
 ) -> Callable[[Coroutine], ContextMenu]:
     """
     A decorator to declare a coroutine as a Context Menu.
@@ -724,6 +734,7 @@ def context_menu(
             default_permission=default_permission,
             permissions=perm,
             callback=func,
+            name_localizations=name_locales,
         )
         return cmd
 
@@ -769,6 +780,8 @@ def slash_option(
     channel_types: Optional[list[Union[ChannelTypes, int]]] = None,
     min_value: Optional[float] = None,
     max_value: Optional[float] = None,
+    name_locales: Optional[dict] = None,
+    description_locales: Optional[dict] = None,
 ) -> Any:
     r"""
     A decorator to add an option to a slash command.
@@ -782,6 +795,8 @@ def slash_option(
         channel_types: The channel types permitted. The option needs to be a channel
         min_value: The minimum value permitted. The option needs to be an integer or float
         max_value: The maximum value permitted. The option needs to be an integer or float
+        name_locales: The name of the option in different languages
+        description_locales: The description of the option in different languages
     """
 
     def wrapper(func: Coroutine) -> Coroutine:
@@ -798,6 +813,8 @@ def slash_option(
             channel_types=channel_types,
             min_value=min_value,
             max_value=max_value,
+            name_localizations=name_locales,
+            description_localizations=description_locales,
         )
         if not hasattr(func, "options"):
             func.options = []
