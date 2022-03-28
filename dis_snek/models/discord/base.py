@@ -29,11 +29,13 @@ class ClientObject(DictSerializationMixin):
     def from_list(cls: Type[T], datas: List[Dict[str, Any]], client: "Snake") -> List[T]:
         return [cls.from_dict(data, client) for data in datas]
 
-    def update_from_dict(self, data) -> None:
+    def update_from_dict(self, data) -> T:
         data = self._process_dict(data, self._client)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
             setattr(self, key, value)
+
+        return self
 
 
 @define(slots=False)
