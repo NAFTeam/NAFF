@@ -32,6 +32,7 @@ class AutoDefer:
                 await ctx.defer(self.ephemeral)
 
     async def defer(self, ctx: "InteractionContext") -> None:
+        """Defer the command"""
         if not ctx.responded or not ctx.deferred:
             try:
                 await ctx.defer(self.ephemeral)

@@ -17,9 +17,12 @@ __all__ = ["TeamMember", "Team"]
 @define()
 class TeamMember(DiscordObject):
     membership_state: TeamMembershipState = field(converter=TeamMembershipState)
+    """Rhe user's membership state on the team"""
     # permissions: List[str] = field(default=["*"])  # disabled until discord adds more team roles
     team_id: "Snowflake_Type" = field(repr=True)
+    """Rhe id of the parent team of which they are a member"""
     user: "User" = field()  # TODO: cache partial user (avatar, discrim, id, username)
+    """Rhe avatar, discriminator, id, and username of the user"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -31,9 +34,13 @@ class TeamMember(DiscordObject):
 @define()
 class Team(DiscordObject):
     icon: Optional[Asset] = field(default=None)
+    """A hash of the image of the team's icon"""
     members: List[TeamMember] = field(factory=list)
+    """The members of the team"""
     name: str = field(repr=True)
+    """The name of the team"""
     owner_user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    """The user id of the current team owner"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -44,6 +51,7 @@ class Team(DiscordObject):
 
     @property
     def owner(self) -> "User":
+        """The owner of the team"""
         return self._client.cache.get_user(self.owner_user_id)
 
     def is_in_team(self, user: Union["SnowflakeObject", "Snowflake_Type"]) -> bool:

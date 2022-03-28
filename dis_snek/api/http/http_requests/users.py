@@ -15,17 +15,23 @@ class UserRequests:
     request: Any
 
     async def get_current_user(self) -> discord_typings.UserData:
-        """Shortcut to get requester's user."""
+        """
+        Shortcut to get requester's user.
+
+        Returns:
+            The user object.
+
+        """
         return await self.get_user("@me")
 
     async def get_user(self, user_id: "Snowflake_Type") -> discord_typings.UserData:
         """
         Get a user object for a given user ID.
 
-        parameters:
+        Args:
             user_id: The user to get.
 
-        returns:
+        Returns:
             The user object.
 
         """
@@ -35,7 +41,7 @@ class UserRequests:
         """
         Modify the user account settings.
 
-        parameters:
+        Args:
             payload: The data to send.
 
         """
@@ -54,7 +60,7 @@ class UserRequests:
         """
         Leave a guild. Returns a 204 empty response on success.
 
-        parameters:
+        Args:
             guild_id: The guild to leave from.
 
         """
@@ -64,7 +70,7 @@ class UserRequests:
         """
         Create a new DM channel with a user. Returns a DM channel object.
 
-        parameters:
+        Args:
             recipient_id: The recipient to open a DM channel with.
 
         """
@@ -74,7 +80,7 @@ class UserRequests:
         """
         Create a new group DM channel with multiple users.
 
-        parameters:
+        Args:
             payload: The data to send.
 
         """
@@ -95,7 +101,7 @@ class UserRequests:
         """
         Adds a recipient to a Group DM using their access token.
 
-        parameters:
+        Args:
             channel_id: The ID of the group dm
             user_id: The ID of the user to add
             access_token: Access token of a user that has granted your app the gdm.join scope
@@ -111,7 +117,7 @@ class UserRequests:
         """
         Remove a recipient from the group dm.
 
-        parameters:
+        Args:
             channel_id: The ID of the group dm
             user_id: The ID of the user to remove
 
@@ -122,7 +128,7 @@ class UserRequests:
         """
         Modifies the nickname of the current user in a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             nickname: The new nickname to use
 

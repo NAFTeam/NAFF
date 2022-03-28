@@ -15,10 +15,21 @@ no_export_meta = {"no_export": True}
 
 
 def export_converter(converter) -> dict:
+    """Makes it easier to quickly type attr export converter metadata."""
     return {"export_converter": converter}
 
 
 def to_dict(inst) -> dict:
+    """
+    Converts an instance to a dict.
+
+    Args:
+        inst: The instance to convert.
+
+    Returns:
+        The processed dict.
+
+    """
     if (converter := getattr(inst, "as_dict", None)) is not None:
         return converter()
 
@@ -45,6 +56,16 @@ def to_dict(inst) -> dict:
 
 
 def _to_dict_any(inst: T) -> dict | list | str | T:
+    """
+    Converts any type to a dict.
+
+    Args:
+        inst: The instance to convert.
+
+    Returns:
+        The processed dict.
+
+    """
     if has(inst.__class__):
         return to_dict(inst)
     elif isinstance(inst, dict):
@@ -61,14 +82,44 @@ def _to_dict_any(inst: T) -> dict | list | str | T:
 
 
 def dict_filter_none(data: dict) -> dict:
+    """
+    Filters out all values that are None.
+
+    Args:
+        data: The dict data to filter.
+
+    Returns:
+        The filtered dict data.
+
+    """
     return {k: v for k, v in data.items() if v is not None}
 
 
 def dict_filter_missing(data: dict) -> dict:
+    """
+    Filters out all values that are MISSING sentinel.
+
+    Args:
+        data: The dict data to filter.
+
+    Returns:
+        The filtered dict data.
+
+    """
     return {k: v for k, v in data.items() if v is not MISSING}
 
 
 def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
+    """
+    Converts an image file to base64 encoded image data for discord api.
+
+    Args:
+        imagefile: The target image file to encode.
+
+    Returns:
+        The base64 encoded image data.
+
+    """
     match imagefile:
         case bytes():
             image_data = imagefile
@@ -90,6 +141,16 @@ def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
 
 
 def _get_file_mimetype(filedata: bytes) -> str:
+    """
+    Gets the mimetype of a file based on file signature.
+
+    Args:
+        filedata: The file data to process.
+
+    Returns:
+        The mimetype of the file.
+
+    """
     if filedata.startswith((b"GIF87a", b"GIF89a")):
         return "image/gif"
     elif filedata.startswith(b"\x89PNG\x0D\x0A\x1A\x0A"):

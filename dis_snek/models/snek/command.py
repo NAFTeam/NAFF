@@ -31,7 +31,7 @@ class BaseCommand(DictSerializationMixin):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
 
-    attributes:
+    Attributes:
         scale: The scale this command belongs to.
         enabled: Whether this command is enabled
         checks: Any checks that must be run before this command can be run
@@ -84,7 +84,7 @@ class BaseCommand(DictSerializationMixin):
         """
         Calls this command.
 
-        parameters:
+        Args:
             context: The context of this command
             args: Any
             kwargs: Any
@@ -193,7 +193,7 @@ class BaseCommand(DictSerializationMixin):
         """
         Determines if this command can be run.
 
-        parameters:
+        Args:
             context: The context of the command
 
         """
@@ -262,9 +262,9 @@ def message_command(
     """
     A decorator to declare a coroutine as a message command.
 
-    parameters:
+    Args:
         name: The name of the command, defaults to the name of the coroutine
-    returns:
+    Returns:
         Message Command Object
 
     """
@@ -282,7 +282,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]) -> Callable[[Coroutine]
     """
     Add a check to a command.
 
-    parameters:
+    Args:
         check: A coroutine as a check for this command
 
     """

@@ -1,7 +1,7 @@
 """
 Constants used throughout Snek.
 
-attributes:
+Attributes:
     __version__ str: The version of the library.
     __repo_url__ str: The URL of the repository.
     __py_version__ str: The python version in use.
@@ -27,6 +27,9 @@ attributes:
     GLOBAL_SCOPE _sentinel: A sentinel that represents a global scope for application commands.
     MENTION_PREFIX _sentinel: A sentinel representing the bot will be mentioned for a prefix
     MISSING _sentinel: A sentinel value that indicates something has not been set
+
+    T TypeVar: A type variable used for generic typing.
+    Absent Union[T, Missing]: A type hint for a value that may be MISSING.
 
 """
 import inspect

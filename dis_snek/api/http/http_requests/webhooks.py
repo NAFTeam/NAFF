@@ -21,7 +21,7 @@ class WebhookRequests:
         """
         Create a new webhook.
 
-        parameters:
+        Args:
             channel_id: The id of the channel to add this webhook to
             name: name of the webhook (1-80 characters)
             avatar: The image for the default webhook avatar
@@ -35,9 +35,10 @@ class WebhookRequests:
         """
         Return a list of channel webhook objects.
 
-        parameters:
+        Args:
             channel_id: The id of the channel to query
-        returns:
+
+        Returns:
             List of webhook objects
 
         """
@@ -47,9 +48,10 @@ class WebhookRequests:
         """
         Return a list of guild webhook objects.
 
-        parameters:
+        Args:
             guild_id: The id of the guild to query
-        returns:
+
+        Returns:
             List of webhook objects
 
         """
@@ -59,10 +61,11 @@ class WebhookRequests:
         """
         Return the new webhook object for the given id.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to get
             webhook_token: The token for the webhook
-        returns:
+
+        Returns:
             Webhook object
 
         """
@@ -81,7 +84,7 @@ class WebhookRequests:
         """
         Modify a webhook.
 
-        parameters:
+        Args:
             name: the default name of the webhook
             avatar: image for the default webhook avatar
             channel_id: the new channel id this webhook should be moved to
@@ -99,10 +102,11 @@ class WebhookRequests:
         """
         Delete a webhook.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
-        returns:
+
+        Returns:
             Webhook object
 
         """
@@ -121,14 +125,15 @@ class WebhookRequests:
         """
         Execute a webhook. Basically send a message as the webhook.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
             payload: The JSON payload for the message
             wait: Waits for server confirmation of message send before response
             thread_id: Send a message to the specified thread
             suffix: An optional suffix to add to the end of the endpoint address
-        returns:
+
+        Returns:
             The sent `message`, if `wait` is True else None
 
         """
@@ -144,11 +149,12 @@ class WebhookRequests:
         """
         Returns a previously-sent webhook message from the same token. Returns a message object on success.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
             message_id: The ID of a message sent by this webhook
-        returns:
+
+        Returns:
             A message object on success
 
         """
@@ -160,12 +166,13 @@ class WebhookRequests:
         """
         Edits a previously-sent webhook message from the same token.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
             message_id: The ID of a message sent by this webhook
             payload: The JSON payload for the message
-        returns:
+
+        Returns:
             The updated message on success
 
         """
@@ -179,7 +186,7 @@ class WebhookRequests:
         """
         Delete a message that was created by the same token.
 
-        parameters:
+        Args:
             webhook_id: The ID of the webhook to delete
             webhook_token: The token for the webhook
             message_id: The ID of a message sent by this webhook

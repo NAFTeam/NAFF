@@ -20,7 +20,7 @@ class ReactionRequests:
         """
         Create a reaction for a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in
             message_id: The message to create a a reaction on
             emoji: The emoji to use (format: `name:id`)
@@ -42,7 +42,7 @@ class ReactionRequests:
         """
         Remove client's reaction from a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in.
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
@@ -64,7 +64,7 @@ class ReactionRequests:
         """
         Remove user's reaction from a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
@@ -86,7 +86,7 @@ class ReactionRequests:
         """
         Remove specific reaction from a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in.
             message_id: The message to remove the reaction on.
             emoji: The emoji to remove. (format: `name:id`)
@@ -106,7 +106,7 @@ class ReactionRequests:
         """
         Remove reactions from a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in.
             message_id: The message to clear reactions from.
 
@@ -124,12 +124,12 @@ class ReactionRequests:
         """
         Gets specific reaction from a message.
 
-        parameters:
+        Args:
             channel_id: The channel this is taking place in.
             message_id: The message to get the reaction.
             emoji: The emoji to get. (format: `name:id`)
 
-        returns:
+        Returns:
             List of users who reacted with the emoji.
 
         """

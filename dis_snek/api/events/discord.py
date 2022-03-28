@@ -503,6 +503,7 @@ class ModalResponse(BaseEvent):
     """Dispatched when a modal receives a response"""
 
     context: "ModalContext" = field()
+    """The context data of the modal"""
 
 
 @define(kw_only=False)

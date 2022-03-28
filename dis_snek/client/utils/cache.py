@@ -17,8 +17,19 @@ VT = TypeVar("VT")
 class TTLItem(Generic[VT]):
     value: VT = field()
     expire: float = field()
+    """When the item expires in cache."""
 
     def is_expired(self, timestamp: float) -> bool:
+        """
+        Check if the item is expired.
+
+        Args:
+            timestamp: The current timestamp to compare against.
+
+        Returns:
+            True if the item is expired, False otherwise.
+
+        """
         return timestamp >= self.expire
 
 

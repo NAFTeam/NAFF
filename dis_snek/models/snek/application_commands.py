@@ -77,10 +77,10 @@ class OptionTypes(IntEnum):
         """
         Convert data types to their corresponding OptionType.
 
-        parameters:
+        Args:
             t: The datatype to convert
 
-        returns:
+        Returns:
             OptionType or None
 
         """
@@ -131,7 +131,7 @@ class Permission(DictSerializationMixin):
     """
     Represents a interaction permission.
 
-    parameters:
+    Args:
         id: The id of the role or user.
         guild_id: The guild this permission belongs to
         type: The type of id (user or role)
@@ -150,7 +150,7 @@ class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
 
-    parameters:
+    Args:
         scope: Denotes whether its global or for specific guild.
         default_permission: Is this command available to all users?
         permissions: Map of guild id and its respective list of permissions to apply.
@@ -228,7 +228,7 @@ class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
 
-    parameters:
+    Args:
         name: The name of this entry.
         type: The type of entry (user or message).
 
@@ -258,7 +258,7 @@ class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
 
-    parameters:
+    Args:
         name: The name the user will see
         value: The data sent to your code when this choice is used
 
@@ -273,7 +273,7 @@ class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
 
-    parameters:
+    Args:
         name: The name of this option
         type: The type of option
         description: The description of this option
@@ -539,7 +539,7 @@ def slash_command(
         We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
         one of the future ui updates.
 
-    parameters:
+    Args:
         name: 1-32 character name of the command
         description: 1-100 character description of the command
         scope: The scope this command exists within
@@ -551,7 +551,7 @@ def slash_command(
         group_name: 1-32 character name of the group
         group_description: 1-100 character description of the group
 
-    returns:
+    Returns:
         SlashCommand Object
 
     """
@@ -656,14 +656,14 @@ def context_menu(
     """
     A decorator to declare a coroutine as a Context Menu.
 
-    parameters:
+    Args:
         name: 1-32 character name of the context menu
         context_type: The type of context menu
         scope: The scope this command exists within
         default_permission: Whether the menu is enabled by default when the app is added to a guild
         permissions: The roles or users who can use this menu
 
-    returns:
+    Returns:
         ContextMenu object
 
     """
@@ -735,7 +735,7 @@ def slash_option(
     r"""
     A decorator to add an option to a slash command.
 
-    parameters:
+    Args:
         name: 1-32 lowercase character name matching ^[\w-]{1,32}$
         opt_type: The type of option
         description: 1-100 character description of option
@@ -773,7 +773,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
     """
     A decorator to add permissions for a guild to a slash command or context menu.
 
-    parameters:
+    Args:
         *permission: The permissions to apply to this command
 
     """

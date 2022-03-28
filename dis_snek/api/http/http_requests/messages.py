@@ -16,7 +16,16 @@ class MessageRequests:
     request: Any
 
     async def create_message(self, payload: dict, channel_id: "Snowflake_Type") -> discord_typings.MessageData:
-        """Send a message to the specified channel."""
+        """
+        Send a message to the specified channel.
+
+        Args:
+            payload: The message to send
+
+        Returns:
+            The resulting message object
+
+        """
         return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
 
     async def delete_message(
@@ -25,7 +34,7 @@ class MessageRequests:
         """
         Deletes a message from the specified channel.
 
-        parameters:
+        Args:
             channel_id: The id of the channel to delete the message from
             message_id: The id of the message to delete
             reason: The reason for this action
@@ -39,7 +48,7 @@ class MessageRequests:
         """
         Delete multiple messages in a single request.
 
-        parameters:
+        Args:
             channel_id: The id of the channel these messages are in
             message_ids: A list of message ids to delete
             reason: The reason for this action
@@ -55,10 +64,11 @@ class MessageRequests:
         """
         Get a specific message in the channel. Returns a message object on success.
 
-        parameters:
+        Args:
             channel_id: the channel this message belongs to
             message_id: the id of the message
-        returns:
+
+        Returns:
             message or None
 
         """
@@ -68,7 +78,7 @@ class MessageRequests:
         """
         Pin a message to a channel.
 
-        parameters:
+        Args:
             channel_id: Channel to pin message to
             message_id: Message to pin
 
@@ -79,7 +89,7 @@ class MessageRequests:
         """
         Unpin a message to a channel.
 
-        parameters:
+        Args:
             channel_id: Channel to unpin message to
             message_id: Message to unpin
 
@@ -95,12 +105,12 @@ class MessageRequests:
         """
         Edit an existing message.
 
-        parameters:
+        Args:
             payload:
             channel_id: Channel of message to edit.
             message_id: Message to edit.
 
-        returns:
+        Returns:
             Message object of edited message
 
         """
@@ -112,10 +122,10 @@ class MessageRequests:
         """
         Crosspost a message in a News Channel to following channels.
 
-        parameters:
+        Args:
             channel_id: Channel the message is in
             message_id: The id of the message to crosspost
-        returns:
+        Returns:
             message object
 
         """

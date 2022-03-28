@@ -57,10 +57,13 @@ class BaseEvent:
     """A base event that all other events inherit from."""
 
     override_name: str = field(kw_only=True, default=None)
+    """Custom name of the event to be used when dispatching."""
     bot: "Snake" = field(kw_only=True, default=MISSING)
+    """The client instance that dispatched this event."""
 
     @property
     def resolved_name(self) -> str:
+        """The name of the event, defaults to the class name if not overridden."""
         name = self.override_name or self.__class__.__name__
         return _event_reg.sub("_", name).lower()
 

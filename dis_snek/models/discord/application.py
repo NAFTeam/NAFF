@@ -18,47 +18,42 @@ __all__ = ["Application"]
 
 @define()
 class Application(DiscordObject):
-    """
-    Represents a discord application.
-
-    Attributes:
-        name str: The name of the application.
-        icon str: The icon of the application
-        description str: The description of the application
-        rpc_origins List[str]: an array of rpc origin urls, if rpc is enabled
-        bot_public bool: when false only app owner can join the app's bot to guilds
-        bot_require_code_grant bool: when true the app's bot will only join upon completion of the full oauth2 code grant flow
-        terms_of_service_url str: the url of the app's terms of service
-        privacy_policy_url str: the url of the app's privacy policy
-        owner User : partial user object containing info on the owner of the application
-        summary str: if this application is a game sold on Discord, this field will be the summary field for the store page of its primary sku
-        verify_key str: the hex encoded key for verification in interactions and the GameSDK's GetTicket
-        team Team: if the application belongs to a team, this will be a list of the members of that team
-        guild_id Snowflake_Type: if this application is a game sold on Discord, this field will be the guild to which it has been linked
-        primary_sku_id Snowflake_Type: if this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists
-        slug str: if this application is a game sold on Discord, this field will be the URL slug that links to the store page
-        cover_image str: the application's default rich presence invite cover image hash
-        flags int: the application's public flags
-
-    """
+    """Represents a discord application."""
 
     name: str = field(repr=True)
+    """The name of the application"""
     icon: Optional[Asset] = field(default=None)
+    """The icon of the application"""
     description: Optional[str] = field(default=None)
+    """The description of the application"""
     rpc_origins: Optional[List[str]] = field(default=None)
+    """An array of rpc origin urls, if rpc is enabled"""
     bot_public: bool = field(default=True)
+    """When false only app owner can join the app's bot to guilds"""
     bot_require_code_grant: bool = field(default=False)
+    """When true the app's bot will only join upon completion of the full oauth2 code grant flow"""
     terms_of_service_url: Optional[str] = field(default=None)
+    """The url of the app's terms of service"""
     privacy_policy_url: Optional[str] = field(default=None)
+    """The url of the app's privacy policy"""
     owner_id: Optional[Snowflake_Type] = field(default=None, converter=optional(to_snowflake))
+    """The id of the owner of the application"""
     summary: str = field()
+    """If this application is a game sold on Discord, this field will be the summary field for the store page of its primary sku"""
     verify_key: Optional[str] = field(default=MISSING)
+    """The hex encoded key for verification in interactions and the GameSDK's GetTicket"""
     team: Optional["Team"] = field(default=None)
+    """If the application belongs to a team, this will be a list of the members of that team"""
     guild_id: Optional["Snowflake_Type"] = field(default=None)
+    """If this application is a game sold on Discord, this field will be the guild to which it has been linked"""
     primary_sku_id: Optional["Snowflake_Type"] = field(default=None)
+    """If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists"""
     slug: Optional[str] = field(default=None)
+    """If this application is a game sold on Discord, this field will be the URL slug that links to the store page"""
     cover_image: Optional[str] = field(default=None)
+    """The application's default rich presence invite cover image hash"""
     flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
+    """The application's public flags"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -76,4 +71,5 @@ class Application(DiscordObject):
 
     @property
     def owner(self) -> "User":
+        """The user object for the owner of this application"""
         return self._client.cache.get_user(self.owner_id)

@@ -23,10 +23,10 @@ class ScheduledEventsRequests:
         """
         Get the scheduled events for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled events from
             with_user_count: Whether to include the user count in the response
-        returns:
+        Returns:
             List of Scheduled Events or None
 
         """
@@ -40,11 +40,11 @@ class ScheduledEventsRequests:
         """
         Get a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled event from
             with_user_count: Whether to include the user count in the response
 
-        returns:
+        Returns:
             Scheduled Event or None
 
         """
@@ -62,12 +62,12 @@ class ScheduledEventsRequests:
         """
         Create a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to create scheduled event from
             payload: The scheduled event payload
             reason: The reason to be displayed in audit logs
 
-        returns:
+        Returns:
             Scheduled Event or None
 
         """
@@ -83,12 +83,13 @@ class ScheduledEventsRequests:
         """
         Modify a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to modify scheduled event from
             scheduled_event_id: The scheduled event to modify
             payload: The payload to modify the scheduled event with
             reason: The reason to be displayed in audit logs
-        returns:
+
+        Returns:
             Scheduled Event or None
 
         """
@@ -105,7 +106,7 @@ class ScheduledEventsRequests:
         """
         Delete a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to delete scheduled event from
             scheduled_event_id: The scheduled event to delete
             reason: The reason to be displayed in audit logs
@@ -127,14 +128,15 @@ class ScheduledEventsRequests:
         """
         Get the users for a scheduled event.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled event users from
             scheduled_event_id: The scheduled event to get users from
             limit: how many users to receive from the event
             with_member: include guild member data if it exists
             before: consider only users before given user id
             after: consider only users after given user id
-        returns:
+
+        Returns:
             List of Scheduled Event Users or None
 
         """

@@ -26,12 +26,12 @@ class GuildRequests:
         """
         Get a list of partial guild objects the current user is a member of req. `guilds` scope.
 
-        parameters:
+        Args:
             limit: max number of guilds to return (1-200)
             before: get guilds before this guild ID
             after: get guilds after this guild ID
 
-        returns:
+        Returns:
             List of guild objects
 
         """
@@ -49,10 +49,10 @@ class GuildRequests:
         """
         Get the guild object for the given ID.
 
-        parameters:
+        Args:
             guild_id: the id of the guild
             with_counts: when `true`, will return approximate member and presence counts for the guild
-        returns:
+        Returns:
             a guild object
 
         """
@@ -64,10 +64,10 @@ class GuildRequests:
         """
         Get a guild's preview.
 
-        parameters:
+        Args:
             guild_id: the guilds ID
 
-        returns:
+        Returns:
             guild preview object
 
         """
@@ -77,10 +77,10 @@ class GuildRequests:
         """
         Get a guilds channels.
 
-        parameters:
+        Args:
             guild_id: the id of the guild
 
-        returns:
+        Returns:
             List of channels
 
         """
@@ -90,10 +90,10 @@ class GuildRequests:
         """
         Get a guild's roles.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
 
-        returns:
+        Returns:
             List of roles
 
         """
@@ -103,7 +103,7 @@ class GuildRequests:
         """
         Modify a guild's attributes.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild we want to modify
             reason: The reason for this change
             kwargs: The params to change
@@ -143,7 +143,7 @@ class GuildRequests:
         """
         Delete the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild that we want to delete
 
         """
@@ -162,7 +162,7 @@ class GuildRequests:
         """
         Add a user to the guild. All parameters to this endpoint except for `access_token`, `guild_id` and `user_id` are optional.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user to add
             access_token: The access token of the user
@@ -170,7 +170,7 @@ class GuildRequests:
             roles: array of role ids the member is assigned
             mute: whether the user is muted in voice channels
             deaf: whether the user is deafened in voice channels
-        returns:
+        Returns:
             Guild Member Object
 
         """
@@ -187,7 +187,7 @@ class GuildRequests:
         """
         Remove a member from a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user to remove
             reason: The reason for this action
@@ -199,10 +199,10 @@ class GuildRequests:
         """
         Return a list of ban objects for the users banned from this guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
 
-        returns:
+        Returns:
             List of ban objects
 
         """
@@ -214,15 +214,15 @@ class GuildRequests:
         """
         Returns a ban object for the given user or a 404 not found if the ban cannot be found.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             user_id: The ID of the user to query
 
-        returns:
+        Returns:
             Ban object if exists
 
-        raises:
-            Not found error if no ban exists
+        Raises:
+            NotFound: if no ban exists
 
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans/{user_id}"))
@@ -237,7 +237,7 @@ class GuildRequests:
         """
         Create a guild ban, and optionally delete previous messages sent by the banned user.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to create the ban in
             user_id: The ID of the user to ban
             delete_message_days: number of days to delete messages for (0-7)
@@ -256,7 +256,7 @@ class GuildRequests:
         """
         Remove a guild ban.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to remove the ban in
             user_id: The ID of the user to unban
             reason: The reason for this action
@@ -270,11 +270,12 @@ class GuildRequests:
         """
         Returns an object with one 'pruned' key indicating the number of members that would be removed in a prune operation.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             days: number of days to count prune for (1-30)
             include_roles: role(s) to include
-        returns:
+
+        Returns:
             {"pruned": int}
 
         """
@@ -295,13 +296,14 @@ class GuildRequests:
         """
         Begin a prune operation.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             days: number of days to count prune for (1-30)
             include_roles: role(s) to include
             compute_prune_count: whether 'pruned' is returned, discouraged for large guilds
             reason: The reason for this action
-        returns:
+
+        Returns:
             {"pruned": Optional[int]}
 
         """
@@ -315,9 +317,10 @@ class GuildRequests:
         """
         Returns a list of invite objects (with invite metadata) for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+
+        Returns:
             List of invite objects
 
         """
@@ -329,11 +332,12 @@ class GuildRequests:
         """
         Create a new role for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             payload: A dict representing the role to add
             reason: The reason for this action
-        returns:
+
+        Returns:
             Role object
 
         """
@@ -345,12 +349,13 @@ class GuildRequests:
         """
         Modify the position of a role in the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             role_id: The ID of the role to move
             position: The new position of this role in the hierarchy
             reason: The reason for this action
-        returns:
+
+        Returns:
             List of guild roles
 
         """
@@ -364,12 +369,13 @@ class GuildRequests:
         """
         Modify an existing role for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             role_id: The ID of the role to move
             payload: A dict representing the role to add
             reason: The reason for this action
-        returns:
+
+        Returns:
             Role object
 
         """
@@ -381,7 +387,7 @@ class GuildRequests:
         """
         Delete a guild role.
 
-        parameters:
+        Args:
             role_id: The ID of the role to delete
             reason: The reason for this action
             guild_id: The ID of the guild
@@ -401,7 +407,7 @@ class GuildRequests:
         """
         Get the audit log for a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             user_id: filter by user ID
             action_type: filter by action type
@@ -409,8 +415,9 @@ class GuildRequests:
             after: snowflake to get entries after
             limit: max number of entries to get
 
-        returns:
+        Returns:
             audit log object for the guild
+
         """
         params = {
             "action_type": action_type,
@@ -425,9 +432,10 @@ class GuildRequests:
         """
         Returns a list of voice region objects for the guild. Unlike the similar /voice route, this returns VIP servers when the guild is VIP- enabled.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+
+        Returns:
             List of voice region objects
 
         """
@@ -437,9 +445,10 @@ class GuildRequests:
         """
         Returns a list of integration objects for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+
+        Returns:
             list of integration objects
 
         """
@@ -451,7 +460,7 @@ class GuildRequests:
         """
         Delete an integration from the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             integration_id: The ID of the integration to remove
 
@@ -462,9 +471,10 @@ class GuildRequests:
         """
         Get guild widget settings.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+
+        Returns:
             guild widget object
 
         """
@@ -474,9 +484,10 @@ class GuildRequests:
         """
         Returns the widget for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+
+        Returns:
             Guild widget
 
         """
@@ -488,10 +499,11 @@ class GuildRequests:
 
         For styles see: https://discord.com/developers/docs/resources/guild#get-guild-widget-image
 
-        parameters:
+        Args:
             guild_id: The guild to query
             style: The style of widget required.
-        returns:
+
+        Returns:
             A url pointing to this image
 
         """
@@ -502,9 +514,9 @@ class GuildRequests:
         """
         Get the welcome screen for this guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
-        returns:
+        Returns:
             Welcome screen object
 
         """
@@ -514,10 +526,10 @@ class GuildRequests:
         """
         Get a partial invite object for the guilds vanity invite url.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
 
-        returns:
+        Returns:
             Returns a partial invite object. Code is None if a vanity url for the guild is not set.
 
         """
@@ -545,7 +557,8 @@ class GuildRequests:
             guild_id: The ID of the guild to modify.
             enabled: Should the guild widget be enabled
             channel_id: The widget's channel ID
-        returns:
+
+        Returns:
             Updated guild widget.
 
         """
@@ -560,12 +573,13 @@ class GuildRequests:
         """
         Modify the guild's welcome screen.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild.
             enabled: Whether the welcome screen is enabled
             welcome_channels: Channels linked in the welcome screen and their display options
             description: The server description to show in the welcome screen
-        returns:
+
+        Returns:
             Updated welcome screen object
 
         """
@@ -584,7 +598,7 @@ class GuildRequests:
         """
         Update the current user voice state.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to update.
             channel_id: The id of the channel the user is currently in
             suppress: Toggle the user's suppress state.
@@ -608,7 +622,7 @@ class GuildRequests:
         """
         Modify the voice state of a user.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild.
             user_id: The ID of the user to modify.
             channel_id: The ID of the channel the user is currently in.
@@ -662,12 +676,12 @@ class GuildRequests:
         note:
             This endpoint can only be used by bots in less than 10 guilds.
 
-        parameters:
+        Args:
             template_code: The code of the template to use.
             name: The name of the guild (2-100 characters)
             icon: Data URI scheme
 
-        returns:
+        Returns:
             The newly created guild object
 
         """
@@ -679,9 +693,10 @@ class GuildRequests:
         """
         Returns an array of guild templates.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query.
-        returns:
+
+        Returns:
             An array of guild templates
 
         """
@@ -693,11 +708,12 @@ class GuildRequests:
         """
         Create a guild template for the guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to create a template for.
             name: The name of the template
             description: The description of the template
-        returns:
+
+        Returns:
             The created guild template
 
         """
@@ -712,10 +728,11 @@ class GuildRequests:
         """
         Sync the template to the guild's current state.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             template_code: The code for the template to sync
-        returns:
+
+        Returns:
             The updated guild template
 
         """
@@ -731,12 +748,13 @@ class GuildRequests:
         """
         Modifies the template's metadata.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             template_code: The template code
             name: The name of the template
             description: The description of the template
-        returns:
+
+        Returns:
             The updated guild template
 
         """
@@ -751,10 +769,11 @@ class GuildRequests:
         """
         Delete the guild template.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             template_code: The ID of the template
-        returns:
+
+        Returns:
             The deleted template object
 
         """

@@ -33,9 +33,6 @@ class Scale:
                 await ctx.send(f"I was sent from a scale called {self.name}")
         ```
 
-    parameters:
-        bot Snake: A reference to the client
-
     Attributes:
         bot Snake: A reference to the client
         name str: The name of this Scale (`read-only`)
@@ -123,6 +120,7 @@ class Scale:
 
     @property
     def name(self) -> str:
+        """Get the name of this Scale."""
         return self.__name
 
     def shed(self) -> None:

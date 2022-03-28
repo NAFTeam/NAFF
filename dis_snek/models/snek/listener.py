@@ -12,7 +12,9 @@ __all__ = ["Listener", "listen"]
 class Listener:
 
     event: str
+    """Name of the event to listen to."""
     callback: Coroutine
+    """Coroutine to call when the event is triggered."""
 
     def __init__(self, func: Coroutine, event: str) -> None:
         self.event = event
@@ -23,6 +25,16 @@ class Listener:
 
     @classmethod
     def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:
+        """
+        Decorator for creating an event listener.
+
+        Args:
+            event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+
+        Returns:
+            A listener object.
+
+        """
         def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
@@ -48,4 +60,14 @@ class Listener:
 
 
 def listen(event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Callable[..., Coroutine]], Listener]:
+    """
+    Decorator to make a function an event listener.
+
+    Args:
+        event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+
+    Returns:
+        A listener object.
+
+    """
     return Listener.create(event_name)

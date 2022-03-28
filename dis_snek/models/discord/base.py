@@ -14,6 +14,8 @@ __all__ = ["ClientObject", "DiscordObject"]
 
 @define(slots=False)
 class ClientObject(DictSerializationMixin):
+    """Serializable object that requires client reference."""
+
     _client: "Snake" = field(metadata=no_export_meta)
 
     @classmethod

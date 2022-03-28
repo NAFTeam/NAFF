@@ -317,6 +317,9 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
     Args:
         embeds: List of dict / embeds to process
 
+    Returns:
+        formatted list for discord
+
     """
     if embeds is None:
         # Its just empty, so nothing to process.

@@ -59,7 +59,9 @@ log = logging.getLogger(logger_name)
 @define()
 class GuildBan:
     reason: Optional[str]
+    """The reason for the ban"""
     user: "models.User"
+    """The banned user"""
 
 
 @define()
@@ -101,6 +103,8 @@ class GuildWelcome(ClientObject):
 
 @define()
 class GuildPreview(BaseGuild):
+    """A partial guild object."""
+
     emoji: list["models.PartialEmoji"] = field(factory=list)
     """A list of custom emoji from this guild"""
     approximate_member_count: int = field(default=0)
@@ -261,6 +265,7 @@ class Guild(BaseGuild):
             system_channel_flags: flags for the system channel
 
         Returns:
+            The created guild object
 
         """
         data = await client.http.create_guild(
@@ -389,8 +394,10 @@ class Guild(BaseGuild):
 
         Args:
             member_id: The ID of the member.
+
         Returns:
             The member object fetched. If the member is not in this guild, returns None.
+
         """
         try:
             return await self._client.cache.fetch_member(self.id, member_id)
@@ -402,18 +409,21 @@ class Guild(BaseGuild):
         Return the Member with the given discord ID.
 
         Args:
-            member_id: The ID of the member:
+            member_id: The ID of the member
+
         Returns:
             Member object or None
+
         """
         return self._client.cache.get_member(self.id, member_id)
 
     async def fetch_owner(self) -> "models.Member":
         """
-        Return the Guild owner
+        Return the Guild owner, fetching from the API if necessary.
 
         Returns:
             Member object or None
+
         """
         # TODO: maybe precache owner instead of using `fetch_owner`
         return await self._client.cache.fetch_member(self.id, self._owner_id)
@@ -424,6 +434,7 @@ class Guild(BaseGuild):
 
         Returns:
             Member object or None
+
         """
         return self._client.cache.get_member(self.id, self._owner_id)
 
@@ -433,6 +444,7 @@ class Guild(BaseGuild):
 
         Returns:
             A list of channels in this guild
+
         """
         data = await self._client.http.get_guild_channels(self.id)
         return [self._client.cache.place_channel_data(channel_data) for channel_data in data]
@@ -444,13 +456,27 @@ class Guild(BaseGuild):
         Args:
             user: The user to check
 
+        Returns:
+            True if the user is the owner of the guild, False otherwise.
+
         Note:
             the `user` argument can be any type that meets `Snowflake_Type`
+
         """
         return self._owner_id == to_snowflake(user)
 
     async def edit_nickname(self, new_nickname: Absent[str] = MISSING, reason: Absent[str] = MISSING) -> None:
-        """Alias for me.edit_nickname"""
+        """
+        Alias for me.edit_nickname
+
+        Args:
+            new_nickname: The new nickname to apply
+            reason: The reason for this change
+
+        Note:
+            Leave `new_nickname` empty to clean user's nickname
+
+        """
         await self.me.edit_nickname(new_nickname, reason=reason)
 
     async def chunk_guild(self, wait=True, presences=False) -> None:
@@ -472,6 +498,7 @@ class Guild(BaseGuild):
 
         Args:
             chunk: A member chunk from discord
+
         """
         if self.chunked.is_set():
             self.chunked.clear()
@@ -524,6 +551,7 @@ class Guild(BaseGuild):
 
         Returns:
             An AuditLog object
+
         """
         data = await self._client.http.get_audit_log(self.id, user_id, action_type, before, after, limit)
         return AuditLog.from_dict(data, self._client)
@@ -539,7 +567,7 @@ class Guild(BaseGuild):
         """
         Get an async iterator for the history of the audit log.
 
-        Parameters:
+        Args:
             guild (:class:`Guild`): The guild to search through.
             user_id (:class:`Snowflake_Type`): The user ID to search for.
             action_type (:class:`AuditLogEventType`): The action type to search for.
@@ -594,7 +622,7 @@ class Guild(BaseGuild):
         """
         Edit the guild.
 
-        Parameters:
+        Args:
             name: The new name of the guild.
             description: The new description of the guild.
             verification_level: The new verification level for the guild.
@@ -612,7 +640,7 @@ class Guild(BaseGuild):
             rules_channel: The text channel where your rules and community guidelines are displayed.
             public_updates_channel: The text channel where updates from discord should appear.
             preferred_locale: The new preferred locale of the guild. Must be an ISO 639 code.
-            features: ToDo
+            features: The enabled guild features
             reason: An optional reason for the audit log.
 
         """
@@ -651,13 +679,13 @@ class Guild(BaseGuild):
         """
         Create a new custom emoji for the guild.
 
-        parameters:
+        Args:
             name: Name of the emoji
             imagefile: The emoji image. (Supports PNG, JPEG, WebP, GIF)
             roles: Roles allowed to use this emoji.
             reason: An optional reason for the audit log.
 
-        returns:
+        Returns:
             The new custom emoji created.
 
         """
@@ -671,10 +699,28 @@ class Guild(BaseGuild):
         return self._client.cache.place_emoji_data(self.id, emoji_data)
 
     async def create_guild_template(self, name: str, description: Absent[str] = MISSING) -> "models.GuildTemplate":
+        """
+        Create a new guild template based on this guild.
+
+        Args:
+            name: The name of the template (1-100 characters)
+            description: The description for the template (0-120 characters)
+
+        Returns:
+            The new guild template created.
+
+        """
         template = await self._client.http.create_guild_template(self.id, name, description)
         return GuildTemplate.from_dict(template, self._client)
 
     async def fetch_guild_templates(self) -> List["models.GuildTemplate"]:
+        """
+        Fetch all guild templates for this guild.
+
+        Returns:
+            A list of guild template objects.
+
+        """
         templates = await self._client.http.get_guild_templates(self.id)
         return GuildTemplate.from_list(templates, self._client)
 
@@ -682,7 +728,7 @@ class Guild(BaseGuild):
         """
         Gets all the custom emoji present for this guild.
 
-        returns:
+        Returns:
             A list of custom emoji objects.
 
         """
@@ -693,10 +739,10 @@ class Guild(BaseGuild):
         """
         Fetches the custom emoji present for this guild, based on the emoji id.
 
-        parameters:
+        Args:
             emoji_id: The target emoji to get data of.
 
-        returns:
+        Returns:
             The custom emoji object. If the emoji is not found, returns None.
 
         """
@@ -709,10 +755,10 @@ class Guild(BaseGuild):
         """
         Gets the custom emoji present for this guild, based on the emoji id.
 
-        parameters:
+        Args:
             emoji_id: The target emoji to get data of.
 
-        returns:
+        Returns:
             The custom emoji object.
 
         """
@@ -741,7 +787,7 @@ class Guild(BaseGuild):
         """
         Create a guild channel, allows for explicit channel type setting.
 
-        parameters:
+        Args:
             channel_type: The type of channel to create
             name: The name of the channel
             topic: The topic of the channel
@@ -754,7 +800,7 @@ class Guild(BaseGuild):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created channel.
 
         """
@@ -790,7 +836,7 @@ class Guild(BaseGuild):
         """
         Create a text channel in this guild.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -800,7 +846,7 @@ class Guild(BaseGuild):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created text channel.
 
         """
@@ -831,7 +877,7 @@ class Guild(BaseGuild):
         """
         Create a news channel in this guild.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -840,7 +886,7 @@ class Guild(BaseGuild):
             nsfw: Should this channel be marked nsfw
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created news channel.
 
         """
@@ -872,7 +918,7 @@ class Guild(BaseGuild):
         """
         Create a guild voice channel.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -883,7 +929,7 @@ class Guild(BaseGuild):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created voice channel.
 
         """
@@ -916,7 +962,7 @@ class Guild(BaseGuild):
         """
         Create a guild stage channel.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -926,7 +972,7 @@ class Guild(BaseGuild):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created stage channel.
 
         """
@@ -954,13 +1000,13 @@ class Guild(BaseGuild):
         """
         Create a category within this guild.
 
-        parameters:
+        Args:
             name: The name of the channel
             position: The position of the channel in the channel list
             permission_overwrites: Permission overwrites to apply to the channel
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created category.
 
         """
@@ -1002,7 +1048,7 @@ class Guild(BaseGuild):
         """
         List all scheduled events in this guild.
 
-        returns:
+        Returns:
             A list of scheduled events.
 
         """
@@ -1016,9 +1062,10 @@ class Guild(BaseGuild):
         Get a scheduled event by id.
 
         Args:
-            event_id: The id of the scheduled event.
+            scheduled_event_id: The id of the scheduled event.
+            with_user_count: Whether to include the user count in the response.
 
-        returns:
+        Returns:
             The scheduled event. If the event does not exist, returns None.
 
         """
@@ -1059,7 +1106,7 @@ class Guild(BaseGuild):
             reason: reason for creating this scheduled event
 
         Returns:
-            ScheduledEvent object
+            The newly created ScheduledEvent object
 
         !!! note
             For external events, external_location is required
@@ -1104,10 +1151,10 @@ class Guild(BaseGuild):
         Creates a custom sticker for a guild.
 
         Args:
-            name: Sticker name
-            imagefile: Sticker image file
-            description: Sticker description
-            tags: Sticker tags
+            name: The name of the sticker (2-30 characters)
+            imagefile: The sticker file to upload, must be a PNG, APNG, or Lottie JSON file (max 500 KB)
+            description: The description of the sticker (empty or 2-100 characters)
+            tags: Autocomplete/suggestion tags for the sticker (max 200 characters)
             reason: Reason for creating the sticker
 
         Returns:
@@ -1165,7 +1212,7 @@ class Guild(BaseGuild):
         """
         Fetches all active threads in the guild, including public and private threads. Threads are ordered by their id, in descending order.
 
-        returns:
+        Returns:
             List of active threads and thread member object for each returned thread the bot user has joined.
 
         """
@@ -1403,7 +1450,8 @@ class Guild(BaseGuild):
         """
         Delete the guild.
 
-        You must own this guild to do this.
+        !!! Note
+            You must own this guild to do this.
 
         """
         await self._client.http.delete_guild(self.id)
@@ -1414,7 +1462,9 @@ class Guild(BaseGuild):
         """
         Kick a user from the guild.
 
-        You must have the `kick members` permission
+        !!! Note
+            You must have the `kick members` permission
+
         Args:
             user: The user to kick
             reason: The reason for the kick
@@ -1431,7 +1481,9 @@ class Guild(BaseGuild):
         """
         Ban a user from the guild.
 
-        You must have the `ban members` permission
+        !!! Note
+            You must have the `ban members` permission
+
         Args:
             user: The user to ban
             delete_message_days: How many days worth of messages to remove
@@ -1477,7 +1529,9 @@ class Guild(BaseGuild):
         """
         Unban a user from the guild.
 
-        You must have the `ban members` permission
+        !!! Note
+            You must have the `ban members` permission
+
         Args:
             user: The user to unban
             reason: The reason for the ban
@@ -1494,15 +1548,30 @@ class Guild(BaseGuild):
         Args:
             style: The style to use for the widget image
 
+        Returns:
+            The URL of the widget image.
+
         """
         return await self._client.http.get_guild_widget_image(self.id, style)
 
     async def fetch_widget_settings(self) -> "GuildWidgetSettings":
-        """Fetches the guilds widget settings."""
+        """
+        Fetches the guilds widget settings.
+
+        Returns:
+            The guilds widget settings object.
+
+        """
         return await GuildWidgetSettings.from_dict(await self._client.http.get_guild_widget_settings(self.id))
 
     async def fetch_widget(self) -> "GuildWidget":
-        """Fetches the guilds widget."""
+        """
+        Fetches the guilds widget.
+
+        Returns:
+            The guilds widget object.
+
+        """
         return GuildWidget.from_dict(await self._client.http.get_guild_widget(self.id), self._client)
 
     async def modify_widget(
@@ -1510,7 +1579,7 @@ class Guild(BaseGuild):
         enabled: Absent[bool] = MISSING,
         channel: Absent[Union["models.TYPE_GUILD_CHANNEL", Snowflake_Type]] = MISSING,
         settings: Absent["GuildWidgetSettings"] = MISSING,
-    ) -> dict:
+    ) -> "GuildWidget":
         """
         Modify the guild's widget.
 
@@ -1518,6 +1587,9 @@ class Guild(BaseGuild):
             enabled: Should the widget be enabled?
             channel: The channel to use in the widget
             settings: The settings to use for the widget
+
+        Returns:
+            The updated guilds widget object.
 
         """
         if isinstance(settings, GuildWidgetSettings):
@@ -1530,14 +1602,39 @@ class Guild(BaseGuild):
         )
 
     async def fetch_invites(self) -> List["models.Invite"]:
+        """
+        Fetches all invites for the guild.
+
+        Returns:
+            A list of invites for the guild.
+
+        """
         invites_data = await self._client.http.get_guild_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
 
     async def fetch_guild_integrations(self) -> List["models.GuildIntegration"]:
+        """
+        Fetches all integrations for the guild.
+
+        Returns:
+            A list of integrations for the guild.
+
+        """
         data = await self._client.http.get_guild_integrations(self.id)
         return [GuildIntegration.from_dict(d | {"guild_id": self.id}, self._client) for d in data]
 
     async def search_members(self, query: str, limit: int = 1) -> List["models.Member"]:
+        """
+        Search for members in the guild whose username or nickname starts with a provided string.
+
+        Args:
+            query: Query string to match username(s) and nickname(s) against.
+            limit: Max number of members to return (1-1000)
+
+        Returns:
+            A list of members matching the query.
+
+        """
         data = await self._client.http.search_guild_members(guild_id=self.id, query=query, limit=limit)
         return [self._client.cache.place_member_data(self.id, _d) for _d in data]
 
@@ -1593,9 +1690,12 @@ class GuildTemplate(ClientObject):
         """
         Modify the template's metadata.
 
-        Arguments:
+        Args:
             name: The name for the template
             description: The description for the template
+
+        Returns:
+            The modified template object.
 
         """
         data = await self._client.http.modify_guild_template(
@@ -1623,21 +1723,35 @@ class GuildWelcomeChannel(ClientObject):
 
 class GuildIntegration(DiscordObject):
     name: str = field(repr=True)
+    """The name of the integration"""
     type: str = field(repr=True)
+    """integration type (twitch, youtube, or discord)"""
     enabled: bool = field(repr=True)
+    """is this integration enabled"""
     account: dict = field()
+    """integration account information"""
     application: Optional["models.Application"] = field(default=None)
+    """The bot/OAuth2 application for discord integrations"""
     _guild_id: Snowflake_Type = field()
 
     syncing: Optional[bool] = field(default=MISSING)
+    """is this integration syncing"""
     role_id: Optional[Snowflake_Type] = field(default=MISSING)
+    """id that this integration uses for "subscribers\""""
     enable_emoticons: bool = field(default=MISSING)
+    """whether emoticons should be synced for this integration (twitch only currently)"""
     expire_behavior: IntegrationExpireBehaviour = field(default=MISSING, converter=optional(IntegrationExpireBehaviour))
+    """the behavior of expiring subscribers"""
     expire_grace_period: int = field(default=MISSING)
+    """the grace period (in days) before expiring subscribers"""
     user: "models.BaseUser" = field(default=MISSING)
+    """user for this integration"""
     synced_at: "models.Timestamp" = field(default=MISSING, converter=optional(timestamp_converter))
+    """when this integration was last synced"""
     subscriber_count: int = field(default=MISSING)
+    """how many subscribers this integration has"""
     revoked: bool = field(default=MISSING)
+    """has this integration been revoked"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1682,33 +1796,70 @@ class GuildWidget(DiscordObject):
         return data
 
     def get_channels(self) -> List["models.TYPE_VOICE_CHANNEL"]:
+        """
+        Gets voice and stage channels which are accessible by @everyone
+
+        Returns:
+            List of channels
+
+        """
         return [self._client.get_channel(channel_id) for channel_id in self._channel_ids]
 
     async def fetch_channels(self) -> List["models.TYPE_VOICE_CHANNEL"]:
+        """
+        Gets voice and stage channels which are accessible by @everyone. Fetches the channels from API if they are not cached.
+
+        Returns:
+            List of channels
+
+        """
         return [await self._client.fetch_channel(channel_id) for channel_id in self._channel_ids]
 
     def get_members(self) -> List["models.User"]:
+        """
+        Gets special widget user objects that includes users presence (Limit 100)
+
+        Returns:
+            List of users
+
+        """
         return [self._client.get_user(member_id) for member_id in self._member_ids]
 
     async def fetch_members(self) -> List["models.User"]:
+        """
+        Gets special widget user objects that includes users presence (Limit 100). Fetches the users from API if they are not cached.
+
+        Returns:
+            List of users
+
+        """
         return [await self._client.fetch_user(member_id) for member_id in self._member_ids]
 
 
 @define()
 class AuditLogChange(ClientObject):
     key: str = field(repr=True)
+    """name of audit log change key"""
     new_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = field(default=MISSING)
+    """new value of the key"""
     old_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = field(default=MISSING)
+    """old value of the key"""
 
 
 @define()
 class AuditLogEntry(DiscordObject):
     target_id: Optional["Snowflake_Type"] = field(converter=optional(to_snowflake))
+    """id of the affected entity (webhook, user, role, etc.)"""
     user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    """the user who made the changes"""
     action_type: "AuditLogEventType" = field(converter=to_snowflake)
+    """type of action that occurred"""
     changes: Optional[List[AuditLogChange]] = field(default=MISSING)
+    """changes made to the target_id"""
     options: Optional[Union["Snowflake_Type", str]] = field(default=MISSING)
+    """additional info for certain action types"""
     reason: Optional[str] = field(default=MISSING)
+    """the reason for the change (0-512 characters)"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1723,11 +1874,17 @@ class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 
     entries: Optional[List["AuditLogEntry"]] = field(default=MISSING)
+    """list of audit log entries"""
     scheduled_events: Optional[List["models.ScheduledEvent"]] = field(default=MISSING)
+    """list of guild scheduled events found in the audit log"""
     integrations: Optional[List["GuildIntegration"]] = field(default=MISSING)
+    """list of partial integration objects"""
     threads: Optional[List["models.ThreadChannel"]] = field(default=MISSING)
+    """list of threads found in the audit log"""
     users: Optional[List["models.User"]] = field(default=MISSING)
+    """list of users found in the audit log"""
     webhooks: Optional[List["models.Webhook"]] = field(default=MISSING)
+    """list of webhooks found in the audit log"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1751,7 +1908,7 @@ class AuditLogHistory(AsyncIterator):
     """
     An async iterator for searching through a audit log's entry history.
 
-    Args:
+    Attributes:
         guild (:class:`Guild`): The guild to search through.
         user_id (:class:`Snowflake_Type`): The user ID to search for.
         action_type (:class:`AuditLogEventType`): The action type to search for.
@@ -1778,6 +1935,13 @@ class AuditLogHistory(AsyncIterator):
         super().__init__(limit)
 
     async def fetch(self) -> List["AuditLog"]:
+        """
+        Retrieves the audit log entries from discord API.
+
+        Returns:
+            The list of audit log entries.
+
+        """
         if self.after:
             if not self.last:
                 self.last = namedtuple("temp", "id")

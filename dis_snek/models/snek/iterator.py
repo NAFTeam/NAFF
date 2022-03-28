@@ -26,6 +26,7 @@ class AsyncIterator(_AsyncIterator, ABC):
 
     @property
     def _continue(self) -> bool:
+        """Whether iteration should continue. Returns False if the limit has been reached."""
         if not self._limit:
             return True
         return not len(self._retrieved_objects) >= self._limit
@@ -49,6 +50,7 @@ class AsyncIterator(_AsyncIterator, ABC):
 
         Returns:
             List of objects
+
         Raises:
               QueueEmpty when no more objects are available.
 

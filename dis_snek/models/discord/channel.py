@@ -70,7 +70,7 @@ class ChannelHistory(AsyncIterator):
     """
     An async iterator for searching through a channel's history.
 
-    Args:
+    Attributes:
         channel: The channel to search through
         limit: The maximum number of messages to return (set to 0 for no limit)
         before: get messages before this message ID
@@ -95,6 +95,7 @@ class ChannelHistory(AsyncIterator):
 
         Returns:
             List of objects
+
         Raises:
               QueueEmpty when no more objects are available.
 
@@ -126,7 +127,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
-    Note:
+    !!! Note
         `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """
@@ -163,6 +164,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
 
         Args:
             *perms: Permissions to add
+
         """
         if not self.allow:
             self.allow = Permissions.NONE
@@ -175,6 +177,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
 
         Args:
             *perms: Permissions to add
+
         """
         if not self.deny:
             self.deny = Permissions.NONE
@@ -187,8 +190,11 @@ class MessageableMixin(SendMixin):
     last_message_id: Optional[Snowflake_Type] = field(
         default=None
     )  # TODO May need to think of dynamically updating this.
+    """The id of the last message sent in this channel (may not point to an existing or valid message)"""
     default_auto_archive_duration: int = field(default=AutoArchiveDuration.ONE_DAY)
+    """Default duration that the clients (not the API) will use for newly created threads, in minutes, to automatically archive the thread after recent activity"""
     last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """When the last pinned message was pinned. This may be None when a message is not pinned."""
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.id)
@@ -202,6 +208,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             The message object fetched. If the message is not found, returns None.
+
         """
         try:
             return await self._client.cache.fetch_message(self.id, message_id)
@@ -217,6 +224,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             The message object fetched.
+
         """
         message_id = to_snowflake(message_id)
         message: "models.Message" = self._client.cache.get_message(self.id, message_id)
@@ -232,7 +240,7 @@ class MessageableMixin(SendMixin):
         """
         Get an async iterator for the history of this channel.
 
-        Parameters:
+        Args:
             limit: The maximum number of messages to return (set to 0 for no limit)
             before: get messages before this message ID
             after: get messages after this message ID
@@ -425,7 +433,7 @@ class InvitableMixin:
         reason: Optional[str] = None,
     ) -> "models.Invite":
         """
-        Create channel invite.
+        Creates a new channel invite.
 
         Args:
             max_age: Max age of invite in seconds, default 86400 (24 hours).
@@ -462,7 +470,13 @@ class InvitableMixin:
         return models.Invite.from_dict(invite_data, self._client)
 
     async def fetch_invites(self) -> List["models.Invite"]:
-        """Fetches all invites (with invite metadata) for the channel."""
+        """
+        Fetches all invites (with invite metadata) for the channel.
+
+        Returns:
+            List of Invite objects.
+
+        """
         invites_data = await self._client.http.get_channel_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
 
@@ -491,6 +505,7 @@ class ThreadableMixin:
 
         Returns:
             The created thread, if successful
+
         """
         if self.type == ChannelTypes.GUILD_NEWS and not message:
             raise ValueError("News channel must include message to create thread from.")
@@ -522,6 +537,9 @@ class ThreadableMixin:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
 
+        Returns:
+            A `ThreadList` of archived threads.
+
         """
         threads_data = await self._client.http.list_public_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -539,6 +557,9 @@ class ThreadableMixin:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
 
+        Returns:
+            A `ThreadList` of archived threads.
+
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -555,6 +576,9 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
+        Returns:
+            A `ThreadList` of archived threads.
 
         """
         threads_data = await self._client.http.list_private_archived_threads(
@@ -575,6 +599,10 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
+        Returns:
+            A `ThreadList` of threads the bot is a participant of.
+
         """
         threads_data = await self._client.http.list_joined_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -583,7 +611,13 @@ class ThreadableMixin:
         return models.ThreadList.from_dict(threads_data, self._client)
 
     async def fetch_active_threads(self) -> "models.ThreadList":
-        """Returns all active threads in the channel, including public and private threads."""
+        """
+        Gets all active threads in the channel, including public and private threads.
+
+        Returns:
+            A `ThreadList` of active threads.
+
+        """
         threads_data = await self._client.http.list_active_threads(guild_id=self._guild_id)
 
         # delete the items where the channel_id does not match
@@ -606,7 +640,13 @@ class ThreadableMixin:
         return models.ThreadList.from_dict(threads_data, self._client)
 
     async def fetch_all_threads(self) -> "models.ThreadList":
-        """Returns all threads in the channel. Active and archived, including public and private threads."""
+        """
+        Gets all threads in the channel. Active and archived, including public and private threads.
+
+        Returns:
+            A `ThreadList` of all threads.
+
+        """
         threads = await self.fetch_active_threads()
 
         # update that data with the archived threads
@@ -625,13 +665,14 @@ class WebhookMixin:
 
         Args:
             name: The name of the webhook
-            avatar: An optional default avatar to use
+            avatar: An optional default avatar image to use
 
         Returns:
-            The created webhook
+            The created webhook object
 
         Raises:
             ValueError: If you try to name the webhook "Clyde"
+
         """
         return await models.Webhook.create(self._client, self, name, avatar)  # type: ignore
 
@@ -641,6 +682,7 @@ class WebhookMixin:
 
         Args:
             webhook: The webhook to delete
+
         """
         return await webhook.delete()
 
@@ -649,7 +691,8 @@ class WebhookMixin:
         Fetches all the webhooks for this channel.
 
         Returns:
-            List of webhooks
+            List of webhook objects
+
         """
         resp = await self._client.http.get_channel_webhooks(self.id)
         return [models.Webhook.from_dict(d, self._client) for d in resp]
@@ -658,7 +701,9 @@ class WebhookMixin:
 @define(slots=False)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(repr=True, default=None)
+    """The name of the channel (1-100 characters)"""
     type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes)
+    """The channel topic (0-1024 characters)"""
 
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
@@ -710,6 +755,35 @@ class BaseChannel(DiscordObject):
         reason: Absent[str] = MISSING,
         **kwargs,
     ) -> "TYPE_ALL_CHANNEL":
+        """
+        Edits the channel.
+
+        Args:
+            name: 1-100 character channel name
+            icon: DM Group icon
+            type: The type of channel; only conversion between text and news is supported and only in guilds with the "NEWS" feature
+            position: The position of the channel in the left-hand listing
+            topic: 0-1024 character channel topic
+            nsfw: Whether the channel is nsfw
+            rate_limit_per_user: Amount of seconds a user has to wait before sending another message (0-21600)
+            bitrate: The bitrate (in bits) of the voice channel; 8000 to 96000 (128000 for VIP servers)
+            user_limit: The user limit of the voice channel; 0 refers to no limit, 1 to 99 refers to a user limit
+            permission_overwrites: Channel or category-specific permissions
+            parent_id: The id of the new parent category for a channel
+            rtc_region: Channel voice region id, automatic when set to None.
+            video_quality_mode: The camera video quality mode of the voice channel
+            default_auto_archive_duration: The default duration that the clients use (not the API) for newly created threads in the channel, in minutes, to automatically archive the thread after recent activity
+            archived: Whether the thread is archived
+            auto_archive_duration: Duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            locked: Whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+            invitable: Whether non-moderators can add other non-moderators to a thread; only available on private threads
+            reason: The reason for editing the channel
+
+        Returns:
+            The edited channel. May be a new object if the channel type changes.
+
+        """
+
         payload = {
             "name": name,
             "icon": to_image_data(icon),
@@ -752,6 +826,7 @@ class BaseChannel(DiscordObject):
 @define(slots=False)
 class DMChannel(BaseChannel, MessageableMixin):
     recipients: List["models.User"] = field(factory=list)
+    """The users of the DM that will receive messages sent"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -770,13 +845,16 @@ class DMChannel(BaseChannel, MessageableMixin):
 class DM(DMChannel):
     @property
     def recipient(self) -> "models.User":
+        """Returns the user that is in this DM channel."""
         return self.recipients[0]
 
 
 @define()
 class DMGroup(DMChannel):
     owner_id: Snowflake_Type = field(repr=True)
+    """id of the creator of the group DM"""
     application_id: Optional[Snowflake_Type] = field(default=None)
+    """Application id of the group DM creator if it is bot-created"""
 
     async def edit(
         self,
@@ -813,6 +891,7 @@ class DMGroup(DMChannel):
             user: The user to add
             access_token: access token of a user that has granted your app the gdm.join scope
             nickname: nickname to apply to the user being added
+
         """
         user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
@@ -824,6 +903,7 @@ class DMGroup(DMChannel):
 
         Args:
             user: The user to remove
+
         """
         user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_remove_recipient(self.id, user.id)
@@ -837,8 +917,11 @@ class DMGroup(DMChannel):
 @define(slots=False)
 class GuildChannel(BaseChannel):
     position: Optional[int] = field(default=0)
+    """Sorting position of the channel"""
     nsfw: bool = field(default=False)
+    """Whether the channel is nsfw"""
     parent_id: Optional[Snowflake_Type] = field(default=None, converter=optional_c(to_snowflake))
+    """id of the parent category for a channel (each parent category can contain up to 50 channels)"""
     permission_overwrites: list[PermissionOverwrite] = field(factory=list)
     """A list of the overwritten permissions for the members and roles"""
 
@@ -923,6 +1006,7 @@ class GuildChannel(BaseChannel):
 
         Raises:
             ValueError: Invalid target for permission
+
         """
         allow = allow or []
         deny = deny or []
@@ -982,6 +1066,7 @@ class GuildChannel(BaseChannel):
         Args:
             target: The permission overwrite to delete
             reason: The reason for this change
+
         """
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
@@ -1005,11 +1090,11 @@ class GuildChannel(BaseChannel):
         """
         Clone this channel and create a new one.
 
-        parameters:
+        Args:
             name: The name of the new channel. Defaults to the current name
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created channel.
 
         """
@@ -1032,24 +1117,12 @@ class GuildChannel(BaseChannel):
 class GuildCategory(GuildChannel):
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
-        """
-        Get all channels within the category.
-
-        Returns:
-            The list of channels
-
-        """
+        """Get all channels within the category"""
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
     @property
     def voice_channels(self) -> List["GuildVoice"]:
-        """
-        Get all voice channels within the category.
-
-        Returns:
-            The list of voice channels
-
-        """
+        """Get all voice channels within the category"""
         return [
             channel
             for channel in self.channels
@@ -1058,35 +1131,17 @@ class GuildCategory(GuildChannel):
 
     @property
     def stage_channels(self) -> List["GuildStageVoice"]:
-        """
-        Get all stage channels within the category.
-
-        Returns:
-            The list of stage channels
-
-        """
+        """Get all stage channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildStageVoice)]
 
     @property
     def text_channels(self) -> List["GuildText"]:
-        """
-        Get all text channels within the category.
-
-        Returns:
-            The list of text channels
-
-        """
+        """Get all text channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildText)]
 
     @property
     def news_channels(self) -> List["GuildNews"]:
-        """
-        Get all news channels within the category.
-
-        Returns:
-            The list of news channels
-
-        """
+        """Get all news channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildNews)]
 
     async def edit(
@@ -1107,6 +1162,10 @@ class GuildCategory(GuildChannel):
             position: the position of the channel in the left-hand listing
             permission_overwrites: channel or category-specific permissions
             reason: the reason for this change
+
+        Returns:
+            The updated channel object.
+
         """
         return await super().edit(
             name=name,
@@ -1134,7 +1193,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild channel within this category, allows for explicit channel type setting.
 
-        parameters:
+        Args:
             channel_type: The type of channel to create
             name: The name of the channel
             topic: The topic of the channel
@@ -1146,7 +1205,7 @@ class GuildCategory(GuildChannel):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created channel.
 
         """
@@ -1179,7 +1238,7 @@ class GuildCategory(GuildChannel):
         """
         Create a text channel in this guild within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1188,7 +1247,7 @@ class GuildCategory(GuildChannel):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created text channel.
 
         """
@@ -1217,7 +1276,7 @@ class GuildCategory(GuildChannel):
         """
         Create a news channel in this guild within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1225,7 +1284,7 @@ class GuildCategory(GuildChannel):
             nsfw: Should this channel be marked nsfw
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created news channel.
 
         """
@@ -1255,7 +1314,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild voice channel within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1265,7 +1324,7 @@ class GuildCategory(GuildChannel):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created voice channel.
 
         """
@@ -1296,7 +1355,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild stage channel within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1305,7 +1364,7 @@ class GuildCategory(GuildChannel):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created stage channel.
 
         """
@@ -1345,6 +1404,10 @@ class GuildStore(GuildChannel):
             parent_id: id of the new parent category for a channel
             nsfw: whether the channel is nsfw
             reason: The reason for this change
+
+        Returns:
+            The edited channel.
+
         """
         return await super().edit(
             name=name,
@@ -1360,6 +1423,7 @@ class GuildStore(GuildChannel):
 @define()
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = field(default=None)
+    """The channel topic (0-1024 characters)"""
 
     async def edit(
         self,
@@ -1390,6 +1454,9 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             default_auto_archive_duration: optional AutoArchiveDuration
             reason: An optional reason for the audit log
 
+        Returns:
+            The edited channel.
+
         """
         return await super().edit(
             name=name,
@@ -1410,6 +1477,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             webhook_channel_id: The ID of the channel to post messages from this channel to
+
         """
         await self._client.http.follow_news_channel(self.id, webhook_channel_id)
 
@@ -1431,6 +1499,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Returns:
             The created public thread, if successful
+
         """
         return await self.create_thread(
             name=name,
@@ -1443,7 +1512,9 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 @define()
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = field(default=None)
+    """The channel topic (0-1024 characters)"""
     rate_limit_per_user: int = field(default=0)
+    """Amount of seconds a user has to wait before sending another message (0-21600)"""
 
     async def edit(
         self,
@@ -1476,6 +1547,9 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: An optional reason for the audit log
 
+        Returns:
+            The edited channel.
+
         """
         return await super().edit(
             name=name,
@@ -1507,6 +1581,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Returns:
             The created public thread, if successful
+
         """
         return await self.create_thread(
             name=name,
@@ -1534,6 +1609,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Returns:
             The created thread, if successful
+
         """
         return await self.create_thread(
             name=name,
@@ -1561,6 +1637,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Returns:
             The created public thread, if successful
+
         """
         return await self.create_thread(
             name=name,
@@ -1577,16 +1654,27 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 @define(slots=False)
 class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
     parent_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    """id of the text channel this thread was created"""
     owner_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    """id of the creator of the thread"""
     topic: Optional[str] = field(default=None)
+    """The thread topic (0-1024 characters)"""
     message_count: int = field(default=0)
+    """An approximate count of messages in a thread, stops counting at 50"""
     member_count: int = field(default=0)
+    """An approximate count of users in a thread, stops counting at 50"""
     archived: bool = field(default=False)
+    """Whether the thread is archived"""
     auto_archive_duration: int = field(
         default=attrs.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
     )
+    """Duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080"""
     locked: bool = field(default=False)
+    """Whether the thread is locked"""
     archive_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """Timestamp when the thread's archive status was last changed, used for calculating recent activity"""
+    create_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """Timestamp when the thread was created"""
 
     _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
@@ -1628,6 +1716,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
 
         Args:
             member: The member to add
+
         """
         await self._client.http.add_thread_member(self.id, to_snowflake(member))
 
@@ -1637,6 +1726,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
 
         Args:
             member: The member to remove
+
         """
         await self._client.http.remove_thread_member(self.id, to_snowflake(member))
 
@@ -1655,6 +1745,10 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         Args:
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             reason: The reason for this archive
+
+        Returns:
+            The archived thread channel object.
+
         """
         return await super().edit(locked=locked, archived=True, reason=reason)
 
@@ -1681,6 +1775,10 @@ class GuildNewsThread(ThreadChannel):
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
         return await super().edit(
             name=name,
@@ -1715,6 +1813,10 @@ class GuildPublicThread(ThreadChannel):
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
         return await super().edit(
             name=name,
@@ -1730,6 +1832,7 @@ class GuildPublicThread(ThreadChannel):
 @define()
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
+    """Whether non-moderators can add other non-moderators to a thread"""
 
     async def edit(
         self,
@@ -1753,6 +1856,10 @@ class GuildPrivateThread(ThreadChannel):
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             invitable: whether non-moderators can add other non-moderators to a thread; only available on private threads
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
         return await super().edit(
             name=name,
@@ -1773,9 +1880,13 @@ class GuildPrivateThread(ThreadChannel):
 @define(slots=False)
 class VoiceChannel(GuildChannel):  # May not be needed, can be directly just GuildVoice.
     bitrate: int = field()
+    """The bitrate (in bits) of the voice channel"""
     user_limit: int = field()
+    """The user limit of the voice channel"""
     rtc_region: str = field(default="auto")
+    """Voice region id for the voice channel, automatic when set to None"""
     video_quality_mode: Union[VideoQualityModes, int] = field(default=VideoQualityModes.AUTO)
+    """The camera video quality mode of the voice channel, 1 when not present"""
     _voice_member_ids: list[Snowflake_Type] = field(factory=list)
 
     async def edit(
@@ -1806,6 +1917,9 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             rtc_region: channel voice region id, automatic when not set
             video_quality_mode: the camera video quality mode of the voice channel
             reason: optional reason for audit logs
+
+        Returns:
+            The edited voice channel object.
 
         """
         return await super().edit(
@@ -1840,6 +1954,7 @@ class GuildVoice(VoiceChannel, InvitableMixin):
 @define()
 class GuildStageVoice(GuildVoice):
     stage_instance: "models.StageInstance" = field(default=MISSING)
+    """The stage instance that this voice channel belongs to"""
 
     # todo: Listeners and speakers properties (needs voice state caching)
 
@@ -1847,7 +1962,8 @@ class GuildStageVoice(GuildVoice):
         """
         Fetches the stage instance associated with this channel.
 
-        If no stage is live, will return None.
+        Returns:
+            The stage instance associated with this channel. If no stage is live, will return None.
 
         """
         self.stage_instance = models.StageInstance.from_dict(
@@ -1864,10 +1980,13 @@ class GuildStageVoice(GuildVoice):
         """
         Create a stage instance in this channel.
 
-        Arguments:
+        Args:
             topic: The topic of the stage (1-120 characters)
             privacy_level: The privacy level of the stage
             reason: The reason for creating this instance
+
+        Returns:
+            The created stage instance object.
 
         """
         self.stage_instance = models.StageInstance.from_dict(
@@ -1879,7 +1998,7 @@ class GuildStageVoice(GuildVoice):
         """
         Closes the live stage instance.
 
-        Arguments:
+        Args:
             reason: The reason for closing the stage
 
         """
@@ -1894,6 +2013,16 @@ class GuildStageVoice(GuildVoice):
 def process_permission_overwrites(
     overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
 ) -> List[dict]:
+    """
+    Processes a permission overwrite lists into format for sending to discord.
+    Args:
+        overwrites: The permission overwrites to process
+
+    Returns:
+        The processed permission overwrites
+
+    """
+
     if not overwrites:
         return overwrites
 

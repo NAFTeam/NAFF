@@ -262,7 +262,7 @@ class MaxConcurrency:
 
         Args:
             context:The context of the command
-        returns:
+        Returns:
             If the semaphore was successfully acquired
 
         """

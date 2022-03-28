@@ -75,6 +75,7 @@ class ConnectionState:
         await self._shard_task
 
     async def stop(self) -> None:
+        """Disconnect from the Discord Gateway."""
         log.debug(f"Shutting down shard ID {self.shard_id}")
         if self.gateway is not None:
             self.gateway.close()

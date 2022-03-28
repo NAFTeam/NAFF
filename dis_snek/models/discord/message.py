@@ -50,31 +50,46 @@ channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
 @define()
 class Attachment(DiscordObject):
     filename: str = field()
+    """name of file attached"""
     description: Optional[str] = field(default=None)
+    """description for the file"""
     content_type: Optional[str] = field(default=None)
+    """the attachment's media type"""
     size: int = field()
+    """size of file in bytes"""
     url: str = field()
+    """source url of file"""
     proxy_url: str = field()
+    """a proxied url of file"""
     height: Optional[int] = field(default=None)
+    """height of file (if image)"""
     width: Optional[int] = field(default=None)
+    """width of file (if image)"""
     ephemeral: bool = field(default=False)
+    """whether this attachment is ephemeral"""
 
     @property
     def resolution(self) -> tuple[Optional[int], Optional[int]]:
+        """returns the image resolution of the attachment file"""
         return self.height, self.width
 
 
 @define()
 class ChannelMention(DiscordObject):
     guild_id: "Snowflake_Type" = field()
+    """id of the guild containing the channel"""
     type: ChannelTypes = field(converter=ChannelTypes)
+    """the type of channel"""
     name: str = field()
+    """the name of the channel"""
 
 
 @dataclass
 class MessageActivity:
     type: MessageActivityTypes
+    """type of message activity"""
     party_id: str = None
+    """party_id from a Rich Presence event"""
 
 
 @define()
@@ -97,6 +112,17 @@ class MessageReference(DictSerializationMixin):
 
     @classmethod
     def for_message(cls, message: "Message", fail_if_not_exists: bool = True) -> "MessageReference":
+        """
+        Creates a reference to a message.
+
+        parameters
+            message: The target message to reference.
+            fail_if_not_exists: Whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message
+
+        Returns:
+            A MessageReference object.
+
+        """
         return cls(
             message_id=message.id,
             channel_id=message._channel_id,
@@ -108,7 +134,9 @@ class MessageReference(DictSerializationMixin):
 @define()
 class MessageInteraction(DiscordObject):
     type: InteractionTypes = field(converter=InteractionTypes)
+    """the type of interaction"""
     name: str = field()
+    """the name of the application command"""
 
     _user_id: "Snowflake_Type" = field()
 
@@ -143,25 +171,60 @@ class AllowedMentions(DictSerializationMixin):
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
     def add_parse(self, *mention_types: Union["MentionTypes", str]) -> None:
+        """
+        Add a mention type to the list of allowed mentions to parse.
+
+        Args:
+            *mention_types: The types of mentions to add
+
+        """
         for mention_type in mention_types:
             if not isinstance(mention_type, MentionTypes) and mention_type not in MentionTypes.__members__.values():
                 raise ValueError(f"Invalid mention type: {mention_type}")
             self.parse.append(mention_type)
 
     def add_roles(self, *roles: Union["models.Role", "Snowflake_Type"]) -> None:
+        """
+        Add roles that are allowed to be mentioned.
+
+        Args:
+            *roles: The roles to add
+
+        """
         for role in roles:
             self.roles.append(to_snowflake(role))
 
     def add_users(self, *users: Union["models.Member", "models.BaseUser", "Snowflake_Type"]) -> None:
+        """
+        Add users that are allowed to be mentioned.
+
+        Args:
+            *users: The users to add
+
+        """
         for user in users:
             self.users.append(to_snowflake(user))
 
     @classmethod
     def all(cls) -> "AllowedMentions":
+        """
+        Allows every user and role to be mentioned.
+
+        Returns:
+            An AllowedMentions object
+
+        """
         return cls(parse=list(MentionTypes.__members__.values()), replied_user=True)
 
     @classmethod
     def none(cls) -> "AllowedMentions":
+        """
+        Disallows any user or role to be mentioned.
+
+        Returns:
+            An AllowedMentions object
+
+        """
         return cls()
 
 
@@ -174,18 +237,22 @@ class BaseMessage(DiscordObject):
 
     @property
     def guild(self) -> "models.Guild":
+        """the guild the message was sent in"""
         return self._client.cache.get_guild(self._guild_id)
 
     @property
     def channel(self) -> "models.TYPE_MESSAGEABLE_CHANNEL":
+        """the channel the message was sent in"""
         return self._client.cache.get_channel(self._channel_id)
 
     @property
     def thread(self) -> "models.TYPE_THREAD_CHANNEL":
+        """the thread that was started from this message, includes thread member object"""
         return self._client.cache.get_channel(self._thread_channel_id)
 
     @property
     def author(self) -> Union["models.Member", "models.User"]:
+        """the author of this message. Only a valid user in the case where the message is generated by a user or bot user."""
         if self._author_id:
             member = None
             if self._guild_id:
@@ -197,42 +264,64 @@ class BaseMessage(DiscordObject):
 @define()
 class Message(BaseMessage):
     content: str = field(default=MISSING)
+    """contents of the message"""
     timestamp: "models.Timestamp" = field(default=MISSING, converter=optional_c(timestamp_converter))
+    """when this message was sent"""
     edited_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """when this message was edited (or `None` if never)"""
     tts: bool = field(default=False)
+    """whether this was a TTS message"""
     mention_everyone: bool = field(default=False)
+    """whether this message mentions everyone"""
     mention_channels: List[ChannelMention] = field(factory=list)
+    """channels specifically mentioned in this message"""
     attachments: List[Attachment] = field(factory=list)
+    """any attached files"""
     embeds: List["models.Embed"] = field(factory=list)
+    """any embedded content"""
     reactions: List["models.Reaction"] = field(factory=list)
+    """reactions to the message"""
     nonce: Optional[Union[int, str]] = field(default=None)
+    """used for validating a message was sent"""
     pinned: bool = field(default=False)
+    """whether this message is pinned"""
     webhook_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    """if the message is generated by a webhook, this is the webhook's id"""
     type: MessageTypes = field(default=MISSING, converter=optional_c(MessageTypes))
+    """type of message"""
     activity: Optional[MessageActivity] = field(default=None, converter=optional_c(MessageActivity))
+    """Activity sent with Rich Presence-related chat embeds"""
     application: Optional["models.Application"] = field(default=None)  # TODO: partial application
+    """Application sent with Rich Presence-related chat embeds"""
     application_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    """if the message is an Interaction or application-owned webhook, this is the id of the application"""
     message_reference: Optional[MessageReference] = field(
         default=None, converter=optional_c(MessageReference.from_dict)
     )
+    """data showing the source of a crosspost, channel follow add, pin, or reply message"""
     flags: MessageFlags = field(default=MessageFlags.NONE, converter=MessageFlags)
+    """message flags combined as a bitfield"""
     interaction: Optional["MessageInteraction"] = field(default=None)
+    """sent if the message is a response to an Interaction"""
     components: Optional[List["models.ActionRow"]] = field(default=None)
+    """sent if the message contains components like buttons, action rows, or other interactive components"""
     sticker_items: Optional[List["models.StickerItem"]] = field(
         default=None
     )  # TODO: Perhaps automatically get the full sticker data.
-
+    """sent if the message contains stickers"""
     _mention_ids: List["Snowflake_Type"] = field(factory=list)
     _mention_roles: List["Snowflake_Type"] = field(factory=list)
     _referenced_message_id: Optional["Snowflake_Type"] = field(default=None)
 
     @property
     async def mention_users(self) -> AsyncGenerator["models.Member", None]:
+        """a generator of users mentioned in this message"""
         for u_id in self._mention_ids:
             yield await self._client.cache.fetch_member(self._guild_id, u_id)
 
     @property
     async def mention_roles(self) -> AsyncGenerator["models.Role", None]:
+        """a generator of roles mentioned in this message"""
         for r_id in self._mention_roles:
             yield await self._client.cache.fetch_role(self._guild_id, r_id)
 
@@ -254,6 +343,7 @@ class Message(BaseMessage):
 
         Returns:
             The referenced message, if found
+
         """
         if self._referenced_message_id is None:
             return None
@@ -433,7 +523,19 @@ class Message(BaseMessage):
         embed: Optional[Union["models.Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
-        """Reply to this message, takes all the same attributes as `send`."""
+        """
+        Reply to this message, takes all the same attributes as `send`.
+
+        Args:
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
+            **kwargs: Additional options to pass to `send`.
+
+        Returns:
+            New message object.
+
+        """
         return await self.channel.send(content=content, reply_to=self, embeds=embeds or embed, **kwargs)
 
     async def create_thread(

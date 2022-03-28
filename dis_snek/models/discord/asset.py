@@ -31,11 +31,24 @@ class Asset:
 
     @classmethod
     def from_path_hash(cls, client: "Snake", path: str, asset_hash: str) -> "Asset":
+        """
+        Create an asset from a path and asset's hash.
+
+        Args:
+            client: The snake bot instance
+            path: The CDN Endpoints for the type of asset.
+            asset_hash: The hash representation of the target asset.
+
+        Returns:
+            A new Asset object
+
+        """
         url = f"{cls.BASE}/{path.format(asset_hash)}"
         return cls(client=client, url=url, hash=asset_hash)
 
     @property
     def url(self) -> str:
+        """The URL of this asset."""
         ext = ".gif" if self.animated else ".png"
         return f"{self._url}{ext}?size=4096"
 
@@ -49,8 +62,8 @@ class Asset:
         Fetch the asset from the Discord CDN.
 
         Args:
-            extension: File extension
-            size: File size
+            extension: File extension based on the target image format
+            size: The image size, can be any power of two between 16 and 4096.
 
         Returns:
             Raw byte array of the file
@@ -78,15 +91,15 @@ class Asset:
         self, fd: Union[str, bytes, "PathLike", int], extension: Optional[str] = None, size: Optional[int] = None
     ) -> int:
         """
-        Save the asset to a file.
+        Save the asset to a local file.
 
         Args:
-            fd: File destination
-            extention: File extension
-            size: File size
+            fd: Destination path to save the file to.
+            extension: File extension based on the target image format.
+            size: The image size, can be any power of two between 16 and 4096.
 
-        Return:
-            Status code
+        Returns:
+            Status code result of file write
 
         """
         content = await self.fetch(extension=extension, size=size)

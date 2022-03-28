@@ -21,6 +21,12 @@ class Task:
 
     A task's trigger must inherit from `BaseTrigger`.
 
+    Attributes:
+        callback (Callable): The function to be called when the trigger is triggered.
+        trigger (BaseTrigger): The trigger object that determines when the task should run.
+        task (Optional[_Task]): The task object that is running the trigger loop.
+        iteration (int): The number of times the task has run.
+
     """
 
     callback: Callable
@@ -45,10 +51,12 @@ class Task:
 
     @property
     def delta_until_run(self) -> Optional[timedelta]:
+        """Get the time until the next run of this task."""
         if not self.task.done():
             return self.next_run - datetime.now()
 
     def on_error(self, error: Exception) -> None:
+        """Error handler for this task. Called when an exception is raised during execution of the task."""
         dis_snek.Snake.default_error_handler("Task", error)
 
     async def __call__(self) -> None:
@@ -67,6 +75,7 @@ class Task:
         self.iteration += 1
 
     async def _task_loop(self) -> None:
+        """The main task loop to fire the task at the specified time based on triggers configured."""
         while not self._stop.is_set():
             fire_time = self.trigger.next_fire()
             if fire_time is None:

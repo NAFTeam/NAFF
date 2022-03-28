@@ -141,20 +141,28 @@ class User(BaseUser):
 
 @define()
 class SnakeBotUser(User):
-    verified: bool = field(repr=True, metadata={"docs": ""})
-    mfa_enabled: bool = field(default=False, metadata={"docs": ""})
-    email: Optional[str] = field(default=None, metadata={"docs": ""})  # needs special permissions?
-    locale: Optional[str] = field(default=None, metadata={"docs": ""})
+    verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
+    mfa_enabled: bool = field(default=False, metadata={"docs": "Whether the user has two factor enabled on their account"})
+    email: Optional[str] = field(default=None, metadata={"docs": "the user's email"})  # needs special permissions?
+    locale: Optional[str] = field(default=None, metadata={"docs": "the user's chosen language option"})
     bio: Optional[str] = field(default=None, metadata={"docs": ""})
-    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": ""})
+    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": "the flags on a user's account"})
 
-    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": ""})
+    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": "All the guilds the user is in"})
 
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]) -> None:
+        """
+        Add the guilds that the user is in to the internal reference.
+
+        Args:
+            guild_ids: The guild ids to add
+
+        """
         self._guild_ids |= guild_ids
 
     @property
     def guilds(self) -> List["Guild"]:
+        """The guilds the user is in."""
         return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
     async def edit(self, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
@@ -282,6 +290,7 @@ class Member(DiscordObject, _SendDMMixin):
 
     @nickname.setter
     def nickname(self, nickname: str) -> None:
+        """Sets the member's nickname."""
         self.nick = nickname
 
     @property

@@ -199,7 +199,7 @@ class HTTPClient(
         """
         Make a request to discord.
 
-        parameters:
+        Args:
             route: The route to take
             json: A json payload to send in the request
             reason: Attach a reason to this request, used for audit logs
@@ -313,9 +313,10 @@ class HTTPClient(
         """
         "Login" to the gateway, basically validates the token and grabs user data.
 
-        parameters:
+        Args:
             token: the token to use
-        returns:
+
+        Returns:
             The currently logged in bot's data
 
         """
@@ -334,7 +335,13 @@ class HTTPClient(
             await self.__session.close()
 
     async def get_gateway(self) -> str:
-        """Get the gateway url."""
+        """
+        Gets the gateway url.
+
+        Returns:
+            The gateway url
+
+        """
         try:
             data: dict = await self.request(Route("GET", "/gateway"))
         except HTTPException as exc:
@@ -345,7 +352,7 @@ class HTTPClient(
         """
         Connect to the websocket.
 
-        parameters:
+        Args:
             url: the url to connect to
 
         """

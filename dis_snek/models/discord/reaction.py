@@ -21,8 +21,8 @@ class ReactionUsers(AsyncIterator):
     """
     An async iterator for searching through a channel's history.
 
-    Args:
-        channel_id: The ID of the channel to search through
+    Attributes:
+        reaction: The reaction to search through
         limit: The maximum number of users to return (set to 0 for no limit)
         after: get users after this message ID
 
@@ -35,6 +35,13 @@ class ReactionUsers(AsyncIterator):
         super().__init__(limit)
 
     async def fetch(self) -> List["User"]:
+        """
+        Gets all the users who reacted to the message. Requests user data from discord API if not cached.
+
+        Returns:
+            A list of users who reacted to the message.
+
+        """
         if self._more:
             expected = self.get_limit
 
@@ -60,21 +67,27 @@ class ReactionUsers(AsyncIterator):
 @define()
 class Reaction(ClientObject):
     count: int = field()
+    """times this emoji has been used to react"""
     me: bool = field(default=False)
+    """whether the current user reacted using this emoji"""
     emoji: "PartialEmoji" = field(converter=PartialEmoji.from_dict)
+    """emoji information"""
 
     _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
     _message_id: "Snowflake_Type" = field(converter=to_snowflake)
 
     def users(self, limit: int = 0, after: "Snowflake_Type" = None) -> ReactionUsers:
+        """Users who reacted using this emoji."""
         return ReactionUsers(self, limit, after)
 
     @property
     def message(self) -> "Message":
+        """The message this reaction is on."""
         return self._client.cache.get_message((self._channel_id, self._message_id))
 
     @property
     def channel(self) -> "TYPE_ALL_CHANNEL":
+        """The channel this reaction is on."""
         return self._client.cache.get_channel(self._channel_id)
 
     async def remove(self) -> None:

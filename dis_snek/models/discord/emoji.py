@@ -44,6 +44,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             <a:emoji_name:emoji_id>
             a:emoji_name:emoji_id
             👋
+
         Args:
             emoji_str: The string representation an emoji
 
@@ -185,6 +186,16 @@ class CustomEmoji(PartialEmoji):
 
 
 def process_emoji_req_format(emoji: Optional[Union[PartialEmoji, dict, str]]) -> Optional[str]:
+    """
+    Processes the emoji parameter into the str format required by the API.
+
+    Args:
+        emoji: The emoji to process.
+
+    Returns:
+        formatted string for discord
+
+    """
     if not emoji:
         return emoji
 
@@ -201,6 +212,17 @@ def process_emoji_req_format(emoji: Optional[Union[PartialEmoji, dict, str]]) ->
 
 
 def process_emoji(emoji: Optional[Union[PartialEmoji, dict, str]]) -> Optional[dict]:
+    """
+    Processes the emoji parameter into the dictionary format required by the API.
+
+    Args:
+        emoji: The emoji to process.
+
+    Returns:
+        formatted dictionary for discord
+
+    """
+
     if not emoji:
         return emoji
 

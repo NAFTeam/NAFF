@@ -387,10 +387,13 @@ def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) 
 
 def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) -> Iterator[str]:
     """
-    Returns generator with the `custom_id` of a component or list of components.
+    Creates a generator with the `custom_id` of a component or list of components.
 
     Args:
         component: Objects to get `custom_id`s from
+
+    Returns:
+        Generator with the `custom_id` of a component or list of components.
 
     Raises:
         ValueError: Unknown component type
