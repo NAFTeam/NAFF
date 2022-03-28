@@ -116,20 +116,19 @@ class ActiveVoiceState(VoiceState):
         asyncio.create_task(self._ws_connect())
         await self.ws.wait_until_ready()
 
-    async def connect(self, timeout: int = 5, move: bool = False) -> None:
+    async def connect(self, timeout: int = 5) -> None:
         """
         Establish the voice connection.
 
         Args:
             timeout: How long to wait for state and server information from discord
-            move: A flag that we're attempting to move to a new voice channel
 
         Raises:
             VoiceAlreadyConnected: if the voice state is already connected to the voice channel
             VoiceConnectionTimeout: if the voice state fails to connect
 
         """
-        if self.connected and not move:
+        if self.connected:
             raise VoiceAlreadyConnected
 
         def predicate(event) -> bool:
@@ -166,9 +165,8 @@ class ActiveVoiceState(VoiceState):
             if self.player:
                 self.player.pause()
 
-            self.ws.close()
             self._channel_id = target_channel
-            await self.connect(move=True)
+            await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
             if self.player:
                 self.player.resume()
