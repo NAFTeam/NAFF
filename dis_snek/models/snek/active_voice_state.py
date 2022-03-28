@@ -116,16 +116,20 @@ class ActiveVoiceState(VoiceState):
         asyncio.create_task(self._ws_connect())
         await self.ws.wait_until_ready()
 
-    async def connect(self, timeout: int = 5) -> None:
+    async def connect(self, timeout: int = 5, move: bool = False) -> None:
         """
         Establish the voice connection.
+
+        Args:
+            timeout: How long to wait for state and server information from discord
+            move: A flag that we're attempting to move to a new voice channel
 
         Raises:
             VoiceAlreadyConnected: if the voice state is already connected to the voice channel
             VoiceConnectionTimeout: if the voice state fails to connect
 
         """
-        if self.connected:
+        if self.connected and not move:
             raise VoiceAlreadyConnected
 
         def predicate(event) -> bool:
@@ -159,9 +163,15 @@ class ActiveVoiceState(VoiceState):
         """
         target_channel = to_snowflake(channel)
         if target_channel != self._channel_id:
+            if self.player:
+                self.player.pause()
+
             self.ws.close()
             self._channel_id = target_channel
-            await self.connect()
+            await self.connect(move=True)
+
+            if self.player:
+                self.player.resume()
 
     async def stop(self) -> None:
         """Stop playback."""
