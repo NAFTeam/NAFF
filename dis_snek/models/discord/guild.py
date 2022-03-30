@@ -394,6 +394,11 @@ class Guild(BaseGuild):
         """Alias for me.guild_permissions"""
         return self.me.guild_permissions
 
+    @property
+    def voice_state(self) -> Optional["models.VoiceState"]:
+        """Get the bot's voice state for the guild."""
+        return self._client.cache.get_bot_voice_state(self.id)
+
     async def fetch_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """
         Return the Member with the given discord ID, fetching from the API if necessary.
