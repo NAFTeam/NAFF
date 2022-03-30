@@ -1850,7 +1850,7 @@ class Snake(
         """
         return await self._connection_state.voice_connect(guild_id, channel_id, muted, deafened)
 
-    def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> ActiveVoiceState:
+    def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> Optional[ActiveVoiceState]:
         return self._connection_state.get_voice_state(guild_id)
 
     async def change_presence(
