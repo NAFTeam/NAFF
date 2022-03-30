@@ -77,6 +77,9 @@ class Webhook(DiscordObject, SendMixin):
             client: The client to use to make the request.
             url: Webhook URL
 
+        Returns:
+            A Webhook object.
+
         """
         match = re.search(r"discord(?:app)?\.com/api/webhooks/(?P<id>[0-9]{17,})/(?P<token>[\w\-.]{60,68})", url)
         if match is None:
@@ -104,7 +107,7 @@ class Webhook(DiscordObject, SendMixin):
             avatar: An optional default avatar to use
 
         Returns:
-            New webhook
+            New webhook object
 
         Raises:
             ValueError: If you try to name the webhook "Clyde"
@@ -249,6 +252,26 @@ class Webhook(DiscordObject, SendMixin):
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
     ) -> Optional["Message"]:
+        """
+        Edit a message as this webhook.
+
+        Args:
+            message: Message to edit
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            reply_to: Message to reference, must be from the same channel.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
+
+        Returns:
+            Updated message object that was sent if `wait` is set to True
+
+        """
         message_payload = process_message_payload(
             content=content,
             embeds=embeds,

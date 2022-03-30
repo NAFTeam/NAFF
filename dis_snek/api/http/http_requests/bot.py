@@ -12,9 +12,9 @@ class BotRequests:
 
     async def get_current_bot_information(self) -> discord_typings.ApplicationData:
         """
-        Returns the bot's application object without flags.
+        Gets the bot's application object without flags.
 
-        returns:
+        Returns:
             application object
 
         """
@@ -22,9 +22,9 @@ class BotRequests:
 
     async def get_current_authorisation_information(self) -> dict:
         """
-        Returns info about the current authorization.
+        Gets info about the current authorization.
 
-        returns:
+        Returns:
             Authorisation information
 
         """
@@ -32,9 +32,9 @@ class BotRequests:
 
     async def list_voice_regions(self) -> List[discord_typings.VoiceRegionData]:
         """
-        Returns an array of voice region objects that can be used when setting a voice or stage channel's `rtc_region`.
+        Gets an array of voice region objects that can be used when setting a voice or stage channel's `rtc_region`.
 
-        returns:
+        Returns:
             an array of voice region objects
 
         """

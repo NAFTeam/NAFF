@@ -21,7 +21,7 @@ class InteractionRequests:
         """
         Delete an existing application command for this application.
 
-        Attributes:
+        Args:
             application_id: the what application to delete for
             guild_id: specify a guild to delete commands from
             command_id The command to delete
@@ -39,11 +39,11 @@ class InteractionRequests:
         """
         Get all application commands for this application from discord.
 
-        parameters:
+        Args:
             application_id: the what application to query
             guild_id: specify a guild to get commands from
 
-        returns:
+        Returns:
             Application command data
 
         """
@@ -57,7 +57,7 @@ class InteractionRequests:
         """
         Take a list of commands and overwrite the existing command list within the given scope
 
-        parameters:
+        Args:
             app_id: The application ID of this bot
             guild_id: The ID of the guild this command is for, if this is a guild command
             data: List of your interaction data
@@ -89,7 +89,7 @@ class InteractionRequests:
         """
         Post an initial response to an interaction.
 
-        parameters:
+        Args:
             payload: the payload to send
             interaction_id: the id of the interaction
             token: the token of the interaction
@@ -101,7 +101,7 @@ class InteractionRequests:
         """
         Send a followup to an interaction.
 
-        parameters:
+        Args:
             payload: the payload to send
             application_id: the id of the application
             token: the token of the interaction
@@ -115,13 +115,13 @@ class InteractionRequests:
         """
         Edits an existing interaction message.
 
-        parameters:
+        Args:
             payload: The payload to send.
             application_id: The id of the application.
             token: The token of the interaction.
             message_id: The target message to edit. Defaults to @original which represents the initial response message.
 
-        returns:
+        Returns:
             The edited message data.
 
         """
@@ -135,13 +135,12 @@ class InteractionRequests:
         """
         Gets an existing interaction message.
 
-        parameters:
-            payload: The payload to send.
+        Args:
             application_id: The id of the application.
             token: The token of the interaction.
             message_id: The target message to get. Defaults to @original which represents the initial response message.
 
-        returns:
+        Returns:
             The message data.
 
         """
@@ -157,12 +156,13 @@ class InteractionRequests:
         """
         Edits command permissions for a specific command.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             cmd_id: The command id to edit
             permissions: The permissions to set to this command
-        returns:
+
+        Returns:
             Guild Application Command Permissions
 
         """
@@ -177,11 +177,12 @@ class InteractionRequests:
         """
         Edit multiple command permissions within a single scope.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             data: The permissions to be set
-        returns:
+
+        Returns:
             array of GuildApplicationCommandPermissions objects
 
         """
@@ -196,11 +197,12 @@ class InteractionRequests:
         """
         Get permission data for a command.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             cmd_id: The command id to edit
-        returns:
+
+        Returns:
             guild application command permissions
 
         """
@@ -214,10 +216,11 @@ class InteractionRequests:
         """
         Get permission data for all commands in a scope.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
-        returns:
+
+        Returns:
             list of guild application command permissions
 
         """

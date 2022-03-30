@@ -20,9 +20,10 @@ class StickerRequests:
         """
         Get a specific sticker.
 
-        parameters:
+        Args:
             sticker_id: The id of the sticker
-        returns:
+
+        Returns:
             Sticker or None
 
         """
@@ -32,7 +33,7 @@ class StickerRequests:
         """
         Gets the list of sticker packs available to Nitro subscribers.
 
-        returns:
+        Returns:
             List of sticker packs
 
         """
@@ -42,9 +43,10 @@ class StickerRequests:
         """
         Get the stickers for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get stickers from
-        returns:
+
+        Returns:
             List of Stickers or None
 
         """
@@ -56,10 +58,11 @@ class StickerRequests:
         """
         Get a sticker from a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get stickers from
             sticker_id: The sticker to get from the guild
-        returns:
+
+        Returns:
             Sticker or None
 
         """
@@ -71,12 +74,12 @@ class StickerRequests:
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        parameters:
+        Args:
             payload: the payload to send.
             guild_id: The guild to create sticker at.
             reason: The reason for this action.
 
-        returns:
+        Returns:
             The new sticker data on success.
 
         """
@@ -88,13 +91,13 @@ class StickerRequests:
         """
         Modify the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        parameters:
+        Args:
             payload: the payload to send.
             guild_id: The guild of the target sticker.
             sticker_id:  The sticker to modify.
             reason: The reason for this action.
 
-        returns:
+        Returns:
             The updated sticker data on success.
 
         """
@@ -108,12 +111,12 @@ class StickerRequests:
         """
         Delete the given sticker. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
 
-        parameters:
+        Args:
             guild_id: The guild of the target sticker.
             sticker_id:  The sticker to delete.
             reason: The reason for this action.
 
-        returns:
+        Returns:
             Returns 204 No Content on success.
 
         """

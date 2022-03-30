@@ -23,7 +23,7 @@ class MemberRequests:
         """
         Get a member of a guild by ID.
 
-        parameters:
+        Args:
             guild_id: The id of the guild
             user_id: The user id to grab
 
@@ -36,7 +36,7 @@ class MemberRequests:
         """
         List the members of a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             limit: How many members to get (max 1000)
             after: Get IDs after this snowflake
@@ -51,7 +51,7 @@ class MemberRequests:
         """
         Search a guild for members who's username or nickname starts with provided string.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to search
             query: The string to search for
             limit: The number of members to return
@@ -76,7 +76,7 @@ class MemberRequests:
         """
         Modify attributes of a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user we're modifying
             nickname: Value to set users nickname to
@@ -85,7 +85,8 @@ class MemberRequests:
             deaf: Whether the user is deafened in voice channels
             channel_id: id of channel to move user to (if they are connected to voice)
             reason: An optional reason for the audit log
-        returns:
+
+        Returns:
             The updated member object
 
         """
@@ -115,9 +116,10 @@ class MemberRequests:
         """
         Modify attributes of the user
 
-        parameters:
+        Args:
             nickname: The new nickname to apply
             reason: An optional reason for the audit log
+
         """
         await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/@me"),
@@ -137,7 +139,7 @@ class MemberRequests:
         """
         Adds a role to a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user
             role_id: The ID of the role to add
@@ -156,7 +158,7 @@ class MemberRequests:
         """
         Remove a role from a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user
             role_id: The ID of the role to remove

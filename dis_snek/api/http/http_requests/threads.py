@@ -20,7 +20,7 @@ class ThreadRequests:
         """
         Join a thread.
 
-        parameters:
+        Args:
             thread_id: The thread to join.
 
         """
@@ -30,7 +30,7 @@ class ThreadRequests:
         """
         Leave a thread.
 
-        parameters:
+        Args:
             thread_id: The thread to leave.
 
         """
@@ -40,7 +40,7 @@ class ThreadRequests:
         """
         Add another user to a thread.
 
-        parameters:
+        Args:
             thread_id: The ID of the thread
             user_id: The ID of the user to add
 
@@ -51,7 +51,7 @@ class ThreadRequests:
         """
         Remove another user from a thread.
 
-        parameters:
+        Args:
             thread_id: The ID of the thread
             user_id: The ID of the user to remove
 
@@ -62,9 +62,10 @@ class ThreadRequests:
         """
         Get a list of members in the thread.
 
-        parameters:
+        Args:
             thread_id: the id of the thread
-        returns:
+
+        Returns:
             a list of member objects
 
         """
@@ -76,11 +77,12 @@ class ThreadRequests:
         """
         Get a list of archived public threads in a channel.
 
-        parameters:
+        Args:
             channel_id: The channel to get threads from
             limit: Optional limit of threads to
             before: Get threads before this snowflake
-        returns:
+
+        Returns:
             a list of threads
 
         """
@@ -97,11 +99,12 @@ class ThreadRequests:
         """
         Get a list of archived private threads in a channel.
 
-        parameters:
+        Args:
             channel_id: The channel to get threads from
             limit: Optional limit of threads to
             before: Get threads before this snowflake
-        returns:
+
+        Returns:
             a list of threads
 
         """
@@ -118,11 +121,12 @@ class ThreadRequests:
         """
         Get a list of archived private threads in a channel that you have joined.
 
-        parameters:
+        Args:
             channel_id: The channel to get threads from
             limit: Optional limit of threads to
             before: Get threads before this snowflake
-        returns:
+
+        Returns:
             a list of threads
 
         """
@@ -139,9 +143,10 @@ class ThreadRequests:
         """
         List active threads within a guild.
 
-        parameters:
+        Args:
             guild_id: the guild id to get threads from
-        returns:
+
+        Returns:
             A list of active threads
 
         """
@@ -160,7 +165,7 @@ class ThreadRequests:
         """
         Create a thread in the given channel. Can either create a thread with or without a message.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to create this thread in
             name: The name of the thread
             auto_archive_duration: duration in minutes to automatically archive the thread after recent activity,
@@ -169,7 +174,8 @@ class ThreadRequests:
             invitable:
             message_id: An optional message to create a thread from.
             reason: An optional reason for the audit log
-        returns:
+
+        Returns:
             The created thread
 
         """

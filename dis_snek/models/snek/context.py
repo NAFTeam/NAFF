@@ -273,7 +273,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         """
         Defers the response, showing a loading state.
 
-        parameters:
+        Args:
             ephemeral: Should the response be ephemeral
 
         """
@@ -327,7 +327,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         """
         Send a message.
 
-        parameters:
+        Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
             embed: Embedded rich content (up to 6000 characters).
@@ -341,7 +341,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             flags: Message flags to apply.
             ephemeral bool: Should this message be sent as ephemeral (hidden)
 
-        returns:
+        Returns:
             New message object that was sent.
 
         """
@@ -425,7 +425,7 @@ class ComponentContext(InteractionContext):
         """
         Defers the response, showing a loading state.
 
-        parameters:
+        Args:
             ephemeral: Should the response be ephemeral
             edit_origin: Whether we intend to edit the original message
 
@@ -465,7 +465,7 @@ class ComponentContext(InteractionContext):
         """
         Edits the original message of the component.
 
-        parameters:
+        Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
             embed: Embedded rich content (up to 6000 characters).
@@ -476,7 +476,7 @@ class ComponentContext(InteractionContext):
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
 
-        returns:
+        Returns:
             The message after it was edited.
 
         """

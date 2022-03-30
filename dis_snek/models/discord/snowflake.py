@@ -54,7 +54,7 @@ def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
 
 @define(slots=False)
 class SnowflakeObject:
-    id: int = field(repr=True, converter=to_snowflake)
+    id: int = field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
         return self.id == other.id
@@ -73,7 +73,7 @@ class SnowflakeObject:
         """
         Returns a timestamp representing the date-time this discord object was created.
 
-        :return:
+        :Returns:
 
         """
         return models.Timestamp.from_snowflake(self.id)

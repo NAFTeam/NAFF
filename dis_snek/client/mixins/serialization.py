@@ -40,10 +40,10 @@ class DictSerializationMixin:
         """
         Process dictionary data received from discord api. Does cleanup and other checks to data.
 
-        parameters:
+        Args:
             data: The dictionary data received from discord api.
 
-        returns:
+        Returns:
             The processed dictionary. Ready to be converted into object class.
 
         """
@@ -54,8 +54,11 @@ class DictSerializationMixin:
         """
         Process and converts dictionary data received from discord api to object class instance.
 
-        parameters:
+        Args:
             data: The json data received from discord api.
+
+        Returns:
+            The object class instance.
 
         """
         if isinstance(data, cls):
@@ -68,14 +71,26 @@ class DictSerializationMixin:
         """
         Process and converts list data received from discord api to object class instances.
 
-        parameters:
+        Args:
             data: The json data received from discord api.
+
+        Returns:
+            List of object class instances.
 
         """
         return [cls.from_dict(data) for data in datas]
 
     def update_from_dict(self: Type[const.T], data: Dict[str, Any]) -> const.T:
-        """Updates object attribute(s) with new json data received from discord api."""
+        """
+        Updates object attribute(s) with new json data received from discord api.
+
+        Args:
+            data: The json data received from discord api.
+
+        Returns:
+            The updated object class instance.
+
+        """
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
             # todo improve
@@ -91,7 +106,7 @@ class DictSerializationMixin:
         """
         Exports object into dictionary representation, ready to be sent to discord api.
 
-        returns:
+        Returns:
             The exported dictionary.
 
         """

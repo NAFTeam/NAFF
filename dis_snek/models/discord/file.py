@@ -12,7 +12,7 @@ class File:
     """
     Representation of a file.
 
-    Used to
+    Used for sending files to discord.
 
     """
 
@@ -22,7 +22,14 @@ class File:
     """Set a filename that will be displayed when uploaded to discord. If you leave this empty, the file will be called `file` by default"""
 
     def open_file(self) -> BinaryIO:
-        if isinstance(self.file, IOBase):
+        """
+        Opens the file.
+
+        Returns:
+            A file-like BinaryIO object.
+
+        """
+        if isinstance(self.file, (IOBase, BinaryIO)):
             return self.file
         else:
             return open(str(self.file), "rb")
@@ -32,10 +39,20 @@ UPLOADABLE_TYPE = Union[File, IOBase, BinaryIO, Path, str]
 
 
 def open_file(file: UPLOADABLE_TYPE) -> BinaryIO:
+    """
+    Opens the file.
+
+    Args:
+        file: The target file or path to file.
+
+    Returns:
+        A file-like BinaryIO object.
+
+    """
     match file:
         case File():
             return file.open_file()
-        case IOBase():
+        case IOBase() | BinaryIO():
             return file
         case Path() | str():
             return open(str(file), "rb")

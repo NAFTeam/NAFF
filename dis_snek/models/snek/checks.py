@@ -49,7 +49,7 @@ def has_id(user_id: int) -> TYPE_CHECK_FUNCTION:
     """
     Checks if the author has the desired ID.
 
-    parameters:
+    Args:
         coro: the function to check
 
     """
@@ -64,7 +64,7 @@ def is_owner() -> TYPE_CHECK_FUNCTION:
     """
     Is the author the owner of the bot.
 
-    parameters:
+    Args:
         coro: the function to check
 
     """

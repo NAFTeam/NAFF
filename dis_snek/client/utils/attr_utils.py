@@ -29,6 +29,15 @@ def docs(doc_string: str) -> Dict[str, str]:
 
 
 def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
+    """
+    Validates that the value is a string. Helps convert and ives a warning if it isn't.
+
+    Args:
+        self: The instance of the class.
+        attribute: The attr attribute being validated.
+        value: The value being validated.
+
+    """
     if not isinstance(value, str):
         if value is MISSING:
             return

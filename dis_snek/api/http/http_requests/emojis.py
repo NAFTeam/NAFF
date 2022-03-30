@@ -19,7 +19,7 @@ class EmojiRequests:
         """
         Get all the emoji from a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query.
 
         Returns:
@@ -34,7 +34,7 @@ class EmojiRequests:
         """
         Get a specific guild emoji object.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             emoji_id: The ID of the emoji to get
 
@@ -53,7 +53,7 @@ class EmojiRequests:
         """
         Create a guild emoji.
 
-        parameters:
+        Args:
             payload: The emoji's data
             guild_id: The ID of the guild
             reason: The reason for this creation
@@ -70,7 +70,7 @@ class EmojiRequests:
         """
         Modify an existing guild emoji.
 
-        parameters:
+        Args:
             payload: The emoji's data
             guild_id: The ID of the guild
             emoji_id: The ID of the emoji to update

@@ -21,9 +21,8 @@ class BaseTrigger(ABC):
         """
         Return the next datetime to fire on.
 
-        If no datetime can be determined, return None
         Returns:
-            Datetime if one can be determined
+            Datetime if one can be determined. If no datetime can be determined, return None
 
         """
         ...
@@ -33,7 +32,7 @@ class IntervalTrigger(BaseTrigger):
     """
     Trigger the task every set interval.
 
-    Arguments:
+    Attributes:
         seconds Union[int, float]: How many seconds between intervals
         minutes Union[int, float]: How many minutes between intervals
         hours Union[int, float]: How many hours between intervals
@@ -59,7 +58,7 @@ class DateTrigger(BaseTrigger):
     """
     Trigger the task once, when the specified datetime is reached.
 
-    Arguments:
+    Attributes:
         target_datetime datetime: A datetime representing the date/time to run this task
 
     """
@@ -77,7 +76,7 @@ class TimeTrigger(BaseTrigger):
     """
     Trigger the task every day, at a specified (24 hour clock) time.
 
-    Arguments:
+    Attributes:
         hour int: The hour of the day (24 hour clock)
         minute int: The minute of the hour
         seconds int: The seconds of the minute

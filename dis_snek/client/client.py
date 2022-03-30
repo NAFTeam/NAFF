@@ -119,7 +119,7 @@ class Snake(
     note:
         By default, all non-privileged intents will be enabled
 
-    Args:
+    Attributes:
         intents: Union[int, Intents]: The intents to use
 
         default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
@@ -335,6 +335,7 @@ class Snake(
 
     @property
     def guilds(self) -> List["Guild"]:
+        """Returns a list of all guilds the bot is in."""
         return self.user.guilds
 
     @property
@@ -365,9 +366,11 @@ class Snake(
 
     @property
     def ws(self) -> WebsocketClient:
+        """Returns the websocket client."""
         return self._connection_state.gateway
 
     def _sanity_check(self) -> None:
+        """Checks for possible and common errors in the bot's configuration."""
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
@@ -437,6 +440,7 @@ class Snake(
         Args:
             source: The source of this error
             error: The exception itself
+
         """
         out = traceback.format_exception(error)
 
@@ -479,6 +483,7 @@ class Snake(
         Called *after* any command is ran.
 
         By default, it will simply log the command, override this to change that behaviour
+
         Args:
             ctx: The context of the command that was called
 
@@ -507,6 +512,7 @@ class Snake(
         Called *after* any component callback is ran.
 
         By default, it will simply log the component use, override this to change that behaviour
+
         Args:
             ctx: The context of the component that was called
 
@@ -535,6 +541,7 @@ class Snake(
         Called *after* any autocomplete callback is ran.
 
         By default, it will simply log the autocomplete callback, override this to change that behaviour
+
         Args:
             ctx: The context of the command that was called
 
@@ -613,6 +620,15 @@ class Snake(
         self.dispatch(events.Login())
 
     async def astart(self, token) -> None:
+        """
+        Asynchronous method to start the bot.
+
+        Args:
+            token: Your bot's token
+
+        Returns:
+
+        """
         await self.login(token)
         try:
             await self._connection_state.start()
@@ -627,7 +643,7 @@ class Snake(
             This is the recommended method to start the bot
 
         Args:
-            token str: Your bot's token
+            token: Your bot's token
 
         """
         try:
@@ -645,6 +661,7 @@ class Snake(
             await self.stop()
 
     async def stop(self) -> None:
+        """Shutdown the bot."""
         log.debug("Stopping the bot.")
         self._ready.clear()
         await self.http.close()
@@ -729,6 +746,7 @@ class Snake(
 
         Returns:
             The context of the modal response
+
         Raises:
             `asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
 
@@ -801,8 +819,11 @@ class Snake(
         """
         A decorator to be used in situations that snek can't automatically hook your listeners. Ideally, the standard listen decorator should be used, not this.
 
-        Arguments:
+        Args:
             event_name: The event name to use, if not the coroutine name
+
+        Returns:
+            A listener that can be used to hook into the event.
 
         """
 
@@ -814,6 +835,17 @@ class Snake(
         return wrapper
 
     def add_event_processor(self, event_name: Absent[str] = MISSING) -> Callable[..., Coroutine]:
+        """
+        A decorator to be used to add event processors.
+
+        Args:
+            event_name: The event name to use, if not the coroutine name
+
+        Returns:
+            A function that can be used to hook into the event.
+
+        """
+
         def wrapper(coro: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
             name = event_name
             if name is MISSING:
@@ -1215,7 +1247,7 @@ class Snake(
             data: The data of the event
             interaction: Is this an interaction or not?
 
-        returns:
+        Returns:
             Context object
 
         """
@@ -1571,12 +1603,12 @@ class Snake(
         note:
             This endpoint can only be used by bots in less than 10 guilds.
 
-        parameters:
+        Args:
             template_code: The code of the template to use.
             name: The name of the guild (2-100 characters)
             icon: Location or File of icon to set
 
-        returns:
+        Returns:
             The newly created guild object
 
         """
@@ -1620,6 +1652,7 @@ class Snake(
 
         Returns:
             Channel Object if found, otherwise None
+
         """
         return self.cache.get_channel(channel_id)
 
@@ -1703,10 +1736,10 @@ class Snake(
         """
         Fetch a scheduled event by id.
 
-        parameters:
+        Args:
             event_id: The id of the scheduled event.
 
-        returns:
+        Returns:
             The scheduled event if found, otherwise None
 
         """
@@ -1720,11 +1753,11 @@ class Snake(
         """
         Fetch a custom emoji by id.
 
-        parameters:
+        Args:
             emoji_id: The id of the custom emoji.
             guild_id: The id of the guild the emoji belongs to.
 
-        returns:
+        Returns:
             The custom emoji if found, otherwise None.
 
         """
@@ -1739,11 +1772,11 @@ class Snake(
         """
         Get a custom emoji by id.
 
-        parameters:
+        Args:
             emoji_id: The id of the custom emoji.
             guild_id: The id of the guild the emoji belongs to.
 
-        returns:
+        Returns:
             The custom emoji if found, otherwise None.
 
         """
@@ -1808,7 +1841,7 @@ class Snake(
             status: The status for the bot to be. i.e. online, afk, etc.
             activity: The activity for the bot to be displayed as doing.
 
-        note::
+        Note::
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """

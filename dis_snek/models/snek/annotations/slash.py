@@ -65,8 +65,8 @@ def slash_float_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
-        min_value:
-        max_value:
+        min_value: The minimum number allowed
+        max_value: The maximum number allowed
 
     """
     option = SlashCommandOption(
@@ -98,8 +98,8 @@ def slash_int_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
-        min_value:
-        max_value:
+        min_value: The minimum number allowed
+        max_value: The maximum number allowed
 
     """
     option = SlashCommandOption(
@@ -254,6 +254,7 @@ def slash_attachment_option(
     Args:
         description: The description of your option
         required: Is this option required?
+
     """
     option = SlashCommandOption(
         name="placeholder", description=description, required=required, type=models.OptionTypes.ATTACHMENT

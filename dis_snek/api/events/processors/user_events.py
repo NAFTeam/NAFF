@@ -48,6 +48,13 @@ class UserEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_presence_update(self, event: "RawGatewayEvent") -> None:
+        """
+        Process raw presence update and dispatch a processed presence update event.
+
+        Args:
+            event: raw presence update event
+
+        """
         g_id = to_snowflake(event.data["guild_id"])
         if user := self.cache.get_user(event.data["user"]["id"]):
             status = Status[event.data["status"].upper()]

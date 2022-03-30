@@ -44,7 +44,7 @@ class SendMixin:
         """
         Send a message.
 
-        parameters:
+        Args:
             content: Message text content.
             embeds: Embedded rich content (up to 6000 characters).
             embed: Embedded rich content (up to 6000 characters).
@@ -57,7 +57,7 @@ class SendMixin:
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
 
-        returns:
+        Returns:
             New message object that was sent.
 
         """

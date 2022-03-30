@@ -85,6 +85,7 @@ def get(sequence: Iterable[T], **kwargs: Any) -> Optional[T]:
 
     Returns:
         A match if found, otherwise None
+
     """
     if not kwargs:
         return sequence[0]
@@ -112,6 +113,7 @@ def get_all(sequence: Iterable[T], **kwargs: Any) -> List[T]:
 
     Returns:
         A list of matches
+
     """
     if not kwargs:
         return sequence
@@ -160,6 +162,16 @@ def wrap_partial(obj, cls) -> Callable:
 
 
 def get_parameters(callback: Callable) -> dict[str, inspect.Parameter]:
+    """
+    Gets all the parameters of a callback.
+
+    Args:
+        callback: The callback to get the parameters of
+
+    Returns:
+        A dictionary of parameters
+
+    """
     return {p.name: p for p in inspect.signature(callback).parameters.values()}
 
 
@@ -172,6 +184,7 @@ def get_event_name(event: Union[str, "events.BaseEvent"]) -> str:
 
     Returns:
         The event name
+
     """
     name = event
 

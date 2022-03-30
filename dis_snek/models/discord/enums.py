@@ -242,7 +242,7 @@ class ApplicationFlags(DiscordIntFlag):  # type: ignore
 
 
 class TeamMembershipState(IntEnum):
-    """Self explanatory."""
+    """Status of membership in the team."""
 
     INVITED = 1
     ACCEPTED = 2
@@ -304,15 +304,23 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
     """Message flags."""
 
     CROSSPOSTED = 1 << 0
+    """This message has been published to subscribed channels (via Channel Following)"""
     IS_CROSSPOST = 1 << 1
+    """This message originated from a message in another channel (via Channel Following)"""
     SUPPRESS_EMBEDS = 1 << 2
+    """Do not include any embeds when serializing this message"""
     SOURCE_MESSAGE_DELETED = 1 << 3
+    """The source message for this crosspost has been deleted (via Channel Following)"""
     URGENT = 1 << 4
+    """This message came from the urgent message system"""
     HAS_THREAD = 1 << 5
+    """This message has an associated thread, with the same id as the message"""
     EPHEMERAL = 1 << 6
+    """This message is only visible to the user who invoked the Interaction"""
     LOADING = 1 << 7
+    """This message is an Interaction Response and the bot is "thinking"""
     FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
-    """this message failed to mention some roles and add their members to the thread"""
+    """This message failed to mention some roles and add their members to the thread"""
 
     # Special members
     NONE = 0
@@ -324,45 +332,87 @@ class Permissions(DiscordIntFlag):  # type: ignore
 
     # Permissions defined by Discord API
     CREATE_INSTANT_INVITE = 1 << 0
+    """Allows creation of instant invites"""
     KICK_MEMBERS = 1 << 1
+    """Allows kicking members"""
     BAN_MEMBERS = 1 << 2
+    """Allows banning members"""
     ADMINISTRATOR = 1 << 3
+    """Allows all permissions and bypasses channel permission overwrites"""
     MANAGE_CHANNELS = 1 << 4
+    """Allows management and editing of channels"""
     MANAGE_GUILD = 1 << 5
+    """Allows management and editing of the guild"""
     ADD_REACTIONS = 1 << 6
+    """Allows for the addition of reactions to messages"""
     VIEW_AUDIT_LOG = 1 << 7
+    """Allows for viewing of audit logs"""
     PRIORITY_SPEAKER = 1 << 8
+    """Allows for using priority speaker in a voice channel"""
     STREAM = 1 << 9
+    """Allows the user to go live"""
     VIEW_CHANNEL = 1 << 10
+    """Allows guild members to view a channel, which includes reading messages in text channels and joining voice channels"""
     SEND_MESSAGES = 1 << 11
+    """	Allows for sending messages in a channel (does not allow sending messages in threads)"""
     SEND_TTS_MESSAGES = 1 << 12
+    """	Allows for sending of `/tts` messages"""
     MANAGE_MESSAGES = 1 << 13
+    """Allows for deletion of other users messages"""
     EMBED_LINKS = 1 << 14
+    """Links sent by users with this permission will be auto-embedded"""
     ATTACH_FILES = 1 << 15
+    """Allows for uploading images and files"""
     READ_MESSAGE_HISTORY = 1 << 16
+    """Allows for reading of message history"""
     MENTION_EVERYONE = 1 << 17
+    """Allows for using the `@everyone` tag to notify all users in a channel, and the `@here` tag to notify all online users in a channel"""
     USE_EXTERNAL_EMOJIS = 1 << 18
+    """Allows the usage of custom emojis from other servers"""
     VIEW_GUILD_INSIGHTS = 1 << 19
+    """Allows for viewing guild insights"""
     CONNECT = 1 << 20
+    """Allows for joining of a voice channel"""
     SPEAK = 1 << 21
+    """Allows for speaking in a voice channel"""
     MUTE_MEMBERS = 1 << 22
+    """Allows for muting members in a voice channel"""
     DEAFEN_MEMBERS = 1 << 23
+    """Allows for deafening of members in a voice channel"""
     MOVE_MEMBERS = 1 << 24
+    """Allows for moving of members between voice channels"""
     USE_VAD = 1 << 25
+    """Allows for using voice-activity-detection in a voice channel"""
     CHANGE_NICKNAME = 1 << 26
+    """Allows for modification of own nickname"""
     MANAGE_NICKNAMES = 1 << 27
+    """Allows for modification of other users nicknames"""
     MANAGE_ROLES = 1 << 28
+    """Allows management and editing of roles"""
     MANAGE_WEBHOOKS = 1 << 29
+    """Allows management and editing of webhooks"""
     MANAGE_EMOJIS_AND_STICKERS = 1 << 30
-    USE_SLASH_COMMANDS = 1 << 31
-    REQUEST_TO_SPEAK = 1 << 32  # This permission is under active development and may be changed or removed.
+    """Allows management and editing of emojis and stickers"""
+    USE_APPLICATION_COMMANDS = 1 << 31
+    """Allows members to use application commands, including slash commands and context menu commands"""
+    REQUEST_TO_SPEAK = 1 << 32
+    """Allows for requesting to speak in stage channels. (This permission is under active development and may be changed or removed.)"""
+    MANAGE_EVENTS = 1 << 33
+    """Allows for creating, editing, and deleting scheduled events"""
     MANAGE_THREADS = 1 << 34
+    """Allows for deleting and archiving threads, and viewing all private threads"""
     USE_PUBLIC_THREADS = 1 << 35
+    """	Allows for creating public and announcement threads"""
     USE_PRIVATE_THREADS = 1 << 36
+    """Allows for creating private threads"""
     USE_EXTERNAL_STICKERS = 1 << 37
+    """Allows the usage of custom stickers from other servers"""
     SEND_MESSAGES_IN_THREADS = 1 << 38
+    """Allows for sending messages in threads"""
     START_EMBEDDED_ACTIVITIES = 1 << 39
+    """Allows for using Activities (applications with the `EMBEDDED` flag) in a voice channel"""
     MODERATE_MEMBERS = 1 << 40
+    """Allows for timing out users to prevent them from sending or reacting to messages in chat and threads, and from speaking in voice and stage channels"""
 
     # Shortcuts/grouping/aliases
     REQUIRES_MFA = (
@@ -378,6 +428,8 @@ class Permissions(DiscordIntFlag):  # type: ignore
         | MANAGE_THREADS
         | MODERATE_MEMBERS
     )
+    USE_SLASH_COMMANDS = USE_APPLICATION_COMMANDS
+    """Legacy alias for :attr:`USE_APPLICATION_COMMANDS`"""
 
     # Special members
     NONE = 0
@@ -388,23 +440,36 @@ class ChannelTypes(IntEnum):
     """Types of channel."""
 
     GUILD_TEXT = 0
+    """Text channel within a server"""
     DM = 1
+    """Direct message between users"""
     GUILD_VOICE = 2
+    """Voice channel within a server"""
     GROUP_DM = 3
+    """Direct message between multiple users"""
     GUILD_CATEGORY = 4
+    """Organizational category that contains up to 50 channels"""
     GUILD_NEWS = 5
+    """Channel that users can follow and crosspost into their own server"""
     GUILD_STORE = 6
+    """Channel in which game developers can sell their game on Discord"""
     GUILD_NEWS_THREAD = 10
+    """Temporary sub-channel within a GUILD_NEWS channel"""
     GUILD_PUBLIC_THREAD = 11
+    """Temporary sub-channel within a GUILD_TEXT channel"""
     GUILD_PRIVATE_THREAD = 12
+    """Temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission"""
     GUILD_STAGE_VOICE = 13
+    """Voice channel for hosting events with an audience"""
 
     @property
     def guild(self) -> bool:
+        """Whether this channel is a guild channel."""
         return self.value not in {1, 3}
 
     @property
     def voice(self) -> bool:
+        """Whether this channel is a voice channel."""
         return self.value in {2, 13}
 
 
@@ -412,17 +477,24 @@ class ComponentTypes(IntEnum):
     """The types of components supported by discord."""
 
     ACTION_ROW = 1
+    """Container for other components"""
     BUTTON = 2
+    """Button object"""
     SELECT = 3
+    """Select menu for picking from choices"""
     INPUT_TEXT = 4
+    """Text input object"""
 
 
 class CommandTypes(IntEnum):
     """The interaction commands supported by discord."""
 
     CHAT_INPUT = 1
+    """Slash commands; a text-based command that shows up when a user types `/`"""
     USER = 2
+    """A UI-based command that shows up when you right click or tap on a user"""
     MESSAGE = 3
+    """A UI-based command that shows up when you right click or tap on a message"""
 
 
 class InteractionTypes(IntEnum):
@@ -525,9 +597,13 @@ class PremiumTiers(IntEnum):
     """The boost level of a server."""
 
     NONE = 0
+    """Guild has not unlocked any Server Boost perks"""
     TIER_1 = 1
+    """Guild has unlocked Tier 1 Server Boost perks"""
     TIER_2 = 2
+    """Guild has unlocked Tier 2 Server Boost perks"""
     TIER_3 = 3
+    """Guild has unlocked Tier 3 Server Boost perks"""
 
 
 class SystemChannelFlags(DiscordIntFlag):
@@ -572,14 +648,21 @@ class ActivityType(IntEnum):
 
     """
 
-    GAME = 0  # "Playing Rocket League"
-    STREAMING = 1  # "Streaming Rocket League"
-    LISTENING = 2  # "Listening to Spotify"
-    WATCHING = 3  # "Watching YouTube Together"
-    CUSTOM = 4  # ":smiley: I am cool"
-    COMPETING = 5  # "Competing in Arena World Champions"
+    GAME = 0
+    """Playing {name}; Example: Playing Rocket League"""
+    STREAMING = 1
+    """Streaming {details}; Example: Streaming Rocket League"""
+    LISTENING = 2
+    """Listening to {name}; Example: Listening to Spotify"""
+    WATCHING = 3
+    """Watching {name}; Example: Watching YouTube Together"""
+    CUSTOM = 4
+    """{emoji} {name}; Example: :smiley: I am cool"""
+    COMPETING = 5
+    """Competing in {name}; Example: Competing in Arena World Champions"""
 
     PLAYING = GAME
+    """Alias for `GAME`"""
 
 
 class ActivityFlags(DiscordIntFlag):
