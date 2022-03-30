@@ -41,6 +41,7 @@ __all__ = [
     "InteractionCommand",
     "ContextMenu",
     "SlashCommandChoice",
+    "SlashCommandOption",
     "SlashCommand",
     "ComponentCommand",
     "slash_command",
