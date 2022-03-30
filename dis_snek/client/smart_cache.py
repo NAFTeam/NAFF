@@ -486,7 +486,7 @@ class GlobalCache:
 
         return channel
 
-    def place_dm_channel_id(self, user_id, channel_id) -> None:
+    def place_dm_channel_id(self, user_id: "Snowflake_Type", channel_id: "Snowflake_Type") -> None:
         """
         Cache that the bot is active within a DM channel.
 
@@ -497,7 +497,7 @@ class GlobalCache:
         """
         self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
 
-    async def fetch_dm_channel_id(self, user_id) -> "Snowflake_Type":
+    async def fetch_dm_channel_id(self, user_id: "Snowflake_Type") -> "Snowflake_Type":
         """
         Get the DM channel ID for a user.
 
@@ -512,7 +512,7 @@ class GlobalCache:
             channel_id = channel.id
         return channel_id
 
-    async def fetch_dm_channel(self, user_id) -> "DM":
+    async def fetch_dm_channel(self, user_id: "Snowflake_Type") -> "DM":
         """
         Fetch the DM channel for a user.
 

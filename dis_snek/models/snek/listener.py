@@ -16,7 +16,7 @@ class Listener:
     callback: Coroutine
     """Coroutine to call when the event is triggered."""
 
-    def __init__(self, func: Coroutine, event: str) -> None:
+    def __init__(self, func: Callable[..., Coroutine], event: str) -> None:
         self.event = event
         self.callback = func
 
@@ -35,7 +35,6 @@ class Listener:
             A listener object.
 
         """
-
         def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
