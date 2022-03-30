@@ -412,8 +412,8 @@ class Snake(
         """
         return self.default_prefix
 
-    def _queue_task(self, coro, event, *args, **kwargs) -> asyncio.Task:
-        async def _async_wrap(_coro, _event, *_args, **_kwargs) -> None:
+    def _queue_task(self, coro: Listener, event: BaseEvent, *args, **kwargs) -> asyncio.Task:
+        async def _async_wrap(_coro: Listener, _event: BaseEvent, *_args, **_kwargs) -> None:
             try:
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot

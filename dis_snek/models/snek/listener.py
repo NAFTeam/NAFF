@@ -12,9 +12,9 @@ __all__ = ["Listener", "listen"]
 class Listener:
 
     event: str
-    callback: Coroutine
+    callback: Callable[..., Coroutine]
 
-    def __init__(self, func: Coroutine, event: str) -> None:
+    def __init__(self, func: Callable[..., Coroutine], event: str) -> None:
         self.event = event
         self.callback = func
 
@@ -22,8 +22,8 @@ class Listener:
         return await self.callback(*args, **kwargs)
 
     @classmethod
-    def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:
-        def wrapper(coro: Coroutine) -> "Listener":
+    def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Callable[..., Coroutine]], "Listener"]:
+        def wrapper(coro: Callable[..., Coroutine]) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
 
