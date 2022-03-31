@@ -33,4 +33,21 @@ Now just join a voice channel, and type run the "play" slash command with a song
 
 Congratulations! You've got a music-bot.
 
+## But what about local music?
+
+If you want to play your own files, you can do that too! Create an `AudioVolume` object and away you go.
+
+!!! note
+    If your audio is already encoded, use the standard `Audio` object instead. You'll lose volume manipulation, however.
+
+```python
+import dis_snek
+from dis_snek.api.voice.audio import AudioVolume
+
+@dis_snek.slash_command("play", "play a song!")
+async def play_file(ctx: dis_snek.InteractionContext):
+    audio = AudioVolume("some_file.wav")
+    await ctx.voice_state.play(audio)
+```
+
 Check out [Active Voice State](/API Reference/models/Snek/active_voice_state/) for a list of available methods and attributes.
