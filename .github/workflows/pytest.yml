@@ -12,7 +12,7 @@ jobs:
           python-version: '3.10'
       - name: Install pytest
         run: |
-          pip install -e .
+          pip install -e .[all]
           pip install pytest pytest-recording pytest-asyncio pytest-cov
       - name: Run Tests
         run: |

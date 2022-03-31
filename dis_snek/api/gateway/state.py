@@ -9,11 +9,12 @@ from dis_snek.models.discord.activity import Activity
 from dis_snek.client.errors import SnakeException, WebSocketClosed
 from dis_snek.client.const import logger_name, MISSING, Absent
 from dis_snek.client.utils.attr_utils import define
-from .gateway import WebsocketClient
+from .gateway import WebsocketClient, GatewayClient
 from dis_snek.api import events
+import dis_snek
 
 if TYPE_CHECKING:
-    from dis_snek import Snake
+    from dis_snek import Snake, Snowflake_Type
 
 __all__ = ["ConnectionState"]
 
@@ -90,7 +91,7 @@ class ConnectionState:
     async def _ws_connect(self) -> None:
         log.info("Attempting to initially connect to gateway...")
         try:
-            async with WebsocketClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
+            async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
                     await self.gateway.run()
                 finally:
@@ -164,3 +165,29 @@ class ConnectionState:
         self.client._status = status
         self.client._activity = activity
         await self.gateway.change_presence(activity.to_dict() if activity else None, status)
+
+    def get_voice_state(self, guild_id: "Snowflake_Type") -> Optional["dis_snek.ActiveVoiceState"]:
+        return self.client.cache.get_bot_voice_state(guild_id)
+
+    async def voice_connect(
+        self, guild_id, channel_id, muted: bool = False, deafened: bool = False
+    ) -> "dis_snek.ActiveVoiceState":
+        """
+        Connect to a voice channel.
+
+        Args:
+            guild_id: id of the guild the voice channel is in.
+            channel_id: id of the voice channel client wants to join.
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
+        voice_state = dis_snek.ActiveVoiceState(
+            client=self.client, guild_id=guild_id, channel_id=channel_id, self_mute=muted, self_deaf=deafened
+        )
+        await voice_state.connect()
+        self.client.cache.place_bot_voice_state(voice_state)
+        return voice_state

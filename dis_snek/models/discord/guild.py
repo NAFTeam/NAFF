@@ -156,8 +156,6 @@ class Guild(BaseGuild):
     """True if this is considered a large guild."""
     member_count: int = field(default=0)
     """The total number of members in this guild."""
-    voice_states: List[dict] = field(factory=list)
-    """The states of members currently in voice channels. Lacks the guild_id key."""
     presences: List[dict] = field(factory=list)
     """The presences of the members in the guild, will only include non-offline members if the size is greater than large threshold."""
     max_presences: Optional[int] = field(default=None)
@@ -216,6 +214,12 @@ class Guild(BaseGuild):
 
         if welcome_screen := data.get("welcome_screen"):
             data["welcome_screen"] = GuildWelcome.from_dict(welcome_screen, client)
+
+        if voice_states := data.get("voice_states"):
+            [
+                asyncio.create_task(client.cache.place_voice_state_data(state | {"guild_id": guild_id}))
+                for state in voice_states
+            ]
         return data
 
     @classmethod
@@ -387,6 +391,19 @@ class Guild(BaseGuild):
     def permissions(self) -> Permissions:
         """Alias for me.guild_permissions"""
         return self.me.guild_permissions
+
+    @property
+    def voice_state(self) -> Optional["models.VoiceState"]:
+        """Get the bot's voice state for the guild."""
+        return self._client.cache.get_bot_voice_state(self.id)
+
+    @property
+    def voice_states(self) -> List["models.VoiceState"]:
+        """Get a list of the active voice states in this guild."""
+        # this is *very* ick, but we cache by user_id, so we have to do it this way,
+        # alternative would be maintaining a lookup table in this guild object, which is inherently unreliable
+        # noinspection PyProtectedMember
+        return [v_state for v_state in self._client.cache.voice_state_cache.values() if v_state._guild_id == self.id]
 
     async def fetch_member(self, member_id: Snowflake_Type) -> Optional["models.Member"]:
         """

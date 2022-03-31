@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.sticker import Sticker
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.modal import Modal
+    from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
     "Resolved",
@@ -123,6 +124,10 @@ class Context:
     def bot(self) -> "Snake":
         """A reference to the bot instance."""
         return self._client
+
+    @property
+    def voice_state(self) -> Optional["ActiveVoiceState"]:
+        return self._client.cache.get_bot_voice_state(self.guild_id)
 
 
 @define()

@@ -24,8 +24,9 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
-    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM
+    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM, GuildVoice
     from dis_snek.models.discord.file import File
+    from dis_snek.models.discord.voice_state import VoiceState
 
 __all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
 
@@ -347,6 +348,11 @@ class Member(DiscordObject, _SendDMMixin):
             return Permissions.ALL
 
         return permissions
+
+    @property
+    def voice(self) -> Optional["VoiceState"]:
+        """Returns the voice state of this user if any."""
+        return self._client.cache.get_voice_state(self.id)
 
     def has_permission(self, *permissions: Permissions) -> bool:
         """

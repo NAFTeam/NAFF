@@ -92,6 +92,7 @@ from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
 from .smart_cache import GlobalCache
+from ..models.snek.active_voice_state import ActiveVoiceState
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
@@ -1830,6 +1831,37 @@ class Snake(
         regions_data = await self.http.list_voice_regions()
         regions = VoiceRegion.from_list(regions_data)
         return regions
+
+    async def connect_to_vc(
+        self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
+    ) -> ActiveVoiceState:
+        """
+        Connect the bot to a voice channel.
+
+        Args:
+            guild_id: id of the guild the voice channel is in.
+            channel_id: id of the voice channel client wants to join.
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
+        return await self._connection_state.voice_connect(guild_id, channel_id, muted, deafened)
+
+    def get_bot_voice_state(self, guild_id: "Snowflake_Type") -> Optional[ActiveVoiceState]:
+        """
+        Get the bot's voice state for a guild.
+
+        Args:
+            guild_id: The target guild's id.
+
+        Returns:
+            The bot's voice state for the guild if connected, otherwise None.
+
+        """
+        return self._connection_state.get_voice_state(guild_id)
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Optional[Union[Activity, str]] = None
