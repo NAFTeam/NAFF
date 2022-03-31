@@ -6,7 +6,8 @@ First you're going to want to get the voice dependencies installed:
 ```
 pip install dis-snek[voice]
 ```
-Also, make sure you have installed [FFmpeg](https://ffmpeg.org/) and made it available in the root directory.
+
+Then you'll need to download [FFmpeg](https://ffmpeg.org) and place it in your project directory or PATH.
 
 Now you've got those; let's make a simple play command to get you started.
 
