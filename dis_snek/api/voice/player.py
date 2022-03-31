@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shutil
 import threading
 import time
 from asyncio import AbstractEventLoop
@@ -35,6 +36,11 @@ class Player(threading.Thread):
         self._sent_payloads: int = 0
 
         self._cond = threading.Condition()
+
+        if not shutil.which("ffmpeg"):
+            raise RuntimeError(
+                "Unable to start player. FFMPeg was not found. Please add it to your project directory or PATH. (https://ffmpeg.org/)"
+            )
 
     def __enter__(self) -> "Player":
         self.state.ws.cond = self._cond
