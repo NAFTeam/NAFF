@@ -39,7 +39,7 @@ class Player(threading.Thread):
 
         if not shutil.which("ffmpeg"):
             raise RuntimeError(
-                "Unable to start player. FFMPeg was not found. Please add it to your project directory or PATH. (https://ffmpeg.org/)"
+                "Unable to start player. FFmpeg was not found. Please add it to your project directory or PATH. (https://ffmpeg.org/)"
             )
 
     def __enter__(self) -> "Player":
