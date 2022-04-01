@@ -9,7 +9,7 @@ from dis_snek.models.discord.activity import Activity
 from dis_snek.client.errors import SnakeException, WebSocketClosed
 from dis_snek.client.const import logger_name, MISSING, Absent
 from dis_snek.client.utils.attr_utils import define
-from .gateway import WebsocketClient, GatewayClient
+from .gateway import GatewayClient
 from dis_snek.api import events
 import dis_snek
 
@@ -30,7 +30,7 @@ class ConnectionState:
     shard_id: int
     """The shard ID of this state"""
 
-    gateway: Absent[WebsocketClient] = MISSING
+    gateway: Absent[GatewayClient] = MISSING
     """The websocket connection for the Discord Gateway."""
 
     start_time: Absent[datetime] = MISSING

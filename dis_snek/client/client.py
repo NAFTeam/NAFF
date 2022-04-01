@@ -34,7 +34,7 @@ import dis_snek.api.events as events
 from dis_snek.api.events import RawGatewayEvent, MessageCreate
 from dis_snek.api.events import processors
 from dis_snek.api.events.internal import Component, BaseEvent
-from dis_snek.api.gateway.gateway import WebsocketClient
+from dis_snek.api.gateway.gateway import GatewayClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
 from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
@@ -366,7 +366,6 @@ class Snake(
         return commands
 
     @property
-    def ws(self) -> WebsocketClient:
         """Returns the websocket client."""
         return self._connection_state.gateway
 
