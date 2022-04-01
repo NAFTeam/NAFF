@@ -1526,15 +1526,25 @@ class Guild(BaseGuild):
             return None
         return GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
 
-    async def fetch_bans(self) -> list[GuildBan]:
+    async def fetch_bans(
+        self,
+        before: Optional["Snowflake_Type"] = MISSING,
+        after: Optional["Snowflake_Type"] = MISSING,
+        limit: int = 1000,
+    ) -> list[GuildBan]:
         """
-        Fetches all bans for the guild. You must have the `ban members` permission.
+        Fetches bans for the guild. You must have the `ban members` permission.
+
+        Args:
+            before: consider only users before given user id
+            after: consider only users after given user id
+            limit: number of users to return (up to maximum 1000)
 
         Returns:
-            A list containing all bans and information about them.
+            A list containing bans and information about them.
 
         """
-        ban_infos = await self._client.http.get_guild_bans(self.id)
+        ban_infos = await self._client.http.get_guild_bans(self.id, before=before, after=after, limit=limit)
         return [
             GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
             for ban_info in ban_infos
