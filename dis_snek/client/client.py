@@ -366,6 +366,7 @@ class Snake(
         return commands
 
     @property
+    def ws(self) -> GatewayClient:
         """Returns the websocket client."""
         return self._connection_state.gateway
 
