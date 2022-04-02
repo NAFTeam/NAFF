@@ -1310,20 +1310,19 @@ class Snake(
             if scope in self.interactions:
                 ctx = await self.get_context(interaction_data, True)
 
-                command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
-                ctx.command = command
-                log.debug(f"{scope} :: {command.name} should be called")
+                ctx.command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                log.debug(f"{scope} :: {ctx.command.name} should be called")
 
-                if command.auto_defer:
-                    auto_defer = command.auto_defer
-                elif command.scale and command.scale.auto_defer:
-                    auto_defer = command.scale.auto_defer
+                if ctx.command.auto_defer:
+                    auto_defer = ctx.command.auto_defer
+                elif ctx.command.scale and ctx.command.scale.auto_defer:
+                    auto_defer = ctx.command.scale.auto_defer
                 else:
                     auto_defer = self.auto_defer
 
                 if auto_opt := getattr(ctx, "focussed_option", None):
                     try:
-                        await command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
+                        await ctx.command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
                     except Exception as e:
                         await self.on_autocomplete_error(ctx, e)
                     finally:
@@ -1333,7 +1332,7 @@ class Snake(
                         await auto_defer(ctx)
                         if self.pre_run_callback:
                             await self.pre_run_callback(ctx, **ctx.kwargs)
-                        await self._run_slash_command(command, ctx)
+                        await self._run_slash_command(ctx.command, ctx)
                         if self.post_run_callback:
                             await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
