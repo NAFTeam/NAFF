@@ -165,7 +165,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
 ```
 
 !!! danger "Option Names"
-    Be aware that the option `name` and the function parameter need to be the same (In this example both are `integer_option`)
+    Be aware that the option `name` and the function parameter need to be the same (In this example both are `integer_option`).
 
 
 ## But I Want A Choice
