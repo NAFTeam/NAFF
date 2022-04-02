@@ -451,8 +451,6 @@ class ChannelTypes(IntEnum):
     """Organizational category that contains up to 50 channels"""
     GUILD_NEWS = 5
     """Channel that users can follow and crosspost into their own server"""
-    GUILD_STORE = 6
-    """Channel in which game developers can sell their game on Discord"""
     GUILD_NEWS_THREAD = 10
     """Temporary sub-channel within a GUILD_NEWS channel"""
     GUILD_PUBLIC_THREAD = 11

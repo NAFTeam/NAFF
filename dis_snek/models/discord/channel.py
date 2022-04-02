@@ -47,7 +47,6 @@ __all__ = [
     "DMGroup",
     "GuildChannel",
     "GuildCategory",
-    "GuildStore",
     "GuildNews",
     "GuildText",
     "ThreadChannel",
@@ -1381,46 +1380,6 @@ class GuildCategory(GuildChannel):
 
 
 @define()
-class GuildStore(GuildChannel):
-    async def edit(
-        self,
-        name: Absent[str] = MISSING,
-        position: Absent[int] = MISSING,
-        permission_overwrites: Absent[
-            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
-        ] = MISSING,
-        parent_id: Absent[Snowflake_Type] = MISSING,
-        nsfw: Absent[bool] = MISSING,
-        reason: Absent[str] = MISSING,
-        **kwargs,
-    ) -> "GuildStore":
-        """
-        Edit this channel.
-
-        Args:
-            name: 1-100 character channel name
-            position: the position of the channel in the left-hand listing
-            permission_overwrites: channel or category-specific permissions
-            parent_id: id of the new parent category for a channel
-            nsfw: whether the channel is nsfw
-            reason: The reason for this change
-
-        Returns:
-            The edited channel.
-
-        """
-        return await super().edit(
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            nsfw=nsfw,
-            reason=reason,
-            **kwargs,
-        )
-
-
-@define()
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = field(default=None)
     """The channel topic (0-1024 characters)"""
@@ -2066,7 +2025,6 @@ TYPE_ALL_CHANNEL = Union[
     GuildVoice,
     GuildStageVoice,
     GuildCategory,
-    GuildStore,
     GuildPublicThread,
     GuildPrivateThread,
     GuildNewsThread,
@@ -2078,7 +2036,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice]
 
 
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
@@ -2098,7 +2056,6 @@ TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_VOICE: GuildVoice,
     ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
     ChannelTypes.GUILD_CATEGORY: GuildCategory,
-    ChannelTypes.GUILD_STORE: GuildStore,
     ChannelTypes.GUILD_PUBLIC_THREAD: GuildPublicThread,
     ChannelTypes.GUILD_PRIVATE_THREAD: GuildPrivateThread,
     ChannelTypes.GUILD_NEWS_THREAD: GuildNewsThread,
