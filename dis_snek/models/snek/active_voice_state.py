@@ -165,7 +165,7 @@ class ActiveVoiceState(VoiceState):
         Args:
             channel: The channel to move to
             timeout: How long to wait for state and server information from discord
-            
+
         """
         target_channel = to_snowflake(channel)
         if target_channel != self._channel_id:
