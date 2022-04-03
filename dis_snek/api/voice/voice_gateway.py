@@ -339,6 +339,7 @@ class VoiceGateway(WebsocketClient):
 
         Args:
             is_speaking: If we're sending audio or not
+
         """
         payload = {
             "op": OP.SPEAKING,

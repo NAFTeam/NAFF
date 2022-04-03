@@ -239,6 +239,7 @@ class GatewayClient(WebsocketClient):
         self.state.client.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{event.lower()}"))
 
     def close(self) -> None:
+        """Shutdown the websocket connection."""
         self._close_gateway.set()
 
     async def _identify(self) -> None:
@@ -281,11 +282,11 @@ class GatewayClient(WebsocketClient):
         log.debug("Client is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:
-        """Send a heartbeat to the gateway."""
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
         log.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None) -> None:
+        """Update the bot's presence status."""
         payload = dict_filter_none(
             {
                 "since": int(since if since else time.time() * 1000),
@@ -331,6 +332,7 @@ class GatewayClient(WebsocketClient):
     async def voice_state_update(
         self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
     ) -> None:
+        """Update the bot's voice state."""
         payload = {
             "op": OPCODE.VOICE_STATE,
             "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": muted, "self_deaf": deafened},

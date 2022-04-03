@@ -133,6 +133,7 @@ class WebsocketClient:
         Args:
             data: The data to send
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
+
         """
         log.debug(f"Sending data to websocket: {data}")
 
@@ -151,6 +152,7 @@ class WebsocketClient:
         Args:
             data: The data to send
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
+
         """
         serialized = OverriddenJson.dumps(data)
         await self.send(serialized, bypass)
@@ -159,7 +161,7 @@ class WebsocketClient:
         """
         Receive a full event payload from the WebSocket.
 
-        Parameters:
+        Args:
             force:
                 Whether to force the receiving, ignoring safety measures such as the read-lock.
                 This option also means that exceptions are raised when a reconnection would normally
@@ -314,4 +316,5 @@ class WebsocketClient:
 
     @abstractmethod
     async def send_heartbeat(self) -> None:
+        """Send a heartbeat to the gateway."""
         ...

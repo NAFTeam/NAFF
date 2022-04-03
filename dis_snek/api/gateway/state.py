@@ -56,6 +56,7 @@ class ConnectionState:
 
     @property
     def presence(self) -> dict:
+        """Returns the presence of the bot."""
         return {
             "status": self.client._status,
             "activities": [self.client._activity.to_dict()] if self.client._activity else [],
@@ -89,6 +90,7 @@ class ConnectionState:
         self.gateway_started.clear()
 
     async def _ws_connect(self) -> None:
+        """Connect to the Discord Gateway."""
         log.info("Attempting to initially connect to gateway...")
         try:
             async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
@@ -167,6 +169,16 @@ class ConnectionState:
         await self.gateway.change_presence(activity.to_dict() if activity else None, status)
 
     def get_voice_state(self, guild_id: "Snowflake_Type") -> Optional["dis_snek.ActiveVoiceState"]:
+        """
+        Get the bot's voice state for a guild.
+
+        Args:
+            guild_id: The target guild's id.
+
+        Returns:
+            The bot's voice state for the guild if connected, otherwise None.
+
+        """
         return self.client.cache.get_bot_voice_state(guild_id)
 
     async def voice_connect(
