@@ -181,7 +181,7 @@ class ActiveVoiceState(VoiceState):
                 await self._client.wait_for("raw_voice_state_update", self._guild_predicate, timeout=timeout)
             except asyncio.TimeoutError:
                 await self._close_connection()
-                raise VoiceConnectionTimeout
+                raise VoiceConnectionTimeout from None
 
             if self.player and not already_paused:
                 self.player.resume()
