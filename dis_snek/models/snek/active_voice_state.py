@@ -121,6 +121,9 @@ class ActiveVoiceState(VoiceState):
         asyncio.create_task(self._ws_connect())
         await self.ws.wait_until_ready()
 
+    def _guild_predicate(self, event) -> bool:
+        return int(event.data["guild_id"]) == self._guild_id
+
     async def connect(self, timeout: int = 5) -> None:
         """
         Establish the voice connection.
@@ -136,17 +139,14 @@ class ActiveVoiceState(VoiceState):
         if self.connected:
             raise VoiceAlreadyConnected
 
-        def predicate(event) -> bool:
-            return int(event.data["guild_id"]) == self._guild_id
-
         await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
         log.debug("Waiting for voice connection data...")
 
         try:
             self._voice_state, self._voice_server = await asyncio.gather(
-                self._client.wait_for("raw_voice_state_update", predicate, timeout=timeout),
-                self._client.wait_for("raw_voice_server_update", predicate, timeout=timeout),
+                self._client.wait_for("raw_voice_state_update", self._guild_predicate, timeout=timeout),
+                self._client.wait_for("raw_voice_server_update", self._guild_predicate, timeout=timeout),
             )
         except asyncio.TimeoutError:
             raise VoiceConnectionTimeout from None
@@ -158,12 +158,14 @@ class ActiveVoiceState(VoiceState):
         """Disconnect from the voice channel."""
         await self._client.ws.voice_state_update(self._guild_id, None)
 
-    async def move(self, channel: "Snowflake_Type") -> None:
+    async def move(self, channel: "Snowflake_Type", timeout: int = 5) -> None:
         """
         Move to another voice channel.
 
         Args:
             channel: The channel to move to
+            timeout: How long to wait for state and server information from discord
+            
         """
         target_channel = to_snowflake(channel)
         if target_channel != self._channel_id:
@@ -173,6 +175,13 @@ class ActiveVoiceState(VoiceState):
 
             self._channel_id = target_channel
             await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
+
+            log.debug("Waiting for voice connection data...")
+            try:
+                await self._client.wait_for("raw_voice_state_update", self._guild_predicate, timeout=timeout)
+            except asyncio.TimeoutError:
+                await self._close_connection()
+                raise VoiceConnectionTimeout
 
             if self.player and not already_paused:
                 self.player.resume()
