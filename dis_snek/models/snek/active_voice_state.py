@@ -1,18 +1,21 @@
 import asyncio
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from discord_typings import VoiceStateData
 
-from dis_snek.api.voice.audio import BaseAudio, AudioVolume
 from dis_snek.api.voice.player import Player
 from dis_snek.api.voice.voice_gateway import VoiceGateway
 from dis_snek.client.const import logger_name, MISSING
-from dis_snek.client.errors import SnakeException, VoiceAlreadyConnected, VoiceConnectionTimeout
+from dis_snek.client.errors import VoiceAlreadyConnected, VoiceConnectionTimeout
 from dis_snek.client.utils import optional
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.models.discord.snowflake import Snowflake_Type, SnowflakeObject, to_snowflake
+from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.discord.voice_state import VoiceState
+
+if TYPE_CHECKING:
+    from dis_snek.api.voice.audio import BaseAudio
+
 
 __all__ = ["ActiveVoiceState"]
 
@@ -46,7 +49,7 @@ class ActiveVoiceState(VoiceState):
         return f"<ActiveVoiceState: channel={self.channel} guild={self.guild} volume={self.volume} playing={self.playing} audio={self.current_audio}>"
 
     @property
-    def current_audio(self) -> Optional[BaseAudio]:
+    def current_audio(self) -> Optional["BaseAudio"]:
         """The current audio being played"""
         if self.player:
             return self.player.current_audio
@@ -62,7 +65,7 @@ class ActiveVoiceState(VoiceState):
         if value < 0.0:
             raise ValueError("Volume may not be negative.")
         self._volume = value
-        if self.player and isinstance(self.player.current_audio, AudioVolume):
+        if self.player and hasattr(self.player.current_audio, "volume"):
             self.player.current_audio.volume = value
 
     @property
@@ -185,7 +188,7 @@ class ActiveVoiceState(VoiceState):
         """Resume playback."""
         self.player.resume()
 
-    async def play(self, audio: BaseAudio) -> None:
+    async def play(self, audio: "BaseAudio") -> None:
         """
         Start playing an audio object.
 
@@ -201,7 +204,7 @@ class ActiveVoiceState(VoiceState):
             self.player.play()
             await self.wait_for_stopped()
 
-    def play_no_wait(self, audio: BaseAudio) -> None:
+    def play_no_wait(self, audio: "BaseAudio") -> None:
         """
         Start playing an audio object, but don't wait for playback to finish.
 

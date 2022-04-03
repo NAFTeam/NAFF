@@ -1,6 +1,11 @@
-from nacl import secret, utils
-
 __all__ = ["Encryption"]
+
+try:
+    from nacl import secret, utils
+
+    nacl_imported = True
+except ImportError:
+    nacl_imported = False
 
 
 class Encryption:
@@ -11,6 +16,8 @@ class Encryption:
     )
 
     def __init__(self, secret_key) -> None:
+        if not nacl_imported:
+            raise RuntimeError("Please install dis-snek[voice] to use voice components.")
         self.box: secret.SecretBox = secret.SecretBox(bytes(secret_key))
 
     def encrypt(self, mode: str, header: bytes, data) -> bytes:

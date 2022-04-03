@@ -7,26 +7,28 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-from _cffi_backend import buffer
-from yt_dlp import YoutubeDL
-
 __all__ = ["AudioBuffer", "BaseAudio", "Audio", "AudioVolume", "YTDLAudio"]
 
-ytdl = YoutubeDL(
-    {
-        "format": "bestaudio/best",
-        "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
-        "restrictfilenames": True,
-        "noplaylist": True,
-        "nocheckcertificate": True,
-        "ignoreerrors": False,
-        "logtostderr": False,
-        "quiet": True,
-        "no_warnings": True,
-        "default_search": "auto",
-        "source_address": "0.0.0.0",  # noqa: S104
-    }
-)
+try:
+    from yt_dlp import YoutubeDL
+
+    ytdl = YoutubeDL(
+        {
+            "format": "bestaudio/best",
+            "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
+            "restrictfilenames": True,
+            "noplaylist": True,
+            "nocheckcertificate": True,
+            "ignoreerrors": False,
+            "logtostderr": False,
+            "quiet": True,
+            "no_warnings": True,
+            "default_search": "auto",
+            "source_address": "0.0.0.0",  # noqa: S104
+        }
+    )
+except ImportError:
+    pass
 
 
 class AudioBuffer:
