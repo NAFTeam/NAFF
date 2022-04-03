@@ -71,7 +71,9 @@ class ActiveVoiceState(VoiceState):
     @property
     def paused(self) -> bool:
         """Is the player currently paused"""
-        return self.player.paused
+        if self.player:
+            return self.player.paused
+        return False
 
     @property
     def playing(self) -> bool:
