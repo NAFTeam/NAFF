@@ -16,6 +16,7 @@ from typing import (
     Coroutine,
     Dict,
     List,
+    Mapping,
     NoReturn,
     Optional,
     Type,
@@ -1441,48 +1442,60 @@ class Snake(
 
         return self.scales.get(name, None)
 
-    def grow_scale(self, file_name: str, package: str = None) -> None:
+    def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
         A helper method to load a scale.
 
         Args:
             file_name: The name of the file to load the scale from.
             package: The package this scale is in.
+            load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
-        self.load_extension(file_name, package)
+        self.load_extension(file_name, package, **load_kwargs)
 
-    def shed_scale(self, scale_name: str) -> None:
+    def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
         """
         Helper method to unload a scale.
 
         Args:
             scale_name: The name of the scale to unload.
+            unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
         if scale := self.get_scale(scale_name):
-            return self.unload_extension(inspect.getmodule(scale).__name__)
+            return self.unload_extension(inspect.getmodule(scale).__name__, **unload_kwargs)
 
         raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
-    def regrow_scale(self, scale_name: str) -> None:
+    def regrow_scale(
+        self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
+    ) -> None:
         """
         Helper method to reload a scale.
 
         Args:
             scale_name: The name of the scale to reload
+            load_kwargs: The manually-filled mapping of the load keyword arguments
+            unload_kwargs: The manually-filled mapping of the unload keyword arguments
 
         """
-        self.shed_scale(scale_name)
-        self.grow_scale(scale_name)
+        if not load_kwargs:
+            load_kwargs = {}
+        if not unload_kwargs:
+            unload_kwargs = {}
 
-    def load_extension(self, name: str, package: str = None) -> None:
+        self.shed_scale(scale_name, **unload_kwargs)
+        self.grow_scale(scale_name, **load_kwargs)
+
+    def load_extension(self, name: str, package: str = None, **load_kwargs) -> None:
         """
-        Load an extension.
+        Load an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
+            load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1496,7 +1509,7 @@ class Snake(
                 raise ExtensionLoadException(
                     f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
                 ) from None
-            setup(self)
+            setup(self, **load_kwargs)
         except ExtensionLoadException:
             raise
         except Exception as e:
@@ -1508,13 +1521,14 @@ class Snake(
             self.__extensions[name] = module
             return
 
-    def unload_extension(self, name, package=None) -> None:
+    def unload_extension(self, name, package=None, **unload_kwargs) -> None:
         """
-        Unload an extension.
+        Unload an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
+            unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1525,23 +1539,27 @@ class Snake(
 
         try:
             teardown = getattr(module, "teardown")
-            teardown()
+            teardown(**unload_kwargs)
         except AttributeError:
             pass
 
         if scale := self.get_scale(name):
-            scale.shed()
+            scale.shed(**unload_kwargs)
 
         del sys.modules[name]
         del self.__extensions[name]
 
-    def reload_extension(self, name, package=None) -> None:
+    def reload_extension(
+        self, name, package=None, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
+    ) -> None:
         """
-        Helper method to reload an extension. Simply unloads, then loads the extension.
+        Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
+            load_kwargs: The manually-filled mapping of the load keyword arguments
+            unload_kwargs: The manually-filled mapping of the unload keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1551,8 +1569,13 @@ class Snake(
             log.warning("Attempted to reload extension thats not loaded. Loading extension instead")
             return self.load_extension(name, package)
 
-        self.unload_extension(name, package)
-        self.load_extension(name, package)
+        if not load_kwargs:
+            load_kwargs = {}
+        if not unload_kwargs:
+            unload_kwargs = {}
+
+        self.unload_extension(name, package, **unload_kwargs)
+        self.load_extension(name, package, **load_kwargs)
 
         # todo: maybe add an ability to revert to the previous version if unable to load the new one
 
