@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.modal import Modal
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
+    from dis_snek.models.snek.command import BaseCommand
 
 __all__ = [
     "Resolved",
@@ -105,6 +106,7 @@ class Context:
 
     _client: "Snake" = field(default=None)
     invoked_name: str = field(default=None, metadata=docs("The name of the command to be invoked"))
+    command: Optional["BaseCommand"] = field(default=None, metadata=docs("The command to be invoked"))
 
     args: List = field(factory=list, metadata=docs("The list of arguments to be passed to the command"))
     kwargs: Dict = field(factory=dict, metadata=docs("The list of keyword arguments to be passed"))
