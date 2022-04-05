@@ -212,13 +212,12 @@ class GuildRequests:
             List of ban objects
 
         """
-        params = dict_filter_none(
-            {
-                "limit": limit,
-                "before": before,
-                "after": after,
-            }
-        )
+        params = {
+            "limit": limit,
+            "before": before,
+            "after": after,
+        }
+
         return await self.request(Route("GET", f"/guilds/{guild_id}/bans"), params=params)
 
     async def get_guild_ban(
