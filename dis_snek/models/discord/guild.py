@@ -1973,7 +1973,7 @@ class AuditLogHistory(AsyncIterator):
             if not self.last:
                 self.last = namedtuple("temp", "id")
                 self.last.id = self.after
-            log = await self.guild.get_audit_log(limit=self.get_limit, after=self.last.id)
+            log = await self.guild.fetch_audit_log(limit=self.get_limit, after=self.last.id)
             entries = log.entries if log.entries else []
 
         else:
@@ -1981,6 +1981,6 @@ class AuditLogHistory(AsyncIterator):
                 self.last = namedtuple("temp", "id")
                 self.last.id = self.before
 
-            log = await self.guild.get_audit_log(limit=self.get_limit, before=self.last.id)
+            log = await self.guild.fetch_audit_log(limit=self.get_limit, before=self.last.id)
             entries = log.entries if log.entries else []
         return entries
