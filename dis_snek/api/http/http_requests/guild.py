@@ -195,7 +195,13 @@ class GuildRequests:
         """
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/members/{user_id}"), reason=reason)
 
-    async def get_guild_bans(self, guild_id: "Snowflake_Type") -> List[discord_typings.BanData]:
+    async def get_guild_bans(
+        self,
+        guild_id: "Snowflake_Type",
+        before: Absent["Snowflake_Type"] = MISSING,
+        after: Absent["Snowflake_Type"] = MISSING,
+        limit: int = 1000,
+    ) -> List[discord_typings.BanData]:
         """
         Return a list of ban objects for the users banned from this guild.
 
@@ -206,7 +212,13 @@ class GuildRequests:
             List of ban objects
 
         """
-        return await self.request(Route("GET", f"/guilds/{guild_id}/bans"))
+        params = {
+            "limit": limit,
+            "before": before,
+            "after": after,
+        }
+
+        return await self.request(Route("GET", f"/guilds/{guild_id}/bans"), params=params)
 
     async def get_guild_ban(
         self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
