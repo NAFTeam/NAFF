@@ -184,6 +184,29 @@ class Paginator:
         pages = [Page(c, prefix=prefix, suffix=suffix) for c in content_pages]
         return cls(client, pages=pages, timeout_interval=timeout)
 
+    @classmethod
+    def create_from_list(
+        cls,
+        client: "Snake",
+        content: list[str],
+        prefix: str = "",
+        suffix: str = "",
+        page_size: int = 4000,
+        timeout: int = 0,
+    ) -> "Paginator":
+        """Create a paginator from a list of strings. Useful to maintain formatting."""
+        pages = []
+        page = ""
+        for entry in content:
+            if len(page) + len(f"\n{entry}") <= page_size:
+                page += f"{entry}\n"
+            else:
+                pages.append(Page(page, prefix=prefix, suffix=suffix))
+                page = ""
+        if page != "":
+            pages.append(Page(page, prefix=prefix, suffix=suffix))
+        return cls(client, pages=pages, timeout_interval=timeout)
+
     def create_components(self, disable: bool = False) -> List[ActionRow]:
         """
         Create the components for the paginator message.
