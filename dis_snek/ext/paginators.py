@@ -166,14 +166,36 @@ class Paginator:
 
     @classmethod
     def create_from_embeds(cls, client: "Snake", *embeds: Embed, timeout: int = 0) -> "Paginator":
-        """Create a paginator system from a list of embeds."""
+        """Create a paginator system from a list of embeds.
+
+        Args:
+            client: A reference to the Snake client
+            embeds: The embeds to use for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
         return cls(client, pages=list(embeds), timeout_interval=timeout)
 
     @classmethod
     def create_from_string(
         cls, client: "Snake", content: str, prefix: str = "", suffix: str = "", page_size: int = 4000, timeout: int = 0
     ) -> "Paginator":
-        """Create a paginator system from a string."""
+        """
+        Create a paginator system from a string.
+
+        Args:
+            client: A reference to the Snake client
+            content: The content to paginate
+            prefix: The prefix for each page to use
+            suffix: The suffix for each page to use
+            page_size: The maximum characters for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
         content_pages = textwrap.wrap(
             content,
             width=page_size - (len(prefix) + len(suffix)),
@@ -194,7 +216,20 @@ class Paginator:
         page_size: int = 4000,
         timeout: int = 0,
     ) -> "Paginator":
-        """Create a paginator from a list of strings. Useful to maintain formatting."""
+        """
+        Create a paginator from a list of strings. Useful to maintain formatting.
+
+        Args:
+            client: A reference to the Snake client
+            content: The content to paginate
+            prefix: The prefix for each page to use
+            suffix: The suffix for each page to use
+            page_size: The maximum characters for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
         pages = []
         page = ""
         for entry in content:
