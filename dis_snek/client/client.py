@@ -39,7 +39,7 @@ from dis_snek.api.gateway.gateway import GatewayClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
 from dis_snek.client import errors
-from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
+from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
 from dis_snek.client.errors import (
     BotException,
     ScaleLoadException,
@@ -488,7 +488,9 @@ class Snake(
             out = out.replace(self.http.token, "[REDACTED TOKEN]")
             await ctx.send(
                 embeds=Embed(
-                    title=f"Error: {type(error).__name__}", color=BrandColors.RED, description=f"```\n{out}```"
+                    title=f"Error: {type(error).__name__}",
+                    color=BrandColors.RED,
+                    description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
                 )
             )
         except errors.SnakeException:
