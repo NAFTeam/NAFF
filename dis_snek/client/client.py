@@ -38,6 +38,7 @@ from dis_snek.api.events.internal import Component, BaseEvent
 from dis_snek.api.gateway.gateway import GatewayClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
+from dis_snek.client import errors
 from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
 from dis_snek.client.errors import (
     BotException,
@@ -49,6 +50,7 @@ from dis_snek.client.errors import (
     HTTPException,
     NotFound,
 )
+from dis_snek.client.smart_cache import GlobalCache
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial, get_event_name
 from dis_snek.client.utils.serializer import to_image_data
@@ -85,16 +87,16 @@ from dis_snek.models import (
     VoiceRegion,
 )
 from dis_snek.models import Wait
+from dis_snek.models.discord.color import BrandColors
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
+from dis_snek.models.discord.embed import Embed
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.modal import Modal
+from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
-from .smart_cache import GlobalCache
-from ..models.snek.active_voice_state import ActiveVoiceState
-from ..models.snek.application_commands import ModalCommand
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
@@ -480,7 +482,16 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        try:
+            out = "".join(traceback.format_exception(error))
+            await ctx.send(
+                embeds=Embed(
+                    title=f"Error: {type(error).__name__}", color=BrandColors.RED, description=f"```\n{out}```"
+                )
+            )
+        except errors.SnakeException:
+            pass
 
     async def on_command(self, ctx: Context) -> None:
         """
