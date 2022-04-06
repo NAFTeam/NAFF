@@ -328,6 +328,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         ephemeral: bool = False,
     ) -> "Message":
@@ -345,6 +346,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
+            suppress_embeds: Should embeds be suppressed on this send
             flags: Message flags to apply.
             ephemeral bool: Should this message be sent as ephemeral (hidden)
 
@@ -355,6 +357,11 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
             self.ephemeral = True
+
+        if suppress_embeds:
+            if isinstance(flags, int):
+                flags = MessageFlags(flags)
+            flags = flags | MessageFlags.SUPPRESS_EMBEDS
 
         return await super().send(
             content,

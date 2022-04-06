@@ -38,6 +38,7 @@ class SendMixin:
         files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
         file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         **kwargs,
     ) -> "Message":
@@ -55,6 +56,7 @@ class SendMixin:
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
+            suppress_embeds: Should embeds be suppressed on this send
             flags: Message flags to apply.
 
         Returns:
@@ -65,6 +67,12 @@ class SendMixin:
             raise errors.EmptyMessageException(
                 "You cannot send a message without any content, embeds, files, or stickers"
             )
+
+        if suppress_embeds:
+            if isinstance(flags, int):
+                flags = MessageFlags(flags)
+            flags = flags | MessageFlags.SUPPRESS_EMBEDS
+
         message_payload = models.discord.message.process_message_payload(
             content=content,
             embeds=embeds or embed,
