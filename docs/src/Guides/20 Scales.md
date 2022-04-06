@@ -203,7 +203,7 @@ bot.grow_scale("Filename_here")
 bot.start("token")
 ```
 
-Use also can pass any **keyword** arguments into the `setup` function. Here is a basic "Scale switching" example:
+You can also pass any **keyword** arguments into the `setup` function. Here is a basic "Scale switching" example:
 
 ```python
 from dis_snek import Scale
