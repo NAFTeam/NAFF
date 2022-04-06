@@ -31,6 +31,7 @@ class Timestamp(datetime):
 
     @classmethod
     def fromdatetime(cls, dt: datetime) -> "Timestamp":
+        """Construct a timezone-aware UTC datetime from a datetime object."""
         timestamp = cls.fromtimestamp(dt.timestamp(), tz=dt.tzinfo)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
@@ -56,7 +57,11 @@ class Timestamp(datetime):
 
     @classmethod
     def fromtimestamp(cls, t: float, tz=None) -> "Timestamp":
-        timestamp = super().fromtimestamp(t, tz=tz)
+        try:
+            timestamp = super().fromtimestamp(t, tz=tz)
+        except Exception:
+            # May be in milliseconds instead of seconds
+            timestamp = super().fromtimestamp(t / 1000, tz=tz)
 
         if timestamp.tzinfo is None:  # assume naive datetimes are based on local timezone
             return timestamp.astimezone()
@@ -67,7 +72,7 @@ class Timestamp(datetime):
         return super().fromordinal(n).astimezone()
 
     @classmethod
-    def now(cls, tz=None):
+    def now(cls, tz=None) -> "Timestamp":
         """
         Construct a datetime from time.time() and optional time zone info.
 
@@ -78,7 +83,7 @@ class Timestamp(datetime):
         return cls.fromtimestamp(t, tz)
 
     @classmethod
-    def utcnow(cls):
+    def utcnow(cls) -> "Timestamp":
         """Construct a timezone-aware UTC datetime from time.time()."""
         t = time.time()
         return cls.utcfromtimestamp(t)
@@ -98,6 +103,19 @@ class Timestamp(datetime):
 
     @classmethod
     def from_snowflake(cls, snowflake: "Snowflake_Type") -> "Timestamp":
+        """
+        Construct a timezone-aware UTC datetime from a snowflake.
+
+        Args:
+            snowflake: The snowflake to convert.
+
+        Returns:
+            A timezone-aware UTC datetime.
+
+        ??? Info
+            https://discord.com/developers/docs/reference#convert-snowflake-to-datetime
+
+        """
         if isinstance(snowflake, str):
             snowflake = int(snowflake)
 
@@ -105,10 +123,20 @@ class Timestamp(datetime):
         return cls.utcfromtimestamp(timestamp)
 
     def format(self, style: Optional[Union[TimestampStyles, str]] = None) -> str:
+        """
+        Format the timestamp for discord client to display.
+
+        Args:
+            style: The style to format the timestamp with.
+
+        Returns:
+            The formatted timestamp.
+
+        """
         if not style:
             return f"<t:{self.timestamp():.0f}>"
         else:
             return f"<t:{self.timestamp():.0f}:{style}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.format()

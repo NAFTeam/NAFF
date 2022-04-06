@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import attr
-
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import EventLocationNotProvided
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake
@@ -24,34 +22,34 @@ __all__ = ["ScheduledEvent"]
 
 @define()
 class ScheduledEvent(DiscordObject):
-    name: str = attr.ib()
-    description: str = attr.ib(default=MISSING)
-    entity_type: Union[ScheduledEventType, int] = attr.ib(converter=ScheduledEventType)
+    name: str = field(repr=True)
+    description: str = field(default=MISSING)
+    entity_type: Union[ScheduledEventType, int] = field(converter=ScheduledEventType)
     """The type of the scheduled event"""
-    start_time: Timestamp = attr.ib(converter=timestamp_converter)
+    start_time: Timestamp = field(converter=timestamp_converter)
     """A Timestamp object representing the scheduled start time of the event """
-    end_time: Optional[Timestamp] = attr.ib(default=None, converter=optional(timestamp_converter))
+    end_time: Optional[Timestamp] = field(default=None, converter=optional(timestamp_converter))
     """Optional Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
-    privacy_level: Union[ScheduledEventPrivacyLevel, int] = attr.ib(converter=ScheduledEventPrivacyLevel)
+    privacy_level: Union[ScheduledEventPrivacyLevel, int] = field(converter=ScheduledEventPrivacyLevel)
     """
     Privacy level of the scheduled event
 
     ??? note:
         Discord only has `GUILD_ONLY` at the momment.
     """
-    status: Union[ScheduledEventStatus, int] = attr.ib(converter=ScheduledEventStatus)
+    status: Union[ScheduledEventStatus, int] = field(converter=ScheduledEventStatus)
     """Current status of the scheduled event"""
-    entity_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING, converter=optional(to_snowflake))
+    entity_id: Optional["Snowflake_Type"] = field(default=MISSING, converter=optional(to_snowflake))
     """The id of an entity associated with a guild scheduled event"""
-    entity_metadata: Optional[Dict[str, Any]] = attr.ib(default=MISSING)  # TODO make this
+    entity_metadata: Optional[Dict[str, Any]] = field(default=MISSING)  # TODO make this
     """The metadata associated with the entity_type"""
-    user_count: int = attr.ib(default=MISSING)
+    user_count: int = field(default=MISSING)
     """Amount of users subscribed to the scheduled event"""
 
-    _guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    _creator: Optional["User"] = attr.ib(default=MISSING)
-    _creator_id: Optional["Snowflake_Type"] = attr.ib(default=MISSING, converter=optional(to_snowflake))
-    _channel_id: Optional["Snowflake_Type"] = attr.ib(default=None, converter=optional(to_snowflake))
+    _guild_id: "Snowflake_Type" = field(converter=to_snowflake)
+    _creator: Optional["User"] = field(default=MISSING)
+    _creator_id: Optional["Snowflake_Type"] = field(default=MISSING, converter=optional(to_snowflake))
+    _channel_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
 
     @property
     async def creator(self) -> Optional["User"]:
@@ -66,7 +64,7 @@ class ScheduledEvent(DiscordObject):
 
     @property
     def guild(self) -> "Guild":
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -74,7 +72,7 @@ class ScheduledEvent(DiscordObject):
             data["creator"] = client.cache.place_user_data(data["creator"])
 
         if data.get("channel_id"):
-            data["channel"] = client.cache.channel_cache.get(data["channel_id"])
+            data["channel"] = client.cache.get_channel(data["channel_id"])
 
         data["start_time"] = data.get("scheduled_start_time")
 
@@ -96,8 +94,7 @@ class ScheduledEvent(DiscordObject):
     async def fetch_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:
         """Returns the channel this event is scheduled in if it is scheduled in a channel."""
         if self._channel_id:
-            channel = await self._client.cache.fetch_channel(self._channel_id)
-            return channel
+            return await self._client.cache.fetch_channel(self._channel_id)
         return None
 
     def get_channel(self) -> Optional[Union["GuildVoice", "GuildStageVoice"]]:

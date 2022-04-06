@@ -3,13 +3,15 @@ import uuid
 from enum import IntEnum
 from typing import Union, Optional, List
 
-import attr
+import attrs
 
 from dis_snek.client.const import MISSING
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.models.snek.application_commands import CallbackTypes
 from dis_snek.models.discord.components import InteractiveComponent, ComponentTypes
-from dis_snek.client.utils.attr_utils import str_validator
+from dis_snek.client.utils.attr_utils import define, field, str_validator
+
+__all__ = ["InputText", "Modal", "ParagraphText", "ShortText", "TextStyles"]
 
 
 class TextStyles(IntEnum):
@@ -17,43 +19,62 @@ class TextStyles(IntEnum):
     PARAGRAPH = 2
 
 
-@attr.s()
+@define(kw_only=False)
 class InputText(InteractiveComponent):
-    type: Union[ComponentTypes, int] = attr.ib(
-        default=ComponentTypes.INPUT_TEXT, init=False, on_setattr=attr.setters.frozen
+    """An input component for modals"""
+
+    type: Union[ComponentTypes, int] = field(
+        default=ComponentTypes.INPUT_TEXT, init=False, on_setattr=attrs.setters.frozen
     )
 
-    label: str = attr.ib(validator=str_validator)
-    style: Union[TextStyles, int] = attr.ib()
+    label: str = field(validator=str_validator)
+    """the label for this component"""
+    style: Union[TextStyles, int] = field()
+    """the Text Input Style for single or multiple lines input"""
 
-    custom_id: Optional[str] = attr.ib(factory=lambda: str(uuid.uuid4()), validator=str_validator)
+    custom_id: Optional[str] = field(factory=lambda: str(uuid.uuid4()), validator=str_validator)
+    """a developer-defined identifier for the input, max 100 characters"""
 
-    placeholder: Optional[str] = attr.ib(default=MISSING, validator=str_validator, kw_only=True)
-    value: Optional[str] = attr.ib(default=MISSING, validator=str_validator, kw_only=True)
+    placeholder: Optional[str] = field(default=MISSING, validator=str_validator, kw_only=True)
+    """custom placeholder text if the input is empty, max 100 characters"""
+    value: Optional[str] = field(default=MISSING, validator=str_validator, kw_only=True)
+    """a pre-filled value for this component, max 4000 characters"""
 
-    required: bool = attr.ib(default=True, kw_only=True)
-    min_length: Optional[int] = attr.ib(default=MISSING, kw_only=True)
-    max_length: Optional[int] = attr.ib(default=MISSING, kw_only=True)
+    required: bool = field(default=True, kw_only=True)
+    """whether this component is required to be filled, default true"""
+    min_length: Optional[int] = field(default=MISSING, kw_only=True)
+    """the minimum input length for a text input, min 0, max 4000"""
+    max_length: Optional[int] = field(default=MISSING, kw_only=True)
+    """the maximum input length for a text input, min 1, max 4000. Must be more than min_length."""
 
 
-@attr.s()
+@define(kw_only=False)
 class ShortText(InputText):
-    style: Union[TextStyles, int] = attr.ib(default=TextStyles.SHORT, kw_only=True)
+    """A single line input component for modals"""
+
+    style: Union[TextStyles, int] = field(default=TextStyles.SHORT, kw_only=True)
 
 
-@attr.s()
+@define(kw_only=False)
 class ParagraphText(InputText):
-    style: Union[TextStyles, int] = attr.ib(default=TextStyles.PARAGRAPH, kw_only=True)
+    """A multi line input component for modals"""
+
+    style: Union[TextStyles, int] = field(default=TextStyles.PARAGRAPH, kw_only=True)
 
 
-@attr.s()
+@define(kw_only=False)
 class Modal(DictSerializationMixin):
-    type: Union[CallbackTypes, int] = attr.ib(default=CallbackTypes.MODAL, init=False, on_setattr=attr.setters.frozen)
-    title: str = attr.ib(validator=str_validator)
-    components: List[InputText] = attr.ib()
-    custom_id: Optional[str] = attr.ib(factory=lambda: str(uuid.uuid4()), validator=str_validator)
+    """Form submission style component on discord"""
 
-    def __attrs_post_init__(self):
+    type: Union[CallbackTypes, int] = field(default=CallbackTypes.MODAL, init=False, on_setattr=attrs.setters.frozen)
+    title: str = field(validator=str_validator)
+    """the title of the popup modal, max 45 characters"""
+    components: List[InputText] = field()
+    """between 1 and 5 (inclusive) components that make up the modal"""
+    custom_id: Optional[str] = field(factory=lambda: str(uuid.uuid4()), validator=str_validator)
+    """a developer-defined identifier for the component, max 100 characters"""
+
+    def __attrs_post_init__(self) -> None:
         if self.custom_id is MISSING:
             self.custom_id = str(uuid.uuid4())
 

@@ -23,12 +23,61 @@ These are events dispatched by Discord. This is intended as a reference so you k
 
 from typing import TYPE_CHECKING, List, Union, Optional
 
-import attr
-
 import dis_snek.models
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
 from .internal import BaseEvent, GuildEvent
+
+__all__ = [
+    "BanCreate",
+    "BanRemove",
+    "ChannelCreate",
+    "ChannelDelete",
+    "ChannelPinsUpdate",
+    "ChannelUpdate",
+    "GuildEmojisUpdate",
+    "GuildJoin",
+    "GuildLeft",
+    "GuildMembersChunk",
+    "GuildStickersUpdate",
+    "GuildUnavailable",
+    "GuildUpdate",
+    "IntegrationCreate",
+    "IntegrationDelete",
+    "IntegrationUpdate",
+    "InteractionCreate",
+    "InviteCreate",
+    "InviteDelete",
+    "MemberAdd",
+    "MemberRemove",
+    "MemberUpdate",
+    "MessageCreate",
+    "MessageDelete",
+    "MessageDeleteBulk",
+    "MessageReactionAdd",
+    "MessageReactionRemove",
+    "MessageReactionRemoveAll",
+    "MessageUpdate",
+    "ModalResponse",
+    "PresenceUpdate",
+    "RawGatewayEvent",
+    "RoleCreate",
+    "RoleDelete",
+    "RoleUpdate",
+    "StageInstanceCreate",
+    "StageInstanceDelete",
+    "StageInstanceUpdate",
+    "ThreadCreate",
+    "ThreadDelete",
+    "ThreadListSync",
+    "ThreadMemberUpdate",
+    "ThreadMembersUpdate",
+    "ThreadUpdate",
+    "TypingStart",
+    "VoiceStateUpdate",
+    "WebhooksUpdate",
+]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild, GuildIntegration
@@ -46,7 +95,7 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.context import ModalContext
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class RawGatewayEvent(BaseEvent):
     """
     An event dispatched from the gateway.
@@ -55,71 +104,71 @@ class RawGatewayEvent(BaseEvent):
 
     """
 
-    data: dict = attr.ib(factory=dict)
+    data: dict = field(factory=dict)
     """Raw Data from the gateway"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ChannelCreate(BaseEvent):
     """Dispatched when a channel is created."""
 
-    channel: "BaseChannel" = attr.ib(metadata=docs("The channel this event is dispatched from"))
+    channel: "BaseChannel" = field(metadata=docs("The channel this event is dispatched from"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ChannelUpdate(BaseEvent):
     """Dispatched when a channel is updated."""
 
-    before: "BaseChannel" = attr.ib()
+    before: "BaseChannel" = field()
     """Channel before this event. MISSING if it was not cached before"""
-    after: "BaseChannel" = attr.ib()
+    after: "BaseChannel" = field()
     """Channel after this event"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ChannelDelete(ChannelCreate):
     """Dispatched when a channel is deleted."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ChannelPinsUpdate(ChannelCreate):
     """Dispatched when a channel's pins are updated."""
 
-    last_pin_timestamp: "Timestamp" = attr.ib()
+    last_pin_timestamp: "Timestamp" = field()
     """The time at which the most recent pinned message was pinned"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created."""
 
-    thread: "TYPE_THREAD_CHANNEL" = attr.ib(metadata=docs("The thread this event is dispatched from"))
+    thread: "TYPE_THREAD_CHANNEL" = field(metadata=docs("The thread this event is dispatched from"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadUpdate(ThreadCreate):
     """Dispatched when a thread is updated."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadDelete(ThreadCreate):
     """Dispatched when a thread is deleted."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadListSync(BaseEvent):
     """Dispatched when gaining access to a channel, contains all active threads in that channel."""
 
-    channel_ids: List["Snowflake_Type"] = attr.ib()
+    channel_ids: List["Snowflake_Type"] = field()
     """The parent channel ids whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data."""
-    threads: List["BaseChannel"] = attr.ib()
+    threads: List["BaseChannel"] = field()
     """all active threads in the given channels that the current user can access"""
-    members: List["Member"] = attr.ib()
+    members: List["Member"] = field()
     """all thread member objects from the synced threads for the current user, indicating which threads the current user has been added to"""
 
 
 # todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadMemberUpdate(ThreadCreate):
     """
     Dispatched when the thread member object for the current user is updated.
@@ -130,25 +179,25 @@ class ThreadMemberUpdate(ThreadCreate):
 
     """
 
-    member: "Member" = attr.ib()
+    member: "Member" = field()
     """The member who was added"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ThreadMembersUpdate(BaseEvent):
     """Dispatched when anyone is added or removed from a thread."""
 
-    id: "Snowflake_Type" = attr.ib()
+    id: "Snowflake_Type" = field()
     """The ID of the thread"""
-    member_count: int = attr.ib(default=50)
+    member_count: int = field(default=50)
     """the approximate number of members in the thread, capped at 50"""
-    added_members: List["Member"] = attr.ib(factory=list)
+    added_members: List["Member"] = field(factory=list)
     """Users added to the thread"""
-    removed_member_ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    removed_member_ids: List["Snowflake_Type"] = field(factory=list)
     """Users removed from the thread"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildJoin(BaseEvent):
     """
     Dispatched when a guild is joined, created, or becomes available.
@@ -158,125 +207,122 @@ class GuildJoin(BaseEvent):
 
     """
 
-    guild: "Guild" = attr.ib()
+    guild: "Guild" = field()
     """The guild that was created"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildUpdate(BaseEvent):
     """Dispatched when a guild is updated."""
 
-    before: "Guild" = attr.ib()
+    before: "Guild" = field()
     """Guild before this event"""
-    after: "Guild" = attr.ib()
+    after: "Guild" = field()
     """Guild after this event"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildLeft(BaseEvent, GuildEvent):
     """Dispatched when a guild is left."""
 
-    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    guild: Optional["Guild"] = field(default=MISSING)
     """The guild, if it was cached"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildUnavailable(BaseEvent, GuildEvent):
     """Dispatched when a guild is not available."""
 
-    guild: Optional["Guild"] = attr.ib(default=MISSING)
+    guild: Optional["Guild"] = field(default=MISSING)
     """The guild, if it was cached"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class BanCreate(BaseEvent, GuildEvent):
     """Dispatched when someone was banned from a guild."""
 
-    user: "BaseUser" = attr.ib(metadata=docs("The user"))
+    user: "BaseUser" = field(metadata=docs("The user"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class BanRemove(BanCreate):
     """Dispatched when a users ban is removed."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
-    before: List["CustomEmoji"] = attr.ib(factory=list)
+    before: List["CustomEmoji"] = field(factory=list)
     """List of emoji before this event. Only includes emojis that were cached. To enable the emoji cache (and this field), start your bot with `Snake(enable_emoji_cache=True)`"""
-    after: List["CustomEmoji"] = attr.ib(factory=list)
+    after: List["CustomEmoji"] = field(factory=list)
     """List of emoji after this event"""
 
 
-# todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildStickersUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
-    before: List["Sticker"] = attr.ib(factory=list)
-    """List of stickers from before this event"""
-    after: List["Sticker"] = attr.ib(factory=list)
+    stickers: List["Sticker"] = field(factory=list)
     """List of stickers from after this event"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MemberAdd(BaseEvent, GuildEvent):
     """Dispatched when a member is added to a guild."""
 
-    member: "Member" = attr.ib(metadata=docs("The member who was added"))
+    member: "Member" = field(metadata=docs("The member who was added"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
-    member: Union["Member", "User"] = attr.ib(
+    member: Union["Member", "User"] = field(
         metadata=docs("The member who was added, can be user if the member is not cached")
     )
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MemberUpdate(BaseEvent, GuildEvent):
     """Dispatched when a member is updated."""
 
-    before: "Member" = attr.ib()
+    before: "Member" = field()
     """The state of the member before this event"""
-    after: "Member" = attr.ib()
+    after: "Member" = field()
     """The state of the member after this event"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class RoleCreate(BaseEvent, GuildEvent):
     """Dispatched when a role is created."""
 
-    role: "Role" = attr.ib()
+    role: "Role" = field()
     """The created role"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class RoleUpdate(BaseEvent, GuildEvent):
     """Dispatched when a role is updated."""
 
-    before: Absent["Role"] = attr.ib()
+    before: Absent["Role"] = field()
     """The role before this event"""
-    after: "Role" = attr.ib()
+    after: "Role" = field()
     """The role after this event"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class RoleDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild role is deleted."""
 
-    id: "Snowflake_Type" = attr.ib()
+    id: "Snowflake_Type" = field()
     """The ID of the deleted role"""
-    role: Absent["Role"] = attr.ib()
+    role: Absent["Role"] = field()
     """The deleted role"""
 
 
 # todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class GuildMembersChunk(BaseEvent, GuildEvent):
     """
     Sent in response to Guild Request Members.
@@ -286,186 +332,185 @@ class GuildMembersChunk(BaseEvent, GuildEvent):
 
     """
 
-    chunk_index: int = attr.ib()
+    chunk_index: int = field()
     """The chunk index in the expected chunks for this response (0 <= chunk_index < chunk_count)"""
-    chunk_count: int = attr.ib()
+    chunk_count: int = field()
     """the total number of expected chunks for this response"""
-    presences: List = attr.ib()
+    presences: List = field()
     """if passing true to `REQUEST_GUILD_MEMBERS`, presences of the returned members will be here"""
-    nonce: str = attr.ib()
+    nonce: str = field()
     """The nonce used in the request, if any"""
-    members: List["Member"] = attr.ib(factory=list)
+    members: List["Member"] = field(factory=list)
     """A list of members"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class IntegrationCreate(BaseEvent):
     """Dispatched when a guild integration is created."""
 
-    integration: "GuildIntegration" = attr.ib()
+    integration: "GuildIntegration" = field()
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class IntegrationUpdate(IntegrationCreate):
     """Dispatched when a guild integration is updated."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class IntegrationDelete(BaseEvent, GuildEvent):
     """Dispatched when a guild integration is deleted."""
 
-    id: "Snowflake_Type" = attr.ib()
+    id: "Snowflake_Type" = field()
     """The ID of the integration"""
-    application_id: "Snowflake_Type" = attr.ib(default=None)
+    application_id: "Snowflake_Type" = field(default=None)
     """The ID of the bot/application for this integration"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created."""
 
-    invite: dis_snek.models.Invite = attr.ib()
+    invite: dis_snek.models.Invite = field()
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class InviteDelete(InviteCreate):
     """Dispatched when an invite is deleted."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageCreate(BaseEvent):
     """Dispatched when a message is created."""
 
-    message: "Message" = attr.ib()
+    message: "Message" = field()
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageUpdate(BaseEvent):
     """Dispatched when a message is edited."""
 
-    before: "Message" = attr.ib()
+    before: "Message" = field()
     """The message before this event was created"""
-    after: "Message" = attr.ib()
+    after: "Message" = field()
     """The message after this event was created"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageDelete(BaseEvent):
     """Dispatched when a message is deleted."""
 
-    message: "Message" = attr.ib()
+    message: "Message" = field()
 
 
-# todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageDeleteBulk(BaseEvent, GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
 
-    channel_id: "Snowflake_Type" = attr.ib()
+    channel_id: "Snowflake_Type" = field()
     """The ID of the channel these were deleted in"""
-    ids: List["Snowflake_Type"] = attr.ib(factory=list)
+    ids: List["Snowflake_Type"] = field(factory=list)
     """A list of message snowflakes"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
-    message: "Message" = attr.ib(metadata=docs("The message that was reacted to"))
-    emoji: "PartialEmoji" = attr.ib(metadata=docs("The emoji that was added to the message"))
-    author: Union["Member", "User"] = attr.ib(metadata=docs("The user who added the reaction"))
+    message: "Message" = field(metadata=docs("The message that was reacted to"))
+    emoji: "PartialEmoji" = field(metadata=docs("The emoji that was added to the message"))
+    author: Union["Member", "User"] = field(metadata=docs("The user who added the reaction"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageReactionRemove(MessageReactionAdd):
     """Dispatched when a reaction is removed."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class MessageReactionRemoveAll(BaseEvent, GuildEvent):
     """Dispatched when all reactions are removed from a message."""
 
-    message: "Message" = attr.ib()
+    message: "Message" = field()
     """The message that was reacted to"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class PresenceUpdate(BaseEvent):
     """A user's presence has changed."""
 
-    user: "User" = attr.ib()
+    user: "User" = field()
     """The user in question"""
-    status: str = attr.ib()
+    status: str = field()
     """'Either `idle`, `dnd`, `online`, or `offline`'"""
-    activities: List["Activity"] = attr.ib()
+    activities: List["Activity"] = field()
     """The users current activities"""
-    client_status: dict = attr.ib()
+    client_status: dict = field()
     """What platform the user is reported as being on"""
-    guild_id: "Snowflake_Type" = attr.ib()
+    guild_id: "Snowflake_Type" = field()
     """The guild this presence update was dispatched from"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created."""
 
-    stage_instance: "StageInstance" = attr.ib(metadata=docs("The stage instance"))
+    stage_instance: "StageInstance" = field(metadata=docs("The stage instance"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class StageInstanceDelete(StageInstanceCreate):
     """Dispatched when a stage instance is deleted."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class StageInstanceUpdate(StageInstanceCreate):
     """Dispatched when a stage instance is updated."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class TypingStart(BaseEvent):
     """Dispatched when a user starts typing."""
 
-    author: Union["User", "Member"] = attr.ib()
+    author: Union["User", "Member"] = field()
     """The user who started typing"""
-    channel: "BaseChannel" = attr.ib()
+    channel: "BaseChannel" = field()
     """The channel typing is in"""
-    guild: "Guild" = attr.ib()
+    guild: "Guild" = field()
     """The ID of the guild this typing is in"""
-    timestamp: "Timestamp" = attr.ib()
+    timestamp: "Timestamp" = field()
     """unix time (in seconds) of when the user started typing"""
 
 
-# todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class WebhooksUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
 
     # Discord doesnt sent the webhook object for this event, for some reason
-    channel_id: "Snowflake_Type" = attr.ib()
+    channel_id: "Snowflake_Type" = field()
     """The ID of the webhook was updated"""
 
 
 # todo implementation missing
-@attr.s(slots=True)
+@define(kw_only=False)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
-    interaction: dict = attr.ib()
+    interaction: dict = field()
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class ModalResponse(BaseEvent):
     """Dispatched when a modal receives a response"""
 
-    context: "ModalContext" = attr.ib()
+    context: "ModalContext" = field()
+    """The context data of the modal"""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class VoiceStateUpdate(BaseEvent):
     """Dispatched when a user joins/leaves/moves voice channels."""
 
-    before: Optional["VoiceState"] = attr.ib()
+    before: Optional["VoiceState"] = field()
     """The voice state before this event was created or None if the user was not in a voice channel"""
-    after: Optional["VoiceState"] = attr.ib()
+    after: Optional["VoiceState"] = field()
     """The voice state after this event was created or None if the user is no longer in a voice channel"""

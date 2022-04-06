@@ -1,9 +1,14 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
+import discord_typings
+
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.models.discord.timestamp import Timestamp
 from dis_snek.client.utils.serializer import dict_filter_missing
+
+__all__ = ["MemberRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -12,11 +17,13 @@ if TYPE_CHECKING:
 class MemberRequests:
     request: Any
 
-    async def get_member(self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type") -> Dict:
+    async def get_member(
+        self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
+    ) -> discord_typings.GuildMemberData:
         """
         Get a member of a guild by ID.
 
-        parameters:
+        Args:
             guild_id: The id of the guild
             user_id: The user id to grab
 
@@ -25,27 +32,26 @@ class MemberRequests:
 
     async def list_members(
         self, guild_id: "Snowflake_Type", limit: int = 1, after: "Snowflake_Type" = MISSING
-    ) -> List[Dict]:
+    ) -> List[discord_typings.GuildMemberData]:
         """
         List the members of a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             limit: How many members to get (max 1000)
             after: Get IDs after this snowflake
 
         """
-        payload = {"limit": limit}
-        if after is not MISSING:
-            payload["after"] = after
-
+        payload = {"limit": limit, "after": after}
         return await self.request(Route("GET", f"/guilds/{guild_id}/members"), params=payload)
 
-    async def search_guild_members(self, guild_id: "Snowflake_Type", query: str, limit: int = 1) -> List[Dict]:
+    async def search_guild_members(
+        self, guild_id: "Snowflake_Type", query: str, limit: int = 1
+    ) -> List[discord_typings.GuildMemberData]:
         """
         Search a guild for members who's username or nickname starts with provided string.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to search
             query: The string to search for
             limit: The number of members to return
@@ -66,11 +72,11 @@ class MemberRequests:
         channel_id: "Snowflake_Type" = MISSING,
         communication_disabled_until: Absent[Union[Timestamp, None]] = MISSING,
         reason: Absent[str] = MISSING,
-    ) -> Dict:
+    ) -> discord_typings.GuildMemberData:
         """
         Modify attributes of a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user we're modifying
             nickname: Value to set users nickname to
@@ -79,7 +85,8 @@ class MemberRequests:
             deaf: Whether the user is deafened in voice channels
             channel_id: id of channel to move user to (if they are connected to voice)
             reason: An optional reason for the audit log
-        returns:
+
+        Returns:
             The updated member object
 
         """
@@ -89,16 +96,14 @@ class MemberRequests:
 
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"),
-            data=dict_filter_missing(
-                {
-                    "nick": nickname,
-                    "roles": roles,
-                    "mute": mute,
-                    "deaf": deaf,
-                    "channel_id": channel_id,
-                    "communication_disabled_until": communication_disabled_until,
-                }
-            ),
+            data={
+                "nick": nickname,
+                "roles": roles,
+                "mute": mute,
+                "deaf": deaf,
+                "channel_id": channel_id,
+                "communication_disabled_until": communication_disabled_until,
+            },
             reason=reason,
         )
 
@@ -111,9 +116,10 @@ class MemberRequests:
         """
         Modify attributes of the user
 
-        parameters:
+        Args:
             nickname: The new nickname to apply
             reason: An optional reason for the audit log
+
         """
         await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/@me"),
@@ -133,7 +139,7 @@ class MemberRequests:
         """
         Adds a role to a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user
             role_id: The ID of the role to add
@@ -152,7 +158,7 @@ class MemberRequests:
         """
         Remove a role from a guild member.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             user_id: The ID of the user
             role_id: The ID of the role to remove

@@ -1,9 +1,10 @@
 import colorsys
 import re
 from enum import Enum
+from random import randint
 from typing import Tuple, Union, Optional
 
-import attr
+from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = [
     "Color",
@@ -18,21 +19,22 @@ __all__ = [
     "process_colour",
 ]
 
+hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
-@attr.s(init=False, slots=True)
+
+@define(init=False)
 class Color:
-    hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
+    value: int = field(repr=True)
+    """The color value as an integer."""
 
-    value: int = attr.ib()
-
-    def __init__(self, color=None):
+    def __init__(self, color=None) -> None:
         color = color or (0, 0, 0)
         if isinstance(color, int):
             self.value = color
         elif isinstance(color, (tuple, list)):
             self.rgb = color
         elif isinstance(color, str):
-            if re.match(self.hex_regex, color):
+            if re.match(hex_regex, color):
                 self.hex = color
             else:
                 self.value = BrandColors[color].value  # todo exception handling for better message
@@ -46,75 +48,136 @@ class Color:
 
     @staticmethod
     def clamp(x, min_value=0, max_value=255) -> int:
+        """Sanitise a value between a minimum and maximum value"""
         return max(min_value, min(x, max_value))
 
     # Constructor methods
 
     @classmethod
-    def from_rgb(cls, r, g, b) -> "Color":
+    def from_rgb(cls, r: int, g: int, b: int) -> "Color":
+        """
+        Create a Color object from red, green and blue values.
+
+        Args:
+            r: The red value.
+            g: The green value.
+            b: The blue value.
+
+        Returns:
+            A Color object.
+
+        """
         return cls((r, g, b))
 
     @classmethod
-    def from_hex(cls, value) -> "Color":
+    def from_hex(cls, value: str) -> "Color":
+        """
+        Create a Color object from a hexadecimal string.
+
+        Args:
+            value: The hexadecimal string.
+
+        Returns:
+            A Color object.
+
+        """
         instance = cls()
         instance.hex = value
         return instance
 
     @classmethod
-    def from_hsv(cls, h, s, v) -> "Color":
+    def from_hsv(cls, h: int, s: int, v: int) -> "Color":
+        """
+        Create a Color object from a hue, saturation and value.
+
+        Args:
+            h: The hue value.
+            s: The saturation value.
+            v: The value value.
+
+        Returns:
+            A Color object.
+
+        """
         instance = cls()
         instance.hsv = h, s, v
         return instance
 
+    @classmethod
+    def random(cls) -> "Color":
+        """Returns random Color instance"""
+        # FFFFFF == 16777215
+        return cls(randint(0, 16777215))
+
     # Properties and setter methods
 
     def _get_byte(self, n) -> int:
+        """
+        Get the nth byte of the color value
+
+        Args:
+            n: The index of the byte to get.
+
+        Returns:
+            The nth byte of the color value.
+
+        """
         return (self.value >> (8 * n)) & 255
 
     @property
     def r(self) -> int:
+        """Red color value"""
         return self._get_byte(2)
 
     @property
     def g(self) -> int:
+        """Green color value"""
         return self._get_byte(1)
 
     @property
     def b(self) -> int:
+        """Blue color value"""
         return self._get_byte(0)
 
     @property
     def rgb(self) -> Tuple[int, int, int]:
+        """The red, green, blue color values in a tuple"""
         return self.r, self.g, self.b
 
     @rgb.setter
     def rgb(self, value: Tuple[int, int, int]) -> None:
+        """Set the color value from a tuple of (r, g, b) values"""
         # noinspection PyTypeChecker
         r, g, b = (self.clamp(v) for v in value)
         self.value = (r << 16) + (g << 8) + b
 
     @property
     def rgb_float(self) -> Tuple[float, float, float]:
+        """The red, green, blue color values in a tuple"""
         # noinspection PyTypeChecker
         return tuple(v / 255 for v in self.rgb)
 
     @property
     def hex(self) -> str:
+        """Hexadecimal representation of color value"""
         r, g, b = self.rgb
         return f"#{r:02x}{g:02x}{b:02x}"
 
     @hex.setter
     def hex(self, value: str) -> None:
+        """Set the color value from a hexadecimal string"""
         value = value.lstrip("#")
         # split hex into 3 parts of 2 digits and convert each to int from base-16 number
         self.rgb = tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
 
     @property
     def hsv(self) -> Tuple[float, float, float]:
+        """The hue, saturation, value color values in a tuple"""
         return colorsys.rgb_to_hsv(*self.rgb_float)
 
     @hsv.setter
     def hsv(self, value) -> None:
+        """Set the color value from a tuple of (h, s, v) values"""
         self.rgb = tuple(round(v * 255) for v in colorsys.hsv_to_rgb(*value))
 
 
@@ -196,6 +259,16 @@ class FlatUIColors(Color, Enum):
 
 
 def process_color(color: Optional[Union[Color, dict, tuple, list, str, int]]) -> Optional[int]:
+    """
+    Process color to a format that can be used by discord.
+
+    Args:
+        color: The color to process.
+
+    Returns:
+        The processed color value.
+
+    """
     if not color:
         return color
     elif isinstance(color, Color):

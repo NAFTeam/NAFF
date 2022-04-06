@@ -11,3 +11,19 @@ from .stickers import StickerRequests
 from .threads import ThreadRequests
 from .users import UserRequests
 from .webhooks import WebhookRequests
+
+__all__ = [
+    "BotRequests",
+    "ChannelRequests",
+    "EmojiRequests",
+    "GuildRequests",
+    "InteractionRequests",
+    "MemberRequests",
+    "MessageRequests",
+    "ReactionRequests",
+    "ScheduledEventsRequests",
+    "StickerRequests",
+    "ThreadRequests",
+    "UserRequests",
+    "WebhookRequests",
+]

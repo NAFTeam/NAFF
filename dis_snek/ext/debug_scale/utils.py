@@ -12,6 +12,7 @@ __all__ = ["debug_embed", "get_cache_state", "strf_delta"]
 
 
 def debug_embed(title: str, **kwargs) -> Embed:
+    """Create a debug embed with a standard header and footer."""
     e = Embed(
         f"Dis-Snek Debug: {title}",
         url="https://github.com/Discord-Snake-Pit/Dis-Snek/tree/master/dis_snek/ext/debug_scale",
@@ -26,6 +27,7 @@ def debug_embed(title: str, **kwargs) -> Embed:
 
 
 def get_cache_state(bot: "Snake") -> str:
+    """Create a nicely formatted table of internal cache state."""
     caches = [
         c[0]
         for c in inspect.getmembers(bot.cache, predicate=lambda x: isinstance(x, dict))

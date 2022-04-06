@@ -137,9 +137,8 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(self, connector: Optional[BaseConnector] = None, loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(self, connector: Optional[BaseConnector] = None) -> None:
         self.connector: Optional[BaseConnector] = connector
-        self.loop = asyncio.get_event_loop() if loop is None else loop
         self.__session: Absent[Optional[ClientSession]] = MISSING
         self.token: Optional[str] = None
         self.global_lock: GlobalLock = GlobalLock()
@@ -151,10 +150,6 @@ class HTTPClient(
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
         )
-
-    def __del__(self):
-        if self.__session and not self.__session.closed:
-            self.loop.run_until_complete(self.__session.close())
 
     def get_ratelimit(self, route: Route) -> BucketLock:
         """
@@ -198,12 +193,13 @@ class HTTPClient(
         route: Route,
         data: Absent[Union[dict, FormData]] = MISSING,
         reason: Absent[str] = MISSING,
+        params: Absent[dict] = MISSING,
         **kwargs: Dict[str, Any],
     ) -> Any:
         """
         Make a request to discord.
 
-        parameters:
+        Args:
             route: The route to take
             json: A json payload to send in the request
             reason: Attach a reason to this request, used for audit logs
@@ -226,6 +222,9 @@ class HTTPClient(
             kwargs["json"] = dict_filter_missing(data)
         elif isinstance(data, FormData):
             kwargs["data"] = data
+
+        if isinstance(params, dict):
+            kwargs["params"] = dict_filter_missing(params)
 
         lock = self.get_ratelimit(route)
         # this gets a BucketLock for this route.
@@ -291,7 +290,7 @@ class HTTPClient(
                         continue
                     raise
 
-    async def _raise_exception(self, response, route, result):
+    async def _raise_exception(self, response, route, result) -> None:
         log.error(f"{route.method}::{route.url}: {response.status}")
 
         if response.status == 403:
@@ -314,9 +313,10 @@ class HTTPClient(
         """
         "Login" to the gateway, basically validates the token and grabs user data.
 
-        parameters:
+        Args:
             token: the token to use
-        returns:
+
+        Returns:
             The currently logged in bot's data
 
         """
@@ -331,11 +331,17 @@ class HTTPClient(
 
     async def close(self) -> None:
         """Close the session."""
-        if self.__session:
+        if self.__session and not self.__session.closed:
             await self.__session.close()
 
     async def get_gateway(self) -> str:
-        """Get the gateway url."""
+        """
+        Gets the gateway url.
+
+        Returns:
+            The gateway url
+
+        """
         try:
             data: dict = await self.request(Route("GET", "/gateway"))
         except HTTPException as exc:
@@ -346,7 +352,7 @@ class HTTPClient(
         """
         Connect to the websocket.
 
-        parameters:
+        Args:
             url: the url to connect to
 
         """

@@ -2,10 +2,11 @@ import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
-import attr
+import attrs
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
+from dis_snek.client.errors import NotFound
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
@@ -14,6 +15,7 @@ from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.misc_utils import get
 from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.discord.base import DiscordObject
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
 from dis_snek.models.snek import AsyncIterator
 from .enums import (
@@ -28,11 +30,9 @@ from .enums import (
 )
 
 if TYPE_CHECKING:
-    from io import IOBase
-    from pathlib import Path
-
     from aiohttp import FormData
     from dis_snek import Snake
+    from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
     "ChannelHistory",
@@ -47,7 +47,6 @@ __all__ = [
     "DMGroup",
     "GuildChannel",
     "GuildCategory",
-    "GuildStore",
     "GuildNews",
     "GuildText",
     "ThreadChannel",
@@ -56,6 +55,7 @@ __all__ = [
     "GuildPrivateThread",
     "GuildVoice",
     "GuildStageVoice",
+    "process_permission_overwrites",
     "TYPE_ALL_CHANNEL",
     "TYPE_DM_CHANNEL",
     "TYPE_GUILD_CHANNEL",
@@ -70,7 +70,7 @@ class ChannelHistory(AsyncIterator):
     """
     An async iterator for searching through a channel's history.
 
-    Args:
+    Attributes:
         channel: The channel to search through
         limit: The maximum number of messages to return (set to 0 for no limit)
         before: get messages before this message ID
@@ -79,7 +79,7 @@ class ChannelHistory(AsyncIterator):
 
     """
 
-    def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None):
+    def __init__(self, channel: "BaseChannel", limit=50, before=None, after=None, around=None) -> None:
         self.channel: "BaseChannel" = channel
         self.before: Snowflake_Type = before
         self.after: Snowflake_Type = after
@@ -95,6 +95,7 @@ class ChannelHistory(AsyncIterator):
 
         Returns:
             List of objects
+
         Raises:
               QueueEmpty when no more objects are available.
 
@@ -116,7 +117,7 @@ class ChannelHistory(AsyncIterator):
                 self.last = namedtuple("temp", "id")
                 self.last.id = self.before
 
-            messages = await self.channel.get_messages(limit=self.get_limit, before=self.last.id)
+            messages = await self.channel.fetch_messages(limit=self.get_limit, before=self.last.id)
             messages.sort(key=lambda x: x.id, reverse=True)
         return messages
 
@@ -126,31 +127,79 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
-    Note:
+    !!! Note
         `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """
 
     type: "OverwriteTypes" = field(repr=True, converter=OverwriteTypes)
     """Permission overwrite type (role or member)"""
-    allow: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    allow: Optional["Permissions"] = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
     """Permissions to allow"""
-    deny: "Permissions" = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
+    deny: Optional["Permissions"] = field(repr=True, converter=optional_c(Permissions), kw_only=True, default=None)
     """Permissions to deny"""
+
+    @classmethod
+    def for_target(cls, target_type: Union["models.Role", "models.Member", "models.User"]) -> "PermissionOverwrite":
+        """
+        Create a PermissionOverwrite for a role or member.
+
+        Args:
+            target_type: The type of the target (role or member)
+
+        Returns:
+            PermissionOverwrite
+
+        """
+        if isinstance(target_type, models.Role):
+            return cls(type=OverwriteTypes.ROLE, id=target_type.id)
+        elif isinstance(target_type, (models.Member, models.User)):
+            return cls(type=OverwriteTypes.MEMBER, id=target_type.id)
+        else:
+            raise TypeError("target_type must be a Role, Member or User")
+
+    def add_allows(self, *perms: "Permissions") -> None:
+        """
+        Add permissions to allow.
+
+        Args:
+            *perms: Permissions to add
+
+        """
+        if not self.allow:
+            self.allow = Permissions.NONE
+        for perm in perms:
+            self.allow |= perm
+
+    def add_denies(self, *perms: "Permissions") -> None:
+        """
+        Add permissions to deny.
+
+        Args:
+            *perms: Permissions to add
+
+        """
+        if not self.deny:
+            self.deny = Permissions.NONE
+        for perm in perms:
+            self.deny |= perm
 
 
 @define(slots=False)
 class MessageableMixin(SendMixin):
-    last_message_id: Optional[Snowflake_Type] = attr.ib(
+    last_message_id: Optional[Snowflake_Type] = field(
         default=None
     )  # TODO May need to think of dynamically updating this.
-    default_auto_archive_duration: int = attr.ib(default=AutoArchiveDuration.ONE_DAY)
-    last_pin_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
+    """The id of the last message sent in this channel (may not point to an existing or valid message)"""
+    default_auto_archive_duration: int = field(default=AutoArchiveDuration.ONE_DAY)
+    """Default duration that the clients (not the API) will use for newly created threads, in minutes, to automatically archive the thread after recent activity"""
+    last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """When the last pinned message was pinned. This may be None when a message is not pinned."""
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         return await self._client.http.create_message(message_payload, self.id)
 
-    async def fetch_message(self, message_id: Snowflake_Type) -> "models.Message":
+    async def fetch_message(self, message_id: Snowflake_Type) -> Optional["models.Message"]:
         """
         Fetch a message from the channel.
 
@@ -158,11 +207,13 @@ class MessageableMixin(SendMixin):
             message_id: ID of message to retrieve.
 
         Returns:
-            The message object fetched.
+            The message object fetched. If the message is not found, returns None.
+
         """
-        message_id = to_snowflake(message_id)
-        message: "models.Message" = await self._client.cache.fetch_message(self.id, message_id)
-        return message
+        try:
+            return await self._client.cache.fetch_message(self.id, message_id)
+        except NotFound:
+            return None
 
     def get_message(self, message_id: Snowflake_Type) -> "models.Message":
         """
@@ -173,6 +224,7 @@ class MessageableMixin(SendMixin):
 
         Returns:
             The message object fetched.
+
         """
         message_id = to_snowflake(message_id)
         message: "models.Message" = self._client.cache.get_message(self.id, message_id)
@@ -188,7 +240,7 @@ class MessageableMixin(SendMixin):
         """
         Get an async iterator for the history of this channel.
 
-        Parameters:
+        Args:
             limit: The maximum number of messages to return (set to 0 for no limit)
             before: get messages before this message ID
             after: get messages after this message ID
@@ -381,7 +433,7 @@ class InvitableMixin:
         reason: Optional[str] = None,
     ) -> "models.Invite":
         """
-        Create channel invite.
+        Creates a new channel invite.
 
         Args:
             max_age: Max age of invite in seconds, default 86400 (24 hours).
@@ -418,68 +470,59 @@ class InvitableMixin:
         return models.Invite.from_dict(invite_data, self._client)
 
     async def fetch_invites(self) -> List["models.Invite"]:
-        """Fetches all invites (with invite metadata) for the channel."""
+        """
+        Fetches all invites (with invite metadata) for the channel.
+
+        Returns:
+            List of Invite objects.
+
+        """
         invites_data = await self._client.http.get_channel_invites(self.id)
         return models.Invite.from_list(invites_data, self._client)
 
 
 @define(slots=False)
 class ThreadableMixin:
-    async def create_thread_with_message(
+    async def create_thread(
         self,
         name: str,
-        message: Union[Snowflake_Type, "models.Message"],
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildNewsThread", "GuildPublicThread"]:
+        message: Absent[Snowflake_Type] = MISSING,
+        thread_type: Absent[ChannelTypes] = MISSING,
+        invitable: Absent[bool] = MISSING,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "TYPE_THREAD_CHANNEL":
         """
-        Create a thread connected to a message.
+        Creates a nee thread in this channel. If a message is provided, it will be used as the initial message.
 
         Args:
             name: 1-100 character thread name
-            message: The message to connect this thread to
-            auto_archive_duration: Time before the thread will be automatically archived
-            reason: The reason for creating this thread
+            message: The message to connect this thread to. Required for news channel.
+            thread_type: Is the thread private or public. Not applicable to news channel, it always be GUILD_NEWS_THREAD.
+            invitable: whether non-moderators can add other non-moderators to a thread. Only applicable when creating a private thread.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
 
         Returns:
             The created thread, if successful
-        """
-        thread_data = await self._client.http.create_thread(
-            channel_id=self.id,
-            name=name,
-            auto_archive_duration=auto_archive_duration,
-            message_id=to_snowflake(message),
-            reason=reason,
-        )
-        return self._client.cache.place_channel_data(thread_data)
 
-    async def create_thread_without_message(
-        self,
-        name: str,
-        thread_type: Union[ChannelTypes, int],
-        invitable: Optional[bool] = None,
-        auto_archive_duration: Union[AutoArchiveDuration, int] = AutoArchiveDuration.ONE_DAY,
-        reason: Optional[str] = None,
-    ) -> Union["GuildPrivateThread", "GuildPublicThread"]:
         """
-        Creates a thread without a message source.
+        if self.type == ChannelTypes.GUILD_NEWS and not message:
+            raise ValueError("News channel must include message to create thread from.")
 
-        Args:
-            name: 	1-100 character thread name
-            thread_type: Is the thread private or public
-            invitable: whether non-moderators can add other non-moderators to a thread; only available when creating a private thread
-            auto_archive_duration: Time before the thread will be automatically archived
-            reason: The reason to create this thread
+        elif message and (thread_type or invitable):
+            raise ValueError("Message cannot be used with thread_type or invitable.")
 
-        Returns:
-            The created thread, if successful
-        """
+        elif thread_type != ChannelTypes.GUILD_PRIVATE_THREAD and invitable:
+            raise ValueError("Invitable only applies to private threads.")
+
         thread_data = await self._client.http.create_thread(
             channel_id=self.id,
             name=name,
             thread_type=thread_type,
-            auto_archive_duration=auto_archive_duration,
             invitable=invitable,
+            auto_archive_duration=auto_archive_duration,
+            message_id=to_optional_snowflake(message),
             reason=reason,
         )
         return self._client.cache.place_channel_data(thread_data)
@@ -493,6 +536,9 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
+        Returns:
+            A `ThreadList` of archived threads.
 
         """
         threads_data = await self._client.http.list_public_archived_threads(
@@ -511,6 +557,9 @@ class ThreadableMixin:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
 
+        Returns:
+            A `ThreadList` of archived threads.
+
         """
         threads_data = await self._client.http.list_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -527,6 +576,9 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
+        Returns:
+            A `ThreadList` of archived threads.
 
         """
         threads_data = await self._client.http.list_private_archived_threads(
@@ -547,6 +599,10 @@ class ThreadableMixin:
         Args:
             limit: optional maximum number of threads to return
             before: Returns threads before this timestamp
+
+        Returns:
+            A `ThreadList` of threads the bot is a participant of.
+
         """
         threads_data = await self._client.http.list_joined_private_archived_threads(
             channel_id=self.id, limit=limit, before=before
@@ -555,7 +611,13 @@ class ThreadableMixin:
         return models.ThreadList.from_dict(threads_data, self._client)
 
     async def fetch_active_threads(self) -> "models.ThreadList":
-        """Returns all active threads in the channel, including public and private threads."""
+        """
+        Gets all active threads in the channel, including public and private threads.
+
+        Returns:
+            A `ThreadList` of active threads.
+
+        """
         threads_data = await self._client.http.list_active_threads(guild_id=self._guild_id)
 
         # delete the items where the channel_id does not match
@@ -578,7 +640,13 @@ class ThreadableMixin:
         return models.ThreadList.from_dict(threads_data, self._client)
 
     async def fetch_all_threads(self) -> "models.ThreadList":
-        """Returns all threads in the channel. Active and archived, including public and private threads."""
+        """
+        Gets all threads in the channel. Active and archived, including public and private threads.
+
+        Returns:
+            A `ThreadList` of all threads.
+
+        """
         threads = await self.fetch_active_threads()
 
         # update that data with the archived threads
@@ -591,21 +659,20 @@ class ThreadableMixin:
 
 @define(slots=False)
 class WebhookMixin:
-    async def create_webhook(
-        self, name: str, avatar: Absent[Union["models.File", "IOBase", "Path", str, bytes]] = MISSING
-    ) -> "models.Webhook":
+    async def create_webhook(self, name: str, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> "models.Webhook":
         """
         Create a webhook in this channel.
 
         Args:
             name: The name of the webhook
-            avatar: An optional default avatar to use
+            avatar: An optional default avatar image to use
 
         Returns:
-            The created webhook
+            The created webhook object
 
         Raises:
             ValueError: If you try to name the webhook "Clyde"
+
         """
         return await models.Webhook.create(self._client, self, name, avatar)  # type: ignore
 
@@ -615,6 +682,7 @@ class WebhookMixin:
 
         Args:
             webhook: The webhook to delete
+
         """
         return await webhook.delete()
 
@@ -623,7 +691,8 @@ class WebhookMixin:
         Fetches all the webhooks for this channel.
 
         Returns:
-            List of webhooks
+            List of webhook objects
+
         """
         resp = await self._client.http.get_channel_webhooks(self.id)
         return [models.Webhook.from_dict(d, self._client) for d in resp]
@@ -631,8 +700,10 @@ class WebhookMixin:
 
 @define(slots=False)
 class BaseChannel(DiscordObject):
-    name: Optional[str] = field(default=None)
-    type: Union[ChannelTypes, int] = field(converter=ChannelTypes)
+    name: Optional[str] = field(repr=True, default=None)
+    """The name of the channel (1-100 characters)"""
+    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes)
+    """The channel topic (0-1024 characters)"""
 
     @classmethod
     def from_dict_factory(cls, data: dict, client: "Snake") -> "TYPE_ALL_CHANNEL":
@@ -659,25 +730,10 @@ class BaseChannel(DiscordObject):
         """Returns a string that would mention the channel."""
         return f"<#{self.id}>"
 
-    async def _edit(self, payload: dict, reason: Absent[Optional[str]] = MISSING) -> None:
-        """
-        # TODO
-
-        Args:
-            payload:
-            reason:
-
-        Returns:
-
-        """
-        channel_data = await self._client.http.modify_channel(self.id, payload, reason)
-
-        self.update_from_dict(channel_data)
-
     async def edit(
         self,
         name: Absent[str] = MISSING,
-        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        icon: Absent[UPLOADABLE_TYPE] = MISSING,
         type: Absent[ChannelTypes] = MISSING,
         position: Absent[int] = MISSING,
         topic: Absent[str] = MISSING,
@@ -689,12 +745,44 @@ class BaseChannel(DiscordObject):
             Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
         ] = MISSING,
         parent_id: Absent[Snowflake_Type] = MISSING,
-        rtc_region: Absent[str] = MISSING,  # todo: voice region object
+        rtc_region: Absent[Union["models.VoiceRegion", str]] = MISSING,
         video_quality_mode: Absent[VideoQualityModes] = MISSING,
         default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        archived: Absent[bool] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        invitable: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "TYPE_ALL_CHANNEL":
+        """
+        Edits the channel.
+
+        Args:
+            name: 1-100 character channel name
+            icon: DM Group icon
+            type: The type of channel; only conversion between text and news is supported and only in guilds with the "NEWS" feature
+            position: The position of the channel in the left-hand listing
+            topic: 0-1024 character channel topic
+            nsfw: Whether the channel is nsfw
+            rate_limit_per_user: Amount of seconds a user has to wait before sending another message (0-21600)
+            bitrate: The bitrate (in bits) of the voice channel; 8000 to 96000 (128000 for VIP servers)
+            user_limit: The user limit of the voice channel; 0 refers to no limit, 1 to 99 refers to a user limit
+            permission_overwrites: Channel or category-specific permissions
+            parent_id: The id of the new parent category for a channel
+            rtc_region: Channel voice region id, automatic when set to None.
+            video_quality_mode: The camera video quality mode of the voice channel
+            default_auto_archive_duration: The default duration that the clients use (not the API) for newly created threads in the channel, in minutes, to automatically archive the thread after recent activity
+            archived: Whether the thread is archived
+            auto_archive_duration: Duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            locked: Whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+            invitable: Whether non-moderators can add other non-moderators to a thread; only available on private threads
+            reason: The reason for editing the channel
+
+        Returns:
+            The edited channel. May be a new object if the channel type changes.
+
+        """
         payload = {
             "name": name,
             "icon": to_image_data(icon),
@@ -707,13 +795,17 @@ class BaseChannel(DiscordObject):
             "user_limit": user_limit,
             "permission_overwrites": process_permission_overwrites(permission_overwrites),
             "parent_id": to_optional_snowflake(parent_id),
-            "rtc_region": rtc_region,
+            "rtc_region": rtc_region.id if isinstance(rtc_region, models.VoiceRegion) else rtc_region,
             "video_quality_mode": video_quality_mode,
             "default_auto_archive_duration": default_auto_archive_duration,
+            "archived": archived,
+            "auto_archive_duration": auto_archive_duration,
+            "locked": locked,
+            "invitable": invitable,
             **kwargs,
         }
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
-        self.update_from_dict(channel_data)
+        return self._client.cache.place_channel_data(channel_data)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
         """
@@ -724,20 +816,22 @@ class BaseChannel(DiscordObject):
 
         """
         await self._client.http.delete_channel(self.id, reason)
-        if guild := getattr(self, "guild"):
-            guild._channel_ids.discard(self.id)
 
 
 ################################################################
 # DMs
 
 
-@define()
+@define(slots=False)
 class DMChannel(BaseChannel, MessageableMixin):
+    recipients: List["models.User"] = field(factory=list)
+    """The users of the DM that will receive messages sent"""
+
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
-        data["recipients"] = [client.cache.place_user_data(recipient) for recipient in data["recipients"]]
+        if recipients := data.get("recipients", None):
+            data["recipients"] = [client.cache.place_user_data(recipient) for recipient in recipients]
         return data
 
     @property
@@ -748,29 +842,26 @@ class DMChannel(BaseChannel, MessageableMixin):
 
 @define()
 class DM(DMChannel):
-    recipient: "models.User" = field()
-
-    @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data = super()._process_dict(data, client)
-        data["recipient"] = data.pop("recipients")[0]
-        client.cache.place_dm_channel_id(data["recipient"], data["id"])
-        return data
+    @property
+    def recipient(self) -> "models.User":
+        """Returns the user that is in this DM channel."""
+        return self.recipients[0]
 
 
 @define()
 class DMGroup(DMChannel):
-    owner_id: Snowflake_Type = attr.ib()
-    application_id: Optional[Snowflake_Type] = attr.ib(default=None)
-    recipients: List["models.User"] = field(factory=list)
+    owner_id: Snowflake_Type = field(repr=True)
+    """id of the creator of the group DM"""
+    application_id: Optional[Snowflake_Type] = field(default=None)
+    """Application id of the group DM creator if it is bot-created"""
 
     async def edit(
         self,
         name: Absent[str] = MISSING,
-        icon: Absent[Union[str, "Path", "IOBase", "models.File"]] = MISSING,
+        icon: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "DMGroup":
         """
         Edit this DM Channel.
 
@@ -779,7 +870,7 @@ class DMGroup(DMChannel):
             icon: An icon to use
             reason: The reason for this change
         """
-        await super().edit(name=name, icon=icon, reason=reason, **kwargs)
+        return await super().edit(name=name, icon=icon, reason=reason, **kwargs)
 
     async def fetch_owner(self) -> "models.User":
         """Fetch the owner of this DM group"""
@@ -799,6 +890,7 @@ class DMGroup(DMChannel):
             user: The user to add
             access_token: access token of a user that has granted your app the gdm.join scope
             nickname: nickname to apply to the user being added
+
         """
         user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_add_recipient(self.id, user.id, access_token, nickname)
@@ -810,6 +902,7 @@ class DMGroup(DMChannel):
 
         Args:
             user: The user to remove
+
         """
         user = await self._client.cache.fetch_user(user)
         await self._client.http.group_dm_remove_recipient(self.id, user.id)
@@ -820,30 +913,33 @@ class DMGroup(DMChannel):
 # Guild
 
 
-@define()
+@define(slots=False)
 class GuildChannel(BaseChannel):
-    position: Optional[int] = attr.ib(default=0)
-    nsfw: bool = attr.ib(default=False)
-    parent_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
-    permission_overwrites: list[PermissionOverwrite] = attr.ib(factory=list)
+    position: Optional[int] = field(default=0)
+    """Sorting position of the channel"""
+    nsfw: bool = field(default=False)
+    """Whether the channel is nsfw"""
+    parent_id: Optional[Snowflake_Type] = field(default=None, converter=optional_c(to_snowflake))
+    """id of the parent category for a channel (each parent category can contain up to 50 channels)"""
+    permission_overwrites: list[PermissionOverwrite] = field(factory=list)
     """A list of the overwritten permissions for the members and roles"""
 
-    _guild_id: Optional[Snowflake_Type] = attr.ib(default=None, converter=optional_c(to_snowflake))
+    _guild_id: Optional[Snowflake_Type] = field(default=None, converter=optional_c(to_snowflake))
 
     @property
     def guild(self) -> "models.Guild":
         """The guild this channel belongs to."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def category(self) -> Optional["GuildCategory"]:
         """The parent category of this channel."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_channel(self.parent_id)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
         if overwrites := data.get("permission_overwrites"):
-            data["permission_overwrites"] = [PermissionOverwrite.from_dict(overwrite) for overwrite in overwrites]
+            data["permission_overwrites"] = PermissionOverwrite.from_list(overwrites)
         return data
 
     def permissions_for(self, instance: Snowflake_Type) -> Permissions:
@@ -889,61 +985,62 @@ class GuildChannel(BaseChannel):
 
             return self.permissions_for(instance)
 
-        async def add_permission(
-            self,
-            target: "PermissionOverwrite" | "models.Role" | "models.User" | "models.Member",
-            type: "OverwriteTypes",
-            allow: Optional[List["Permissions"] | int] = None,
-            deny: Optional[List["Permissions"] | int] = None,
-            reason: Optional[str] = None,
-        ) -> None:
-            """
-            Add a permission to this channel.
+    async def add_permission(
+        self,
+        target: Union["PermissionOverwrite", "models.Role", "models.User", "models.Member", "Snowflake_Type"],
+        type: Optional["OverwriteTypes"] = None,
+        allow: Optional[List["Permissions"] | int] = None,
+        deny: Optional[List["Permissions"] | int] = None,
+        reason: Optional[str] = None,
+    ) -> None:
+        """
+        Add a permission to this channel.
 
-            Args:
-                target: The permission target
-                type: The type of permission overwrite
-                allow: List of permissions to allow
-                deny: List of permissions to deny
-                reason: The reason for this change
+        Args:
+            target: The updated PermissionOverwrite object, or the Role or User object/id to update
+            type: The type of permission overwrite. Only applicable if target is an id
+            allow: List of permissions to allow. Only applicable if target is not an PermissionOverwrite object
+            deny: List of permissions to deny. Only applicable if target is not an PermissionOverwrite object
+            reason: The reason for this change
 
-            Raises:
-                ValueError: Invalid target for permission
-            """
-            allow = allow or []
-            deny = deny or []
-            if not isinstance(target, PermissionOverwrite):
-                target_type = None
-                if isinstance(target, (models.User, models.Member)):
-                    target_type = OverwriteTypes.MEMBER
-                elif isinstance(target, models.Role):
-                    target_type = OverwriteTypes.ROLE
-                else:
-                    raise ValueError("Invalid target for permission")
-                overwrite = PermissionOverwrite(
-                    id=target.id, type=target_type, allow=Permissions.NONE, deny=Permissions.NONE
-                )
-                if isinstance(allow, int):
-                    overwrite.allow |= allow
-                else:
-                    for perm in allow:
-                        overwrite.allow |= perm
-                if isinstance(deny, int):
-                    overwrite.deny |= deny
-                else:
-                    for perm in deny:
-                        overwrite.deny |= perm
+        Raises:
+            ValueError: Invalid target for permission
+
+        """
+        allow = allow or []
+        deny = deny or []
+        if not isinstance(target, PermissionOverwrite):
+            if isinstance(target, (models.User, models.Member)):
+                target = target.id
+                type = OverwriteTypes.MEMBER
+            elif isinstance(target, models.Role):
+                target = target.id
+                type = OverwriteTypes.ROLE
+            elif type and isinstance(target, Snowflake_Type):
+                target = to_snowflake(target)
             else:
-                overwrite = target
-            if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
-                exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
-                exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
-                return await self.edit_permission(exists, reason)
+                raise ValueError("Invalid target and/or type for permission")
+            overwrite = PermissionOverwrite(id=target, type=type, allow=Permissions.NONE, deny=Permissions.NONE)
+            if isinstance(allow, int):
+                overwrite.allow |= allow
+            else:
+                for perm in allow:
+                    overwrite.allow |= perm
+            if isinstance(deny, int):
+                overwrite.deny |= deny
+            else:
+                for perm in deny:
+                    overwrite.deny |= perm
+        else:
+            overwrite = target
 
+        if exists := get(self.permission_overwrites, id=overwrite.id, type=overwrite.type):
+            exists.deny = (exists.deny | overwrite.deny) & ~overwrite.allow
+            exists.allow = (exists.allow | overwrite.allow) & ~overwrite.deny
+            await self.edit_permission(exists, reason)
+        else:
             permission_overwrites = self.permission_overwrites
-            permission_overwrites.append(overwrite)
-
-            return await self.edit(permission_overwrites=permission_overwrites)
+            await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
         """
@@ -954,7 +1051,7 @@ class GuildChannel(BaseChannel):
             reason: The reason for this change
         """
         await self._client.http.edit_channel_permission(
-            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason  # TODO Convert to str...?
+            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason
         )
 
     async def delete_permission(
@@ -968,52 +1065,10 @@ class GuildChannel(BaseChannel):
         Args:
             target: The permission overwrite to delete
             reason: The reason for this change
+
         """
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
-
-    async def create_invite(
-        self,
-        max_age: int = 86400,
-        max_uses: int = 0,
-        temporary: bool = False,
-        unique: bool = False,
-        target_type: InviteTargetTypes = None,
-        target_user_id: Snowflake_Type = None,
-        target_event_id: Snowflake_Type = None,
-        target_application_id: Snowflake_Type = None,
-        reason: Absent[str] = MISSING,
-    ) -> "models.Invite":
-        """
-        Create an invite for this channel.
-
-        Args:
-            max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
-            max_uses: max number of uses or 0 for unlimited. between 0 and 100
-            temporary: whether this invite only grants temporary membership
-            unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
-            target_type: the type of target for this voice channel invite
-            target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
-            target_event_id: the channel's scheduled event ID. Only works for events scheduled in a channel.
-            target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
-            reason: An optional reason for the audit log
-
-        Returns:
-            The created invite
-        """
-        resp = await self._client.http.create_channel_invite(
-            self.id,
-            max_age,
-            max_uses,
-            temporary,
-            unique,
-            target_type,
-            target_user_id,
-            target_application_id,
-            reason=reason,
-        )
-        resp["target_event_id"] = target_event_id
-        return models.Invite.from_dict(resp, self._client)
 
     @property
     def members(self) -> List["models.Member"]:
@@ -1034,11 +1089,11 @@ class GuildChannel(BaseChannel):
         """
         Clone this channel and create a new one.
 
-        parameters:
+        Args:
             name: The name of the new channel. Defaults to the current name
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created channel.
 
         """
@@ -1061,24 +1116,12 @@ class GuildChannel(BaseChannel):
 class GuildCategory(GuildChannel):
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
-        """
-        Get all channels within the category.
-
-        Returns:
-            The list of channels
-
-        """
+        """Get all channels within the category"""
         return [channel for channel in self.guild.channels if channel.parent_id == self.id]
 
     @property
     def voice_channels(self) -> List["GuildVoice"]:
-        """
-        Get all voice channels within the category.
-
-        Returns:
-            The list of voice channels
-
-        """
+        """Get all voice channels within the category"""
         return [
             channel
             for channel in self.channels
@@ -1087,35 +1130,17 @@ class GuildCategory(GuildChannel):
 
     @property
     def stage_channels(self) -> List["GuildStageVoice"]:
-        """
-        Get all stage channels within the category.
-
-        Returns:
-            The list of stage channels
-
-        """
+        """Get all stage channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildStageVoice)]
 
     @property
     def text_channels(self) -> List["GuildText"]:
-        """
-        Get all text channels within the category.
-
-        Returns:
-            The list of text channels
-
-        """
+        """Get all text channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildText)]
 
     @property
     def news_channels(self) -> List["GuildNews"]:
-        """
-        Get all news channels within the category.
-
-        Returns:
-            The list of news channels
-
-        """
+        """Get all news channels within the category"""
         return [channel for channel in self.channels if isinstance(channel, GuildNews)]
 
     async def edit(
@@ -1127,7 +1152,7 @@ class GuildCategory(GuildChannel):
         ] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildCategory":
         """
         Edit this channel.
 
@@ -1136,9 +1161,17 @@ class GuildCategory(GuildChannel):
             position: the position of the channel in the left-hand listing
             permission_overwrites: channel or category-specific permissions
             reason: the reason for this change
+
+        Returns:
+            The updated channel object.
+
         """
-        await super().edit(
-            name=name, position=position, permission_overwrites=permission_overwrites, reason=reason, **kwargs
+        return await super().edit(
+            name=name,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            reason=reason,
+            **kwargs,
         )
 
     async def create_channel(
@@ -1147,7 +1180,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
@@ -1157,7 +1192,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild channel within this category, allows for explicit channel type setting.
 
-        parameters:
+        Args:
             channel_type: The type of channel to create
             name: The name of the channel
             topic: The topic of the channel
@@ -1169,35 +1204,32 @@ class GuildCategory(GuildChannel):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created channel.
 
         """
-        if permission_overwrites:
-            permission_overwrites = list(map(to_dict, permission_overwrites))
-
-        channel_data = await self._client.http.create_guild_channel(
-            self._guild_id,
-            name,
-            channel_type,
-            topic,
-            position,
-            permission_overwrites,
-            to_snowflake(self),
-            nsfw,
-            bitrate,
-            user_limit,
-            rate_limit_per_user,
-            reason,
+        return await self.guild.create_channel(
+            channel_type=channel_type,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=self.id,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
         )
-        return self._client.cache.place_channel_data(channel_data)
 
     async def create_text_channel(
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         rate_limit_per_user: int = 0,
         reason: Absent[Optional[str]] = MISSING,
@@ -1205,7 +1237,7 @@ class GuildCategory(GuildChannel):
         """
         Create a text channel in this guild within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1214,7 +1246,7 @@ class GuildCategory(GuildChannel):
             rate_limit_per_user: The time users must wait between sending messages
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created text channel.
 
         """
@@ -1229,12 +1261,50 @@ class GuildCategory(GuildChannel):
             reason=reason,
         )
 
+    async def create_news_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
+        nsfw: bool = False,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "GuildNews":
+        """
+        Create a news channel in this guild within this category.
+
+        Args:
+            name: The name of the channel
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            nsfw: Should this channel be marked nsfw
+            reason: The reason for creating this channel
+
+        Returns:
+           The newly created news channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_NEWS,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            nsfw=nsfw,
+            reason=reason,
+        )
+
     async def create_voice_channel(
         self,
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
@@ -1243,7 +1313,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild voice channel within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1253,7 +1323,7 @@ class GuildCategory(GuildChannel):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
            The newly created voice channel.
 
         """
@@ -1274,7 +1344,9 @@ class GuildCategory(GuildChannel):
         name: str,
         topic: Absent[Optional[str]] = MISSING,
         position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["models.PermissionOverwrite", dict]]]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
+        ] = MISSING,
         bitrate: int = 64000,
         user_limit: int = 0,
         reason: Absent[Optional[str]] = MISSING,
@@ -1282,7 +1354,7 @@ class GuildCategory(GuildChannel):
         """
         Create a guild stage channel within this category.
 
-        parameters:
+        Args:
             name: The name of the channel
             topic: The topic of the channel
             position: The position of the channel in the channel list
@@ -1291,7 +1363,7 @@ class GuildCategory(GuildChannel):
             user_limit: The max users that can be in this channel, only for voice
             reason: The reason for creating this channel
 
-        returns:
+        Returns:
             The newly created stage channel.
 
         """
@@ -1308,44 +1380,9 @@ class GuildCategory(GuildChannel):
 
 
 @define()
-class GuildStore(GuildChannel):
-    async def edit(
-        self,
-        name: Absent[str] = MISSING,
-        position: Absent[int] = MISSING,
-        permission_overwrites: Absent[
-            Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
-        ] = MISSING,
-        parent_id: Absent[Snowflake_Type] = MISSING,
-        nsfw: Absent[bool] = MISSING,
-        reason: Absent[str] = MISSING,
-        **kwargs,
-    ) -> None:
-        """
-        Edit this channel.
-
-        Args:
-            name: 1-100 character channel name
-            position: the position of the channel in the left-hand listing
-            permission_overwrites: channel or category-specific permissions
-            parent_id: id of the new parent category for a channel
-            nsfw: whether the channel is nsfw
-            reason: The reason for this change
-        """
-        await super().edit(
-            name=name,
-            position=position,
-            permission_overwrites=permission_overwrites,
-            parent_id=parent_id,
-            nsfw=nsfw,
-            reason=reason,
-            **kwargs,
-        )
-
-
-@define()
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
-    topic: Optional[str] = attr.ib(default=None)
+    topic: Optional[str] = field(default=None)
+    """The channel topic (0-1024 characters)"""
 
     async def edit(
         self,
@@ -1361,7 +1398,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         default_auto_archive_duration: Absent["AutoArchiveDuration"] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildNews", "GuildText"]:
         """
         Edit the guild text channel.
 
@@ -1376,15 +1413,18 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             default_auto_archive_duration: optional AutoArchiveDuration
             reason: An optional reason for the audit log
 
+        Returns:
+            The edited channel.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
             parent_id=parent_id,
             nsfw=nsfw,
             topic=topic,
-            channel_type=channel_type,
+            type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
             **kwargs,
@@ -1396,14 +1436,44 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             webhook_channel_id: The ID of the channel to post messages from this channel to
+
         """
         await self._client.http.follow_news_channel(self.id, webhook_channel_id)
+
+    async def create_thread_from_message(
+        self,
+        name: str,
+        message: Snowflake_Type,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildNewsThread":
+        """
+        Creates a new news thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+
+        """
+        return await self.create_thread(
+            name=name,
+            message=message,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
 
 
 @define()
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
-    topic: Optional[str] = attr.ib(default=None)
-    rate_limit_per_user: int = attr.ib(default=0)
+    topic: Optional[str] = field(default=None)
+    """The channel topic (0-1024 characters)"""
+    rate_limit_per_user: int = field(default=0)
+    """Amount of seconds a user has to wait before sending another message (0-21600)"""
 
     async def edit(
         self,
@@ -1420,7 +1490,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildText", "GuildNews"]:
         """
         Edit the guild text channel.
 
@@ -1436,18 +1506,103 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: An optional reason for the audit log
 
+        Returns:
+            The edited channel.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
             parent_id=parent_id,
             nsfw=nsfw,
             topic=topic,
-            channel_type=channel_type,
+            type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
             **kwargs,
+        )
+
+    async def create_public_thread(
+        self,
+        name: str,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPublicThread":
+        """
+        Creates a new public thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            thread_type: Is the thread private or public.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+
+        """
+        return await self.create_thread(
+            name=name,
+            thread_type=ChannelTypes.GUILD_PUBLIC_THREAD,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
+
+    async def create_private_thread(
+        self,
+        name: str,
+        invitable: Absent[bool] = MISSING,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPrivateThread":
+        """
+        Creates a new private thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            invitable: whether non-moderators can add other non-moderators to a thread.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created thread, if successful
+
+        """
+        return await self.create_thread(
+            name=name,
+            thread_type=ChannelTypes.GUILD_PRIVATE_THREAD,
+            invitable=invitable,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
+        )
+
+    async def create_thread_from_message(
+        self,
+        name: str,
+        message: Snowflake_Type,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        reason: Absent[str] = None,
+    ) -> "GuildPublicThread":
+        """
+        Creates a new public thread in this channel.
+
+        Args:
+            name: 1-100 character thread name.
+            message: The message to connect this thread to.
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            reason: The reason for creating this thread.
+
+        Returns:
+            The created public thread, if successful
+
+        """
+        return await self.create_thread(
+            name=name,
+            message=message,
+            auto_archive_duration=auto_archive_duration,
+            reason=reason,
         )
 
 
@@ -1455,18 +1610,32 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 # Guild Threads
 
 
-@define()
-class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
-    owner_id: Snowflake_Type = attr.ib(default=None)
-    topic: Optional[str] = attr.ib(default=None)
-    message_count: int = attr.ib(default=0)
-    member_count: int = attr.ib(default=0)
-    archived: bool = attr.ib(default=False)
-    auto_archive_duration: int = attr.ib(
-        default=attr.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
+@define(slots=False)
+class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
+    parent_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    """id of the text channel this thread was created"""
+    owner_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
+    """id of the creator of the thread"""
+    topic: Optional[str] = field(default=None)
+    """The thread topic (0-1024 characters)"""
+    message_count: int = field(default=0)
+    """An approximate count of messages in a thread, stops counting at 50"""
+    member_count: int = field(default=0)
+    """An approximate count of users in a thread, stops counting at 50"""
+    archived: bool = field(default=False)
+    """Whether the thread is archived"""
+    auto_archive_duration: int = field(
+        default=attrs.Factory(lambda self: self.default_auto_archive_duration, takes_self=True)
     )
-    locked: bool = attr.ib(default=False)
-    archive_timestamp: Optional["models.Timestamp"] = attr.ib(default=None, converter=optional_c(timestamp_converter))
+    """Duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080"""
+    locked: bool = field(default=False)
+    """Whether the thread is locked"""
+    archive_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """Timestamp when the thread's archive status was last changed, used for calculating recent activity"""
+    create_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    """Timestamp when the thread was created"""
+
+    _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -1481,9 +1650,14 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
         return self.type == ChannelTypes.GUILD_PRIVATE_THREAD
 
     @property
+    def guild(self) -> "models.Guild":
+        """The guild this channel belongs to."""
+        return self._client.cache.get_guild(self._guild_id)
+
+    @property
     def parent_channel(self) -> GuildText:
         """The channel this thread is a child of."""
-        return self._client.cache.channel_cache.get(self.parent_id)
+        return self._client.cache.get_channel(self.parent_id)
 
     @property
     def mention(self) -> str:
@@ -1493,10 +1667,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
         members_data = await self._client.http.list_thread_members(self.id)
-        members = []
-        for member_data in members_data:
-            members.append(models.ThreadMember.from_dict(member_data, self._client))
-        return members
+        return models.ThreadMember.from_list(members_data, self._client)
 
     async def add_member(self, member: Union["models.Member", Snowflake_Type]) -> None:
         """
@@ -1504,6 +1675,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
 
         Args:
             member: The member to add
+
         """
         await self._client.http.add_thread_member(self.id, to_snowflake(member))
 
@@ -1513,6 +1685,7 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
 
         Args:
             member: The member to remove
+
         """
         await self._client.http.remove_thread_member(self.id, to_snowflake(member))
 
@@ -1524,19 +1697,19 @@ class ThreadChannel(GuildChannel, MessageableMixin, WebhookMixin):
         """Leave this thread."""
         await self._client.http.leave_thread(self.id)
 
-    async def archive(self, locked: bool = False, reason: Absent[str] = MISSING) -> None:
+    async def archive(self, locked: bool = False, reason: Absent[str] = MISSING) -> "TYPE_THREAD_CHANNEL":
         """
         Helper method to archive this thread.
 
         Args:
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             reason: The reason for this archive
+
+        Returns:
+            The archived thread channel object.
+
         """
-        payload = {
-            "archived": True,
-            "locked": locked,
-        }
-        await self._edit(payload=payload, reason=reason)
+        return await super().edit(locked=locked, archived=True, reason=reason)
 
 
 @define()
@@ -1545,27 +1718,31 @@ class GuildNewsThread(ThreadChannel):
         self,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
-        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildNewsThread":
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
-            default_auto_archive_duration=default_auto_archive_duration,
+            auto_archive_duration=auto_archive_duration,
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             reason=reason,
@@ -1579,27 +1756,31 @@ class GuildPublicThread(ThreadChannel):
         self,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
-        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildPublicThread":
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
-            default_auto_archive_duration=default_auto_archive_duration,
+            auto_archive_duration=auto_archive_duration,
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             reason=reason,
@@ -1610,34 +1791,39 @@ class GuildPublicThread(ThreadChannel):
 @define()
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
+    """Whether non-moderators can add other non-moderators to a thread"""
 
     async def edit(
         self,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
-        default_auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
         invitable: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> "GuildPrivateThread":
         """
         Edit this thread.
 
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            default_auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
             invitable: whether non-moderators can add other non-moderators to a thread; only available on private threads
             reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             archived=archived,
-            default_auto_archive_duration=default_auto_archive_duration,
+            auto_archive_duration=auto_archive_duration,
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             invitable=invitable,
@@ -1650,13 +1836,17 @@ class GuildPrivateThread(ThreadChannel):
 # Guild Voices
 
 
-@define()
+@define(slots=False)
 class VoiceChannel(GuildChannel):  # May not be needed, can be directly just GuildVoice.
-    bitrate: int = attr.ib()
-    user_limit: int = attr.ib()
-    rtc_region: str = attr.ib(default="auto")
-    video_quality_mode: Union[VideoQualityModes, int] = attr.ib(default=VideoQualityModes.AUTO)
-    _voice_member_ids: list[Snowflake_Type] = attr.ib(factory=list)
+    bitrate: int = field()
+    """The bitrate (in bits) of the voice channel"""
+    user_limit: int = field()
+    """The user limit of the voice channel"""
+    rtc_region: str = field(default="auto")
+    """Voice region id for the voice channel, automatic when set to None"""
+    video_quality_mode: Union[VideoQualityModes, int] = field(default=VideoQualityModes.AUTO)
+    """The camera video quality mode of the voice channel, 1 when not present"""
+    _voice_member_ids: list[Snowflake_Type] = field(factory=list)
 
     async def edit(
         self,
@@ -1672,7 +1862,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
         video_quality_mode: Absent[VideoQualityModes] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> None:
+    ) -> Union["GuildVoice", "GuildStageVoice"]:
         """
         Edit guild voice channel.
 
@@ -1687,8 +1877,11 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             video_quality_mode: the camera video quality mode of the voice channel
             reason: optional reason for audit logs
 
+        Returns:
+            The edited voice channel object.
+
         """
-        await super().edit(
+        return await super().edit(
             name=name,
             position=position,
             permission_overwrites=permission_overwrites,
@@ -1709,9 +1902,29 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
     @property
     def voice_members(self) -> List["models.Member"]:
         """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
-        return [
-            self._client.cache.member_cache.get((self._guild_id, member_id)) for member_id in self._voice_member_ids
-        ]
+        return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
+
+    @property
+    def voice_state(self) -> Optional["ActiveVoiceState"]:
+        """Returns the voice state of the bot in this channel if it is connected"""
+        return self._client.get_bot_voice_state(self._guild_id)
+
+    async def connect(self, muted: bool = False, deafened: bool = False) -> "ActiveVoiceState":
+        """
+        Connect the bot to this voice channel, or move the bot to this voice channel if it is already connected in another voice channel.
+
+        Args:
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
+        if not self.voice_state:
+            return await self._client.connect_to_vc(self._guild_id, self.id, muted, deafened)
+        await self.voice_state.move(self.id)
+        return self.voice_state
 
 
 @define()
@@ -1721,7 +1934,8 @@ class GuildVoice(VoiceChannel, InvitableMixin):
 
 @define()
 class GuildStageVoice(GuildVoice):
-    stage_instance: "models.StageInstance" = attr.ib(default=MISSING)
+    stage_instance: "models.StageInstance" = field(default=MISSING)
+    """The stage instance that this voice channel belongs to"""
 
     # todo: Listeners and speakers properties (needs voice state caching)
 
@@ -1729,7 +1943,8 @@ class GuildStageVoice(GuildVoice):
         """
         Fetches the stage instance associated with this channel.
 
-        If no stage is live, will return None.
+        Returns:
+            The stage instance associated with this channel. If no stage is live, will return None.
 
         """
         self.stage_instance = models.StageInstance.from_dict(
@@ -1746,10 +1961,13 @@ class GuildStageVoice(GuildVoice):
         """
         Create a stage instance in this channel.
 
-        Arguments:
+        Args:
             topic: The topic of the stage (1-120 characters)
             privacy_level: The privacy level of the stage
             reason: The reason for creating this instance
+
+        Returns:
+            The created stage instance object.
 
         """
         self.stage_instance = models.StageInstance.from_dict(
@@ -1761,7 +1979,7 @@ class GuildStageVoice(GuildVoice):
         """
         Closes the live stage instance.
 
-        Arguments:
+        Args:
             reason: The reason for closing the stage
 
         """
@@ -1776,6 +1994,16 @@ class GuildStageVoice(GuildVoice):
 def process_permission_overwrites(
     overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
 ) -> List[dict]:
+    """
+    Processes a permission overwrite lists into format for sending to discord.
+
+    Args:
+        overwrites: The permission overwrites to process
+
+    Returns:
+        The processed permission overwrites
+
+    """
     if not overwrites:
         return overwrites
 
@@ -1797,7 +2025,6 @@ TYPE_ALL_CHANNEL = Union[
     GuildVoice,
     GuildStageVoice,
     GuildCategory,
-    GuildStore,
     GuildPublicThread,
     GuildPrivateThread,
     GuildNewsThread,
@@ -1809,7 +2036,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildStore, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice]
 
 
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
@@ -1829,7 +2056,6 @@ TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_VOICE: GuildVoice,
     ChannelTypes.GUILD_STAGE_VOICE: GuildStageVoice,
     ChannelTypes.GUILD_CATEGORY: GuildCategory,
-    ChannelTypes.GUILD_STORE: GuildStore,
     ChannelTypes.GUILD_PUBLIC_THREAD: GuildPublicThread,
     ChannelTypes.GUILD_PRIVATE_THREAD: GuildPrivateThread,
     ChannelTypes.GUILD_NEWS_THREAD: GuildNewsThread,

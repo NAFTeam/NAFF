@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import attr
-from attr import setters
-from attr.validators import instance_of
-from attr.validators import optional as v_optional
+from attrs.validators import instance_of
+from attrs.validators import optional as v_optional
 
 from dis_snek.client.const import (
     EMBED_MAX_NAME_LENGTH,
@@ -14,7 +12,7 @@ from dis_snek.client.const import (
     EMBED_FIELD_VALUE_LENGTH,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import field
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import list_converter, timestamp_converter
 from dis_snek.client.utils.converters import optional as c_optional
 from dis_snek.client.utils.serializer import no_export_meta, export_converter
@@ -33,7 +31,7 @@ __all__ = [
 ]
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedField(DictSerializationMixin):
     """
     Representation of an embed field.
@@ -45,9 +43,9 @@ class EmbedField(DictSerializationMixin):
 
     """
 
-    name: str = attr.ib()
-    value: str = attr.ib()
-    inline: bool = attr.ib(default=False)
+    name: str = field()
+    value: str = field()
+    inline: bool = field(default=False)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -59,11 +57,11 @@ class EmbedField(DictSerializationMixin):
         if len(value) > EMBED_FIELD_VALUE_LENGTH:
             raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.name) + len(self.value)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
@@ -76,21 +74,21 @@ class EmbedAuthor(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attr.ib(default=None)
-    url: Optional[str] = attr.ib(default=None)
-    icon_url: Optional[str] = attr.ib(default=None)
-    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+    name: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
+    icon_url: Optional[str] = field(default=None)
+    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
         if len(value) > EMBED_MAX_NAME_LENGTH:
             raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.name)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
@@ -103,13 +101,13 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
 
     """
 
-    url: Optional[str] = attr.ib(default=None)
-    proxy_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
-    height: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
-    width: Optional[int] = attr.ib(default=None, metadata=no_export_meta)
+    url: Optional[str] = field(default=None)
+    proxy_url: Optional[str] = field(default=None, metadata=no_export_meta)
+    height: Optional[int] = field(default=None, metadata=no_export_meta)
+    width: Optional[int] = field(default=None, metadata=no_export_meta)
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any]):
+    def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(data, str):
             return {"url": data}
         return data
@@ -119,7 +117,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
         return self.height, self.width
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedFooter(DictSerializationMixin):
     """
     Representation of an Embed Footer.
@@ -131,15 +129,15 @@ class EmbedFooter(DictSerializationMixin):
 
     """
 
-    text: str = attr.ib()
-    icon_url: Optional[str] = attr.ib(default=None)
-    proxy_icon_url: Optional[str] = attr.ib(default=None, metadata=no_export_meta)
+    text: str = field()
+    icon_url: Optional[str] = field(default=None)
+    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.text)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
@@ -153,11 +151,11 @@ class EmbedProvider(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attr.ib(default=None)
-    url: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Embed(DictSerializationMixin):
     """Represents a discord embed object."""
 
@@ -174,12 +172,11 @@ class Embed(DictSerializationMixin):
     timestamp: Optional[Timestamp] = field(
         default=None,
         converter=c_optional(timestamp_converter),
-        on_setattr=setters.convert,
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
     """Timestamp of embed content"""
-    fields: List[EmbedField] = field(factory=list, converter=list_converter(EmbedField.from_dict), repr=True)
+    fields: List[EmbedField] = field(factory=list, converter=EmbedField.from_list, repr=True)
     """A list of [fields][dis_snek.models.discord_objects.embed.EmbedField] to go in the embed"""
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
@@ -235,7 +232,7 @@ class Embed(DictSerializationMixin):
                 "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         # yes i know there are far more optimal ways to write this
         # its written like this for readability
         total: int = 0
@@ -319,6 +316,9 @@ def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed,
 
     Args:
         embeds: List of dict / embeds to process
+
+    Returns:
+        formatted list for discord
 
     """
     if embeds is None:

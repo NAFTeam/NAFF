@@ -1,16 +1,16 @@
+from __future__ import annotations
 import asyncio
 import copy
 import functools
 import logging
 import re
-from typing import Awaitable, Callable, Coroutine, Any, TYPE_CHECKING
-
-import attr
+import typing
+from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
 from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
@@ -26,12 +26,12 @@ kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class BaseCommand(DictSerializationMixin):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
 
-    attributes:
+    Attributes:
         scale: The scale this command belongs to.
         enabled: Whether this command is enabled
         checks: Any checks that must be run before this command can be run
@@ -42,32 +42,32 @@ class BaseCommand(DictSerializationMixin):
 
     """
 
-    scale: Any = attr.ib(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
+    scale: Any = field(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
 
-    enabled: bool = attr.ib(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
-    checks: list = attr.ib(
+    enabled: bool = field(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
+    checks: list = field(
         factory=list, metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta
     )
-    cooldown: Cooldown = attr.ib(
+    cooldown: Cooldown = field(
         default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
     )
-    max_concurrency: MaxConcurrency = attr.ib(
+    max_concurrency: MaxConcurrency = field(
         default=MISSING,
         metadata=docs("An optional maximum number of concurrent instances to apply to the command") | no_export_meta,
     )
 
-    callback: Callable[..., Coroutine] = attr.ib(
+    callback: Callable[..., Coroutine] = field(
         default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
     )
-    error_callback: Callable[..., Coroutine] = attr.ib(
+    error_callback: Callable[..., Coroutine] = field(
         default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
     )
-    pre_run_callback: Callable[..., Coroutine] = attr.ib(
+    pre_run_callback: Callable[..., Coroutine] = field(
         default=None,
         metadata=no_export_meta
         | docs("The coroutine to be called before the command is executed, **but** after the checks"),
     )
-    post_run_callback: Callable[..., Coroutine] = attr.ib(
+    post_run_callback: Callable[..., Coroutine] = field(
         default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
     )
 
@@ -80,11 +80,11 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
-    async def __call__(self, context, *args, **kwargs):
+    async def __call__(self, context: "Context", *args, **kwargs) -> None:
         """
         Calls this command.
 
-        parameters:
+        Args:
             context: The context of this command
             args: Any
             kwargs: Any
@@ -96,7 +96,8 @@ class BaseCommand(DictSerializationMixin):
                     await self.pre_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_prerun:
-                    await self.scale.scale_prerun(context, *args, **kwargs)
+                    for prerun in self.scale.scale_prerun:
+                        await prerun(context, *args, **kwargs)
 
                 await self.call_callback(self.callback, context)
 
@@ -104,21 +105,36 @@ class BaseCommand(DictSerializationMixin):
                     await self.post_run_callback(context, *args, **kwargs)
 
                 if self.scale is not None and self.scale.scale_postrun:
-                    await self.scale.scale_postrun(context, *args, **kwargs)
+                    for postrun in self.scale.scale_postrun:
+                        await postrun(context, *args, **kwargs)
 
         except Exception as e:
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
+            elif self.scale and self.scale.scale_error:
+                await self.scale.scale_error(context, *args, **kwargs)
             else:
                 raise
         finally:
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
-    async def try_convert(self, converter: Callable, context: "Context", value) -> Any:
+    async def try_convert(self, converter: Callable, context: "Context", value: Any) -> Any:
         if converter is None:
             return value
         return await converter(context, value)
+
+    def param_config(self, annotation: Any, name: str) -> Tuple[Callable, Optional[dict]]:
+        # This thing is complicated. Snek-annotations can either be annotated directly, or they can be annotated with Annotated[str, CMD_*]
+        # This helper function handles both cases, and returns a tuple of the converter and its config (if any)
+        if annotation is None:
+            return None
+        if typing.get_origin(annotation) is Annotated and (args := typing.get_args(annotation)):
+            for ann in args:
+                v = getattr(ann, name, None)
+                if v is not None:
+                    return (ann, v)
+        return (annotation, getattr(annotation, name, None))
 
     async def call_callback(self, callback: Callable, context: "Context") -> None:
         callback = functools.partial(callback, context)  # first param must be ctx
@@ -132,14 +148,15 @@ class BaseCommand(DictSerializationMixin):
         c_args = copy.copy(context.args)
         for param in parameters.values():
             convert = functools.partial(self.try_convert, getattr(param.annotation, "convert", None), context)
-            if config := getattr(param.annotation, "_annotation_dat", None):
+            func, config = self.param_config(param.annotation, "_annotation_dat")
+            if config:
                 # if user has used an snek-annotation, run the annotation, and pass the result to the user
                 local = {"context": context, "scale": self.scale, "param": param.name}
                 ano_args = [local[c] for c in config["args"]]
                 if param.kind != param.POSITIONAL_ONLY:
-                    kwargs[param.name] = param.annotation(*ano_args)
+                    kwargs[param.name] = func(*ano_args)
                 else:
-                    args.append(param.annotation(*ano_args))
+                    args.append(func(*ano_args))
                 continue
             elif param.name in context.kwargs:
                 # if parameter is in kwargs, user obviously wants it, pass it
@@ -172,11 +189,11 @@ class BaseCommand(DictSerializationMixin):
             args = args + [await convert(c) for c in c_args]
         return await callback(*args, **kwargs)
 
-    async def _can_run(self, context) -> bool:
+    async def _can_run(self, context: Context) -> bool:
         """
         Determines if this command can be run.
 
-        parameters:
+        Args:
             context: The context of the command
 
         """
@@ -232,22 +249,22 @@ class BaseCommand(DictSerializationMixin):
         return call
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class MessageCommand(BaseCommand):
     """Represents a command triggered by standard message."""
 
-    name: str = attr.ib(metadata=docs("The name of the command"))
+    name: str = field(metadata=docs("The name of the command"))
 
 
 def message_command(
     name: str = None,
-) -> Callable[[Coroutine], MessageCommand]:
+) -> Callable[[Callable[..., Coroutine]], MessageCommand]:
     """
     A decorator to declare a coroutine as a message command.
 
-    parameters:
+    Args:
         name: The name of the command, defaults to the name of the coroutine
-    returns:
+    Returns:
         Message Command Object
 
     """
@@ -265,7 +282,7 @@ def check(check: Callable[["Context"], Awaitable[bool]]) -> Callable[[Coroutine]
     """
     Add a check to a command.
 
-    parameters:
+    Args:
         check: A coroutine as a check for this command
 
     """

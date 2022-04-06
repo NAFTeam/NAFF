@@ -1,9 +1,9 @@
 from functools import partial, total_ordering
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
 
-import attr
+import attrs
 
-from dis_snek.client.const import MISSING, Absent
+from dis_snek.client.const import MISSING, Absent, T
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.serializer import dict_filter_missing
@@ -21,10 +21,8 @@ if TYPE_CHECKING:
 
 __all__ = ["Role"]
 
-T = TypeVar("T")
 
-
-def sentinel_converter(value: Optional[bool | T], sentinel: T = attr.NOTHING) -> bool:
+def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool:
     if value is sentinel:
         return False
     elif value is None:
@@ -58,7 +56,20 @@ class Role(DiscordObject):
         if self._guild_id != other._guild_id:
             raise RuntimeError("Unable to compare Roles from different guilds.")
 
-        return self.position < other.position
+        if self.id == self._guild_id:  # everyone role
+            # everyone role is on the bottom, so check if the other role is, well, not it
+            # because then it must be higher than it
+            return other.id != self.id
+
+        if self.position < other.position:
+            return True
+
+        if self.position == other.position:
+            # if two roles have the same position, which can happen thanks to discord, then
+            # we can thankfully use their ids to determine which one is lower
+            return self.id < other.id
+
+        return False
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -96,7 +107,7 @@ class Role(DiscordObject):
     @property
     def guild(self) -> "Guild":
         """The guild object this role is from."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def default(self) -> bool:

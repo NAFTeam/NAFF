@@ -51,13 +51,14 @@ class MessageEvents(EventMixinTemplate):
             event: raw message deletion event
 
         """
-        message = await self.cache.fetch_message(
-            event.data.get("channel_id"), event.data.get("id"), request_fallback=False
+        message = self.cache.get_message(
+            event.data.get("channel_id"),
+            event.data.get("id"),
         )
 
         if not message:
             message = BaseMessage.from_dict(event.data, self)
-
+        self.cache.delete_message(event.data["channel_id"], event.data["id"])
         log.debug(f"Dispatching Event: {event.resolved_name}")
         self.dispatch(events.MessageDelete(message))
 
@@ -71,8 +72,21 @@ class MessageEvents(EventMixinTemplate):
 
         """
         # a copy is made because the cache will update the original object in memory
-        before = copy.copy(
-            await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("id"), request_fallback=False)
-        )
+        before = copy.copy(self.cache.get_message(event.data.get("channel_id"), event.data.get("id")))
         after = self.cache.place_message_data(event.data)
         self.dispatch(events.MessageUpdate(before=before, after=after))
+
+    @Processor.define()
+    async def _on_raw_message_delete_bulk(self, event: "RawGatewayEvent") -> None:
+        """
+        Process raw bulk message deletion event and dispatch a processed bulk deletion event.
+
+        Args:
+            event: raw bulk message deletion event
+
+        """
+        self.dispatch(
+            events.MessageDeleteBulk(
+                event.data.get("guild_id", None), event.data.get("channel_id"), event.data.get("ids")
+            )
+        )

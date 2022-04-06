@@ -1,12 +1,10 @@
 import asyncio
 import inspect
-import re
 from typing import Coroutine, Callable
 
 from dis_snek.api.events.internal import BaseEvent
 from dis_snek.client.const import MISSING, Absent
-
-camel_to_snake = re.compile(r"([A-Z]+)")
+from dis_snek.client.utils import get_event_name
 
 __all__ = ["Listener", "listen"]
 
@@ -14,17 +12,30 @@ __all__ = ["Listener", "listen"]
 class Listener:
 
     event: str
+    """Name of the event to listen to."""
     callback: Coroutine
+    """Coroutine to call when the event is triggered."""
 
-    def __init__(self, func: Coroutine, event: str):
+    def __init__(self, func: Callable[..., Coroutine], event: str) -> None:
         self.event = event
         self.callback = func
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs) -> None:
         return await self.callback(*args, **kwargs)
 
     @classmethod
     def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:
+        """
+        Decorator for creating an event listener.
+
+        Args:
+            event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+
+        Returns:
+            A listener object.
+
+        """
+
         def wrapper(coro: Coroutine) -> "Listener":
             if not asyncio.iscoroutinefunction(coro):
                 raise TypeError("Listener must be a coroutine")
@@ -44,20 +55,20 @@ class Listener:
                 if not name:
                     name = coro.__name__
 
-            elif inspect.isclass(name) and issubclass(name, BaseEvent):
-                name = name.__name__
-
-            # convert CamelCase to snake_case
-            name = camel_to_snake.sub(r"_\1", name).lower()
-            # remove any leading underscores
-            name = name.lstrip("_")
-            # remove any `on_` prefixes
-            name = name.removeprefix("on_")
-
-            return cls(coro, name)
+            return cls(coro, get_event_name(name))
 
         return wrapper
 
 
-def listen(event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], Listener]:
+def listen(event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Callable[..., Coroutine]], Listener]:
+    """
+    Decorator to make a function an event listener.
+
+    Args:
+        event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+
+    Returns:
+        A listener object.
+
+    """
     return Listener.create(event_name)

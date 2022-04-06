@@ -3,9 +3,8 @@ import inspect
 import logging
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, List, Union, Optional, Any
-
-import attr
+from typing import TYPE_CHECKING, Annotated, Callable, Coroutine, Dict, List, Union, Optional, Any
+import typing
 
 import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
@@ -20,9 +19,9 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_parameters
-from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
@@ -42,6 +41,7 @@ __all__ = [
     "InteractionCommand",
     "ContextMenu",
     "SlashCommandChoice",
+    "SlashCommandOption",
     "SlashCommand",
     "ComponentCommand",
     "slash_command",
@@ -78,10 +78,10 @@ class OptionTypes(IntEnum):
         """
         Convert data types to their corresponding OptionType.
 
-        parameters:
+        Args:
             t: The datatype to convert
 
-        returns:
+        Returns:
             OptionType or None
 
         """
@@ -127,12 +127,12 @@ class CallbackTypes(IntEnum):
     MODAL = 9
 
 
-@attr.s(slots=True, hash=True)
-class Permission:
+@define(kw_only=False)
+class Permission(DictSerializationMixin):
     """
     Represents a interaction permission.
 
-    parameters:
+    Args:
         id: The id of the role or user.
         guild_id: The guild this permission belongs to
         type: The type of id (user or role)
@@ -140,32 +140,18 @@ class Permission:
 
     """
 
-    id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
-    guild_id: "Snowflake_Type" = attr.ib(converter=to_snowflake, metadata=no_export_meta)
-    type: Union[PermissionTypes, int] = attr.ib(converter=PermissionTypes)
-    permission: bool = attr.ib(default=True)
-
-    def to_dict(self) -> dict:
-        """
-        Convert this object into a dict ready for discord.
-
-        returns:
-            Representation of this object
-
-        """
-        data = attr.asdict(self)
-        data.pop("guild_id", None)
-        data["id"] = str(data["id"])
-
-        return data
+    id: "Snowflake_Type" = field(converter=to_snowflake, metadata=export_converter(str))
+    guild_id: "Snowflake_Type" = field(converter=to_snowflake, metadata=no_export_meta)
+    type: Union[PermissionTypes, int] = field(converter=PermissionTypes)
+    permission: bool = field(default=True)
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
 
-    parameters:
+    Args:
         scope: Denotes whether its global or for specific guild.
         default_permission: Is this command available to all users?
         permissions: Map of guild id and its respective list of permissions to apply.
@@ -174,27 +160,27 @@ class InteractionCommand(BaseCommand):
 
     """
 
-    name: str = attr.ib(metadata=docs("1-32 character name") | no_export_meta)
-    scopes: List["Snowflake_Type"] = attr.ib(
+    name: str = field(metadata=docs("1-32 character name") | no_export_meta)
+    scopes: List["Snowflake_Type"] = field(
         default=[GLOBAL_SCOPE],
         converter=to_snowflake_list,
         metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
 
-    default_permission: bool = attr.ib(
+    default_permission: bool = field(
         default=True, metadata=docs("whether this command is enabled by default when the app is added to a guild")
     )
-    permissions: Optional[List[Union[Permission, Dict]]] = attr.ib(
+    permissions: Optional[List[Union[Permission, Dict]]] = field(
         factory=dict, metadata=docs("The permissions of this interaction")
     )
 
-    cmd_id: Dict[str, "Snowflake_Type"] = attr.ib(
+    cmd_id: Dict[str, "Snowflake_Type"] = field(
         factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
     )  # scope: cmd_id
-    callback: Callable[..., Coroutine] = attr.ib(
+    callback: Callable[..., Coroutine] = field(
         default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
     )
-    auto_defer: "AutoDefer" = attr.ib(
+    auto_defer: "AutoDefer" = field(
         default=MISSING,
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
@@ -238,19 +224,19 @@ class InteractionCommand(BaseCommand):
         return self.default_permission
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
 
-    parameters:
+    Args:
         name: The name of this entry.
         type: The type of entry (user or message).
 
     """
 
-    name: str = attr.ib(metadata=docs("1-32 character name"))
-    type: CommandTypes = attr.ib(metadata=docs("The type of command, defaults to 1 if not specified"))
+    name: str = field(metadata=docs("1-32 character name"))
+    type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -258,7 +244,7 @@ class ContextMenu(InteractionCommand):
             raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
 
     @type.validator
-    def _type_validator(self, attribute: str, value: int):
+    def _type_validator(self, attribute: str, value: int) -> None:
         if not isinstance(value, CommandTypes):
             if value not in CommandTypes.__members__.values():
                 raise ValueError("Context Menu type not recognised, please consult the docs.")
@@ -268,27 +254,27 @@ class ContextMenu(InteractionCommand):
             )
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
 
-    parameters:
+    Args:
         name: The name the user will see
         value: The data sent to your code when this choice is used
 
     """
 
-    name: str = attr.ib()
-    value: Union[str, int, float] = attr.ib()
+    name: str = field()
+    value: Union[str, int, float] = field()
 
 
-@attr.s(slots=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define(kw_only=False)
 class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
 
-    parameters:
+    Args:
         name: The name of this option
         type: The type of option
         description: The description of this option
@@ -300,15 +286,15 @@ class SlashCommandOption(DictSerializationMixin):
 
     """
 
-    name: str = attr.ib()
-    type: Union[OptionTypes, int] = attr.ib()
-    description: str = attr.ib(default="No Description Set")
-    required: bool = attr.ib(default=True)
-    autocomplete: bool = attr.ib(default=False)
-    choices: List[Union[SlashCommandChoice, Dict]] = attr.ib(factory=list)
-    channel_types: Optional[list[Union[ChannelTypes, int]]] = attr.ib(default=None)
-    min_value: Optional[float] = attr.ib(default=None)
-    max_value: Optional[float] = attr.ib(default=None)
+    name: str = field()
+    type: Union[OptionTypes, int] = field()
+    description: str = field(default="No Description Set")
+    required: bool = field(default=True)
+    autocomplete: bool = field(default=False)
+    choices: List[Union[SlashCommandChoice, Dict]] = field(factory=list)
+    channel_types: Optional[list[Union[ChannelTypes, int]]] = field(default=None)
+    min_value: Optional[float] = field(default=None)
+    max_value: Optional[float] = field(default=None)
 
     @name.validator
     def _name_validator(self, attribute: str, value: str) -> None:
@@ -370,19 +356,19 @@ class SlashCommandOption(DictSerializationMixin):
                     raise ValueError("`min_value` needs to be <= than `max_value`")
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class SlashCommand(InteractionCommand):
-    name: str = attr.ib()
-    description: str = attr.ib("No Description Set")
+    name: str = field()
+    description: str = field(default="No Description Set")
 
-    group_name: str = attr.ib(default=None, metadata=no_export_meta)
-    group_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+    group_name: str = field(default=None, metadata=no_export_meta)
+    group_description: str = field(default="No Description Set", metadata=no_export_meta)
 
-    sub_cmd_name: str = attr.ib(default=None, metadata=no_export_meta)
-    sub_cmd_description: str = attr.ib(default="No Description Set", metadata=no_export_meta)
+    sub_cmd_name: str = field(default=None, metadata=no_export_meta)
+    sub_cmd_description: str = field(default="No Description Set", metadata=no_export_meta)
 
-    options: List[Union[SlashCommandOption, Dict]] = attr.ib(factory=list)
-    autocomplete_callbacks: dict = attr.ib(factory=dict, metadata=no_export_meta)
+    options: List[Union[SlashCommandOption, Dict]] = field(factory=list)
+    autocomplete_callbacks: dict = field(factory=dict, metadata=no_export_meta)
 
     @property
     def resolved_name(self) -> str:
@@ -393,16 +379,23 @@ class SlashCommand(InteractionCommand):
         return self.sub_cmd_name is not None
 
     def __attrs_post_init__(self) -> None:
-        params = get_parameters(self.callback)
-        for name, val in params.items():
-            if val.annotation and isinstance(val.annotation, SlashCommandOption):
-
-                if not self.options:
-                    self.options = []
-                val.annotation.name = name
-                self.options.append(val.annotation)
-
         if self.callback is not None:
+            params = get_parameters(self.callback)
+            for name, val in params.items():
+                annotation = None
+                if val.annotation and isinstance(val.annotation, SlashCommandOption):
+                    annotation = val.annotation
+                elif typing.get_origin(val.annotation) is Annotated:
+                    for ann in typing.get_args(val.annotation):
+                        if isinstance(ann, SlashCommandOption):
+                            annotation = ann
+
+                if annotation:
+                    if not self.options:
+                        self.options = []
+                    ann.name = name
+                    self.options.append(ann)
+
             if hasattr(self.callback, "options"):
                 if not self.options:
                     self.options = []
@@ -474,29 +467,40 @@ class SlashCommand(InteractionCommand):
         option_name = option_name.lower()
         return wrapper
 
+    def group(self, name: str = None, description: str = "No Description Set") -> "SlashCommand":
+
+        return SlashCommand(
+            name=self.name,
+            description=self.description,
+            group_name=name,
+            group_description=description,
+            scopes=self.scopes,
+        )
+
     def subcommand(
         self,
         sub_cmd_name: str,
         group_name: str = None,
-        group_description: str = "No Description Set",
         sub_cmd_description: Absent[str] = MISSING,
+        group_description: Absent[str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
+            nonlocal sub_cmd_description
+
             if not asyncio.iscoroutinefunction(call):
                 raise TypeError("Subcommand must be coroutine")
 
-            _description = sub_cmd_description
-            if _description is MISSING:
-                _description = call.__doc__ if call.__doc__ else "No Description Set"
+            if sub_cmd_description is MISSING:
+                sub_cmd_description = call.__doc__ or "No Description Set"
 
             return SlashCommand(
                 name=self.name,
                 description=self.description,
-                group_name=group_name,
-                group_description=group_description,
+                group_name=group_name or self.group_name,
+                group_description=group_description or self.group_description,
                 sub_cmd_name=sub_cmd_name,
-                sub_cmd_description=_description,
+                sub_cmd_description=sub_cmd_description,
                 options=options,
                 callback=call,
                 scopes=self.scopes,
@@ -505,10 +509,10 @@ class SlashCommand(InteractionCommand):
         return wrapper
 
 
-@attr.s(slots=True, kw_only=True, on_setattr=[attr.setters.convert, attr.setters.validate])
+@define()
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
-    listeners: list[str] = attr.ib(factory=list)
+    listeners: list[str] = field(factory=list)
 
 
 ##############
@@ -527,7 +531,7 @@ def slash_command(
     group_name: str = None,
     sub_cmd_description: str = "No Description Set",
     group_description: str = "No Description Set",
-) -> Callable[[Coroutine], SlashCommand]:
+) -> Callable[[Callable[..., Coroutine]], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
 
@@ -536,7 +540,7 @@ def slash_command(
         We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
         one of the future ui updates.
 
-    parameters:
+    Args:
         name: 1-32 character name of the command
         description: 1-100 character description of the command
         scope: The scope this command exists within
@@ -548,12 +552,12 @@ def slash_command(
         group_name: 1-32 character name of the group
         group_description: 1-100 character description of the group
 
-    returns:
+    Returns:
         SlashCommand Object
 
     """
 
-    def wrapper(func) -> SlashCommand:
+    def wrapper(func: Callable[..., Coroutine]) -> SlashCommand:
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
@@ -653,14 +657,14 @@ def context_menu(
     """
     A decorator to declare a coroutine as a Context Menu.
 
-    parameters:
+    Args:
         name: 1-32 character name of the context menu
         context_type: The type of context menu
         scope: The scope this command exists within
         default_permission: Whether the menu is enabled by default when the app is added to a guild
         permissions: The roles or users who can use this menu
 
-    returns:
+    Returns:
         ContextMenu object
 
     """
@@ -732,7 +736,7 @@ def slash_option(
     r"""
     A decorator to add an option to a slash command.
 
-    parameters:
+    Args:
         name: 1-32 lowercase character name matching ^[\w-]{1,32}$
         opt_type: The type of option
         description: 1-100 character description of option
@@ -770,7 +774,7 @@ def slash_permission(*permission: Union[Permission, Dict]) -> Any:
     """
     A decorator to add permissions for a guild to a slash command or context menu.
 
-    parameters:
+    Args:
         *permission: The permissions to apply to this command
 
     """
@@ -824,11 +828,13 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         sub_cmds = []
         for subcommand in subcommands:
             if not output_data:
+                perms = [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions]
+                perms_filtered = [dict(t) for t in {tuple(d.items()) for d in perms}]
                 output_data = {
                     "name": subcommand.name,
                     "description": subcommand.description,
                     "options": [],
-                    "permissions": [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions],
+                    "permissions": perms_filtered,
                     "default_permission": subcommand.default_permission,
                 }
             if subcommand.group_name:
@@ -862,7 +868,12 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             scopes: list[Snowflake_Type] = list({s for c in cmd_list for s in c.scopes})
             permissions: list = list({d for c in cmd_list for d in c.permissions})
             base_description = next(
-                (c.description for c in cmd_list if c.description is not None), "No Description Set"
+                (
+                    c.description
+                    for c in cmd_list
+                    if c.description is not None and c.description != "No Description Set"
+                ),
+                "No Description Set",
             )
 
             if not all(c.description in (base_description, "No Description Set") for c in cmd_list):
@@ -890,7 +901,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
     return output
 
 
-def _compare_options(local_opt_list: dict, remote_opt_list: dict):
+def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
     if local_opt_list != remote_opt_list:
         if len(local_opt_list) != len(remote_opt_list):
             return False
@@ -907,7 +918,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict):
                         or local_option["description"] != remote_option["description"]
                         or local_option["required"] != remote_option.get("required", False)
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
-                        or local_option["choices"] != remote_option.get("choices", [])
+                        or local_option.get("choices", []) != remote_option.get("choices", [])
                     ):
                         return False
             else:

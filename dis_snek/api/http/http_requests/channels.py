@@ -1,9 +1,14 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import discord_typings
+
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel
+from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permissions, OverwriteTypes
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_none, dict_filter_missing
+
+__all__ = ["ChannelRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.channel import PermissionOverwrite
@@ -13,13 +18,14 @@ if TYPE_CHECKING:
 class ChannelRequests:
     request: Any
 
-    async def get_channel(self, channel_id: "Snowflake_Type") -> dict:
+    async def get_channel(self, channel_id: "Snowflake_Type") -> discord_typings.ChannelData:
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.
 
-        parameters:
+        Args:
             channel_id: The id of the channel
-        returns:
+
+        Returns:
             channel
 
         """
@@ -32,18 +38,18 @@ class ChannelRequests:
         around: Optional["Snowflake_Type"] = None,
         before: Optional["Snowflake_Type"] = None,
         after: Optional["Snowflake_Type"] = None,
-    ) -> List[dict]:
+    ) -> List[discord_typings.MessageData]:
         """
         Get the messages for a channel.
 
-        parameters:
+        Args:
             channel_id: The channel to get messages from
             limit: How many messages to get (default 50, max 100)
             around: Get messages around this snowflake
             before: Get messages before this snowflake
             after: Get messages after this snowflake
 
-        returns:
+        Returns:
             List of message dicts
 
         """
@@ -80,8 +86,28 @@ class ChannelRequests:
         user_limit: int = 0,
         rate_limit_per_user: int = 0,
         reason: Absent[str] = MISSING,
-    ) -> Dict:
-        """"""
+    ) -> discord_typings.ChannelData:
+        """
+        Create a channel in a guild.
+
+        Args:
+            guild_id: The ID of the guild to create the channel in
+            name: The name of the channel
+            channel_type: The type of channel to create
+            topic: The topic of the channel
+            position: The position of the channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the channel
+            parent_id: The category this channel should be within
+            nsfw: Should this channel be marked nsfw
+            bitrate: The bitrate of this channel, only for voice
+            user_limit: The max users that can be in this channel, only for voice
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this channel
+
+        Returns:
+            The created channel object
+
+        """
         payload = {
             "name": name,
             "type": channel_type,
@@ -99,8 +125,6 @@ class ChannelRequests:
                 user_limit=user_limit,
             )
 
-        # clean up payload
-        payload = dict_filter_missing(payload)
         return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
     async def move_channel(
@@ -115,7 +139,7 @@ class ChannelRequests:
         """
         Move a channel.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild this affects
             channel_id: The ID of the channel to move
             new_pos: The new position of this channel
@@ -130,16 +154,18 @@ class ChannelRequests:
 
         return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
 
-    async def modify_channel(self, channel_id: "Snowflake_Type", data: dict, reason: Absent[str] = MISSING) -> dict:
+    async def modify_channel(
+        self, channel_id: "Snowflake_Type", data: dict, reason: Absent[str] = MISSING
+    ) -> discord_typings.ChannelData:
         """
         Update a channel's settings, returns the updated channel object on success.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to update
             data: The data to update with
             reason: An optional reason for the audit log
 
-        returns:
+        Returns:
             Channel object on success
 
         """
@@ -149,21 +175,21 @@ class ChannelRequests:
         """
         Delete the channel.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to delete
             reason: An optional reason for the audit log
 
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}"), reason=reason)
 
-    async def get_channel_invites(self, channel_id: "Snowflake_Type") -> List[dict]:
+    async def get_channel_invites(self, channel_id: "Snowflake_Type") -> List[discord_typings.InviteData]:
         """
         Get the invites for the channel.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to retrieve from
 
-        returns:
+        Returns:
             List of invite objects
 
         """
@@ -180,11 +206,11 @@ class ChannelRequests:
         target_user_id: "Snowflake_Type" = None,
         target_application_id: "Snowflake_Type" = None,
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> discord_typings.InviteData:
         """
         Create an invite for the given channel.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to create an invite for
             max_age: duration of invite in seconds before expiry, or 0 for never. between 0 and 604800 (7 days) (default 24 hours)
             max_uses: max number of uses or 0 for unlimited. between 0 and 100
@@ -195,7 +221,7 @@ class ChannelRequests:
             target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
             reason: An optional reason for the audit log
 
-        returns:
+        Returns:
             an invite object
 
         """
@@ -215,7 +241,7 @@ class ChannelRequests:
         with_counts: bool = False,
         with_expiration: bool = True,
         scheduled_event_id: "Snowflake_Type" = None,
-    ) -> dict:
+    ) -> discord_typings.InviteData:
         """
         Get an invite object for a given code.
 
@@ -238,15 +264,15 @@ class ChannelRequests:
         )
         return await self.request(Route("GET", f"/invites/{invite_code}", params=params))
 
-    async def delete_invite(self, invite_code: str, reason: Absent[str] = MISSING) -> dict:
+    async def delete_invite(self, invite_code: str, reason: Absent[str] = MISSING) -> discord_typings.InviteData:
         """
         Delete an invite.
 
-        parameters:
+        Args:
             invite_code: The code of the invite to delete
             reason: The reason to delete the invite
 
-        returns:
+        Returns:
             The deleted invite object
 
         """
@@ -256,15 +282,15 @@ class ChannelRequests:
         self,
         channel_id: "Snowflake_Type",
         overwrite_id: "Snowflake_Type",
-        allow: str,
-        deny: str,
-        perm_type: int,
+        allow: Union["Permissions", int],
+        deny: Union["Permissions", int],
+        perm_type: Union["OverwriteTypes", int],
         reason: Absent[str] = MISSING,
     ) -> None:
         """
         Edit the channel permission overwrites for a user or role in a channel.
 
-        parameters:
+        Args:
             channel_id: The id of the channel
             overwrite_id: The id of the object to override
             allow: the bitwise value of all allowed permissions
@@ -285,7 +311,7 @@ class ChannelRequests:
         """
         Delete a channel permission overwrite for a user or role in a channel.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel.
             overwrite_id: The ID of the overwrite
             reason: An optional reason for the audit log
@@ -293,15 +319,17 @@ class ChannelRequests:
         """
         return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"), reason=reason)
 
-    async def follow_news_channel(self, channel_id: "Snowflake_Type", webhook_channel_id: "Snowflake_Type") -> dict:
+    async def follow_news_channel(
+        self, channel_id: "Snowflake_Type", webhook_channel_id: "Snowflake_Type"
+    ) -> discord_typings.FollowedChannelData:
         """
         Follow a news channel to send messages to the target channel.
 
-        parameters:
+        Args:
             channel_id: The channel to follow
             webhook_channel_id: ID of the target channel
 
-        returns:
+        Returns:
             Followed channel object
 
         """
@@ -313,20 +341,20 @@ class ChannelRequests:
         """
         Post a typing indicator for the specified channel. Generally bots should not implement this route.
 
-        parameters:
+        Args:
             channel_id: The id of the channel to "type" in
 
         """
         return await self.request(Route("POST", f"/channels/{channel_id}/typing"))
 
-    async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> List[dict]:
+    async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> List[discord_typings.MessageData]:
         """
         Get all pinned messages from a channel.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to get pins from
 
-        returns:
+        Returns:
             A list of pinned message objects
 
         """
@@ -338,17 +366,17 @@ class ChannelRequests:
         topic: str,
         privacy_level: StagePrivacyLevel = 1,
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> discord_typings.StageInstanceData:
         """
         Create a new stage instance.
 
-        parameters:
+        Args:
             channel_id: The ID of the stage channel
             topic: The topic of the stage instance (1-120 characters)
             privacy_level: Them privacy_level of the stage instance (default guild only)
             reason: The reason for the creating the stage instance
 
-        returns:
+        Returns:
             The stage instance
 
         """
@@ -362,14 +390,14 @@ class ChannelRequests:
             reason=reason,
         )
 
-    async def get_stage_instance(self, channel_id: "Snowflake_Type") -> dict:
+    async def get_stage_instance(self, channel_id: "Snowflake_Type") -> discord_typings.StageInstanceData:
         """
         Get the stage instance associated with a given channel, if it exists.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to retrieve the instance for.
 
-        returns:
+        Returns:
             A stage instance.
 
         """
@@ -377,17 +405,17 @@ class ChannelRequests:
 
     async def modify_stage_instance(
         self, channel_id: "Snowflake_Type", topic: str = None, privacy_level: int = None, reason: Absent[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.StageInstanceData:
         """
         Update the fields of a given stage instance.
 
-        parameters:
+        Args:
             channel_id: The id of the stage channel.
             topic: The new topic for the stage instance
             privacy_level: The privacy level for the stage instance
             reason: The reason for the change
 
-        returns:
+        Returns:
             The updated stage instance.
 
         """
@@ -401,7 +429,7 @@ class ChannelRequests:
         """
         Delete a stage instance.
 
-        parameters:
+        Args:
             channel_id: The ID of the channel to delete the stage instance for.
             reason: The reason for the deletion
 

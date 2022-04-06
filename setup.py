@@ -1,3 +1,4 @@
+import itertools
 from pathlib import Path
 
 import tomli
@@ -5,6 +6,16 @@ from setuptools import find_packages, setup
 
 with open("pyproject.toml", "rb") as f:
     pyproject = tomli.load(f)
+
+extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6", "yt-dlp"]}
+extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
+extras_require["docs"] = extras_require["all"] + [
+    "pytkdocs @ git+https://github.com/LordOfPolls/pytkdocs.git",
+    "mkdocs-autorefs",
+    "mkdocs-awesome-pages-plugin",
+    "mkdocs-material",
+    "mkdocstrings",
+]
 
 setup(
     name=pyproject["tool"]["poetry"]["name"],
@@ -16,7 +27,7 @@ setup(
     url="https://github.com/Discord-Snake-Pit/Dis-Snek",
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
-    package_data={"dis_snek": ["py.typed", "*.pyi", "**/*.pyi"]},
+    include_package_data=True,
     python_requires=">=3.10",
     install_requires=(Path(__file__).parent / "requirements.txt").read_text().splitlines(),
     classifiers=[
@@ -39,4 +50,5 @@ setup(
         "Documentation": "https://dis-snek.readthedocs.io",
         "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },
+    extras_require=extras_require,
 )

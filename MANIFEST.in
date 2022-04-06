@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include requirements.txt
+include dis_snek/py.typed
+recursive-include dis_snek *.pyi
+recursive-include dis_snek *.dll

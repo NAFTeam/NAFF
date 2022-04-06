@@ -23,4 +23,4 @@ embeds = [Embed("Page 1 content"), Embed("Page 2 embed"), Embed("Page 3 embed"),
 paginator = Paginator.create_from_embeds(bot, *embeds)
 ```
 
-Paginators are configurable, you can choose which buttons show, add timeouts, add select-menu navigation, and even add callbacks. To see your options, check out their documentation [here](/API Reference/ext/paginators).
+Paginators are configurable, you can choose which buttons show, add timeouts, add select menu navigation, and even add callbacks. To see your options, check out their documentation [here](/API Reference/ext/paginators).

@@ -4,6 +4,7 @@ from collections import Counter
 from typing import Optional
 
 from dis_snek import Scale
+from dis_snek.client.client import Snake
 from dis_snek.client.const import GLOBAL_SCOPE
 from dis_snek.client.errors import HTTPException
 from dis_snek.models import (
@@ -27,7 +28,7 @@ app_cmds_def = {
 
 
 class DebugAppCMD(Scale):
-    def __init__(self, bot):
+    def __init__(self, bot: Snake) -> None:
         self.add_scale_check(checks.is_owner())
 
     @slash_command(
@@ -139,5 +140,5 @@ class DebugAppCMD(Scale):
             return await ctx.send(f"No commands found in `{scope.strip()}`")
 
 
-def setup(bot) -> None:
+def setup(bot: Snake) -> None:
     DebugAppCMD(bot)

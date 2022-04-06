@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any, Union
 
-import attr
-
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.enums import TeamMembershipState
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -18,10 +16,13 @@ __all__ = ["TeamMember", "Team"]
 
 @define()
 class TeamMember(DiscordObject):
-    membership_state: TeamMembershipState = attr.ib(converter=TeamMembershipState)
-    # permissions: List[str] = attr.ib(default=["*"])  # disabled until discord adds more team roles
-    team_id: "Snowflake_Type" = attr.ib()
-    user: "User" = attr.ib()  # TODO: cache partial user (avatar, discrim, id, username)
+    membership_state: TeamMembershipState = field(converter=TeamMembershipState)
+    """Rhe user's membership state on the team"""
+    # permissions: List[str] = field(default=["*"])  # disabled until discord adds more team roles
+    team_id: "Snowflake_Type" = field(repr=True)
+    """Rhe id of the parent team of which they are a member"""
+    user: "User" = field()  # TODO: cache partial user (avatar, discrim, id, username)
+    """Rhe avatar, discriminator, id, and username of the user"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -32,21 +33,26 @@ class TeamMember(DiscordObject):
 
 @define()
 class Team(DiscordObject):
-    icon: Optional[Asset] = attr.ib(default=None)
-    members: List[TeamMember] = attr.ib(factory=list)
-    name: str = attr.ib()
-    owner_user_id: "Snowflake_Type" = attr.ib(converter=to_snowflake)
+    icon: Optional[Asset] = field(default=None)
+    """A hash of the image of the team's icon"""
+    members: List[TeamMember] = field(factory=list)
+    """The members of the team"""
+    name: str = field(repr=True)
+    """The name of the team"""
+    owner_user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    """The user id of the current team owner"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
-        data["members"] = [TeamMember.from_dict(member, client) for member in data["members"]]
+        data["members"] = TeamMember.from_list(data["members"], client)
         if data["icon"]:
             data["icon"] = Asset.from_path_hash(client, f"team-icons/{data['id']}/{{}}", data["icon"])
         return data
 
     @property
     def owner(self) -> "User":
-        return self._client.cache.user_cache.get(self.owner_user_id)
+        """The owner of the team"""
+        return self._client.cache.get_user(self.owner_user_id)
 
     def is_in_team(self, user: Union["SnowflakeObject", "Snowflake_Type"]) -> bool:
         """

@@ -1,6 +1,11 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List
+
+import discord_typings
 
 from ..route import Route
+
+__all__ = ["UserRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -9,33 +14,40 @@ if TYPE_CHECKING:
 class UserRequests:
     request: Any
 
-    async def get_current_user(self) -> dict:
-        """Shortcut to get requester's user."""
-        return self.get_user("@me")
+    async def get_current_user(self) -> discord_typings.UserData:
+        """
+        Shortcut to get requester's user.
 
-    async def get_user(self, user_id: "Snowflake_Type") -> dict:
+        Returns:
+            The user object.
+
+        """
+        return await self.get_user("@me")
+
+    async def get_user(self, user_id: "Snowflake_Type") -> discord_typings.UserData:
         """
         Get a user object for a given user ID.
 
-        parameters:
+        Args:
             user_id: The user to get.
-        returns:
-            user
+
+        Returns:
+            The user object.
 
         """
         return await self.request(Route("GET", f"/users/{user_id}"))
 
-    async def modify_client_user(self, payload: dict) -> dict:
+    async def modify_client_user(self, payload: dict) -> discord_typings.UserData:
         """
         Modify the user account settings.
 
-        parameters:
+        Args:
             payload: The data to send.
 
         """
         return await self.request(Route("PATCH", "/users/@me"), data=payload)
 
-    async def get_user_guilds(self) -> list:
+    async def get_user_guilds(self) -> List[discord_typings.GuildData]:
         """
         Returns a list of partial guild objects the current user is a member of.
 
@@ -44,31 +56,31 @@ class UserRequests:
         """
         return await self.request(Route("GET", "/users/@me/guilds"))
 
-    async def leave_guild(self, guild_id) -> dict:
+    async def leave_guild(self, guild_id: "Snowflake_Type") -> None:
         """
         Leave a guild. Returns a 204 empty response on success.
 
-        parameters:
+        Args:
             guild_id: The guild to leave from.
 
         """
         return await self.request(Route("DELETE", f"/users/@me/guilds/{guild_id}"))
 
-    async def create_dm(self, recipient_id) -> dict:
+    async def create_dm(self, recipient_id: "Snowflake_Type") -> discord_typings.DMChannelData:
         """
         Create a new DM channel with a user. Returns a DM channel object.
 
-        parameters:
+        Args:
             recipient_id: The recipient to open a DM channel with.
 
         """
         return await self.request(Route("POST", "/users/@me/channels"), data={"recipient_id": recipient_id})
 
-    async def create_group_dm(self, payload: dict) -> dict:
+    async def create_group_dm(self, payload: dict) -> discord_typings.GroupDMChannelData:
         """
         Create a new group DM channel with multiple users.
 
-        parameters:
+        Args:
             payload: The data to send.
 
         """
@@ -89,7 +101,7 @@ class UserRequests:
         """
         Adds a recipient to a Group DM using their access token.
 
-        parameters:
+        Args:
             channel_id: The ID of the group dm
             user_id: The ID of the user to add
             access_token: Access token of a user that has granted your app the gdm.join scope
@@ -105,7 +117,7 @@ class UserRequests:
         """
         Remove a recipient from the group dm.
 
-        parameters:
+        Args:
             channel_id: The ID of the group dm
             user_id: The ID of the user to remove
 
@@ -116,7 +128,7 @@ class UserRequests:
         """
         Modifies the nickname of the current user in a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild
             nickname: The new nickname to use
 

@@ -1,11 +1,15 @@
 import functools
 import inspect
 import re
-from typing import Callable, Iterable, List, Optional, Any
+from typing import Callable, Iterable, List, Optional, Any, Union
 
-__all__ = ["escape_mentions", "find", "wrap_partial", "get_parameters"]
+import dis_snek.api.events as events
+from dis_snek.client.const import T
+
+__all__ = ["escape_mentions", "find", "find_all", "get", "get_all", "wrap_partial", "get_parameters", "get_event_name"]
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
+camel_to_snake = re.compile(r"([A-Z]+)")
 
 
 def escape_mentions(content: str) -> str:
@@ -25,7 +29,7 @@ def escape_mentions(content: str) -> str:
     return mention_reg.sub("@\u200b\\1", content)
 
 
-def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
+def find(predicate: Callable[[T], bool], sequence: Iterable[T]) -> Optional[T]:
     """
     Find the first element in a sequence that matches the predicate.
 
@@ -47,7 +51,7 @@ def find(predicate: Callable, sequence: Iterable) -> Optional[Any]:
     return None
 
 
-def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
+def find_all(predicate: Callable[[T], bool], sequence: Iterable[T]) -> List[T]:
     """
     Find all elements in a sequence that match the predicate.
 
@@ -66,7 +70,7 @@ def find_all(predicate: Callable, sequence: Iterable) -> List[Any]:
     return [el for el in sequence if predicate(el)]
 
 
-def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
+def get(sequence: Iterable[T], **kwargs: Any) -> Optional[T]:
     """
     Find the first element in a sequence that matches all attrs.
 
@@ -81,6 +85,7 @@ def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
 
     Returns:
         A match if found, otherwise None
+
     """
     if not kwargs:
         return sequence[0]
@@ -93,7 +98,7 @@ def get(sequence: Iterable, **kwargs: Any) -> Optional[Any]:
     return None
 
 
-def get_all(sequence: Iterable, **kwargs: Any) -> List[Any]:
+def get_all(sequence: Iterable[T], **kwargs: Any) -> List[T]:
     """
     Find all elements in a sequence that match all attrs.
 
@@ -108,6 +113,7 @@ def get_all(sequence: Iterable, **kwargs: Any) -> List[Any]:
 
     Returns:
         A list of matches
+
     """
     if not kwargs:
         return sequence
@@ -136,7 +142,7 @@ def wrap_partial(obj, cls) -> Callable:
         The original command object with its callback methods wrapped
 
     """
-    if isinstance(obj.callback, functools.partial):
+    if obj.callback is None or isinstance(obj.callback, functools.partial):
         return obj
     if "_no_wrap" not in getattr(obj.callback, "__name__", ""):
         obj.callback = functools.partial(obj.callback, cls)
@@ -156,4 +162,40 @@ def wrap_partial(obj, cls) -> Callable:
 
 
 def get_parameters(callback: Callable) -> dict[str, inspect.Parameter]:
+    """
+    Gets all the parameters of a callback.
+
+    Args:
+        callback: The callback to get the parameters of
+
+    Returns:
+        A dictionary of parameters
+
+    """
     return {p.name: p for p in inspect.signature(callback).parameters.values()}
+
+
+def get_event_name(event: Union[str, "events.BaseEvent"]) -> str:
+    """
+    Get the event name smartly from an event class or string name.
+
+    Args:
+        event: The event to parse the name of
+
+    Returns:
+        The event name
+
+    """
+    name = event
+
+    if inspect.isclass(name) and issubclass(name, events.BaseEvent):
+        name = name.__name__
+
+    # convert CamelCase to snake_case
+    name = camel_to_snake.sub(r"_\1", name).lower()
+    # remove any leading underscores
+    name = name.lstrip("_")
+    # remove any `on_` prefixes
+    name = name.removeprefix("on_")
+
+    return name

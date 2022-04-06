@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Union
 
-import attr
-
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 __all__ = ["Asset"]
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Asset:
     """
     Represents a discord asset.
@@ -26,17 +25,30 @@ class Asset:
 
     BASE = "https://cdn.discordapp.com"
 
-    _client: "Snake" = attr.field(metadata=no_export_meta)
-    _url: str = attr.field()
-    hash: Optional[str] = attr.field(default=None)
+    _client: "Snake" = field(metadata=no_export_meta)
+    _url: str = field(repr=True)
+    hash: Optional[str] = field(repr=True, default=None)
 
     @classmethod
     def from_path_hash(cls, client: "Snake", path: str, asset_hash: str) -> "Asset":
+        """
+        Create an asset from a path and asset's hash.
+
+        Args:
+            client: The snake bot instance
+            path: The CDN Endpoints for the type of asset.
+            asset_hash: The hash representation of the target asset.
+
+        Returns:
+            A new Asset object
+
+        """
         url = f"{cls.BASE}/{path.format(asset_hash)}"
         return cls(client=client, url=url, hash=asset_hash)
 
     @property
     def url(self) -> str:
+        """The URL of this asset."""
         ext = ".gif" if self.animated else ".png"
         return f"{self._url}{ext}?size=4096"
 
@@ -50,8 +62,8 @@ class Asset:
         Fetch the asset from the Discord CDN.
 
         Args:
-            extension: File extension
-            size: File size
+            extension: File extension based on the target image format
+            size: The image size, can be any power of two between 16 and 4096.
 
         Returns:
             Raw byte array of the file
@@ -79,17 +91,17 @@ class Asset:
         self, fd: Union[str, bytes, "PathLike", int], extension: Optional[str] = None, size: Optional[int] = None
     ) -> int:
         """
-        Save the asset to a file.
+        Save the asset to a local file.
 
         Args:
-            fd: File destination
-            extention: File extension
-            size: File size
+            fd: Destination path to save the file to.
+            extension: File extension based on the target image format.
+            size: The image size, can be any power of two between 16 and 4096.
 
-        Return:
-            Status code
+        Returns:
+            Status code result of file write
 
         """
-        content = await self.get(extension=extension, size=size)
+        content = await self.fetch(extension=extension, size=size)
         with open(fd, "wb") as f:
             return f.write(content)

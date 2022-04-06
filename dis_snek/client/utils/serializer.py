@@ -2,12 +2,12 @@ from base64 import b64encode
 from datetime import datetime, timezone
 from io import IOBase
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from attr import fields, has
 
-from dis_snek.client.const import MISSING
-from dis_snek.models.discord.file import File
+from dis_snek.client.const import MISSING, T
+from dis_snek.models.discord.file import UPLOADABLE_TYPE, File
 
 __all__ = ["no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter_missing", "to_image_data"]
 
@@ -15,10 +15,21 @@ no_export_meta = {"no_export": True}
 
 
 def export_converter(converter) -> dict:
+    """Makes it easier to quickly type attr export converter metadata."""
     return {"export_converter": converter}
 
 
 def to_dict(inst) -> dict:
+    """
+    Converts an instance to a dict.
+
+    Args:
+        inst: The instance to convert.
+
+    Returns:
+        The processed dict.
+
+    """
     if (converter := getattr(inst, "as_dict", None)) is not None:
         return converter()
 
@@ -44,7 +55,17 @@ def to_dict(inst) -> dict:
     return d
 
 
-def _to_dict_any(inst):
+def _to_dict_any(inst: T) -> dict | list | str | T:
+    """
+    Converts any type to a dict.
+
+    Args:
+        inst: The instance to convert.
+
+    Returns:
+        The processed dict.
+
+    """
     if has(inst.__class__):
         return to_dict(inst)
     elif isinstance(inst, dict):
@@ -61,14 +82,44 @@ def _to_dict_any(inst):
 
 
 def dict_filter_none(data: dict) -> dict:
+    """
+    Filters out all values that are None.
+
+    Args:
+        data: The dict data to filter.
+
+    Returns:
+        The filtered dict data.
+
+    """
     return {k: v for k, v in data.items() if v is not None}
 
 
 def dict_filter_missing(data: dict) -> dict:
+    """
+    Filters out all values that are MISSING sentinel.
+
+    Args:
+        data: The dict data to filter.
+
+    Returns:
+        The filtered dict data.
+
+    """
     return {k: v for k, v in data.items() if v is not MISSING}
 
 
-def to_image_data(imagefile: Optional[Union["File", "IOBase", "Path", str, bytes]]) -> Optional[str]:
+def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
+    """
+    Converts an image file to base64 encoded image data for discord api.
+
+    Args:
+        imagefile: The target image file to encode.
+
+    Returns:
+        The base64 encoded image data.
+
+    """
     match imagefile:
         case bytes():
             image_data = imagefile
@@ -90,6 +141,16 @@ def to_image_data(imagefile: Optional[Union["File", "IOBase", "Path", str, bytes
 
 
 def _get_file_mimetype(filedata: bytes) -> str:
+    """
+    Gets the mimetype of a file based on file signature.
+
+    Args:
+        filedata: The file data to process.
+
+    Returns:
+        The mimetype of the file.
+
+    """
     if filedata.startswith((b"GIF87a", b"GIF89a")):
         return "image/gif"
     elif filedata.startswith(b"\x89PNG\x0D\x0A\x1A\x0A"):

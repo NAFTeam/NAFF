@@ -1,7 +1,12 @@
 from typing import TYPE_CHECKING, List, Any
 
+import discord_typings
+
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
+
+__all__ = ["EmojiRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -10,11 +15,11 @@ if TYPE_CHECKING:
 class EmojiRequests:
     request: Any
 
-    async def get_all_guild_emoji(self, guild_id: "Snowflake_Type") -> List[dict]:
+    async def get_all_guild_emoji(self, guild_id: "Snowflake_Type") -> List[discord_typings.EmojiData]:
         """
         Get all the emoji from a guild.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query.
 
         Returns:
@@ -23,11 +28,13 @@ class EmojiRequests:
         """
         return await self.request(Route("GET", f"/guilds/{guild_id}/emojis"))
 
-    async def get_guild_emoji(self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type") -> dict:
+    async def get_guild_emoji(
+        self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type"
+    ) -> discord_typings.EmojiData:
         """
         Get a specific guild emoji object.
 
-        parameters:
+        Args:
             guild_id: The ID of the guild to query
             emoji_id: The ID of the emoji to get
 
@@ -42,11 +49,11 @@ class EmojiRequests:
 
     async def create_guild_emoji(
         self, payload: dict, guild_id: "Snowflake_Type", reason: Absent[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.EmojiData:
         """
         Create a guild emoji.
 
-        parameters:
+        Args:
             payload: The emoji's data
             guild_id: The ID of the guild
             reason: The reason for this creation
@@ -59,11 +66,11 @@ class EmojiRequests:
 
     async def modify_guild_emoji(
         self, payload: dict, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Absent[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.EmojiData:
         """
         Modify an existing guild emoji.
 
-        parameters:
+        Args:
             payload: The emoji's data
             guild_id: The ID of the guild
             emoji_id: The ID of the emoji to update

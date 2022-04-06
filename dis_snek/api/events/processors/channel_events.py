@@ -19,13 +19,7 @@ log = logging.getLogger(logger_name)
 class ChannelEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_channel_create(self, event: "RawGatewayEvent") -> None:
-
-        channel = BaseChannel.from_dict_factory(event.data, self)
-        if guild := channel.guild:
-            # delete references to this channel in the parent guild
-            guild._channel_ids.add(channel.id)
-        # delete this channel from the cache
-        self.cache.channel_cache.pop(channel.id, None)
+        channel = self.cache.place_channel_data(event.data)
         self.dispatch(events.ChannelCreate(channel))
 
     @Processor.define()
@@ -33,20 +27,19 @@ class ChannelEvents(EventMixinTemplate):
         # for some reason this event returns the deleted object?
         # so we cache it regardless
         channel = self.cache.place_channel_data(event.data)
-        if guild := channel.guild:
+        if guild := getattr(channel, "guild", None):
             guild._channel_ids.discard(channel.id)
         self.dispatch(events.ChannelDelete(channel))
 
     @Processor.define()
     async def _on_raw_channel_update(self, event: "RawGatewayEvent") -> None:
-        before = copy.copy(await self.cache.fetch_channel(channel_id=event.data.get("id"), request_fallback=False))
+        before = copy.copy(self.cache.get_channel(event.data.get("id")))
         self.dispatch(events.ChannelUpdate(before=before or MISSING, after=self.cache.place_channel_data(event.data)))
 
     @Processor.define()
     async def _on_raw_channel_pins_update(self, event: "RawGatewayEvent") -> None:
         channel = await self.cache.fetch_channel(event.data.get("channel_id"))
         channel.last_pin_timestamp = event.data.get("last_pin_timestamp")
-        self.cache.channel_cache[channel.id] = channel
         self.dispatch(events.ChannelPinsUpdate(channel, channel.last_pin_timestamp))
 
     @Processor.define()

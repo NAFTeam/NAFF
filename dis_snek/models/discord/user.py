@@ -1,10 +1,6 @@
 import logging
 from datetime import datetime
-from io import IOBase
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
-
-import attr
 
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
@@ -17,6 +13,7 @@ from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
 from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.snowflake import Snowflake_Type
 from dis_snek.models.discord.snowflake import to_snowflake
@@ -27,8 +24,9 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
-    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM
+    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM, GuildVoice
     from dis_snek.models.discord.file import File
+    from dis_snek.models.discord.voice_state import VoiceState
 
 __all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
 
@@ -51,7 +49,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
     discriminator: int = field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
     avatar: "Asset" = field(metadata=docs("The user's default avatar"))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.tag
 
     @classmethod
@@ -80,11 +78,11 @@ class BaseUser(DiscordObject, _SendDMMixin):
 
     async def fetch_dm(self) -> "DM":
         """Fetch the DM channel associated with this user."""
-        return await self._client.cache.fetch_channel(self.id)  # noqa
+        return await self._client.cache.fetch_dm_channel(self.id)  # noqa
 
-    def get_dm(self) -> "DM":
+    def get_dm(self) -> Optional["DM"]:
         """Get the DM channel associated with this user."""
-        return self._client.cache.get_channel(self.id)  # noqa
+        return self._client.cache.get_dm_channel(self.id)  # noqa
 
     @property
     def mutual_guilds(self) -> List["Guild"]:
@@ -144,25 +142,33 @@ class User(BaseUser):
 
 @define()
 class SnakeBotUser(User):
-    verified: bool = field(repr=True, metadata={"docs": ""})
-    mfa_enabled: bool = field(default=False, metadata={"docs": ""})
-    email: Optional[str] = field(default=None, metadata={"docs": ""})  # needs special permissions?
-    locale: Optional[str] = field(default=None, metadata={"docs": ""})
+    verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
+    mfa_enabled: bool = field(
+        default=False, metadata={"docs": "Whether the user has two factor enabled on their account"}
+    )
+    email: Optional[str] = field(default=None, metadata={"docs": "the user's email"})  # needs special permissions?
+    locale: Optional[str] = field(default=None, metadata={"docs": "the user's chosen language option"})
     bio: Optional[str] = field(default=None, metadata={"docs": ""})
-    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": ""})
+    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": "the flags on a user's account"})
 
-    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": ""})
+    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": "All the guilds the user is in"})
 
-    def _add_guilds(self, guild_ids: Set["Snowflake_Type"]):
+    def _add_guilds(self, guild_ids: Set["Snowflake_Type"]) -> None:
+        """
+        Add the guilds that the user is in to the internal reference.
+
+        Args:
+            guild_ids: The guild ids to add
+
+        """
         self._guild_ids |= guild_ids
 
     @property
     def guilds(self) -> List["Guild"]:
-        return [self._client.cache.guild_cache.get(g_id) for g_id in self._guild_ids]
+        """The guilds the user is in."""
+        return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
-    async def edit(
-        self, username: Absent[str] = MISSING, avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING
-    ) -> None:
+    async def edit(self, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
         """
         Edit the client's user.
 
@@ -204,7 +210,7 @@ class SnakeBotUser(User):
             self._client.cache.place_user_data(resp)
 
 
-@attr.s(**{k: v for k, v in class_defaults.items() if k != "on_setattr"})
+@define()
 class Member(DiscordObject, _SendDMMixin):
     bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
@@ -268,24 +274,17 @@ class Member(DiscordObject, _SendDMMixin):
     @property
     def user(self) -> "User":
         """Returns this member's user object."""
-        return self._client.cache.user_cache.get(self.id)
+        return self._client.cache.get_user(self.id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.user.tag
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         # this allows for transparent access to user attributes
         try:
             return getattr(self.user, name)
         except AttributeError as e:
             raise AttributeError(f"Neither `User` or `Member` have attribute {name}") from e
-
-    def __setattr__(self, key, value):
-        # this allows for transparent access to user attributes
-        if attrib := getattr(self.__attrs_attrs__, key):
-            value = attr.setters.convert(self, attrib, value)
-            value = attr.setters.validate(self, attrib, value)
-        super(Member, self).__setattr__(key, value)
 
     @property
     def nickname(self) -> str:
@@ -293,13 +292,14 @@ class Member(DiscordObject, _SendDMMixin):
         return self.nick
 
     @nickname.setter
-    def nickname(self, nickname) -> None:
+    def nickname(self, nickname: str) -> None:
+        """Sets the member's nickname."""
         self.nick = nickname
 
     @property
     def guild(self) -> "Guild":
         """The guild object this member is from."""
-        return self._client.cache.guild_cache.get(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)
 
     @property
     def roles(self) -> List["Role"]:
@@ -348,6 +348,11 @@ class Member(DiscordObject, _SendDMMixin):
             return Permissions.ALL
 
         return permissions
+
+    @property
+    def voice(self) -> Optional["VoiceState"]:
+        """Returns the voice state of this user if any."""
+        return self._client.cache.get_voice_state(self.id)
 
     def has_permission(self, *permissions: Permissions) -> bool:
         """
@@ -431,7 +436,10 @@ class Member(DiscordObject, _SendDMMixin):
             Leave `new_nickname` empty to clean user's nickname
 
         """
-        await self._client.http.modify_current_member(self._guild_id, nickname=new_nickname, reason=reason)
+        if self.id == self._client.user.id:
+            await self._client.http.modify_current_member(self._guild_id, nickname=new_nickname, reason=reason)
+        else:
+            await self._client.http.modify_guild_member(self._guild_id, self.id, nickname=new_nickname, reason=reason)
 
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
@@ -508,7 +516,7 @@ class Member(DiscordObject, _SendDMMixin):
         """
         await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
 
-    async def ban(self, delete_message_days=0, reason: Absent[str] = MISSING) -> None:
+    async def ban(self, delete_message_days: int = 0, reason: Absent[str] = MISSING) -> None:
         """
         Ban a member from the guild.
 

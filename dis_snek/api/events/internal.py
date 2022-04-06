@@ -23,11 +23,25 @@ These are events dispatched by the client. This is intended as a reference so yo
 import re
 from typing import TYPE_CHECKING
 
-import attr
-
 from dis_snek.client.const import MISSING
 from dis_snek.models.discord.snowflake import to_snowflake
-from dis_snek.client.utils.attr_utils import docs
+from dis_snek.client.utils.attr_utils import define, field, docs
+
+__all__ = [
+    "BaseEvent",
+    "Button",
+    "Component",
+    "Connect",
+    "Disconnect",
+    "GuildEvent",
+    "Login",
+    "Ready",
+    "Resume",
+    "Select",
+    "Startup",
+    "WebsocketReady",
+]
+
 
 if TYPE_CHECKING:
     from dis_snek import Snake
@@ -38,52 +52,55 @@ if TYPE_CHECKING:
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
 
-@attr.s()
+@define(slots=False)
 class BaseEvent:
     """A base event that all other events inherit from."""
 
-    override_name: str = attr.ib(kw_only=True, default=None)
-    bot: "Snake" = attr.ib(kw_only=True, default=MISSING)
+    override_name: str = field(kw_only=True, default=None)
+    """Custom name of the event to be used when dispatching."""
+    bot: "Snake" = field(kw_only=True, default=MISSING)
+    """The client instance that dispatched this event."""
 
     @property
     def resolved_name(self) -> str:
+        """The name of the event, defaults to the class name if not overridden."""
         name = self.override_name or self.__class__.__name__
         return _event_reg.sub("_", name).lower()
 
 
-@attr.s()
+@define(slots=False, kw_only=False)
 class GuildEvent:
     """A base event that adds guild_id."""
 
-    guild_id: "Snowflake_Type" = attr.ib(metadata=docs("The ID of the guild"), converter=to_snowflake)
+    guild_id: "Snowflake_Type" = field(metadata=docs("The ID of the guild"), converter=to_snowflake)
 
     @property
     def guild(self) -> "Guild":
         """Guild related to event"""
-        return self.bot.cache.guild_cache.get(self.guild_id)
+        return self.bot.cache.get_guild(self.guild_id)
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Login(BaseEvent):
     """The bot has just logged in."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Connect(BaseEvent):
     """The bot is now connected to the discord Gateway."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Resume(BaseEvent):
     """The bot has resumed its connection to the discord Gateway."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Disconnect(BaseEvent):
     """The bot has just disconnected."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Startup(BaseEvent):
     """
     The client is now ready for the first time.
@@ -94,7 +111,7 @@ class Startup(BaseEvent):
     """
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Ready(BaseEvent):
     """
     The client is now ready.
@@ -106,25 +123,25 @@ class Ready(BaseEvent):
     """
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class WebsocketReady(BaseEvent):
     """The gateway has reported that it is ready."""
 
-    data: dict = attr.ib(metadata=docs("The data from the ready event"))
+    data: dict = field(metadata=docs("The data from the ready event"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Component(BaseEvent):
     """Dispatched when a user uses a Component."""
 
-    context: "ComponentContext" = attr.ib(metadata=docs("The context of the interaction"))
+    context: "ComponentContext" = field(metadata=docs("The context of the interaction"))
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Button(Component):
     """Dispatched when a user uses a Button."""
 
 
-@attr.s(slots=True)
+@define(kw_only=False)
 class Select(Component):
     """Dispatched when a user uses a Select."""

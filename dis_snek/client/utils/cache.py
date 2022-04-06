@@ -1,24 +1,42 @@
 import time
 from collections import OrderedDict
 from collections.abc import ItemsView, ValuesView
-from typing import Any
+from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
-import attr
+import attrs
+
+from dis_snek.client.utils.attr_utils import define, field
 
 __all__ = ["TTLItem", "TTLCache"]
 
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
-@attr.s(slots=True)
-class TTLItem:
-    value: Any = attr.ib()
-    expire: float = attr.ib()
 
-    def is_expired(self, timestamp) -> bool:
+@define(kw_only=False)
+class TTLItem(Generic[VT]):
+    value: VT = field()
+    expire: float = field()
+    """When the item expires in cache."""
+
+    def is_expired(self, timestamp: float) -> bool:
+        """
+        Check if the item is expired.
+
+        Args:
+            timestamp: The current timestamp to compare against.
+
+        Returns:
+            True if the item is expired, False otherwise.
+
+        """
         return timestamp >= self.expire
 
 
-class TTLCache(OrderedDict):
-    def __init__(self, ttl=600, soft_limit=50, hard_limit=250, on_expire=None):
+class TTLCache(OrderedDict[KT, TTLItem[VT]]):
+    def __init__(
+        self, ttl: int = 600, soft_limit: int = 50, hard_limit: int = 250, on_expire: Optional[Callable] = None
+    ) -> None:
         super().__init__()
 
         self.ttl = ttl
@@ -26,7 +44,7 @@ class TTLCache(OrderedDict):
         self.soft_limit = min(soft_limit, hard_limit)
         self.on_expire = on_expire
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: KT, value: VT) -> None:
         expire = time.monotonic() + self.ttl
         item = TTLItem(value, expire)
         super().__setitem__(key, item)
@@ -34,24 +52,24 @@ class TTLCache(OrderedDict):
 
         self.expire()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: KT) -> VT:
         # Will not (should not) reset expiration!
         item = super().__getitem__(key)
         # self._reset_expiration(key, item)
         return item.value
 
-    def pop(self, key, default=attr.NOTHING) -> Any:
+    def pop(self, key: KT, default=attrs.NOTHING) -> VT:
         if key in self:
             item = self[key]
             del self[key]
-            return item.value
+            return item
 
-        if default is attr.NOTHING:
+        if default is attrs.NOTHING:
             raise KeyError(key)
 
         return default
 
-    def get(self, key, default=None, reset_expiration=True) -> Any:
+    def get(self, key: KT, default: Optional[VT] = None, reset_expiration: bool = True) -> VT:
         item = super().get(key, default)
         if item is not default:
             if reset_expiration:
@@ -60,17 +78,17 @@ class TTLCache(OrderedDict):
 
         return default
 
-    def values(self) -> ValuesView:
+    def values(self) -> ValuesView[VT]:
         return _CacheValuesView(self)
 
     def items(self) -> ItemsView:
         return _CacheItemsView(self)
 
-    def _reset_expiration(self, key: Any, item: TTLItem):
+    def _reset_expiration(self, key: KT, item: TTLItem) -> None:
         self.move_to_end(key)
         item.expire = time.monotonic() + self.ttl
 
-    def _first_item(self):
+    def _first_item(self) -> Tuple[KT, TTLItem[VT]]:
         return next(super().items().__iter__())
 
     def expire(self) -> None:
@@ -97,35 +115,35 @@ class TTLCache(OrderedDict):
 
 
 class _CacheValuesView(ValuesView):
-    def __contains__(self, value):
+    def __contains__(self, value) -> bool:
         for key in self._mapping:
             v = self._mapping.get(key, reset_expiration=False)
             if v is value or v == value:
                 return True
         return False
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         for key in self._mapping:
             yield self._mapping.get(key, reset_expiration=False)
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[Any]:
         for key in reversed(self._mapping):
             yield self._mapping.get(key, reset_expiration=False)
 
 
 class _CacheItemsView(ItemsView):
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         key, value = item
-        v = self._mapping.get(key, default=attr.NOTHING, reset_expiration=False)
-        if v is attr.NOTHING:
+        v = self._mapping.get(key, default=attrs.NOTHING, reset_expiration=False)
+        if v is attrs.NOTHING:
             return False
         else:
             return v is value or v == value
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[Any, Any]]:
         for key in self._mapping:
             yield key, self._mapping.get(key, reset_expiration=False)
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[Tuple[Any, Any]]:
         for key in reversed(self._mapping):
             yield key, self._mapping.get(key, reset_expiration=False)

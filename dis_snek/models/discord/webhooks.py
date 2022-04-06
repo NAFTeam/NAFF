@@ -1,28 +1,24 @@
 from enum import IntEnum
 from typing import Optional, TYPE_CHECKING, Union, Dict, Any, List
-
-import attr
+import re
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import ForeignWebhookException, EmptyMessageException
 from dis_snek.client.mixins.send import SendMixin
-from dis_snek.client.utils.attr_utils import define
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.message import process_message_payload
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
 
 if TYPE_CHECKING:
-    from io import IOBase
-    from pathlib import Path
-
+    from dis_snek.models.discord.file import UPLOADABLE_TYPE
     from dis_snek.client import Snake
     from dis_snek.models.discord.enums import MessageFlags
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from dis_snek.models.discord.components import BaseComponent
     from dis_snek.models.discord.embed import Embed
-    from dis_snek.models import File
 
     from dis_snek.models.discord.message import (
         AllowedMentions,
@@ -43,34 +39,55 @@ class WebhookTypes(IntEnum):
     """Application webhooks are webhooks used with Interactions"""
 
 
-@define
+@define()
 class Webhook(DiscordObject, SendMixin):
-    type: WebhookTypes = attr.ib()
+    type: WebhookTypes = field()
     """The type of webhook"""
 
-    application_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    application_id: Optional["Snowflake_Type"] = field(default=None)
     """the bot/OAuth2 application that created this webhook"""
 
-    guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    guild_id: Optional["Snowflake_Type"] = field(default=None)
     """the guild id this webhook is for, if any"""
-    channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    channel_id: Optional["Snowflake_Type"] = field(default=None)
     """the channel id this webhook is for, if any"""
-    user_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    user_id: Optional["Snowflake_Type"] = field(default=None)
     """the user this webhook was created by"""
 
-    name: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = field(default=None)
     """the default name of the webhook"""
-    avatar: Optional[str] = attr.ib(default=None)
+    avatar: Optional[str] = field(default=None)
     """the default user avatar hash of the webhook"""
-    token: str = attr.ib(default=MISSING)
+    token: str = field(default=MISSING)
     """the secure token of the webhook (returned for Incoming Webhooks)"""
-    url: Optional[str] = attr.ib(default=None)
+    url: Optional[str] = field(default=None)
     """the url used for executing the webhook (returned by the webhooks OAuth2 flow)"""
 
-    source_guild_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    source_guild_id: Optional["Snowflake_Type"] = field(default=None)
     """the guild of the channel that this webhook is following (returned for Channel Follower Webhooks)"""
-    source_channel_id: Optional["Snowflake_Type"] = attr.ib(default=None)
+    source_channel_id: Optional["Snowflake_Type"] = field(default=None)
     """the channel that this webhook is following (returned for Channel Follower Webhooks)"""
+
+    @classmethod
+    def from_url(cls, url: str, client: "Snake") -> "Webhook":
+        """
+        Webhook object from a URL.
+
+        Args:
+            client: The client to use to make the request.
+            url: Webhook URL
+
+        Returns:
+            A Webhook object.
+
+        """
+        match = re.search(r"discord(?:app)?\.com/api/webhooks/(?P<id>[0-9]{17,})/(?P<token>[\w\-.]{60,68})", url)
+        if match is None:
+            raise ValueError("Invalid webhook URL given.")
+
+        data: Dict[str, Any] = match.groupdict()
+        data["type"] = WebhookTypes.INCOMING
+        return cls.from_dict(data, client)
 
     @classmethod
     async def create(
@@ -78,7 +95,7 @@ class Webhook(DiscordObject, SendMixin):
         client: "Snake",
         channel: Union["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"],
         name: str,
-        avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
+        avatar: Absent["UPLOADABLE_TYPE"] = MISSING,
     ) -> "Webhook":
         """
         Create a webhook.
@@ -90,7 +107,7 @@ class Webhook(DiscordObject, SendMixin):
             avatar: An optional default avatar to use
 
         Returns:
-            New webhook
+            New webhook object
 
         Raises:
             ValueError: If you try to name the webhook "Clyde"
@@ -121,7 +138,7 @@ class Webhook(DiscordObject, SendMixin):
     async def edit(
         self,
         name: Absent[str] = MISSING,
-        avatar: Absent[Union["File", "IOBase", "Path", str, bytes]] = MISSING,
+        avatar: Absent["UPLOADABLE_TYPE"] = MISSING,
         channel_id: Absent["Snowflake_Type"] = MISSING,
     ) -> None:
         """
@@ -159,8 +176,8 @@ class Webhook(DiscordObject, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         username: str = None,
@@ -230,11 +247,31 @@ class Webhook(DiscordObject, SendMixin):
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union["File", "IOBase", "Path", str, List[Union["File", "IOBase", "Path", str]]]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
     ) -> Optional["Message"]:
+        """
+        Edit a message as this webhook.
+
+        Args:
+            message: Message to edit
+            content: Message text content.
+            embeds: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            reply_to: Message to reference, must be from the same channel.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
+
+        Returns:
+            Updated message object that was sent if `wait` is set to True
+
+        """
         message_payload = process_message_payload(
             content=content,
             embeds=embeds,

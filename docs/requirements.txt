@@ -1,8 +1,0 @@
-aiohttp
-attrs>=21.2.0
-discord_typings
-git+https://github.com/LordOfPolls/pytkdocs.git
-mkdocs-autorefs
-mkdocs-awesome-pages-plugin
-mkdocs-material
-mkdocstrings

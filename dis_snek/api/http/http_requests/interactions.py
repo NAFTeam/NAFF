@@ -1,7 +1,12 @@
 from typing import TYPE_CHECKING, Any, Dict, List
 
+import discord_typings
+
 from dis_snek.client.const import GLOBAL_SCOPE
 from ..route import Route
+
+__all__ = ["InteractionRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -16,7 +21,7 @@ class InteractionRequests:
         """
         Delete an existing application command for this application.
 
-        Attributes:
+        Args:
             application_id: the what application to delete for
             guild_id: specify a guild to delete commands from
             command_id The command to delete
@@ -30,15 +35,16 @@ class InteractionRequests:
 
     async def get_application_commands(
         self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type"
-    ) -> List[Dict]:
+    ) -> List[discord_typings.ApplicationCommandData]:
         """
         Get all application commands for this application from discord.
 
-        parameters:
+        Args:
             application_id: the what application to query
             guild_id: specify a guild to get commands from
-        returns:
-            InteractionCommand
+
+        Returns:
+            Application command data
 
         """
         if guild_id == GLOBAL_SCOPE:
@@ -47,11 +53,11 @@ class InteractionRequests:
 
     async def overwrite_application_commands(
         self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
-    ) -> dict:
+    ) -> List[discord_typings.ApplicationCommandData]:
         """
         Take a list of commands and overwrite the existing command list within the given scope
 
-        parameters:
+        Args:
             app_id: The application ID of this bot
             guild_id: The ID of the guild this command is for, if this is a guild command
             data: List of your interaction data
@@ -63,7 +69,7 @@ class InteractionRequests:
 
     async def create_application_command(
         self, app_id: "Snowflake_Type", command: Dict, guild_id: "Snowflake_Type"
-    ) -> dict:
+    ) -> discord_typings.ApplicationCommandData:
         """
         Add a given command to scope.
 
@@ -83,7 +89,7 @@ class InteractionRequests:
         """
         Post an initial response to an interaction.
 
-        parameters:
+        Args:
             payload: the payload to send
             interaction_id: the id of the interaction
             token: the token of the interaction
@@ -95,7 +101,7 @@ class InteractionRequests:
         """
         Send a followup to an interaction.
 
-        parameters:
+        Args:
             payload: the payload to send
             application_id: the id of the application
             token: the token of the interaction
@@ -105,17 +111,17 @@ class InteractionRequests:
 
     async def edit_interaction_message(
         self, payload: dict, application_id: "Snowflake_Type", token: str, message_id: str = "@original"
-    ) -> dict:
+    ) -> discord_typings.MessageData:
         """
         Edits an existing interaction message.
 
-        parameters:
+        Args:
             payload: The payload to send.
             application_id: The id of the application.
             token: The token of the interaction.
             message_id: The target message to edit. Defaults to @original which represents the initial response message.
 
-        returns:
+        Returns:
             The edited message data.
 
         """
@@ -123,17 +129,18 @@ class InteractionRequests:
             Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), data=payload
         )
 
-    async def get_interaction_message(self, application_id: str, token: str, message_id: str = "@original") -> dict:
+    async def get_interaction_message(
+        self, application_id: str, token: str, message_id: str = "@original"
+    ) -> discord_typings.MessageData:
         """
         Gets an existing interaction message.
 
-        parameters:
-            payload: The payload to send.
+        Args:
             application_id: The id of the application.
             token: The token of the interaction.
             message_id: The target message to get. Defaults to @original which represents the initial response message.
 
-        returns:
+        Returns:
             The message data.
 
         """
@@ -145,16 +152,17 @@ class InteractionRequests:
         scope: "Snowflake_Type",
         cmd_id: "Snowflake_Type",
         permissions: List[dict],
-    ) -> dict:
+    ) -> discord_typings.ApplicationCommandPermissionsData:
         """
         Edits command permissions for a specific command.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             cmd_id: The command id to edit
             permissions: The permissions to set to this command
-        returns:
+
+        Returns:
             Guild Application Command Permissions
 
         """
@@ -165,15 +173,16 @@ class InteractionRequests:
 
     async def batch_edit_application_command_permissions(
         self, application_id: "Snowflake_Type", scope: "Snowflake_Type", data: List[dict]
-    ) -> dict:
+    ) -> List[discord_typings.ApplicationCommandPermissionsData]:
         """
         Edit multiple command permissions within a single scope.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             data: The permissions to be set
-        returns:
+
+        Returns:
             array of GuildApplicationCommandPermissions objects
 
         """
@@ -184,15 +193,16 @@ class InteractionRequests:
 
     async def get_application_command_permissions(
         self, application_id: "Snowflake_Type", scope: "Snowflake_Type", cmd_id: "Snowflake_Type"
-    ) -> dict:
+    ) -> List[discord_typings.ApplicationCommandPermissionsData]:
         """
         Get permission data for a command.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
             cmd_id: The command id to edit
-        returns:
+
+        Returns:
             guild application command permissions
 
         """
@@ -202,14 +212,15 @@ class InteractionRequests:
 
     async def batch_get_application_command_permissions(
         self, application_id: "Snowflake_Type", scope: "Snowflake_Type"
-    ) -> dict:
+    ) -> List[discord_typings.ApplicationCommandPermissionsData]:
         """
         Get permission data for all commands in a scope.
 
-        parameters:
+        Args:
             application_id: the id of the application
             scope: The scope this command is in
-        returns:
+
+        Returns:
             list of guild application command permissions
 
         """

@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import logging
-from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine
+from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
 import dis_snek.models.snek as snek
 from dis_snek.client.const import logger_name, MISSING
@@ -33,9 +33,6 @@ class Scale:
                 await ctx.send(f"I was sent from a scale called {self.name}")
         ```
 
-    parameters:
-        bot Snake: A reference to the client
-
     Attributes:
         bot Snake: A reference to the client
         name str: The name of this Scale (`read-only`)
@@ -53,16 +50,19 @@ class Scale:
     scale_checks: List
     scale_prerun: List
     scale_postrun: List
+    scale_error: Optional[Callable[..., Coroutine]]
     _commands: List
+    _listeners: List
     auto_defer: "AutoDefer"
 
-    def __new__(cls, bot: "Snake", *args, **kwargs):
+    def __new__(cls, bot: "Snake", *args, **kwargs) -> "Scale":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
         new_cls.__name = cls.__name__
         new_cls.scale_checks = []
         new_cls.scale_prerun = []
         new_cls.scale_postrun = []
+        new_cls.scale_error = None
         new_cls.auto_defer = MISSING
 
         new_cls.description = kwargs.get("Description", None)
@@ -105,7 +105,7 @@ class Scale:
         return new_cls
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return self.name
 
     @property
@@ -120,6 +120,7 @@ class Scale:
 
     @property
     def name(self) -> str:
+        """Get the name of this Scale."""
         return self.__name
 
     def shed(self) -> None:
@@ -159,7 +160,6 @@ class Scale:
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.bot = bot
                 self.add_scale_check(self.example)
 
             @staticmethod
@@ -190,7 +190,6 @@ class Scale:
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.bot = bot
                 self.add_scale_prerun(self.example)
 
             async def example(self, context: Context):
@@ -215,7 +214,6 @@ class Scale:
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.bot = bot
                 self.add_scale_postrun(self.example)
 
             async def example(self, context: Context):
@@ -232,3 +230,23 @@ class Scale:
         if not self.scale_postrun:
             self.scale_postrun = []
         self.scale_postrun.append(coroutine)
+
+    def set_scale_error(self, coroutine: Callable[..., Coroutine]) -> None:
+        """
+        Add a coroutine to handle any exceptions raised in this scale.
+
+        ??? Hint "Example Usage:"
+            ```python
+            def __init__(self, bot):
+                self.set_scale_error(self.example)
+
+        Args:
+            coroutine: The coroutine to run
+
+        """
+        if not asyncio.iscoroutinefunction(coroutine):
+            raise TypeError("Callback must be a coroutine")
+
+        if self.scale_error:
+            log.warning("Scale error callback has been overridden!")
+        self.scale_error = coroutine

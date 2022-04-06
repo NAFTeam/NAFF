@@ -6,7 +6,7 @@ import dis_snek.api.events as events
 
 from dis_snek.client.const import logger_name, MISSING
 from ._template import EventMixinTemplate, Processor
-from dis_snek.models import GuildIntegration, to_snowflake
+from dis_snek.models import GuildIntegration, Sticker, to_snowflake
 from dis_snek.api.events.discord import (
     GuildEmojisUpdate,
     IntegrationCreate,
@@ -14,6 +14,8 @@ from dis_snek.api.events.discord import (
     IntegrationDelete,
     BanCreate,
     BanRemove,
+    GuildStickersUpdate,
+    WebhooksUpdate,
 )
 
 if TYPE_CHECKING:
@@ -58,7 +60,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildUnavailable(
                     guild_id,
-                    await self.cache.fetch_guild(guild_id, False) or MISSING,
+                    self.cache.get_guild(guild_id) or MISSING,
                 )
             )
         else:
@@ -72,7 +74,7 @@ class GuildEvents(EventMixinTemplate):
             self.dispatch(
                 events.GuildLeft(
                     guild_id,
-                    await self.cache.fetch_guild(guild_id, False) or MISSING,
+                    self.cache.get_guild(guild_id) or MISSING,
                 )
             )
 
@@ -117,3 +119,13 @@ class GuildEvents(EventMixinTemplate):
                 after=after,
             )
         )
+
+    @Processor.define()
+    async def _on_raw_guild_stickers_update(self, event: "RawGatewayEvent") -> None:
+        self.dispatch(
+            GuildStickersUpdate(event.data.get("guild_id"), Sticker.from_list(event.data.get("stickers", []), self))
+        )
+
+    @Processor.define()
+    async def _on_raw_webhook_update(self, event: "RawGatewayEvent") -> None:
+        self.dispatch(WebhooksUpdate(event.data.get("guild_id"), event.data.get("channel_id")))

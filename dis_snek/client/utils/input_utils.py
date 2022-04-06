@@ -42,10 +42,11 @@ _pending_regex = _pending_regex.replace("2", f"[{''.join(list(_quotes.values()))
 
 arg_parse = re.compile(_pending_regex)
 white_space = re.compile(r"\s+")
-initial_word = re.compile(r"^([^\s]+)\s*?")
 
 
 class OverriddenJson:
+    """Uses orjson if available, otherwise uses built-in json library."""
+
     @staticmethod
     def dumps(*args, **kwargs) -> str:
         data = json.dumps(*args, **kwargs)
@@ -98,7 +99,4 @@ def get_first_word(text: str) -> Optional[str]:
          The requested word
 
     """
-    found = initial_word.findall(text)
-    if len(found) == 0:
-        return None
-    return found[0]
+    return split[0] if (split := text.split(maxsplit=1)) else None

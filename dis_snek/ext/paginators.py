@@ -3,8 +3,6 @@ import textwrap
 import uuid
 from typing import List, TYPE_CHECKING, Optional, Callable, Coroutine, Union
 
-import attr
-
 from dis_snek import (
     Embed,
     ComponentContext,
@@ -15,6 +13,7 @@ from dis_snek import (
     ComponentCommand,
     get_components_ids,
     Context,
+    MessageContext,
     Message,
     MISSING,
     Snowflake_Type,
@@ -23,6 +22,7 @@ from dis_snek import (
     Color,
     BrandColors,
 )
+from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.serializer import export_converter
 from dis_snek.models.discord.emoji import process_emoji
 
@@ -33,11 +33,14 @@ if TYPE_CHECKING:
 __all__ = ["Paginator"]
 
 
-@attr.s()
+@define(kw_only=False)
 class Timeout:
-    paginator: "Paginator" = attr.ib()
-    run: bool = attr.ib(default=True)
+    paginator: "Paginator" = field()
+    """The paginator that this timeout is associated with."""
+    run: bool = field(default=True)
+    """Whether or not this timeout is currently running."""
     ping: asyncio.Event = asyncio.Event()
+    """The event that is used to wait the paginator action."""
 
     async def __call__(self) -> None:
         while self.run:
@@ -51,83 +54,89 @@ class Timeout:
                 self.ping.clear()
 
 
-@attr.s(auto_detect=True)
+@define(kw_only=False)
 class Page:
-    content: str = attr.ib()
-    title: Optional[str] = attr.ib(default=None)
-    prefix: str = attr.ib(kw_only=True, default="")
-    suffix: str = attr.ib(kw_only=True, default="")
+    content: str = field()
+    """The content of the page."""
+    title: Optional[str] = field(default=None)
+    """The title of the page."""
+    prefix: str = field(kw_only=True, default="")
+    """Content that is prepended to the page."""
+    suffix: str = field(kw_only=True, default="")
+    """Content that is appended to the page."""
 
     @property
     def get_summary(self) -> str:
+        """Get the short version of the page content."""
         return self.title or textwrap.shorten(self.content, 40, placeholder="...")
 
     def to_embed(self) -> Embed:
+        """Process the page to an embed."""
         return Embed(description=f"{self.prefix}\n{self.content}\n{self.suffix}", title=self.title)
 
 
-@attr.s(auto_detect=True)
+@define(kw_only=False)
 class Paginator:
-    client: "Snake" = attr.ib()
+    client: "Snake" = field()
     """The snake client to hook listeners into"""
 
-    page_index: int = attr.ib(kw_only=True, default=0)
+    page_index: int = field(kw_only=True, default=0)
     """The index of the current page being displayed"""
-    pages: List[Page | Embed] = attr.ib(factory=list, kw_only=True)
+    pages: List[Page | Embed] = field(factory=list, kw_only=True)
     """The pages this paginator holds"""
-    timeout_interval: int = attr.ib(default=0, kw_only=True)
+    timeout_interval: int = field(default=0, kw_only=True)
     """How long until this paginator disables itself"""
-    callback: Callable[..., Coroutine] = attr.ib(default=None)
+    callback: Callable[..., Coroutine] = field(default=None)
     """A coroutine to call should the select button be pressed"""
 
-    show_first_button: bool = attr.ib(default=True)
+    show_first_button: bool = field(default=True)
     """Should a `First` button be shown"""
-    show_back_button: bool = attr.ib(default=True)
+    show_back_button: bool = field(default=True)
     """Should a `Back` button be shown"""
-    show_next_button: bool = attr.ib(default=True)
+    show_next_button: bool = field(default=True)
     """Should a `Next` button be shown"""
-    show_last_button: bool = attr.ib(default=True)
+    show_last_button: bool = field(default=True)
     """Should a `Last` button be shown"""
-    show_callback_button: bool = attr.ib(default=False)
+    show_callback_button: bool = field(default=False)
     """Show a button which will call the `callback`"""
-    show_select_menu: bool = attr.ib(default=False)
+    show_select_menu: bool = field(default=False)
     """Should a select menu be shown for navigation"""
 
-    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⏮️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the first button"""
-    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⬅️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the back button"""
-    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="➡️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the next button"""
-    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="⏩", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the last button"""
-    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attr.ib(
+    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
         default="✅", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the callback button"""
 
-    wrong_user_message: str = attr.ib(default="This paginator is not for you")
+    wrong_user_message: str = field(default="This paginator is not for you")
     """The message to be sent when the wrong user uses this paginator"""
 
-    default_title: Optional[str] = attr.ib(default=None)
+    default_title: Optional[str] = field(default=None)
     """The default title to show on the embeds"""
-    default_color: Color = attr.ib(default=BrandColors.BLURPLE)
+    default_color: Color = field(default=BrandColors.BLURPLE)
     """The default colour to show on the embeds"""
-    default_button_color: Union[ButtonStyles, int] = attr.ib(default=ButtonStyles.BLURPLE)
+    default_button_color: Union[ButtonStyles, int] = field(default=ButtonStyles.BLURPLE)
     """The color of the buttons"""
 
-    _uuid: str = attr.ib(factory=uuid.uuid4)
-    _message: Message = attr.ib(default=MISSING)
-    _timeout_task: Timeout = attr.ib(default=MISSING)
-    _author_id: Snowflake_Type = attr.ib(default=MISSING)
+    _uuid: str = field(factory=uuid.uuid4)
+    _message: Message = field(default=MISSING)
+    _timeout_task: Timeout = field(default=MISSING)
+    _author_id: Snowflake_Type = field(default=MISSING)
 
     def __attrs_post_init__(self) -> None:
         self.client.add_component_callback(
@@ -147,22 +156,46 @@ class Paginator:
 
     @property
     def message(self) -> Message:
+        """The message this paginator is currently attached to"""
         return self._message
 
     @property
     def author_id(self) -> Snowflake_Type:
+        """The ID of the author of the message this paginator is currently attached to"""
         return self._author_id
 
     @classmethod
     def create_from_embeds(cls, client: "Snake", *embeds: Embed, timeout: int = 0) -> "Paginator":
-        """Create a paginator system from a list of embeds."""
+        """Create a paginator system from a list of embeds.
+
+        Args:
+            client: A reference to the Snake client
+            embeds: The embeds to use for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
         return cls(client, pages=list(embeds), timeout_interval=timeout)
 
     @classmethod
     def create_from_string(
         cls, client: "Snake", content: str, prefix: str = "", suffix: str = "", page_size: int = 4000, timeout: int = 0
     ) -> "Paginator":
-        """Create a paginator system from a string."""
+        """
+        Create a paginator system from a string.
+
+        Args:
+            client: A reference to the Snake client
+            content: The content to paginate
+            prefix: The prefix for each page to use
+            suffix: The suffix for each page to use
+            page_size: The maximum characters for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
         content_pages = textwrap.wrap(
             content,
             width=page_size - (len(prefix) + len(suffix)),
@@ -173,7 +206,43 @@ class Paginator:
         pages = [Page(c, prefix=prefix, suffix=suffix) for c in content_pages]
         return cls(client, pages=pages, timeout_interval=timeout)
 
-    def create_components(self, disable=False) -> List[ActionRow]:
+    @classmethod
+    def create_from_list(
+        cls,
+        client: "Snake",
+        content: list[str],
+        prefix: str = "",
+        suffix: str = "",
+        page_size: int = 4000,
+        timeout: int = 0,
+    ) -> "Paginator":
+        """
+        Create a paginator from a list of strings. Useful to maintain formatting.
+
+        Args:
+            client: A reference to the Snake client
+            content: The content to paginate
+            prefix: The prefix for each page to use
+            suffix: The suffix for each page to use
+            page_size: The maximum characters for each page
+            timeout: A timeout to wait before closing the paginator
+
+        Returns:
+            A paginator system
+        """
+        pages = []
+        page = ""
+        for entry in content:
+            if len(page) + len(f"\n{entry}") <= page_size:
+                page += f"{entry}\n"
+            else:
+                pages.append(Page(page, prefix=prefix, suffix=suffix))
+                page = ""
+        if page != "":
+            pages.append(Page(page, prefix=prefix, suffix=suffix))
+        return cls(client, pages=pages, timeout_interval=timeout)
+
+    def create_components(self, disable: bool = False) -> List[ActionRow]:
         """
         Create the components for the paginator message.
 
@@ -282,7 +351,25 @@ class Paginator:
 
         if self.timeout_interval > 1:
             self._timeout_task = Timeout(self)
-            self.client.loop.create_task(self._timeout_task())
+            asyncio.create_task(self._timeout_task())
+
+        return self._message
+
+    async def reply(self, ctx: MessageContext) -> Message:
+        """
+        Reply this paginator to ctx.
+
+        Args:
+            ctx: The context to reply this paginator with
+        Returns:
+            The resulting message
+        """
+        self._message = await ctx.reply(**self.to_dict())
+        self._author_id = ctx.author.id
+
+        if self.timeout_interval > 1:
+            self._timeout_task = Timeout(self)
+            asyncio.create_task(self._timeout_task())
 
         return self._message
 
@@ -302,7 +389,7 @@ class Paginator:
         """
         await self._message.edit(**self.to_dict())
 
-    async def _on_button(self, ctx: ComponentContext, *args, **kwargs):
+    async def _on_button(self, ctx: ComponentContext, *args, **kwargs) -> Optional[Message]:
         if ctx.author.id == self.author_id:
             if self._timeout_task:
                 self._timeout_task.ping.set()

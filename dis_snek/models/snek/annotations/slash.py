@@ -4,6 +4,18 @@ import dis_snek.models as models
 
 from dis_snek.models.snek.application_commands import SlashCommandOption
 
+__all__ = [
+    "slash_attachment_option",
+    "slash_bool_option",
+    "slash_channel_option",
+    "slash_float_option",
+    "slash_int_option",
+    "slash_mentionable_option",
+    "slash_role_option",
+    "slash_str_option",
+    "slash_user_option",
+]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.snek import SlashCommandChoice
@@ -53,8 +65,8 @@ def slash_float_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
-        min_value:
-        max_value:
+        min_value: The minimum number allowed
+        max_value: The maximum number allowed
 
     """
     option = SlashCommandOption(
@@ -86,8 +98,8 @@ def slash_int_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
-        min_value:
-        max_value:
+        min_value: The minimum number allowed
+        max_value: The maximum number allowed
 
     """
     option = SlashCommandOption(
@@ -242,6 +254,7 @@ def slash_attachment_option(
     Args:
         description: The description of your option
         required: Is this option required?
+
     """
     option = SlashCommandOption(
         name="placeholder", description=description, required=required, type=models.OptionTypes.ATTACHMENT

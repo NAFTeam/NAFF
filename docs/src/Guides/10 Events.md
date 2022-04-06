@@ -1,6 +1,6 @@
 # Events
 
-Events are dispatched whenever a subscribed event gets send by discord.
+Events are dispatched whenever a subscribed event gets sent by Discord.
 
 ## What Events Can I Get
 

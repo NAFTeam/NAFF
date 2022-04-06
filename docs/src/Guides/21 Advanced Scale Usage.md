@@ -56,7 +56,7 @@ def setup(client):
 
 ## Global Checks
 
-Now you learned how to make checks for a scale right after we tell you to use scales to split your code into different files.
+Now you learned how to make checks for a scale right after we told you to use scales to split your code into different files.
 Ironic, if you want a check for any interaction in any scale.
 
 Lucky you, however, since you seem to have forgotten about python subclassing.

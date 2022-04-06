@@ -6,6 +6,8 @@ Because the library has a habit of mangling the data (_process_dict), these are 
 
 import discord_typings
 
+__all__ = ["SAMPLE_DM_DATA", "SAMPLE_GUILD_DATA", "SAMPLE_USER_DATA"]
+
 
 def SAMPLE_USER_DATA() -> discord_typings.UserData:
     return {

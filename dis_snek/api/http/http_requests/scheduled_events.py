@@ -1,9 +1,14 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, List
 from urllib.parse import urlencode
+
+import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_missing
+
+__all__ = ["ScheduledEventsRequests"]
+
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -12,14 +17,16 @@ if TYPE_CHECKING:
 class ScheduledEventsRequests:
     request: Any
 
-    async def list_schedules_events(self, guild_id: "Snowflake_Type", with_user_count: bool = False) -> list[dict]:
+    async def list_schedules_events(
+        self, guild_id: "Snowflake_Type", with_user_count: bool = False
+    ) -> List[discord_typings.GuildScheduledEventData]:
         """
         Get the scheduled events for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled events from
             with_user_count: Whether to include the user count in the response
-        returns:
+        Returns:
             List of Scheduled Events or None
 
         """
@@ -29,19 +36,21 @@ class ScheduledEventsRequests:
 
     async def get_scheduled_event(
         self, guild_id: "Snowflake_Type", scheduled_event_id: "Snowflake_Type", with_user_count: bool = False
-    ) -> dict:
+    ) -> discord_typings.GuildScheduledEventData:
         """
         Get a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled event from
             with_user_count: Whether to include the user count in the response
-        returns:
+
+        Returns:
             Scheduled Event or None
 
         """
         return await self.request(
-            Route("GET", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}?with_user_count={with_user_count}")
+            Route("GET", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"),
+            params={"with_user_count": with_user_count},
         )
 
     async def create_scheduled_event(
@@ -49,15 +58,16 @@ class ScheduledEventsRequests:
         guild_id: "Snowflake_Type",
         payload: dict,
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> discord_typings.GuildScheduledEventData:
         """
         Create a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to create scheduled event from
             payload: The scheduled event payload
             reason: The reason to be displayed in audit logs
-        returns:
+
+        Returns:
             Scheduled Event or None
 
         """
@@ -69,16 +79,17 @@ class ScheduledEventsRequests:
         scheduled_event_id: "Snowflake_Type",
         payload: dict,
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> discord_typings.GuildScheduledEventData:
         """
         Modify a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to modify scheduled event from
             scheduled_event_id: The scheduled event to modify
             payload: The payload to modify the scheduled event with
             reason: The reason to be displayed in audit logs
-        returns:
+
+        Returns:
             Scheduled Event or None
 
         """
@@ -91,16 +102,14 @@ class ScheduledEventsRequests:
         guild_id: "Snowflake_Type",
         scheduled_event_id: "Snowflake_Type",
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> None:
         """
         Delete a scheduled event for a guild.
 
-        parameters:
+        Args:
             guild_id: The guild to delete scheduled event from
             scheduled_event_id: The scheduled event to delete
             reason: The reason to be displayed in audit logs
-        returns:
-            Scheduled Event or None
 
         """
         return await self.request(
@@ -115,27 +124,24 @@ class ScheduledEventsRequests:
         with_member: bool = False,
         before: "Snowflake_Type" = MISSING,
         after: "Snowflake_Type" = MISSING,
-    ) -> list[dict]:
+    ) -> List[discord_typings.GuildScheduledEventUserData]:
         """
         Get the users for a scheduled event.
 
-        parameters:
+        Args:
             guild_id: The guild to get scheduled event users from
             scheduled_event_id: The scheduled event to get users from
             limit: how many users to receive from the event
             with_member: include guild member data if it exists
             before: consider only users before given user id
             after: consider only users after given user id
-        returns:
+
+        Returns:
             List of Scheduled Event Users or None
 
         """
-        query_params = urlencode(
-            dict_filter_missing({"limit": limit, "with_member": with_member, "before": before, "after": after})
-        )
+        params = {"limit": limit, "with_member": with_member, "before": before, "after": after}
         return await self.request(
-            Route(
-                "GET",
-                f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users?{query_params}",
-            )
+            Route("GET", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users"),
+            params=params,
         )

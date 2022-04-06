@@ -4,24 +4,24 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
-import attr
-
 from dis_snek.models.discord.enums import Intents, Status, ActivityType
 from dis_snek.models.discord.activity import Activity
 from dis_snek.client.errors import SnakeException, WebSocketClosed
 from dis_snek.client.const import logger_name, MISSING, Absent
-from .gateway import WebsocketClient
+from dis_snek.client.utils.attr_utils import define
+from .gateway import GatewayClient
 from dis_snek.api import events
+import dis_snek
 
 if TYPE_CHECKING:
-    from dis_snek import Snake
+    from dis_snek import Snake, Snowflake_Type
 
 __all__ = ["ConnectionState"]
 
 log = logging.getLogger(logger_name)
 
 
-@attr.s(auto_attribs=True)
+@define(kw_only=False)
 class ConnectionState:
     client: "Snake"
     """The bot's client"""
@@ -30,7 +30,7 @@ class ConnectionState:
     shard_id: int
     """The shard ID of this state"""
 
-    gateway: Absent[WebsocketClient] = MISSING
+    gateway: Absent[GatewayClient] = MISSING
     """The websocket connection for the Discord Gateway."""
 
     start_time: Absent[datetime] = MISSING
@@ -38,6 +38,9 @@ class ConnectionState:
 
     gateway_url: str = MISSING
     """The URL that the gateway should connect to."""
+
+    gateway_started: asyncio.Event = asyncio.Event()
+    """Event to check if the gateway has been started."""
 
     _shard_task: asyncio.Task | None = None
 
@@ -53,6 +56,7 @@ class ConnectionState:
 
     @property
     def presence(self) -> dict:
+        """Returns the presence of the bot."""
         return {
             "status": self.client._status,
             "activities": [self.client._activity.to_dict()] if self.client._activity else [],
@@ -66,11 +70,14 @@ class ConnectionState:
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
 
+        self.gateway_started.set()
+
         # Historically this method didn't return until the connection closed
         # so we need to wait for the task to exit.
         await self._shard_task
 
     async def stop(self) -> None:
+        """Disconnect from the Discord Gateway."""
         log.debug(f"Shutting down shard ID {self.shard_id}")
         if self.gateway is not None:
             self.gateway.close()
@@ -80,10 +87,13 @@ class ConnectionState:
             await self._shard_task
             self._shard_task = None
 
+        self.gateway_started.clear()
+
     async def _ws_connect(self) -> None:
+        """Connect to the Discord Gateway."""
         log.info("Attempting to initially connect to gateway...")
         try:
-            async with WebsocketClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
+            async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
                     await self.gateway.run()
                 finally:
@@ -157,3 +167,39 @@ class ConnectionState:
         self.client._status = status
         self.client._activity = activity
         await self.gateway.change_presence(activity.to_dict() if activity else None, status)
+
+    def get_voice_state(self, guild_id: "Snowflake_Type") -> Optional["dis_snek.ActiveVoiceState"]:
+        """
+        Get the bot's voice state for a guild.
+
+        Args:
+            guild_id: The target guild's id.
+
+        Returns:
+            The bot's voice state for the guild if connected, otherwise None.
+
+        """
+        return self.client.cache.get_bot_voice_state(guild_id)
+
+    async def voice_connect(
+        self, guild_id, channel_id, muted: bool = False, deafened: bool = False
+    ) -> "dis_snek.ActiveVoiceState":
+        """
+        Connect to a voice channel.
+
+        Args:
+            guild_id: id of the guild the voice channel is in.
+            channel_id: id of the voice channel client wants to join.
+            muted: Whether the bot should be muted when connected.
+            deafened: Whether the bot should be deafened when connected.
+
+        Returns:
+            The new active voice state on successfully connection.
+
+        """
+        voice_state = dis_snek.ActiveVoiceState(
+            client=self.client, guild_id=guild_id, channel_id=channel_id, self_mute=muted, self_deaf=deafened
+        )
+        await voice_state.connect()
+        self.client.cache.place_bot_voice_state(voice_state)
+        return voice_state

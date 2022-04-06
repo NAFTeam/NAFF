@@ -48,7 +48,7 @@ class Buckets(IntEnum):
         else:
             return context.author.id
 
-    def __call__(self, context: "Context"):
+    def __call__(self, context: "Context") -> Any:
         return self.get_key(context)
 
 
@@ -57,7 +57,7 @@ class Cooldown:
 
     __slots__ = "bucket", "cooldown_repositories", "rate", "interval"
 
-    def __init__(self, cooldown_bucket: Buckets, rate: int, interval: float):
+    def __init__(self, cooldown_bucket: Buckets, rate: int, interval: float) -> None:
         self.bucket: Buckets = cooldown_bucket
         self.cooldown_repositories = {}
         self.rate: int = rate
@@ -151,7 +151,7 @@ class CooldownSystem:
 
     __slots__ = "rate", "interval", "opened", "_tokens"
 
-    def __init__(self, rate: int, interval: float):
+    def __init__(self, rate: int, interval: float) -> None:
         self.rate: int = rate
         self.interval: float = interval
         self.opened: float = 0.0
@@ -232,7 +232,7 @@ class MaxConcurrency:
 
     """
 
-    def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait=False):
+    def __init__(self, concurrent: int, concurrency_bucket: Buckets, wait: bool = False) -> None:
         self.bucket: Buckets = concurrency_bucket
         self.concurrency_repository: Dict = {}
         self.concurrent: int = concurrent
@@ -262,7 +262,7 @@ class MaxConcurrency:
 
         Args:
             context:The context of the command
-        returns:
+        Returns:
             If the semaphore was successfully acquired
 
         """

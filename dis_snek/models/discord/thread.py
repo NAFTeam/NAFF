@@ -75,7 +75,7 @@ class ThreadMember(DiscordObject, SendMixin):
         return await self._client.http.create_message(message_payload, dm_id)
 
 
-@define
+@define()
 class ThreadList(ClientObject):
     """Represents a list of one or more threads."""
 
@@ -93,9 +93,6 @@ class ThreadList(ClientObject):
             threads.append(client.cache.place_channel_data(thread_data))
         data["threads"] = threads
 
-        members = []
-        for member_data in data["members"]:
-            members.append(ThreadMember.from_dict(member_data, client))
-        data["members"] = threads
+        data["members"] = ThreadMember.from_list(data["members"], client)
 
         return data

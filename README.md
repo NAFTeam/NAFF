@@ -43,7 +43,9 @@ async def user_context(ctx):
 
 bot.start("TOKEN")
 ```
-For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/), and if you get stuck join our [Discord server](https://discord.gg/dis-snek)
+For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/dis-snek).
+
+If you get stuck join our [Discord server](https://discord.gg/dis-snek).
 
 
 ## "Can I contribute to this project?"
