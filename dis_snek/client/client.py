@@ -145,6 +145,7 @@ class Snake(
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
+        send_command_tracebacks: bool: Should the traceback of command errors be sent in reply to the command invocation
 
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
@@ -180,6 +181,7 @@ class Snake(
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        send_command_tracebacks: bool = True,
         total_shards: int = 1,
         shard_id: int = 0,
         **kwargs,
@@ -197,6 +199,8 @@ class Snake(
         """The default prefix to be used for message commands"""
         self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
         """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
+        self.send_command_tracebacks: bool = send_command_tracebacks
+        """Should the traceback of command errors be sent in reply to the command invocation"""
         if auto_defer is True:
             auto_defer = AutoDefer(enabled=True)
         else:
@@ -486,13 +490,14 @@ class Snake(
         try:
             out = "".join(traceback.format_exception(error))
             out = out.replace(self.http.token, "[REDACTED TOKEN]")
-            await ctx.send(
-                embeds=Embed(
-                    title=f"Error: {type(error).__name__}",
-                    color=BrandColors.RED,
-                    description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
+            if self.send_command_tracebacks:
+                await ctx.send(
+                    embeds=Embed(
+                        title=f"Error: {type(error).__name__}",
+                        color=BrandColors.RED,
+                        description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
+                    )
                 )
-            )
         except errors.SnakeException:
             pass
 
