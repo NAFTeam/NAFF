@@ -1,16 +1,18 @@
+import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from aiohttp import FormData
-from dis_snek.models.discord.file import UPLOADABLE_TYPE
 
 import dis_snek.models.discord.message as message
+from dis_snek.models.discord.timestamp import Timestamp
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import AlreadyDeferred
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.message import Attachment
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
@@ -242,6 +244,18 @@ class _BaseInteractionContext(Context):
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    @property
+    def expires_at(self) -> Timestamp:
+        """The timestamp the interaction is expected to expire at."""
+        if self.responded:
+            return Timestamp.from_snowflake(self.interaction_id) + datetime.timedelta(minutes=15)
+        return Timestamp.from_snowflake(self.interaction_id) + datetime.timedelta(seconds=3)
+
+    @property
+    def expired(self) -> bool:
+        """Has the interaction expired yet?"""
+        return Timestamp.utcnow() >= self.expires_at
 
     async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
         """
