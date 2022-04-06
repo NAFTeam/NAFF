@@ -1,3 +1,4 @@
+import logging
 import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
@@ -5,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import dis_snek.models as models
-from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
+from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
 from dis_snek.client.errors import NotFound
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.mixins.serialization import DictSerializationMixin
@@ -64,6 +65,8 @@ __all__ = [
     "TYPE_CHANNEL_MAPPING",
     "TYPE_MESSAGEABLE_CHANNEL",
 ]
+
+log = logging.getLogger(logger_name)
 
 
 class ChannelHistory(AsyncIterator):
@@ -721,7 +724,8 @@ class BaseChannel(DiscordObject):
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
         if not channel_class:
-            raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
+            log.error(f"Unsupported channel type for {data} ({channel_type}).")
+            channel_class = BaseChannel
 
         return channel_class.from_dict(data, client)
 
