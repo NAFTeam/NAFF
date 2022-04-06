@@ -485,6 +485,7 @@ class Snake(
         await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
         try:
             out = "".join(traceback.format_exception(error))
+            out = out.replace(self.http.token, "[REDACTED TOKEN]")
             await ctx.send(
                 embeds=Embed(
                     title=f"Error: {type(error).__name__}", color=BrandColors.RED, description=f"```\n{out}```"
