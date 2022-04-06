@@ -203,7 +203,14 @@ bot.grow_scale("Filename_here")
 bot.start("token")
 ```
 
-You can also pass any **keyword** arguments into the `setup` function. Here is a basic "Scale switching" example:
+Additionally, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
+To do this, simply run `bot.regrow_scale("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
+is doing will be abruptly stopped.
+
+
+Finally, you can also pass any **keyword** arguments into module's `setup` and `teardown` functions, it will also send them into your `Scale.shed` method.
+
+Here is a basic "Scale switching" example:
 
 ```python
 from dis_snek import Scale
@@ -229,7 +236,3 @@ bot.grow_scale("Filename_here", default_scale=False, another_arg=3.14)
 # OR
 bot.grow_scale("Filename_here", default_scale=True, some_arg=555)
 ```
-
-Finally, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
-To do this, simply run `bot.regrow_scale("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
-is doing will be abruptly stopped.
