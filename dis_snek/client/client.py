@@ -488,9 +488,32 @@ class Snake(
         """
         await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
         try:
-            out = "".join(traceback.format_exception(error))
-            out = out.replace(self.http.token, "[REDACTED TOKEN]")
-            if self.send_command_tracebacks:
+            if isinstance(error, errors.CommandOnCooldown):
+                await ctx.send(
+                    embeds=Embed(
+                        description=f"This command is on cooldown!\n"
+                        f"Please try again in {int(error.cooldown.get_cooldown_time())} seconds",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.MaxConcurrencyReached):
+                await ctx.send(
+                    embeds=Embed(
+                        description="This command has reached its maximum concurrent usage!\n"
+                        "Please try again shortly.",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.CommandCheckFailure):
+                await ctx.send(
+                    embeds=Embed(
+                        description="You do not have permission to run this command!",
+                        color=BrandColors.YELLOW,
+                    )
+                )
+            elif self.send_command_tracebacks:
+                out = "".join(traceback.format_exception(error))
+                out = out.replace(self.http.token, "[REDACTED TOKEN]")
                 await ctx.send(
                     embeds=Embed(
                         title=f"Error: {type(error).__name__}",
