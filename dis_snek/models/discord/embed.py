@@ -133,6 +133,22 @@ class EmbedFooter(DictSerializationMixin):
     icon_url: Optional[str] = field(default=None)
     proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
+    @classmethod
+    def converter(cls, ingest: dict | str | "EmbedFooter") -> "EmbedFooter":
+        """
+        A converter to handle users passing raw strings or dictionaries as footers to the Embed object.
+
+        Args:
+            ingest: The data to convert
+
+        Returns:
+            An EmbedFooter object
+        """
+        if isinstance(ingest, str):
+            return cls(text=ingest)
+        else:
+            return cls.from_dict(ingest)
+
     def __len__(self) -> int:
         return len(self.text)
 
@@ -188,7 +204,7 @@ class Embed(DictSerializationMixin):
         default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
-    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.from_dict))
+    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.converter))
     """The footer of the embed"""
     provider: Optional[EmbedProvider] = field(
         default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
