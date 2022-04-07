@@ -134,7 +134,7 @@ class EmbedFooter(DictSerializationMixin):
     proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
 
     @classmethod
-    def converter(cls, ingest: dict | str | "EmbedFooter") -> "EmbedFooter":
+    def converter(cls, ingest: Union[dict, str, "EmbedFooter"]) -> "EmbedFooter":
         """
         A converter to handle users passing raw strings or dictionaries as footers to the Embed object.
 
