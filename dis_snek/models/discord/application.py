@@ -65,7 +65,7 @@ class Application(DiscordObject):
                 owner = client.cache.place_user_data(data.pop("owner"))
                 data["owner_id"] = owner.id
 
-        if data["icon"]:
+        if data.get("icon"):
             data["icon"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}", data["icon"])
         return data
 
