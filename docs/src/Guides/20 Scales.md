@@ -208,7 +208,7 @@ To do this, simply run `bot.regrow_scale("Filename_here")` and your new code wil
 is doing will be abruptly stopped.
 
 
-Any keyword-arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Scale.shed` method. 
+Any keyword-arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Scale.shed` method.
 
 Here is a basic "Scale switching" example:
 
