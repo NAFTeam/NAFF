@@ -6,6 +6,7 @@ import struct
 import time
 from enum import IntEnum
 from threading import Event
+from typing import Optional
 
 from aiohttp import WSMsgType
 
@@ -58,6 +59,7 @@ class VoiceGateway(WebsocketClient):
         self.ws_url = f"wss://{voice_server['endpoint']}?v=4"
         self.session_id = voice_state["session_id"]
         self.token = voice_server["token"]
+        self.secret: Optional[str] = None
         self.guild_id = voice_server["guild_id"]
 
         self.sock_sequence = 0
@@ -193,7 +195,9 @@ class VoiceGateway(WebsocketClient):
 
             case OP.SESSION_DESCRIPTION:
                 log.info(f"Voice connection established; using {data['mode']}")
-                self.encryptor = Encryption(data["secret_key"])
+                self.selected_mode = data["mode"]
+                self.secret = data["secret_key"]
+                self.encryptor = Encryption(self.secret)
                 self.ready.set()
                 if self.cond:
                     with self.cond:
