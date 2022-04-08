@@ -63,6 +63,7 @@ class VoiceGateway(WebsocketClient):
         self.sock_sequence = 0
         self.timestamp = 0
         self.ready = Event()
+        self.user_ssrc_map = {}
         self.cond = None
 
     async def wait_until_ready(self) -> None:
@@ -197,6 +198,9 @@ class VoiceGateway(WebsocketClient):
                 if self.cond:
                     with self.cond:
                         self.cond.notify()
+
+            case OP.SPEAKING:
+                self.user_ssrc_map[data["ssrc"]] = {"user_id": int(data["user_id"]), "speaking": data["speaking"]}
 
             case _:
                 return log.debug(f"Unhandled OPCODE: {op} = {data = }")
