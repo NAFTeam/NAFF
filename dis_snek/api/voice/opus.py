@@ -333,13 +333,14 @@ class Decoder(OpusConfig):
         """
         if data:
             frames = self.get_packet_frame_count(data)
-            self.channels = self.get_packet_channel_count(data)
+            channels = self.get_packet_channel_count(data)
             f_size = frames * self.get_packet_sample_rate(data)
         else:
             f_size = self.samples_per_frame
+            channels = self.channels
 
-        pcm = (ctypes.c_int16 * (f_size * self.channels * 2))()
+        pcm = (ctypes.c_int16 * (f_size * channels * 2))()
         pcm_pointer = ctypes.cast(pcm, c_int16_ptr)
 
         result = self.lib_opus.opus_decode(self.decoder, data, len(data) if data else 0, pcm_pointer, f_size, fec)
-        return array.array("h", pcm[: result * self.channels]).tobytes()
+        return array.array("h", pcm[: result * channels]).tobytes()
