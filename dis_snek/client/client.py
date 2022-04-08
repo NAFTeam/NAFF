@@ -435,15 +435,19 @@ class Snake(
         return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
 
     @staticmethod
-    def default_error_handler(source: str, error: BaseException) -> None:
+    def default_error_handler(source: str, error: BaseException, logger: Absent[logging.Logger] = MISSING) -> None:
         """
         The default error logging behaviour.
 
         Args:
             source: The source of this error
             error: The exception itself
+            logger: The logger to use. Default: Internal Logger
 
         """
+        if logger is MISSING:
+            logger = log
+
         out = traceback.format_exception(error)
 
         if isinstance(error, HTTPException):
@@ -454,11 +458,13 @@ class Snake(
             except Exception:  # noqa : S110
                 pass
 
-        log.error(
+        logger.error(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
-    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+    async def on_error(
+        self, source: str, error: Exception, logger: Absent[logging.Logger] = MISSING, *args, **kwargs
+    ) -> None:
         """
         Catches all errors dispatched by the library.
 
@@ -467,9 +473,11 @@ class Snake(
         Override this to change error handling behaviour
 
         """
-        self.default_error_handler(source, error)
+        self.default_error_handler(source, error, logger)
 
-    async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
+    async def on_command_error(
+        self, ctx: Context, error: Exception, logger: Absent[logging.Logger] = MISSING, *args, **kwargs
+    ) -> None:
         """
         Catches all errors dispatched by commands.
 
@@ -478,7 +486,7 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, logger, *args, **kwargs)
 
     async def on_command(self, ctx: Context) -> None:
         """
@@ -498,7 +506,9 @@ class Snake(
             symbol = "?"  # likely custom context
         log.info(f"Command Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
-    async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
+    async def on_component_error(
+        self, ctx: ComponentContext, error: Exception, logger: Absent[logging.Logger] = MISSING, *args, **kwargs
+    ) -> None:
         """
         Catches all errors dispatched by components.
 
@@ -507,7 +517,7 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"Component Callback for {ctx.custom_id}", error, *args, **kwargs)
+        return await self.on_error(f"Component Callback for {ctx.custom_id}", error, logger, *args, **kwargs)
 
     async def on_component(self, ctx: ComponentContext) -> None:
         """
@@ -522,7 +532,9 @@ class Snake(
         symbol = "¢"
         log.info(f"Component Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
 
-    async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
+    async def on_autocomplete_error(
+        self, ctx: AutocompleteContext, error: Exception, logger: Absent[logging.Logger] = MISSING, *args, **kwargs
+    ) -> None:
         """
         Catches all errors dispatched by autocompletion options.
 
@@ -534,6 +546,7 @@ class Snake(
         return await self.on_error(
             f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}",
             error,
+            logger,
             *args,
             **kwargs,
         )
