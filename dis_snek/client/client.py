@@ -94,6 +94,7 @@ from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
 from .smart_cache import GlobalCache
 from ..models.snek.active_voice_state import ActiveVoiceState
+from ..models.snek.application_commands import ModalCommand
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
@@ -254,6 +255,7 @@ class Snake(
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
+        self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.processors: Dict[str, Callable[..., Coroutine]] = {}
         self.__extensions = {}
@@ -929,13 +931,29 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
+    def add_modal_callback(self, command: ModalCommand) -> None:
+        """
+        Add a modal callback to the client.
+
+        Args:
+            command: The command to add
+        """
+        for listener in command.listeners:
+            if listener not in self._modal_callbacks.keys():
+                self._modal_callbacks[listener] = command
+                continue
+            else:
+                raise ValueError(f"Duplicate Component! Multiple modal callbacks for `{listener}`")
+
     def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self."""
 
         def process(_cmds) -> None:
 
             for func in _cmds:
-                if isinstance(func, ComponentCommand):
+                if isinstance(func, ModalCommand):
+                    self.add_modal_callback(func)
+                elif isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
@@ -1369,6 +1387,22 @@ class Snake(
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
             ctx = await self.get_context(interaction_data, True)
             self.dispatch(events.ModalResponse(ctx))
+
+            # todo: Polls remove this icky code duplication - love from past-polls ❤️
+            if callback := self._modal_callbacks.get(ctx.custom_id):
+                ctx.command = callback
+
+                try:
+                    if self.pre_run_callback:
+                        await self.pre_run_callback(ctx)
+                    await callback(ctx)
+                    if self.post_run_callback:
+                        await self.post_run_callback(ctx)
+                except Exception as e:
+                    await self.on_component_error(ctx, e)
+                finally:
+                    await self.on_component(ctx)
+
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 

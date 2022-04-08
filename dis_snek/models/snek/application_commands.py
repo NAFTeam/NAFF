@@ -44,6 +44,7 @@ __all__ = [
     "SlashCommandOption",
     "SlashCommand",
     "ComponentCommand",
+    "ModalCommand",
     "slash_command",
     "subcommand",
     "context_menu",
@@ -515,6 +516,30 @@ class ComponentCommand(InteractionCommand):
     listeners: list[str] = field(factory=list)
 
 
+@define()
+class ModalCommand(ComponentCommand):
+    ...
+
+
+def _unpack_helper(iterable: typing.Iterable[str]) -> list[str]:
+    """
+    Unpacks all types of iterable into a list of strings. Primarily to flatten generators.
+
+    Args:
+        iterable: The iterable of strings to unpack
+
+    Returns:
+        A list of strings
+    """
+    unpack = []
+    for c in iterable:
+        if inspect.isgenerator(c):
+            unpack += list(c)
+        else:
+            unpack.append(c)
+    return unpack
+
+
 ##############
 # Decorators #
 ##############
@@ -522,6 +547,7 @@ class ComponentCommand(InteractionCommand):
 
 def slash_command(
     name: str,
+    *,
     description: Absent[str] = MISSING,
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
@@ -711,14 +737,28 @@ def component_callback(*custom_id: str) -> Callable[[Coroutine], ComponentComman
 
         return ComponentCommand(name=f"ComponentCallback::{custom_id}", callback=func, listeners=custom_id)
 
-    # allows a mixture of generators and strings to be passed
-    unpack = []
-    for c in custom_id:
-        if inspect.isgenerator(c):
-            unpack += list(c)
-        else:
-            unpack.append(c)
-    custom_id = unpack
+    custom_id = _unpack_helper(custom_id)
+    return wrapper
+
+
+def modal_callback(*custom_id: str) -> Callable[[Coroutine], ModalCommand]:
+    """
+    Register a coroutine as a modal callback.
+
+    Modal callbacks work the same way as commands, just using modals as a way of invoking, instead of messages.
+    Your callback will be given a single argument, `ModalContext`
+
+    Args:
+        *custom_id: The custom ID of the modal to wait for
+    """
+
+    def wrapper(func) -> ModalCommand:
+        if not asyncio.iscoroutinefunction(func):
+            raise ValueError("Commands must be coroutines")
+
+        return ModalCommand(name=f"ModalCallback::{custom_id}", callback=func, listeners=custom_id)
+
+    custom_id = _unpack_helper(custom_id)
     return wrapper
 
 
