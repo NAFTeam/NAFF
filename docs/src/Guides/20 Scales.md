@@ -203,12 +203,13 @@ bot.grow_scale("Filename_here")
 bot.start("token")
 ```
 
-Additionally, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
+Nowadays, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
 To do this, simply run `bot.regrow_scale("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
 is doing will be abruptly stopped.
 
 
-Any keyword-arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Scale.shed` method.
+You can pass keyword-arguments to the `grow_scale`, `shed_scale` and `regrow_scale` scale management methods.
+Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Scale.shed` method.
 
 Here is a basic "Scale switching" example:
 
@@ -220,7 +221,7 @@ class SomeScale(Scale):
         ...
 
 class AnotherScale(Scale):
-    def __init__(self, _, another_arg: float = 0.0):
+    def __init__(self, bot, another_arg: float = 0.0):
         ...
 
 
