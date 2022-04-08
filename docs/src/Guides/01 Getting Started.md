@@ -9,8 +9,30 @@ Hi! So you want to make a bot powered by snakes. This guide aims to get you star
 - [x] [A bot account](02 Creating Your Bot.md)
 - [ ] An aversion to snakes
 
-## Installation
+## Using a Template
 
+We created a [cookiecutter template](https://github.com/Discord-Snake-Pit/Bot-Template) which you can use to set up your own bot faster.
+With the template, your code will already have a well-defined structure which will make development easier for you.
+
+We recommend newer devs to make use of this template.
+
+### Template Feature
+- Basic, ready to go bot
+- Implementation of best practises
+- Scales, and general extensibility
+- Example command, context menu, component, and event
+- Logging to both console and file
+- Pip and poetry config
+- Pre-commit config
+- Dockerfile and pre-made docker-compose
+
+### Template Installation
+1) Install cookiecutter - `pip install cookiecutter`
+2) Set up the template - `cookiecutter https://github.com/Discord-Snake-Pit/Bot-Template`
+
+More information can be found [here](https://github.com/Discord-Snake-Pit/Bot-Template).
+
+## Manual Installation
 
 ### Virtual-Environments
 
