@@ -5,9 +5,12 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, TYPE_CHECKING
 
-__all__ = ["AudioBuffer", "BaseAudio", "Audio", "AudioVolume", "YTDLAudio"]
+__all__ = ["AudioBuffer", "BaseAudio", "Audio", "AudioVolume", "YTDLAudio", "RawInputAudio"]
+
+if TYPE_CHECKING:
+    from dis_snek.api.voice.recorder import Recorder
 
 try:
     from yt_dlp import YoutubeDL
@@ -68,6 +71,46 @@ class AudioBuffer:
                 # pad incomplete frames with 0's
                 data.extend(b"\0" * (total_bytes - len(data)))
             return data
+
+
+class RawInputAudio:
+    pcm: bytes
+    """The decoded audio"""
+    sequence: int
+    """The audio sequence"""
+    timestamp: int
+    """The current timestamp for this audio"""
+    ssrc: str
+    """The source of this audio"""
+    _recoder: "Recorder"
+    """A reference to the audio recorder managing this object"""
+
+    def __init__(self, recorder: "Recorder", data: bytes) -> None:
+        self.pcm: bytes = b""
+        self._recorder = recorder
+
+        self.ingest(data)
+
+    def ingest(self, data: bytes) -> bytes | None:
+        data = bytearray(data)
+        header = data[:12]
+
+        decrypted: bytes = self._recorder.decrypt(header, data[12:])
+        self.ssrc = str(int.from_bytes(header[8:12], byteorder="big"))
+        self.sequence = int.from_bytes(header[2:4], byteorder="big")
+        self.timestamp = int.from_bytes(header[4:8], byteorder="big")
+
+        # noinspection PyProtectedMember
+        self.pcm = self._recorder._decoder.decode(decrypted)
+        return self.pcm
+
+    @property
+    def user_id(self) -> Optional[int]:
+        """The ID of the user who made this audio."""
+        data = self._recorder.state.ws.user_ssrc_map.get(self.ssrc)
+        if data:
+            return data["user_id"]
+        return None
 
 
 class BaseAudio(ABC):
