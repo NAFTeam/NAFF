@@ -203,7 +203,7 @@ bot.grow_scale("Filename_here")
 bot.start("token")
 ```
 
-Nowadays, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
+Now, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
 To do this, simply run `bot.regrow_scale("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
 is doing will be abruptly stopped.
 
