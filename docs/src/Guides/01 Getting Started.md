@@ -27,8 +27,8 @@ We recommend newer devs to make use of this template.
 - Dockerfile and pre-made docker-compose
 
 ### Template Installation
-1) Install cookiecutter - `pip install cookiecutter`
-2) Set up the template - `cookiecutter https://github.com/Discord-Snake-Pit/Bot-Template`
+1. Install cookiecutter - `pip install cookiecutter`
+2. Set up the template - `cookiecutter https://github.com/Discord-Snake-Pit/Bot-Template`
 
 More information can be found [here](https://github.com/Discord-Snake-Pit/Bot-Template).
 
