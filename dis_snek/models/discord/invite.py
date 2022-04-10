@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.models.discord.application import Application
 from dis_snek.models.discord.enums import InviteTargetTypes
 from dis_snek.models.discord.guild import GuildPreview

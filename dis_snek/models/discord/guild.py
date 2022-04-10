@@ -12,9 +12,9 @@ from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Ab
 from dis_snek.client.errors import EventLocationNotProvided, NotFound
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.converters import optional
-from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import no_export_meta, to_image_data
+from dis_snek.client.utils.attr_converters import optional
+from dis_snek.client.utils.attr_converters import timestamp_converter
+from dis_snek.client.utils.serializer import to_image_data, no_export_meta
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,

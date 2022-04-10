@@ -10,7 +10,7 @@ from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import AlreadyDeferred
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.attr_converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.message import Attachment

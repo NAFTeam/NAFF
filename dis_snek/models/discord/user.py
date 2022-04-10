@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
 from dis_snek.client.mixins.send import SendMixin
-from dis_snek.client.utils.attr_utils import define, docs, field
-from dis_snek.client.utils.converters import list_converter
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_utils import define, field, docs
+from dis_snek.client.utils.attr_converters import list_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.serializer import to_image_data
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color

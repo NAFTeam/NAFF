@@ -5,7 +5,7 @@ import attrs
 
 from dis_snek.client.const import MISSING, Absent, T
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import optional as optional_c
 from dis_snek.client.utils.serializer import dict_filter_missing
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.emoji import PartialEmoji
