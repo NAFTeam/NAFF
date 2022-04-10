@@ -6,7 +6,17 @@ from typing import Callable, Iterable, List, Optional, Any, Union
 import dis_snek.api.events as events
 from dis_snek.client.const import T
 
-__all__ = ["escape_mentions", "find", "find_all", "get", "get_all", "wrap_partial", "get_parameters", "get_event_name"]
+__all__ = [
+    "escape_mentions",
+    "find",
+    "find_all",
+    "get",
+    "get_all",
+    "wrap_partial",
+    "get_parameters",
+    "get_event_name",
+    "get_object_name",
+]
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
 camel_to_snake = re.compile(r"([A-Z]+)")
@@ -199,3 +209,18 @@ def get_event_name(event: Union[str, "events.BaseEvent"]) -> str:
     name = name.removeprefix("on_")
 
     return name
+
+
+def get_object_name(x: Any) -> str:
+    """Gets the name of virtually any object.
+
+    Args:
+        x (Any): The object to get the name of.
+
+    Returns:
+        str: The name of the object.
+    """
+    try:
+        return x.__name__
+    except AttributeError:
+        return repr(x) if hasattr(x, "__origin__") else x.__class__.__name__
