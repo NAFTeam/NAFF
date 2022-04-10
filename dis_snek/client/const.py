@@ -69,6 +69,7 @@ __all__ = [
     "PREMIUM_GUILD_LIMITS",
     "Absent",
     "T",
+    "T_co",
 ]
 
 _ver_info = sys.version_info
@@ -172,4 +173,5 @@ PREMIUM_GUILD_LIMITS = defaultdict(
 )
 
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 Absent = Union[T, Missing]
