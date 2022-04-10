@@ -2,6 +2,7 @@ import re
 import typing
 from typing import TypeVar, Protocol, Any, Optional, List, Callable
 
+from dis_snek.client.const import T, T_co
 from dis_snek.client.errors import Forbidden, HTTPException
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.guild import Guild
@@ -68,9 +69,6 @@ __all__ = (
     "Greedy",
     "SNEK_MODEL_TO_CONVERTER",
 )
-
-T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
 
 
 class LiteralConverter(Converter):

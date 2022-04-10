@@ -1,10 +1,10 @@
 import typing
-from typing import Protocol, Any, TypeVar, TYPE_CHECKING
+from typing import Protocol, Any, TYPE_CHECKING
+
+from dis_snek.client.const import T_co
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
-
-T_co = TypeVar("T_co", covariant=True)
 
 __all__ = ["Converter"]
 
