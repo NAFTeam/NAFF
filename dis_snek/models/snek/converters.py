@@ -1,6 +1,5 @@
 import re
-import typing
-from typing import TypeVar, Protocol, Any, Optional, List, Callable
+from typing import Any, Optional, List
 
 from dis_snek.client.const import T, T_co
 from dis_snek.client.errors import Forbidden, HTTPException
@@ -35,7 +34,6 @@ from dis_snek.models.discord.channel import (
 )
 from dis_snek.models.snek.protocols import Converter
 from dis_snek.models.snek.context import Context
-from dis_snek.client.utils.misc_utils import get_object_name, get_parameters
 from dis_snek.client.errors import BadArgument
 
 
