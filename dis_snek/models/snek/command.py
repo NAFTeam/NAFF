@@ -11,10 +11,10 @@ from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.misc_utils import get_parameters
+from dis_snek.client.utils.misc_utils import get_parameters, get_object_name
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
-from dis_snek.models.snek.converters import Converter, _get_converter_function
+from dis_snek.models.snek.protocols import Converter
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
@@ -120,6 +120,30 @@ class BaseCommand(DictSerializationMixin):
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
+    def _get_converter_function(self, anno: type[Converter] | Converter, name: str) -> Callable[[Context, str], Any]:
+        num_params = len(get_parameters(anno.convert))
+
+        # if we have three parameters for the function, it's likely it has a self parameter
+        # so we need to get rid of it by initing - typehinting hates this, btw!
+        # the below line will error out if we aren't supposed to init it, so that works out
+        try:
+            actual_anno: Converter = anno() if num_params == 3 else anno  # type: ignore
+        except TypeError:
+            raise ValueError(
+                f"{get_object_name(anno)} for {name} is invalid: converters must have exactly 2 arguments."
+            ) from None
+
+        # we can only get to this point while having three params if we successfully inited
+        if num_params == 3:
+            num_params -= 1
+
+        if num_params != 2:
+            raise ValueError(
+                f"{get_object_name(anno)} for {name} is invalid: converters must have exactly 2 arguments."
+            )
+
+        return actual_anno.convert
+
     async def try_convert(self, converter: Optional[Callable], context: "Context", value: Any) -> Any:
         if converter is None:
             return value
@@ -154,7 +178,7 @@ class BaseCommand(DictSerializationMixin):
                 # it does NOT check if the annotation is actually a subclass of Converter
                 # this is an intended behavior for Protocols with the runtime_checkable decorator
                 convert = functools.partial(
-                    self.try_convert, _get_converter_function(param.annotation, param.name), context
+                    self.try_convert, self._get_converter_function(param.annotation, param.name), context
                 )
             else:
                 convert = functools.partial(self.try_convert, None, context)
