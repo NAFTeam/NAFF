@@ -12,7 +12,11 @@ repos:
         language_version: python3.10
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
-
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v1.4
+    hooks:
+      - id: autoflake
+        args: [--remove-all-unused-imports, --in-place, --ignore-init-module-imports]
   - repo: https://github.com/psf/black
     rev: 22.3.0
     hooks:
