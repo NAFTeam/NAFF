@@ -4,7 +4,7 @@ import logging
 import time
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
-from dis_snek.models.snek import AsyncIterator
+from dis_snek.models.utils.iterator import AsyncIterator
 from aiohttp import FormData
 
 import dis_snek.models as models

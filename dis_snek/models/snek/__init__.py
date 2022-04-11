@@ -7,7 +7,6 @@ from .command import *
 from .context import *
 from .converters import *
 from .cooldowns import *
-from .iterator import *
 from .listener import *
 from .protocols import *
 from .scale import *
