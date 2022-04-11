@@ -1,5 +1,5 @@
 from functools import partial, total_ordering
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 
 import attrs
 

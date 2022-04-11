@@ -3,10 +3,8 @@ import sys
 import array
 import ctypes
 import ctypes.util
-import typing
-from email.policy import default
 from enum import IntEnum
-from typing import Type, Any
+from typing import Any
 
 import attr
 

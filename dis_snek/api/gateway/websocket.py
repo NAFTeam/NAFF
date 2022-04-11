@@ -1,7 +1,6 @@
 import asyncio
 import collections
 import logging
-import random
 import time
 import zlib
 from abc import abstractmethod

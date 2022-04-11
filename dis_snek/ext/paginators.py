@@ -11,7 +11,6 @@ from dis_snek import (
     ButtonStyles,
     spread_to_rows,
     ComponentCommand,
-    get_components_ids,
     Context,
     MessageContext,
     Message,
