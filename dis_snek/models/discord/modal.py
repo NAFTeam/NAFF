@@ -1,4 +1,3 @@
-import functools
 import uuid
 from enum import IntEnum
 from typing import Union, Optional, List

@@ -6,7 +6,7 @@ import discord_typings
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
 from dis_snek.models import VoiceState
-from dis_snek.models.discord.channel import BaseChannel, GuildChannel, VoiceChannel, ThreadChannel
+from dis_snek.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role

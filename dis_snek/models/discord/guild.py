@@ -4,7 +4,6 @@ import logging
 import time
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
-from io import IOBase
 from dis_snek.models.snek import AsyncIterator
 from aiohttp import FormData
 
@@ -15,7 +14,7 @@ from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.converters import optional
 from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_none, no_export_meta
+from dis_snek.client.utils.serializer import no_export_meta, to_image_data
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,

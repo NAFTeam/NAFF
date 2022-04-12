@@ -1,9 +1,9 @@
 import logging
 from functools import partial
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict
 
 import attrs
-from dis_snek.client.const import logger_name, MISSING, T
+from dis_snek.client.const import MISSING, logger_name
 
 __all__ = ["define", "field", "docs", "str_validator"]
 

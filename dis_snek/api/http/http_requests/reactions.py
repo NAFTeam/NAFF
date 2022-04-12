@@ -4,7 +4,6 @@ import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
-from dis_snek.client.utils.serializer import dict_filter_missing
 
 __all__ = ["ReactionRequests"]
 

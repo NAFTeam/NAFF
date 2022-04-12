@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
 from dis_snek.client.mixins.send import SendMixin
-from dis_snek.client.utils.attr_utils import define, field, class_defaults, docs
+from dis_snek.client.utils.attr_utils import define, docs, field
 from dis_snek.client.utils.converters import list_converter
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
@@ -24,8 +24,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
-    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM, GuildVoice
-    from dis_snek.models.discord.file import File
+    from dis_snek.models.discord.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord.voice_state import VoiceState
 
 __all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
