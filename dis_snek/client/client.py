@@ -38,7 +38,8 @@ from dis_snek.api.events.internal import Component, BaseEvent
 from dis_snek.api.gateway.gateway import GatewayClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
-from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
+from dis_snek.client import errors
+from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
 from dis_snek.client.errors import (
     BotException,
     ScaleLoadException,
@@ -49,6 +50,7 @@ from dis_snek.client.errors import (
     HTTPException,
     NotFound,
 )
+from dis_snek.client.smart_cache import GlobalCache
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial, get_event_name
 from dis_snek.client.utils.serializer import to_image_data
@@ -85,15 +87,17 @@ from dis_snek.models import (
     VoiceRegion,
 )
 from dis_snek.models import Wait
+from dis_snek.models.discord.color import BrandColors
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
+from dis_snek.models.discord.embed import Embed
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.modal import Modal
+from dis_snek.models.snek.active_voice_state import ActiveVoiceState
+from dis_snek.models.snek.application_commands import ModalCommand
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
-from .smart_cache import GlobalCache
-from ..models.snek.active_voice_state import ActiveVoiceState
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
@@ -142,6 +146,7 @@ class Snake(
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
+        send_command_tracebacks: bool: Should the traceback of command errors be sent in reply to the command invocation
 
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
@@ -177,6 +182,7 @@ class Snake(
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        send_command_tracebacks: bool = True,
         total_shards: int = 1,
         shard_id: int = 0,
         **kwargs,
@@ -194,6 +200,8 @@ class Snake(
         """The default prefix to be used for prefixed commands"""
         self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
         """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
+        self.send_command_tracebacks: bool = send_command_tracebacks
+        """Should the traceback of command errors be sent in reply to the command invocation"""
         if auto_defer is True:
             auto_defer = AutoDefer(enabled=True)
         else:
@@ -254,6 +262,7 @@ class Snake(
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
+        self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.processors: Dict[str, Callable[..., Coroutine]] = {}
         self.__extensions = {}
@@ -478,7 +487,43 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        try:
+            if isinstance(error, errors.CommandOnCooldown):
+                await ctx.send(
+                    embeds=Embed(
+                        description=f"This command is on cooldown!\n"
+                        f"Please try again in {int(error.cooldown.get_cooldown_time())} seconds",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.MaxConcurrencyReached):
+                await ctx.send(
+                    embeds=Embed(
+                        description="This command has reached its maximum concurrent usage!\n"
+                        "Please try again shortly.",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.CommandCheckFailure):
+                await ctx.send(
+                    embeds=Embed(
+                        description="You do not have permission to run this command!",
+                        color=BrandColors.YELLOW,
+                    )
+                )
+            elif self.send_command_tracebacks:
+                out = "".join(traceback.format_exception(error))
+                out = out.replace(self.http.token, "[REDACTED TOKEN]")
+                await ctx.send(
+                    embeds=Embed(
+                        title=f"Error: {type(error).__name__}",
+                        color=BrandColors.RED,
+                        description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
+                    )
+                )
+        except errors.SnakeException:
+            pass
 
     async def on_command(self, ctx: Context) -> None:
         """
@@ -929,13 +974,29 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
+    def add_modal_callback(self, command: ModalCommand) -> None:
+        """
+        Add a modal callback to the client.
+
+        Args:
+            command: The command to add
+        """
+        for listener in command.listeners:
+            if listener not in self._modal_callbacks.keys():
+                self._modal_callbacks[listener] = command
+                continue
+            else:
+                raise ValueError(f"Duplicate Component! Multiple modal callbacks for `{listener}`")
+
     def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self."""
 
         def process(_cmds) -> None:
 
             for func in _cmds:
-                if isinstance(func, ComponentCommand):
+                if isinstance(func, ModalCommand):
+                    self.add_modal_callback(func)
+                elif isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
@@ -1369,6 +1430,22 @@ class Snake(
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
             ctx = await self.get_context(interaction_data, True)
             self.dispatch(events.ModalResponse(ctx))
+
+            # todo: Polls remove this icky code duplication - love from past-polls ❤️
+            if callback := self._modal_callbacks.get(ctx.custom_id):
+                ctx.command = callback
+
+                try:
+                    if self.pre_run_callback:
+                        await self.pre_run_callback(ctx)
+                    await callback(ctx)
+                    if self.post_run_callback:
+                        await self.post_run_callback(ctx)
+                except Exception as e:
+                    await self.on_component_error(ctx, e)
+                finally:
+                    await self.on_component(ctx)
+
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
