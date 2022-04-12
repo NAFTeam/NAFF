@@ -94,6 +94,7 @@ from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTy
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.modal import Modal
 from dis_snek.models.snek.active_voice_state import ActiveVoiceState
+from dis_snek.models.snek.application_commands import ModalCommand
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
