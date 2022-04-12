@@ -19,7 +19,7 @@ from dis_snek.models.snek.protocols import Converter
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
 
-__all__ = ["BaseCommand", "MessageCommand", "message_command", "check", "cooldown", "max_concurrency"]
+__all__ = ["BaseCommand", "PrefixedCommand", "prefixed_command", "check", "cooldown", "max_concurrency"]
 
 log = logging.getLogger(logger_name)
 
@@ -284,29 +284,29 @@ class BaseCommand(DictSerializationMixin):
 
 
 @define()
-class MessageCommand(BaseCommand):
-    """Represents a command triggered by standard message."""
+class PrefixedCommand(BaseCommand):
+    """Represents a command triggered by standard message with a specified prefix."""
 
     name: str = field(metadata=docs("The name of the command"))
 
 
-def message_command(
+def prefixed_command(
     name: str = None,
-) -> Callable[[Callable[..., Coroutine]], MessageCommand]:
+) -> Callable[[Callable[..., Coroutine]], PrefixedCommand]:
     """
-    A decorator to declare a coroutine as a message command.
+    A decorator to declare a coroutine as a prefixed command.
 
     Args:
         name: The name of the command, defaults to the name of the coroutine
     Returns:
-        Message Command Object
+        Prefixed Command Object
 
     """
 
-    def wrapper(func) -> MessageCommand:
+    def wrapper(func) -> PrefixedCommand:
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
-        cmd = MessageCommand(name=name or func.__name__, callback=func)
+        cmd = PrefixedCommand(name=name or func.__name__, callback=func)
         return cmd
 
     return wrapper

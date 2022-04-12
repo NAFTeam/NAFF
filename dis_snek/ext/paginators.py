@@ -12,7 +12,7 @@ from dis_snek import (
     spread_to_rows,
     ComponentCommand,
     Context,
-    MessageContext,
+    PrefixedContext,
     Message,
     MISSING,
     Snowflake_Type,
@@ -354,7 +354,7 @@ class Paginator:
 
         return self._message
 
-    async def reply(self, ctx: MessageContext) -> Message:
+    async def reply(self, ctx: PrefixedContext) -> Message:
         """
         Reply this paginator to ctx.
 

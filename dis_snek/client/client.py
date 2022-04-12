@@ -69,14 +69,14 @@ from dis_snek.models import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
-    MessageCommand,
+    PrefixedCommand,
     BaseCommand,
     to_snowflake,
     to_snowflake_list,
     ComponentContext,
     InteractionContext,
     ModalContext,
-    MessageContext,
+    PrefixedContext,
     AutocompleteContext,
     ComponentCommand,
     Context,
@@ -124,7 +124,7 @@ class Snake(
     Attributes:
         intents: Union[int, Intents]: The intents to use
 
-        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
+        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
         generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
         status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
         activity: Union[Activity, str]: The activity the bot should log in "playing"
@@ -172,7 +172,7 @@ class Snake(
         activity: Union[Activity, str] = None,
         auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
         interaction_context: Type[InteractionContext] = InteractionContext,
-        message_context: Type[MessageContext] = MessageContext,
+        message_context: Type[PrefixedContext] = PrefixedContext,
         component_context: Type[ComponentContext] = ComponentContext,
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
@@ -191,7 +191,7 @@ class Snake(
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
-        """The default prefix to be used for message commands"""
+        """The default prefix to be used for prefixed commands"""
         self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
         """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
         if auto_defer is True:
@@ -209,7 +209,7 @@ class Snake(
         # context objects
         self.interaction_context: Type[InteractionContext] = interaction_context
         """The object to instantiate for Interaction Context"""
-        self.message_context: Type[MessageContext] = message_context
+        self.message_context: Type[PrefixedContext] = message_context
         """The object to instantiate for Message Context"""
         self.component_context: Type[ComponentContext] = component_context
         """The object to instantiate for Component Context"""
@@ -249,7 +249,7 @@ class Snake(
         self._app: Absent[Application] = MISSING
 
         # collections
-        self.commands: Dict[str, MessageCommand] = {}
+        self.commands: Dict[str, PrefixedCommand] = {}
         """A dictionary of registered commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
@@ -376,7 +376,7 @@ class Snake(
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
-            self.message_context: MessageContext,
+            self.message_context: PrefixedContext,
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
         }
@@ -490,7 +490,7 @@ class Snake(
             ctx: The context of the command that was called
 
         """
-        if isinstance(ctx, MessageContext):
+        if isinstance(ctx, PrefixedContext):
             symbol = "@"
         elif isinstance(ctx, InteractionContext):
             symbol = "/"
@@ -900,9 +900,9 @@ class Snake(
 
         return True
 
-    def add_message_command(self, command: MessageCommand) -> None:
+    def add_prefixed_command(self, command: PrefixedCommand) -> None:
         """
-        Add a message command to the client.
+        Add a prefixed command to the client.
 
         Args:
             command InteractionCommand: The command to add
@@ -939,8 +939,8 @@ class Snake(
                     self.add_component_callback(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
-                elif isinstance(func, MessageCommand):
-                    self.add_message_command(func)
+                elif isinstance(func, PrefixedCommand):
+                    self.add_prefixed_command(func)
                 elif isinstance(func, Listener):
                     self.add_listener(func)
 
@@ -1233,12 +1233,12 @@ class Snake(
         ...
 
     @overload
-    async def get_context(self, data: Message, interaction: Literal[False] = False) -> MessageContext:
+    async def get_context(self, data: Message, interaction: Literal[False] = False) -> PrefixedContext:
         ...
 
     async def get_context(
         self, data: InteractionData | dict | Message, interaction: bool = False
-    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext:
+    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext | PrefixedContext:
         """
         Return a context object based on data passed.
 
@@ -1254,7 +1254,7 @@ class Snake(
 
         """
         # this line shuts up IDE warnings
-        cls: ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext
+        cls: ComponentContext | AutocompleteContext | ModalContext | InteractionContext | PrefixedContext
 
         if interaction:
             match data["type"]:
@@ -1284,8 +1284,8 @@ class Snake(
         """Overrideable method that executes slash commands, can be used to wrap callback execution"""
         return await command(ctx, **ctx.kwargs)
 
-    async def _run_message_command(self, command: MessageCommand, ctx: MessageContext) -> Any:
-        """Overrideable method that executes message commands, can be used to wrap callback execution"""
+    async def _run_prefixed_command(self, command: PrefixedCommand, ctx: PrefixedContext) -> Any:
+        """Overrideable method that executes prefixed commands, can be used to wrap callback execution"""
         return await command(ctx)
 
     @processors.Processor.define("raw_interaction_create")
@@ -1373,8 +1373,8 @@ class Snake(
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     @Listener.create("message_create")
-    async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
-        """Determine if a command is being triggered, and dispatch it."""
+    async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
+        """Determine if a prefixed command is being triggered, and dispatch it."""
         message = event.message
 
         if not message.content:
@@ -1415,7 +1415,7 @@ class Snake(
                     try:
                         if self.pre_run_callback:
                             await self.pre_run_callback(context)
-                        await self._run_message_command(command, context)
+                        await self._run_prefixed_command(command, context)
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:

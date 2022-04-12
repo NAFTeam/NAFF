@@ -21,7 +21,7 @@ Below is an example of a bot, one with scales, one without.
         import dis_snek.const
         from dis_snek.client import Snake
         from dis_snek.models.application_commands import slash_command, slash_option
-        from dis_snek.models.command import message_command
+        from dis_snek.models.command import prefixed_command
         from dis_snek.models.context import InteractionContext
         from dis_snek.models.discord_objects.components import Button, ActionRow
         from dis_snek.models.enums import ButtonStyles
@@ -58,7 +58,7 @@ Below is an example of a bot, one with scales, one without.
             await ctx.edit_origin("test")
 
 
-        @message_command()
+        @prefixed_command()
         async def multiple_buttons(ctx):
             await ctx.send(
                 "2 buttons in a row",
@@ -66,7 +66,7 @@ Below is an example of a bot, one with scales, one without.
             )
 
 
-        @message_command()
+        @prefixed_command()
         async def action_rows(ctx):
             await ctx.send(
                 "2 buttons in 2 rows, using nested lists",
@@ -74,7 +74,7 @@ Below is an example of a bot, one with scales, one without.
             )
 
 
-        @message_command()
+        @prefixed_command()
         async def action_rows_more(ctx):
             await ctx.send(
                 "2 buttons in 2 rows, using explicit action_rows lists",
@@ -138,32 +138,32 @@ Below is an example of a bot, one with scales, one without.
 
         # File: `test_components.py`
 
-        from dis_snek.models.command import message_command
+        from dis_snek.models.command import prefixed_command
         from dis_snek.models.discord_objects.components import Button, ActionRow
         from dis_snek.models.enums import ButtonStyles
         from dis_snek.models.scale import Scale
 
 
         class ButtonExampleSkin(Scale):
-            @message_command()
+            @prefixed_command()
             async def blurple_button(self, ctx):
                 await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
 
-            @message_command()
+            @prefixed_command()
             async def multiple_buttons(self, ctx):
                 await ctx.send(
                     "2 buttons in a row",
                     components=[Button(ButtonStyles.BLURPLE, "A blurple button"), Button(ButtonStyles.RED, "A red button")],
                 )
 
-            @message_command()
+            @prefixed_command()
             async def action_rows(self, ctx):
                 await ctx.send(
                     "2 buttons in 2 rows, using nested lists",
                     components=[[Button(ButtonStyles.BLURPLE, "A blurple button")], [Button(ButtonStyles.RED, "A red button")]],
                 )
 
-            @message_command()
+            @prefixed_command()
             async def action_rows_more(self, ctx):
                 await ctx.send(
                     "2 buttons in 2 rows, using explicit action_rows lists",

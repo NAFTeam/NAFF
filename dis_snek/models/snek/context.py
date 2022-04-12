@@ -40,7 +40,7 @@ __all__ = [
     "ComponentContext",
     "AutocompleteContext",
     "ModalContext",
-    "MessageContext",
+    "PrefixedContext",
 ]
 
 log = logging.getLogger(logger_name)
@@ -616,11 +616,11 @@ class ModalContext(InteractionContext):
 
 
 @define
-class MessageContext(Context, SendMixin):
+class PrefixedContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
     @classmethod
-    def from_message(cls, client: "Snake", message: "Message") -> "MessageContext":
+    def from_message(cls, client: "Snake", message: "Message") -> "PrefixedContext":
         new_cls = cls(
             client=client,
             message=message,

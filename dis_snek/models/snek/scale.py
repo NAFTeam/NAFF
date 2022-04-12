@@ -28,7 +28,7 @@ class Scale:
             def __init__(self, bot):
                 print("Scale Created")
 
-            @message_command
+            @prefixed_command()
             async def some_command(self, context):
                 await ctx.send(f"I was sent from a scale called {self.name}")
         ```
@@ -87,7 +87,7 @@ class Scale:
                 elif isinstance(val, snek.InteractionCommand):
                     bot.add_interaction(val)
                 else:
-                    bot.add_message_command(val)
+                    bot.add_prefixed_command(val)
             elif isinstance(val, snek.Listener):
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
@@ -133,7 +133,7 @@ class Scale:
                 for scope in func.scopes:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
-            elif isinstance(func, snek.MessageCommand):
+            elif isinstance(func, snek.PrefixedCommand):
                 if self.bot.commands[func.name]:
                     self.bot.commands.pop(func.name)
         for func in self.listeners:

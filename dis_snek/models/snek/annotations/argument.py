@@ -2,7 +2,7 @@ from typing import Callable, Union, TYPE_CHECKING
 
 from dis_snek.client.const import T
 from dis_snek.client.utils.misc_utils import get_parameters
-from dis_snek.models.snek.context import Context, MessageContext
+from dis_snek.models.snek.context import Context, PrefixedContext
 from dis_snek.models.snek.scale import Scale
 
 __all__ = ["CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL", "define_annotation"]
@@ -52,8 +52,8 @@ def CMD_BODY(context: Context) -> str:
     how are you?`
 
     """
-    if not isinstance(context, MessageContext):
-        raise TypeError("CMD_BODY can only be used with Message Commands")
+    if not isinstance(context, PrefixedContext):
+        raise TypeError("CMD_BODY can only be used with Prefixed Commands")
     return context.content_parameters
 
 
