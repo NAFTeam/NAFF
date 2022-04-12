@@ -24,7 +24,15 @@ from dis_snek.api.http.http_requests import (
     WebhookRequests,
     ScheduledEventsRequests,
 )
-from dis_snek.client.const import __py_version__, __repo_url__, __version__, logger_name, MISSING, Absent
+from dis_snek.client.const import (
+    __py_version__,
+    __repo_url__,
+    __version__,
+    logger_name,
+    MISSING,
+    Absent,
+    __api_version__,
+)
 from dis_snek.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from dis_snek.client.utils.input_utils import response_decode
 from dis_snek.client.utils.serializer import dict_filter_missing
@@ -346,7 +354,7 @@ class HTTPClient(
             data: dict = await self.request(Route("GET", "/gateway"))
         except HTTPException as exc:
             raise GatewayNotFound from exc
-        return "{0}?encoding={1}&v=9&compress=zlib-stream".format(data["url"], "json")
+        return "{0}?encoding={1}&v={2}&compress=zlib-stream".format(data["url"], "json", __api_version__)
 
     async def websocket_connect(self, url: str) -> ClientWebSocketResponse:
         """

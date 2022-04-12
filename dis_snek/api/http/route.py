@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 from urllib.parse import quote as _uriquote
-
+from dis_snek.client.const import __api_version__
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -9,7 +9,7 @@ __all__ = ["Route"]
 
 
 class Route:
-    BASE: ClassVar[str] = "https://discord.com/api/v9"
+    BASE: ClassVar[str] = f"https://discord.com/api/v{__api_version__}"
     path: str
     params: dict[str, str | int]
 
