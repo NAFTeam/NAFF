@@ -136,7 +136,7 @@ class Snake(
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
-        message_context: Type[MessageContext]: The object to instantiate for Message Context
+        prefixed_context: Type[PrefixedContext]: The object to instantiate for Prefixed Context
         component_context: Type[ComponentContext]: The object to instantiate for Component Context
         autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
 
@@ -172,7 +172,7 @@ class Snake(
         activity: Union[Activity, str] = None,
         auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
         interaction_context: Type[InteractionContext] = InteractionContext,
-        message_context: Type[PrefixedContext] = PrefixedContext,
+        prefixed_context: Type[PrefixedContext] = PrefixedContext,
         component_context: Type[ComponentContext] = ComponentContext,
         autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
@@ -209,8 +209,8 @@ class Snake(
         # context objects
         self.interaction_context: Type[InteractionContext] = interaction_context
         """The object to instantiate for Interaction Context"""
-        self.message_context: Type[PrefixedContext] = message_context
-        """The object to instantiate for Message Context"""
+        self.prefixed_context: Type[PrefixedContext] = prefixed_context
+        """The object to instantiate for Prefixed Context"""
         self.component_context: Type[ComponentContext] = component_context
         """The object to instantiate for Component Context"""
         self.autocomplete_context: Type[AutocompleteContext] = autocomplete_context
@@ -1274,7 +1274,7 @@ class Snake(
                 cls.channel = await self.cache.fetch_channel(data["channel_id"])
 
         else:
-            cls = self.message_context.from_message(self, data)
+            cls = self.prefixed_context.from_message(self, data)
             if not cls.channel:
                 cls.channel = await self.cache.fetch_channel(data._channel_id)
 
