@@ -376,7 +376,7 @@ class Snake(
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
-            self.message_context: PrefixedContext,
+            self.prefixed_context: PrefixedContext,
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
         }
