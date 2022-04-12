@@ -82,7 +82,9 @@ class Scale:
 
                 new_cls._commands.append(val)
 
-                if isinstance(val, snek.ComponentCommand):
+                if isinstance(val, snek.ModalCommand):
+                    bot.add_modal_callback(val)
+                elif isinstance(val, snek.ComponentCommand):
                     bot.add_component_callback(val)
                 elif isinstance(val, snek.InteractionCommand):
                     bot.add_interaction(val)
@@ -126,8 +128,13 @@ class Scale:
     def shed(self) -> None:
         """Called when this Scale is being removed."""
         for func in self._commands:
-            if isinstance(func, snek.ComponentCommand):
+            if isinstance(func, snek.ModalCommand):
                 for listener in func.listeners:
+                    # noinspection PyProtectedMember
+                    self.bot._modal_callbacks.pop(listener)
+            elif isinstance(func, snek.ComponentCommand):
+                for listener in func.listeners:
+                    # noinspection PyProtectedMember
                     self.bot._component_callbacks.pop(listener)
             elif isinstance(func, snek.InteractionCommand):
                 for scope in func.scopes:
