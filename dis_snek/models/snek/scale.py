@@ -81,17 +81,18 @@ class Scale:
                 val = wrap_partial(val, new_cls)
 
                 if not hasattr(val, "is_subcommand") or not val.is_subcommand():
-                    # we do not want to add prefixed subcommands here
+                    # we do not want to add prefixed subcommands
                     new_cls._commands.append(val)
 
-                if isinstance(val, snek.ModalCommand):
-                    bot.add_modal_callback(val)
-                elif isinstance(val, snek.ComponentCommand):
-                    bot.add_component_callback(val)
-                elif isinstance(val, snek.InteractionCommand):
-                    bot.add_interaction(val)
-                else:
-                    bot.add_prefixed_command(val)
+                    if isinstance(val, snek.ModalCommand):
+                        bot.add_modal_callback(val)
+                    elif isinstance(val, snek.ComponentCommand):
+                        bot.add_component_callback(val)
+                    elif isinstance(val, snek.InteractionCommand):
+                        bot.add_interaction(val)
+                    else:
+                        bot.add_prefixed_command(val)
+
             elif isinstance(val, snek.Listener):
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
