@@ -80,7 +80,7 @@ class RawInputAudio:
     """The audio sequence"""
     timestamp: int
     """The current timestamp for this audio"""
-    ssrc: str
+    ssrc: int
     """The source of this audio"""
     _recoder: "Recorder"
     """A reference to the audio recorder managing this object"""
@@ -96,7 +96,7 @@ class RawInputAudio:
         header = data[:12]
 
         decrypted: bytes = self._recorder.decrypt(header, data[12:])
-        self.ssrc = str(int.from_bytes(header[8:12], byteorder="big"))
+        self.ssrc = int.from_bytes(header[8:12], byteorder="big")
         self.sequence = int.from_bytes(header[2:4], byteorder="big")
         self.timestamp = int.from_bytes(header[4:8], byteorder="big")
 
