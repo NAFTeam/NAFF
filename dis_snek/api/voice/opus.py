@@ -3,7 +3,6 @@ import sys
 import array
 import ctypes
 import ctypes.util
-import typing
 from ctypes import CDLL
 from enum import IntEnum
 from typing import Any
