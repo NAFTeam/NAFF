@@ -950,13 +950,19 @@ class Snake(
         Add a prefixed command to the client.
 
         Args:
-            command InteractionCommand: The command to add
+            command PrefixedCommand: The command to add
 
         """
-        if command.name not in self.prefixed_commands:
-            self.prefixed_commands[command.name] = command
-            return
-        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
+        command._parse_parameters()
+
+        if command.name in self.prefixed_commands:
+            raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{command.name}`")
+        self.prefixed_commands[command.name] = command
+
+        for alias in command.aliases:
+            if alias in self.prefixed_commands:
+                raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{alias}`")
+            self.prefixed_commands[alias] = command
 
     def add_component_callback(self, command: ComponentCommand) -> None:
         """
@@ -1000,7 +1006,9 @@ class Snake(
                     self.add_component_callback(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
-                elif isinstance(func, PrefixedCommand):
+                elif (
+                    isinstance(func, PrefixedCommand) and not func.is_subcomamnd()
+                ):  # subcommands will be added with main comamnds
                     self.add_prefixed_command(func)
                 elif isinstance(func, Listener):
                     self.add_listener(func)
@@ -1458,19 +1466,18 @@ class Snake(
             return
 
         if not message.author.bot:
-            prefixes = await self.generate_prefixes(self, message)
+            prefixes: str | Iterable[str] = await self.generate_prefixes(self, message)
 
             if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
                 # its easier to treat everything as if it may be an iterable
                 # rather than building a special case for this
-                prefixes = (prefixes,)
+                prefixes = (prefixes,)  # type: ignore
 
             prefix_used = None
 
             for prefix in prefixes:
                 if prefix == MENTION_PREFIX:
-                    mention = self._mention_reg.search(message.content)
-                    if mention:
+                    if mention := self._mention_reg.search(message.content):  # type: ignore
                         prefix = mention.group()
                     else:
                         continue
@@ -1480,14 +1487,42 @@ class Snake(
                     break
 
             if prefix_used:
-                invoked_name = get_first_word(message.content.removeprefix(prefix_used))
-                command = self.prefixed_commands.get(invoked_name)
+                context = await self.get_context(message)
+                context.prefix = prefix_used
+
+                # interestingly enough, we cannot count on ctx.invoked_name
+                # being correct as its hard to account for newlines and the like
+                # with the way we get subcommands here
+                # we'll have to reconstruct it by getting the content_parameters
+                # then removing the prefix and the parameters from the message
+                # content
+                content_parameters = message.content.removeprefix(prefix_used)  # type: ignore
+                command = self  # yes, this is a hack
+
+                while True:
+                    first_word: str = get_first_word(content_parameters)  # type: ignore
+                    if isinstance(command, PrefixedCommand):
+                        new_command = command.subcommands.get(first_word)
+                    else:
+                        new_command = command.prefixed_commands.get(first_word)
+                    if not new_command or not new_command.enabled:
+                        break
+
+                    command = new_command
+                    content_parameters = content_parameters.removeprefix(first_word).strip()
+
+                    if command.subcommands and command.hierarchical_checking:
+                        await new_command._can_run(context)  # will error out if we can't run this command
+
+                if not isinstance(command, PrefixedCommand):
+                    command = None
 
                 if command and command.enabled:
-                    context = await self.get_context(message)
+                    # yeah, this looks ugly
                     context.command = command
-                    context.invoked_name = invoked_name
-                    context.prefix = prefix_used
+                    context.invoked_name = (
+                        message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
+                    )
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:

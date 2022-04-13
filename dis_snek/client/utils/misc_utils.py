@@ -16,6 +16,7 @@ __all__ = [
     "get_parameters",
     "get_event_name",
     "get_object_name",
+    "maybe_coroutine",
 ]
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
@@ -224,3 +225,11 @@ def get_object_name(x: Any) -> str:
         return x.__name__
     except AttributeError:
         return repr(x) if hasattr(x, "__origin__") else x.__class__.__name__
+
+
+async def maybe_coroutine(func: Callable, *args, **kwargs) -> Any:
+    """Allows running either a coroutine or a function."""
+    if inspect.iscoroutinefunction(func):
+        return await func(*args, **kwargs)
+    else:
+        return func(*args, **kwargs)

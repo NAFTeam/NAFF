@@ -80,7 +80,9 @@ class Scale:
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
-                new_cls._commands.append(val)
+                if not hasattr(val, "is_subcommand") or not val.is_subcommand():
+                    # we do not want to add prefixed subcommands here
+                    new_cls._commands.append(val)
 
                 if isinstance(val, snek.ModalCommand):
                     bot.add_modal_callback(val)

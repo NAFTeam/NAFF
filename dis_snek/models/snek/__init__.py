@@ -8,6 +8,7 @@ from .context import *
 from .converters import *
 from .cooldowns import *
 from .listener import *
+from .prefixed_commands import *
 from .protocols import *
 from .scale import *
 from .wait import *

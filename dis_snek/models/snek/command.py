@@ -11,7 +11,7 @@ from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.misc_utils import get_parameters, get_object_name
+from dis_snek.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
 from dis_snek.models.snek.protocols import Converter
@@ -19,7 +19,7 @@ from dis_snek.models.snek.protocols import Converter
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
 
-__all__ = ["BaseCommand", "PrefixedCommand", "prefixed_command", "check", "cooldown", "max_concurrency"]
+__all__ = ["BaseCommand", "check", "cooldown", "max_concurrency"]
 
 log = logging.getLogger(logger_name)
 
@@ -81,6 +81,9 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
+    def __hash__(self) -> int:
+        return id(self)
+
     async def __call__(self, context: "Context", *args, **kwargs) -> None:
         """
         Calls this command.
@@ -120,7 +123,8 @@ class BaseCommand(DictSerializationMixin):
             if self.max_concurrency is not MISSING:
                 await self.max_concurrency.release(context)
 
-    def _get_converter_function(self, anno: type[Converter] | Converter, name: str) -> Callable[[Context, str], Any]:
+    @staticmethod
+    def _get_converter_function(anno: type[Converter] | Converter, name: str) -> Callable[[Context, str], Any]:
         num_params = len(get_parameters(anno.convert))
 
         # if we have three parameters for the function, it's likely it has a self parameter
@@ -147,7 +151,7 @@ class BaseCommand(DictSerializationMixin):
     async def try_convert(self, converter: Optional[Callable], context: "Context", value: Any) -> Any:
         if converter is None:
             return value
-        return await converter(context, value)
+        return await maybe_coroutine(converter, context, value)
 
     def param_config(self, annotation: Any, name: str) -> Tuple[Callable, Optional[dict]]:
         # This thing is complicated. Snek-annotations can either be annotated directly, or they can be annotated with Annotated[str, CMD_*]
@@ -281,35 +285,6 @@ class BaseCommand(DictSerializationMixin):
             raise TypeError("post_run must be coroutine")
         self.post_run_callback = call
         return call
-
-
-@define()
-class PrefixedCommand(BaseCommand):
-    """Represents a command triggered by standard message with a specified prefix."""
-
-    name: str = field(metadata=docs("The name of the command"))
-
-
-def prefixed_command(
-    name: str = None,
-) -> Callable[[Callable[..., Coroutine]], PrefixedCommand]:
-    """
-    A decorator to declare a coroutine as a prefixed command.
-
-    Args:
-        name: The name of the command, defaults to the name of the coroutine
-    Returns:
-        Prefixed Command Object
-
-    """
-
-    def wrapper(func) -> PrefixedCommand:
-        if not asyncio.iscoroutinefunction(func):
-            raise ValueError("Commands must be coroutines")
-        cmd = PrefixedCommand(name=name or func.__name__, callback=func)
-        return cmd
-
-    return wrapper
 
 
 def check(check: Callable[["Context"], Awaitable[bool]]) -> Callable[[Coroutine], Coroutine]:
