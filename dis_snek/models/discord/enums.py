@@ -163,6 +163,8 @@ class Intents(DiscordIntFlag):  # type: ignore
         direct_messages=False,
         direct_message_reactions=False,
         direct_message_typing=False,
+        guild_message_content=False,
+        guild_scheduled_events=False,
         messages=False,
         reactions=False,
         typing=False,
