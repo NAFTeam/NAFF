@@ -55,6 +55,8 @@ class AudioWriter:
             raise RuntimeError("Attempted to write audio data after Writer is no longer recording.")
 
         if user_id not in self.files:
+            if user_id is None:
+                raise RuntimeError("Attempted to write audio without a known user_id")
             self.user_initial_timestamps[user_id] = time.perf_counter()
 
         file = self.files[user_id]
@@ -85,7 +87,6 @@ class AudioWriter:
             raise ValueError(
                 f"`{encoding}` is not a supported encoding format. Supported Encodings are: {' '.join(self.SUPPORTED_ENCODINGS)}"
             )
-
         for user_id in self.files:
             getattr(self, f"_encode_{encoding.lower()}")(user_id)
             with open(f"{self.channel_id}-{user_id}.{encoding}", "wb") as f:
