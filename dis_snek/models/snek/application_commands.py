@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 import logging
 import re
 from enum import IntEnum
@@ -20,6 +19,7 @@ from dis_snek.client.const import (
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
+from dis_snek.client.utils.input_utils import unpack_helper
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
@@ -521,25 +521,6 @@ class ModalCommand(ComponentCommand):
     ...
 
 
-def _unpack_helper(iterable: typing.Iterable[str]) -> list[str]:
-    """
-    Unpacks all types of iterable into a list of strings. Primarily to flatten generators.
-
-    Args:
-        iterable: The iterable of strings to unpack
-
-    Returns:
-        A list of strings
-    """
-    unpack = []
-    for c in iterable:
-        if inspect.isgenerator(c):
-            unpack += list(c)
-        else:
-            unpack.append(c)
-    return unpack
-
-
 ##############
 # Decorators #
 ##############
@@ -737,7 +718,7 @@ def component_callback(*custom_id: str) -> Callable[[Coroutine], ComponentComman
 
         return ComponentCommand(name=f"ComponentCallback::{custom_id}", callback=func, listeners=custom_id)
 
-    custom_id = _unpack_helper(custom_id)
+    custom_id = unpack_helper(custom_id)
     return wrapper
 
 
@@ -758,7 +739,7 @@ def modal_callback(*custom_id: str) -> Callable[[Coroutine], ModalCommand]:
 
         return ModalCommand(name=f"ModalCallback::{custom_id}", callback=func, listeners=custom_id)
 
-    custom_id = _unpack_helper(custom_id)
+    custom_id = unpack_helper(custom_id)
     return wrapper
 
 

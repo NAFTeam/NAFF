@@ -1,5 +1,7 @@
+import inspect
 import logging
 import re
+import typing
 from typing import Any, Dict, Union, Optional
 
 import aiohttp  # type: ignore
@@ -100,3 +102,22 @@ def get_first_word(text: str) -> Optional[str]:
 
     """
     return split[0] if (split := text.split(maxsplit=1)) else None
+
+
+def unpack_helper(iterable: typing.Iterable) -> list[Any]:
+    """
+    Unpacks all types of iterable into a list. Primarily to flatten generators.
+
+    Args:
+        iterable: The iterable to unpack
+
+    Returns:
+        A flattened list
+    """
+    unpack = []
+    for c in iterable:
+        if inspect.isgenerator(c):
+            unpack += list(c)
+        else:
+            unpack.append(c)
+    return unpack
