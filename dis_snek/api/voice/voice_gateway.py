@@ -262,7 +262,7 @@ class VoiceGateway(WebsocketClient):
         log.debug("IP Discovery in progress...")
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setblocking(False)
+        self.socket.setblocking(True)
 
         packet = bytearray(70)
         struct.pack_into(">H", packet, 0, 1)  # 1 = Send

@@ -100,9 +100,10 @@ class RawInputAudio:
         self.sequence = int.from_bytes(header[2:4], byteorder="big")
         self.timestamp = int.from_bytes(header[4:8], byteorder="big")
 
-        # noinspection PyProtectedMember
-        self.pcm = self._recorder._decoder.decode(decrypted)
-        return self.pcm
+        if not self._recorder.recording_whitelist or self.user_id in self._recorder.recording_whitelist:
+            # noinspection PyProtectedMember
+            self.pcm = self._recorder._decoder.decode(decrypted)
+            return self.pcm
 
     @property
     def user_id(self) -> Optional[int]:
