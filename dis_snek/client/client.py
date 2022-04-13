@@ -257,8 +257,8 @@ class Snake(
         self._app: Absent[Application] = MISSING
 
         # collections
-        self.commands: Dict[str, PrefixedCommand] = {}
-        """A dictionary of registered commands: `{name: command}`"""
+        self.prefixed_commands: Dict[str, PrefixedCommand] = {}
+        """A dictionary of registered prefixed commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
@@ -953,8 +953,8 @@ class Snake(
             command InteractionCommand: The command to add
 
         """
-        if command.name not in self.commands:
-            self.commands[command.name] = command
+        if command.name not in self.prefixed_commands:
+            self.prefixed_commands[command.name] = command
             return
         raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
 
@@ -1481,7 +1481,7 @@ class Snake(
 
             if prefix_used:
                 invoked_name = get_first_word(message.content.removeprefix(prefix_used))
-                command = self.commands.get(invoked_name)
+                command = self.prefixed_commands.get(invoked_name)
 
                 if command and command.enabled:
                     context = await self.get_context(message)

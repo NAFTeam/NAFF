@@ -141,8 +141,8 @@ class Scale:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
             elif isinstance(func, snek.PrefixedCommand):
-                if self.bot.commands[func.name]:
-                    self.bot.commands.pop(func.name)
+                if self.bot.prefixed_commands[func.name]:
+                    self.bot.prefixed_commands.pop(func.name)
         for func in self.listeners:
             self.bot.listeners[func.event].remove(func)
 
