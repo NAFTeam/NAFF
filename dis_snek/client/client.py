@@ -1545,7 +1545,7 @@ class Snake(
 
         """
         if scale := self.get_scales(scale_name):
-            return self.unload_extension(inspect.getmodule(scale).__name__, **unload_kwargs)
+            return self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
         raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
