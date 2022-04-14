@@ -1552,8 +1552,8 @@ class Snake(
 
             if self.sync_scales:
                 asyncio.create_task(self.synchronise_interactions())
-
-        raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+        else:
+            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def regrow_scale(
         self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
