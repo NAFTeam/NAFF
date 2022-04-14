@@ -1504,22 +1504,24 @@ class Snake(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scale(self, name) -> Optional[Scale]:
+    def get_scale(self, name) -> list[Scale]:
         """
-        Get a scale.
+        Get all scales with a name or extension name.
 
         Args:
             name: The name of the scale, or the name of it's extension
 
         Returns:
-            Scale or None if no scale is found
+            List of Scales
         """
+        out = []
         if name not in self.scales.keys():
             for scale in self.scales.values():
                 if scale.extension_name == name:
-                    return scale
+                    out.append(scale)
+            return out
 
-        return self.scales.get(name, None)
+        return [self.scales.get(name, None)]
 
     def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
@@ -1622,7 +1624,7 @@ class Snake(
         except AttributeError:
             pass
 
-        if scale := self.get_scale(name):
+        for scale in self.get_scale(name):
             scale.shed(**unload_kwargs)
 
         del sys.modules[name]
