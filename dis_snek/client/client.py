@@ -1504,7 +1504,7 @@ class Snake(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scale(self, name) -> list[Scale]:
+    def get_scales(self, name) -> list[Scale]:
         """
         Get all scales with a name or extension name.
 
@@ -1544,7 +1544,7 @@ class Snake(
             unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
-        if scale := self.get_scale(scale_name):
+        if scale := self.get_scales(scale_name):
             return self.unload_extension(inspect.getmodule(scale).__name__, **unload_kwargs)
 
         raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
@@ -1624,7 +1624,7 @@ class Snake(
         except AttributeError:
             pass
 
-        for scale in self.get_scale(name):
+        for scale in self.get_scales(name):
             scale.shed(**unload_kwargs)
 
         del sys.modules[name]
