@@ -7,3 +7,6 @@ Within these pages, you will find a list of all available models within Snek.
 
 - [Snek](Snek)
     - Models for library constructs
+
+- [Utils](Utils)
+    - Models for constructs that fit neither category
