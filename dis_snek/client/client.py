@@ -1507,22 +1507,38 @@ class Snake(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scale(self, name) -> Optional[Scale]:
+    def get_scales(self, name: str) -> list[Scale]:
         """
-        Get a scale.
+        Get all scales with a name or extension name.
 
         Args:
             name: The name of the scale, or the name of it's extension
 
         Returns:
-            Scale or None if no scale is found
+            List of Scales
         """
+        out = []
         if name not in self.scales.keys():
             for scale in self.scales.values():
                 if scale.extension_name == name:
-                    return scale
+                    out.append(scale)
+            return out
 
-        return self.scales.get(name, None)
+        return [self.scales.get(name, None)]
+
+    def get_scale(self, name: str) -> Scale | None:
+        """
+        Get a scale with a name or extension name.
+
+        Args:
+            name: The name of the scale, or the name of it's extension
+
+        Returns:
+            A scale, if found
+        """
+        if scales := self.get_scales(name):
+            return scales[0]
+        return None
 
     def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
@@ -1547,11 +1563,12 @@ class Snake(
             unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
-        if scale := self.get_scale(scale_name):
-            self.unload_extension(inspect.getmodule(scale).__name__, **unload_kwargs)
+        if scale := self.get_scales(scale_name):
+            self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
             if self.sync_scales:
                 asyncio.create_task(self.synchronise_interactions())
+
         else:
             raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
@@ -1630,7 +1647,7 @@ class Snake(
         except AttributeError:
             pass
 
-        if scale := self.get_scale(name):
+        for scale in self.get_scales(name):
             scale.shed(**unload_kwargs)
 
         del sys.modules[name]
