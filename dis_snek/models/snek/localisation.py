@@ -40,7 +40,10 @@ class LocalisedField:
     vietnamese: str | None = field(default=None, metadata={"locale-code": "vi"})
 
     def __str__(self) -> str:
-        return getattr(self, self.default_locale)
+        return str(getattr(self, self.default_locale))
+
+    def __bool__(self) -> bool:
+        return getattr(self, self.default_locale) is not None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}: default_locale={self.default_locale}, value='{self.__str__()}'>"
@@ -62,10 +65,14 @@ class LocalisedField:
         except AttributeError:
             raise ValueError(f"`{value}` is not a supported default localisation") from None
 
-    def to_dict(self) -> dict:
+    def as_dict(self) -> str:
+        return str(self)
+
+    def to_locale_dict(self) -> dict:
         data = {}
         for attr in self.__attrs_attrs__:
-            if "locale-code" in attr.metadata:
-                if val := getattr(self, attr.name):
-                    data[attr.metadata["locale-code"]] = val
+            if attr.name != self.default_locale:
+                if "locale-code" in attr.metadata:
+                    if val := getattr(self, attr.name):
+                        data[attr.metadata["locale-code"]] = val
         return data
