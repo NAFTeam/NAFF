@@ -1504,7 +1504,7 @@ class Snake(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scales(self, name) -> list[Scale]:
+    def get_scales(self, name: str) -> list[Scale]:
         """
         Get all scales with a name or extension name.
 
@@ -1522,6 +1522,20 @@ class Snake(
             return out
 
         return [self.scales.get(name, None)]
+
+    def get_scale(self, name: str) -> Scale | None:
+        """
+        Get a scale with a name or extension name.
+
+        Args:
+            name: The name of the scale, or the name of it's extension
+
+        Returns:
+            A scale, if found
+        """
+        if scales := self.get_scales(name):
+            return scales[0]
+        return None
 
     def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
