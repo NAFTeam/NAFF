@@ -7,7 +7,6 @@
 - [Commands](command)
 - [Context](context)
 - [Cooldowns](cooldowns)
-- [Iterator](iterator)
 - [Listeners](listener)
 - [Scales](scale)
 - [Tasks](tasks.md)
