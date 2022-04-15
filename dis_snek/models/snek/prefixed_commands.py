@@ -374,6 +374,9 @@ class PrefixedCommand(BaseCommand):
         This allows variables like "self" to be filtered out, and is useful for
         potential future additions.
         """
+        # clear out old parameters just in case
+        self.parameters = []
+
         # we don't care about the ctx variable
         callback = functools.partial(self.callback, None)
 
