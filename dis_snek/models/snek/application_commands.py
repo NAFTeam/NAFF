@@ -56,6 +56,10 @@ __all__ = [
     "auto_defer",
     "application_commands_to_dict",
     "sync_needed",
+    "LocalisedName",
+    "LocalizedName",
+    "LocalizedDesc",
+    "LocalisedDesc",
 ]
 
 log = logging.getLogger(logger_name)
