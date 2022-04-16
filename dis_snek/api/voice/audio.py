@@ -1,4 +1,3 @@
-import asyncio
 import audioop
 import subprocess  # noqa: S404
 import threading
@@ -7,7 +6,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-__all__ = ["AudioBuffer", "BaseAudio", "Audio", "AudioVolume", "YTDLAudio"]
+__all__ = [
+    "AudioBuffer",
+    "BaseAudio",
+    "Audio",
+    "AudioVolume",
+]
 
 try:
     from yt_dlp import YoutubeDL
@@ -225,29 +229,3 @@ class AudioVolume(Audio):
         """
         data = super().read(frame_size)
         return audioop.mul(data, 2, self._volume)
-
-
-class YTDLAudio(AudioVolume):
-    """An audio object to play sources supported by YTDLP"""
-
-    def __init__(self, src) -> None:
-        super().__init__(src)
-        self.entry: Optional[dict] = None
-
-    @classmethod
-    async def from_url(cls, url, stream=True) -> "YTDLAudio":
-        """Create this object from a YTDL support url."""
-        data = await asyncio.to_thread(lambda: ytdl.extract_info(url, download=not stream))
-
-        if "entries" in data:
-            data = data["entries"][0]
-
-        filename = data["url"] if stream else ytdl.prepare_filename(data)
-
-        new_cls = cls(filename)
-
-        if stream:
-            new_cls.ffmpeg_before_args = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
-
-        new_cls.entry = data
-        return new_cls
