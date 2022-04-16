@@ -8,6 +8,12 @@ __all__ = ("LocalisedField", "LocalizedField")
 
 @define(slots=False)
 class LocalisedField:
+    """
+    An object that enables support for localising fields.
+
+    Supported locales: https://discord.com/developers/docs/reference#locales
+    """
+
     default_locale: str = field(default=const.default_locale)
 
     bulgarian: str | None = field(default=None, metadata={"locale-code": "bg"})

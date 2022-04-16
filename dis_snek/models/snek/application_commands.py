@@ -81,12 +81,16 @@ def desc_validator(_: Any, attr: Attribute, value: str) -> None:
 
 @define(field_transformer=attrs_validator(name_validator, skip_fields=["default_locale"]))
 class LocalisedName(LocalisedField):
+    """A localisation object for names."""
+
     def __repr__(self) -> str:
         return super().__repr__()
 
 
 @define(field_transformer=attrs_validator(desc_validator, skip_fields=["default_locale"]))
 class LocalisedDesc(LocalisedField):
+    """A localisation object for descriptions."""
+
     def __repr__(self) -> str:
         return super().__repr__()
 
