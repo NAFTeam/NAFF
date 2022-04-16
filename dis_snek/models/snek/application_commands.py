@@ -992,6 +992,9 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
                         or local_option["description"] != remote_option["description"]
                         or local_option["required"] != remote_option.get("required", False)
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
+                        or local_option.get("name_localized", {}) != remote_option.get("name_localized", {})
+                        or local_option.get("description_localized", {})
+                        != remote_option.get("description_localized", {})
                         or local_option.get("choices", []) != remote_option.get("choices", [])
                     ):
                         return False
@@ -1020,6 +1023,8 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
         local_cmd["name"] != remote_cmd["name"]
         or local_cmd.get("description", "") != remote_cmd.get("description", "")
         or local_cmd["default_permission"] != remote_cmd["default_permission"]
+        or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
+        or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
     ):
         # basic comparison of attributes
         return True
