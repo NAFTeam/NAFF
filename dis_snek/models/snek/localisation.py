@@ -1,10 +1,12 @@
+from functools import cached_property
+
 from dis_snek.client import const
 from dis_snek.client.utils import define, field
 
 __all__ = ("LocalisedField",)
 
 
-@define()
+@define(slots=False)
 class LocalisedField:
     default_locale: str = field(default=const.default_locale)
 
@@ -40,13 +42,43 @@ class LocalisedField:
     vietnamese: str | None = field(default=None, metadata={"locale-code": "vi"})
 
     def __str__(self) -> str:
-        return str(getattr(self, self.default_locale))
+        return str(self.default)
 
     def __bool__(self) -> bool:
-        return getattr(self, self.default_locale) is not None
+        return self.default is not None
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}: default_locale={self.default_locale}, value='{self.__str__()}'>"
+        return f"<{self.__class__.__name__}: default_locale={self.default_locale}, value='{self}'>"
+
+    @cached_property
+    def _code_mapping(self) -> dict:
+        """Generates a lookup table for this object on demand to allow for value retrieval with locale codes"""
+        data = {}
+        for attr in self.__attrs_attrs__:
+            if attr.name != self.default_locale:
+                if code := attr.metadata.get("locale-code"):
+                    data[code] = attr.name
+        return data
+
+    @property
+    def default(self) -> str:
+        """The default value based on the CONST default_locale"""
+        return getattr(self, self.default_locale)
+
+    def get_locale(self, locale: str) -> str:
+        """
+        Get the value for the specified locale.
+
+        Args:
+            locale: The locale to fetch
+
+        Returns:
+            The localised string, or the default value
+        """
+        if attr := self._code_mapping.get(locale):
+            if val := getattr(self, attr, self.default):
+                return val
+        return getattr(self, locale, self.default)
 
     @classmethod
     def converter(cls, value: str | None) -> "LocalisedField":
