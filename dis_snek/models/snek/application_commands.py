@@ -228,6 +228,9 @@ class InteractionCommand(BaseCommand):
         """A representation of this interaction's name."""
         return str(self.name)
 
+    def get_localised_name(self, locale: str) -> str:
+        return self.name.get_locale(locale)
+
     def get_cmd_id(self, scope: "Snowflake_Type") -> "Snowflake_Type":
         return self.cmd_id.get(scope, self.cmd_id.get(GLOBAL_SCOPE, None))
 
@@ -400,7 +403,18 @@ class SlashCommand(InteractionCommand):
 
     @property
     def resolved_name(self) -> str:
-        return f"{self.name}{f' {self.group_name}' if self.group_name else ''}{f' {self.sub_cmd_name}' if self.sub_cmd_name else ''}"
+        return (
+            f"{self.name}"
+            f"{f' {self.group_name}' if bool(self.group_name) else ''}"
+            f"{f' {self.sub_cmd_name}' if bool(self.sub_cmd_name) else ''}"
+        )
+
+    def get_localised_name(self, locale: str) -> str:
+        return (
+            f"{self.name.get_locale(locale)}"
+            f"{f' {self.group_name.get_locale(locale)}' if bool(self.group_name) else ''}"
+            f"{f' {self.sub_cmd_name.get_locale(locale)}' if bool(self.sub_cmd_name) else ''}"
+        )
 
     @property
     def is_subcommand(self) -> bool:

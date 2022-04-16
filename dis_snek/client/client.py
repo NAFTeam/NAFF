@@ -487,7 +487,7 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        await self.on_error(f"cmd /`{ctx.invoke_target}`", error, *args, **kwargs)
         try:
             if isinstance(error, errors.CommandOnCooldown):
                 await ctx.send(
@@ -541,7 +541,7 @@ class Snake(
             symbol = "/"
         else:
             symbol = "?"  # likely custom context
-        log.info(f"Command Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -565,7 +565,7 @@ class Snake(
 
         """
         symbol = "¢"
-        log.info(f"Component Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -577,7 +577,7 @@ class Snake(
 
         """
         return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}",
+            f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
             error,
             *args,
             **kwargs,
@@ -594,7 +594,7 @@ class Snake(
 
         """
         symbol = "$"
-        log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     @Listener.create()
     async def on_resume(self) -> None:
@@ -1119,7 +1119,7 @@ class Snake(
                         (v for v in remote_commands if int(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
                     )
                     # get json representation of this command
-                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == local_cmd.name))
+                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == str(local_cmd.name)))
 
                     # this works by adding any command we *want* on Discord, to a payload, and synchronising that
                     # this allows us to delete unused commands, add new commands, or do nothing in 1 or less API calls
@@ -1372,7 +1372,7 @@ class Snake(
             if scope in self.interactions:
                 ctx = await self.get_context(interaction_data, True)
 
-                ctx.command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                ctx.command: SlashCommand = self.interactions[scope][ctx.invoke_target]  # type: ignore
                 log.debug(f"{scope} :: {ctx.command.name} should be called")
 
                 if ctx.command.auto_defer:
@@ -1486,7 +1486,7 @@ class Snake(
                 if command and command.enabled:
                     context = await self.get_context(message)
                     context.command = command
-                    context.invoked_name = invoked_name
+                    context.invoke_target = invoked_name
                     context.prefix = prefix_used
                     context.args = get_args(context.content_parameters)
                     try:

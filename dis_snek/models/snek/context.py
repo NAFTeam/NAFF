@@ -107,7 +107,7 @@ class Context:
     """Represents the context of a command."""
 
     _client: "Snake" = field(default=None)
-    invoked_name: str = field(default=None, metadata=docs("The name of the command to be invoked"))
+    invoke_target: str = field(default=None, metadata=docs("The name of the command to be invoked"))
     command: Optional["BaseCommand"] = field(default=None, metadata=docs("The command to be invoked"))
 
     args: List = field(factory=list, metadata=docs("The list of arguments to be passed to the command"))
@@ -170,7 +170,7 @@ class _BaseInteractionContext(Context):
             token=data["token"],
             interaction_id=data["id"],
             data=data,
-            invoked_name=data["data"].get("name"),
+            invoke_target=data["data"].get("name"),
             guild_id=data.get("guild_id"),
             context_type=data["data"].get("type", 0),
             locale=data.get("locale"),
@@ -198,17 +198,16 @@ class _BaseInteractionContext(Context):
     def _process_options(self, data: dict) -> None:
         kwargs = {}
         guild_id = to_snowflake(data.get("guild_id", 0))
-
         if options := data["data"].get("options"):
             o_type = options[0]["type"]
             if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
                 # this is a subcommand, process accordingly
                 if o_type == OptionTypes.SUB_COMMAND:
-                    self.invoked_name = f"{self.invoked_name} {options[0]['name']}"
+                    self.invoke_target = f"{self.invoke_target} {options[0]['name']}"
                     options = options[0].get("options", [])
                 else:
-                    self.invoked_name = (
-                        f"{self.invoked_name} {options[0]['name']} "
+                    self.invoke_target = (
+                        f"{self.invoke_target} {options[0]['name']} "
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
@@ -256,6 +255,10 @@ class _BaseInteractionContext(Context):
     def expired(self) -> bool:
         """Has the interaction expired yet?"""
         return Timestamp.utcnow() >= self.expires_at
+
+    @property
+    def invoked_name(self) -> str:
+        return self.command.get_localised_name(self.locale)
 
     async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
         """
@@ -632,7 +635,7 @@ class MessageContext(Context, SendMixin):
 
     @property
     def content_parameters(self) -> str:
-        return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
+        return self.message.content.removeprefix(f"{self.prefix}{self.invoke_target}").strip()
 
     async def reply(
         self,
