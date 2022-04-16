@@ -67,7 +67,7 @@ class LocalisedField:
 
     def get_locale(self, locale: str) -> str:
         """
-        Get the value for the specified locale.
+        Get the value for the specified locale. Supports locale-codes and locale names.
 
         Args:
             locale: The locale to fetch
@@ -75,10 +75,17 @@ class LocalisedField:
         Returns:
             The localised string, or the default value
         """
+        if val := getattr(self, locale, None):
+            # Attempt to retrieve an attribute with the specified locale
+            return val
         if attr := self._code_mapping.get(locale):
+            # assume the locale is a code, and attempt to find an attribute with that code
             if val := getattr(self, attr, self.default):
+                # if the value isn't None, return
                 return val
-        return getattr(self, locale, self.default)
+
+        # no value was found, return default
+        return self.default
 
     @classmethod
     def converter(cls, value: str | None) -> "LocalisedField":
