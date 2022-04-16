@@ -80,7 +80,7 @@ class LocalisedField:
             return val
         if attr := self._code_mapping.get(locale):
             # assume the locale is a code, and attempt to find an attribute with that code
-            if val := getattr(self, attr, self.default):
+            if val := getattr(self, attr, None):
                 # if the value isn't None, return
                 return val
 
