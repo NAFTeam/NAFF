@@ -3,7 +3,7 @@ from functools import cached_property
 from dis_snek.client import const
 from dis_snek.client.utils import define, field
 
-__all__ = ("LocalisedField",)
+__all__ = ("LocalisedField", "LocalizedField")
 
 
 @define(slots=False)
@@ -115,3 +115,6 @@ class LocalisedField:
                     if val := getattr(self, attr.name):
                         data[attr.metadata["locale-code"]] = val
         return data
+
+
+LocalizedField = LocalisedField

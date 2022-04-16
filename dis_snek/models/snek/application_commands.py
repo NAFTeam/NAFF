@@ -87,6 +87,10 @@ class LocalisedDesc(LocalisedField):
         return super().__repr__()
 
 
+LocalizedName = LocalisedName
+LocalizedDesc = LocalisedDesc
+
+
 class OptionTypes(IntEnum):
     """Option types supported by slash commands."""
 
