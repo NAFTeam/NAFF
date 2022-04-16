@@ -8,6 +8,7 @@ jobs:
       matrix:
         extras:
           - .
+          - .[speedup]
           - .[voice]
           - .[all]
           - .[docs]
