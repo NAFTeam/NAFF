@@ -1065,17 +1065,18 @@ class Snake(
             found = set()  # this is a temporary hack to fix subcommand detection
             if scope in self.interactions:
                 for cmd in self.interactions[scope].values():
-                    cmd_data = remote_cmds.get(cmd.name, MISSING)
+                    cmd_name = str(cmd.name)
+                    cmd_data = remote_cmds.get(cmd_name, MISSING)
                     if cmd_data is MISSING:
-                        if cmd.name not in found:
+                        if cmd_name not in found:
                             if warn_missing:
                                 log.error(
-                                    f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                                    f'Detected yet to sync slash command "/{cmd_name}" for scope '
                                     f"{'global' if scope == GLOBAL_SCOPE else scope}"
                                 )
                         continue
                     else:
-                        found.add(cmd.name)
+                        found.add(cmd_name)
                     self._interaction_scopes[str(cmd_data["id"])] = scope
                     cmd.cmd_id[scope] = int(cmd_data["id"])
 
