@@ -165,26 +165,28 @@ class Snake(
 
     def __init__(
         self,
-        intents: Union[int, Intents] = Intents.DEFAULT,
+        *,
+        activity: Union[Activity, str] = None,
+        auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
+        autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
+        component_context: Type[ComponentContext] = ComponentContext,
+        debug_scope: Absent["Snowflake_Type"] = MISSING,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
-        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
-        sync_interactions: bool = True,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
-        debug_scope: Absent["Snowflake_Type"] = MISSING,
-        status: Status = Status.ONLINE,
-        activity: Union[Activity, str] = None,
-        auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
+        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
+        global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
-        component_context: Type[ComponentContext] = ComponentContext,
-        autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
-        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
-        global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         send_command_tracebacks: bool = True,
-        total_shards: int = 1,
         shard_id: int = 0,
+        status: Status = Status.ONLINE,
+        sync_interactions: bool = True,
+        sync_scales: bool = True,
+        total_shards: int = 1,
         **kwargs,
     ) -> None:
 
@@ -194,6 +196,8 @@ class Snake(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
+        self.sync_scales: bool = sync_scales
+        """Should we sync whenever a scale is (un)loaded"""
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
@@ -1592,6 +1596,8 @@ class Snake(
 
         """
         self.load_extension(file_name, package, **load_kwargs)
+        if self.sync_scales:
+            asyncio.create_task(self.synchronise_interactions())
 
     def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
         """
@@ -1603,9 +1609,13 @@ class Snake(
 
         """
         if scale := self.get_scales(scale_name):
-            return self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
+            self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
-        raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+            if self.sync_scales:
+                asyncio.create_task(self.synchronise_interactions())
+
+        else:
+            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def regrow_scale(
         self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
