@@ -43,7 +43,7 @@ class PrefixedCommandParameter:
 
 
 @attrs.define(slots=True)
-class ArgsIterator:
+class _PrefixedArgsIterator:
     """
     An iterator over the arguments of a prefixed command.
 
@@ -54,7 +54,7 @@ class ArgsIterator:
     index: int = attrs.field(init=False, default=0)
     length: int = attrs.field(init=False, default=0)
 
-    def __iter__(self) -> "ArgsIterator":
+    def __iter__(self) -> "_PrefixedArgsIterator":
         self.length = len(self.args)
         return self
 
@@ -199,7 +199,7 @@ async def _convert(param: PrefixedCommandParameter, ctx: "PrefixedContext", arg:
 
 
 async def _greedy_convert(
-    param: PrefixedCommandParameter, ctx: "PrefixedContext", args: ArgsIterator
+    param: PrefixedCommandParameter, ctx: "PrefixedContext", args: _PrefixedArgsIterator
 ) -> tuple[list[Any] | Any, bool]:
     args.back()
     broke_off = False
@@ -574,7 +574,7 @@ class PrefixedCommand(BaseCommand):
             # this is slightly costly, but probably worth it
             new_args: list[Any] = []
             kwargs: dict[str, Any] = {}
-            args = ArgsIterator(tuple(ctx.args))
+            args = _PrefixedArgsIterator(tuple(ctx.args))
             param_index = 0
 
             for arg in args:
