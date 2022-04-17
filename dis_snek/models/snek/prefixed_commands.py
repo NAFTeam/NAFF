@@ -3,7 +3,7 @@ import inspect
 import typing
 from collections import deque
 from types import NoneType, UnionType
-from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING
+from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING, Type
 
 import attrs
 
@@ -26,19 +26,30 @@ __all__ = (
 
 @attrs.define(slots=True)
 class PrefixedCommandParameter:
-    """An object representing parameters in a prefixed command."""
+    """
+    An object representing parameters in a prefixed command.
 
-    name: str = attrs.field(default=None)
-    default: Optional[Any] = attrs.field(default=None)
-    type: type = attrs.field(default=None)
-    converters: list[Callable[["PrefixedContext", str], Any]] = attrs.field(factory=list)
-    greedy: bool = attrs.field(default=False)
-    union: bool = attrs.field(default=False)
-    variable: bool = attrs.field(default=False)
-    consume_rest: bool = attrs.field(default=False)
+    This class should not be instantiated directly.
+    """
+
+    name: str = attrs.field(default=None, metadata=docs("The name of the parameter."))
+    default: Optional[Any] = attrs.field(default=None, metadata=docs("The default value of the parameter."))
+    type: Type = attrs.field(
+        default=None, metadata=docs("The type of the parameter.")
+    )  # yes i can use type here, mkdocs doesnt like that
+    converters: list[Callable[["PrefixedContext", str], Any]] = attrs.field(
+        factory=list, metadata=docs("A list of the converter functions for the parameter that convert to its type.")
+    )
+    greedy: bool = attrs.field(default=False, metadata=docs("Is the parameter greedy?"))
+    union: bool = attrs.field(default=False, metadata=docs("Is the parameter a union?"))
+    variable: bool = attrs.field(default=False, metadata=docs("Was the parameter marked as a variable argument?"))
+    consume_rest: bool = attrs.field(
+        default=False, metadata=docs("Was the parameter marked to consume the rest of the input?")
+    )
 
     @property
     def optional(self) -> bool:
+        """Is this parameter optional?"""
         return self.default != MISSING
 
 
