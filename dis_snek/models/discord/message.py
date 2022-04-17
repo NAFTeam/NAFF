@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Uni
 from aiohttp import FormData
 
 import dis_snek.models as models
-from dis_snek.client.const import MISSING, Absent
+from dis_snek.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
 from dis_snek.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
@@ -426,6 +426,39 @@ class Message(BaseMessage):
             data["sticker_items"] = models.StickerItem.from_list(data["sticker_items"], client)
 
         return data
+
+    @property
+    def system_content(self) -> Optional[str]:
+        """Content for system messages. (boosts, welcomes, etc)"""
+        match self.type:
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION:
+                return f"{self.author.mention} just boosted the server!"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 1!**"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 2!**"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 3!**"
+            case MessageTypes.GUILD_MEMBER_JOIN:
+                return GUILD_WELCOME_MESSAGES[
+                    int(self.timestamp.timestamp() * 1000)
+                    % len(GUILD_WELCOME_MESSAGES)
+                    # This is how Discord calculates the welcome message.
+                ].format(self.author.mention)
+            case MessageTypes.THREAD_CREATED:
+                return f"{self.author.mention} started a thread: {self.thread.mention}. See all threads."
+            case MessageTypes.CHANNEL_FOLLOW_ADD:
+                return f"{self.author.mention} has added **{self.content}** to this channel. Its most important updates will show up here."
+            case MessageTypes.RECIPIENT_ADD:
+                return f"{self.author.mention} added <@{self._mention_ids[0]}> to the thread."
+            case MessageTypes.RECIPIENT_REMOVE:
+                return f"{self.author.mention} removed <@{self._mention_ids[0]}> from the thread."
+            case MessageTypes.CHANNEL_NAME_CHANGE:
+                return f"{self.author.mention} changed the channel name: **{self.content}**."
+            case MessageTypes.CHANNEL_PINNED_MESSAGE:
+                return f"{self.author.mention} pinned a message. See all pinned messages"
+            case _:
+                return None
 
     @property
     def jump_url(self) -> str:

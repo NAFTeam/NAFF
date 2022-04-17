@@ -173,5 +173,22 @@ PREMIUM_GUILD_LIMITS = defaultdict(
     },
 )
 
+
+GUILD_WELCOME_MESSAGES = [
+    "{0} joined the party.",
+    "{0} is here.",
+    "Welcome, {0}. We hope you brought pizza.",
+    "A wild {0} appeared.",
+    "{0} just landed.",
+    "{0} just slid into the server.",
+    "{0} just showed up!",
+    "Welcome {0}. Say hi!",
+    "{0} hopped into the server.",
+    "Everyone welcome {0}!",
+    "Glad you're here, {0}.",
+    "Good to see you, {0}.",
+    "Yay you made it, {0}!",
+]
+
 T = TypeVar("T")
 Absent = Union[T, Missing]
