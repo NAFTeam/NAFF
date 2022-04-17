@@ -35,6 +35,8 @@ async def hello_cmd(ctx: dis_snek.InteractionContext):
     await ctx.send(f"{ctx.invoked_name} {ctx.author.display_name}")
 ```
 Simply by changing `"hello"` to `ctx.invoked_name` the command will always use whatever the user typed to greet them.
+If you want to know what locale the user is in, simply use `ctx.locale`.
+
 
 This will work for any object with a `name` or `description` field. Simply use `LocalisedDesc` instead for descriptions.
 For example, you can localise options, choices, and subcommands.
