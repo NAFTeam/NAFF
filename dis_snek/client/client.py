@@ -185,6 +185,7 @@ class Snake(
         shard_id: int = 0,
         status: Status = Status.ONLINE,
         sync_interactions: bool = True,
+        sync_scales: bool = True,
         total_shards: int = 1,
         **kwargs,
     ) -> None:
@@ -195,6 +196,8 @@ class Snake(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
+        self.sync_scales: bool = sync_scales
+        """Should we sync whenever a scale is (un)loaded"""
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
@@ -1549,6 +1552,8 @@ class Snake(
 
         """
         self.load_extension(file_name, package, **load_kwargs)
+        if self.sync_scales:
+            asyncio.create_task(self.synchronise_interactions())
 
     def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
         """
@@ -1560,9 +1565,13 @@ class Snake(
 
         """
         if scale := self.get_scales(scale_name):
-            return self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
+            self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
-        raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+            if self.sync_scales:
+                asyncio.create_task(self.synchronise_interactions())
+
+        else:
+            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def regrow_scale(
         self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
