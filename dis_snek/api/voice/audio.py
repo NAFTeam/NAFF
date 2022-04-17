@@ -13,27 +13,6 @@ __all__ = [
     "AudioVolume",
 ]
 
-try:
-    from yt_dlp import YoutubeDL
-
-    ytdl = YoutubeDL(
-        {
-            "format": "bestaudio/best",
-            "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
-            "restrictfilenames": True,
-            "noplaylist": True,
-            "nocheckcertificate": True,
-            "ignoreerrors": False,
-            "logtostderr": False,
-            "quiet": True,
-            "no_warnings": True,
-            "default_search": "auto",
-            "source_address": "0.0.0.0",  # noqa: S104
-        }
-    )
-except ImportError:
-    pass
-
 
 class AudioBuffer:
     def __init__(self) -> None:
