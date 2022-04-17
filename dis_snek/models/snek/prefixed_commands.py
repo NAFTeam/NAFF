@@ -12,7 +12,7 @@ from dis_snek.client.errors import BadArgument
 from dis_snek.client.utils.input_utils import _quotes
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_object_name, maybe_coroutine
-from dis_snek.models.snek.converters import Converter, LiteralConverter, Greedy, SNEK_MODEL_TO_CONVERTER
+from dis_snek.models.snek.converters import Converter, _LiteralConverter, Greedy, SNEK_MODEL_TO_CONVERTER
 from dis_snek.models.snek.command import BaseCommand
 
 if TYPE_CHECKING:
@@ -145,7 +145,7 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
         return BaseCommand._get_converter_function(converter, name)
     elif typing.get_origin(anno) is Literal:
         literals = typing.get_args(anno)
-        return LiteralConverter(literals).convert
+        return _LiteralConverter(literals).convert
     elif inspect.isfunction(anno):
         num_params = len(inspect.signature(anno).parameters.values())
         match num_params:

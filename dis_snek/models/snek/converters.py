@@ -38,7 +38,6 @@ from dis_snek.client.errors import BadArgument
 
 
 __all__ = (
-    "LiteralConverter",
     "IDConverter",
     "SnowflakeConverter",
     "MemberConverter",
@@ -69,7 +68,7 @@ __all__ = (
 )
 
 
-class LiteralConverter(Converter):
+class _LiteralConverter(Converter):
     values: dict
 
     def __init__(self, args: Any) -> None:
