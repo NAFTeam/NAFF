@@ -430,7 +430,12 @@ class PrefixedCommand(BaseCommand):
         return bool(self.parent)
 
     def add_command(self, cmd: "PrefixedCommand") -> None:
-        """Adds a command as a subcommand to this command."""
+        """
+        Adds a command as a subcommand to this command.
+
+        Args:
+            cmd: The command to add
+        """
         cmd.parent = self  # just so we know this is a subcommand
 
         cmd_names = frozenset(self.subcommands)
@@ -452,6 +457,9 @@ class PrefixedCommand(BaseCommand):
         Removes a command as a subcommand from this command.
 
         If an alias is specified, only the alias will be removed.
+
+        Args:
+            name: The command to remove.
         """
         command = self.subcommands.pop(name, None)
 
@@ -466,10 +474,10 @@ class PrefixedCommand(BaseCommand):
         Gets a subcommand from this command. Can get subcommands of subcommands if needed.
 
         Args:
-            name (`str`): The command to search for.
+            name: The command to search for.
 
         Returns:
-            `PrefixedCommand`: The command object, if found.
+            PrefixedCommand: The command object, if found.
         """
         if " " not in name:
             return self.subcommands.get(name)
@@ -507,38 +515,15 @@ class PrefixedCommand(BaseCommand):
         A decorator to declare a subcommand for a prefixed command.
 
         Args:
-            name (`str`, optional): The name of the command.
-            Defaults to the name of the coroutine.
-
-            aliases (`list[str]`, optional): The list of aliases the
-            command can be invoked under.
-
-            help (`str`, optional): The long help text for the command.
-            Defaults to the docstring of the coroutine, if there is one.
-
-            brief (`str`, optional): The short help text for the command.
-            Defaults to the first line of the help text, if there is one.
-
-            usage(`str`, optional): A string displaying how the command
-            can be used. If no string is set, it will default to the
-            command's signature. Useful for help commands.
-
-            enabled (`bool`, optional): Whether this command can be run
-            at all. Defaults to True.
-
-            hidden (`bool`, optional): If `True`, the default help
-            command (when it is added) does not show this in the help
-            output. Defaults to False.
-
-            ignore_extra (`bool`, optional): If `True`, ignores extraneous
-            strings passed to a command if all its requirements are met
-            (e.g. ?foo a b c when only expecting a and b).
-            Otherwise, an error is raised. Defaults to True.
-
-            hierarchical_checking (`bool`, optional): If `True` and if the
-            base of a subcommand, every subcommand underneath it will run
-            this command's checks before its own. Otherwise, only the
-            subcommand's checks are checked. Defaults to True.
+            name: The name of the command. Defaults to the name of the coroutine.
+            aliases: The list of aliases the command can be invoked under.
+            help: The long help text for the command. Defaults to the docstring of the coroutine, if there is one.
+            brief: The short help text for the command. Defaults to the first line of the help text, if there is one.
+            usage: A string displaying how the command can be used. If no string is set, it will default to the command's signature. Useful for help commands.
+            enabled: Whether this command can be run at all.
+            hidden: If `True`, the default help command (when it is added) does not show this in the help output.
+            ignore_extra: If `True`, ignores extraneous strings passed to a command if all its requirements are met (e.g. ?foo a b c when only expecting a and b). Otherwise, an error is raised.
+            hierarchical_checking: If `True` and if the base of a subcommand, every subcommand underneath it will run this command's checks before its own. Otherwise, only the subcommand's checks are checked.
         """
 
         def wrapper(func: Callable) -> "PrefixedCommand":
@@ -564,8 +549,8 @@ class PrefixedCommand(BaseCommand):
         Runs the callback of this command.
 
         Args:
-            callback (`Callable`): The callback to run. This is provided for compatibility with dis_snek.
-            ctx (`dis_snek.MessageContext`): The context to use for this command.
+            callback (Callable: The callback to run. This is provided for compatibility with dis_snek.
+            ctx (dis_snek.MessageContext): The context to use for this command.
         """
         # sourcery skip: remove-empty-nested-block, remove-redundant-if, remove-unnecessary-else
         if len(self.parameters) == 0:
@@ -648,36 +633,14 @@ def prefixed_command(
 
     Args:
         name: The name of the command. Defaults to the name of the coroutine.
-
-        aliases (`list[str]`, optional): The list of aliases the
-        command can be invoked under.
-
-        help (`str`, optional): The long help text for the command.
-        Defaults to the docstring of the coroutine, if there is one.
-
-        brief (`str`, optional): The short help text for the command.
-        Defaults to the first line of the help text, if there is one.
-
-        usage(`str`, optional): A string displaying how the command
-        can be used. If no string is set, it will default to the
-        command's signature. Useful for help commands.
-
-        enabled (`bool`, optional): Whether this command can be run
-        at all. Defaults to True.
-
-        hidden (`bool`, optional): If `True`, the default help
-        command (when it is added) does not show this in the help
-        output. Defaults to False.
-
-        ignore_extra (`bool`, optional): If `True`, ignores extraneous
-        strings passed to a command if all its requirements are met
-        (e.g. ?foo a b c when only expecting a and b).
-        Otherwise, an error is raised. Defaults to True.
-
-        hierarchical_checking (`bool`, optional): If `True` and if the
-        base of a subcommand, every subcommand underneath it will run
-        this command's checks before its own. Otherwise, only the
-        subcommand's checks are checked. Defaults to True.
+        aliases: The list of aliases the command can be invoked under.
+        help: The long help text for the command. Defaults to the docstring of the coroutine, if there is one.
+        brief: The short help text for the command. Defaults to the first line of the help text, if there is one.
+        usage: A string displaying how the command can be used. If no string is set, it will default to the command's signature. Useful for help commands.
+        enabled: Whether this command can be run at all.
+        hidden: If `True`, the default help command (when it is added) does not show this in the help output.
+        ignore_extra: If `True`, ignores extraneous strings passed to a command if all its requirements are met (e.g. ?foo a b c when only expecting a and b). Otherwise, an error is raised.
+        hierarchical_checking: If `True` and if the base of a subcommand, every subcommand underneath it will run this command's checks before its own. Otherwise, only the subcommand's checks are checked.
     """
 
     def wrapper(func: Callable) -> PrefixedCommand:
