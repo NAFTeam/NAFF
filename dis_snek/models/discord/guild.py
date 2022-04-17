@@ -519,6 +519,17 @@ class Guild(BaseGuild):
         if self.chunked.is_set():
             self.chunked.clear()
 
+        if presences := chunk.get("presences"):
+            # combine the presence dict into the members dict
+            for presence in presences:
+                u_id = presence["user"]["id"]
+                # find the user this presence is for
+                member_index = next(
+                    (index for (index, d) in enumerate(chunk.get("members")) if d["user"]["id"] == u_id), None
+                )
+                del presence["user"]
+                chunk["members"][member_index]["user"] = chunk["members"][member_index]["user"] | presence
+
         if not self._chunk_cache:
             self._chunk_cache: List = chunk.get("members")
         else:
