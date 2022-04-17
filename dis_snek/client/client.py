@@ -1512,7 +1512,16 @@ class Snake(
                     content_parameters = content_parameters.removeprefix(first_word).strip()
 
                     if command.subcommands and command.hierarchical_checking:
-                        await new_command._can_run(context)  # will error out if we can't run this command
+                        try:
+                            await new_command._can_run(context)  # will error out if we can't run this command
+                        except Exception as e:
+                            if new_command.error_callback:
+                                await new_command.error_callback(e, context)
+                            elif new_command.scale and new_command.scale.scale_error:
+                                await new_command.scale.scale_error(context)
+                            else:
+                                await self.on_command_error(context, e)
+                            return
 
                 if not isinstance(command, PrefixedCommand):
                     command = None
