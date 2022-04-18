@@ -555,6 +555,7 @@ class SlashCommand(InteractionCommand):
 @define()
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
+    name: str = field()
     listeners: list[str] = field(factory=list)
 
 
