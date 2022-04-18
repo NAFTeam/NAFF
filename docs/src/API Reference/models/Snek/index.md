@@ -9,6 +9,7 @@
 - [Cooldowns](cooldowns)
 - [Iterator](iterator)
 - [Listeners](listener)
+- [Localisation](localisation)
 - [Scales](scale)
 - [Tasks](tasks.md)
 - [Waits](wait)

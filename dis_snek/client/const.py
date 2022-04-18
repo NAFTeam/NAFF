@@ -82,6 +82,7 @@ __repo_url__ = "https://github.com/Discord-Snake-Pit/Dis-Snek"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
 logger_name = "dis.snek"
+default_locale = "english_us"
 kwarg_spam = False
 
 DISCORD_EPOCH = 1420070400000
