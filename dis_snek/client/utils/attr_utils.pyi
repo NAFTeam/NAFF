@@ -1,6 +1,8 @@
-import attrs
 import logging
 from typing import Any, TypeVar, Callable, Tuple, Union
+
+import attrs
+from attr import Attribute
 
 # this took way too lonk to solve
 # but this solution is based on https://www.attrs.org/en/stable/extending.html
@@ -27,3 +29,6 @@ def field(**kwargs) -> Any: ...
 def define(**kwargs) -> Callable[[_T], _T]: ...
 def docs(doc_string: str) -> dict[str, str]: ...
 def str_validator(self, attribute: attrs.Attribute, value: Any) -> None: ...
+def attrs_validator(
+    validator: Callable, skip_fields: list[str] | None = None
+) -> Callable[[Any, list[Attribute]], list[Attribute]]: ...

@@ -6,11 +6,12 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Annotated, Callable, Coroutine, Dict, List, Union, Optional, Any
 import typing
 
+import attrs
+from attr import Attribute
+
 import dis_snek.models.discord.channel as channel
 from dis_snek.client.const import (
     GLOBAL_SCOPE,
-    CONTEXT_MENU_NAME_LENGTH,
-    SLASH_OPTION_NAME_LENGTH,
     SLASH_CMD_NAME_LENGTH,
     SLASH_CMD_MAX_OPTIONS,
     SLASH_CMD_MAX_DESC_LENGTH,
@@ -19,7 +20,7 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import define, field, docs
+from dis_snek.client.utils.attr_utils import define, field, docs, attrs_validator
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
@@ -28,6 +29,7 @@ from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
 from dis_snek.models.discord.user import BaseUser
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.command import BaseCommand
+from dis_snek.models.snek.localisation import LocalisedField
 
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -54,9 +56,47 @@ __all__ = [
     "auto_defer",
     "application_commands_to_dict",
     "sync_needed",
+    "LocalisedName",
+    "LocalizedName",
+    "LocalizedDesc",
+    "LocalisedDesc",
 ]
 
 log = logging.getLogger(logger_name)
+
+
+def name_validator(_: Any, attr: Attribute, value: str) -> None:
+    if value:
+        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
+            raise ValueError(
+                f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
+            )
+
+
+def desc_validator(_: Any, attr: Attribute, value: str) -> None:
+    if value:
+        if not 1 <= len(value) <= SLASH_CMD_MAX_DESC_LENGTH:
+            raise ValueError(f"Description must be between 1 and {SLASH_CMD_MAX_DESC_LENGTH} characters long")
+
+
+@define(field_transformer=attrs_validator(name_validator, skip_fields=["default_locale"]))
+class LocalisedName(LocalisedField):
+    """A localisation object for names."""
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+
+@define(field_transformer=attrs_validator(desc_validator, skip_fields=["default_locale"]))
+class LocalisedDesc(LocalisedField):
+    """A localisation object for descriptions."""
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+
+LocalizedName = LocalisedName
+LocalizedDesc = LocalisedDesc
 
 
 class OptionTypes(IntEnum):
@@ -161,7 +201,9 @@ class InteractionCommand(BaseCommand):
 
     """
 
-    name: str = field(metadata=docs("1-32 character name") | no_export_meta)
+    name: LocalisedName = field(
+        metadata=docs("1-32 character name") | no_export_meta, converter=LocalisedName.converter
+    )
     scopes: List["Snowflake_Type"] = field(
         default=[GLOBAL_SCOPE],
         converter=to_snowflake_list,
@@ -196,7 +238,10 @@ class InteractionCommand(BaseCommand):
     @property
     def resolved_name(self) -> str:
         """A representation of this interaction's name."""
-        return self.name
+        return str(self.name)
+
+    def get_localised_name(self, locale: str) -> str:
+        return self.name.get_locale(locale)
 
     def get_cmd_id(self, scope: "Snowflake_Type") -> "Snowflake_Type":
         return self.cmd_id.get(scope, self.cmd_id.get(GLOBAL_SCOPE, None))
@@ -236,13 +281,8 @@ class ContextMenu(InteractionCommand):
 
     """
 
-    name: str = field(metadata=docs("1-32 character name"))
+    name: LocalisedName = field(metadata=docs("1-32 character name"), converter=LocalisedName.converter)
     type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
-
-    @name.validator
-    def _name_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= CONTEXT_MENU_NAME_LENGTH:
-            raise ValueError("Context Menu name attribute must be between 1 and 32 characters")
 
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
@@ -266,7 +306,7 @@ class SlashCommandChoice(DictSerializationMixin):
 
     """
 
-    name: str = field()
+    name: LocalisedField = field(converter=LocalisedField.converter)
     value: Union[str, int, float] = field()
 
 
@@ -287,27 +327,15 @@ class SlashCommandOption(DictSerializationMixin):
 
     """
 
-    name: str = field()
+    name: LocalisedName = field(converter=LocalisedName.converter)
     type: Union[OptionTypes, int] = field()
-    description: str = field(default="No Description Set")
+    description: LocalisedDesc = field(default="No Description Set", converter=LocalisedDesc.converter)
     required: bool = field(default=True)
     autocomplete: bool = field(default=False)
     choices: List[Union[SlashCommandChoice, Dict]] = field(factory=list)
     channel_types: Optional[list[Union[ChannelTypes, int]]] = field(default=None)
     min_value: Optional[float] = field(default=None)
     max_value: Optional[float] = field(default=None)
-
-    @name.validator
-    def _name_validator(self, attribute: str, value: str) -> None:
-        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
-            raise ValueError(
-                f"Options names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
-            )
-
-    @description.validator
-    def _description_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= SLASH_OPTION_NAME_LENGTH:
-            raise ValueError("Options must be between 1 and 100 characters long")
 
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
@@ -356,28 +384,53 @@ class SlashCommandOption(DictSerializationMixin):
                 if self.max_value < self.min_value:
                     raise ValueError("`min_value` needs to be <= than `max_value`")
 
+    def as_dict(self) -> dict:
+        data = attrs.asdict(self)
+        data["name"] = str(self.name)
+        data["description"] = str(self.description)
+
+        data["name_localizations"] = self.name.to_locale_dict()
+        data["description_localizations"] = self.description.to_locale_dict()
+
+        return data
+
 
 @define()
 class SlashCommand(InteractionCommand):
-    name: str = field()
-    description: str = field(default="No Description Set")
+    name: LocalisedName = field(converter=LocalisedName.converter)
+    description: LocalisedDesc = field(default="No Description Set", converter=LocalisedDesc.converter)
 
-    group_name: str = field(default=None, metadata=no_export_meta)
-    group_description: str = field(default="No Description Set", metadata=no_export_meta)
+    group_name: LocalisedName = field(default=None, metadata=no_export_meta, converter=LocalisedName.converter)
+    group_description: LocalisedDesc = field(
+        default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
+    )
 
-    sub_cmd_name: str = field(default=None, metadata=no_export_meta)
-    sub_cmd_description: str = field(default="No Description Set", metadata=no_export_meta)
+    sub_cmd_name: LocalisedName = field(default=None, metadata=no_export_meta, converter=LocalisedName.converter)
+    sub_cmd_description: LocalisedDesc = field(
+        default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
+    )
 
     options: List[Union[SlashCommandOption, Dict]] = field(factory=list)
     autocomplete_callbacks: dict = field(factory=dict, metadata=no_export_meta)
 
     @property
     def resolved_name(self) -> str:
-        return f"{self.name}{f' {self.group_name}' if self.group_name else ''}{f' {self.sub_cmd_name}' if self.sub_cmd_name else ''}"
+        return (
+            f"{self.name}"
+            f"{f' {self.group_name}' if bool(self.group_name) else ''}"
+            f"{f' {self.sub_cmd_name}' if bool(self.sub_cmd_name) else ''}"
+        )
+
+    def get_localised_name(self, locale: str) -> str:
+        return (
+            f"{self.name.get_locale(locale)}"
+            f"{f' {self.group_name.get_locale(locale)}' if bool(self.group_name) else ''}"
+            f"{f' {self.sub_cmd_name.get_locale(locale)}' if bool(self.sub_cmd_name) else ''}"
+        )
 
     @property
     def is_subcommand(self) -> bool:
-        return self.sub_cmd_name is not None
+        return bool(self.sub_cmd_name)
 
     def __attrs_post_init__(self) -> None:
         if self.callback is not None:
@@ -408,29 +461,18 @@ class SlashCommand(InteractionCommand):
 
     def to_dict(self) -> dict:
         data = super().to_dict()
+
         if self.is_subcommand:
-            data["name"] = self.sub_cmd_name
-            data["description"] = self.sub_cmd_description
+            data["name"] = str(self.sub_cmd_name)
+            data["description"] = str(self.sub_cmd_description)
+            data["name_localizations"] = self.sub_cmd_name.to_locale_dict()
+            data["description_localizations"] = self.sub_cmd_description.to_locale_dict()
             data.pop("default_permission", None)
             data.pop("permissions", None)
+        else:
+            data["name_localizations"] = self.name.to_locale_dict()
+            data["description_localizations"] = self.description.to_locale_dict()
         return data
-
-    @name.validator
-    @group_name.validator
-    @sub_cmd_name.validator
-    def name_validator(self, attribute: str, value: str) -> None:
-        if value:
-            if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
-                raise ValueError(
-                    f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
-                )
-
-    @description.validator
-    @group_description.validator
-    @sub_cmd_description.validator
-    def description_validator(self, attribute: str, value: str) -> None:
-        if not 1 <= len(value) <= SLASH_CMD_MAX_DESC_LENGTH:
-            raise ValueError(f"Description must be between 1 and {SLASH_CMD_MAX_DESC_LENGTH} characters long")
 
     @options.validator
     def options_validator(self, attribute: str, value: List) -> None:
@@ -480,10 +522,10 @@ class SlashCommand(InteractionCommand):
 
     def subcommand(
         self,
-        sub_cmd_name: str,
-        group_name: str = None,
-        sub_cmd_description: Absent[str] = MISSING,
-        group_description: Absent[str] = MISSING,
+        sub_cmd_name: LocalisedName | str,
+        group_name: LocalisedName | str = None,
+        sub_cmd_description: Absent[LocalisedDesc | str] = MISSING,
+        group_description: Absent[LocalisedDesc | str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
@@ -513,6 +555,7 @@ class SlashCommand(InteractionCommand):
 @define()
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
+    name: str = field()
     listeners: list[str] = field(factory=list)
 
 
@@ -546,17 +589,17 @@ def _unpack_helper(iterable: typing.Iterable[str]) -> list[str]:
 
 
 def slash_command(
-    name: str,
+    name: str | LocalisedName,
     *,
-    description: Absent[str] = MISSING,
+    description: Absent[str | LocalisedDesc] = MISSING,
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
     default_permission: bool = True,
     permissions: Optional[List[Union[Permission, Dict]]] = None,
-    sub_cmd_name: str = None,
-    group_name: str = None,
-    sub_cmd_description: str = "No Description Set",
-    group_description: str = "No Description Set",
+    sub_cmd_name: str | LocalisedName = None,
+    group_name: str | LocalisedName = None,
+    sub_cmd_description: str | LocalisedDesc = "No Description Set",
+    group_description: str | LocalisedDesc = "No Description Set",
 ) -> Callable[[Callable[..., Coroutine]], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
@@ -611,17 +654,17 @@ def slash_command(
 
 
 def subcommand(
-    base: str,
+    base: str | LocalisedName,
     *,
-    subcommand_group: Optional[str] = None,
-    name: Optional[str] = None,
-    description: Absent[str] = MISSING,
-    base_description: Optional[str] = None,
-    base_desc: Optional[str] = None,
+    subcommand_group: Optional[str | LocalisedName] = None,
+    name: Optional[str | LocalisedName] = None,
+    description: Absent[str | LocalisedDesc] = MISSING,
+    base_description: Optional[str | LocalisedDesc] = None,
+    base_desc: Optional[str | LocalisedDesc] = None,
     base_default_permission: bool = True,
     base_permissions: Optional[dict] = None,
-    subcommand_group_description: Optional[str] = None,
-    sub_group_desc: Optional[str] = None,
+    subcommand_group_description: Optional[str | LocalisedDesc] = None,
+    sub_group_desc: Optional[str | LocalisedDesc] = None,
     scopes: List["Snowflake_Type"] = None,
     options: List[dict] = None,
 ) -> Callable[[Coroutine], SlashCommand]:
@@ -674,7 +717,7 @@ def subcommand(
 
 
 def context_menu(
-    name: str,
+    name: str | LocalisedName,
     context_type: "CommandTypes",
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     default_permission: bool = True,
@@ -871,21 +914,25 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 perms = [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions]
                 perms_filtered = [dict(t) for t in {tuple(d.items()) for d in perms}]
                 output_data = {
-                    "name": subcommand.name,
-                    "description": subcommand.description,
+                    "name": str(subcommand.name),
+                    "description": str(subcommand.description),
                     "options": [],
                     "permissions": perms_filtered,
                     "default_permission": subcommand.default_permission,
+                    "name_localizations": subcommand.name.to_locale_dict(),
+                    "description_localizations": subcommand.description.to_locale_dict(),
                 }
-            if subcommand.group_name:
-                if subcommand.group_name not in groups:
-                    groups[subcommand.group_name] = {
-                        "name": subcommand.group_name,
-                        "description": subcommand.group_description,
+            if bool(subcommand.group_name):
+                if str(subcommand.group_name) not in groups:
+                    groups[str(subcommand.group_name)] = {
+                        "name": str(subcommand.group_name),
+                        "description": str(subcommand.group_description),
                         "type": int(OptionTypes.SUB_COMMAND_GROUP),
                         "options": [],
+                        "name_localizations": subcommand.group_name.to_locale_dict(),
+                        "description_localizations": subcommand.group_description.to_locale_dict(),
                     }
-                groups[subcommand.group_name]["options"].append(
+                groups[str(subcommand.group_name)]["options"].append(
                     subcommand.to_dict() | {"type": int(OptionTypes.SUB_COMMAND)}
                 )
             elif subcommand.is_subcommand:
@@ -911,14 +958,14 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 (
                     c.description
                     for c in cmd_list
-                    if c.description is not None and c.description != "No Description Set"
+                    if str(c.description) is not None and str(c.description) != "No Description Set"
                 ),
                 "No Description Set",
             )
 
-            if not all(c.description in (base_description, "No Description Set") for c in cmd_list):
+            if not all(str(c.description) in (str(base_description), "No Description Set") for c in cmd_list):
                 log.warning(
-                    f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{base_description}` will be used"
+                    f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{str(base_description)}` will be used"
                 )
             if not all(c.default_permission == cmd_list[0].default_permission for c in cmd_list):
                 raise ValueError(f"Conflicting `default_permission` values found in `{cmd_list[0].name}`")
@@ -958,6 +1005,9 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
                         or local_option["description"] != remote_option["description"]
                         or local_option["required"] != remote_option.get("required", False)
                         or local_option["autocomplete"] != remote_option.get("autocomplete", False)
+                        or local_option.get("name_localized", {}) != remote_option.get("name_localized", {})
+                        or local_option.get("description_localized", {})
+                        != remote_option.get("description_localized", {})
                         or local_option.get("choices", []) != remote_option.get("choices", [])
                     ):
                         return False
@@ -986,6 +1036,8 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
         local_cmd["name"] != remote_cmd["name"]
         or local_cmd.get("description", "") != remote_cmd.get("description", "")
         or local_cmd["default_permission"] != remote_cmd["default_permission"]
+        or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
+        or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
     ):
         # basic comparison of attributes
         return True

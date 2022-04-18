@@ -213,7 +213,7 @@ class BaseCommand(DictSerializationMixin):
                             args.append(await convert(c_args.pop(0)))
                         except IndexError:
                             raise ValueError(
-                                f"{context.invoked_name} expects {len([p for p in parameters.values() if p.default is p.empty])+len(callback.args)}"
+                                f"{context.invoke_target} expects {len([p for p in parameters.values() if p.default is p.empty]) + len(callback.args)}"
                                 f" arguments but received {len(context.args)} instead"
                             ) from None
                     else:

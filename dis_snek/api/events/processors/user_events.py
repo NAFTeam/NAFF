@@ -57,7 +57,9 @@ class UserEvents(EventMixinTemplate):
         """
         g_id = to_snowflake(event.data["guild_id"])
         if user := self.cache.get_user(event.data["user"]["id"]):
-            status = Status[event.data["status"].upper()]
-            activities = Activity.from_list(event.data.get("activities"))
+            user.status = Status[event.data["status"].upper()]
+            user.activities = Activity.from_list(event.data.get("activities"))
 
-            self.dispatch(events.PresenceUpdate(user, status, activities, event.data.get("client_status", None), g_id))
+            self.dispatch(
+                events.PresenceUpdate(user, user.status, user.activities, event.data.get("client_status", None), g_id)
+            )

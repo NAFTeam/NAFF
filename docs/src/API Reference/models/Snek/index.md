@@ -9,6 +9,7 @@
 - [Converters](converters)
 - [Cooldowns](cooldowns)
 - [Listeners](listener)
+- [Localisation](localisation)
 - [Prefixed Commands](prefixed_commands)
 - [Protocols](protocols)
 - [Scales](scale)
