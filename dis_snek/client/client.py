@@ -1553,7 +1553,7 @@ class Snake(
 
         """
         self.load_extension(file_name, package, **load_kwargs)
-        if self.sync_scales:
+        if self.sync_scales and self._ready.is_set():
             try:
                 asyncio.get_running_loop()
             except RuntimeError:
@@ -1572,7 +1572,7 @@ class Snake(
         if scale := self.get_scales(scale_name):
             self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
-            if self.sync_scales:
+            if self.sync_scales and self._ready.is_set():
                 try:
                     asyncio.get_running_loop()
                 except RuntimeError:
