@@ -740,12 +740,9 @@ class GlobalCache:
         old_state = self.get_voice_state(user_id)
         if old_state:
             # noinspection PyProtectedMember
-            # for some unholy reason, self.get_channel() seems to return a copy(), and does not update the cache after changing the obj
-            old_channel = self.channel_cache[old_state._channel_id]
-            # noinspection PyProtectedMember
-            if user_id in old_channel._voice_member_ids:
+            if user_id in old_state.channel._voice_member_ids:
                 # noinspection PyProtectedMember
-                old_channel._voice_member_ids.remove(user_id)
+                old_state.channel._voice_member_ids.remove(user_id)
 
         # check if the channel_id is None
         # if that is the case, the user disconnected, and we can delete them from the cache
