@@ -1554,6 +1554,10 @@ class Snake(
         """
         self.load_extension(file_name, package, **load_kwargs)
         if self.sync_scales:
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return
             asyncio.create_task(self.synchronise_interactions())
 
     def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
@@ -1569,6 +1573,10 @@ class Snake(
             self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
             if self.sync_scales:
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    return
                 asyncio.create_task(self.synchronise_interactions())
 
         else:
