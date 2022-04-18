@@ -446,7 +446,7 @@ class Message(BaseMessage):
                     # This is how Discord calculates the welcome message.
                 ].format(self.author.mention)
             case MessageTypes.THREAD_CREATED:
-                return f"{self.author.mention} started a thread: {self.thread.mention}. See all threads."
+                return f"{self.author.mention} started a thread: {self.thread.mention}. See all **threads**."
             case MessageTypes.CHANNEL_FOLLOW_ADD:
                 return f"{self.author.mention} has added **{self.content}** to this channel. Its most important updates will show up here."
             case MessageTypes.RECIPIENT_ADD:
@@ -457,6 +457,20 @@ class Message(BaseMessage):
                 return f"{self.author.mention} changed the channel name: **{self.content}**."
             case MessageTypes.CHANNEL_PINNED_MESSAGE:
                 return f"{self.author.mention} pinned a message. See all pinned messages"
+            case MessageTypes.GUILD_DISCOVERY_DISQUALIFIED:
+                return "This server has been removed from Server Discovery because it no longer passes all the requirements. Check Server Settings for more details."
+            case MessageTypes.GUILD_DISCOVERY_REQUALIFIED:
+                return "This server is eligible for Server Discovery again and has been automatically relisted!"
+            case MessageTypes.GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING:
+                return "This server has failed Discovery activity requirements for 1 week. If this server fails for 4 weeks in a row, it will be automatically removed from Discovery."
+            case MessageTypes.GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING:
+                return "This server has failed Discovery activity requirements for 3 weeks in a row. If this server fails for 1 more week, it will be removed from Discovery."
+            case MessageTypes.GUILD_INVITE_REMINDER:
+                return "**Invite your friends**\nThe best way to setup a server is with your buddies!"
+            case MessageTypes.THREAD_STARTER_MESSAGE:
+                if referenced_message := self.get_referenced_message():
+                    return referenced_message.content
+                return "Sorry, we couldn't load the first message in this thread"
             case _:
                 return None
 
