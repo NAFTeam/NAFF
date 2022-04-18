@@ -24,6 +24,9 @@ __all__ = (
 )
 
 
+_STARTING_QUOTES = frozenset(_quotes.keys())
+
+
 @attrs.define(slots=True)
 class PrefixedCommandParameter:
     """
@@ -75,11 +78,11 @@ class _PrefixedArgsIterator:
 
         result = self.args[self.index]
         self.index += 1
-        return self._arg_fix(result)
+        return self._remove_quotes(result)
 
-    def _arg_fix(self, arg: str) -> str:
+    def _remove_quotes(self, arg: str) -> str:
         # this removes quotes from the arguments themselves
-        return arg[1:-1] if arg[0] in _quotes.keys() else arg
+        return arg[1:-1] if arg[0] in _STARTING_QUOTES else arg
 
     def _finish_args(self) -> tuple[str]:
         result = self.args[self.index - 1 :]
@@ -87,7 +90,7 @@ class _PrefixedArgsIterator:
         return result
 
     def get_rest_of_args(self) -> tuple[str]:
-        return tuple(self._arg_fix(r) for r in self._finish_args())
+        return tuple(self._remove_quotes(r) for r in self._finish_args())
 
     def consume_rest(self) -> str:
         return " ".join(self._finish_args())
