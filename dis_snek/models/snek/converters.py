@@ -91,13 +91,33 @@ _ID_REGEX = re.compile(r"([0-9]{15,})$")
 
 
 class IDConverter(Converter[T_co]):
+    """The base converter for objects that have snowflake IDs."""
+
     @staticmethod
     def _get_id_match(argument: str) -> Optional[re.Match[str]]:
         return _ID_REGEX.match(argument)
 
 
 class SnowflakeConverter(IDConverter[SnowflakeObject]):
+    """Converts a string argument to a SnowflakeObject."""
+
     async def convert(self, ctx: Context, argument: str) -> SnowflakeObject:
+        """
+        Converts a given string to a SnowflakeObject.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By role or channel mention.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            SnowflakeObject: The converted object.
+        """
         match = self._get_id_match(argument) or re.match(r"<(?:@(?:!|&)?|#)([0-9]{15,})>$", argument)
 
         if match is None:
@@ -107,10 +127,31 @@ class SnowflakeConverter(IDConverter[SnowflakeObject]):
 
 
 class ChannelConverter(IDConverter[T_co]):
+    """The base converter for channel objects."""
+
     def _check(self, result: BaseChannel) -> bool:
         return True
 
     async def convert(self, ctx: Context, argument: str) -> T_co:
+        """
+        Converts a given string to a Channel object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By channel mention.
+
+        3. By name - the bot will search in a guild if the context has it, otherwise it will search globally.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            BaseChannel: The converted object.
+            The channel type will be of the type the converter represents.
+        """
         match = self._get_id_match(argument) or re.match(r"<#([0-9]{15,})>$", argument)
         result = None
 
@@ -208,7 +249,29 @@ class MessageableChannelConverter(ChannelConverter[TYPE_MESSAGEABLE_CHANNEL]):
 
 
 class UserConverter(IDConverter[User]):
+    """Converts a string argument to a User object."""
+
     async def convert(self, ctx: Context, argument: str) -> User:
+        """
+        Converts a given string to a User object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By mention.
+
+        3. By username + tag (ex User#1234).
+
+        4. By username.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            User: The converted object.
+        """
         match = self._get_id_match(argument) or re.match(r"<@!?([0-9]{15,})>$", argument)
         result = None
 
@@ -228,6 +291,8 @@ class UserConverter(IDConverter[User]):
 
 
 class MemberConverter(IDConverter[Member]):
+    """Converts a string argument to a Member object."""
+
     def _get_member_from_list(self, members: list[Member], argument: str) -> Optional[Member]:
         # sourcery skip: assign-if-exp
         result = None
@@ -240,6 +305,28 @@ class MemberConverter(IDConverter[Member]):
         return result
 
     async def convert(self, ctx: Context, argument: str) -> Member:
+        """
+        Converts a given string to a Member object. This will only work in guilds.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By mention.
+
+        3. By username + tag (ex User#1234).
+
+        4. By nickname.
+
+        5. By username.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            Member: The converted object.
+        """
         if not ctx.guild:
             raise BadArgument("This command cannot be used in private messages.")
 
@@ -265,6 +352,8 @@ class MemberConverter(IDConverter[Member]):
 
 
 class MessageConverter(Converter[Message]):
+    """Converts a string argument to a Message object."""
+
     # either just the id or <chan_id>-<mes_id>, a format you can get by shift clicking "copy id"
     _ID_REGEX = re.compile(r"(?:(?P<channel_id>[0-9]{15,})-)?(?P<message_id>[0-9]{15,})")
     # of course, having a way to get it from a link is nice
@@ -273,6 +362,24 @@ class MessageConverter(Converter[Message]):
     )
 
     async def convert(self, ctx: Context, argument: str) -> Message:
+        """
+        Converts a given string to a Message object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID. The message must be in the same channel as the context.
+
+        2. By message + channel ID in the format of channel_id-message_id. This can be obtained by shift clicking "Copy ID".
+
+        3. By message link.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            Message: The converted object.
+        """
         match = self._ID_REGEX.match(argument) or self._MESSAGE_LINK_REGEX.match(argument)
         if not match:
             raise BadArgument(f'Message "{argument}" not found.')
@@ -300,7 +407,25 @@ class MessageConverter(Converter[Message]):
 
 
 class GuildConverter(IDConverter[Guild]):
+    """Converts a string argument to a Guild object."""
+
     async def convert(self, ctx: Context, argument: str) -> Guild:
+        """
+        Converts a given string to a Guild object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By name.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            Guild: The converted object.
+        """
         match = self._get_id_match(argument)
         result = None
 
@@ -316,7 +441,27 @@ class GuildConverter(IDConverter[Guild]):
 
 
 class RoleConverter(IDConverter[Role]):
+    """Converts a string argument to a Role object."""
+
     async def convert(self, ctx: Context, argument: str) -> Role:
+        """
+        Converts a given string to a Role object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By mention.
+
+        3. By name.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            Role: The converted object.
+        """
         if not ctx.guild:
             raise BadArgument("This command cannot be used in private messages.")
 
@@ -335,8 +480,21 @@ class RoleConverter(IDConverter[Role]):
 
 
 class PartialEmojiConverter(IDConverter[PartialEmoji]):
-    async def convert(self, ctx: Context, argument: str) -> PartialEmoji:
+    """Converts a string argument to a PartialEmoji object."""
 
+    async def convert(self, ctx: Context, argument: str) -> PartialEmoji:
+        """
+        Converts a given string to a PartialEmoji object.
+
+        This converter only accepts emoji strings.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            PartialEmoji: The converted object.
+        """
         if match := self._get_id_match(argument) or re.match(r"<a?:[a-zA-Z0-9\_]{1,32}:([0-9]{15,})>$", argument):
             emoji_animated = bool(match.group(1))
             emoji_name = match.group(2)
@@ -348,7 +506,27 @@ class PartialEmojiConverter(IDConverter[PartialEmoji]):
 
 
 class CustomEmojiConverter(IDConverter[CustomEmoji]):
+    """Converts a string argument to a CustomEmoji object."""
+
     async def convert(self, ctx: Context, argument: str) -> CustomEmoji:
+        """
+        Converts a given string to a CustomEmoji object.
+
+        The lookup strategy is as follows:
+
+        1. By raw snowflake ID.
+
+        2. By the emoji string format.
+
+        3. By name.
+
+        Args:
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
+
+        Returns:
+            CustomEmoji: The converted object.
+        """
         if not ctx.guild:
             raise BadArgument("This command cannot be used in private messages.")
 
@@ -373,10 +551,7 @@ class CustomEmojiConverter(IDConverter[CustomEmoji]):
 
 
 class Greedy(List[T]):
-    # this class doesn't actually do a whole lot
-    # it's more or less simply a note to the parameter
-    # getter
-    pass
+    """A special marker class to mark an argument in a prefixed command to repeatedly convert until it fails to convert an argument."""
 
 
 SNEK_MODEL_TO_CONVERTER: dict[type, type[Converter]] = {
@@ -409,3 +584,4 @@ SNEK_MODEL_TO_CONVERTER: dict[type, type[Converter]] = {
     PartialEmoji: PartialEmojiConverter,
     CustomEmoji: CustomEmojiConverter,
 }
+"""A dictionary mapping of dis-snek objects to their corresponding converters."""

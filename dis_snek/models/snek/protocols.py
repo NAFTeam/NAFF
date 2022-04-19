@@ -20,8 +20,8 @@ class Converter(Protocol[T_co]):
         This should be overridden by subclasses for their conversion logic.
 
         Args:
-            ctx (Context): The context to use for the conversion.
-            argument (Any): The argument to be converted.
+            ctx: The context to use for the conversion.
+            argument: The argument to be converted.
 
         Returns:
             Any: The converted argument.
