@@ -500,9 +500,9 @@ class SlashCommand(InteractionCommand):
 
             # automatically set the option's autocomplete attribute to True
             for opt in self.options:
-                if isinstance(opt, dict) and opt["name"] == option_name:
+                if isinstance(opt, dict) and str(opt["name"]) == option_name:
                     opt["autocomplete"] = True
-                elif isinstance(opt, SlashCommandOption) and opt.name == option_name:
+                elif isinstance(opt, SlashCommandOption) and str(opt.name) == option_name:
                     opt.autocomplete = True
 
             return call
