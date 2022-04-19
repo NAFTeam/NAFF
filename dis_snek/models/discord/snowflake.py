@@ -58,10 +58,8 @@ class SnowflakeObject:
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
         if hasattr(other, "id"):
-            other_id = other.id
-        else:
-            other_id = other
-        return self.id == other_id
+            other = other.id
+        return self.id == other
 
     def __ne__(self, other: "SnowflakeObject") -> bool:
         return self.id != other.id
