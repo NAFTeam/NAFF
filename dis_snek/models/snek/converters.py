@@ -369,7 +369,7 @@ class MessageConverter(Converter[Message]):
 
         1. By raw snowflake ID. The message must be in the same channel as the context.
 
-        2. By message + channel ID in the format of channel_id-message_id. This can be obtained by shift clicking "Copy ID".
+        2. By message + channel ID in the format of "{Channel ID}-{Message ID}". This can be obtained by shift clicking "Copy ID" when Developer Mode is enabled.
 
         3. By message link.
 
