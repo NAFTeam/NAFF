@@ -309,6 +309,9 @@ class SlashCommandChoice(DictSerializationMixin):
     name: LocalisedField = field(converter=LocalisedField.converter)
     value: Union[str, int, float] = field()
 
+    def as_dict(self) -> dict:
+        return {"name": str(self.name), "value": self.value, "name_localizations": self.name.to_locale_dict()}
+
 
 @define(kw_only=False)
 class SlashCommandOption(DictSerializationMixin):
@@ -388,7 +391,9 @@ class SlashCommandOption(DictSerializationMixin):
         data = attrs.asdict(self)
         data["name"] = str(self.name)
         data["description"] = str(self.description)
-
+        data["choices"] = [
+            choice.as_dict() if isinstance(choice, SlashCommandChoice) else choice for choice in self.choices
+        ]
         data["name_localizations"] = self.name.to_locale_dict()
         data["description_localizations"] = self.description.to_locale_dict()
 
@@ -984,7 +989,6 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 output[s] = [cmd_data]
                 continue
             output[s].append(cmd_data)
-
     return output
 
 
