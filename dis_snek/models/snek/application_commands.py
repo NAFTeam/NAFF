@@ -500,9 +500,9 @@ class SlashCommand(InteractionCommand):
 
             # automatically set the option's autocomplete attribute to True
             for opt in self.options:
-                if isinstance(opt, dict) and opt["name"] == option_name:
+                if isinstance(opt, dict) and str(opt["name"]) == option_name:
                     opt["autocomplete"] = True
-                elif isinstance(opt, SlashCommandOption) and opt.name == option_name:
+                elif isinstance(opt, SlashCommandOption) and str(opt.name) == option_name:
                     opt.autocomplete = True
 
             return call
@@ -943,12 +943,11 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
 
     for _scope, cmds in commands.items():
         for cmd in cmds.values():
-            cmd_name = str(cmd.name)
-            if cmd_name not in cmd_bases:
-                cmd_bases[cmd_name] = [cmd]
+            if cmd.name not in cmd_bases:
+                cmd_bases[cmd.name] = [cmd]
                 continue
-            if cmd not in cmd_bases[cmd_name]:
-                cmd_bases[cmd_name].append(cmd)
+            if cmd not in cmd_bases[cmd.name]:
+                cmd_bases[cmd.name].append(cmd)
 
     for cmd_list in cmd_bases.values():
         if any(c.is_subcommand for c in cmd_list):
