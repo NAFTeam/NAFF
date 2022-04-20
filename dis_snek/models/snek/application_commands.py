@@ -281,7 +281,7 @@ class ContextMenu(InteractionCommand):
 
     """
 
-    name: LocalisedName = field(metadata=docs("1-32 character name"), converter=LocalisedName.converter)
+    name: LocalisedField = field(metadata=docs("1-32 character name"), converter=LocalisedField.converter)
     type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @type.validator
@@ -293,6 +293,12 @@ class ContextMenu(InteractionCommand):
             raise ValueError(
                 "The CHAT_INPUT type is basically slash commands. Please use the @slash_command() " "decorator instead."
             )
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+
+        data["name"] = str(self.name)
+        return data
 
 
 @define(kw_only=False)
