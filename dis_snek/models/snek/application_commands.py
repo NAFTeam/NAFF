@@ -954,11 +954,12 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
 
     for _scope, cmds in commands.items():
         for cmd in cmds.values():
-            if cmd.name not in cmd_bases:
-                cmd_bases[cmd.name] = [cmd]
+            cmd_name = str(cmd.name)
+            if cmd_name not in cmd_bases:
+                cmd_bases[cmd_name] = [cmd]
                 continue
-            if cmd not in cmd_bases[cmd.name]:
-                cmd_bases[cmd.name].append(cmd)
+            if cmd not in cmd_bases[cmd_name]:
+                cmd_bases[cmd_name].append(cmd)
 
     for cmd_list in cmd_bases.values():
         if any(c.is_subcommand for c in cmd_list):
