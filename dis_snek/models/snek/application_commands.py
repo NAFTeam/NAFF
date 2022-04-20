@@ -281,7 +281,7 @@ class ContextMenu(InteractionCommand):
 
     """
 
-    name: LocalisedName = field(metadata=docs("1-32 character name"), converter=LocalisedName.converter)
+    name: LocalisedField = field(metadata=docs("1-32 character name"), converter=LocalisedField.converter)
     type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @type.validator
@@ -293,6 +293,12 @@ class ContextMenu(InteractionCommand):
             raise ValueError(
                 "The CHAT_INPUT type is basically slash commands. Please use the @slash_command() " "decorator instead."
             )
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+
+        data["name"] = str(self.name)
+        return data
 
 
 @define(kw_only=False)
@@ -308,6 +314,9 @@ class SlashCommandChoice(DictSerializationMixin):
 
     name: LocalisedField = field(converter=LocalisedField.converter)
     value: Union[str, int, float] = field()
+
+    def as_dict(self) -> dict:
+        return {"name": str(self.name), "value": self.value, "name_localizations": self.name.to_locale_dict()}
 
 
 @define(kw_only=False)
@@ -388,7 +397,9 @@ class SlashCommandOption(DictSerializationMixin):
         data = attrs.asdict(self)
         data["name"] = str(self.name)
         data["description"] = str(self.description)
-
+        data["choices"] = [
+            choice.as_dict() if isinstance(choice, SlashCommandChoice) else choice for choice in self.choices
+        ]
         data["name_localizations"] = self.name.to_locale_dict()
         data["description_localizations"] = self.description.to_locale_dict()
 
@@ -984,7 +995,6 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 output[s] = [cmd_data]
                 continue
             output[s].append(cmd_data)
-
     return output
 
 
