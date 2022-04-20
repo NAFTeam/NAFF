@@ -57,7 +57,9 @@ class SnowflakeObject:
     id: int = field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
-        return self.id == other.id
+        if hasattr(other, "id"):
+            other = other.id
+        return self.id == other
 
     def __ne__(self, other: "SnowflakeObject") -> bool:
         return self.id != other.id
