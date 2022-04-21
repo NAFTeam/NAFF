@@ -149,4 +149,5 @@ class Player(threading.Thread):
                 time.sleep(max(0.0, start + (self._encoder.delay * loops) - time.perf_counter()))
         finally:
             asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
+            self.current_audio.cleanup()
             self.loop.call_soon_threadsafe(self._stopped.set)
