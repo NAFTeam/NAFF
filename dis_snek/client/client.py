@@ -275,6 +275,9 @@ class Snake(
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
 
+        self.async_startup_tasks: list[Coroutine] = []
+        """A list of coroutines to run during startup"""
+
         # callbacks
         if global_pre_run_callback:
             if asyncio.iscoroutinefunction(global_pre_run_callback):
@@ -635,6 +638,13 @@ class Snake(
             if len(self.cache.guild_cache) == len(expected_guilds):
                 # all guilds cached
                 break
+
+        # run any pending startup tasks
+        if self.async_startup_tasks:
+            try:
+                await asyncio.gather(*self.async_startup_tasks)
+            except Exception as e:
+                await self.on_error("async-scale-loader", e)
 
         # cache slash commands
         if not self._startup:

@@ -107,6 +107,13 @@ class Scale:
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
         new_cls.bot.scales[new_cls.name] = new_cls
+
+        if hasattr(new_cls, "async_start"):
+            if inspect.iscoroutinefunction(new_cls.async_start):
+                bot.async_startup_tasks.append(new_cls.async_start())
+            else:
+                raise TypeError("async_start is a reserved method and must be a coroutine")
+
         return new_cls
 
     @property
