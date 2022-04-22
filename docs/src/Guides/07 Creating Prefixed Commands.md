@@ -30,7 +30,7 @@ Often, when using prefixed commands, you typically want to parse in what the use
 For example, to make a command that takes in one argument, we can do:
 ```python
 @prefixed_command()
-async def test(ctx, arg):
+async def test(ctx: PrefixedContext, arg):
     await ctx.reply(arg)
 ```
 
@@ -40,15 +40,52 @@ When a user uses the command, all they simply need to do is pass a word after th
 If the user wishes to use multiple words in an argument like this, they can wrap it in quotes like so:
 (ditto, but using something "hello world!" for the arg)
 
-!!! danger "Forgetting Quotes"
-    If a user forgets or simply does not wrap multiple words in an argument in quotes, the library will only use thenfirst word for the argument and ignore the rest.
+!!! warning "Forgetting Quotes"
+    If a user forgets or simply does not wrap multiple words in an argument in quotes, the library will only use the first word for the argument and ignore the rest.
     (same as other two, but with hello world, letting the above warning play out or something)
 
 You can add as many parameters as you want to a command:
 ```python
 @prefixed_command()
-async def test(ctx, arg1, arg2):
+async def test(ctx: PrefixedContext, arg1, arg2):
     await ctx.reply(f"Arguments: {arg1}, {arg2}.")
 ```
 
 ### Variable and Keyword-Only Arguments
+
+There may be times where you wish for an argument to be able to have multiple words without wrapping them in quotes. There are two ways of apporaching this.
+
+#### Variable
+
+If you wish to get a list (or more specifically, a tuple) of words for one argument, or simply want an undetermined amount of arguments for a command, then you should use a *variable* argument:
+```python
+@prefixed_command()
+async def test(ctx: PrefixedContext, *args):
+    await ctx.reply(f"{len(args)} arguments: {','.join(args)}")
+```
+
+The result looks something like this:
+(insert picture of running "!test hello there world, "how are you?"")
+
+Notice how the quoted words are still parsed as one argument in the tuple.
+
+#### Keyword-Only
+
+If you simply wish to take in the rest of the user's input as an argument, you can use a keyword-only argument, like so:
+```python
+@prefixed_command()
+async def test(ctx: PrefixedContext, *, arg):
+    await ctx.reply(arg)
+```
+
+The result looks like this:
+("!test hello world!")
+
+??? note "Quotes"
+    If a user passes quotes into a keyword-only argument, then the resulting argument will have said quotes.
+    (show example of "!test "hello world"" here)
+
+!!! warning "Parser ambiguities"
+    Due to parser ambiguities, you can *only* have either a single variable or keyword-only/consume rest argument.
+
+## Typehinting and Converters
