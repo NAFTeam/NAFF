@@ -1021,7 +1021,7 @@ class Snake(
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
                 elif (
-                    isinstance(func, PrefixedCommand) and not func.is_subcomamnd
+                    isinstance(func, PrefixedCommand) and not func.is_subcommand
                 ):  # subcommands will be added with main comamnds
                     self.add_prefixed_command(func)
                 elif isinstance(func, Listener):

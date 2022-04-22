@@ -380,7 +380,7 @@ class PrefixedCommand(BaseCommand):
         return " ".join(results)
 
     @property
-    def is_subcomamnd(self) -> bool:
+    def is_subcommand(self) -> bool:
         """Return whether this command is a subcommand or not."""
         return bool(self.parent)
 

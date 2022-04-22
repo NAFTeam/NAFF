@@ -80,7 +80,7 @@ class Scale:
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
-                if not isinstance(val, snek.PrefixedCommand) or not val.is_subcomamnd:
+                if not isinstance(val, snek.PrefixedCommand) or not val.is_subcommand:
                     # we do not want to add prefixed subcommands
                     new_cls._commands.append(val)
 
