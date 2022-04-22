@@ -862,9 +862,9 @@ class GlobalCache:
         Returns:
             The processed emoji
         """
-        guild_id = to_snowflake(guild_id)
+        del data["guild_id"]  # discord sometimes packages a guild_id - this will cause an exception
 
-        emoji = CustomEmoji.from_dict(data, self._client, guild_id)
+        emoji = CustomEmoji.from_dict(data, self._client, to_snowflake(guild_id))
         if self.emoji_cache is not None:
             self.emoji_cache[emoji.id] = emoji
 
