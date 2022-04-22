@@ -23,7 +23,7 @@ If the bot's prefix was set to `!`, then a user could invoke it like:
 !my_command
 ```
 
-# Parameters
+## Parameters
 
 Often, when using prefixed commands, you typically want to parse in what the user says into seperated parameters/arguments. This can be done easily in this library using a Python-esque syntax.
 
@@ -51,4 +51,4 @@ async def test(ctx, arg1, arg2):
     await ctx.reply(f"Arguments: {arg1}, {arg2}.")
 ```
 
-## Variable and Keyword-Only Arguments
+### Variable and Keyword-Only Arguments
