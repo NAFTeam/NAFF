@@ -400,7 +400,14 @@ class PrefixedCommand(BaseCommand):
         callback = functools.partial(self.callback, None)
 
         params = inspect.signature(callback).parameters
+        # this is used by keyword-only and variable args to make sure there isn't more than one of either
+        # mind you, we also don't want one keyword-only and one variable arg either
+        finished_params = False
+
         for name, param in params.items():
+            if finished_params:
+                raise ValueError("Cannot have multiple keyword-only or variable arguments.")
+
             cmd_param = PrefixedCommandParameter()
             cmd_param.name = name
             cmd_param.default = param.default if param.default is not param.empty else MISSING
@@ -426,16 +433,14 @@ class PrefixedCommand(BaseCommand):
             match param.kind:
                 case param.KEYWORD_ONLY:
                     cmd_param.consume_rest = True
-                    self.parameters.append(cmd_param)
-                    break
+                    finished_params = True
                 case param.VAR_POSITIONAL:
                     if cmd_param.optional:
                         # there's a lot of parser ambiguities here, so i'd rather not
                         raise ValueError("Variable arguments cannot have default values or be Optional.")
 
                     cmd_param.variable = True
-                    self.parameters.append(cmd_param)
-                    break
+                    finished_params = True
 
             self.parameters.append(cmd_param)
 
