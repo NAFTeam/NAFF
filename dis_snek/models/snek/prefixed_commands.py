@@ -379,6 +379,11 @@ class PrefixedCommand(BaseCommand):
 
         return " ".join(results)
 
+    @property
+    def is_subcomamnd(self) -> bool:
+        """Return whether this command is a subcommand or not."""
+        return bool(self.parent)
+
     def _parse_parameters(self) -> None:
         """
         Parses the parameters that this command has into a form dis-snek can use.
@@ -437,11 +442,6 @@ class PrefixedCommand(BaseCommand):
         # we need to deal with subcommands too
         for command in self.all_subcommands:
             command._parse_parameters()
-
-    def is_subcomamnd(self) -> bool:
-        """Return whether this command is a subcommand or not."""
-        # making this a property via cmd.subcommand would conflict with the subcommand deco
-        return bool(self.parent)
 
     def add_command(self, cmd: "PrefixedCommand") -> None:
         """
