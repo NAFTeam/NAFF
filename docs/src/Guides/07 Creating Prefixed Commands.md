@@ -43,7 +43,7 @@ If the user wishes to use multiple words in an argument like this, they can wrap
 !!! danger "Forgetting Quotes"
     If a user forgets or simply does not wrap multiple words in an argument in quotes, the library will only use thenfirst word for the argument and ignore the rest.
     (same as other two, but with hello world, letting the above warning play out or something)
-    
+
 You can add as many parameters as you want to a command:
 ```python
 @prefixed_command()
