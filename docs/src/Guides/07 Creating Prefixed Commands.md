@@ -89,3 +89,69 @@ The result looks like this:
     Due to parser ambiguities, you can *only* have either a single variable or keyword-only/consume rest argument.
 
 ## Typehinting and Converters
+
+### Basic Types
+
+Parameters, by default, are assumed to be strings, since `Message.content`, the content used for prefixed commands, is one. However, there are many times where you want to have a parameter be a more specific type, like a integer or boolean.
+
+`Dis-Snek` provides an easy syntax to do so:
+
+```python
+@prefixed_command()
+async def test(ctx: PrefixedContext, an_int: int, a_float: float):
+    await ctx.reply(an_int + a_float)
+```
+
+Words/arguments will automatically be converted to the specified type. If `Dis-Snek` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarily to how it is handled with [slash commands](/Guides/03 Creating Commands).
+
+You can even pass in a function for parameters:
+
+```python
+def to_upper(arg: str):
+    return arg.upper()
+
+@prefixed_command()
+async def test(ctx: PrefixedContext, uppered: to_upper):
+    await ctx.reply(uppered)
+```
+
+#### Booleans
+
+Booleans, unlike other basic types, are handled somewhat differently, as using the default `bool` converter would make any non-empty argument `True`. It is instead evaluated as so:
+
+```python
+if lowered in {"yes", "y", "true", "t", "1", "enable", "on"}:
+    return True
+elif lowered in {"no", "n", "false", "f", "0", "disable", "off"}:
+    return False
+```
+
+### Converters
+
+Converters work much of the same way as they do for other commands; see [the guide for converters for reference](/Guides/08 Converters).
+
+There are a few specific converters that only work with prefixed commands due to their nature, however.
+
+#### Discord Converters
+
+Prefixed commands can be typehinted with some Discord models, like so:
+
+```python
+@prefixed_command()
+async def poke(ctx: PrefixedContext, target: Member):
+    await ctx.send(f"{target.mention}, you got poked by {ctx.author.mention}!")
+```
+
+The argument here will automatically be converted into a `Member` object. A table of supported objects and the converter used under the hood is as follows:
+
+
+| Discord Model | Converter |
+| --------------- | --------------- |
+| Row 1 Column 1 | Row 1 Column 2 |
+| Row 2 Column 1 | Row 2 Column 2 |
+| Row 3 Column 1 | Row 3 Column 2 |
+
+
+#### `typing.Union`
+
+`typing.Union` allows for a parameter/argument to be of multiple types instead of one. If
