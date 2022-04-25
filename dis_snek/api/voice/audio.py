@@ -176,7 +176,8 @@ class Audio(BaseAudio):
     def cleanup(self) -> None:
         """Cleans up after this audio object."""
         if self.process:
-            self.process.kill()
+            self.process.terminate()
+            self.process.wait()
 
 
 class AudioVolume(Audio):

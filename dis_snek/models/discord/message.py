@@ -607,7 +607,7 @@ class Message(BaseMessage):
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
 
         """
-        if not self.channel.type == ChannelTypes.GUILD_TEXT:
+        if self.channel.type not in (ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_NEWS):
             raise ThreadOutsideOfGuild
 
         thread_data = await self._client.http.create_thread(

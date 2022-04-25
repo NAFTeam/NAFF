@@ -1,20 +1,21 @@
 import logging
+from contextlib import suppress
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import discord_typings
 
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import NotFound, Forbidden
+from dis_snek.client.utils.attr_utils import define, field
+from dis_snek.client.utils.cache import TTLCache
 from dis_snek.models import VoiceState
 from dis_snek.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
+from dis_snek.models.discord.emoji import CustomEmoji
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.user import Member, User
-from dis_snek.models.discord.emoji import CustomEmoji
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
-from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.cache import TTLCache
+from dis_snek.models.discord.user import Member, User
 from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = ["GlobalCache", "create_cache"]
@@ -862,9 +863,10 @@ class GlobalCache:
         Returns:
             The processed emoji
         """
-        guild_id = to_snowflake(guild_id)
+        with suppress(KeyError):
+            del data["guild_id"]  # discord sometimes packages a guild_id - this will cause an exception
 
-        emoji = CustomEmoji.from_dict(data, self._client, guild_id)
+        emoji = CustomEmoji.from_dict(data, self._client, to_snowflake(guild_id))
         if self.emoji_cache is not None:
             self.emoji_cache[emoji.id] = emoji
 
