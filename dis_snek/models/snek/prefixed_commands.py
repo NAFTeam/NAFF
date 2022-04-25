@@ -116,10 +116,9 @@ def _convert_to_bool(argument: str) -> bool:
         raise BadArgument(f"{argument} is not a recognised boolean option.")
 
 
-def _get_from_anno_type(anno: Annotated, name: str) -> Any:
+def _get_from_anno_type(anno: Annotated) -> Any:
     """
-    Handles dealing with Annotated annotations, getting their \
-    (first and what should be only) type annotation.
+    Handles dealing with Annotated annotations, getting their (first) type annotation.
 
     This allows correct type hinting with, say, Converters, for example.
     """
@@ -127,20 +126,12 @@ def _get_from_anno_type(anno: Annotated, name: str) -> Any:
     # the first argument is ignored and the rest is treated as is
 
     args = typing.get_args(anno)[1:]
-    if len(args) > 1:
-        # we could treat this as a union, but id rather have a user
-        # use an actual union type here
-        # from what ive seen, multiple arguments for Annotated are
-        # meant to be used to narrow down a type rather than
-        # be used as a union anyways
-        raise ValueError(f"{get_object_name(anno)} for {name} has more than 2 arguments, which is unsupported.")
-
     return args[0]
 
 
 def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], Any]:  # type: ignore
     if typing.get_origin(anno) == Annotated:
-        anno = _get_from_anno_type(anno, name)
+        anno = _get_from_anno_type(anno)
 
     if isinstance(anno, Converter):
         return BaseCommand._get_converter_function(anno, name)
@@ -175,7 +166,7 @@ def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
     arg = typing.get_args(greedy)[0]
 
     if typing.get_origin(arg) == Annotated:
-        arg = _get_from_anno_type(arg, param.name)
+        arg = _get_from_anno_type(arg)
 
     if arg in {NoneType, str}:
         raise ValueError(f"Greedy[{get_object_name(arg)}] is invalid.")
