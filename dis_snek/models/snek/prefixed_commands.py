@@ -654,7 +654,7 @@ def prefixed_command(
     """
 
     def wrapper(func: Callable) -> PrefixedCommand:
-        cmd = PrefixedCommand(  # type: ignore
+        return PrefixedCommand(  # type: ignore
             callback=func,
             name=name or func.__name__,
             aliases=aliases or [],
@@ -666,6 +666,5 @@ def prefixed_command(
             ignore_extra=ignore_extra,
             hierarchical_checking=hierarchical_checking,
         )
-        return cmd
 
     return wrapper
