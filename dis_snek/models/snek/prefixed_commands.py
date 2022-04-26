@@ -160,6 +160,8 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
 
 
 def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
+    default = param.default
+
     if param.kind in {param.KEYWORD_ONLY, param.VAR_POSITIONAL}:
         raise ValueError("Greedy[...] cannot be a variable or keyword-only argument.")
 
@@ -168,13 +170,19 @@ def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
     if typing.get_origin(arg) == Annotated:
         arg = _get_from_anno_type(arg)
 
-    if arg in {NoneType, str}:
+    if arg in {NoneType, str, Greedy}:
         raise ValueError(f"Greedy[{get_object_name(arg)}] is invalid.")
 
-    if typing.get_origin(arg) in {Union, UnionType} and NoneType in typing.get_args(arg):
-        raise ValueError(f"Greedy[{repr(arg)}] is invalid.")
+    if typing.get_origin(arg) in {Union, UnionType}:
+        args = typing.get_args(arg)
 
-    return arg
+        if len(args) > 2 or NoneType not in args:
+            raise ValueError(f"Greedy[{repr(arg)}] is invalid.")
+
+        arg = args[0]
+        default = None
+
+    return arg, default
 
 
 async def _convert(param: PrefixedCommandParameter, ctx: "PrefixedContext", arg: str) -> tuple[Any, bool]:
@@ -406,7 +414,10 @@ class PrefixedCommand(BaseCommand):
             cmd_param.type = anno = param.annotation
 
             if typing.get_origin(anno) == Greedy:
-                anno = _greedy_parse(anno, param)
+                anno, default = _greedy_parse(anno, param)
+
+                if default is not param.empty:
+                    cmd_param.default = default
                 cmd_param.greedy = True
 
             if typing.get_origin(anno) in {Union, UnionType}:
