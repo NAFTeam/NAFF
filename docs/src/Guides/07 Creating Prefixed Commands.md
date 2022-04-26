@@ -260,8 +260,8 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
 (run example)
 
 !!! warning "Greedy Warnings"
-    `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional` ~~note for astrea allow it to be wrapped in optional~~.
-    `Greedy` ~~astrea add this too~~, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
+    `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional`.
+    `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
 
 ## Other Notes
 - `CMD_*` is *not* supported with prefixed commands.
