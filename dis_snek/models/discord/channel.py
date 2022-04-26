@@ -2050,7 +2050,7 @@ TYPE_VOICE_CHANNEL = Union[GuildVoice, GuildStageVoice]
 
 
 TYPE_MESSAGEABLE_CHANNEL = Union[
-    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread
+    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread, GuildVoice
 ]
 
 
