@@ -135,6 +135,10 @@ async def test(ctx: PrefixedContext, uppered: to_upper):
     await ctx.reply(uppered)
 ```
 
+??? note "Functions"
+    If functions are used as arguments, they can either have one parameter (which is the passed argument as a string) or two parameters (which are the context and the argument).
+    They can also be asynchronous or synchronous.
+
 #### Booleans
 
 Booleans, unlike other basic types, are handled somewhat differently, as using the default `bool` converter would make any non-empty argument `True`. It is instead evaluated as so:
