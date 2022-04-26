@@ -9,6 +9,7 @@ Whatever the reason is, `Dis-Snek` has an extensive yet familiar prefixed comman
 ## Your First Prefixed Command
 
 To create a prefixed command, simply define an asynchronous function and use the `@prefixed_command()` decorator above it.
+
 ```python
 @prefixed_command(name="my_command")
 async def my_command_function(ctx: PrefixedContext):
@@ -22,6 +23,25 @@ If the bot's prefix was set to `!`, then a user could invoke it like:
 ```
 !my_command
 ```
+
+## Subcommands
+
+Subcommands are rather simple, too:
+
+```python
+@prefixed_command()
+async def base_command(ctx: PrefixedContext):
+    await ctx.reply("This is the base command.")
+
+@base_command.subcommand()
+async def subcommand(ctx: PrefixedContext):
+    await ctx.reply("This is a subcommand.")
+```
+
+A user can use them like so:
+
+(example of using base command)
+(example of using subcommand)
 
 ## Parameters
 
@@ -184,7 +204,7 @@ async def union(ctx: PrefixedContext, param: Union[GuildText, User]):
 
 #### `typing.Optional`
 
-Usually, `Optional[OBJECT]` is an alias for `Union[OBJECT, None]` - it indicates the parameter can be passed `None`. It means something slightly different here, however.
+Usually, `Optional[OBJECT]` is an alias for `Union[OBJECT, None]` - it indicates the parameter can be passed `None` or an instance of the object itself. It means something slightly different here, however.
 
 If a parameter is marked as `Optional`, then the command handler will try converting it to the type inside of it, defaulting to either `None` or a default value, if found. A similar behavior is done is the value has a default value, regardless of if it is marked with `Optional` or not.
 
@@ -201,3 +221,49 @@ And if they omit the `delete_message_days`, it would act as so:
 (run the above example)
 
 #### `typing.Literal`
+
+`typing.Literal` specifies that a parameter *must* be one of the values in the list. `Dis-Snek` also forces that here (though note this only works with values of basic types, like `str` or `int`):
+
+```python
+@prefixed_command()
+async def one_or_two(ctx: PrefixedContext, num: Literal[1, 2]):
+    await ctx.reply(num)
+```
+
+#### `typing.Annotated`
+
+Using `typing.Annotated` can allow you to have more proper typehints when using converters:
+
+```python
+class JudgementConverter(molter.Converter):
+    async def convert(self, ctx: PrefixedContext, argument: str):
+        return f"{ctx.author.mention} is {argument}."
+
+@prefixed_command()
+async def judgement(ctx: PrefixedContext, judgment: Annotated[str, JudgementConverter]):
+    await ctx.reply(judgment)
+```
+
+`Dis-Snek` will use the second parameter in `Annotated` as the actual converter.
+
+#### `Greedy`
+
+The `Greedy` class, included in this library, specifies `Dis-Snek` to keep converting as many arguments as it can until it fails to do so. For example:
+
+```python
+@prefixed_command()
+async def slap(ctx: PrefixedContext, members: Greedy[Member]):
+    slapped = ", ".join(x.display_name for x in members)
+    await ctx.reply(f"{slapped} just got slapped!")
+```
+
+(run example)
+
+!!! warning "Greedy Warnings"
+    `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional` ~~note for astrea allow it to be wrapped in optional~~.
+    `Greedy` ~~astrea add this too~~, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
+
+## Other Notes
+- `CMD_*` is *not* supported with prefixed commands.
+- Checks, cooldowns, and concurrency all works as-is with prefixed commands.
+- There is no automatically added help command into `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease.
