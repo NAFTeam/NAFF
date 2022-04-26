@@ -46,4 +46,45 @@ async def upper(ctx: PrefixedContext, uppered: UpperConverter):
     await ctx.reply(uppered)
 ```
 
-There are also `Converter`s that represent some Discord models that you can subclass from. These are largely useful for prefixed commands, so a list of those converters is kept [there](/Guides/07 Creating Prefixed Commands).
+## Built-in Converters
+
+### Context-based Arguments
+
+The library provides `CMD_ARGS`, `CMD_AUTHOR`, `CMD_BODY`, and `CMD_CHANNEL` to get the arguments, the author, the body, and the channel of an instance of a command based on its context. While you can do these yourself in the command itself, having this as an argument may be useful to you, especially for cases where you only have one argument that takes in the rest of the message:
+
+```python
+@prefixed_command()
+async def say(ctx: PrefixedContext, content: CMD_BODY):
+    await ctx.reply(content)
+```
+
+### Discord Model Converters
+
+There are also `Converter`s that represent some Discord models that you can subclass from. These are largely useful for prefixed commands, but you may find a use for them elsewhere.
+
+A table of objects and their respective converter is as follows:
+
+| Discord Model                          | Converter                     |
+|----------------------------------------|-------------------------------|
+| `SnowflakeObject`                      | `SnowflakeConverter`          |
+| `BaseChannel`, `TYPE_ALL_CHANNEL`      | `BaseChannelConverter`        |
+| `DMChannel`, `TYPE_DM_CHANNEL`         | `DMChannelConverter`          |
+| `DM`                                   | `DMConverter`                 |
+| `DMGroup`                              | `DMGroupConverter`            |
+| `GuildChannel`, `TYPE_GUILD_CHANNEL`   | `GuildChannelConverter`       |
+| `GuildNews`                            | `GuildNewsConverter`          |
+| `GuildCategory`                        | `GuildCategoryConverter`      |
+| `GuildText`                            | `GuildTextConverter`          |
+| `ThreadChannel`, `TYPE_THREAD_CHANNEL` | `ThreadChannelConverter`      |
+| `GuildNewsThread`                      | `GuildNewsThreadConverter`    |
+| `GuildPublicThread`                    | `GuildPublicThreadConverter`  |
+| `GuildPrivateThread`                   | `GuildPrivateThreadConverter` |
+| `GuildVoice`, `TYPE_VOICE_CHANNEL`     | `GuildVoiceConverter`         |
+| `GuildStageVoice`                      | `GuildStageVoiceConverter`    |
+| `TYPE_MESSAGEABLE_CHANNEL`             | `MessageableChannelConverter` |
+| `User`                                 | `UserConverter`               |
+| `Member`                               | `MemberConverter`             |
+| `Guild`                                | `GuildConverter`              |
+| `Role`                                 | `RoleConverter`               |
+| `PartialEmoji`                         | `PartialEmojiConverter`       |
+| `CustomEmoji`                          | `CustomEmojiConverter`        |

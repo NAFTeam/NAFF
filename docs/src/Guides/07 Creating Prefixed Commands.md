@@ -166,33 +166,9 @@ async def poke(ctx: PrefixedContext, target: Member):
     await ctx.send(f"{target.mention}, you got poked by {ctx.author.mention}!")
 ```
 
-The argument here will automatically be converted into a `Member` object. A table of supported objects and the converter used under the hood is as follows:
+The argument here will automatically be converted into a `Member` object.
 
-
-| Discord Model                          | Converter                     |
-|----------------------------------------|-------------------------------|
-| `SnowflakeObject`                      | `SnowflakeConverter`          |
-| `BaseChannel`, `TYPE_ALL_CHANNEL`      | `BaseChannelConverter`        |
-| `DMChannel`, `TYPE_DM_CHANNEL`         | `DMChannelConverter`          |
-| `DM`                                   | `DMConverter`                 |
-| `DMGroup`                              | `DMGroupConverter`            |
-| `GuildChannel`, `TYPE_GUILD_CHANNEL`   | `GuildChannelConverter`       |
-| `GuildNews`                            | `GuildNewsConverter`          |
-| `GuildCategory`                        | `GuildCategoryConverter`      |
-| `GuildText`                            | `GuildTextConverter`          |
-| `ThreadChannel`, `TYPE_THREAD_CHANNEL` | `ThreadChannelConverter`      |
-| `GuildNewsThread`                      | `GuildNewsThreadConverter`    |
-| `GuildPublicThread`                    | `GuildPublicThreadConverter`  |
-| `GuildPrivateThread`                   | `GuildPrivateThreadConverter` |
-| `GuildVoice`, `TYPE_VOICE_CHANNEL`     | `GuildVoiceConverter`         |
-| `GuildStageVoice`                      | `GuildStageVoiceConverter`    |
-| `TYPE_MESSAGEABLE_CHANNEL`             | `MessageableChannelConverter` |
-| `User`                                 | `UserConverter`               |
-| `Member`                               | `MemberConverter`             |
-| `Guild`                                | `GuildConverter`              |
-| `Role`                                 | `RoleConverter`               |
-| `PartialEmoji`                         | `PartialEmojiConverter`       |
-| `CustomEmoji`                          | `CustomEmojiConverter`        |
+A table of supported objects and their converters can be found [here](/Guides/08 Converters). You may use the Discord model itself in your command for prefixed commands, just like the above.
 
 #### `typing.Union`
 
