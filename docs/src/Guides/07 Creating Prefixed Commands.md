@@ -268,6 +268,5 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
     `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
 
 ## Other Notes
-- `CMD_*` is *not* supported with prefixed commands.
 - Checks, cooldowns, and concurrency all works as-is with prefixed commands.
 - There is no automatically added help command into `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease.

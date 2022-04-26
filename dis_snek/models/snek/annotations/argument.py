@@ -1,75 +1,50 @@
-from typing import Callable, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from dis_snek.client.const import T
-from dis_snek.client.utils.misc_utils import get_parameters
+from dis_snek.client.errors import BadArgument
 from dis_snek.models.snek.context import Context, PrefixedContext
-from dis_snek.models.snek.scale import Scale
 
-__all__ = ["CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL", "define_annotation"]
+__all__ = ["CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL"]
 
 
 if TYPE_CHECKING:
     from dis_snek.models import Member, User, TYPE_MESSAGEABLE_CHANNEL
 
 
-def define_annotation() -> Callable[[Callable[[Context], T]], Callable[[Context], T]]:
-    """
-    Define a function as an annotation.
-
-    The function **must** type hint its expected arguments. Make sure your annotation runs quickly,
-    as command execution will be delayed until all annotations are completed
-
-    **Supported Types:**
-    `Context`
-    `Scale`
-
-    """
-
-    def wrapper(func: Callable[[Context], T]) -> Callable[[Context], T]:
-        params = get_parameters(func)
-        args = []
-        for param in params.values():
-            if issubclass(param.annotation, Context):
-                args.append("context")
-            elif param.annotation is Scale:
-                args.append("scale")
-            # elif param.annotation is Snake:
-            #     args.append("snake")
-        func._annotation_dat = {"args": args}  # type: ignore
-        return func
-
-    return wrapper
-
-
-@define_annotation()
-def CMD_BODY(context: Context) -> str:
+class CMD_BODY:
     """
     This argument is for the body of the message.
 
     IE:
 
-    if `@bot hello how are you?` is sent this argument will be `hello
-    how are you?`
-
+    if `@bot hello how are you?` is sent this argument will be `hello how are you?`
     """
-    if not isinstance(context, PrefixedContext):
-        raise TypeError("CMD_BODY can only be used with Prefixed Commands")
-    return context.content_parameters
+
+    @staticmethod
+    async def convert(context: Context, _) -> str:
+        if not isinstance(context, PrefixedContext):
+            raise BadArgument("CMD_BODY can only be used with prefixed commands.")
+        return context.content_parameters
 
 
-@define_annotation()
-def CMD_AUTHOR(context: Context) -> Union["Member", "User"]:
+class CMD_AUTHOR:
     """This argument is the author of the command."""
-    return context.author
+
+    @staticmethod
+    async def convert(context: Context, _) -> "Member | User":
+        return context.author
 
 
-@define_annotation()
-def CMD_CHANNEL(context: Context) -> "TYPE_MESSAGEABLE_CHANNEL":
+class CMD_CHANNEL:
     """This argument is the channel the command was sent in."""
-    return context.channel
+
+    @staticmethod
+    async def convert(context: Context, _) -> "TYPE_MESSAGEABLE_CHANNEL":
+        return context.channel
 
 
-@define_annotation()
-def CMD_ARGS(context: Context) -> list:
+class CMD_ARGS:
     """This argument is all of the arguments sent with this command."""
-    return context.args
+
+    @staticmethod
+    async def convert(context: Context, _) -> list[str]:
+        return context.args
