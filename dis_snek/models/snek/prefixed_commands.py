@@ -170,9 +170,6 @@ def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
     if typing.get_origin(arg) == Annotated:
         arg = _get_from_anno_type(arg)
 
-    if arg in {NoneType, str, Greedy}:
-        raise ValueError(f"Greedy[{get_object_name(arg)}] is invalid.")
-
     if typing.get_origin(arg) in {Union, UnionType}:
         args = typing.get_args(arg)
 
@@ -181,6 +178,9 @@ def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
 
         arg = args[0]
         default = None
+
+    if arg in {NoneType, str, Greedy}:
+        raise ValueError(f"Greedy[{get_object_name(arg)}] is invalid.")
 
     return arg, default
 
