@@ -145,13 +145,59 @@ async def poke(ctx: PrefixedContext, target: Member):
 The argument here will automatically be converted into a `Member` object. A table of supported objects and the converter used under the hood is as follows:
 
 
-| Discord Model | Converter |
-| --------------- | --------------- |
-| Row 1 Column 1 | Row 1 Column 2 |
-| Row 2 Column 1 | Row 2 Column 2 |
-| Row 3 Column 1 | Row 3 Column 2 |
-
+| Discord Model                          | Converter                     |
+|----------------------------------------|-------------------------------|
+| `SnowflakeObject`                      | `SnowflakeConverter`          |
+| `BaseChannel`, `TYPE_ALL_CHANNEL`      | `BaseChannelConverter`        |
+| `DMChannel`, `TYPE_DM_CHANNEL`         | `DMChannelConverter`          |
+| `DM`                                   | `DMConverter`                 |
+| `DMGroup`                              | `DMGroupConverter`            |
+| `GuildChannel`, `TYPE_GUILD_CHANNEL`   | `GuildChannelConverter`       |
+| `GuildNews`                            | `GuildNewsConverter`          |
+| `GuildCategory`                        | `GuildCategoryConverter`      |
+| `GuildText`                            | `GuildTextConverter`          |
+| `ThreadChannel`, `TYPE_THREAD_CHANNEL` | `ThreadChannelConverter`      |
+| `GuildNewsThread`                      | `GuildNewsThreadConverter`    |
+| `GuildPublicThread`                    | `GuildPublicThreadConverter`  |
+| `GuildPrivateThread`                   | `GuildPrivateThreadConverter` |
+| `GuildVoice`, `TYPE_VOICE_CHANNEL`     | `GuildVoiceConverter`         |
+| `GuildStageVoice`                      | `GuildStageVoiceConverter`    |
+| `TYPE_MESSAGEABLE_CHANNEL`             | `MessageableChannelConverter` |
+| `User`                                 | `UserConverter`               |
+| `Member`                               | `MemberConverter`             |
+| `Guild`                                | `GuildConverter`              |
+| `Role`                                 | `RoleConverter`               |
+| `PartialEmoji`                         | `PartialEmojiConverter`       |
+| `CustomEmoji`                          | `CustomEmojiConverter`        |
 
 #### `typing.Union`
 
-`typing.Union` allows for a parameter/argument to be of multiple types instead of one. If
+`typing.Union` allows for a parameter/argument to be of multiple types instead of one. `Dis-Snek` will attempt to convert a given argument into each type specified (starting from the first one), going down the "list" until a valid match is found.
+
+For example, the below will try to convert an argument to a `GuildText` first, then a `User` if it cannot do so.
+
+```python
+@prefixed_command()
+async def union(ctx: PrefixedContext, param: Union[GuildText, User]):
+    await ctx.reply(param)
+```
+
+#### `typing.Optional`
+
+Usually, `Optional[OBJECT]` is an alias for `Union[OBJECT, None]` - it indicates the parameter can be passed `None`. It means something slightly different here, however.
+
+If a parameter is marked as `Optional`, then the command handler will try converting it to the type inside of it, defaulting to either `None` or a default value, if found. A similar behavior is done is the value has a default value, regardless of if it is marked with `Optional` or not.
+
+For example, a user could run the following code:
+
+```python
+@prefixed_command()
+async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optional[int] = 0, *, reason: str)
+    await member.ban(delete_message_days=delete_message_days, reason=reason)
+    await ctx.reply(f"Banned {member.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
+```
+
+And if they omit the `delete_message_days`, it would act as so:
+(run the above example)
+
+#### `typing.Literal`
