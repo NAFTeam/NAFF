@@ -179,7 +179,7 @@ def _greedy_parse(greedy: Greedy, param: inspect.Parameter) -> Any:
         arg = args[0]
         default = None
 
-    if arg in {NoneType, str, Greedy}:
+    if arg in {NoneType, str, Greedy, Union, UnionType}:
         raise ValueError(f"Greedy[{get_object_name(arg)}] is invalid.")
 
     return arg, default
