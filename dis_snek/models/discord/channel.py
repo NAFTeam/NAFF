@@ -1932,7 +1932,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
 
 @define()
-class GuildVoice(VoiceChannel, InvitableMixin):
+class GuildVoice(VoiceChannel, InvitableMixin, MessageableMixin):
     pass
 
 
