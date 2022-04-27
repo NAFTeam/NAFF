@@ -354,29 +354,5 @@ There also is `on_command` which you can overwrite too. That fires on every inte
 ## I Need A Custom Parameter Type
 
 If your bot is complex enough, you might find yourself wanting to use custom models in your commands.
-To do this, you'll want to use a string option, and define a converter:
 
-```python
-class DatabaseEntry():
-    name: str
-    description: str
-    score: int
-
-    @classmethod
-    async def convert(cls, ctx: Context, value: str) -> DatabaseEntry:
-        """This is where the magic happens"""
-        return cls(hypothetical_database.lookup(ctx.guild.id, value))
-
-@slash_command(name="lookup", description="Gives info about a thing from the db")
-@slash_option(
-    name="thing",
-    description="The user enters a string",
-    required=True,
-    opt_type=OptionTypes.STRING
-)
-async def my_command_function(ctx: InteractionContext, thing: DatabaseEntry):
-    await ctx.send(f"***{thing.name}***\n{thing.description}\nScore: {thing.score}/10")
-```
-
-As you can see, a converter can transparently convert what Discord sends you (a string, a user, etc) into something more complex (A pokemon card, a scoresheet, etc).
-This can be useful if you frequently find yourself starting commands with `thing = lookup(thing_name)`
+To do this, you'll want to use a string option, and define a converter. Information on how to use converters can be found [on the converter page](/Guides/08 Converters).

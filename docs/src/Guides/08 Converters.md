@@ -19,6 +19,7 @@ class DatabaseEntry():
         """This is where the magic happens"""
         return cls(hypothetical_database.lookup(ctx.guild.id, value))
 
+# Slash Command:
 @slash_command(name="lookup", description="Gives info about a thing from the db")
 @slash_option(
     name="thing",
@@ -28,6 +29,11 @@ class DatabaseEntry():
 )
 async def my_command_function(ctx: InteractionContext, thing: DatabaseEntry):
     await ctx.send(f"***{thing.name}***\n{thing.description}\nScore: {thing.score}/10")
+
+# Prefixed Command:
+@prefixed_command()
+async def my_command_function(ctx: InteractionContext, thing: DatabaseEntry):
+    await ctx.reply(f"***{thing.name}***\n{thing.description}\nScore: {thing.score}/10")
 ```
 
 As you can see, a converter can transparently convert what Discord sends you (a string, a user, etc) into something more complex (a pokemon card, a scoresheet, etc).
@@ -41,9 +47,21 @@ class UpperConverter(Converter):
     async def convert(ctx: PrefixedContext, argument: str):
         return argument.upper()
 
+# Slash Command:
+@slash_command(name="upper", description="Sends back the input in all caps.")
+@slash_option(
+    name="to_upper",
+    description="The thing to make all caps.",
+    required=True,
+    opt_type=OptionTypes.STRING
+)
+async def upper(ctx: InteractionContext, to_upper: UpperConverter):
+    await ctx.send(to_upper)
+
+# Prefixed Command:
 @prefixed_command()
-async def upper(ctx: PrefixedContext, uppered: UpperConverter):
-    await ctx.reply(uppered)
+async def upper(ctx: PrefixedContext, to_upper: UpperConverter):
+    await ctx.reply(to_upper)
 ```
 
 ## Built-in Converters
@@ -53,6 +71,8 @@ async def upper(ctx: PrefixedContext, uppered: UpperConverter):
 The library provides `CMD_ARGS`, `CMD_AUTHOR`, `CMD_BODY`, and `CMD_CHANNEL` to get the arguments, the author, the body, and the channel of an instance of a command based on its context. While you can do these yourself in the command itself, having this as an argument may be useful to you, especially for cases where you only have one argument that takes in the rest of the message:
 
 ```python
+# This example is only viable for prefixed commands.
+# The other CMD_* can be used with slash commands, however.
 @prefixed_command()
 async def say(ctx: PrefixedContext, content: CMD_BODY):
     await ctx.reply(content)

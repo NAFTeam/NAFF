@@ -168,7 +168,7 @@ async def poke(ctx: PrefixedContext, target: Member):
 
 The argument here will automatically be converted into a `Member` object.
 
-A table of supported objects and their converters can be found [here](/Guides/08 Converters). You may use the Discord model itself in your command for prefixed commands, just like the above.
+A table of supported objects and their converters can be found [here](/Guides/08 Converters#discord-model-converters). You may use the Discord model itself in your command for prefixed commands, just like the above, and their respective converter will be used under the hood.
 
 #### `typing.Union`
 
@@ -241,8 +241,24 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
 
 !!! warning "Greedy Warnings"
     `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional`.
-    `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
+    `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.\
+
+## Help Command
+
+There is no automatically added help command in `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease. Using it looks like so:
+
+```python
+from dis_snek.ext.prefixed_help import PrefixedHelpCommand
+
+# There are a variety of options - adjust them to your liking!
+help_cmd = PrefixedHelpCommand(bot, ...)
+help_cmd.register()
+```
+
+With the default options, the result looks like:
+
+(insert screenshot of help cmd - probably ask polls for that old screenshot)
 
 ## Other Notes
 - Checks, cooldowns, and concurrency all works as-is with prefixed commands.
-- There is no automatically added help command into `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease.
+- Prefixed commands uses a different method to process `Converter`s compared to slash commands. While they should roughly give the same result, they may act slightly differently.
