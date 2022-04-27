@@ -464,6 +464,20 @@ class ChannelTypes(IntEnum):
     GUILD_STAGE_VOICE = 13
     """Voice channel for hosting events with an audience"""
 
+    @classmethod
+    def converter(cls, value) -> "ChannelTypes":
+        """A converter to handle discord creating new channel types that the lib isn't aware of, without losing type info"""
+        try:
+            out = cls(value)
+            return out
+        except ValueError:
+            # construct a new enum item to represent this new unknown type - without losing the value
+            new = int.__new__(cls)
+            new._name_ = f"UNKNOWN-TYPE-{value}"
+            new._value_ = value
+
+            return cls._value2member_map_.setdefault(value, new)
+
     @property
     def guild(self) -> bool:
         """Whether this channel is a guild channel."""
