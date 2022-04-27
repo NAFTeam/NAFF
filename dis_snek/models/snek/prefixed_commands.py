@@ -593,7 +593,7 @@ class PrefixedCommand(BaseCommand):
                         args_to_convert = args.get_rest_of_args()
                         new_arg = [await _convert(param, ctx, arg) for arg in args_to_convert]
                         new_arg = tuple(arg[0] for arg in new_arg)
-                        new_args.append(new_arg)
+                        new_args.extend(new_arg)
                         param_index += 1
                         break
 
