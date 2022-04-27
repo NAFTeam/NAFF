@@ -77,8 +77,8 @@ class _LiteralConverter(Converter):
     async def convert(self, ctx: Context, argument: str) -> Any:
         for arg, converter in self.values.items():
             try:
-                if arg == converter(argument):
-                    return argument
+                if (converted := converter(argument)) == arg:
+                    return converted
             except Exception:  # noqa
                 continue
 
