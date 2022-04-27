@@ -335,7 +335,6 @@ class PrefixedCommand(BaseCommand):
             name = param.name
 
             if typing.get_origin(anno) == Annotated:
-                # message commands can only have two arguments in an annotation anyways
                 anno = typing.get_args(anno)[1]
 
             if not param.greedy and param.union:
