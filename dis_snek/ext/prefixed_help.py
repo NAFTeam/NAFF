@@ -13,32 +13,37 @@ from dis_snek.models.snek.prefixed_commands import prefixed_command, PrefixedCom
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
-__all__ = ("HelpCommand",)
+__all__ = ("PrefixedHelpCommand",)
 
 log = logging.getLogger(logger_name)
 
 
 @attrs.define(slots=True)
-class HelpCommand:
+class PrefixedHelpCommand:
+    """A help command for all prefixed commands in a bot."""
+
+    client: "Snake" = attrs.field()
+    """The client to use for the help command."""
+
     show_hidden: bool = attrs.field(default=False, kw_only=True)
-    """Should hidden commands be shown"""
+    """Should hidden commands be shown?"""
     show_disabled: bool = attrs.field(default=False, kw_only=True)
-    """Should disabled commands be shown"""
+    """Should disabled commands be shown?"""
     run_checks: bool = attrs.field(default=False, kw_only=True)
-    """Should only commands that's checks pass be shown"""
+    """Should only commands that's checks pass be shown?"""
     show_self: bool = attrs.field(default=False, kw_only=True)
-    """Should this command be shown in the help message"""
+    """Should this command be shown in the help message?"""
     show_usage: bool = attrs.field(default=False, kw_only=True)
-    """Should usage for commands be shown"""
+    """Should usage for commands be shown?"""
     show_aliases: bool = attrs.field(default=False, kw_only=True)
-    """Should aliases for commands be shown"""
+    """Should aliases for commands be shown?"""
     show_prefix: bool = attrs.field(default=False, kw_only=True)
-    """Should the prefix be shown"""
+    """Should the prefix be shown?"""
     embed_color: Color = attrs.field(default=BrandColors.BLURPLE, kw_only=True)
-    """The colour to show in the Embeds"""
+    """The colour to show in the Embeds."""
 
     embed_title: str = attrs.field(default="{username} Help Command", kw_only=True)
-    """The title to use in the embed. {username} will be replaced by the client's username"""
+    """The title to use in the embed. {username} will be replaced by the client's username."""
     not_found_message: str = attrs.field(default="Sorry! No command called `{cmd_name}` was found.", kw_only=True)
     """The message to send when a command was not found. {cmd_name} will be replaced by the requested command."""
     fallback_help_string: str = attrs.field(default="No help message available.", kw_only=True)
@@ -46,7 +51,6 @@ class HelpCommand:
     fallback_brief_string: str = attrs.field(default="No help message available.", kw_only=True)
     """The text to display when a command does not have a brief string defined."""
 
-    _client: "Snake" = attrs.field()
     _cmd: PrefixedCommand = attrs.field(init=False, default=None)
 
     def __attrs_post_init__(self) -> None:
@@ -54,23 +58,23 @@ class HelpCommand:
             self._cmd = self._callback  # type: ignore
 
     def register(self) -> None:
-        """Register the help command."""
+        """Registers the help command."""
         if not isinstance(self._cmd.callback, functools.partial):
             # prevent wrap-nesting
             self._cmd.callback = functools.partial(self._cmd.callback, self)
 
         # replace existing help command if found
-        if "help" in self._client.prefixed_commands:
+        if "help" in self.client.prefixed_commands:
             log.warning("Replacing existing help command.")
-            del self._client.prefixed_commands["help"]
+            del self.client.prefixed_commands["help"]
 
-        self._client.add_prefixed_command(self._cmd)  # type: ignore
+        self.client.add_prefixed_command(self._cmd)  # type: ignore
 
     async def send_help(self, ctx: PrefixedContext, cmd_name: str | None) -> None:
         """
         Send a help message to the given context.
 
-        args:
+        Args:
             ctx: The context to use.
             cmd_name: An optional command name to send help for.
         """
@@ -92,13 +96,13 @@ class HelpCommand:
 
             output.append(self._sanitise_mentions(_temp))
         if len("\n".join(output)) > 500:
-            paginator = Paginator.create_from_list(self._client, output, page_size=500)
+            paginator = Paginator.create_from_list(self.client, output, page_size=500)
             paginator.default_color = self.embed_color
-            paginator.default_title = self.embed_title.format(username=self._client.user.username)
+            paginator.default_title = self.embed_title.format(username=self.client.user.username)
             await paginator.send(ctx)
         else:
             embed = Embed(
-                title=self.embed_title.format(username=self._client.user.username),
+                title=self.embed_title.format(username=self.client.user.username),
                 description="\n".join(output),
                 color=self.embed_color,
             )
@@ -118,14 +122,14 @@ class HelpCommand:
         """
         Gather commands based on the rules set out in the class attributes.
 
-        args:
+        Args:
             ctx: The context to use to establish usability.
-        returns:
+        Returns:
             dict[str, PrefixedCommand]: A list of commands fit the class attribute configuration.
         """
         out: dict[str, PrefixedCommand] = {}
 
-        for cmd in frozenset(self._client.prefixed_commands.values()):
+        for cmd in frozenset(self.client.prefixed_commands.values()):
             if not cmd.enabled and not self.show_disabled:
                 continue
 
@@ -160,8 +164,8 @@ class HelpCommand:
         mappings = {
             "@everyone": "@\u200beveryone",
             "@here": "@\u200bhere",
-            f"<@{self._client.user.id}>": f"@{self._client.user.username}",
-            f"<@!{self._client.user.id}>": f"@{self._client.user.username}",
+            f"<@{self.client.user.id}>": f"@{self.client.user.username}",
+            f"<@!{self.client.user.id}>": f"@{self.client.user.username}",
         }
         for source, target in mappings.items():
             text = text.replace(source, target)

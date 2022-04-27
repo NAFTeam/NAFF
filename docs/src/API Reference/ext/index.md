@@ -7,3 +7,6 @@ These files contain useful features that help you develop a bot
 
 - [Paginators](paginators)
     - An automatic message paginator to help you get a lot of information across
+
+- [Prefixed Help Command](prefixed_help_command)
+    - An easy-to-use help command for prefixed commands
