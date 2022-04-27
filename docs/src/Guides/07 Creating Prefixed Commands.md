@@ -19,10 +19,8 @@ async def my_command_function(ctx: PrefixedContext):
 ??? note "Command Name"
     If `name` is not specified, `Dis-Snek` will automatically use the function's name as the command's name.
 
-If the bot's prefix was set to `!`, then a user could invoke it like:
-```
-!my_command
-```
+If the bot's prefix was set to `!`, then a user could invoke it like so:
+(show picture of this command)
 
 ## Subcommands
 
@@ -188,7 +186,7 @@ Usually, `Optional[OBJECT]` is an alias for `Union[OBJECT, None]` - it indicates
 
 If a parameter is marked as `Optional`, then the command handler will try converting it to the type inside of it, defaulting to either `None` or a default value, if found. A similar behavior is done is the value has a default value, regardless of if it is marked with `Optional` or not.
 
-For example, a user could run the following code:
+For example, you could use the following code:
 
 ```python
 @prefixed_command()
@@ -197,12 +195,12 @@ async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optiona
     await ctx.reply(f"Banned {member.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
 ```
 
-And if they omit the `delete_message_days`, it would act as so:
+And if a user omits the `delete_message_days` parameter, it would act as so:
 (run the above example)
 
 #### `typing.Literal`
 
-`typing.Literal` specifies that a parameter *must* be one of the values in the list. `Dis-Snek` also forces that here (though note this only works with values of basic types, like `str` or `int`):
+`typing.Literal` specifies that a parameter *must* be one of the values in the list. `Dis-Snek` also forces that here (though this only works with values of basic types, like `str` or `int`):
 
 ```python
 @prefixed_command()
@@ -241,7 +239,7 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
 
 !!! warning "Greedy Warnings"
     `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional`.
-    `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.\
+    `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
 
 ## Help Command
 
@@ -262,3 +260,4 @@ With the default options, the result looks like:
 ## Other Notes
 - Checks, cooldowns, and concurrency all works as-is with prefixed commands.
 - Prefixed commands uses a different method to process `Converter`s compared to slash commands. While they should roughly give the same result, they may act slightly differently.
+- All prefixed commands use `PrefixedContext`, which contains useful information based on the current instance of the command.

@@ -2,7 +2,7 @@
 
 If your bot is complex enough, you might find yourself wanting to use custom models in your commands. Converters are classes that allow you to do just that, and can be used in both slash and prefixed commands.
 
-This can be useful if you frequently find yourself starting commands with `thing = lookup(thing_name)`
+This can be useful if you frequently find yourself starting commands with `thing = lookup(thing_name)`.
 
 ## Inline Converters
 
@@ -14,7 +14,7 @@ class DatabaseEntry():
     description: str
     score: int
 
-    @classmethod
+    @classmethod  # you can also use staticmethod
     async def convert(cls, ctx: Context, value: str) -> DatabaseEntry:
         """This is where the magic happens"""
         return cls(hypothetical_database.lookup(ctx.guild.id, value))
@@ -71,8 +71,8 @@ async def upper(ctx: PrefixedContext, to_upper: UpperConverter):
 The library provides `CMD_ARGS`, `CMD_AUTHOR`, `CMD_BODY`, and `CMD_CHANNEL` to get the arguments, the author, the body, and the channel of an instance of a command based on its context. While you can do these yourself in the command itself, having this as an argument may be useful to you, especially for cases where you only have one argument that takes in the rest of the message:
 
 ```python
-# This example is only viable for prefixed commands.
-# The other CMD_* can be used with slash commands, however.
+# this example is only viable for prefixed commands
+# the other CMD_* can be used with slash commands, however
 @prefixed_command()
 async def say(ctx: PrefixedContext, content: CMD_BODY):
     await ctx.reply(content)
