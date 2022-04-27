@@ -433,12 +433,17 @@ class PrefixedCommand(BaseCommand):
 
             match param.kind:
                 case param.KEYWORD_ONLY:
+                    if cmd_param.greedy:
+                        raise ValueError("Variable arguments cannot be Greedy.")
+
                     cmd_param.consume_rest = True
                     finished_params = True
                 case param.VAR_POSITIONAL:
                     if cmd_param.optional:
                         # there's a lot of parser ambiguities here, so i'd rather not
                         raise ValueError("Variable arguments cannot have default values or be Optional.")
+                    if cmd_param.greedy:
+                        raise ValueError("Variable arguments cannot be Greedy.")
 
                     cmd_param.variable = True
                     finished_params = True
