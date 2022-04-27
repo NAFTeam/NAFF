@@ -1,4 +1,5 @@
 import re
+import typing
 from typing import Any, Optional, List
 
 from dis_snek.client.const import T, T_co
@@ -7,7 +8,6 @@ from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.guild import Guild
 from dis_snek.models.discord.message import Message
 from dis_snek.models.discord.user import User, Member
-from dis_snek.models.discord.enums import ChannelTypes
 from dis_snek.models.discord.snowflake import SnowflakeObject
 from dis_snek.models.discord.emoji import PartialEmoji, CustomEmoji
 from dis_snek.models.discord.channel import (
@@ -240,12 +240,12 @@ class GuildStageVoiceConverter(ChannelConverter[GuildStageVoice]):
         return isinstance(result, GuildStageVoice)
 
 
+_MESSAGEABLE_CHANNEL_TYPES = typing.get_args(TYPE_MESSAGEABLE_CHANNEL)
+
+
 class MessageableChannelConverter(ChannelConverter[TYPE_MESSAGEABLE_CHANNEL]):
     def _check(self, result: BaseChannel) -> bool:
-        return (isinstance(result.type, ChannelTypes) and not result.type.voice) or result.type not in {
-            2,
-            13,
-        }
+        return isinstance(result, _MESSAGEABLE_CHANNEL_TYPES)
 
 
 class UserConverter(IDConverter[User]):
