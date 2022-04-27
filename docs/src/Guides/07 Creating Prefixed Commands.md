@@ -23,7 +23,8 @@ async def my_command_function(ctx: PrefixedContext):
     If `name` is not specified, `Dis-Snek` will automatically use the function's name as the command's name.
 
 If the bot's prefix was set to `!`, then a user could invoke it like so:
-(show picture of this command)
+
+![Hello World!](../images/PrefixedCommands/FirstCommand.png "The above command running.")
 
 ## Subcommands
 
@@ -41,8 +42,7 @@ async def subcommand(ctx: PrefixedContext):
 
 A user can use them like so:
 
-(example of using base command)
-(example of using subcommand)
+![Subcommands](../images/PrefixedCommands/Subcommands.png "Both the base command and the subcommand running.")
 
 ## Parameters
 
@@ -56,14 +56,17 @@ async def test(ctx: PrefixedContext, arg):
 ```
 
 When a user uses the command, all they simply need to do is pass a word after the command:
-(insert picture of running the above command with one word)
+
+![One Parameter](../images/PrefixedCommands/OneParamNoQuotes.png "The above running with the argument: hello!")
 
 If the user wishes to use multiple words in an argument like this, they can wrap it in quotes like so:
-(ditto, but using something "hello world!" for the arg)
+
+![One Parameter With Quotes](../images/PrefixedCommands/OneParamWithQuotes.png "The above running with the argument: "hello world!"")
 
 !!! warning "Forgetting Quotes"
     If a user forgets or simply does not wrap multiple words in an argument in quotes, the library will only use the first word for the argument and ignore the rest.
-    (same as other two, but with hello world, letting the above warning play out or something)
+
+    ![Don't Forget Quotes](../images/PrefixedCommands/DontForgetQuotes.png "The above running with the argument hello world! - the bot only outputs hello.")
 
 You can add as many parameters as you want to a command:
 ```python
@@ -71,6 +74,8 @@ You can add as many parameters as you want to a command:
 async def test(ctx: PrefixedContext, arg1, arg2):
     await ctx.reply(f"Arguments: {arg1}, {arg2}.")
 ```
+
+![Two Parameters](../images/PrefixedCommands/TwoParams.png "The above running with the arguments: one two")
 
 ### Variable and Keyword-Only Arguments
 
@@ -82,11 +87,12 @@ If you wish to get a list (or more specifically, a tuple) of words for one argum
 ```python
 @prefixed_command()
 async def test(ctx: PrefixedContext, *args):
-    await ctx.reply(f"{len(args)} arguments: {','.join(args)}")
+    await ctx.reply(f"{len(args)} arguments: {', '.join(args)}")
 ```
 
 The result looks something like this:
-(insert picture of running "!test hello there world, "how are you?"")
+
+![Variable Parameter](../images/PrefixedCommands/VariableParam.png "The above running with the arguments: hello there world "how are you?"")
 
 Notice how the quoted words are still parsed as one argument in the tuple.
 
@@ -100,11 +106,13 @@ async def test(ctx: PrefixedContext, *, arg):
 ```
 
 The result looks like this:
-("!test hello world!")
+
+![Keyword-Only Parameter](../images/PrefixedCommands/KeywordParam.png "The above running with the arguments: hello world!")
 
 ??? note "Quotes"
     If a user passes quotes into a keyword-only argument, then the resulting argument will have said quotes.
-    (show example of "!test "hello world"" here)
+
+    ![Keyword-Only Quotes](../images/PrefixedCommands/KeywordParamWithQuotes.png "The above running with the arguments: "hello world!"")
 
 !!! warning "Parser ambiguities"
     Due to parser ambiguities, you can *only* have either a single variable or keyword-only/consume rest argument.
@@ -120,8 +128,10 @@ Parameters, by default, are assumed to be strings, since `Message.content`, the 
 ```python
 @prefixed_command()
 async def test(ctx: PrefixedContext, an_int: int, a_float: float):
-    await ctx.reply(an_int + a_float)
+    await ctx.reply(str(an_int + a_float))
 ```
+
+![Basic Type Conversion](../images/PrefixedCommands/BasicTypeConversion.png "The above running with the arguments: 1 2.5")
 
 Words/arguments will automatically be converted to the specified type. If `Dis-Snek` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarily to how it is handled with [slash commands](/Guides/03 Creating Commands).
 
@@ -136,9 +146,12 @@ async def test(ctx: PrefixedContext, uppered: to_upper):
     await ctx.reply(uppered)
 ```
 
+![Function Conversion](../images/PrefixedCommands/FunctionConversion.png "The above running with the arguments: hello!")
+
 ??? note "Functions"
     If functions are used as arguments, they can either have one parameter (which is the passed argument as a string) or two parameters (which are the context and the argument).
     They can also be asynchronous or synchronous.
+    Also, your typechecker will likely complain about this. You can ignore it for `Dis-Snek`.
 
 #### Booleans
 
@@ -164,10 +177,12 @@ Prefixed commands can be typehinted with some Discord models, like so:
 ```python
 @prefixed_command()
 async def poke(ctx: PrefixedContext, target: Member):
-    await ctx.send(f"{target.mention}, you got poked by {ctx.author.mention}!")
+    await ctx.send(f"{target.user.mention}, you got poked by {ctx.author.mention}!")
 ```
 
-The argument here will automatically be converted into a `Member` object.
+The argument here will automatically be converted into a `Member` object:
+
+![Discord Model Conversion](../images/PrefixedCommands/DiscordModelConversion.png "The above running with a user passed in.")
 
 A table of supported objects and their converters can be found [here](/Guides/08 Converters#discord-model-converters). You may use the Discord model itself in your command for prefixed commands, just like the above, and their respective converter will be used under the hood.
 
@@ -180,8 +195,10 @@ For example, the below will try to convert an argument to a `GuildText` first, t
 ```python
 @prefixed_command()
 async def union(ctx: PrefixedContext, param: Union[GuildText, User]):
-    await ctx.reply(param)
+    await ctx.reply(str(param))
 ```
+
+![Union Conversion](../images/PrefixedCommands/UnionConversion.png "The above running twice, with a channel passed the first time and a user the second time.")
 
 #### `typing.Optional`
 
@@ -193,13 +210,14 @@ For example, you could use the following code:
 
 ```python
 @prefixed_command()
-async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optional[int] = 0, *, reason: str)
+async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optional[int] = 0, *, reason: str):
     await member.ban(delete_message_days=delete_message_days, reason=reason)
-    await ctx.reply(f"Banned {member.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
+    await ctx.reply(f"Banned {member.user.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
 ```
 
 And if a user omits the `delete_message_days` parameter, it would act as so:
-(run the above example)
+
+![Optional Conversion](../images/PrefixedCommands/OptionalConversion.png "The above running, banning a user without specifying delete_message_days.")
 
 #### `typing.Literal`
 
@@ -208,8 +226,10 @@ And if a user omits the `delete_message_days` parameter, it would act as so:
 ```python
 @prefixed_command()
 async def one_or_two(ctx: PrefixedContext, num: Literal[1, 2]):
-    await ctx.reply(num)
+    await ctx.reply(str(num))
 ```
+
+![Literal Conversion](../images/PrefixedCommands/LiteralConversion.png "The above running with the arguments: 1")
 
 #### `typing.Annotated`
 
@@ -238,11 +258,12 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
     await ctx.reply(f"{slapped} just got slapped!")
 ```
 
-(run example)
+![Greedy Conversion](../images/PrefixedCommands/GreedyConversion.png "The above running with multiple users as the arguments.")
 
 !!! warning "Greedy Warnings"
     `Greedy` does *not* default to being optional. You *must* specify that it is by giving it a default value or wrapping it with `Optional`.
     `Greedy`, `str`, `None`, `Optional` are also not allowed as parameters in `Greedy`.
+    `Greedy` cannot be used as a variable or keyword-only argument.
 
 ## Help Command
 
@@ -258,7 +279,7 @@ help_cmd.register()
 
 With the default options, the result looks like:
 
-(insert screenshot of help cmd - probably ask polls for that old screenshot)
+![Help Command](../images/PrefixedCommands/HelpCommand.png "The help command running.")
 
 ## Other Notes
 - Checks, cooldowns, and concurrency all works as-is with prefixed commands.
