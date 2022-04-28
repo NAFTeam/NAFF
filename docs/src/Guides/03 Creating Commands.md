@@ -301,9 +301,54 @@ You are in luck. There are currently four different ways to create interactions,
 
 ## I Don't Want My Friends Using My Commands
 
-!!! danger "Interaction Permissions"
-    Since a big overhaul to discord's permission system is coming, this page is currently missing. It will be populated when discord updates their permission system. To learn how to use permissions in the meantime, please visit their documentation [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_permission).
+How rude.
 
+Anyway, this is somewhat possible with command permissions.
+While you cannot explicitly block / allow certain roles / members / channels to use your commands on the bot side, you can define default permissions which members need to have to use the command.
+
+However, these default permissions can be overwritten by server admins, so this system is not safe for stuff like owner only eval commands.
+This system is designed to limit access to admin commands after a bot is added to a server, before admins have a chance to customise the permissions they want.
+
+In this example, we will limit access to the command to members with the `MANAGE_EVENTS` and `MANAGE_THREADS` permissions.
+There are two ways to define permissions.
+
+=== ":one: Decorators"
+    ```py
+    @slash_command(name="my_command")
+    @slash_default_member_permission(Permissions.MANAGE_EVENTS)
+    @slash_default_member_permission(Permissions.MANAGE_THREADS)
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== ":two: Function Definition"
+    ```py
+    @slash_command(
+        name="my_command",
+        default_member_permissions=Permissions.MANAGE_EVENTS | Permissions.MANAGE_THREADS,
+    )
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+Multiple permissions are defined with the bitwise OR operator `|`.
+
+### Blocking Commands in DMs
+
+You can also block commands in DMs. To do that, just set `dm_permission` to false.
+
+```py
+@slash_command(
+    name="my_guild_only_command",
+    dm_permission=False,
+)
+async def my_command_function(ctx: InteractionContext):
+    ...
+```
+
+### Context Menus
+
+Both default permissions and DM blocking can be used the same way for context menus, since they are normal slash commands under the hood.
 
 ## I Don't Want To Define The Same Option Every Time
 
