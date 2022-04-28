@@ -22,10 +22,10 @@ from dis_snek.client.const import (
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs, attrs_validator
 from dis_snek.client.utils.misc_utils import get_parameters
-from dis_snek.client.utils.serializer import no_export_meta, export_converter
-from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
+from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.models.discord.enums import ChannelTypes, CommandTypes, Permissions
 from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
+from dis_snek.models.discord.snowflake import to_snowflake_list
 from dis_snek.models.discord.user import BaseUser
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.command import BaseCommand
@@ -37,9 +37,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "OptionTypes",
-    "PermissionTypes",
     "CallbackTypes",
-    "Permission",
     "InteractionCommand",
     "ContextMenu",
     "SlashCommandChoice",
@@ -52,7 +50,7 @@ __all__ = [
     "context_menu",
     "component_callback",
     "slash_option",
-    "slash_permission",
+    "slash_default_member_permission",
     "auto_defer",
     "application_commands_to_dict",
     "sync_needed",
@@ -142,20 +140,6 @@ class OptionTypes(IntEnum):
             return cls.NUMBER
 
 
-class PermissionTypes(IntEnum):
-    """Types of target supported by the interaction permission."""
-
-    ROLE = 1
-    USER = 2
-
-    @classmethod
-    def from_type(cls, t: type) -> "PermissionTypes":
-        if issubclass(t, Role):
-            return cls.ROLE
-        if issubclass(t, BaseUser):
-            return cls.USER
-
-
 class CallbackTypes(IntEnum):
     """Types of callback supported by interaction response."""
 
@@ -166,25 +150,6 @@ class CallbackTypes(IntEnum):
     UPDATE_MESSAGE = 7
     AUTOCOMPLETE_RESULT = 8
     MODAL = 9
-
-
-@define(kw_only=False)
-class Permission(DictSerializationMixin):
-    """
-    Represents a interaction permission.
-
-    Args:
-        id: The id of the role or user.
-        guild_id: The guild this permission belongs to
-        type: The type of id (user or role)
-        permission: The state of permission. ``True`` to allow, ``False``, to disallow.
-
-    """
-
-    id: "Snowflake_Type" = field(converter=to_snowflake, metadata=export_converter(str))
-    guild_id: "Snowflake_Type" = field(converter=to_snowflake, metadata=no_export_meta)
-    type: Union[PermissionTypes, int] = field(converter=PermissionTypes)
-    permission: bool = field(default=True)
 
 
 @define()
@@ -209,8 +174,8 @@ class InteractionCommand(BaseCommand):
         converter=to_snowflake_list,
         metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
-    default_member_permissions: bool = field(
-        default=True, metadata=docs("What permissions members need to have by default to use this command")
+    default_member_permissions: Optional["Permissions"] = field(
+        default=None, metadata=docs("What permissions members need to have by default to use this command")
     )
     dm_permission: bool = field(default=True, metadata=docs("Whether this command is enabled in DMs"))
     cmd_id: Dict[str, "Snowflake_Type"] = field(
@@ -586,7 +551,7 @@ def slash_command(
     description: Absent[str | LocalisedDesc] = MISSING,
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
-    default_member_permissions: bool = False,
+    default_member_permissions: Optional["Permissions"] = None,
     dm_permission: bool = True,
     sub_cmd_name: str | LocalisedName = None,
     group_name: str | LocalisedName = None,
@@ -653,7 +618,7 @@ def subcommand(
     description: Absent[str | LocalisedDesc] = MISSING,
     base_description: Optional[str | LocalisedDesc] = None,
     base_desc: Optional[str | LocalisedDesc] = None,
-    base_default_member_permissions: bool = True,
+    base_default_member_permissions: Optional["Permissions"] = None,
     base_dm_permission: bool = True,
     subcommand_group_description: Optional[str | LocalisedDesc] = None,
     sub_group_desc: Optional[str | LocalisedDesc] = None,
@@ -712,7 +677,7 @@ def context_menu(
     name: str | LocalisedName,
     context_type: "CommandTypes",
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
-    default_member_permissions: bool = False,
+    default_member_permissions: Optional["Permissions"] = None,
     dm_permission: bool = True,
 ) -> Callable[[Coroutine], ContextMenu]:
     """
@@ -838,22 +803,25 @@ def slash_option(
     return wrapper
 
 
-def slash_permission(*permission: Union[Permission, Dict]) -> Any:
+def slash_default_member_permission(permission: "Permissions") -> Any:
     """
-    A decorator to add permissions for a guild to a slash command or context menu.
+    A decorator to permissions members need to have by default to use a command.
 
     Args:
-        *permission: The permissions to apply to this command
+        permission: The permissions to require for to this command
 
     """
 
     def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
-            raise Exception("slash_permission decorators must be positioned under a slash_command decorator")
+            raise Exception(
+                "slash_default_member_permission decorators must be positioned under a slash_command decorator"
+            )
 
-        if not hasattr(func, "permissions"):
-            func.permissions = []
-        func.permissions += list(permission)
+        if not hasattr(func, "default_member_permissions") or func.default_member_permissions is None:
+            func.default_member_permissions = permission
+        else:
+            func.default_member_permissions = func.default_member_permissions | permission
         return func
 
     return wrapper
