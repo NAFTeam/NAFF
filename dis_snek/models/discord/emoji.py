@@ -71,6 +71,8 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
         return s
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, PartialEmoji):
+            return False
         if self.id:
             return self.id == other.id
         return self.name == other.name
