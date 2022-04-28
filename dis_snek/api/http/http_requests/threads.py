@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
 import discord_typings
+from aiohttp import FormData
 
 from dis_snek.client.const import MISSING, Absent
-from ..route import Route
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.enums import ChannelTypes
+from ..route import Route
 
 __all__ = ["ThreadRequests"]
 
@@ -189,3 +190,42 @@ class ThreadRequests:
             payload["type"] = thread_type or ChannelTypes.GUILD_PUBLIC_THREAD
             payload["invitable"] = invitable
             return await self.request(Route("POST", f"/channels/{channel_id}/threads"), data=payload, reason=reason)
+
+    async def create_forum_thread(
+        self,
+        channel_id: "Snowflake_Type",
+        name: str,
+        auto_archive_duration: int,
+        message: dict | FormData,
+        rate_limit_per_user: Absent[int] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> dict:
+        """
+        Create a thread within a forum channel.
+
+        Args:
+            channel_id: The id of the forum channel
+            name: The name of the thread
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            message: The message-content for the post/thread
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this thread
+
+        Returns:
+            The created thread object
+        """
+        if isinstance(message, dict):
+            payload = {
+                "name": name,
+                "auto_archive_duration": auto_archive_duration,
+                "rate_limit_per_user": rate_limit_per_user,
+            }
+            payload.update(message)
+        else:
+            # handle FormData payloads
+            payload = message
+
+        # note: `?has_message=true` seems to be a temporary flag until forums launch
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/threads?has_message=true"), data=payload, reason=reason
+        )

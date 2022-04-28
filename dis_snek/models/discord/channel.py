@@ -14,11 +14,12 @@ from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.client.utils.converters import optional as optional_c
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.client.utils.misc_utils import get
-from dis_snek.client.utils.serializer import to_dict, to_image_data
+from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_missing
 from dis_snek.models.discord.base import DiscordObject
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
 from dis_snek.models.snek import AsyncIterator
+from dis_snek.models.discord.thread import ThreadTag
 from .enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -32,7 +33,7 @@ from .enums import (
 
 if TYPE_CHECKING:
     from aiohttp import FormData
-    from dis_snek import Snake
+    from dis_snek import Snake, Embed, BaseComponent, AllowedMentions, Sticker
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
@@ -1995,6 +1996,87 @@ class GuildStageVoice(GuildVoice):
         await self.stage_instance.delete(reason=reason)
 
 
+@define()
+class GuildForum(GuildChannel):
+    available_tags: list[ThreadTag] = field(factory=list)
+    """A list of tags available to assign to threads"""
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+        data["available_tags"] = [ThreadTag.from_dict(tag_data, client) for tag_data in data["available_tags"]]
+        return data
+
+    async def create_post(
+        self,
+        name: str,
+        content: str,
+        *,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        rate_limit_per_user: Absent[int] = MISSING,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
+        reason: Absent[str] = MISSING,
+    ) -> "GuildPublicThread":
+        """
+        Create a post within this channel.
+
+        Args:
+            name: The name of the post
+            content: The text content of this post
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            rate_limit_per_user: The time users must wait between sending messages
+            embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
+            reason: The reason for creating this post
+
+        Returns:
+
+        """
+        if file or files:
+            extra = dict_filter_missing(
+                {
+                    "name": name,
+                    "auto_archive_duration": auto_archive_duration,
+                    "rate_limit_per_user": rate_limit_per_user,
+                }
+            )
+        else:
+            extra = {}
+
+        message_payload = models.discord.message.process_message_payload(
+            content=content,
+            embeds=embeds or embed,
+            components=components,
+            stickers=stickers,
+            allowed_mentions=allowed_mentions,
+            files=files or file,
+            tts=tts,
+            flags=flags,
+            **extra,
+        )
+
+        data = await self._client.http.create_forum_thread(
+            self.id, name, auto_archive_duration, message_payload, rate_limit_per_user, reason=reason
+        )
+        return self._client.cache.place_channel_data(data)
+
+
 def process_permission_overwrites(
     overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
 ) -> List[dict]:
@@ -2065,4 +2147,5 @@ TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_NEWS_THREAD: GuildNewsThread,
     ChannelTypes.DM: DM,
     ChannelTypes.GROUP_DM: DMGroup,
+    ChannelTypes.GUILD_FORUM: GuildForum,
 }

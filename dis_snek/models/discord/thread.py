@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.channel import TYPE_THREAD_CHANNEL
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["ThreadMember", "ThreadList"]
+__all__ = ["ThreadMember", "ThreadList", "ThreadTag"]
 
 
 @define()
@@ -96,3 +96,10 @@ class ThreadList(ClientObject):
         data["members"] = ThreadMember.from_list(data["members"], client)
 
         return data
+
+
+@define()
+class ThreadTag(ClientObject):
+    name: str = field()
+    emoji_id: "Snowflake_Type" = field(default=None)
+    emoji_name: str | None = field(default=None)
