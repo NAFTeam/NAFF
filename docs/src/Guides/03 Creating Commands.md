@@ -404,11 +404,6 @@ There are a few pre-made checks for you to use, and you can simply create your o
 
     The check will be checked for every command in the extension.
 
-This example only allows the bot owner to execute a command.
-```py
-
-
-```
 
 
 ## I Don't Want To Define The Same Option Every Time
