@@ -434,7 +434,7 @@ class PrefixedCommand(BaseCommand):
             match param.kind:
                 case param.KEYWORD_ONLY:
                     if cmd_param.greedy:
-                        raise ValueError("Variable arguments cannot be Greedy.")
+                        raise ValueError("Keyword-only arguments cannot be Greedy.")
 
                     cmd_param.consume_rest = True
                     finished_params = True
