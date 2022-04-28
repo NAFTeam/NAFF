@@ -309,6 +309,8 @@ While you cannot explicitly block / allow certain roles / members / channels to 
 However, these default permissions can be overwritten by server admins, so this system is not safe for stuff like owner only eval commands.
 This system is designed to limit access to admin commands after a bot is added to a server, before admins have a chance to customise the permissions they want.
 
+If you do not want admins to be able to overwrite your permissions, or the permissions are not flexible enough for you, you should use [checks][check-this-out].
+
 In this example, we will limit access to the command to members with the `MANAGE_EVENTS` and `MANAGE_THREADS` permissions.
 There are two ways to define permissions.
 
@@ -349,6 +351,65 @@ async def my_command_function(ctx: InteractionContext):
 ### Context Menus
 
 Both default permissions and DM blocking can be used the same way for context menus, since they are normal slash commands under the hood.
+
+### Check This Out
+
+Checks allow you to define who can use your commands however you want.
+
+There are a few pre-made checks for you to use, and you can simply create your own custom checks.
+
+=== "Build-In Check"
+    Check that the author is the owner of the bot:  
+
+    ```py
+    @is_owner()
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== "Custom Check"
+    Check that the author's name starts with `a`:  
+
+    ```py
+    async def my_check(ctx: Context):
+        return ctx.author.name.startswith("a")
+
+    @check(check=my_check)
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== "Reusing Checks"
+    You can reuse checks in extensions by adding them to the extension check list
+
+    ```py
+    class MyExtension(Scale):
+        def __init__(self, bot) -> None:
+            super().__init__(bot)
+            self.add_scale_check(is_owner())
+
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+
+    @slash_command(name="my_command2")
+    async def my_command_function2(ctx: InteractionContext):
+        ...
+
+    def setup(bot) -> None:
+        MyExtension(bot)
+    ```
+
+    The check will be checked for every command in the extension.
+
+This example only allows the bot owner to execute a command.
+```py
+
+
+```
+
 
 ## I Don't Want To Define The Same Option Every Time
 
