@@ -6,7 +6,7 @@ from aiohttp import FormData
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.converters import timestamp_converter
 from dis_snek.models.discord.enums import ChannelTypes
-from ..route import Route
+from dis_snek.api.http.route import Route
 
 __all__ = ["ThreadRequests"]
 
