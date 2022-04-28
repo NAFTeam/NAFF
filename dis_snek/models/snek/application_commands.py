@@ -196,6 +196,16 @@ class InteractionCommand(BaseCommand):
 
         super().__attrs_post_init__()
 
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+
+        if self.default_member_permissions is not None:
+            data["default_member_permissions"] = str(int(self.default_member_permissions))
+        else:
+            data["default_member_permissions"] = None
+
+        return data
+
     @property
     def resolved_name(self) -> str:
         """A representation of this interaction's name."""
@@ -501,6 +511,8 @@ class SlashCommand(InteractionCommand):
                 group_description=group_description or self.group_description,
                 sub_cmd_name=sub_cmd_name,
                 sub_cmd_description=sub_cmd_description,
+                default_member_permissions=self.default_member_permissions,
+                dm_permission=self.dm_permission,
                 options=options,
                 callback=call,
                 scopes=self.scopes,
@@ -587,6 +599,13 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
+        perm = default_member_permissions
+        if hasattr(func, "default_member_permissions"):
+            if perm:
+                perm = perm | func.default_member_permissions
+            else:
+                perm = func.default_member_permissions
+
         _description = description
         if _description is MISSING:
             _description = func.__doc__ if func.__doc__ else "No Description Set"
@@ -599,7 +618,7 @@ def slash_command(
             sub_cmd_description=sub_cmd_description,
             description=_description,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
-            default_member_permissions=default_member_permissions,
+            default_member_permissions=perm,
             dm_permission=dm_permission,
             callback=func,
             options=options,
@@ -699,11 +718,18 @@ def context_menu(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
+        perm = default_member_permissions
+        if hasattr(func, "default_member_permissions"):
+            if perm:
+                perm = perm | func.default_member_permissions
+            else:
+                perm = func.default_member_permissions
+
         cmd = ContextMenu(
             name=name,
             type=context_type,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
-            default_member_permissions=default_member_permissions,
+            default_member_permissions=perm,
             dm_permission=dm_permission,
             callback=func,
         )
@@ -868,7 +894,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     "name": str(subcommand.name),
                     "description": str(subcommand.description),
                     "options": [],
-                    "default_member_permissions": subcommand.default_member_permissions,
+                    "default_member_permissions": str(int(subcommand.default_member_permissions)),
                     "dm_permission": subcommand.dm_permission,
                     "name_localizations": subcommand.name.to_locale_dict(),
                     "description_localizations": subcommand.description.to_locale_dict(),
@@ -986,8 +1012,8 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
     if (
         local_cmd["name"] != remote_cmd["name"]
         or local_cmd.get("description", "") != remote_cmd.get("description", "")
-        or local_cmd["default_member_permissions"] != remote_cmd["default_member_permissions"]
-        or local_cmd["dm_permission"] != remote_cmd["dm_permission"]
+        or local_cmd["default_member_permissions"] != remote_cmd.get("default_member_permissions", None)
+        or local_cmd["dm_permission"] != remote_cmd.get("dm_permission", True)
         or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
         or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
     ):
