@@ -1206,19 +1206,24 @@ class Snake(
                 perms_to_sync[c.get_cmd_id(perm_scope)] = [
                     perm for perm in cmd_perms["permissions"] if perm not in remote_perms.get("permissions", [])
                 ]
-            perms_to_sync = [cmd for cmd in perms_to_sync.values() if cmd]
+
             if perms_to_sync:
-                try:
-                    log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                    await self.http.batch_edit_application_command_permissions(
-                        application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
-                    )
-                except Forbidden:
-                    log.error(
-                        f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
-                    )
-                except HTTPException as e:
-                    self._raise_sync_exception(e, local_cmds_json, perm_scope)
+                for cmd_id, cmd_perms in perms_to_sync.items():
+                    log.debug(f"Updating command {cmd_id} permissions in scope {perm_scope}")
+                    if cmd_perms:
+                        try:
+                            await self.http.edit_application_command_permissions(
+                                application_id=self.app.id,
+                                scope=perm_scope,
+                                cmd_id=cmd_id,
+                                permissions=perms_to_sync[cmd_id],
+                            )
+                        except Forbidden:
+                            log.error(
+                                f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
+                            )
+                        except HTTPException as e:
+                            self._raise_sync_exception(e, local_cmds_json, perm_scope)
             else:
                 log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
