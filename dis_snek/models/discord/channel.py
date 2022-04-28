@@ -18,7 +18,7 @@ from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.discord.base import DiscordObject
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
-from dis_snek.models.utils import AsyncIterator
+from dis_snek.models.misc import AsyncIterator
 from .enums import (
     ChannelTypes,
     OverwriteTypes,

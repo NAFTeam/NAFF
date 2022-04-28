@@ -1,3 +1,3 @@
-# Utils Models Index
+# Misc Models Index
 
 - [Iterator](iterator)
