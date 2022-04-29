@@ -43,7 +43,7 @@ class CMD_AUTHOR(NoArgumentConverter):
         return context.author
 
 
-class CMD_CHANNEL((NoArgumentConverter)):
+class CMD_CHANNEL(NoArgumentConverter):
     """This argument is the channel the command was sent in."""
 
     async def convert(self, context: Context, _) -> "TYPE_MESSAGEABLE_CHANNEL":
@@ -51,7 +51,7 @@ class CMD_CHANNEL((NoArgumentConverter)):
         return context.channel
 
 
-class CMD_ARGS:
+class CMD_ARGS(NoArgumentConverter):
     """This argument is all of the arguments sent with this context."""
 
     @staticmethod
