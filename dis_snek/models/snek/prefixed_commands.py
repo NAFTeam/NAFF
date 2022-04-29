@@ -12,6 +12,7 @@ from dis_snek.client.errors import BadArgument
 from dis_snek.client.utils.input_utils import _quotes
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_object_name, maybe_coroutine
+from dis_snek.models.snek.annotations.argument import NoArgumentConverter
 from dis_snek.models.snek.converters import Converter, _LiteralConverter, Greedy, SNEK_MODEL_TO_CONVERTER
 from dis_snek.models.snek.command import BaseCommand
 
@@ -48,6 +49,9 @@ class PrefixedCommandParameter:
     variable: bool = attrs.field(default=False, metadata=docs("Was the parameter marked as a variable argument?"))
     consume_rest: bool = attrs.field(
         default=False, metadata=docs("Was the parameter marked to consume the rest of the input?")
+    )
+    no_argument: bool = attrs.field(
+        default=False, metadata=docs("Does this parameter have a converter that subclasses NoArgumentConverter?")
     )
 
     @property
@@ -207,6 +211,10 @@ async def _convert(param: PrefixedCommandParameter, ctx: "PrefixedContext", arg:
             union_names = tuple(get_object_name(t) for t in union_types)
             union_types_str = ", ".join(union_names[:-1]) + f", or {union_names[-1]}"
             raise BadArgument(f'Could not convert "{arg}" into {union_types_str}.')
+
+    if param.no_argument:
+        # tells converter not to eat the current argument
+        used_default = True
 
     return converted, used_default
 
@@ -422,12 +430,18 @@ class PrefixedCommand(BaseCommand):
             if typing.get_origin(anno) in {Union, UnionType}:
                 cmd_param.union = True
                 for arg in typing.get_args(anno):
+                    if isinstance(anno, NoArgumentConverter):
+                        cmd_param.no_argument = True
+
                     if arg != NoneType:
                         converter = _get_converter(arg, name)
                         cmd_param.converters.append(converter)
                     elif not cmd_param.optional:  # d.py-like behavior
                         cmd_param.default = None
             else:
+                if isinstance(anno, NoArgumentConverter):
+                    cmd_param.no_argument = True
+
                 converter = _get_converter(anno, name)
                 cmd_param.converters.append(converter)
 
