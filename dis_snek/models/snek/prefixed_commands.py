@@ -152,7 +152,7 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
             case 1:
                 return lambda ctx, arg: anno(arg)
             case 0:
-                return lambda ctx, arg: anno()
+                ValueError(f"{get_object_name(anno)} for {name} has 0 arguments, which is unsupported.")
             case _:
                 ValueError(f"{get_object_name(anno)} for {name} has more than 2 arguments, which is unsupported.")
     elif anno == bool:
