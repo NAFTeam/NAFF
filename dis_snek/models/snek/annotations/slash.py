@@ -43,7 +43,7 @@ def slash_str_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.STRING,
     )
     return option  # type: ignore
@@ -74,7 +74,7 @@ def slash_float_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         max_value=max_value,
         min_value=min_value,
         type=models.OptionTypes.NUMBER,
@@ -107,7 +107,7 @@ def slash_int_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         max_value=max_value,
         min_value=min_value,
         type=models.OptionTypes.INTEGER,
@@ -183,7 +183,7 @@ def slash_channel_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         channel_types=channel_types,
         type=models.OptionTypes.CHANNEL,
     )
@@ -211,7 +211,7 @@ def slash_role_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.ROLE,
     )
     return option  # type: ignore
@@ -238,7 +238,7 @@ def slash_mentionable_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.MENTIONABLE,
     )
     return option  # type: ignore
