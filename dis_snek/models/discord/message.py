@@ -305,9 +305,7 @@ class Message(BaseMessage):
     """Sent if the message is a response to an Interaction"""
     components: Optional[List["models.ActionRow"]] = field(default=None)
     """Sent if the message contains components like buttons, action rows, or other interactive components"""
-    sticker_items: Optional[List["models.StickerItem"]] = field(
-        default=None
-    )  # TODO: Perhaps automatically get the full sticker data.
+    sticker_items: Optional[List["models.StickerItem"]] = field(default=None)
     """Sent if the message contains stickers"""
     _mention_ids: List["Snowflake_Type"] = field(factory=list)
     _mention_roles: List["Snowflake_Type"] = field(factory=list)
@@ -690,7 +688,6 @@ class Message(BaseMessage):
             await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
-        # TODO Should we combine this with clear_all_reactions?
         """
         Clear a specific reaction from message.
 

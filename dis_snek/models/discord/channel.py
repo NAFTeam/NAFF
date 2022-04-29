@@ -112,7 +112,6 @@ class ChannelHistory(AsyncIterator):
 
         elif self.around:
             messages = await self.channel.fetch_messages(limit=self.get_limit, around=self.around)
-            # todo: decide how getting *more* messages from `around` would work
             self._limit = 1  # stops history from getting more messages
 
         else:

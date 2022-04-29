@@ -441,7 +441,6 @@ class Guild(BaseGuild):
             Member object or None
 
         """
-        # TODO: maybe precache owner instead of using `fetch_owner`
         return await self._client.cache.fetch_member(self.id, self._owner_id)
 
     def get_owner(self) -> "models.Member":
@@ -633,7 +632,6 @@ class Guild(BaseGuild):
         afk_timeout: Absent[Optional[int]] = MISSING,
         system_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
-        # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         splash: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
@@ -1191,7 +1189,6 @@ class Guild(BaseGuild):
         payload = FormData()
         payload.add_field("name", name)
 
-        # TODO Validate image type?
         file_buffer = models.open_file(imagefile)
         if isinstance(imagefile, models.File):
             payload.add_field("file", file_buffer, filename=imagefile.file_name)
@@ -1286,7 +1283,6 @@ class Guild(BaseGuild):
         color: Absent[Optional[Union["models.Color", int]]] = MISSING,
         hoist: Optional[bool] = False,
         mentionable: Optional[bool] = False,
-        # ToDo: icon needs testing. I have to access to that
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.Role":

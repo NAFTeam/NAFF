@@ -321,7 +321,6 @@ class RoleDelete(BaseEvent, GuildEvent):
     """The deleted role"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class GuildMembersChunk(BaseEvent, GuildEvent):
     """
@@ -490,7 +489,6 @@ class WebhooksUpdate(BaseEvent, GuildEvent):
     """The ID of the webhook was updated"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
