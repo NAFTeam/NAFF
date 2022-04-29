@@ -71,7 +71,7 @@ __all__ = (
 
 class NoArgumentConverter(Converter):
     """
-    A marker for special type of converters that only uses the Context.
+    An indicator class for special type of converters that only uses the Context.
 
     This is mainly needed for prefixed commands, as arguments will be "eaten up" by converters otherwise.
     """
