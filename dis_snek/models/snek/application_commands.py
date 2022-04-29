@@ -458,8 +458,8 @@ class SlashCommand(InteractionCommand):
                 if annotation:
                     if not self.options:
                         self.options = []
-                    ann.name = name
-                    self.options.append(ann)
+                    annotation.name = name
+                    self.options.append(annotation)
 
             if hasattr(self.callback, "options"):
                 if not self.options:
