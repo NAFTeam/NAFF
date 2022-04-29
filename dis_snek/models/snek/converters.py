@@ -38,6 +38,7 @@ from dis_snek.client.errors import BadArgument
 
 
 __all__ = (
+    "NoArgumentConverter",
     "IDConverter",
     "SnowflakeConverter",
     "MemberConverter",
@@ -66,6 +67,14 @@ __all__ = (
     "Greedy",
     "SNEK_MODEL_TO_CONVERTER",
 )
+
+
+class NoArgumentConverter(Converter):
+    """
+    A marker for special type of converters that only uses the Context.
+
+    This is mainly needed for prefixed commands, as arguments will be "eaten up" by converters otherwise.
+    """
 
 
 class _LiteralConverter(Converter):

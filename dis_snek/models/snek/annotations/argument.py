@@ -1,22 +1,14 @@
 from typing import TYPE_CHECKING
 
 from dis_snek.client.errors import BadArgument
-from dis_snek.models.snek.protocols import Converter
+from dis_snek.models.snek.converters import NoArgumentConverter
 from dis_snek.models.snek.context import Context, PrefixedContext
 
-__all__ = ["NoArgumentConverter", "CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL"]
+__all__ = ["CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL"]
 
 
 if TYPE_CHECKING:
     from dis_snek.models import Member, User, TYPE_MESSAGEABLE_CHANNEL
-
-
-class NoArgumentConverter(Converter):
-    """
-    A special type of converter that only uses the Context.
-
-    This is mainly needed for prefixed commands, as arguments will be "eaten up" by converters otherwise.
-    """
 
 
 class CMD_BODY(NoArgumentConverter):

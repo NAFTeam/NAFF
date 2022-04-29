@@ -12,8 +12,13 @@ from dis_snek.client.errors import BadArgument
 from dis_snek.client.utils.input_utils import _quotes
 from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.misc_utils import get_object_name, maybe_coroutine
-from dis_snek.models.snek.annotations.argument import NoArgumentConverter
-from dis_snek.models.snek.converters import Converter, _LiteralConverter, Greedy, SNEK_MODEL_TO_CONVERTER
+from dis_snek.models.snek.converters import (
+    Converter,
+    NoArgumentConverter,
+    _LiteralConverter,
+    Greedy,
+    SNEK_MODEL_TO_CONVERTER,
+)
 from dis_snek.models.snek.command import BaseCommand
 
 if TYPE_CHECKING:
@@ -51,7 +56,7 @@ class PrefixedCommandParameter:
         default=False, metadata=docs("Was the parameter marked to consume the rest of the input?")
     )
     no_argument: bool = attrs.field(
-        default=False, metadata=docs("Does this parameter have a converter that subclasses NoArgumentConverter?")
+        default=False, metadata=docs("Does this parameter have a converter that subclasses `NoArgumentConverter`?")
     )
 
     @property
