@@ -894,7 +894,9 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     "name": str(subcommand.name),
                     "description": str(subcommand.description),
                     "options": [],
-                    "default_member_permissions": str(int(subcommand.default_member_permissions)),
+                    "default_member_permissions": str(int(subcommand.default_member_permissions))
+                    if subcommand.default_member_permissions
+                    else None,
                     "dm_permission": subcommand.dm_permission,
                     "name_localizations": subcommand.name.to_locale_dict(),
                     "description_localizations": subcommand.description.to_locale_dict(),
