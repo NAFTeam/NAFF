@@ -1936,7 +1936,7 @@ class GuildVoice(VoiceChannel, InvitableMixin, MessageableMixin):
 
 
 @define()
-class GuildStageVoice(GuildVoice):
+class GuildStageVoice(VoiceChannel, InvitableMixin):
     stage_instance: "models.StageInstance" = field(default=MISSING)
     """The stage instance that this voice channel belongs to"""
 
