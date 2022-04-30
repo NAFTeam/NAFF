@@ -22,10 +22,10 @@ from dis_snek.client.const import (
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs, attrs_validator
 from dis_snek.client.utils.misc_utils import get_parameters
-from dis_snek.client.utils.serializer import no_export_meta, export_converter
-from dis_snek.models.discord.enums import ChannelTypes, CommandTypes
+from dis_snek.client.utils.serializer import no_export_meta
+from dis_snek.models.discord.enums import ChannelTypes, CommandTypes, Permissions
 from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.snowflake import to_snowflake, to_snowflake_list
+from dis_snek.models.discord.snowflake import to_snowflake_list
 from dis_snek.models.discord.user import BaseUser
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.command import BaseCommand
@@ -37,9 +37,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "OptionTypes",
-    "PermissionTypes",
     "CallbackTypes",
-    "Permission",
     "InteractionCommand",
     "ContextMenu",
     "SlashCommandChoice",
@@ -52,7 +50,7 @@ __all__ = [
     "context_menu",
     "component_callback",
     "slash_option",
-    "slash_permission",
+    "slash_default_member_permission",
     "auto_defer",
     "application_commands_to_dict",
     "sync_needed",
@@ -142,20 +140,6 @@ class OptionTypes(IntEnum):
             return cls.NUMBER
 
 
-class PermissionTypes(IntEnum):
-    """Types of target supported by the interaction permission."""
-
-    ROLE = 1
-    USER = 2
-
-    @classmethod
-    def from_type(cls, t: type) -> "PermissionTypes":
-        if issubclass(t, Role):
-            return cls.ROLE
-        if issubclass(t, BaseUser):
-            return cls.USER
-
-
 class CallbackTypes(IntEnum):
     """Types of callback supported by interaction response."""
 
@@ -168,25 +152,6 @@ class CallbackTypes(IntEnum):
     MODAL = 9
 
 
-@define(kw_only=False)
-class Permission(DictSerializationMixin):
-    """
-    Represents a interaction permission.
-
-    Args:
-        id: The id of the role or user.
-        guild_id: The guild this permission belongs to
-        type: The type of id (user or role)
-        permission: The state of permission. ``True`` to allow, ``False``, to disallow.
-
-    """
-
-    id: "Snowflake_Type" = field(converter=to_snowflake, metadata=export_converter(str))
-    guild_id: "Snowflake_Type" = field(converter=to_snowflake, metadata=no_export_meta)
-    type: Union[PermissionTypes, int] = field(converter=PermissionTypes)
-    permission: bool = field(default=True)
-
-
 @define()
 class InteractionCommand(BaseCommand):
     """
@@ -194,8 +159,8 @@ class InteractionCommand(BaseCommand):
 
     Args:
         scope: Denotes whether its global or for specific guild.
-        default_permission: Is this command available to all users?
-        permissions: Map of guild id and its respective list of permissions to apply.
+        default_member_permissions: What permissions members need to have by default to use this command.
+        dm_permission: Should this command be available in DMs.
         cmd_id: The id of this command given by discord.
         callback: The coroutine to callback when this interaction is received.
 
@@ -209,14 +174,10 @@ class InteractionCommand(BaseCommand):
         converter=to_snowflake_list,
         metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
-
-    default_permission: bool = field(
-        default=True, metadata=docs("whether this command is enabled by default when the app is added to a guild")
+    default_member_permissions: Optional["Permissions"] = field(
+        default=None, metadata=docs("What permissions members need to have by default to use this command")
     )
-    permissions: Optional[List[Union[Permission, Dict]]] = field(
-        factory=dict, metadata=docs("The permissions of this interaction")
-    )
-
+    dm_permission: bool = field(default=True, metadata=docs("Whether this command is enabled in DMs"))
     cmd_id: Dict[str, "Snowflake_Type"] = field(
         factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
     )  # scope: cmd_id
@@ -234,6 +195,16 @@ class InteractionCommand(BaseCommand):
                 self.auto_defer = self.callback.auto_defer
 
         super().__attrs_post_init__()
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+
+        if self.default_member_permissions is not None:
+            data["default_member_permissions"] = str(int(self.default_member_permissions))
+        else:
+            data["default_member_permissions"] = None
+
+        return data
 
     @property
     def resolved_name(self) -> str:
@@ -253,21 +224,8 @@ class InteractionCommand(BaseCommand):
     async def _permission_enforcer(self, ctx: "Context") -> bool:
         """A check that enforces Discord permissions."""
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
-        for perm in self.permissions or []:
-            if perm.type == PermissionTypes.ROLE:
-                if ctx.author.has_role(perm.id):
-                    if perm.permission is True:
-                        return True
-                    elif self.default_permission is True:
-                        return False
-
-            elif perm.type == PermissionTypes.USER:
-                if ctx.author.id == perm.id:
-                    if perm.permission is True:
-                        return True
-                    elif self.default_permission is True:
-                        return False
-        return self.default_permission
+        if self.dm_permission:
+            return ctx.guild is not None
 
 
 @define()
@@ -466,8 +424,6 @@ class SlashCommand(InteractionCommand):
                     self.options = []
                 self.options += self.callback.options
 
-            if hasattr(self.callback, "permissions"):
-                self.permissions = self.callback.permissions
         super().__attrs_post_init__()
 
     def to_dict(self) -> dict:
@@ -478,8 +434,8 @@ class SlashCommand(InteractionCommand):
             data["description"] = str(self.sub_cmd_description)
             data["name_localizations"] = self.sub_cmd_name.to_locale_dict()
             data["description_localizations"] = self.sub_cmd_description.to_locale_dict()
-            data.pop("default_permission", None)
-            data.pop("permissions", None)
+            data.pop("default_member_permissions", None)
+            data.pop("dm_permission", None)
         else:
             data["name_localizations"] = self.name.to_locale_dict()
             data["description_localizations"] = self.description.to_locale_dict()
@@ -555,6 +511,8 @@ class SlashCommand(InteractionCommand):
                 group_description=group_description or self.group_description,
                 sub_cmd_name=sub_cmd_name,
                 sub_cmd_description=sub_cmd_description,
+                default_member_permissions=self.default_member_permissions,
+                dm_permission=self.dm_permission,
                 options=options,
                 callback=call,
                 scopes=self.scopes,
@@ -605,8 +563,8 @@ def slash_command(
     description: Absent[str | LocalisedDesc] = MISSING,
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
     options: Optional[List[Union[SlashCommandOption, Dict]]] = None,
-    default_permission: bool = True,
-    permissions: Optional[List[Union[Permission, Dict]]] = None,
+    default_member_permissions: Optional["Permissions"] = None,
+    dm_permission: bool = True,
     sub_cmd_name: str | LocalisedName = None,
     group_name: str | LocalisedName = None,
     sub_cmd_description: str | LocalisedDesc = "No Description Set",
@@ -623,10 +581,10 @@ def slash_command(
     Args:
         name: 1-32 character name of the command
         description: 1-100 character description of the command
-        scope: The scope this command exists within
+        scopes: The scope this command exists within
         options: The parameters for the command, max 25
-        default_permission: Whether the command is enabled by default when the app is added to a guild
-        permissions: The roles or users who can use this command
+        default_member_permissions: What permissions members need to have by default to use this command.
+        dm_permission: Should this command be available in DMs.
         sub_cmd_name: 1-32 character name of the subcommand
         sub_cmd_description: 1-100 character description of the subcommand
         group_name: 1-32 character name of the group
@@ -641,6 +599,13 @@ def slash_command(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
+        perm = default_member_permissions
+        if hasattr(func, "default_member_permissions"):
+            if perm:
+                perm = perm | func.default_member_permissions
+            else:
+                perm = func.default_member_permissions
+
         _description = description
         if _description is MISSING:
             _description = func.__doc__ if func.__doc__ else "No Description Set"
@@ -653,8 +618,8 @@ def slash_command(
             sub_cmd_description=sub_cmd_description,
             description=_description,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
-            default_permission=default_permission,
-            permissions=permissions or {},
+            default_member_permissions=perm,
+            dm_permission=dm_permission,
             callback=func,
             options=options,
         )
@@ -672,8 +637,8 @@ def subcommand(
     description: Absent[str | LocalisedDesc] = MISSING,
     base_description: Optional[str | LocalisedDesc] = None,
     base_desc: Optional[str | LocalisedDesc] = None,
-    base_default_permission: bool = True,
-    base_permissions: Optional[dict] = None,
+    base_default_member_permissions: Optional["Permissions"] = None,
+    base_dm_permission: bool = True,
     subcommand_group_description: Optional[str | LocalisedDesc] = None,
     sub_group_desc: Optional[str | LocalisedDesc] = None,
     scopes: List["Snowflake_Type"] = None,
@@ -689,8 +654,8 @@ def subcommand(
         description: The description of the subcommand
         base_description: The description of the base command
         base_desc: An alias of `base_description`
-        base_default_permission: If users have permission to run the command by default when no permissions have been set
-        base_permissions: Permissions of the command
+        base_default_member_permissions: What permissions members need to have by default to use this command.
+        base_dm_permission: Should this command be available in DMs.
         subcommand_group_description: Description of the subcommand group
         sub_group_desc: An alias for `subcommand_group_description`
         scopes: The scopes of which this command is available, defaults to GLOBAL_SCOPE
@@ -716,8 +681,8 @@ def subcommand(
             group_description=(subcommand_group_description or sub_group_desc) or "No Description Set",
             sub_cmd_name=name,
             sub_cmd_description=_description,
-            default_permission=base_default_permission,
-            permissions=base_permissions or {},
+            default_member_permissions=base_default_member_permissions,
+            dm_permission=base_dm_permission,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
             callback=func,
             options=options,
@@ -731,8 +696,8 @@ def context_menu(
     name: str | LocalisedName,
     context_type: "CommandTypes",
     scopes: Absent[List["Snowflake_Type"]] = MISSING,
-    default_permission: bool = True,
-    permissions: Optional[List[Union[Permission, Dict]]] = None,
+    default_member_permissions: Optional["Permissions"] = None,
+    dm_permission: bool = True,
 ) -> Callable[[Coroutine], ContextMenu]:
     """
     A decorator to declare a coroutine as a Context Menu.
@@ -740,9 +705,9 @@ def context_menu(
     Args:
         name: 1-32 character name of the context menu
         context_type: The type of context menu
-        scope: The scope this command exists within
-        default_permission: Whether the menu is enabled by default when the app is added to a guild
-        permissions: The roles or users who can use this menu
+        scopes: The scope this command exists within
+        default_member_permissions: What permissions members need to have by default to use this command.
+        dm_permission: Should this command be available in DMs.
 
     Returns:
         ContextMenu object
@@ -753,19 +718,19 @@ def context_menu(
         if not asyncio.iscoroutinefunction(func):
             raise ValueError("Commands must be coroutines")
 
-        perm = permissions or {}
-        if hasattr(func, "permissions"):
+        perm = default_member_permissions
+        if hasattr(func, "default_member_permissions"):
             if perm:
-                perm.update(func.permissions)
+                perm = perm | func.default_member_permissions
             else:
-                perm = func.permissions
+                perm = func.default_member_permissions
 
         cmd = ContextMenu(
             name=name,
             type=context_type,
             scopes=scopes if scopes else [GLOBAL_SCOPE],
-            default_permission=default_permission,
-            permissions=perm,
+            default_member_permissions=perm,
+            dm_permission=dm_permission,
             callback=func,
         )
         return cmd
@@ -864,22 +829,25 @@ def slash_option(
     return wrapper
 
 
-def slash_permission(*permission: Union[Permission, Dict]) -> Any:
+def slash_default_member_permission(permission: "Permissions") -> Any:
     """
-    A decorator to add permissions for a guild to a slash command or context menu.
+    A decorator to permissions members need to have by default to use a command.
 
     Args:
-        *permission: The permissions to apply to this command
+        permission: The permissions to require for to this command
 
     """
 
     def wrapper(func: Coroutine) -> Coroutine:
         if hasattr(func, "cmd_id"):
-            raise Exception("slash_permission decorators must be positioned under a slash_command decorator")
+            raise Exception(
+                "slash_default_member_permission decorators must be positioned under a slash_command decorator"
+            )
 
-        if not hasattr(func, "permissions"):
-            func.permissions = []
-        func.permissions += list(permission)
+        if not hasattr(func, "default_member_permissions") or func.default_member_permissions is None:
+            func.default_member_permissions = permission
+        else:
+            func.default_member_permissions = func.default_member_permissions | permission
         return func
 
     return wrapper
@@ -922,14 +890,14 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         sub_cmds = []
         for subcommand in subcommands:
             if not output_data:
-                perms = [s.to_dict() if not isinstance(s, dict) else s for s in subcommand.permissions]
-                perms_filtered = [dict(t) for t in {tuple(d.items()) for d in perms}]
                 output_data = {
                     "name": str(subcommand.name),
                     "description": str(subcommand.description),
                     "options": [],
-                    "permissions": perms_filtered,
-                    "default_permission": subcommand.default_permission,
+                    "default_member_permissions": str(int(subcommand.default_member_permissions))
+                    if subcommand.default_member_permissions
+                    else None,
+                    "dm_permission": subcommand.dm_permission,
                     "name_localizations": subcommand.name.to_locale_dict(),
                     "description_localizations": subcommand.description.to_locale_dict(),
                 }
@@ -965,7 +933,6 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
         if any(c.is_subcommand for c in cmd_list):
             # validate all commands share required attributes
             scopes: list[Snowflake_Type] = list({s for c in cmd_list for s in c.scopes})
-            permissions: list = list({d for c in cmd_list for d in c.permissions})
             base_description = next(
                 (
                     c.description
@@ -979,12 +946,13 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 log.warning(
                     f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{str(base_description)}` will be used"
                 )
-            if not all(c.default_permission == cmd_list[0].default_permission for c in cmd_list):
-                raise ValueError(f"Conflicting `default_permission` values found in `{cmd_list[0].name}`")
+            if not all(c.default_member_permissions == cmd_list[0].default_member_permissions for c in cmd_list):
+                raise ValueError(f"Conflicting `default_member_permissions` values found in `{cmd_list[0].name}`")
+            if not all(c.dm_permission == cmd_list[0].dm_permission for c in cmd_list):
+                raise ValueError(f"Conflicting `dm_permission` values found in `{cmd_list[0].name}`")
 
             for cmd in cmd_list:
                 cmd.scopes = list(scopes)
-                cmd.permissions = permissions
                 cmd.description = base_description
             # end validation of attributes
             cmd_data = squash_subcommand(cmd_list)
@@ -1046,7 +1014,8 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
     if (
         local_cmd["name"] != remote_cmd["name"]
         or local_cmd.get("description", "") != remote_cmd.get("description", "")
-        or local_cmd["default_permission"] != remote_cmd["default_permission"]
+        or local_cmd["default_member_permissions"] != remote_cmd.get("default_member_permissions", None)
+        or local_cmd["dm_permission"] != remote_cmd.get("dm_permission", True)
         or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
         or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
     ):

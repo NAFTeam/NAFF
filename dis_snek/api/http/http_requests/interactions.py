@@ -171,26 +171,6 @@ class InteractionRequests:
             data=permissions,
         )
 
-    async def batch_edit_application_command_permissions(
-        self, application_id: "Snowflake_Type", scope: "Snowflake_Type", data: List[dict]
-    ) -> List[discord_typings.ApplicationCommandPermissionsData]:
-        """
-        Edit multiple command permissions within a single scope.
-
-        Args:
-            application_id: the id of the application
-            scope: The scope this command is in
-            data: The permissions to be set
-
-        Returns:
-            array of GuildApplicationCommandPermissions objects
-
-        """
-        return await self.request(
-            Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/permissions"),
-            data=data,
-        )
-
     async def get_application_command_permissions(
         self, application_id: "Snowflake_Type", scope: "Snowflake_Type", cmd_id: "Snowflake_Type"
     ) -> List[discord_typings.ApplicationCommandPermissionsData]:
