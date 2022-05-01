@@ -16,7 +16,7 @@ import dis_snek
 if TYPE_CHECKING:
     from dis_snek import Snake, Snowflake_Type
 
-__all__ = ["ConnectionState"]
+__all__ = "ConnectionState"
 
 log = logging.getLogger(logger_name)
 

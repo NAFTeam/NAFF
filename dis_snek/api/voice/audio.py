@@ -6,12 +6,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-__all__ = [
+__all__ = (
     "AudioBuffer",
     "BaseAudio",
     "Audio",
     "AudioVolume",
-]
+)
 
 
 class AudioBuffer:

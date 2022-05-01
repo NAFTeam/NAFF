@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from dis_snek.api.voice.audio import BaseAudio
 
 
-__all__ = ["ActiveVoiceState"]
+__all__ = ("ActiveVoiceState",)
 
 log = logging.getLogger(logger_name)
 

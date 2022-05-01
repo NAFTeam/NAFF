@@ -22,7 +22,7 @@ from typing import Callable, Optional
 from mypy.plugin import Plugin, ClassDefContext
 from mypy.plugins import attrs
 
-__all__ = ["plugin"]
+__all__ = "plugin"
 
 
 class SnekPlugin(Plugin):

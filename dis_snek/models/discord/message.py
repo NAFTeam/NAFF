@@ -29,7 +29,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optio
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
-__all__ = [
+__all__ = (
     "Attachment",
     "ChannelMention",
     "MessageActivity",
@@ -42,7 +42,7 @@ __all__ = [
     "process_allowed_mentions",
     "process_message_reference",
     "process_message_payload",
-]
+)
 
 channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
 

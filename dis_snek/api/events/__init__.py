@@ -2,7 +2,7 @@ from . import processors
 from .discord import *
 from .internal import *
 
-__all__ = [
+__all__ = (
     "RawGatewayEvent",
     "ChannelCreate",
     "ChannelUpdate",
@@ -61,4 +61,4 @@ __all__ = [
     "Component",
     "Button",
     "Select",
-]
+)

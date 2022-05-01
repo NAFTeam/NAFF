@@ -1,7 +1,7 @@
 from asyncio import Future
 from typing import Callable, Optional
 
-__all__ = ["Wait"]
+__all__ = ("Wait",)
 
 
 class Wait:

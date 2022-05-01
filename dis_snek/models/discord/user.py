@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord.voice_state import VoiceState
 
-__all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
+__all__ = ("BaseUser", "User", "SnakeBotUser", "Member")
 
 log = logging.getLogger(logger_name)
 

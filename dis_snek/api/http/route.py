@@ -5,7 +5,7 @@ from dis_snek.client.const import __api_version__
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["Route"]
+__all__ = "Route"
 
 
 class Route:

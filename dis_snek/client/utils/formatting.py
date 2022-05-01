@@ -2,7 +2,7 @@ import enum
 from typing import Optional
 
 
-__all__ = [
+__all__ = (
     "bold",
     "italic",
     "underline",
@@ -23,7 +23,7 @@ __all__ = [
     "ansi_format",
     "ansi_escape",
     "ansi_styled",
-]
+)
 
 
 def bold(text: str) -> str:

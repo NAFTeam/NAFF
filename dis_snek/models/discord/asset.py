@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
     from dis_snek.client import Snake
 
-__all__ = ["Asset"]
+__all__ = ("Asset",)
 
 
 @define(kw_only=False)

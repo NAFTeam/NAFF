@@ -6,7 +6,7 @@ from dis_snek.models.discord.channel import DM, GuildText
 from dis_snek.models.discord.snowflake import to_snowflake
 from tests.consts import SAMPLE_DM_DATA, SAMPLE_GUILD_DATA, SAMPLE_USER_DATA
 
-__all__ = ["bot", "test_dm_channel", "test_get_user_from_dm", "test_guild_channel", "test_update_guild"]
+__all__ = ("bot", "test_dm_channel", "test_get_user_from_dm", "test_guild_channel", "test_update_guild")
 
 
 @pytest.fixture()

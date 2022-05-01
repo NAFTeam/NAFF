@@ -5,7 +5,7 @@ import discord_typings
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 
-__all__ = ["MessageRequests"]
+__all__ = "MessageRequests"
 
 
 if TYPE_CHECKING:

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.user import User
 
-__all__ = ["ScheduledEvent"]
+__all__ = ("ScheduledEvent",)
 
 
 @define()

@@ -6,7 +6,7 @@ from dis_snek.api.events.internal import BaseEvent
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils import get_event_name
 
-__all__ = ["Listener", "listen"]
+__all__ = ("Listener", "listen")
 
 
 class Listener:

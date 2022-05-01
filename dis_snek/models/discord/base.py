@@ -9,7 +9,7 @@ from dis_snek.models.discord.snowflake import SnowflakeObject
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
-__all__ = ["ClientObject", "DiscordObject"]
+__all__ = ("ClientObject", "DiscordObject")
 
 
 @define(slots=False)

@@ -5,7 +5,7 @@ import discord_typings
 from dis_snek.client.const import GLOBAL_SCOPE
 from ..route import Route
 
-__all__ = ["InteractionRequests"]
+__all__ = "InteractionRequests"
 
 
 if TYPE_CHECKING:

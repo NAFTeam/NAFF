@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["GatewayClient"]
+__all__ = "GatewayClient"
 
 log = logging.getLogger(logger_name)
 

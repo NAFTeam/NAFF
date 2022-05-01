@@ -4,7 +4,7 @@ from dis_snek.client.errors import BadArgument
 from dis_snek.models.snek.converters import NoArgumentConverter
 from dis_snek.models.snek.context import Context, PrefixedContext
 
-__all__ = ["CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL"]
+__all__ = ("CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL")
 
 
 if TYPE_CHECKING:

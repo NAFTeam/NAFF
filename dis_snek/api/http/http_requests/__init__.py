@@ -12,7 +12,7 @@ from .threads import ThreadRequests
 from .users import UserRequests
 from .webhooks import WebhookRequests
 
-__all__ = [
+__all__ = (
     "BotRequests",
     "ChannelRequests",
     "EmojiRequests",
@@ -26,4 +26,4 @@ __all__ = [
     "ThreadRequests",
     "UserRequests",
     "WebhookRequests",
-]
+)

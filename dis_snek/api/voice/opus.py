@@ -10,7 +10,7 @@ import attr
 
 from dis_snek.client.const import MISSING
 
-__all__ = ["Encoder"]
+__all__ = "Encoder"
 
 
 c_int_ptr = ctypes.POINTER(ctypes.c_int)

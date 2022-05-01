@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from dis_snek import Snake
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
-__all__ = [
+__all__ = (
     "ChannelHistory",
     "PermissionOverwrite",
     "MessageableMixin",
@@ -64,7 +64,7 @@ __all__ = [
     "TYPE_VOICE_CHANNEL",
     "TYPE_CHANNEL_MAPPING",
     "TYPE_MESSAGEABLE_CHANNEL",
-]
+)
 
 log = logging.getLogger(logger_name)
 

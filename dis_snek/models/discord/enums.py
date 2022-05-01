@@ -8,7 +8,7 @@ from dis_snek.client.const import logger_name
 
 _log = logging.getLogger(logger_name)
 
-__all__ = [
+__all__ = (
     "WebSocketOPCodes",
     "Intents",
     "UserFlags",
@@ -45,7 +45,7 @@ __all__ = [
     "ScheduledEventType",
     "ScheduledEventStatus",
     "AuditLogEventType",
-]
+)
 
 
 class AntiFlag:

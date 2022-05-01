@@ -7,7 +7,7 @@ import dis_snek.client.const as const
 from dis_snek.client.utils.attr_utils import define
 import dis_snek.client.utils.serializer as serializer
 
-__all__ = ["DictSerializationMixin"]
+__all__ = "DictSerializationMixin"
 
 log = logging.getLogger(const.logger_name)
 

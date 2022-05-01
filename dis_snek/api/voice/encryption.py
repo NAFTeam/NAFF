@@ -1,4 +1,4 @@
-__all__ = ["Encryption"]
+__all__ = "Encryption"
 
 try:
     from nacl import secret, utils

@@ -21,7 +21,7 @@ from dis_snek.api.events.discord import (
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
-__all__ = ["GuildEvents"]
+__all__ = ("GuildEvents",)
 
 log = logging.getLogger(logger_name)
 

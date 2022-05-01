@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.discord.enums import MessageFlags
 
-__all__ = ["SendMixin"]
+__all__ = "SendMixin"
 
 
 class SendMixin:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Union
 if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["TimestampStyles", "Timestamp"]
+__all__ = ("TimestampStyles", "Timestamp")
 
 DISCORD_EPOCH = 1420070400000
 

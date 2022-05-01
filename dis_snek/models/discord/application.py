@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from dis_snek.client import Snake
     from dis_snek.models import User
 
-__all__ = ["Application"]
+__all__ = ("Application",)
 
 
 @define()

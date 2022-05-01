@@ -4,7 +4,7 @@ import dis_snek.models as models
 
 from dis_snek.models.snek.application_commands import SlashCommandOption
 
-__all__ = [
+__all__ = (
     "slash_attachment_option",
     "slash_bool_option",
     "slash_channel_option",
@@ -14,7 +14,7 @@ __all__ = [
     "slash_role_option",
     "slash_str_option",
     "slash_user_option",
-]
+)
 
 
 if TYPE_CHECKING:

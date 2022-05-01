@@ -5,7 +5,7 @@ import discord_typings
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 
-__all__ = ["ScheduledEventsRequests"]
+__all__ = "ScheduledEventsRequests"
 
 
 if TYPE_CHECKING:

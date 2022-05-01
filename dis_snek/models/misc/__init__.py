@@ -1,3 +1,3 @@
 from .iterator import AsyncIterator
 
-__all__ = ["AsyncIterator"]
+__all__ = ("AsyncIterator",)

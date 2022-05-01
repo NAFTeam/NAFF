@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
     from dis_snek.models.snek.command import BaseCommand
 
-__all__ = [
+__all__ = (
     "Resolved",
     "Context",
     "InteractionContext",
@@ -41,7 +41,7 @@ __all__ = [
     "AutocompleteContext",
     "ModalContext",
     "PrefixedContext",
-]
+)
 
 log = logging.getLogger(logger_name)
 
