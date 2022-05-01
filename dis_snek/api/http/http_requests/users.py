@@ -4,7 +4,7 @@ import discord_typings
 
 from ..route import Route
 
-__all__ = "UserRequests"
+__all__ = ("UserRequests",)
 
 
 if TYPE_CHECKING:

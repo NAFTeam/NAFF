@@ -9,7 +9,7 @@ from .debug_exec import DebugExec
 from .debug_scales import DebugScales
 from .utils import get_cache_state, debug_embed, strf_delta
 
-__all__ = "DebugScale"
+__all__ = ("DebugScale",)
 
 log = logging.getLogger(logger_name)
 

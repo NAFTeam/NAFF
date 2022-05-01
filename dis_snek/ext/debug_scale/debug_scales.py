@@ -6,7 +6,7 @@ from dis_snek.models import (
     Context,
 )
 
-__all__ = "DebugScales"
+__all__ = ("DebugScales",)
 
 
 class DebugScales(Scale):

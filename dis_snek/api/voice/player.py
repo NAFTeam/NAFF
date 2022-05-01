@@ -12,7 +12,7 @@ from dis_snek.api.voice.opus import Encoder
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
-__all__ = "Player"
+__all__ = ("Player",)
 
 log = logging.getLogger(logger_name)
 

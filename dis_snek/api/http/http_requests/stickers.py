@@ -5,7 +5,7 @@ import discord_typings
 from dis_snek.client.const import MISSING
 from ..route import Route
 
-__all__ = "StickerRequests"
+__all__ = ("StickerRequests",)
 
 
 if TYPE_CHECKING:

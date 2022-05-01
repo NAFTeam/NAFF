@@ -5,7 +5,7 @@ import discord_typings
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_none
 
-__all__ = "WebhookRequests"
+__all__ = ("WebhookRequests",)
 
 
 if TYPE_CHECKING:

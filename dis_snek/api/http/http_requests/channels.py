@@ -7,7 +7,7 @@ from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permi
 from ..route import Route
 from dis_snek.client.utils.serializer import dict_filter_none
 
-__all__ = "ChannelRequests"
+__all__ = ("ChannelRequests",)
 
 
 if TYPE_CHECKING:
