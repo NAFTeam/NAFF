@@ -99,7 +99,8 @@ A table of objects and their respective converter is as follows:
 | `GuildNewsThread`                      | `GuildNewsThreadConverter`    |
 | `GuildPublicThread`                    | `GuildPublicThreadConverter`  |
 | `GuildPrivateThread`                   | `GuildPrivateThreadConverter` |
-| `GuildVoice`, `TYPE_VOICE_CHANNEL`     | `GuildVoiceConverter`         |
+| `VoiceChannel`, `TYPE_VOICE_CHANNEL`   | `VoiceChannelConverter`       |
+| `GuildVoice`                           | `GuildVoiceConverter`         |
 | `GuildStageVoice`                      | `GuildStageVoiceConverter`    |
 | `TYPE_MESSAGEABLE_CHANNEL`             | `MessageableChannelConverter` |
 | `User`                                 | `UserConverter`               |

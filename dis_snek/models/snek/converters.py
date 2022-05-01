@@ -23,6 +23,7 @@ from dis_snek.models.discord.channel import (
     GuildNewsThread,
     GuildPublicThread,
     GuildPrivateThread,
+    VoiceChannel,
     GuildVoice,
     GuildStageVoice,
     TYPE_ALL_CHANNEL,
@@ -56,6 +57,7 @@ __all__ = (
     "GuildNewsThreadConverter",
     "GuildPublicThreadConverter",
     "GuildPrivateThreadConverter",
+    "VoiceChannelConverter",
     "GuildVoiceConverter",
     "GuildStageVoiceConverter",
     "MessageableChannelConverter",
@@ -237,6 +239,11 @@ class GuildPublicThreadConverter(ChannelConverter[GuildPublicThread]):
 class GuildPrivateThreadConverter(ChannelConverter[GuildPrivateThread]):
     def _check(self, result: BaseChannel) -> bool:
         return isinstance(result, GuildPrivateThread)
+
+
+class VoiceChannelConverter(ChannelConverter[VoiceChannel]):
+    def _check(self, result: BaseChannel) -> bool:
+        return isinstance(result, VoiceChannel)
 
 
 class GuildVoiceConverter(ChannelConverter[GuildVoice]):
@@ -577,13 +584,14 @@ SNEK_MODEL_TO_CONVERTER: dict[type, type[Converter]] = {
     GuildNewsThread: GuildNewsThreadConverter,
     GuildPublicThread: GuildPublicThreadConverter,
     GuildPrivateThread: GuildPrivateThreadConverter,
+    VoiceChannel: VoiceChannelConverter,
     GuildVoice: GuildVoiceConverter,
     GuildStageVoice: GuildStageVoiceConverter,
     TYPE_ALL_CHANNEL: BaseChannelConverter,
     TYPE_DM_CHANNEL: DMChannelConverter,
     TYPE_GUILD_CHANNEL: GuildChannelConverter,
     TYPE_THREAD_CHANNEL: ThreadChannelConverter,
-    TYPE_VOICE_CHANNEL: GuildVoiceConverter,
+    TYPE_VOICE_CHANNEL: VoiceChannelConverter,
     TYPE_MESSAGEABLE_CHANNEL: MessageableChannelConverter,
     User: UserConverter,
     Member: MemberConverter,
