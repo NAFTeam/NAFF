@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, List, Dict, Any, Union
 
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
 from .base import DiscordObject, ClientObject

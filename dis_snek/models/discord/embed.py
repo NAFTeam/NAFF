@@ -13,8 +13,8 @@ from dis_snek.client.const import (
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.converters import optional as c_optional
+from dis_snek.client.utils.attr_converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as c_optional
 from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.color import Color, process_color
 from dis_snek.models.discord.timestamp import Timestamp

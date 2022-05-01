@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import list_converter
-from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.attr_converters import list_converter
+from dis_snek.client.utils.attr_converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none, no_export_meta
 from dis_snek.models.discord.snowflake import SnowflakeObject, to_snowflake
 

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Optional, Dict, Any
 
 from dis_snek.client.const import MISSING
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp

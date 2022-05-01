@@ -9,8 +9,8 @@ from dis_snek.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
 from dis_snek.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.file import UPLOADABLE_TYPE

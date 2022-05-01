@@ -23,7 +23,7 @@
 
 5. Migrating your commands
      - If you were already using dpy's command extension, migrating to slash commands is fairly simple.  You just need to convert the decorators as per the [Slash Commands guide](/Guides/03 Creating Commands/)
-     - If you wish to keep using message commands, you can get simple support (no converters) with the `@dis_snek.message_command` decorator, or use [our experimental message command extension](https://github.com/Discord-Snake-Pit/molter)
+     - If you wish to keep using prefixed commands (sometimes called message or text-based commands), you can use our `@dis_snek.prefixed_command` decorator, which has an [extensive guide for them](/Guides/07 Creating Prefixed Commands). The syntax should be very similar to discord.py with a few exceptions.
      - If you were manually handling commands with `on_message`, you'll probably need to figure it out yourself, as this guide doesn't know how you wrote your parser.  Consider using the provided command handlers.
 
 ??? Note

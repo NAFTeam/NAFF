@@ -36,7 +36,7 @@ _quotes = {
     "《": "》",
     "〈": "〉",
 }
-_pending_regex = r"(1.*2|[^\s]+)"
+_pending_regex = r"(1.*2|[^\t\f\v ]+)"
 _pending_regex = _pending_regex.replace("1", f"[{''.join(list(_quotes.keys()))}]")
 _pending_regex = _pending_regex.replace("2", f"[{''.join(list(_quotes.values()))}]")
 

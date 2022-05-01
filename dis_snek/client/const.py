@@ -70,6 +70,7 @@ __all__ = [
     "PREMIUM_GUILD_LIMITS",
     "Absent",
     "T",
+    "T_co",
 ]
 
 _ver_info = sys.version_info
@@ -192,4 +193,5 @@ GUILD_WELCOME_MESSAGES = [
 ]
 
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 Absent = Union[T, Missing]
