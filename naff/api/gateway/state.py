@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from naff.models.discord.enums import Intents, Status, ActivityType
 from naff.models.discord.activity import Activity
-from naff.client.errors import SnakeException, WebSocketClosed
+from naff.client.errors import NaffException, WebSocketClosed
 from naff.client.const import logger_name, MISSING, Absent
 from naff.client.utils.attr_utils import define
 from .gateway import GatewayClient
@@ -101,11 +101,11 @@ class ConnectionState:
 
         except WebSocketClosed as ex:
             if ex.code == 4011:
-                raise SnakeException("Your bot is too large, you must use shards") from None
+                raise NaffException("Your bot is too large, you must use shards") from None
             elif ex.code == 4013:
-                raise SnakeException(f"Invalid Intents have been passed: {self.intents}") from None
+                raise NaffException(f"Invalid Intents have been passed: {self.intents}") from None
             elif ex.code == 4014:
-                raise SnakeException(
+                raise NaffException(
                     "You have requested privileged intents that have not been enabled or approved. Check the developer dashboard"
                 ) from None
             raise
