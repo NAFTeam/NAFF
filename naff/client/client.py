@@ -93,11 +93,11 @@ from naff.models.discord.embed import Embed
 from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.modal import Modal
-from naff.models.snek.active_voice_state import ActiveVoiceState
-from naff.models.snek.application_commands import ModalCommand
-from naff.models.snek.auto_defer import AutoDefer
-from naff.models.snek.listener import Listener
-from naff.models.snek.tasks import Task
+from naff.models.naff.active_voice_state import ActiveVoiceState
+from naff.models.naff.application_commands import ModalCommand
+from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.listener import Listener
+from naff.models.naff.tasks import Task
 
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type, TYPE_ALL_CHANNEL

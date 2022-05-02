@@ -45,7 +45,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     from naff import Client
-    from naff.models.snek.context import ComponentContext
+    from naff.models.naff.context import ComponentContext
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.discord.guild import Guild
 

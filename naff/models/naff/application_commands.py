@@ -28,13 +28,13 @@ from naff.models.discord.enums import ChannelTypes, CommandTypes, Permissions
 from naff.models.discord.role import Role
 from naff.models.discord.snowflake import to_snowflake_list, to_snowflake
 from naff.models.discord.user import BaseUser
-from naff.models.snek.auto_defer import AutoDefer
-from naff.models.snek.command import BaseCommand
-from naff.models.snek.localisation import LocalisedField
+from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.command import BaseCommand
+from naff.models.naff.localisation import LocalisedField
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
-    from naff.models.snek.context import Context
+    from naff.models.naff.context import Context
 
 __all__ = (
     "OptionTypes",

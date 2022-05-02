@@ -17,7 +17,7 @@ class Encryption:
 
     def __init__(self, secret_key) -> None:
         if not nacl_imported:
-            raise RuntimeError("Please install dis-snek[voice] to use voice components.")
+            raise RuntimeError("Please install dis-naff[voice] to use voice components.")
         self.box: secret.SecretBox = secret.SecretBox(bytes(secret_key))
 
     def encrypt(self, mode: str, header: bytes, data) -> bytes:

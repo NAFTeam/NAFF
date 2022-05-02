@@ -1,3 +1,3 @@
 from .discord import *
-from .snek import *
+from .naff import *
 from .misc import *

@@ -3,7 +3,7 @@ import platform
 
 from naff import Client, Scale, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from naff.client.const import logger_name, __version__, __py_version__
-from naff.models.snek import checks
+from naff.models.naff import checks
 from .debug_application_cmd import DebugAppCMD
 from .debug_exec import DebugExec
 from .debug_scales import DebugScales

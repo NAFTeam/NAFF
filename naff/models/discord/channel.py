@@ -33,7 +33,7 @@ from .enums import (
 if TYPE_CHECKING:
     from aiohttp import FormData
     from naff import Client
-    from naff.models.snek.active_voice_state import ActiveVoiceState
+    from naff.models.naff.active_voice_state import ActiveVoiceState
 
 __all__ = (
     "ChannelHistory",

@@ -18,7 +18,7 @@ extras_require["docs"] = extras_require["all"] + [
 ]
 
 setup(
-    name="dis-snek",
+    name="dis-naff",
     description=pyproject["tool"]["poetry"]["description"],
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",

@@ -92,7 +92,7 @@ if TYPE_CHECKING:
     from naff.models.discord.sticker import Sticker
     from naff.models.discord.voice_state import VoiceState
     from naff.models.discord.stage_instance import StageInstance
-    from naff.models.snek.context import ModalContext
+    from naff.models.naff.context import ModalContext
 
 
 @define(kw_only=False)

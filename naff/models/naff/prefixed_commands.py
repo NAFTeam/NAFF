@@ -12,12 +12,12 @@ from naff.client.errors import BadArgument
 from naff.client.utils.input_utils import _quotes
 from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
-from naff.models.snek.protocols import Converter
-from naff.models.snek.converters import _LiteralConverter, NoArgumentConverter, Greedy, SNEK_MODEL_TO_CONVERTER
-from naff.models.snek.command import BaseCommand
+from naff.models.naff.protocols import Converter
+from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, SNEK_MODEL_TO_CONVERTER
+from naff.models.naff.command import BaseCommand
 
 if TYPE_CHECKING:
-    from naff.models.snek.context import PrefixedContext
+    from naff.models.naff.context import PrefixedContext
 
 __all__ = (
     "PrefixedCommand",
@@ -392,7 +392,7 @@ class PrefixedCommand(BaseCommand):
 
     def _parse_parameters(self) -> None:
         """
-        Parses the parameters that this command has into a form dis-snek can use.
+        Parses the parameters that this command has into a form dis-naff can use.
 
         This is purposely seperated like this to allow "lazy parsing" - parsing
         as the command is added to a bot rather than being parsed immediately.

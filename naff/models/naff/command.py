@@ -13,11 +13,11 @@ from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from naff.client.utils.serializer import no_export_meta
-from naff.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
-from naff.models.snek.protocols import Converter
+from naff.models.naff.cooldowns import Cooldown, Buckets, MaxConcurrency
+from naff.models.naff.protocols import Converter
 
 if TYPE_CHECKING:
-    from naff.models.snek.context import Context
+    from naff.models.naff.context import Context
 
 __all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")
 
@@ -188,7 +188,7 @@ class BaseCommand(DictSerializationMixin):
                 convert = functools.partial(self.try_convert, None, context)
             func, config = self.param_config(param.annotation, "_annotation_dat")
             if config:
-                # if user has used an snek-annotation, run the annotation, and pass the result to the user
+                # if user has used an naff-annotation, run the annotation, and pass the result to the user
                 local = {"context": context, "scale": self.scale, "param": param.name}
                 ano_args = [local[c] for c in config["args"]]
                 if param.kind != param.POSITIONAL_ONLY:

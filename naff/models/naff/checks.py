@@ -2,7 +2,7 @@ from typing import Awaitable, Callable, Union
 
 from naff.models.discord.role import Role
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
-from naff.models.snek.context import Context
+from naff.models.naff.context import Context
 
 __all__ = ("has_role", "has_any_role", "has_id", "is_owner", "guild_only", "dm_only")
 

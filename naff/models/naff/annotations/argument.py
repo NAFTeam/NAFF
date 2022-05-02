@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from naff.client.errors import BadArgument
-from naff.models.snek.converters import NoArgumentConverter
-from naff.models.snek.context import Context, PrefixedContext
+from naff.models.naff.converters import NoArgumentConverter
+from naff.models.naff.context import Context, PrefixedContext
 
 __all__ = ("CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL")
 

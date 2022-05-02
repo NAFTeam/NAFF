@@ -11,7 +11,7 @@ from naff.api.voice.audio import BaseAudio, AudioVolume
 from naff.api.voice.opus import Encoder
 
 if TYPE_CHECKING:
-    from naff.models.snek.active_voice_state import ActiveVoiceState
+    from naff.models.naff.active_voice_state import ActiveVoiceState
 __all__ = ("Player",)
 
 log = logging.getLogger(logger_name)

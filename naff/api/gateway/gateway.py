@@ -1,4 +1,4 @@
-"""This file outlines the interaction between snek and Discord's Gateway API."""
+"""This file outlines the interaction between naff and Discord's Gateway API."""
 import asyncio
 import logging
 import sys
@@ -14,7 +14,7 @@ from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.enums import Status
 from naff.models.discord.enums import WebSocketOPCodes as OPCODE
 from naff.models.discord.snowflake import to_snowflake
-from naff.models.snek.cooldowns import CooldownSystem
+from naff.models.naff.cooldowns import CooldownSystem
 from .websocket import WebsocketClient
 
 if TYPE_CHECKING:
@@ -253,7 +253,7 @@ class GatewayClient(WebsocketClient):
                 "intents": self.state.intents,
                 "shard": self.shard,
                 "large_threshold": 250,
-                "properties": {"$os": sys.platform, "$browser": "dis.snek", "$device": "dis.snek"},
+                "properties": {"$os": sys.platform, "$browser": "dis.naff", "$device": "dis.naff"},
                 "presence": self.state.presence,
             },
             "compress": True,

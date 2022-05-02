@@ -7,8 +7,8 @@ from naff import Embed
 from naff.client.const import logger_name
 from naff.ext.paginators import Paginator
 from naff.models.discord.color import BrandColors, Color
-from naff.models.snek.context import PrefixedContext
-from naff.models.snek.prefixed_commands import prefixed_command, PrefixedCommand
+from naff.models.naff.context import PrefixedContext
+from naff.models.naff.prefixed_commands import prefixed_command, PrefixedCommand
 
 if TYPE_CHECKING:
     from naff.client import Client

@@ -33,8 +33,8 @@ from naff.models.discord.channel import (
     TYPE_VOICE_CHANNEL,
     TYPE_MESSAGEABLE_CHANNEL,
 )
-from naff.models.snek.protocols import Converter
-from naff.models.snek.context import Context
+from naff.models.naff.protocols import Converter
+from naff.models.naff.context import Context
 from naff.client.errors import BadArgument
 
 
@@ -601,4 +601,4 @@ SNEK_MODEL_TO_CONVERTER: dict[type, type[Converter]] = {
     PartialEmoji: PartialEmojiConverter,
     CustomEmoji: CustomEmojiConverter,
 }
-"""A dictionary mapping of dis-snek objects to their corresponding converters."""
+"""A dictionary mapping of dis-naff objects to their corresponding converters."""

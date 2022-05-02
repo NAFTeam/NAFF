@@ -6,7 +6,7 @@ import attrs
 
 from naff.client.const import MISSING
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.models.snek.application_commands import CallbackTypes
+from naff.models.naff.application_commands import CallbackTypes
 from naff.models.discord.components import InteractiveComponent, ComponentTypes
 from naff.client.utils.attr_utils import define, field, str_validator
 

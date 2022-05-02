@@ -76,13 +76,13 @@ __all__ = (
 _ver_info = sys.version_info
 
 try:
-    __version__ = _v("dis-snek")
+    __version__ = _v("dis-naff")
 except Exception:
     __version__ = "0.0.0"
 __repo_url__ = "https://github.com/Discord-Snake-Pit/Dis-Snek"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
-logger_name = "dis.snek"
+logger_name = "dis.naff"
 default_locale = "english_us"
 kwarg_spam = False
 

@@ -15,7 +15,7 @@ from naff.models.discord.enums import MessageFlags, CommandTypes
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
-from naff.models.snek.application_commands import CallbackTypes, OptionTypes
+from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from naff.models.discord.sticker import Sticker
     from naff.models.discord.role import Role
     from naff.models.discord.modal import Modal
-    from naff.models.snek.active_voice_state import ActiveVoiceState
-    from naff.models.snek.command import BaseCommand
+    from naff.models.naff.active_voice_state import ActiveVoiceState
+    from naff.models.naff.command import BaseCommand
 
 __all__ = (
     "Resolved",

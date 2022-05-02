@@ -5,7 +5,7 @@ from naff.client.errors import AlreadyDeferred, NotFound, BadRequest
 from naff.client.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
-    from naff.models.snek.context import InteractionContext
+    from naff.models.naff.context import InteractionContext
 
 __all__ = ("AutoDefer",)
 

@@ -3,15 +3,15 @@ import inspect
 import logging
 from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
-import naff.models.snek as snek
+import naff.models.naff as naff
 from naff.client.const import logger_name, MISSING
 from naff.client.utils.misc_utils import wrap_partial
-from naff.models.snek.tasks import Task
+from naff.models.naff.tasks import Task
 
 if TYPE_CHECKING:
     from naff.client import Client
-    from naff.models.snek import AutoDefer, BaseCommand, Listener
-    from naff.models.snek import Context
+    from naff.models.naff import AutoDefer, BaseCommand, Listener
+    from naff.models.naff import Context
 
 log = logging.getLogger(logger_name)
 
@@ -74,26 +74,26 @@ class Scale:
         new_cls._listeners = []
 
         for _name, val in inspect.getmembers(
-            new_cls, predicate=lambda x: isinstance(x, (snek.BaseCommand, snek.Listener, Task))
+            new_cls, predicate=lambda x: isinstance(x, (naff.BaseCommand, naff.Listener, Task))
         ):
-            if isinstance(val, snek.BaseCommand):
+            if isinstance(val, naff.BaseCommand):
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
-                if not isinstance(val, snek.PrefixedCommand) or not val.is_subcommand:
+                if not isinstance(val, naff.PrefixedCommand) or not val.is_subcommand:
                     # we do not want to add prefixed subcommands
                     new_cls._commands.append(val)
 
-                    if isinstance(val, snek.ModalCommand):
+                    if isinstance(val, naff.ModalCommand):
                         bot.add_modal_callback(val)
-                    elif isinstance(val, snek.ComponentCommand):
+                    elif isinstance(val, naff.ComponentCommand):
                         bot.add_component_callback(val)
-                    elif isinstance(val, snek.InteractionCommand):
+                    elif isinstance(val, naff.InteractionCommand):
                         bot.add_interaction(val)
                     else:
                         bot.add_prefixed_command(val)
 
-            elif isinstance(val, snek.Listener):
+            elif isinstance(val, naff.Listener):
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
                 new_cls.listeners.append(val)
@@ -138,19 +138,19 @@ class Scale:
     def shed(self) -> None:
         """Called when this Scale is being removed."""
         for func in self._commands:
-            if isinstance(func, snek.ModalCommand):
+            if isinstance(func, naff.ModalCommand):
                 for listener in func.listeners:
                     # noinspection PyProtectedMember
                     self.bot._modal_callbacks.pop(listener)
-            elif isinstance(func, snek.ComponentCommand):
+            elif isinstance(func, naff.ComponentCommand):
                 for listener in func.listeners:
                     # noinspection PyProtectedMember
                     self.bot._component_callbacks.pop(listener)
-            elif isinstance(func, snek.InteractionCommand):
+            elif isinstance(func, naff.InteractionCommand):
                 for scope in func.scopes:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
-            elif isinstance(func, snek.PrefixedCommand):
+            elif isinstance(func, naff.PrefixedCommand):
                 if self.bot.prefixed_commands[func.name]:
                     self.bot.prefixed_commands.pop(func.name)
         for func in self.listeners:
@@ -168,7 +168,7 @@ class Scale:
             time_until_defer: How long to wait before deferring automatically
 
         """
-        self.auto_defer = snek.AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
+        self.auto_defer = naff.AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
 
     def add_scale_check(self, coroutine: Callable[["Context"], Awaitable[bool]]) -> None:
         """

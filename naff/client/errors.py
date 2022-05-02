@@ -6,9 +6,9 @@ from . import const
 from naff.client.utils.misc_utils import escape_mentions
 
 if TYPE_CHECKING:
-    from naff.models.snek.command import BaseCommand
-    from naff.models.snek.context import Context
-    from naff.models.snek.cooldowns import CooldownSystem, MaxConcurrency
+    from naff.models.naff.command import BaseCommand
+    from naff.models.naff.context import Context
+    from naff.models.naff.cooldowns import CooldownSystem, MaxConcurrency
     from naff.models.discord.snowflake import Snowflake_Type
 
 __all__ = (

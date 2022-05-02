@@ -10,7 +10,7 @@ from typing import TypeVar, TYPE_CHECKING
 
 from naff.client.const import logger_name
 from naff.client.errors import WebSocketClosed
-from naff.models.snek.cooldowns import CooldownSystem
+from naff.models.naff.cooldowns import CooldownSystem
 
 from naff.client.utils.input_utils import OverriddenJson
 

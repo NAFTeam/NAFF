@@ -16,7 +16,7 @@ from naff.models.discord.message import Message
 from naff.models.discord.role import Role
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from naff.models.discord.user import Member, User
-from naff.models.snek.active_voice_state import ActiveVoiceState
+from naff.models.naff.active_voice_state import ActiveVoiceState
 
 __all__ = ("GlobalCache", "create_cache")
 

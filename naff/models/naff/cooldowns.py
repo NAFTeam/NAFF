@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
-    from naff.models.snek.context import Context
+    from naff.models.naff.context import Context
 
 __all__ = ("Buckets", "Cooldown", "CooldownSystem", "MaxConcurrency")
 

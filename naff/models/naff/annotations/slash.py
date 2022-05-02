@@ -2,7 +2,7 @@ from typing import Union, List, Optional, Type, TYPE_CHECKING
 
 import naff.models as models
 
-from naff.models.snek.application_commands import SlashCommandOption
+from naff.models.naff.application_commands import SlashCommandOption
 
 __all__ = (
     "slash_attachment_option",
@@ -18,7 +18,7 @@ __all__ = (
 
 
 if TYPE_CHECKING:
-    from naff.models.snek import SlashCommandChoice
+    from naff.models.naff import SlashCommandChoice
     from naff.models.discord import User, Member, Role, BaseChannel, ChannelTypes, Attachment
 
 

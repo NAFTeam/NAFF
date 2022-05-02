@@ -190,7 +190,7 @@ class SomeClass(Scale):
 
 
 def setup(bot):
-    # This is called by dis-snek so it knows how to load the Scale
+    # This is called by dis-naff so it knows how to load the Scale
     SomeClass(bot)
 ```
 As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek,
