@@ -554,7 +554,7 @@ class Client(
         """
         Catches all errors dispatched by components.
 
-        By default it will call `Snake.on_error`
+        By default it will call `Naff.on_error`
 
         Override this to change error handling behavior
 
@@ -578,7 +578,7 @@ class Client(
         """
         Catches all errors dispatched by autocompletion options.
 
-        By default it will call `Snake.on_error`
+        By default it will call `Naff.on_error`
 
         Override this to change error handling behavior
 
@@ -661,7 +661,7 @@ class Client(
         Login to discord via http.
 
         !!! note
-            You will need to run Snake.start_gateway() before you start receiving gateway events.
+            You will need to run Naff.start_gateway() before you start receiving gateway events.
 
         Args:
             token str: Your bot's token
@@ -878,7 +878,7 @@ class Client(
 
     def listen(self, event_name: Absent[str] = MISSING) -> Listener:
         """
-        A decorator to be used in situations that snek can't automatically hook your listeners. Ideally, the standard listen decorator should be used, not this.
+        A decorator to be used in situations that Naff can't automatically hook your listeners. Ideally, the standard listen decorator should be used, not this.
 
         Args:
             event_name: The event name to use, if not the coroutine name
