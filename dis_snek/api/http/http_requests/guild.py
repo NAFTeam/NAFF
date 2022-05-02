@@ -8,7 +8,7 @@ from dis_snek.client.utils.serializer import dict_filter_missing, dict_filter_no
 
 from ..route import Route
 
-__all__ = ["GuildRequests"]
+__all__ = ("GuildRequests",)
 
 
 if TYPE_CHECKING:

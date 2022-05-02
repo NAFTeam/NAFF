@@ -7,7 +7,7 @@ import attrs
 
 from dis_snek.client.utils.attr_utils import define, field
 
-__all__ = ["TTLItem", "TTLCache"]
+__all__ = ("TTLItem", "TTLCache")
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")

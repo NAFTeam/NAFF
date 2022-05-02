@@ -35,7 +35,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_s
 if TYPE_CHECKING:
     from dis_snek.client.client import Snake
 
-__all__ = [
+__all__ = (
     "GuildBan",
     "BaseGuild",
     "GuildWelcome",
@@ -50,7 +50,7 @@ __all__ = [
     "AuditLogEntry",
     "AuditLog",
     "AuditLogHistory",
-]
+)
 
 log = logging.getLogger(logger_name)
 

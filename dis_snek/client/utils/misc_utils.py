@@ -6,7 +6,7 @@ from typing import Callable, Iterable, List, Optional, Any, Union
 import dis_snek.api.events as events
 from dis_snek.client.const import T
 
-__all__ = [
+__all__ = (
     "escape_mentions",
     "find",
     "find_all",
@@ -17,7 +17,7 @@ __all__ = [
     "get_event_name",
     "get_object_name",
     "maybe_coroutine",
-]
+)
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
 camel_to_snake = re.compile(r"([A-Z]+)")

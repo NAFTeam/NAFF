@@ -6,7 +6,7 @@ from dis_snek.client.const import T_co
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
 
-__all__ = ["Converter"]
+__all__ = ("Converter",)
 
 
 @typing.runtime_checkable

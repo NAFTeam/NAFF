@@ -19,7 +19,7 @@ from dis_snek.models.snek.protocols import Converter
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
 
-__all__ = ["BaseCommand", "check", "cooldown", "max_concurrency"]
+__all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")
 
 log = logging.getLogger(logger_name)
 

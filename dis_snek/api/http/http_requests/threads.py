@@ -7,7 +7,7 @@ from ..route import Route
 from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.models.discord.enums import ChannelTypes
 
-__all__ = ["ThreadRequests"]
+__all__ = ("ThreadRequests",)
 
 
 if TYPE_CHECKING:

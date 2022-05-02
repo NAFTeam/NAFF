@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from dis_snek import Snake
     from dis_snek.models.discord.emoji import PartialEmoji
 
-__all__ = ["Paginator"]
+__all__ = ("Paginator",)
 
 
 @define(kw_only=False)

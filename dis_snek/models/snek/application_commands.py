@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.snowflake import Snowflake_Type
     from dis_snek.models.snek.context import Context
 
-__all__ = [
+__all__ = (
     "OptionTypes",
     "CallbackTypes",
     "InteractionCommand",
@@ -58,7 +58,7 @@ __all__ = [
     "LocalizedName",
     "LocalizedDesc",
     "LocalisedDesc",
-]
+)
 
 log = logging.getLogger(logger_name)
 

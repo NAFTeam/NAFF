@@ -6,7 +6,7 @@ from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.models.discord.timestamp import Timestamp
 
-__all__ = ["MemberRequests"]
+__all__ = ("MemberRequests",)
 
 
 if TYPE_CHECKING:

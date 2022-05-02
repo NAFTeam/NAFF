@@ -11,7 +11,7 @@ from .triggers import BaseTrigger
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Task"]
+__all__ = ("Task",)
 
 
 class Task:

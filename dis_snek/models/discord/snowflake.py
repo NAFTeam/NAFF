@@ -4,7 +4,7 @@ import dis_snek.models as models
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
 
-__all__ = ["to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type"]
+__all__ = ("to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type")
 
 
 # Snowflake_Type should be used in FUNCTION args of user-facing APIs (combined with to_snowflake to sanitize input)

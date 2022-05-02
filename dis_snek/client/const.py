@@ -38,7 +38,7 @@ from collections import defaultdict
 from importlib.metadata import version as _v
 from typing import TypeVar, Union
 
-__all__ = [
+__all__ = (
     "__version__",
     "__repo_url__",
     "__py_version__",
@@ -71,7 +71,7 @@ __all__ = [
     "Absent",
     "T",
     "T_co",
-]
+)
 
 _ver_info = sys.version_info
 

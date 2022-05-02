@@ -9,13 +9,13 @@ from dis_snek.models.discord.enums import ActivityType, ActivityFlags
 from dis_snek.models.discord.snowflake import Snowflake_Type
 from dis_snek.models.discord.timestamp import Timestamp
 
-__all__ = [
+__all__ = (
     "ActivityTimestamps",
     "ActivityParty",
     "ActivityAssets",
     "ActivitySecrets",
     "Activity",
-]
+)
 
 
 @define()

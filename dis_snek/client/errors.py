@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.cooldowns import CooldownSystem, MaxConcurrency
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = [
+__all__ = (
     "SnakeException",
     "BotException",
     "GatewayNotFound",
@@ -47,7 +47,7 @@ __all__ = [
     "EventLocationNotProvided",
     "VoiceAlreadyConnected",
     "VoiceConnectionTimeout",
-]
+)
 
 
 class SnakeException(Exception):

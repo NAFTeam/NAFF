@@ -7,7 +7,7 @@ from attr import Attribute
 
 from dis_snek.client.const import MISSING, logger_name
 
-__all__ = ["define", "field", "docs", "str_validator"]
+__all__ = ("define", "field", "docs", "str_validator")
 
 log = logging.getLogger(logger_name)
 

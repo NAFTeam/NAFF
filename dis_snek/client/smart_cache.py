@@ -18,7 +18,7 @@ from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflak
 from dis_snek.models.discord.user import Member, User
 from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
-__all__ = ["GlobalCache", "create_cache"]
+__all__ = ("GlobalCache", "create_cache")
 
 
 if TYPE_CHECKING:

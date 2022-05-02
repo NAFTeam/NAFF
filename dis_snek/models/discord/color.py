@@ -6,7 +6,7 @@ from typing import Tuple, Union, Optional
 
 from dis_snek.client.utils.attr_utils import define, field
 
-__all__ = [
+__all__ = (
     "Color",
     "BrandColors",
     "MaterialColors",
@@ -17,7 +17,7 @@ __all__ = [
     "MaterialColours",
     "FlatUIColours",
     "process_colour",
-]
+)
 
 hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 

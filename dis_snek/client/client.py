@@ -104,7 +104,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Snake"]
+__all__ = ("Snake",)
 
 
 class Snake(

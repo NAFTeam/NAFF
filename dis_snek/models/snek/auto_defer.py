@@ -7,7 +7,7 @@ from dis_snek.client.utils.attr_utils import define, field
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import InteractionContext
 
-__all__ = ["AutoDefer"]
+__all__ = ("AutoDefer",)
 
 
 @define()

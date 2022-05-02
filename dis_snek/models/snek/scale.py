@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Scale"]
+__all__ = ("Scale",)
 
 
 class Scale:

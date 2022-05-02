@@ -10,7 +10,7 @@ from dis_snek.models import to_snowflake
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
-__all__ = ["ThreadEvents"]
+__all__ = ("ThreadEvents",)
 
 log = logging.getLogger(logger_name)
 

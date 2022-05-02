@@ -19,7 +19,7 @@ from dis_snek.client.utils.serializer import no_export_meta, export_converter
 from dis_snek.models.discord.color import Color, process_color
 from dis_snek.models.discord.timestamp import Timestamp
 
-__all__ = [
+__all__ = (
     "EmbedField",
     "EmbedAuthor",
     "EmbedAttachment",
@@ -28,7 +28,7 @@ __all__ = [
     "EmbedProvider",
     "Embed",
     "process_embeds",
-]
+)
 
 
 @define(kw_only=False)

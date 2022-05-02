@@ -17,7 +17,7 @@ from dis_snek.client.utils.input_utils import OverriddenJson
 if TYPE_CHECKING:
     from dis_snek.api.gateway.state import ConnectionState
 
-__all__ = ["WebsocketClient", "WebsocketRateLimit"]
+__all__ = ("WebsocketClient", "WebsocketRateLimit")
 
 log = logging.getLogger(logger_name)
 
