@@ -1,20 +1,22 @@
 import asyncio
-from collections import namedtuple
 import logging
 import time
+from collections import namedtuple
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
-from dis_snek.models.discord.file import UPLOADABLE_TYPE
-from dis_snek.models.misc.iterator import AsyncIterator
+
 from aiohttp import FormData
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
 from dis_snek.client.errors import EventLocationNotProvided, NotFound
 from dis_snek.client.mixins.serialization import DictSerializationMixin
-from dis_snek.client.utils.attr_utils import define, field, docs
 from dis_snek.client.utils.attr_converters import optional
 from dis_snek.client.utils.attr_converters import timestamp_converter
+from dis_snek.client.utils.attr_utils import define, field, docs
+from dis_snek.client.utils.deserialise_app_cmds import deserialize_app_cmds
 from dis_snek.client.utils.serializer import to_image_data, no_export_meta
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
+from dis_snek.models.misc.iterator import AsyncIterator
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,
@@ -34,6 +36,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_s
 
 if TYPE_CHECKING:
     from dis_snek.client.client import Snake
+    from dis_snek import InteractionCommand
 
 __all__ = [
     "GuildBan",
@@ -1906,6 +1909,8 @@ class AuditLogEntry(DiscordObject):
 class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 
+    application_commands: list["InteractionCommand"] = field(factory=list, converter=optional(deserialize_app_cmds))
+    """list of application commands that have had their permissions updated"""
     entries: Optional[List["AuditLogEntry"]] = field(default=MISSING)
     """list of audit log entries"""
     scheduled_events: Optional[List["models.ScheduledEvent"]] = field(default=MISSING)

@@ -2,9 +2,9 @@ import asyncio
 import inspect
 import logging
 import re
+import typing
 from enum import IntEnum
 from typing import TYPE_CHECKING, Annotated, Callable, Coroutine, Dict, List, Union, Optional, Any
-import typing
 
 import attrs
 from attr import Attribute
@@ -20,12 +20,13 @@ from dis_snek.client.const import (
     Absent,
 )
 from dis_snek.client.mixins.serialization import DictSerializationMixin
+from dis_snek.client.utils import optional
 from dis_snek.client.utils.attr_utils import define, field, docs, attrs_validator
 from dis_snek.client.utils.misc_utils import get_parameters
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.discord.enums import ChannelTypes, CommandTypes, Permissions
 from dis_snek.models.discord.role import Role
-from dis_snek.models.discord.snowflake import to_snowflake_list
+from dis_snek.models.discord.snowflake import to_snowflake_list, to_snowflake
 from dis_snek.models.discord.user import BaseUser
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.command import BaseCommand
@@ -188,6 +189,7 @@ class InteractionCommand(BaseCommand):
         default=MISSING,
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
+    _application_id: "Snowflake_Type" = field(default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
         if self.callback is not None:
