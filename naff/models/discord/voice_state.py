@@ -11,7 +11,7 @@ from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models import Guild, TYPE_VOICE_CHANNEL
     from naff.models.discord.user import Member
     from naff.models.discord.snowflake import Snowflake_Type
@@ -81,7 +81,7 @@ class VoiceState(ClientObject):
         return self._client.cache.get_member(self._guild_id, self._member_id) if self._guild_id else None
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if member := data.pop("member", None):
             member = client.cache.place_member_data(data["guild_id"], member)
             data["member_id"] = member.id

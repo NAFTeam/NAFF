@@ -7,7 +7,7 @@
 import logging
 
 import naff.const
-from naff.client import Snake
+from naff.client import Client
 from naff.models.context import ComponentContext
 from naff.models.enums import Intents
 from naff.models.events import Component
@@ -17,7 +17,7 @@ logging.basicConfig()
 cls_log = logging.getLogger(naff.const.logger_name)
 cls_log.setLevel(logging.DEBUG)
 
-bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
+bot = Client(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 
 
 @listen()

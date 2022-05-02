@@ -24,9 +24,9 @@ While this library shares features and some stylistic choices with `discord.py`,
 Here is a basic example:
 
 ```python
-from naff import Snake, Button, ButtonStyles, CommandTypes, context_menu, prefixed_command, listen
+from naff import Client, Button, ButtonStyles, CommandTypes, context_menu, prefixed_command, listen
 
-bot = Snake(sync_interactions=True)
+bot = Client(sync_interactions=True)
 
 
 @listen()

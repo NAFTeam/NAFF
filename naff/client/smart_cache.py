@@ -22,7 +22,7 @@ __all__ = ("GlobalCache", "create_cache")
 
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.channel import DM, TYPE_ALL_CHANNEL
     from naff.models.discord.snowflake import Snowflake_Type
 
@@ -56,7 +56,7 @@ def create_cache(
 
 @define(kw_only=False)
 class GlobalCache:
-    _client: "Snake" = field()
+    _client: "Client" = field()
 
     # Non expiring discord objects cache
     user_cache: dict = field(factory=dict)  # key: user_id

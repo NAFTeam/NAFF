@@ -1,7 +1,7 @@
 import logging
 import platform
 
-from naff import Snake, Scale, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
+from naff import Client, Scale, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from naff.client.const import logger_name, __version__, __py_version__
 from naff.models.snek import checks
 from .debug_application_cmd import DebugAppCMD
@@ -15,7 +15,7 @@ log = logging.getLogger(logger_name)
 
 
 class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
-    def __init__(self, bot: Snake) -> None:
+    def __init__(self, bot: Client) -> None:
         super().__init__(bot)
         self.add_scale_check(checks.is_owner())
 
@@ -68,5 +68,5 @@ class DebugScale(DebugExec, DebugAppCMD, DebugScales, Scale):
         await self.bot.stop()
 
 
-def setup(bot: Snake) -> None:
+def setup(bot: Client) -> None:
     DebugScale(bot)

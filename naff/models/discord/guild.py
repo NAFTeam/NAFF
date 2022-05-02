@@ -35,7 +35,7 @@ from .enums import (
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
-    from naff.client.client import Snake
+    from naff.client.client import Client
     from naff import InteractionCommand
 
 __all__ = (
@@ -83,7 +83,7 @@ class BaseGuild(DiscordObject):
     """The features of this guild"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if icon_hash := data.pop("icon", None):
             data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
         if splash_hash := data.pop("splash", None):
@@ -115,7 +115,7 @@ class GuildPreview(BaseGuild):
     """Approximate number of online members in this guild"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         return super()._process_dict(data, client)
 
 
@@ -195,7 +195,7 @@ class Guild(BaseGuild):
     _chunk_cache: list = field(factory=list)
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         # todo: find a away to prevent this loop from blocking the event loop
         data = super()._process_dict(data, client)
         guild_id = data["id"]
@@ -228,7 +228,7 @@ class Guild(BaseGuild):
     async def create(
         cls,
         name: str,
-        client: "Snake",
+        client: "Client",
         *,
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         verification_level: Absent[int] = MISSING,
@@ -1709,7 +1709,7 @@ class GuildTemplate(ClientObject):
     is_dirty: bool = field(default=False, metadata=docs("Whether this template has un-synced changes"))
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data["creator"] = client.cache.place_user_data(data["creator"])
 
         # todo: partial guild obj that **isn't** cached
@@ -1790,7 +1790,7 @@ class GuildIntegration(DiscordObject):
     """has this integration been revoked"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if app := data.get("application", None):
             data["application"] = models.Application.from_dict(app, client)
         if user := data.get("user", None):
@@ -1824,7 +1824,7 @@ class GuildWidget(DiscordObject):
     """Special widget user objects that includes users presence (Limit 100)"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if channels := data.get("channels"):
             data["channel_ids"] = [channel["id"] for channel in channels]
         if members := data.get("members"):
@@ -1898,7 +1898,7 @@ class AuditLogEntry(DiscordObject):
     """the reason for the change (0-512 characters)"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if changes := data.get("changes", None):
             data["changes"] = AuditLogChange.from_list(changes, client)
 
@@ -1925,7 +1925,7 @@ class AuditLog(ClientObject):
     """list of webhooks found in the audit log"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if entries := data.get("audit_log_entries", None):
             data["entries"] = AuditLogEntry.from_list(entries, client)
         if scheduled_events := data.get("guild_scheduled_events", None):

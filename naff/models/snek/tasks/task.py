@@ -56,7 +56,7 @@ class Task:
 
     def on_error(self, error: Exception) -> None:
         """Error handler for this task. Called when an exception is raised during execution of the task."""
-        naff.Snake.default_error_handler("Task", error)
+        naff.Client.default_error_handler("Task", error)
 
     async def __call__(self) -> None:
         try:

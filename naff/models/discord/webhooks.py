@@ -13,7 +13,7 @@ from .base import DiscordObject
 
 if TYPE_CHECKING:
     from naff.models.discord.file import UPLOADABLE_TYPE
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.enums import MessageFlags
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
@@ -69,7 +69,7 @@ class Webhook(DiscordObject, SendMixin):
     """the channel that this webhook is following (returned for Channel Follower Webhooks)"""
 
     @classmethod
-    def from_url(cls, url: str, client: "Snake") -> "Webhook":
+    def from_url(cls, url: str, client: "Client") -> "Webhook":
         """
         Webhook object from a URL.
 
@@ -92,7 +92,7 @@ class Webhook(DiscordObject, SendMixin):
     @classmethod
     async def create(
         cls,
-        client: "Snake",
+        client: "Client",
         channel: Union["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"],
         name: str,
         avatar: Absent["UPLOADABLE_TYPE"] = MISSING,
@@ -129,7 +129,7 @@ class Webhook(DiscordObject, SendMixin):
         return new_cls
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if data.get("user"):
             user = client.cache.place_user_data(data.pop("user"))
             data["user_id"] = user.id

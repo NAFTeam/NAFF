@@ -18,7 +18,7 @@ from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from naff.models.snek.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from naff.models.discord.components import BaseComponent
     from naff.models.discord.embed import Embed
@@ -70,7 +70,7 @@ class Resolved:
     )
 
     @classmethod
-    def from_dict(cls, client: "Snake", data: dict, guild_id: Optional["Snowflake_Type"] = None) -> "Resolved":
+    def from_dict(cls, client: "Client", data: dict, guild_id: Optional["Snowflake_Type"] = None) -> "Resolved":
         new_cls = cls()
 
         if channels := data.get("channels"):
@@ -106,7 +106,7 @@ class Resolved:
 class Context:
     """Represents the context of a command."""
 
-    _client: "Snake" = field(default=None)
+    _client: "Client" = field(default=None)
     invoke_target: str = field(default=None, metadata=docs("The name of the command to be invoked"))
     command: Optional["BaseCommand"] = field(default=None, metadata=docs("The command to be invoked"))
 
@@ -125,7 +125,7 @@ class Context:
         return self._client.cache.get_guild(self.guild_id)
 
     @property
-    def bot(self) -> "Snake":
+    def bot(self) -> "Client":
         """A reference to the bot instance."""
         return self._client
 
@@ -163,7 +163,7 @@ class _BaseInteractionContext(Context):
     data: Dict = field(factory=dict, metadata=docs("The raw data of this interaction"))
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake") -> "Context":
+    def from_dict(cls, data: Dict, client: "Client") -> "Context":
         """Create a context object from a dictionary."""
         new_cls = cls(
             client=client,
@@ -440,7 +440,7 @@ class ComponentContext(InteractionContext):
     defer_edit_origin: bool = field(default=False, metadata=docs("Are we editing the message the component is on"))
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
+    def from_dict(cls, data: Dict, client: "Client") -> "ComponentContext":
         """Create a context object from a dictionary."""
         new_cls = super().from_dict(data, client)
         new_cls.token = data["token"]
@@ -551,7 +551,7 @@ class AutocompleteContext(_BaseInteractionContext):
     focussed_option: str = field(default=MISSING, metadata=docs("The option the user is currently filling in"))
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake") -> "ComponentContext":
+    def from_dict(cls, data: Dict, client: "Client") -> "ComponentContext":
         """Create a context object from a dictionary."""
         new_cls = super().from_dict(data, client)
 
@@ -598,7 +598,7 @@ class ModalContext(InteractionContext):
     custom_id: str = field(default="")
 
     @classmethod
-    def from_dict(cls, data: Dict, client: "Snake") -> "ModalContext":
+    def from_dict(cls, data: Dict, client: "Client") -> "ModalContext":
         new_cls = super().from_dict(data, client)
 
         new_cls.kwargs = {
@@ -623,7 +623,7 @@ class PrefixedContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
     @classmethod
-    def from_message(cls, client: "Snake", message: "Message") -> "PrefixedContext":
+    def from_message(cls, client: "Client", message: "Message") -> "PrefixedContext":
         new_cls = cls(
             client=client,
             message=message,

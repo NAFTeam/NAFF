@@ -9,7 +9,7 @@ from .base import DiscordObject
 if TYPE_CHECKING:
     from naff.models.discord.user import User
     from naff.models.discord.snowflake import Snowflake_Type, SnowflakeObject
-    from naff.client import Snake
+    from naff.client import Client
 
 __all__ = ("TeamMember", "Team")
 
@@ -25,7 +25,7 @@ class TeamMember(DiscordObject):
     """Rhe avatar, discriminator, id, and username of the user"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data["user"] = client.cache.place_user_data(data["user"])
         data["id"] = data["user"].id
         return data
@@ -43,7 +43,7 @@ class Team(DiscordObject):
     """The user id of the current team owner"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data["members"] = TeamMember.from_list(data["members"], client)
         if data["icon"]:
             data["icon"] = Asset.from_path_hash(client, f"team-icons/{data['id']}/{{}}", data["icon"])

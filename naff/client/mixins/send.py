@@ -6,7 +6,7 @@ import naff.models as models
 if TYPE_CHECKING:
     from aiohttp.formdata import FormData
 
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.file import UPLOADABLE_TYPE
     from naff.models.discord.components import BaseComponent
     from naff.models.discord.embed import Embed
@@ -19,7 +19,7 @@ __all__ = ("SendMixin",)
 
 
 class SendMixin:
-    _client: "Snake"
+    _client: "Client"
 
     async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
         raise NotImplementedError

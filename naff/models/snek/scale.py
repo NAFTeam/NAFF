@@ -9,7 +9,7 @@ from naff.client.utils.misc_utils import wrap_partial
 from naff.models.snek.tasks import Task
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.snek import AutoDefer, BaseCommand, Listener
     from naff.models.snek import Context
 
@@ -43,7 +43,7 @@ class Scale:
 
     """
 
-    bot: "Snake"
+    bot: "Client"
     __name: str
     extension_name: str
     description: str
@@ -55,7 +55,7 @@ class Scale:
     _listeners: List
     auto_defer: "AutoDefer"
 
-    def __new__(cls, bot: "Snake", *args, **kwargs) -> "Scale":
+    def __new__(cls, bot: "Client", *args, **kwargs) -> "Scale":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
         new_cls.__name = cls.__name__

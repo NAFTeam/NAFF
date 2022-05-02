@@ -11,7 +11,7 @@ from naff.models.snek.context import PrefixedContext
 from naff.models.snek.prefixed_commands import prefixed_command, PrefixedCommand
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
 
 __all__ = ("PrefixedHelpCommand",)
 
@@ -22,7 +22,7 @@ log = logging.getLogger(logger_name)
 class PrefixedHelpCommand:
     """A help command for all prefixed commands in a bot."""
 
-    client: "Snake" = attrs.field()
+    client: "Client" = attrs.field()
     """The client to use for the help command."""
 
     show_hidden: bool = attrs.field(default=False, kw_only=True)

@@ -14,7 +14,7 @@ from naff.api import events
 import naff
 
 if TYPE_CHECKING:
-    from naff import Snake, Snowflake_Type
+    from naff import Client, Snowflake_Type
 
 __all__ = ("ConnectionState",)
 
@@ -23,7 +23,7 @@ log = logging.getLogger(logger_name)
 
 @define(kw_only=False)
 class ConnectionState:
-    client: "Snake"
+    client: "Client"
     """The bot's client"""
     intents: Intents
     """The event intents in use"""

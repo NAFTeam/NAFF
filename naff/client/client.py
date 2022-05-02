@@ -104,10 +104,10 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(logger_name)
 
-__all__ = ("Snake",)
+__all__ = ("Client",)
 
 
-class Snake(
+class Client(
     processors.ChannelEvents,
     processors.GuildEvents,
     processors.MemberEvents,
@@ -416,7 +416,7 @@ class Snake(
         if len(self.processors) == 0:
             log.warning("No Processors are loaded! This means no events will be processed!")
 
-    async def generate_prefixes(self, bot: "Snake", message: Message) -> str | Iterable[str]:
+    async def generate_prefixes(self, bot: "Client", message: Message) -> str | Iterable[str]:
         """
         A method to get the bot's default_prefix, can be overridden to add dynamic prefixes.
 

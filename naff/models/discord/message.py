@@ -27,7 +27,7 @@ from .enums import (
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
 
 __all__ = (
     "Attachment",
@@ -141,7 +141,7 @@ class MessageInteraction(DiscordObject):
     _user_id: "Snowflake_Type" = field()
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         user_data = data["user"]
         data["user_id"] = client.cache.place_user_data(user_data).id
         return data
@@ -348,7 +348,7 @@ class Message(BaseMessage):
         return self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
     @classmethod
-    def _process_dict(cls, data: dict, client: "Snake") -> dict:
+    def _process_dict(cls, data: dict, client: "Client") -> dict:
         if author_data := data.pop("author", None):
             if "guild_id" in data and "member" in data:
                 author_data["member"] = data.pop("member")

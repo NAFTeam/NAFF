@@ -10,7 +10,7 @@ from naff.models.discord.team import Team
 from .base import DiscordObject
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models import User
 
 __all__ = ("Application",)
@@ -56,7 +56,7 @@ class Application(DiscordObject):
     """The application's public flags"""
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if data.get("team"):
             data["team"] = Team.from_dict(data["team"], client)
             data["owner_id"] = data["team"].owner_user_id

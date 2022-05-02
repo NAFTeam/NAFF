@@ -14,7 +14,7 @@ from naff.models.discord.enums import Permissions
 from .base import DiscordObject
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.guild import Guild
     from naff.models.discord.user import Member
     from naff.models.discord.snowflake import Snowflake_Type
@@ -72,7 +72,7 @@ class Role(DiscordObject):
         return False
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data.update(data.pop("tags", {}))
 
         if icon_hash := data.get("icon"):

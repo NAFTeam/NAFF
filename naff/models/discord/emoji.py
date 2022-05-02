@@ -9,7 +9,7 @@ from naff.client.utils.serializer import dict_filter_none, no_export_meta
 from naff.models.discord.snowflake import SnowflakeObject, to_snowflake
 
 if TYPE_CHECKING:
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.guild import Guild
     from naff.models.discord.user import User, Member
     from naff.models.discord.role import Role
@@ -88,7 +88,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
 class CustomEmoji(PartialEmoji):
     """Represent a custom emoji in a guild with all its properties."""
 
-    _client: "Snake" = field(metadata=no_export_meta)
+    _client: "Client" = field(metadata=no_export_meta)
 
     require_colons: bool = field(default=False)
     """Whether this emoji must be wrapped in colons"""
@@ -102,7 +102,7 @@ class CustomEmoji(PartialEmoji):
     _guild_id: "Snowflake_Type" = field(default=None, converter=to_snowflake)
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         creator_dict = data.pop("user", None)
         data["creator_id"] = client.cache.place_user_data(creator_dict).id if creator_dict else None
 
@@ -112,7 +112,7 @@ class CustomEmoji(PartialEmoji):
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], client: "Snake", guild_id: int) -> "CustomEmoji":
+    def from_dict(cls, data: Dict[str, Any], client: "Client", guild_id: int) -> "CustomEmoji":
         data = cls._process_dict(data, client)
         return cls(client=client, guild_id=guild_id, **cls._filter_kwargs(data, cls._get_init_keys()))
 

@@ -26,7 +26,7 @@ from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 
 if TYPE_CHECKING:
-    from naff import Snake
+    from naff import Client
     from naff.models.discord.emoji import PartialEmoji
 
 __all__ = ("Paginator",)
@@ -76,7 +76,7 @@ class Page:
 
 @define(kw_only=False)
 class Paginator:
-    client: "Snake" = field()
+    client: "Client" = field()
     """The snake client to hook listeners into"""
 
     page_index: int = field(kw_only=True, default=0)
@@ -164,7 +164,7 @@ class Paginator:
         return self._author_id
 
     @classmethod
-    def create_from_embeds(cls, client: "Snake", *embeds: Embed, timeout: int = 0) -> "Paginator":
+    def create_from_embeds(cls, client: "Client", *embeds: Embed, timeout: int = 0) -> "Paginator":
         """Create a paginator system from a list of embeds.
 
         Args:
@@ -179,7 +179,7 @@ class Paginator:
 
     @classmethod
     def create_from_string(
-        cls, client: "Snake", content: str, prefix: str = "", suffix: str = "", page_size: int = 4000, timeout: int = 0
+        cls, client: "Client", content: str, prefix: str = "", suffix: str = "", page_size: int = 4000, timeout: int = 0
     ) -> "Paginator":
         """
         Create a paginator system from a string.
@@ -208,7 +208,7 @@ class Paginator:
     @classmethod
     def create_from_list(
         cls,
-        client: "Snake",
+        client: "Client",
         content: list[str],
         prefix: str = "",
         suffix: str = "",

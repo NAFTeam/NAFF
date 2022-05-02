@@ -23,7 +23,7 @@ from .base import DiscordObject
 if TYPE_CHECKING:
     from aiohttp import FormData
     from naff.models.discord.guild import Guild
-    from naff.client import Snake
+    from naff.client import Client
     from naff.models.discord.timestamp import Timestamp
     from naff.models.discord.channel import DM, TYPE_GUILD_CHANNEL
     from naff.models.discord.voice_state import VoiceState
@@ -53,7 +53,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         return self.tag
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if not isinstance(data["avatar"], Asset):
             if data["avatar"]:
                 data["avatar"] = Asset.from_path_hash(client, f"avatars/{data['id']}/{{}}", data["avatar"])
@@ -123,7 +123,7 @@ class User(BaseUser):
     status: Absent[Status] = field(default=MISSING, metadata=docs("The user's status"), converter=optional(Status))
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
         if "banner" in data:
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
@@ -242,7 +242,7 @@ class Member(DiscordObject, _SendDMMixin):
     )
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if "user" in data:
             user_data = data.pop("user")
             client.cache.place_user_data(user_data)
