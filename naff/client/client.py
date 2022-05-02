@@ -448,7 +448,7 @@ class Client(
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
-        return asyncio.create_task(wrapped, name=f"snake:: {event.resolved_name}")
+        return asyncio.create_task(wrapped, name=f"naff:: {event.resolved_name}")
 
     @staticmethod
     def default_error_handler(source: str, error: BaseException) -> None:
