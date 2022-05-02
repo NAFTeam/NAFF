@@ -22,9 +22,9 @@ def deserialize_app_cmds(data: list[dict]) -> list["InteractionCommand"]:
     """
     out = []
     command_mapping = {
-        CommandTypes.CHAT_INPUT: models.snek.SlashCommand,
-        CommandTypes.USER: models.snek.ContextMenu,
-        CommandTypes.MESSAGE: models.snek.ContextMenu,
+        CommandTypes.CHAT_INPUT: models.naff.SlashCommand,
+        CommandTypes.USER: models.naff.ContextMenu,
+        CommandTypes.MESSAGE: models.naff.ContextMenu,
     }
 
     for cmd_dict in data:
@@ -69,13 +69,13 @@ def deserialize_subcommands(
     """
     out = []
     for opt in options:
-        if opt["type"] == models.snek.OptionTypes.SUB_COMMAND_GROUP:
+        if opt["type"] == models.naff.OptionTypes.SUB_COMMAND_GROUP:
             out += deserialize_subcommands(
                 base_cmd, opt["options"], {"name": opt["name"], "description": opt["description"]}
             )
-        elif opt["type"] == models.snek.OptionTypes.SUB_COMMAND:
+        elif opt["type"] == models.naff.OptionTypes.SUB_COMMAND:
             out.append(
-                models.snek.SlashCommand(
+                models.naff.SlashCommand(
                     name=base_cmd.name,
                     description=base_cmd.description,
                     group_name=parent_group["name"] if parent_group else None,
@@ -102,7 +102,7 @@ def deserialize_options(options: list[dict]) -> list["SlashCommandOption"]:
         list of SlashCommandOption objects
     """
     return [
-        models.snek.SlashCommandOption(**opt)
+        models.naff.SlashCommandOption(**opt)
         for opt in options
-        if opt["type"] not in (models.snek.OptionTypes.SUB_COMMAND_GROUP, models.snek.OptionTypes.SUB_COMMAND)
+        if opt["type"] not in (models.naff.OptionTypes.SUB_COMMAND_GROUP, models.naff.OptionTypes.SUB_COMMAND)
     ]

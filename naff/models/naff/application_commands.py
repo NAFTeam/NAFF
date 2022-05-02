@@ -878,7 +878,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
     """
     Convert the command list into a format that would be accepted by discord.
 
-    `Snake.interactions` should be the variable passed to this
+    `Client.interactions` should be the variable passed to this
 
     """
     cmd_bases = {}  # {cmd_base: [commands]}

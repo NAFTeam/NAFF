@@ -258,7 +258,7 @@ class Guild(BaseGuild):
 
         Args:
             name: name of the guild (2-100 characters)
-            client: The Snake client
+            client: The NAFF client
             icon: An icon for the guild
             verification_level: The guild's verification level
             default_message_notifications: The default message notification level
@@ -1678,7 +1678,7 @@ class Guild(BaseGuild):
         """
         Fetches the voice regions for the guild.
 
-        Unlike the `Snake.fetch_voice_regions` method, this will returns VIP servers when the guild is VIP-enabled.
+        Unlike the `NAFF.fetch_voice_regions` method, this will returns VIP servers when the guild is VIP-enabled.
 
         Returns:
             A list of voice regions.

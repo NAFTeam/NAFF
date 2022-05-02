@@ -77,7 +77,7 @@ class Page:
 @define(kw_only=False)
 class Paginator:
     client: "Client" = field()
-    """The snake client to hook listeners into"""
+    """The NAFF client to hook listeners into"""
 
     page_index: int = field(kw_only=True, default=0)
     """The index of the current page being displayed"""
@@ -168,7 +168,7 @@ class Paginator:
         """Create a paginator system from a list of embeds.
 
         Args:
-            client: A reference to the Snake client
+            client: A reference to the NAFF client
             embeds: The embeds to use for each page
             timeout: A timeout to wait before closing the paginator
 
@@ -185,7 +185,7 @@ class Paginator:
         Create a paginator system from a string.
 
         Args:
-            client: A reference to the Snake client
+            client: A reference to the NAFF client
             content: The content to paginate
             prefix: The prefix for each page to use
             suffix: The suffix for each page to use
@@ -219,7 +219,7 @@ class Paginator:
         Create a paginator from a list of strings. Useful to maintain formatting.
 
         Args:
-            client: A reference to the Snake client
+            client: A reference to the NAFF client
             content: The content to paginate
             prefix: The prefix for each page to use
             suffix: The suffix for each page to use

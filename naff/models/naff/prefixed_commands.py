@@ -13,7 +13,7 @@ from naff.client.utils.input_utils import _quotes
 from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
 from naff.models.naff.protocols import Converter
-from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, SNEK_MODEL_TO_CONVERTER
+from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, NAFF_MODEL_TO_CONVERTER
 from naff.models.naff.command import BaseCommand
 
 if TYPE_CHECKING:
@@ -139,7 +139,7 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
 
     if isinstance(anno, Converter):
         return BaseCommand._get_converter_function(anno, name)
-    elif converter := SNEK_MODEL_TO_CONVERTER.get(anno, None):
+    elif converter := NAFF_MODEL_TO_CONVERTER.get(anno, None):
         return BaseCommand._get_converter_function(converter, name)
     elif typing.get_origin(anno) is Literal:
         literals = typing.get_args(anno)

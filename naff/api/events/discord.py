@@ -254,7 +254,7 @@ class GuildEmojisUpdate(BaseEvent, GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
     before: List["CustomEmoji"] = field(factory=list)
-    """List of emoji before this event. Only includes emojis that were cached. To enable the emoji cache (and this field), start your bot with `Snake(enable_emoji_cache=True)`"""
+    """List of emoji before this event. Only includes emojis that were cached. To enable the emoji cache (and this field), start your bot with `Client(enable_emoji_cache=True)`"""
     after: List["CustomEmoji"] = field(factory=list)
     """List of emoji after this event"""
 

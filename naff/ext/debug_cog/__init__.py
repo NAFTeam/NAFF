@@ -40,7 +40,7 @@ class DebugCog(DebugExec, DebugAppCMD, DebugCogs, Cog):
         e.set_thumbnail(self.bot.user.avatar.url)
         e.add_field("Operating System", platform.platform())
 
-        e.add_field("Version Info", f"Dis-Snek@{__version__} | Py@{__py_version__}")
+        e.add_field("Version Info", f"Naff@{__version__} | Py@{__py_version__}")
 
         e.add_field("Start Time", f"{uptime.format(TimestampStyles.RelativeTime)}")
 

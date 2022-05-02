@@ -35,7 +35,7 @@ class Asset:
         Create an asset from a path and asset's hash.
 
         Args:
-            client: The snake bot instance
+            client: The NAFF bot instance
             path: The CDN Endpoints for the type of asset.
             asset_hash: The hash representation of the target asset.
 

@@ -1,11 +1,11 @@
 """
-Constants used throughout Snek.
+Constants used throughout NAFF.
 
 Attributes:
     __version__ str: The version of the library.
     __repo_url__ str: The URL of the repository.
     __py_version__ str: The python version in use.
-    logger_name str: The logger name used by Snek.
+    logger_name str: The logger name used by NAFF.
     kwarg_spam bool: Should ``unused kwargs`` be logged.
 
     ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.

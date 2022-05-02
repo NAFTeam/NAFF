@@ -675,7 +675,7 @@ class Message(BaseMessage):
 
         Args:
             emoji: Emoji to remove
-            member: Member to remove reaction of. Default's to snake bot user.
+            member: Member to remove reaction of. Default's to NAFF bot user.
 
         """
         emoji_str = models.process_emoji_req_format(emoji)

@@ -34,7 +34,7 @@ class Cog:
         ```
 
     Attributes:
-        bot Snake: A reference to the client
+        bot Client: A reference to the client
         name str: The name of this Cog (`read-only`)
         description str: A description of this Cog
         cog_checks str: A list of checks to be ran on any command in this cog
