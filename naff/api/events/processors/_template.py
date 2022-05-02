@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable, Coroutine
 
 from naff.client.const import logger_name, MISSING, Absent
 
-from naff.models.discord.user import SnakeBotUser
+from naff.models.discord.user import NaffUser
 
 if TYPE_CHECKING:
     from naff.client.smart_cache import GlobalCache
@@ -47,7 +47,7 @@ class EventMixinTemplate:
     dispatch: Callable[["BaseEvent"], None]
     _init_interactions: Callable[[], Coroutine]
     synchronise_interactions: Callable[[], Coroutine]
-    _user: SnakeBotUser
+    _user: NaffUser
     _guild_event: asyncio.Event
 
     def __init__(self) -> None:

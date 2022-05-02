@@ -62,7 +62,7 @@ from naff.models import (
     GuildTemplate,
     Message,
     Scale,
-    SnakeBotUser,
+    NaffUser,
     User,
     Member,
     StickerPack,
@@ -257,7 +257,7 @@ class Client(
         else:
             self._activity: Activity = activity
 
-        self._user: Absent[SnakeBotUser] = MISSING
+        self._user: Absent[NaffUser] = MISSING
         self._app: Absent[Application] = MISSING
 
         # collections
@@ -334,7 +334,7 @@ class Client(
         return self._connection_state.intents
 
     @property
-    def user(self) -> SnakeBotUser:
+    def user(self) -> NaffUser:
         """Returns the bot's user."""
         return self._user
 
@@ -674,7 +674,7 @@ class Client(
 
         log.debug("Attempting to login")
         me = await self.http.login(token.strip())
-        self._user = SnakeBotUser.from_dict(me, self)
+        self._user = NaffUser.from_dict(me, self)
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")

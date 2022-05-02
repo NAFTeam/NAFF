@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from naff.models.discord.channel import DM, TYPE_GUILD_CHANNEL
     from naff.models.discord.voice_state import VoiceState
 
-__all__ = ("BaseUser", "User", "SnakeBotUser", "Member")
+__all__ = ("BaseUser", "User", "NaffUser", "Member")
 
 log = logging.getLogger(logger_name)
 
@@ -145,7 +145,7 @@ class User(BaseUser):
 
 
 @define()
-class SnakeBotUser(User):
+class NaffUser(User):
     verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
     mfa_enabled: bool = field(
         default=False, metadata={"docs": "Whether the user has two factor enabled on their account"}
