@@ -11,7 +11,7 @@ Snek comes builtin with a pagination utility that splits your messages up into p
 To use it, you only need 3 lines.
 
 ```python
-from dis_snek.ext.paginators import Paginator
+from naff.ext.paginators import Paginator
 
 paginator = Paginator.create_from_string(bot, your_content, page_size=1000)
 await paginator.send(ctx)

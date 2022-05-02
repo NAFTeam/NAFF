@@ -6,7 +6,7 @@ logging.basicConfig()
 cls_log = logging.getLogger(dis_snek.const.logger_name)
 cls_log.setLevel(logging.DEBUG)
 
-bot.grow_scale("dis_snek.ext.debug_scale")
+bot.grow_scale("naff.ext.debug_scale")
 
 bot = Snake(..., asyncio_debug=True)
 ```

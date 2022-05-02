@@ -182,10 +182,12 @@ Scales are effectively just another python file that contains a class that inher
 inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
-from dis_snek import Scale
+from naff import Scale
+
 
 class SomeClass(Scale):
     ...
+
 
 def setup(bot):
     # This is called by dis-snek so it knows how to load the Scale
@@ -214,11 +216,13 @@ Any arguments you pass to the `setup` or `teardown` methods, will also be passed
 Here is a basic "Scale switching" example:
 
 ```python
-from dis_snek import Scale
+from naff import Scale
+
 
 class SomeScale(Scale):
     def __init__(self, bot, some_arg: int = 0):
         ...
+
 
 class AnotherScale(Scale):
     def __init__(self, bot, another_arg: float = 0.0):
@@ -230,6 +234,7 @@ def setup(bot, default_scale: bool, **kwargs):  # We don't care about other argu
         SomeScale(bot, **kwargs)
     else:
         AnotherScale(bot, **kwargs)
+
 
 ...
 

@@ -8,30 +8,36 @@ this means the same command will have different names and descriptions depending
 # How its made:
 
 Let's take this nice and simple `hello` command
-```python
-import dis_snek
 
-@dis_snek.slash_command(name="hello")
-async def hello_cmd(ctx: dis_snek.InteractionContext):
+```python
+import naff
+
+
+@naff.slash_command(name="hello")
+async def hello_cmd(ctx: naff.InteractionContext):
     await ctx.send(f"Hello {ctx.author.display_name}")
 ```
 This command was immensely popular, and now we have some 🇫🇷 French users. Wouldn't it be nice if we could speak their language.
-```python
-import dis_snek
-from dis_snek import LocalisedName
 
-@dis_snek.slash_command(name=LocalisedName(english_us="hello", french="salut"))
-async def hello_cmd(ctx: dis_snek.InteractionContext):
+```python
+import naff
+from naff import LocalisedName
+
+
+@naff.slash_command(name=LocalisedName(english_us="hello", french="salut"))
+async def hello_cmd(ctx: naff.InteractionContext):
     await ctx.send(f"Hello {ctx.author.display_name}")
 ```
 All we need to do is set the field to a `Localised` object, and dis-snek and discord wil handle the rest for you.
 For extra flavour lets make this command more dynamic.
-```python
-import dis_snek
-from dis_snek import LocalisedName
 
-@dis_snek.slash_command(name=LocalisedName(english_us="hello", french="salut"))
-async def hello_cmd(ctx: dis_snek.InteractionContext):
+```python
+import naff
+from naff import LocalisedName
+
+
+@naff.slash_command(name=LocalisedName(english_us="hello", french="salut"))
+async def hello_cmd(ctx: naff.InteractionContext):
     await ctx.send(f"{ctx.invoked_name} {ctx.author.display_name}")
 ```
 Simply by changing `"hello"` to `ctx.invoked_name` the command will always use whatever the user typed to greet them.

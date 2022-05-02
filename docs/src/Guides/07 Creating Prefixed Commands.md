@@ -270,7 +270,7 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
 There is no automatically added help command in `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease. Using it looks like so:
 
 ```python
-from dis_snek.ext.prefixed_help import PrefixedHelpCommand
+from naff.ext.prefixed_help import PrefixedHelpCommand
 
 # There are a variety of options - adjust them to your liking!
 help_cmd = PrefixedHelpCommand(bot, ...)

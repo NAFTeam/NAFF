@@ -6,16 +6,15 @@
 
 import logging
 
-import dis_snek.const
-from dis_snek.client import Snake
-from dis_snek.models.context import ComponentContext
-from dis_snek.models.enums import Intents
-from dis_snek.models.events import Component
-from dis_snek.models.listener import listen
-
+import naff.const
+from naff.client import Snake
+from naff.models.context import ComponentContext
+from naff.models.enums import Intents
+from naff.models.events import Component
+from naff.models.listener import listen
 
 logging.basicConfig()
-cls_log = logging.getLogger(dis_snek.const.logger_name)
+cls_log = logging.getLogger(naff.const.logger_name)
 cls_log.setLevel(logging.DEBUG)
 
 bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
@@ -52,7 +51,7 @@ bot.start("Token")
 
 ```python
 
-from dis_snek import prefixed_command, Button, ActionRow, ButtonStyles, Scale
+from naff import prefixed_command, Button, ActionRow, ButtonStyles, Scale
 
 
 class ButtonExampleSkin(Scale):
@@ -93,7 +92,8 @@ def setup(bot):
 
 ```python
 
-from dis_snek import slash_command, slash_option, InteractionContext, context_menu, CommandTypes, Button, ActionRow, ButtonStyles, Scale
+from naff import slash_command, slash_option, InteractionContext, context_menu, CommandTypes, Button, ActionRow,
+    ButtonStyles, Scale
 
 
 class CommandsExampleSkin(Scale):
