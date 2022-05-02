@@ -12,6 +12,6 @@
 - [Localisation](localisation)
 - [Prefixed Commands](prefixed_commands)
 - [Protocols](protocols)
-- [Scales](scale)
+- [Scales](cog)
 - [Tasks](tasks.md)
 - [Waits](wait)

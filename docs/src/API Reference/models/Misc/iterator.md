@@ -1,1 +1,1 @@
-::: dis_snek.models.misc.iterator
+::: naff.models.misc.iterator

@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.thread
+::: naff.models.discord.thread

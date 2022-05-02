@@ -1,1 +1,1 @@
-::: dis_snek.ext.prefixed_help
+::: naff.ext.prefixed_help

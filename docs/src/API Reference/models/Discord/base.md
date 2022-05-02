@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.base
+::: naff.models.discord.base

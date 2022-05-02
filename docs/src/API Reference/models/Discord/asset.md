@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.asset
+::: naff.models.discord.asset
