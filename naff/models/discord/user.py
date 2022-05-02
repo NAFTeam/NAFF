@@ -510,6 +510,16 @@ class Member(DiscordObject, _SendDMMixin):
             reason=reason,
         )
 
+    async def move(self, channel_id: "Snowflake_Type") -> None:
+        """
+        Moves the member to a different voice channel.
+
+        Args:
+            channel_id: The voice channel to move the member to
+
+        """
+        await self._client.http.modify_guild_member(self._guild_id, self.id, channel_id=channel_id)
+
     async def kick(self, reason: Absent[str] = MISSING) -> None:
         """
         Remove a member from the guild.
