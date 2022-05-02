@@ -145,8 +145,8 @@ class PrefixedHelpCommand:
                     if not await _c(ctx):
                         continue
 
-                if cmd.scale and cmd.scale.scale_checks:
-                    for _c in cmd.scale.scale_checks:
+                if cmd.cog and cmd.cog.cog_checks:
+                    for _c in cmd.cog.cog_checks:
                         if not await _c(ctx):
                             continue
 

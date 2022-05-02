@@ -130,7 +130,7 @@ Below is an example of a bot, one with scales, one without.
             await ctx.edit_origin("test")
 
 
-        bot.grow_scale("test_components")
+        bot.mount_cog("test_components")
         bot.start("Token")
 
         ```
@@ -141,10 +141,10 @@ Below is an example of a bot, one with scales, one without.
         from dis_snek.models.command import prefixed_command
         from dis_snek.models.discord_objects.components import Button, ActionRow
         from dis_snek.models.enums import ButtonStyles
-        from dis_snek.models.scale import Scale
+        from dis_snek.models.scale import Cog
 
 
-        class ButtonExampleSkin(Scale):
+        class ButtonExampleSkin(Cog):
             @prefixed_command()
             async def blurple_button(self, ctx):
                 await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
@@ -178,53 +178,54 @@ Below is an example of a bot, one with scales, one without.
             ButtonExampleSkin(bot)
         ```
 
-Scales are effectively just another python file that contains a class that inherits from an object called `Scale`,
+Scales are effectively just another python file that contains a class that inherits from an object called `Cog`,
 inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
-from naff import Scale
+from naff import Cog
 
 
-class SomeClass(Scale):
+class SomeClass(Cog):
     ...
 
 
 def setup(bot):
-    # This is called by dis-naff so it knows how to load the Scale
+    # This is called by dis-naff so it knows how to load the Cog
     SomeClass(bot)
 ```
 As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek,
 so it knows how to load the scale properly.
 
 To load a scale, you simply add the following to your `main` script, just above `bot.start`:
+
 ```python
 ...
 
-bot.grow_scale("Filename_here")
+bot.mount_cog("Filename_here")
 
 bot.start("token")
 ```
 
 Now, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
-To do this, simply run `bot.regrow_scale("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
+To do this, simply run `bot.reload_cog("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
 is doing will be abruptly stopped.
 
 
-You can pass keyword-arguments to the `grow_scale`, `shed_scale` and `regrow_scale` scale management methods.
-Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Scale.shed` method.
+You can pass keyword-arguments to the `mount_cog`, `drop_cog` and `reload_cog` scale management methods.
+Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Cog.shed` method.
 
-Here is a basic "Scale switching" example:
+Here is a basic "Cog switching" example:
 
 ```python
-from naff import Scale
+from naff import Cog
 
 
-class SomeScale(Scale):
+class SomeScale(Cog):
     def __init__(self, bot, some_arg: int = 0):
         ...
 
 
-class AnotherScale(Scale):
+class AnotherScale(Cog):
     def __init__(self, bot, another_arg: float = 0.0):
         ...
 
@@ -238,7 +239,7 @@ def setup(bot, default_scale: bool, **kwargs):  # We don't care about other argu
 
 ...
 
-bot.grow_scale("Filename_here", default_scale=False, another_arg=3.14)
+bot.mount_cog("Filename_here", default_scale=False, another_arg=3.14)
 # OR
-bot.grow_scale("Filename_here", default_scale=True, some_arg=555)
+bot.mount_cog("Filename_here", default_scale=True, some_arg=555)
 ```

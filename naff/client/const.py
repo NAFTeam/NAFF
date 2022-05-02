@@ -76,7 +76,7 @@ __all__ = (
 _ver_info = sys.version_info
 
 try:
-    __version__ = _v("dis-naff")
+    __version__ = _v("naff")
 except Exception:
     __version__ = "0.0.0"
 __repo_url__ = "https://github.com/Discord-Snake-Pit/Dis-Snek"

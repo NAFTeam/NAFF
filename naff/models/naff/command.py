@@ -33,7 +33,7 @@ class BaseCommand(DictSerializationMixin):
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
 
     Attributes:
-        scale: The scale this command belongs to.
+        cog: The cog this command belongs to.
         enabled: Whether this command is enabled
         checks: Any checks that must be run before this command can be run
         callback: The coroutine to be called for this command
@@ -43,7 +43,7 @@ class BaseCommand(DictSerializationMixin):
 
     """
 
-    scale: Any = field(default=None, metadata=docs("The scale this command belongs to") | no_export_meta)
+    cog: Any = field(default=None, metadata=docs("The cog this command belongs to") | no_export_meta)
 
     enabled: bool = field(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
     checks: list = field(
@@ -99,8 +99,8 @@ class BaseCommand(DictSerializationMixin):
                 if self.pre_run_callback is not None:
                     await self.pre_run_callback(context, *args, **kwargs)
 
-                if self.scale is not None and self.scale.scale_prerun:
-                    for prerun in self.scale.scale_prerun:
+                if self.cog is not None and self.cog.cog_prerun:
+                    for prerun in self.cog.cog_prerun:
                         await prerun(context, *args, **kwargs)
 
                 await self.call_callback(self.callback, context)
@@ -108,15 +108,15 @@ class BaseCommand(DictSerializationMixin):
                 if self.post_run_callback is not None:
                     await self.post_run_callback(context, *args, **kwargs)
 
-                if self.scale is not None and self.scale.scale_postrun:
-                    for postrun in self.scale.scale_postrun:
+                if self.cog is not None and self.cog.cog_postrun:
+                    for postrun in self.cog.cog_postrun:
                         await postrun(context, *args, **kwargs)
 
         except Exception as e:
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
-            elif self.scale and self.scale.scale_error:
-                await self.scale.scale_error(context, *args, **kwargs)
+            elif self.cog and self.cog.cog_error:
+                await self.cog.cog_error(context, *args, **kwargs)
             else:
                 raise
         finally:
@@ -189,7 +189,7 @@ class BaseCommand(DictSerializationMixin):
             func, config = self.param_config(param.annotation, "_annotation_dat")
             if config:
                 # if user has used an naff-annotation, run the annotation, and pass the result to the user
-                local = {"context": context, "scale": self.scale, "param": param.name}
+                local = {"context": context, "cog": self.cog, "param": param.name}
                 ano_args = [local[c] for c in config["args"]]
                 if param.kind != param.POSITIONAL_ONLY:
                     kwargs[param.name] = func(*ano_args)
@@ -245,8 +245,8 @@ class BaseCommand(DictSerializationMixin):
                 if not await _c(context):
                     raise CommandCheckFailure(self, _c, context)
 
-            if self.scale and self.scale.scale_checks:
-                for _c in self.scale.scale_checks:
+            if self.cog and self.cog.cog_checks:
+                for _c in self.cog.cog_checks:
                     if not await _c(context):
                         raise CommandCheckFailure(self, _c, context)
 

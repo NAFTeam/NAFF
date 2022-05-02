@@ -385,10 +385,10 @@ There are a few pre-made checks for you to use, and you can simply create your o
     You can reuse checks in extensions by adding them to the extension check list
 
     ```py
-    class MyExtension(Scale):
+    class MyExtension(Cog):
         def __init__(self, bot) -> None:
             super().__init__(bot)
-            self.add_scale_check(is_owner())
+            self.add_cog_check(is_owner())
 
     @slash_command(name="my_command")
     async def my_command_function(ctx: InteractionContext):

@@ -10,6 +10,6 @@ from .cooldowns import *
 from .listener import *
 from .prefixed_commands import *
 from .protocols import *
-from .scale import *
+from .cog import *
 from .wait import *
 from .tasks import *

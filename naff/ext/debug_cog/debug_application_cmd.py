@@ -3,7 +3,7 @@ import pprint
 from collections import Counter
 from typing import Optional
 
-from naff import Scale
+from naff import Cog
 from naff.client.client import Client
 from naff.client.const import GLOBAL_SCOPE
 from naff.client.errors import HTTPException
@@ -27,9 +27,9 @@ app_cmds_def = {
 }
 
 
-class DebugAppCMD(Scale):
+class DebugAppCMD(Cog):
     def __init__(self, bot: Client) -> None:
-        self.add_scale_check(checks.is_owner())
+        self.add_cog_check(checks.is_owner())
 
     @slash_command(
         "debug",

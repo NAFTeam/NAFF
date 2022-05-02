@@ -2,7 +2,7 @@
 
 These files contain useful features that help you develop a bot
 
-- [Debug Scale](debug_scale)
+- [Debug Cog](debug_scale)
     - A scale preloaded with a load of debugging utilities to help you find and fix bugs
 
 - [Paginators](paginators)

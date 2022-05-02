@@ -42,7 +42,7 @@ from naff.client import errors
 from naff.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
 from naff.client.errors import (
     BotException,
-    ScaleLoadException,
+    CogLoadException,
     ExtensionLoadException,
     ExtensionNotFound,
     Forbidden,
@@ -61,7 +61,7 @@ from naff.models import (
     Guild,
     GuildTemplate,
     Message,
-    Scale,
+    Cog,
     NaffUser,
     User,
     Member,
@@ -185,7 +185,7 @@ class Client(
         shard_id: int = 0,
         status: Status = Status.ONLINE,
         sync_interactions: bool = True,
-        sync_scales: bool = True,
+        sync_cogs: bool = True,
         total_shards: int = 1,
         **kwargs,
     ) -> None:
@@ -196,8 +196,8 @@ class Client(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
-        self.sync_scales: bool = sync_scales
-        """Should we sync whenever a scale is (un)loaded"""
+        self.sync_cogs: bool = sync_cogs
+        """Should we sync whenever a cog is (un)loaded"""
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
@@ -270,8 +270,8 @@ class Client(
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.processors: Dict[str, Callable[..., Coroutine]] = {}
         self.__extensions = {}
-        self.scales = {}
-        """A dictionary of mounted Scales"""
+        self.cogs = {}
+        """A dictionary of mounted cogs"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
 
@@ -644,7 +644,7 @@ class Client(
             try:
                 await asyncio.gather(*self.async_startup_tasks)
             except Exception as e:
-                await self.on_error("async-scale-loader", e)
+                await self.on_error("async-cog-loader", e)
 
         # cache slash commands
         if not self._startup:
@@ -1347,8 +1347,8 @@ class Client(
 
                 if ctx.command.auto_defer:
                     auto_defer = ctx.command.auto_defer
-                elif ctx.command.scale and ctx.command.scale.auto_defer:
-                    auto_defer = ctx.command.scale.auto_defer
+                elif ctx.command.cog and ctx.command.cog.auto_defer:
+                    auto_defer = ctx.command.cog.auto_defer
                 else:
                     auto_defer = self.auto_defer
 
@@ -1479,8 +1479,8 @@ class Client(
                         except Exception as e:
                             if new_command.error_callback:
                                 await new_command.error_callback(e, context)
-                            elif new_command.scale and new_command.scale.scale_error:
-                                await new_command.scale.scale_error(context)
+                            elif new_command.cog and new_command.cog.cog_error:
+                                await new_command.cog.cog_error(context)
                             else:
                                 await self.on_command_error(context, e)
                             return
@@ -1510,70 +1510,70 @@ class Client(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scales(self, name: str) -> list[Scale]:
+    def get_cogs(self, name: str) -> list[Cog]:
         """
-        Get all scales with a name or extension name.
+        Get all cogs with a name or extension name.
 
         Args:
-            name: The name of the scale, or the name of it's extension
+            name: The name of the cog, or the name of it's extension
 
         Returns:
-            List of Scales
+            List of Cogs
         """
         out = []
-        if name not in self.scales.keys():
-            for scale in self.scales.values():
-                if scale.extension_name == name:
-                    out.append(scale)
+        if name not in self.cogs.keys():
+            for cog in self.cogs.values():
+                if cog.extension_name == name:
+                    out.append(cog)
             return out
 
-        return [self.scales.get(name, None)]
+        return [self.cogs.get(name, None)]
 
-    def get_scale(self, name: str) -> Scale | None:
+    def get_cog(self, name: str) -> Cog | None:
         """
-        Get a scale with a name or extension name.
+        Get a cog with a name or extension name.
 
         Args:
-            name: The name of the scale, or the name of it's extension
+            name: The name of the cog, or the name of it's extension
 
         Returns:
-            A scale, if found
+            A cog, if found
         """
-        if scales := self.get_scales(name):
-            return scales[0]
+        if cog := self.get_cogs(name):
+            return cog[0]
         return None
 
-    def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
+    def mount_cog(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
-        A helper method to load a scale.
+        A helper method to load a cog.
 
         Args:
-            file_name: The name of the file to load the scale from.
-            package: The package this scale is in.
+            file_name: The name of the file to load the cog from.
+            package: The package this cog is in.
             load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
         self.load_extension(file_name, package, **load_kwargs)
-        if self.sync_scales and self._ready.is_set():
+        if self.sync_cogs and self._ready.is_set():
             try:
                 asyncio.get_running_loop()
             except RuntimeError:
                 return
             asyncio.create_task(self.synchronise_interactions())
 
-    def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
+    def drop_cog(self, cog_name: str, **unload_kwargs) -> None:
         """
-        Helper method to unload a scale.
+        Helper method to unload a cog.
 
         Args:
-            scale_name: The name of the scale to unload.
+            cog_name: The name of the cog to unload.
             unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
-        if scale := self.get_scales(scale_name):
-            self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
+        if cog := self.get_cogs(cog_name):
+            self.unload_extension(inspect.getmodule(cog[0]).__name__, **unload_kwargs)
 
-            if self.sync_scales and self._ready.is_set():
+            if self.sync_cogs and self._ready.is_set():
                 try:
                     asyncio.get_running_loop()
                 except RuntimeError:
@@ -1581,16 +1581,16 @@ class Client(
                 asyncio.create_task(self.synchronise_interactions())
 
         else:
-            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+            raise CogLoadException(f"Unable to shed cog: No cog exists with name: `{cog_name}`")
 
-    def regrow_scale(
-        self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
+    def reload_cog(
+        self, cog_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
     ) -> None:
         """
-        Helper method to reload a scale.
+        Helper method to reload a cog.
 
         Args:
-            scale_name: The name of the scale to reload
+            cog_name: The name of the cog to reload
             load_kwargs: The manually-filled mapping of the load keyword arguments
             unload_kwargs: The manually-filled mapping of the unload keyword arguments
 
@@ -1600,8 +1600,8 @@ class Client(
         if not unload_kwargs:
             unload_kwargs = {}
 
-        self.shed_scale(scale_name, **unload_kwargs)
-        self.grow_scale(scale_name, **load_kwargs)
+        self.drop_cog(cog_name, **unload_kwargs)
+        self.mount_cog(cog_name, **load_kwargs)
 
     def load_extension(self, name: str, package: str = None, **load_kwargs) -> None:
         """
@@ -1658,8 +1658,8 @@ class Client(
         except AttributeError:
             pass
 
-        for scale in self.get_scales(name):
-            scale.shed(**unload_kwargs)
+        for cog in self.get_cogs(name):
+            cog.shed(**unload_kwargs)
 
         del sys.modules[name]
         del self.__extensions[name]
