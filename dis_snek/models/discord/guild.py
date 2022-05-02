@@ -1883,9 +1883,9 @@ class AuditLogChange(ClientObject):
 class AuditLogEntry(DiscordObject):
     target_id: Optional["Snowflake_Type"] = field(converter=optional(to_snowflake))
     """id of the affected entity (webhook, user, role, etc.)"""
-    user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    user_id: "Snowflake_Type" = field(converter=optional(to_snowflake))
     """the user who made the changes"""
-    action_type: "AuditLogEventType" = field(converter=to_snowflake)
+    action_type: "AuditLogEventType" = field(converter=AuditLogEventType)
     """type of action that occurred"""
     changes: Optional[List[AuditLogChange]] = field(default=MISSING)
     """changes made to the target_id"""
