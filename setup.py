@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 with open("pyproject.toml", "rb") as f:
     pyproject = tomli.load(f)
 
-extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6"], "speedup": ["cchardet", "aiodns", "orjson"]}
+extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6"], "speedup": ["cchardet", "aiodns", "orjson", "Brotli"]}
 extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
 extras_require["docs"] = extras_require["all"] + [
     "pytkdocs @ git+https://github.com/LordOfPolls/pytkdocs.git",
