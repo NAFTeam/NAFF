@@ -253,6 +253,8 @@ async def test_members(bot: Client, guild: Guild, channel: GuildText) -> None:
     await member.edit_nickname("Test Nickname")
     assert member.display_name == "Test Nickname"
     await member.edit_nickname(None)
+    with suppress(asyncio.exceptions.TimeoutError):
+        await bot.wait_for("member_update", timeout=2)
     assert member.display_name == (bot.get_user(member.id)).username
 
     assert len(member.roles) == 0
