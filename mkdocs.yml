@@ -1,6 +1,6 @@
-site_name: Dis-Naff
-repo_url: https://github.com/Discord-Snake-Pit/Dis-Naff
-repo_name: Discord-Snake-Pit/Dis-Naff
+site_name: naff
+repo_url: https://github.com/Discord-Snake-Pit/naff
+repo_name: Discord-Snake-Pit/naff
 copyright: Copyright &copy; 2021 - Present LordOfPolls
 docs_dir: docs/src
 edit_uri: edit/master/docs/src
@@ -39,10 +39,10 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/discord
-      link: https://discord.gg/dis-naff
+      link: https://discord.gg/naff
       name: Discord Server
     - icon: fontawesome/brands/github
-      link: https://github.com/Discord-Snake-Pit/Dis-Naff
+      link: https://github.com/Discord-Snake-Pit/naff
       name: Github Repository
     - icon: fontawesome/brands/trello
       link: https://trello.com/b/LVjnmYKt/dev-board

@@ -601,4 +601,4 @@ NAFF_MODEL_TO_CONVERTER: dict[type, type[Converter]] = {
     PartialEmoji: PartialEmojiConverter,
     CustomEmoji: CustomEmojiConverter,
 }
-"""A dictionary mapping of dis-naff objects to their corresponding converters."""
+"""A dictionary mapping of naff objects to their corresponding converters."""

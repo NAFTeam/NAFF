@@ -190,7 +190,7 @@ class SomeClass(Cog):
 
 
 def setup(bot):
-    # This is called by dis-naff so it knows how to load the Cog
+    # This is called by naff so it knows how to load the Cog
     SomeClass(bot)
 ```
 As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek,

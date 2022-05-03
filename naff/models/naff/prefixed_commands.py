@@ -392,7 +392,7 @@ class PrefixedCommand(BaseCommand):
 
     def _parse_parameters(self) -> None:
         """
-        Parses the parameters that this command has into a form dis-naff can use.
+        Parses the parameters that this command has into a form naff can use.
 
         This is purposely seperated like this to allow "lazy parsing" - parsing
         as the command is added to a bot rather than being parsed immediately.
