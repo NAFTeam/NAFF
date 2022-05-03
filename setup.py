@@ -23,7 +23,7 @@ setup(
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     author="LordOfPolls",
-    author_email="snekcord@gmail.com",
+    author_email="lordofpolls.dev@gmail.com",
     url="https://github.com/Discord-Snake-Pit/Dis-Snek",
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
@@ -48,7 +48,6 @@ setup(
     project_urls={
         "Discord": "https://discord.gg/dis-snek",
         "Documentation": "https://dis-snek.readthedocs.io",
-        "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },
     extras_require=extras_require,
 )
