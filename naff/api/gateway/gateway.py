@@ -235,7 +235,7 @@ class GatewayClient(WebsocketClient):
                 else:
                     log.debug(f"No processor for `{event_name}`")
 
-        self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_socket_receive"))
+        self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_gateway_event"))
         self.state.client.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{event.lower()}"))
 
     def close(self) -> None:
