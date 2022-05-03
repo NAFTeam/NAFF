@@ -376,9 +376,7 @@ class Client(
         """A list of all application commands registered within the bot."""
         commands = []
         for scope in self.interactions.keys():
-            for cmd in self.interactions[scope].values():
-                if cmd not in commands:
-                    commands.append(cmd)
+            commands += [cmd for cmd in self.interactions[scope].values() if cmd not in commands]
 
         return commands
 
@@ -1520,12 +1518,8 @@ class Client(
         Returns:
             List of Cogs
         """
-        out = []
         if name not in self.cogs.keys():
-            for cog in self.cogs.values():
-                if cog.extension_name == name:
-                    out.append(cog)
-            return out
+            return [cog for cog in self.cogs.values() if cog.extension_name == name]
 
         return [self.cogs.get(name, None)]
 
@@ -1951,10 +1945,8 @@ class Client(
         """
         try:
             packs_data = await self.http.list_nitro_sticker_packs()
-            packs = []
-            for pack_data in packs_data:
-                packs.append(StickerPack.from_dict(pack_data, self))
-            return packs
+            return [StickerPack.from_dict(data, self) for data in packs_data]
+
         except NotFound:
             return None
 
