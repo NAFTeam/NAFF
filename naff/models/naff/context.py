@@ -404,24 +404,24 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
             case CommandTypes.USER:
                 # This can only be in the member or user cache
-                caches = [
+                caches = (
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
                     (self._client.cache.get_user, self.target_id),
-                ]
+                )
             case CommandTypes.MESSAGE:
                 # This can only be in the message cache
-                caches = [(self._client.cache.get_message, (self.channel.id, self.target_id))]
+                caches = ((self._client.cache.get_message, (self.channel.id, self.target_id)),)
             case _:
                 # Most likely a new context type, check all rational caches for the target_id
                 log.warning(f"New Context Type Detected. Please Report: {self._context_type}")
-                caches = [
+                caches = (
                     (self._client.cache.get_message, (self.channel.id, self.target_id)),
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
                     (self._client.cache.get_user, self.target_id),
                     (self._client.cache.get_channel, self.target_id),
                     (self._client.cache.get_role, self.target_id),
                     (self._client.cache.get_emoji, self.target_id),  # unlikely, so check last
-                ]
+                )
 
         for cache, keys in caches:
             thing = cache(*keys)
