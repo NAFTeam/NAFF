@@ -176,7 +176,7 @@ PREMIUM_GUILD_LIMITS = defaultdict(
 )
 
 
-GUILD_WELCOME_MESSAGES = [
+GUILD_WELCOME_MESSAGES = (
     "{0} joined the party.",
     "{0} is here.",
     "Welcome, {0}. We hope you brought pizza.",
@@ -190,7 +190,7 @@ GUILD_WELCOME_MESSAGES = [
     "Glad you're here, {0}.",
     "Good to see you, {0}.",
     "Yay you made it, {0}!",
-]
+)
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
