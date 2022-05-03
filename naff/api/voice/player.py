@@ -2,13 +2,13 @@ import asyncio
 import logging
 import shutil
 import threading
-import time
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, run_coroutine_threadsafe
+from time import sleep, perf_counter
 from typing import Optional, TYPE_CHECKING
 
-from naff.client.const import logger_name
 from naff.api.voice.audio import BaseAudio, AudioVolume
 from naff.api.voice.opus import Encoder
+from naff.client.const import logger_name
 
 if TYPE_CHECKING:
     from naff.models.naff.active_voice_state import ActiveVoiceState
@@ -111,7 +111,7 @@ class Player(threading.Thread):
         try:
             while not self._stop_event.is_set():
                 if not self.state.ws.ready.is_set() or not self._resume.is_set():
-                    asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
+                    run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
                     log.debug("Voice playback has been suspended!")
 
                     wait_for = []
@@ -127,7 +127,7 @@ class Player(threading.Thread):
                     if self._stop_event.is_set():
                         continue
 
-                    asyncio.run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
+                    run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
                     log.debug("Voice playback has been resumed!")
                     start = None
                     loops = 0
@@ -142,11 +142,11 @@ class Player(threading.Thread):
                         break
 
                 if not start:
-                    start = time.perf_counter()
+                    start = perf_counter()
 
                 loops += 1
                 self._sent_payloads += 1  # used for duration calc
-                time.sleep(max(0.0, start + (self._encoder.delay * loops) - time.perf_counter()))
+                sleep(max(0.0, start + (self._encoder.delay * loops) - perf_counter()))
         finally:
             asyncio.run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
             self.current_audio.cleanup()
