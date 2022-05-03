@@ -27,3 +27,12 @@ profile = "black"
 [tool.mypy]
 ignore_missing_imports = true
 plugins = "naff.ext.mypy"
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tools.coverage.run]
+source = ["naff",]
