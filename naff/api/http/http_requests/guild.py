@@ -108,7 +108,7 @@ class GuildRequests:
             kwargs: The params to change
 
         """
-        expected = [
+        expected = (
             "name",
             "region",
             "verification_level",
@@ -128,7 +128,7 @@ class GuildRequests:
             "preferred_locale",
             "features",
             "description",
-        ]
+        )
         kwargs_copy = kwargs.copy()
         for key, value in kwargs.items():
             if key not in expected or value is MISSING:
