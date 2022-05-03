@@ -24,6 +24,8 @@ jobs:
           pip install -e ${{ matrix.extras }}
           pip install pytest pytest-recording pytest-asyncio pytest-cov
       - name: Run Tests
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           pytest
           coverage xml -i

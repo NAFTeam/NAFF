@@ -8,7 +8,7 @@ from naff.client.const import logger_name
 from ._template import EventMixinTemplate, Processor
 from naff.models import to_snowflake, BaseMessage
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("MessageEvents",)

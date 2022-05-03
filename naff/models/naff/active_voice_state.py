@@ -13,7 +13,7 @@ from naff.client.utils.attr_utils import define, field
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.voice_state import VoiceState
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.voice.audio import BaseAudio
 
 

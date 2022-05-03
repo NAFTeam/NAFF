@@ -13,7 +13,7 @@ from naff.models.discord.color import Color
 from naff.models.discord.enums import Permissions
 from .base import DiscordObject
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client import Client
     from naff.models.discord.guild import Guild
     from naff.models.discord.user import Member

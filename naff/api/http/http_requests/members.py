@@ -9,7 +9,7 @@ from naff.models.discord.timestamp import Timestamp
 __all__ = ("MemberRequests",)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.snowflake import Snowflake_Type
 
 

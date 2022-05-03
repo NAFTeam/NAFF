@@ -7,7 +7,7 @@ import naff.api.events as events
 from naff.client.const import logger_name, MISSING
 from ._template import EventMixinTemplate, Processor
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("RoleEvents",)

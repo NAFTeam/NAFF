@@ -10,7 +10,7 @@ from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client import Client
     from naff.models.discord.channel import GuildStageVoice, GuildVoice
     from naff.models.discord.guild import Guild

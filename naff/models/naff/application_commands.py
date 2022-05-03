@@ -32,7 +32,7 @@ from naff.models.naff.auto_defer import AutoDefer
 from naff.models.naff.command import BaseCommand
 from naff.models.naff.localisation import LocalisedField
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.naff.context import Context
 

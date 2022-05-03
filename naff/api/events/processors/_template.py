@@ -8,7 +8,7 @@ from naff.client.const import logger_name, MISSING, Absent
 
 from naff.models.discord.user import NaffUser
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client.smart_cache import GlobalCache
     from naff.api.events.internal import BaseEvent
 

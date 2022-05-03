@@ -8,7 +8,7 @@ from naff.client.utils.serializer import dict_filter_none
 __all__ = ("WebhookRequests",)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.snowflake import Snowflake_Type
 
 

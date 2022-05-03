@@ -30,7 +30,7 @@ from .enums import (
     InviteTargetTypes,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from aiohttp import FormData
     from naff import Client
     from naff.models.naff.active_voice_state import ActiveVoiceState

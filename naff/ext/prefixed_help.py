@@ -10,7 +10,7 @@ from naff.models.discord.color import BrandColors, Color
 from naff.models.naff.context import PrefixedContext
 from naff.models.naff.prefixed_commands import prefixed_command, PrefixedCommand
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client import Client
 
 __all__ = ("PrefixedHelpCommand",)

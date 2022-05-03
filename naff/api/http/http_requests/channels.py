@@ -10,7 +10,7 @@ from naff.client.utils.serializer import dict_filter_none
 __all__ = ("ChannelRequests",)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.channel import PermissionOverwrite
     from naff.models.discord.snowflake import Snowflake_Type
 

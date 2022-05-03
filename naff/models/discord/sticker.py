@@ -8,7 +8,7 @@ from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.guild import Guild
     from naff.models.discord.user import User
     from naff.models.discord.snowflake import Snowflake_Type

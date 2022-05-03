@@ -3,7 +3,7 @@ import time
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Dict
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.naff.context import Context
 
 __all__ = ("Buckets", "Cooldown", "CooldownSystem", "MaxConcurrency")

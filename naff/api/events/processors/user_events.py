@@ -7,7 +7,7 @@ from ._template import EventMixinTemplate, Processor
 from naff.models import User, Member, BaseChannel, Timestamp, to_snowflake, Activity
 from naff.models.discord.enums import Status
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("UserEvents",)

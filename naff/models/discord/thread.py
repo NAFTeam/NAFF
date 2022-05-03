@@ -8,7 +8,7 @@ from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject, ClientObject
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from aiohttp import FormData
 
     from naff.client import Client

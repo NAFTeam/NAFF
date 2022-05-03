@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from naff.client.errors import AlreadyDeferred, NotFound, BadRequest
 from naff.client.utils.attr_utils import define, field
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.naff.context import InteractionContext
 
 __all__ = ("AutoDefer",)

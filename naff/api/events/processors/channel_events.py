@@ -7,7 +7,7 @@ from naff.models.discord.invite import Invite
 from naff.client.const import MISSING, logger_name
 from ._template import EventMixinTemplate, Processor
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("ChannelEvents",)

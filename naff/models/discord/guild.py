@@ -34,7 +34,7 @@ from .enums import (
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client.client import Client
     from naff import InteractionCommand
 

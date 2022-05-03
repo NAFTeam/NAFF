@@ -10,7 +10,7 @@ from naff.models.discord.enums import ChannelTypes
 __all__ = ("ThreadRequests",)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.snowflake import Snowflake_Type
 
 

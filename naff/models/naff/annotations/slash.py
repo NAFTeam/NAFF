@@ -17,7 +17,7 @@ __all__ = (
 )
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.naff import SlashCommandChoice
     from naff.models.discord import User, Member, Role, BaseChannel, ChannelTypes, Attachment
 

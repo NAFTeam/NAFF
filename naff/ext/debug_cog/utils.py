@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from naff.client.utils.cache import TTLCache
 from naff.models import Embed, MaterialColors
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client import Client
 
 __all__ = ("debug_embed", "get_cache_state", "strf_delta")

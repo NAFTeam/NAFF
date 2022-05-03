@@ -12,7 +12,7 @@ from naff.models.discord.stage_instance import StageInstance
 from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.client import Client
     from naff.models import TYPE_GUILD_CHANNEL
     from naff.models.discord.user import User

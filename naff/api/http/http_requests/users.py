@@ -7,7 +7,7 @@ from ..route import Route
 __all__ = ("UserRequests",)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.discord.snowflake import Snowflake_Type
 
 

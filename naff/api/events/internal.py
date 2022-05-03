@@ -43,7 +43,7 @@ __all__ = (
 )
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff import Client
     from naff.models.naff.context import ComponentContext
     from naff.models.discord.snowflake import Snowflake_Type

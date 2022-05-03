@@ -6,7 +6,7 @@ from naff.models.discord.enums import StagePrivacyLevel
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models import Guild, GuildStageVoice, Snowflake_Type
 
 __all__ = ("StageInstance",)

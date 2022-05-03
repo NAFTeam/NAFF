@@ -13,7 +13,7 @@ from .gateway import GatewayClient
 from naff.api import events
 import naff
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff import Client, Snowflake_Type
 
 __all__ = ("ConnectionState",)

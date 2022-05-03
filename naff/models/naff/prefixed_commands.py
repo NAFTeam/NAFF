@@ -16,7 +16,7 @@ from naff.models.naff.protocols import Converter
 from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, NAFF_MODEL_TO_CONVERTER
 from naff.models.naff.command import BaseCommand
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.naff.context import PrefixedContext
 
 __all__ = (

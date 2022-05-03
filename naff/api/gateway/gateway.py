@@ -17,7 +17,7 @@ from naff.models.discord.snowflake import to_snowflake
 from naff.models.naff.cooldowns import CooldownSystem
 from .websocket import WebsocketClient
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .state import ConnectionState
     from naff.models.discord.snowflake import Snowflake_Type
 

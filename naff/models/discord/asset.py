@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.serializer import no_export_meta
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from os import PathLike
 
     from naff.client import Client

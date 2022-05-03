@@ -3,7 +3,7 @@ from typing import Protocol, Any, TYPE_CHECKING
 
 from naff.client.const import T_co
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models.naff.context import Context
 
 __all__ = ("Converter",)

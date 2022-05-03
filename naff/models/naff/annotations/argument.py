@@ -7,7 +7,7 @@ from naff.models.naff.context import Context, PrefixedContext
 __all__ = ("CMD_ARGS", "CMD_AUTHOR", "CMD_BODY", "CMD_CHANNEL")
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.models import Member, User, TYPE_MESSAGEABLE_CHANNEL
 
 

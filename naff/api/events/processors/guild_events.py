@@ -18,7 +18,7 @@ from naff.api.events.discord import (
     WebhooksUpdate,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("GuildEvents",)
