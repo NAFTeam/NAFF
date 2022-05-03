@@ -279,8 +279,7 @@ class ActionRow(BaseComponent):
             components: The components to add
 
         """
-        for c in components:
-            self.components.append(self._component_checks(c))
+        self.components += [self._component_checks(c) for c in components]
 
 
 def process_components(

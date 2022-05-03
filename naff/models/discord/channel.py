@@ -633,10 +633,9 @@ class ThreadableMixin:
         threads_data["threads"] = cleaned_threads_data_threads
 
         # delete the member data which is not needed
-        cleaned_member_data_threads = []
-        for thread_member in threads_data["members"]:
-            if thread_member["id"] not in removed_thread_ids:
-                cleaned_member_data_threads.append(thread_member)
+        cleaned_member_data_threads = [
+            member for member in threads_data["members"] if member[id] not in removed_thread_ids
+        ]
         threads_data["members"] = cleaned_member_data_threads
 
         return models.ThreadList.from_dict(threads_data, self._client)
