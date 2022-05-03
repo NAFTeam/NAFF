@@ -25,7 +25,7 @@ from naff.client.utils.attr_utils import define, field
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff import Client
     from naff.models.discord.emoji import PartialEmoji
 

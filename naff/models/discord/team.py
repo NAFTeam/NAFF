@@ -6,7 +6,7 @@ from naff.models.discord.enums import TeamMembershipState
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.user import User
     from naff.models.discord.snowflake import Snowflake_Type, SnowflakeObject
     from naff.client import Client

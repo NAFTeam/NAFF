@@ -17,7 +17,7 @@ from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
     from naff.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from naff.models.discord.components import BaseComponent

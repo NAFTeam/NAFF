@@ -9,7 +9,7 @@ from naff.models.discord.snowflake import to_snowflake
 from naff.models.misc.iterator import AsyncIterator
 from .base import ClientObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models import Message, TYPE_ALL_CHANNEL
     from naff.models.discord.user import User

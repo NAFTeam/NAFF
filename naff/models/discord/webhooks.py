@@ -11,7 +11,7 @@ from naff.models.discord.message import process_message_payload
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from .base import DiscordObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.file import UPLOADABLE_TYPE
     from naff.client import Client
     from naff.models.discord.enums import MessageFlags

@@ -8,7 +8,7 @@ from ..route import Route
 __all__ = ("EmojiRequests",)
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 

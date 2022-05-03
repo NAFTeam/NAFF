@@ -6,7 +6,7 @@ from naff.client.utils.attr_utils import define, field
 from naff.client.utils.serializer import no_export_meta
 from naff.models.discord.snowflake import SnowflakeObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
 
 __all__ = ("ClientObject", "DiscordObject")

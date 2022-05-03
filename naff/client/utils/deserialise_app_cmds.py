@@ -4,7 +4,7 @@ import naff.client.const as const
 import naff.models as models
 from naff.models.discord.enums import CommandTypes
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff import InteractionCommand, SlashCommand, SlashCommandOption
 
 __all__ = ("deserialize_app_cmds",)

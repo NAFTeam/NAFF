@@ -10,7 +10,7 @@ from naff.api.voice.audio import BaseAudio, AudioVolume
 from naff.api.voice.opus import Encoder
 from naff.client.const import logger_name
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.naff.active_voice_state import ActiveVoiceState
 __all__ = ("Player",)
 

@@ -14,7 +14,7 @@ from naff.models.naff.cooldowns import CooldownSystem
 
 from naff.client.utils.input_utils import OverriddenJson
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.api.gateway.state import ConnectionState
 
 __all__ = ("WebsocketClient", "WebsocketRateLimit")

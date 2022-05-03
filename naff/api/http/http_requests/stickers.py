@@ -8,7 +8,7 @@ from ..route import Route
 __all__ = ("StickerRequests",)
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from aiohttp import FormData
     from naff.models.discord.snowflake import Snowflake_Type
 

@@ -10,7 +10,7 @@ from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
     from naff.models import Guild, TYPE_VOICE_CHANNEL
     from naff.models.discord.user import Member

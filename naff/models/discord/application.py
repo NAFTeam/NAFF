@@ -9,7 +9,7 @@ from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.team import Team
 from .base import DiscordObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
     from naff.models import User
 

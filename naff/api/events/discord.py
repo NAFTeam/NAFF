@@ -79,7 +79,7 @@ __all__ = (
 )
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.guild import Guild, GuildIntegration
     from naff.models.discord.channel import BaseChannel, TYPE_THREAD_CHANNEL
     from naff.models.discord.message import Message

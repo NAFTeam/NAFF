@@ -10,7 +10,7 @@ from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 from naff.models.discord.enums import ButtonStyles, ComponentTypes
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.discord.emoji import PartialEmoji
 
 __all__ = (

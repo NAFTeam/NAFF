@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 import naff.client.errors as errors
 import naff.models as models
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from aiohttp.formdata import FormData
 
     from naff.client import Client

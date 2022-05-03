@@ -99,7 +99,7 @@ from naff.models.naff.auto_defer import AutoDefer
 from naff.models.naff.listener import Listener
 from naff.models.naff.tasks import Task
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)

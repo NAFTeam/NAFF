@@ -8,7 +8,7 @@ from naff.client.const import logger_name, MISSING
 from naff.client.utils.misc_utils import wrap_partial
 from naff.models.naff.tasks import Task
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
     from naff.models.naff import AutoDefer, BaseCommand, Listener
     from naff.models.naff import Context

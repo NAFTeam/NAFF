@@ -21,7 +21,7 @@ from naff.models.naff.active_voice_state import ActiveVoiceState
 __all__ = ("GlobalCache", "create_cache")
 
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.client import Client
     from naff.models.discord.channel import DM, TYPE_ALL_CHANNEL
     from naff.models.discord.snowflake import Snowflake_Type

@@ -16,7 +16,7 @@ from naff.client.utils.serializer import no_export_meta
 from naff.models.naff.cooldowns import Cooldown, Buckets, MaxConcurrency
 from naff.models.naff.protocols import Converter
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.naff.context import Context
 
 __all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")

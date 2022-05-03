@@ -20,7 +20,7 @@ from naff.models.discord.snowflake import Snowflake_Type
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from aiohttp import FormData
     from naff.models.discord.guild import Guild
     from naff.client import Client

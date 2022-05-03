@@ -5,7 +5,7 @@ import aiohttp
 from . import const
 from naff.client.utils.misc_utils import escape_mentions
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from naff.models.naff.command import BaseCommand
     from naff.models.naff.context import Context
     from naff.models.naff.cooldowns import CooldownSystem, MaxConcurrency
