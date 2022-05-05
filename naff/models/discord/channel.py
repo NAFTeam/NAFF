@@ -1042,6 +1042,7 @@ class GuildChannel(BaseChannel):
             await self.edit_permission(exists, reason)
         else:
             permission_overwrites = self.permission_overwrites
+            permission_overwrites.append(overwrite)
             await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
