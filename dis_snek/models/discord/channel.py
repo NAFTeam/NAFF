@@ -1767,6 +1767,7 @@ class GuildPublicThread(ThreadChannel):
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        applied_tags: Absent[List[Union[Snowflake_Type, ThreadTag]]] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
@@ -1778,6 +1779,7 @@ class GuildPublicThread(ThreadChannel):
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
+            applied_tags: list of tags to apply to a forum post (!!! This is for forum threads only)
             auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
@@ -1785,12 +1787,15 @@ class GuildPublicThread(ThreadChannel):
 
         Returns:
             The edited thread channel object.
-
         """
+        if applied_tags != MISSING:
+            applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
+
         return await super().edit(
             name=name,
             archived=archived,
             auto_archive_duration=auto_archive_duration,
+            applied_tags=applied_tags,
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             reason=reason,
@@ -2043,6 +2048,7 @@ class GuildForum(GuildChannel):
         self,
         name: str,
         content: str,
+        applied_tags: Optional[List[Union["Snowflake_Type", "ThreadTag"]]] = MISSING,
         *,
         auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
         rate_limit_per_user: Absent[int] = MISSING,
@@ -2065,6 +2071,7 @@ class GuildForum(GuildChannel):
         Args:
             name: The name of the post
             content: The text content of this post
+            applied_tags: A list of tag ids or tag objects to apply to this post
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             rate_limit_per_user: The time users must wait between sending messages
             embeds: Embedded rich content (up to 6000 characters).
@@ -2079,14 +2086,18 @@ class GuildForum(GuildChannel):
             reason: The reason for creating this post
 
         Returns:
-
+            A GuildPublicThread object representing the created post.
         """
+        if applied_tags != MISSING:
+            applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
+
         if file or files:
             extra = dict_filter_missing(
                 {
                     "name": name,
                     "auto_archive_duration": auto_archive_duration,
                     "rate_limit_per_user": rate_limit_per_user,
+                    "applied_tags": applied_tags,
                 }
             )
         else:
@@ -2105,7 +2116,7 @@ class GuildForum(GuildChannel):
         )
 
         data = await self._client.http.create_forum_thread(
-            self.id, name, auto_archive_duration, message_payload, rate_limit_per_user, reason=reason
+            self.id, name, auto_archive_duration, message_payload, applied_tags, rate_limit_per_user, reason=reason
         )
         return self._client.cache.place_channel_data(data)
 

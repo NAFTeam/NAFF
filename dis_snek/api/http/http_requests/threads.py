@@ -197,6 +197,7 @@ class ThreadRequests:
         name: str,
         auto_archive_duration: int,
         message: dict | FormData,
+        applied_tags: List[str] = None,
         rate_limit_per_user: Absent[int] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> dict:
@@ -219,6 +220,7 @@ class ThreadRequests:
                 "name": name,
                 "auto_archive_duration": auto_archive_duration,
                 "rate_limit_per_user": rate_limit_per_user,
+                "applied_tags": applied_tags,
             }
             payload.update(message)
         else:
