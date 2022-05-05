@@ -99,7 +99,7 @@ class ThreadList(ClientObject):
 
 
 @define()
-class ThreadTag(ClientObject):
+class ThreadTag(DiscordObject):
     name: str = field()
     emoji_id: "Snowflake_Type" = field(default=None)
     emoji_name: str | None = field(default=None)

@@ -33,6 +33,7 @@ __all__ = [
     "NSFWLevels",
     "PremiumTiers",
     "SystemChannelFlags",
+    "ChannelFlags",
     "VideoQualityModes",
     "AutoArchiveDuration",
     "ActivityType",
@@ -640,6 +641,14 @@ class SystemChannelFlags(DiscordIntFlag):
     # Special members
     NONE = 0
     ALL = AntiFlag()
+
+
+class ChannelFlags(DiscordIntFlag):
+    PINNED = 1 << 1
+    """ Thread is pinned to the top of its parent forum channel """
+
+    # Special members
+    NONE = 0
 
 
 class VideoQualityModes(IntEnum):
