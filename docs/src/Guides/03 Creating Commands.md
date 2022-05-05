@@ -37,7 +37,7 @@ async def my_command_function(ctx: InteractionContext):
     await ctx.send("Hello World")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_command).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.slash_command).
 
 ## Subcommands
 
@@ -85,7 +85,7 @@ This will show up in discord as `/base group command`. There are two ways to add
 
 ## But I Need More Options
 
-Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.OptionTypes):
+Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.OptionTypes):
 
 | Option Type               | Return Type                                | Description                                                                                 |
 |---------------------------|--------------------------------------------|---------------------------------------------------------------------------------------------|
@@ -129,7 +129,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int = 5):
     await ctx.send(f"You input {integer_option}")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_option).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.slash_option).
 
 ## Restricting Options
 
@@ -190,7 +190,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
     await ctx.send(f"You input {integer_option} which is either 1 or 2")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.SlashCommandChoice).
+For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.SlashCommandChoice).
 
 ## I Need More Than 25 Choices
 
@@ -301,8 +301,109 @@ You are in luck. There are currently four different ways to create interactions,
 
 ## I Don't Want My Friends Using My Commands
 
-!!! danger "Interaction Permissions"
-    Since a big overhaul to discord's permission system is coming, this page is currently missing. It will be populated when discord updates their permission system. To learn how to use permissions in the meantime, please visit their documentation [here](/API Reference/models/Snek/application_commands/#dis_snek.models.snek.application_commands.slash_permission).
+How rude.
+
+Anyway, this is somewhat possible with command permissions.
+While you cannot explicitly block / allow certain roles / members / channels to use your commands on the bot side, you can define default permissions which members need to have to use the command.
+
+However, these default permissions can be overwritten by server admins, so this system is not safe for stuff like owner only eval commands.
+This system is designed to limit access to admin commands after a bot is added to a server, before admins have a chance to customise the permissions they want.
+
+If you do not want admins to be able to overwrite your permissions, or the permissions are not flexible enough for you, you should use [checks][check-this-out].
+
+In this example, we will limit access to the command to members with the `MANAGE_EVENTS` and `MANAGE_THREADS` permissions.
+There are two ways to define permissions.
+
+=== ":one: Decorators"
+    ```py
+    @slash_command(name="my_command")
+    @slash_default_member_permission(Permissions.MANAGE_EVENTS)
+    @slash_default_member_permission(Permissions.MANAGE_THREADS)
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== ":two: Function Definition"
+    ```py
+    @slash_command(
+        name="my_command",
+        default_member_permissions=Permissions.MANAGE_EVENTS | Permissions.MANAGE_THREADS,
+    )
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+Multiple permissions are defined with the bitwise OR operator `|`.
+
+### Blocking Commands in DMs
+
+You can also block commands in DMs. To do that, just set `dm_permission` to false.
+
+```py
+@slash_command(
+    name="my_guild_only_command",
+    dm_permission=False,
+)
+async def my_command_function(ctx: InteractionContext):
+    ...
+```
+
+### Context Menus
+
+Both default permissions and DM blocking can be used the same way for context menus, since they are normal slash commands under the hood.
+
+### Check This Out
+
+Checks allow you to define who can use your commands however you want.
+
+There are a few pre-made checks for you to use, and you can simply create your own custom checks.
+
+=== "Build-In Check"
+    Check that the author is the owner of the bot:  
+
+    ```py
+    @is_owner()
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== "Custom Check"
+    Check that the author's name starts with `a`:  
+
+    ```py
+    async def my_check(ctx: Context):
+        return ctx.author.name.startswith("a")
+
+    @check(check=my_check)
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+    ```
+
+=== "Reusing Checks"
+    You can reuse checks in extensions by adding them to the extension check list
+
+    ```py
+    class MyExtension(Cog):
+        def __init__(self, bot) -> None:
+            super().__init__(bot)
+            self.add_cog_check(is_owner())
+
+    @slash_command(name="my_command")
+    async def my_command_function(ctx: InteractionContext):
+        ...
+
+    @slash_command(name="my_command2")
+    async def my_command_function2(ctx: InteractionContext):
+        ...
+
+    def setup(bot) -> None:
+        MyExtension(bot)
+    ```
+
+    The check will be checked for every command in the extension.
+
 
 
 ## I Don't Want To Define The Same Option Every Time
@@ -354,29 +455,5 @@ There also is `on_command` which you can overwrite too. That fires on every inte
 ## I Need A Custom Parameter Type
 
 If your bot is complex enough, you might find yourself wanting to use custom models in your commands.
-To do this, you'll want to use a string option, and define a converter:
 
-```python
-class DatabaseEntry():
-    name: str
-    description: str
-    score: int
-
-    @classmethod
-    async def convert(cls, ctx: Context, value: str) -> DatabaseEntry:
-        """This is where the magic happens"""
-        return cls(hypothetical_database.lookup(ctx.guild.id, value))
-
-@slash_command(name="lookup", description="Gives info about a thing from the db")
-@slash_option(
-    name="thing",
-    description="The user enters a string",
-    required=True,
-    opt_type=OptionTypes.STRING
-)
-async def my_command_function(ctx: InteractionContext, thing: DatabaseEntry):
-    await ctx.send(f"***{thing.name}***\n{thing.description}\nScore: {thing.score}/10")
-```
-
-As you can see, a converter can transparently convert what Discord sends you (a string, a user, etc) into something more complex (A pokemon card, a scoresheet, etc).
-This can be useful if you frequently find yourself starting commands with `thing = lookup(thing_name)`
+To do this, you'll want to use a string option, and define a converter. Information on how to use converters can be found [on the converter page](/Guides/08 Converters).

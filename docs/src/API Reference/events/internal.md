@@ -1,1 +1,1 @@
-::: dis_snek.api.events.internal
+::: naff.api.events.internal

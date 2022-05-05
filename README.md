@@ -22,19 +22,23 @@ While this library shares features and some stylistic choices with `discord.py`,
 
 ## How do I use this?
 Here is a basic example:
-```python
-from dis_snek import Snake, Button, ButtonStyles, CommandTypes, context_menu, message_command, listen
 
-bot = Snake(sync_interactions=True)
+```python
+from naff import Client, Button, ButtonStyles, CommandTypes, context_menu, prefixed_command, listen
+
+bot = Client(sync_interactions=True)
+
 
 @listen()
 async def on_startup():
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
 
-@message_command()
+
+@prefixed_command()
 async def test_button(ctx):
     await ctx.send("Blurple button example!", components=Button(ButtonStyles.BLURPLE, "Click me"))
+
 
 @context_menu(name="User menu", context_type=CommandTypes.USER, scopes=[931832853770149918])
 async def user_context(ctx):

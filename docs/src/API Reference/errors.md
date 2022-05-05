@@ -1,1 +1,1 @@
-::: dis_snek.client.errors
+::: naff.client.errors

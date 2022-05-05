@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.file
+::: naff.models.discord.file
