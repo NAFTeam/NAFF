@@ -1816,7 +1816,7 @@ class GuildPublicThread(ThreadChannel):
         return [tag for tag in self.parent_channel.available_tags if str(tag.id) in self._applied_tags]
 
     @property
-    def initial_post(self) -> "Message":
+    def initial_post(self) -> Optional["Message"]:
         """
         The initial message posted by the OP.
 
