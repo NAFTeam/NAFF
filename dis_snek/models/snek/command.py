@@ -94,6 +94,10 @@ class BaseCommand(DictSerializationMixin):
             kwargs: Any
 
         """
+        # signals if a semaphore has been acquired, for exception handling
+        # if present assume one will be acquired
+        max_conc_acquired = self.max_concurrency is not MISSING
+        
         try:
             if await self._can_run(context):
                 if self.pre_run_callback is not None:
@@ -113,6 +117,9 @@ class BaseCommand(DictSerializationMixin):
                         await postrun(context, *args, **kwargs)
 
         except Exception as e:
+            # if a MaxConcurrencyReached-exception is raised a connection was never acquired
+            max_conc_acquired = not isinstance(e, MaxConcurrencyReached)
+            
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
             elif self.scale and self.scale.scale_error:
@@ -120,7 +127,7 @@ class BaseCommand(DictSerializationMixin):
             else:
                 raise
         finally:
-            if self.max_concurrency is not MISSING:
+            if self.max_concurrency is not MISSING and max_conc_acquired:
                 await self.max_concurrency.release(context)
 
     @staticmethod
