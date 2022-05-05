@@ -23,9 +23,10 @@ class DictSerializationMixin:
 
     @classmethod
     def _get_init_keys(cls) -> frozenset:
-        if (init_keys := getattr(cls, "_init_keys", None)) is None:
+        name = f"_init_keys_{cls.__name__}"
+        if (init_keys := getattr(cls, name, None)) is None:
             init_keys = frozenset(field.name.removeprefix("_") for field in attrs.fields(cls) if field.init)
-            setattr(cls, "_init_keys", init_keys)
+            setattr(cls, name, init_keys)
         return init_keys
 
     @classmethod
