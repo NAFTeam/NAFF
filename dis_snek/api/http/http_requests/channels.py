@@ -435,3 +435,62 @@ class ChannelRequests:
 
         """
         return await self.request(Route("DELETE", f"/stage-instances/{channel_id}"), reason=reason)
+
+    async def create_tag(
+        self,
+        channel_id: "Snowflake_Type",
+        name: str,
+        emoji_id: Optional["Snowflake_Type"] = None,
+        emoji_name: Optional[str] = None,
+    ) -> discord_typings.ChannelData:
+        """
+        Create a new tag.
+
+        Args:
+            name: The name of the tag
+            emoji_id: The ID of the emoji to use for the tag
+            emoji_name: The name of the emoji to use for the tag
+
+        Note:
+            Can either have an emoji_id or an emoji_name, but not both.
+            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        """
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/tags"),
+            data=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
+        )
+
+    async def edit_tag(
+        self,
+        channel_id: "Snowflake_Type",
+        tag_id: "Snowflake_Type",
+        name: str,
+        emoji_id: Optional["Snowflake_Type"] = None,
+        emoji_name: Optional[str] = None,
+    ) -> discord_typings.ChannelData:
+        """
+        Update a tag.
+
+        Args:
+            tag_id: The ID of the tag to update
+            name: The new name of the tag
+            emoji_id: The ID of the emoji to use for the tag
+            emoji_name: The name of the emoji to use for the tag
+
+        Note:
+            Can either have an emoji_id or an emoji_name, but not both.
+            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        """
+        return await self.request(
+            Route("PUT", f"/channels/{channel_id}/tags/{tag_id}"),
+            data=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
+        )
+
+    async def delete_tag(self, channel_id: "Snowflake_Type", tag_id: "Snowflake_Type") -> discord_typings.ChannelData:
+        """
+        Delete a forum tag.
+
+        Args:
+            tag_id: The ID of the tag to delete
+        """
+        return await self.request(Route("DELETE", f"/channels/{channel_id}/tags/{tag_id}"))

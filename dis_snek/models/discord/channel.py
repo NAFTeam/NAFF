@@ -20,6 +20,7 @@ from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
 from dis_snek.models.snek import AsyncIterator
 from dis_snek.models.discord.thread import ThreadTag
+from dis_snek.models.discord.emoji import PartialEmoji
 from .enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -33,7 +34,7 @@ from .enums import (
 
 if TYPE_CHECKING:
     from aiohttp import FormData
-    from dis_snek import Snake, Embed, BaseComponent, AllowedMentions, Sticker
+    from dis_snek import Snake, Embed, BaseComponent, AllowedMentions, Sticker, Message
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
 __all__ = [
@@ -52,6 +53,7 @@ __all__ = [
     "GuildNews",
     "GuildText",
     "ThreadChannel",
+    "GuildForum",
     "GuildNewsThread",
     "GuildPublicThread",
     "GuildPrivateThread",
@@ -1660,7 +1662,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         return self._client.cache.get_guild(self._guild_id)
 
     @property
-    def parent_channel(self) -> GuildText:
+    def parent_channel(self) -> Union[GuildText, "GuildForum"]:
         """The channel this thread is a child of."""
         return self._client.cache.get_channel(self.parent_id)
 
@@ -1757,6 +1759,9 @@ class GuildNewsThread(ThreadChannel):
 
 @define()
 class GuildPublicThread(ThreadChannel):
+
+    _applied_tags: List[Snowflake_Type] = field(factory=list)
+
     async def edit(
         self,
         name: Absent[str] = MISSING,
@@ -1791,6 +1796,32 @@ class GuildPublicThread(ThreadChannel):
             reason=reason,
             **kwargs,
         )
+
+    @property
+    def applied_tags(self) -> list[ThreadTag]:
+        """
+        The tags applied to this thread.
+
+        Note:
+            This is only on forum threads.
+
+        """
+        if not isinstance(self.parent_channel, GuildForum):
+            raise AttributeError("This is only available on forum threads.")
+        return [tag for tag in self.parent_channel.available_tags if str(tag.id) in self._applied_tags]
+
+    @property
+    def initial_post(self) -> "Message":
+        """
+        The initial message posted by the OP.
+
+        Note:
+            This is only on forum threads.
+
+        """
+        if not isinstance(self.parent_channel, GuildForum):
+            raise AttributeError("This is only available on forum threads.")
+        return self.get_message(self.id)
 
 
 @define()
@@ -1998,8 +2029,10 @@ class GuildStageVoice(GuildVoice):
 
 @define()
 class GuildForum(GuildChannel):
-    available_tags: list[ThreadTag] = field(factory=list)
+    available_tags: List[ThreadTag] = field(factory=list)
     """A list of tags available to assign to threads"""
+    last_message_id: Optional[Snowflake_Type] = field(default=None)
+    # TODO: Implement "template" once the API supports them
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -2076,6 +2109,66 @@ class GuildForum(GuildChannel):
         )
         return self._client.cache.place_channel_data(data)
 
+    async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
+        """
+        Create a tag for this forum.
+
+        Args:
+            name: The name of the tag
+            emoji: The emoji to use for the tag
+
+        Note:
+            If the emoji is a custom emoji, it must be from the same guild as the channel.
+
+        Returns:
+            The created tag object.
+
+        """
+        if isinstance(emoji, str):
+            emoji = PartialEmoji.from_str(emoji)
+        elif isinstance(emoji, dict):
+            emoji = PartialEmoji.from_dict(emoji)
+
+        if emoji.id:
+            data = await self._client.http.create_tag(self.id, name, emoji_id=emoji.id)
+        else:
+            data = await self._client.http.create_tag(self.id, name, emoji_name=emoji.name)
+
+        channel_data = self._client.cache.place_channel_data(data)
+        return [tag for tag in channel_data.available_tags if tag.name == name][0]
+
+    async def edit_tag(
+        self, tag_id: "Snowflake_Type", name: str, emoji: Union["models.PartialEmoji", dict, str]
+    ) -> "ThreadTag":
+        """
+        Edit a tag for this forum.
+
+            Args:
+                tag_id: The ID of the tag to edit
+        """
+        if isinstance(emoji, str):
+            emoji = PartialEmoji.from_str(emoji)
+        elif isinstance(emoji, dict):
+            emoji = PartialEmoji.from_dict(emoji)
+
+        if emoji.id:
+            data = await self._client.http.edit_tag(self.id, tag_id, name, emoji_id=emoji.id)
+        else:
+            data = await self._client.http.edit_tag(self.id, tag_id, name, emoji_name=emoji.name)
+
+        channel_data = self._client.cache.place_channel_data(data)
+        return [tag for tag in channel_data.available_tags if tag.name == name][0]
+
+    async def delete_tag(self, tag_id: "Snowflake_Type") -> None:
+        """
+        Delete a tag for this forum.
+
+        Args:
+            tag_id: The ID of the tag to delete
+        """
+        data = await self._client.http.delete_tag(self.id, tag_id)
+        self._client.cache.place_channel_data(data)
+
 
 def process_permission_overwrites(
     overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
@@ -2107,6 +2200,7 @@ def process_permission_overwrites(
 
 TYPE_ALL_CHANNEL = Union[
     GuildText,
+    GuildForum,
     GuildNews,
     GuildVoice,
     GuildStageVoice,
