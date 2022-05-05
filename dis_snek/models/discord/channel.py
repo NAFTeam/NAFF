@@ -22,6 +22,7 @@ from dis_snek.models.snek import AsyncIterator
 from dis_snek.models.discord.thread import ThreadTag
 from dis_snek.models.discord.emoji import PartialEmoji
 from .enums import (
+    ChannelFlags,
     ChannelTypes,
     OverwriteTypes,
     Permissions,
@@ -1641,6 +1642,8 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
     """Timestamp when the thread's archive status was last changed, used for calculating recent activity"""
     create_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     """Timestamp when the thread was created"""
+    flags: ChannelFlags = field(default=ChannelFlags.NONE, converter=ChannelFlags)
+    """Flags for the thread"""
 
     _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
@@ -1770,6 +1773,7 @@ class GuildPublicThread(ThreadChannel):
         applied_tags: Absent[List[Union[Snowflake_Type, ThreadTag]]] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
+        flags: Absent[Union[int, ChannelFlags]] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
     ) -> "GuildPublicThread":
@@ -1783,6 +1787,7 @@ class GuildPublicThread(ThreadChannel):
             auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
+            flags: channel flags for forum threads
             reason: The reason for this change
 
         Returns:
@@ -1799,6 +1804,7 @@ class GuildPublicThread(ThreadChannel):
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             reason=reason,
+            flags=flags,
             **kwargs,
         )
 
@@ -2062,7 +2068,6 @@ class GuildForum(GuildChannel):
         files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
         file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
-        flags: Optional[Union[int, "MessageFlags"]] = None,
         reason: Absent[str] = MISSING,
     ) -> "GuildPublicThread":
         """
@@ -2111,7 +2116,6 @@ class GuildForum(GuildChannel):
             allowed_mentions=allowed_mentions,
             files=files or file,
             tts=tts,
-            flags=flags,
             **extra,
         )
 
