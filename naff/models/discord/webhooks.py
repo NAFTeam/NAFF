@@ -238,7 +238,7 @@ class Webhook(DiscordObject, SendMixin):
         )
 
         message_data = await self._client.http.execute_webhook(
-            self.id, self.token, message_payload, wait, to_optional_snowflake(thread), files=files or [file]
+            self.id, self.token, message_payload, wait, to_optional_snowflake(thread), files=files or file
         )
         if message_data:
             return self._client.cache.place_message_data(message_data)
