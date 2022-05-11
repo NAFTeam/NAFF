@@ -57,8 +57,8 @@ class Application(DiscordObject):
     tags: Optional[List[str]] = field(default=None)
     """The application's tags describing its functionality and content"""
     # todo: implement an ApplicationInstallParams object. See https://discord.com/developers/docs/resources/application#install-params-object
-    # install_params: Optional["ApplicationInstallParams"] = field(default=None, converter=optional(ApplicationInstallParams)) 
-    # """The application's settings for in-app invitation to guilds"""
+    install_params: Optional[dict] = field(default=None) 
+    """The application's settings for in-app invitation to guilds"""
     custom_install_url: Optional[str] = field(default=None)
     """The application's custom authorization link for invitation to a guild"""
     
