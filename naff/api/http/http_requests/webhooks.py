@@ -122,6 +122,7 @@ class WebhookRequests:
         payload: dict,
         wait: bool = False,
         thread_id: "Snowflake_Type" = None,
+        files: list["UPLOADABLE_TYPE"] | None = None,
     ) -> Optional[discord_typings.MessageData]:
         """
         Execute a webhook. Basically send a message as the webhook.
@@ -133,6 +134,7 @@ class WebhookRequests:
             wait: Waits for server confirmation of message send before response
             thread_id: Send a message to the specified thread
             suffix: An optional suffix to add to the end of the endpoint address
+            files: The files to send with this message
 
         Returns:
             The sent `message`, if `wait` is True else None
@@ -142,6 +144,7 @@ class WebhookRequests:
             Route("POST", f"/webhooks/{webhook_id}/{webhook_token}"),
             params=dict_filter_none({"wait": "true" if wait else "false", "thread_id": thread_id}),
             payload=payload,
+            files=files,
         )
 
     async def get_webhook_message(
