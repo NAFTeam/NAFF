@@ -235,6 +235,8 @@ class GuildUnavailable(BaseEvent, GuildEvent):
 
     guild: Optional["Guild"] = field(default=MISSING)
     """The guild, if it was cached"""
+    unavailable: Optional[bool] = field(default=MISSING)
+    """The guild's state, whether accessible temporarily or on the time of dispatch."""
 
 
 @define(kw_only=False)
