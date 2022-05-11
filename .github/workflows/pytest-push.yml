@@ -1,5 +1,5 @@
 name: pytest
-on: [push, pull_request]
+on: push
 jobs:
   pytest:
     name: runner / pytest tests
