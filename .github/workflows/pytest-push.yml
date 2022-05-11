@@ -4,6 +4,7 @@ jobs:
   pytest:
     name: runner / pytest tests
     runs-on: ubuntu-latest
+    if: ${{ secrets.BOT_TOKEN != null }}
     strategy:
       matrix:
         extras:
