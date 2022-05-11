@@ -1,4 +1,4 @@
-name: pytest PR
+name: Pytest PR
 on:
   repository_dispatch:
     types: [ok-to-test-command]
