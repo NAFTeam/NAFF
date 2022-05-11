@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from naff.models.discord.user import User
     from naff.models.discord.channel import TYPE_THREAD_CHANNEL
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 __all__ = ("ThreadMember", "ThreadList")
 
@@ -70,9 +71,11 @@ class ThreadMember(DiscordObject, SendMixin):
         """
         return self._client.cache.get_user(self._user_id)
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
         dm_id = await self._client.cache.fetch_dm_channel_id(self._user_id)
-        return await self._client.http.create_message(message_payload, dm_id)
+        return await self._client.http.create_message(message_payload, dm_id, files=files)
 
 
 @define()

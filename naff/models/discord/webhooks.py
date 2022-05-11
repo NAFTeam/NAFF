@@ -230,7 +230,6 @@ class Webhook(DiscordObject, SendMixin):
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
-            files=files or file,
             tts=tts,
             flags=flags,
             username=username,
@@ -239,7 +238,7 @@ class Webhook(DiscordObject, SendMixin):
         )
 
         message_data = await self._client.http.execute_webhook(
-            self.id, self.token, message_payload, wait, to_optional_snowflake(thread)
+            self.id, self.token, message_payload, wait, to_optional_snowflake(thread), files=files or [file]
         )
         if message_data:
             return self._client.cache.place_message_data(message_data)
@@ -287,12 +286,11 @@ class Webhook(DiscordObject, SendMixin):
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
-            files=files or file,
             tts=tts,
             flags=flags,
         )
         msg_data = await self._client.http.edit_webhook_message(
-            self.id, self.token, to_snowflake(message), message_payload
+            self.id, self.token, to_snowflake(message), message_payload, files=files or file
         )
         if msg_data:
             return self._client.cache.place_message_data(msg_data)

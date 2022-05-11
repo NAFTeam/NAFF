@@ -9,8 +9,8 @@ __all__ = ("StickerRequests",)
 
 
 if TYPE_CHECKING:
-    from aiohttp import FormData
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class StickerRequests:
@@ -69,7 +69,7 @@ class StickerRequests:
         return await self.request(Route("GET", f"/guilds/{guild_id}/stickers/{sticker_id}"))
 
     async def create_guild_sticker(
-        self, payload: "FormData", guild_id: "Snowflake_Type", reason: Optional[str] = MISSING
+        self, payload: dict, guild_id: "Snowflake_Type", file: "UPLOADABLE_TYPE", reason: Optional[str] = MISSING
     ) -> discord_typings.StickerData:
         """
         Create a new sticker for the guild. Requires the MANAGE_EMOJIS_AND_STICKERS permission.
@@ -77,13 +77,16 @@ class StickerRequests:
         Args:
             payload: the payload to send.
             guild_id: The guild to create sticker at.
+            file: the image to use for the sticker
             reason: The reason for this action.
 
         Returns:
             The new sticker data on success.
 
         """
-        return await self.request(Route("POST", f"/guild/{guild_id}/stickers"), data=payload, reason=reason)
+        return await self.request(
+            Route("POST", f"/guild/{guild_id}/stickers"), payload=payload, files=[file], reason=reason
+        )
 
     async def modify_guild_sticker(
         self, payload: dict, guild_id: "Snowflake_Type", sticker_id: "Snowflake_Type", reason: Optional[str] = MISSING
@@ -102,7 +105,7 @@ class StickerRequests:
 
         """
         return await self.request(
-            Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), data=payload, reason=reason
+            Route("PATCH", f"/guild/{guild_id}/stickers/{sticker_id}"), payload=payload, reason=reason
         )
 
     async def delete_guild_sticker(

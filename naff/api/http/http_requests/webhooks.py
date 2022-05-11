@@ -10,6 +10,7 @@ __all__ = ("WebhookRequests",)
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class WebhookRequests:
@@ -28,7 +29,7 @@ class WebhookRequests:
 
         """
         return await self.request(
-            Route("POST", f"/channels/{channel_id}/webhooks"), data={"name": name, "avatar": avatar}
+            Route("POST", f"/channels/{channel_id}/webhooks"), payload={"name": name, "avatar": avatar}
         )
 
     async def get_channel_webhooks(self, channel_id: "Snowflake_Type") -> List[discord_typings.WebhookData]:
@@ -95,7 +96,7 @@ class WebhookRequests:
         endpoint = f"/webhooks/{webhook_id}{f'/{webhook_token}' if webhook_token else ''}"
 
         return await self.request(
-            Route("PATCH", endpoint), data={"name": name, "avatar": avatar, "channel_id": channel_id}
+            Route("PATCH", endpoint), payload={"name": name, "avatar": avatar, "channel_id": channel_id}
         )
 
     async def delete_webhook(self, webhook_id: "Snowflake_Type", webhook_token: str = None) -> None:
@@ -140,7 +141,7 @@ class WebhookRequests:
         return await self.request(
             Route("POST", f"/webhooks/{webhook_id}/{webhook_token}"),
             params=dict_filter_none({"wait": "true" if wait else "false", "thread_id": thread_id}),
-            data=payload,
+            payload=payload,
         )
 
     async def get_webhook_message(
@@ -161,7 +162,12 @@ class WebhookRequests:
         return await self.request(Route("GET", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"))
 
     async def edit_webhook_message(
-        self, webhook_id: "Snowflake_Type", webhook_token: str, message_id: "Snowflake_Type", payload: dict
+        self,
+        webhook_id: "Snowflake_Type",
+        webhook_token: str,
+        message_id: "Snowflake_Type",
+        payload: dict,
+        files: None | list["UPLOADABLE_TYPE"] = None,
     ) -> discord_typings.MessageData:
         """
         Edits a previously-sent webhook message from the same token.
@@ -171,13 +177,16 @@ class WebhookRequests:
             webhook_token: The token for the webhook
             message_id: The ID of a message sent by this webhook
             payload: The JSON payload for the message
+            files: The files to send in this message
 
         Returns:
             The updated message on success
 
         """
         return await self.request(
-            Route("PATCH", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"), data=payload
+            Route("PATCH", f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}"),
+            payload=payload,
+            files=files,
         )
 
     async def delete_webhook_message(

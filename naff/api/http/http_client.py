@@ -1,7 +1,7 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional
 from urllib.parse import quote as _uriquote
 from weakref import WeakValueDictionary
 
@@ -9,6 +9,7 @@ import aiohttp
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
+from naff import models
 from naff.api.http.http_requests import (
     BotRequests,
     ChannelRequests,
@@ -34,9 +35,10 @@ from naff.client.const import (
     __api_version__,
 )
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
-from naff.client.utils.input_utils import response_decode
+from naff.client.utils.input_utils import response_decode, OverriddenJson
 from naff.client.utils.serializer import dict_filter_missing
 from naff.models import CooldownSystem
+from naff.models.discord.file import UPLOADABLE_TYPE
 from .route import Route
 
 __all__ = ("HTTPClient",)
@@ -196,20 +198,59 @@ class HTTPClient(
             self._endpoints[route.rl_bucket] = bucket_lock.bucket_hash
             self.ratelimit_locks[bucket_lock.bucket_hash] = bucket_lock
 
+    @staticmethod
+    def _process_payload(payload: dict | list[dict], files: Absent[list[UPLOADABLE_TYPE]]) -> dict | FormData | None:
+        """
+        Processes a payload into a format safe for discord. Converts the payload into FormData where required
+
+        Args:
+            payload: The payload of the request
+            files: A list of any files to send
+
+        Returns:
+            Either a dictionary or multipart data form
+        """
+        if not payload:
+            return None
+
+        if isinstance(payload, dict):
+            payload = dict_filter_missing(payload)
+        else:
+            payload = [dict_filter_missing(x) if isinstance(x, dict) else x for x in payload]
+
+        if not files:
+            return payload
+
+        if not isinstance(files, list):
+            files = [files]
+
+        form_data = FormData()
+        form_data.add_field("payload_json", OverriddenJson.dumps(payload))
+
+        for index, file in enumerate(files):
+            file_buffer = models.open_file(file)
+            if isinstance(file, models.File):
+                form_data.add_field(f"files[{index}]", file_buffer, filename=file.file_name)
+            else:
+                form_data.add_field(f"files[{index}]", file_buffer)
+        return form_data
+
     async def request(
         self,
         route: Route,
-        data: Absent[Union[dict, FormData]] = MISSING,
+        payload: Absent[dict] = MISSING,
+        files: Absent[list[UPLOADABLE_TYPE]] = MISSING,
         reason: Absent[str] = MISSING,
         params: Absent[dict] = MISSING,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict,
     ) -> Any:
         """
         Make a request to discord.
 
         Args:
             route: The route to take
-            json: A json payload to send in the request
+            payload: The payload for this request
+            files: The files to send with this request
             reason: Attach a reason to this request, used for audit logs
 
         """
@@ -220,17 +261,8 @@ class HTTPClient(
         if reason not in (None, MISSING):
             kwargs["headers"]["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
-        if isinstance(data, (list, dict)):
+        if isinstance(payload, (list, dict)) and not files:
             kwargs["headers"]["Content-Type"] = "application/json"
-
-        # sanity check payload
-        if isinstance(data, list):
-            kwargs["json"] = [dict_filter_missing(x) if isinstance(x, dict) else x for x in data]
-        elif isinstance(data, dict):
-            kwargs["json"] = dict_filter_missing(data)
-        elif isinstance(data, FormData):
-            kwargs["data"] = data
-
         if isinstance(params, dict):
             kwargs["params"] = dict_filter_missing(params)
 
@@ -247,6 +279,12 @@ class HTTPClient(
 
                     if self.__session.closed:
                         await self.login(self.token)
+
+                    processed_data = self._process_payload(payload, files)
+                    if isinstance(processed_data, FormData):
+                        kwargs["data"] = processed_data
+                    else:
+                        kwargs["json"] = processed_data
 
                     async with self.__session.request(route.method, route.url, **kwargs) as response:
                         result = await response_decode(response)

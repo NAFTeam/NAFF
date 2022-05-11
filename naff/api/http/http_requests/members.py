@@ -95,7 +95,7 @@ class MemberRequests:
 
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/{user_id}"),
-            data={
+            payload={
                 "nick": nickname,
                 "roles": roles,
                 "mute": mute,
@@ -122,7 +122,7 @@ class MemberRequests:
         """
         await self.request(
             Route("PATCH", f"/guilds/{guild_id}/members/@me"),
-            data={
+            payload={
                 "nick": nickname or None,
             },
             reason=reason,

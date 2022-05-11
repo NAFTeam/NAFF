@@ -62,7 +62,7 @@ class EmojiRequests:
             The created emoji object
 
         """
-        return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/emojis"), payload=payload, reason=reason)
 
     async def modify_guild_emoji(
         self, payload: dict, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Absent[str] = MISSING
@@ -80,7 +80,9 @@ class EmojiRequests:
             The updated emoji object
 
         """
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/emojis/{emoji_id}"), data=payload, reason=reason)
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/emojis/{emoji_id}"), payload=payload, reason=reason
+        )
 
     async def delete_guild_emoji(
         self, guild_id: "Snowflake_Type", emoji_id: "Snowflake_Type", reason: Absent[str] = MISSING
