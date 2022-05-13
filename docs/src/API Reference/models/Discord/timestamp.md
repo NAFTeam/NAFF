@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.timestamp
+::: naff.models.discord.timestamp

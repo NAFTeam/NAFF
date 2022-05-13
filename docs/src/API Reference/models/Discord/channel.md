@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.channel
+::: naff.models.discord.channel

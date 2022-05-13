@@ -12,7 +12,7 @@ bot = Snake(intents=Intents.DEFAULT)
 bot.start("Put your token here")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Discord/enums/#dis_snek.models.discord.enums.Intents).
+For more information, please visit the API reference [here](/API Reference/models/Discord/enums/#naff.models.discord.enums.Intents).
 
 ## Hey Listen!!!
 
