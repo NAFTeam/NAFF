@@ -54,6 +54,13 @@ class Application(DiscordObject):
     """The application's default rich presence invite cover"""
     flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
     """The application's public flags"""
+    tags: Optional[List[str]] = field(default=None)
+    """The application's tags describing its functionality and content"""
+    # todo: implement an ApplicationInstallParams object. See https://discord.com/developers/docs/resources/application#install-params-object
+    install_params: Optional[dict] = field(default=None)
+    """The application's settings for in-app invitation to guilds"""
+    custom_install_url: Optional[str] = field(default=None)
+    """The application's custom authorization link for invitation to a guild"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
