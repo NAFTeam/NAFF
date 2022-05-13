@@ -1,1 +1,1 @@
-::: dis_snek.client.const
+::: naff.client.const

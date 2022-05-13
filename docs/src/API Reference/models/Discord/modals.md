@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.modal
+::: naff.models.discord.modal

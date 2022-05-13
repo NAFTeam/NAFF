@@ -3,4 +3,4 @@ This is a list of endpoints that are supported by dis-snek. These methods are or
 !!! note
     The majority of the time you should never need to interact with these. They’re only documented for people contributing to dis-snek.
 
-::: dis_snek.api.http.http_requests
+::: naff.api.http.http_requests

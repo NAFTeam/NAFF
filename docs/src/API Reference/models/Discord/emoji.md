@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.emoji
+::: naff.models.discord.emoji

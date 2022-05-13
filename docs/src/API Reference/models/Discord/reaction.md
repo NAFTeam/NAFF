@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.reaction
+::: naff.models.discord.reaction

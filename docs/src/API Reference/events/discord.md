@@ -1,1 +1,1 @@
-::: dis_snek.api.events.discord
+::: naff.api.events.discord
