@@ -33,7 +33,7 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
 
     if 22 > snowflake.bit_length() > 64:
         raise ValueError(
-            f"ID (snowflake) is not in correct Discord format! Bit length of int should be from 22 to 64"
+            f"ID (snowflake) is not in correct Discord format! Bit length of int should be from 22 to 64 "
             f"Got '{snowflake}' (bit length {snowflake.bit_length()})"
         )
 
