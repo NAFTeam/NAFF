@@ -50,8 +50,8 @@ class Application(DiscordObject):
     """If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists"""
     slug: Optional[str] = field(default=None)
     """If this application is a game sold on Discord, this field will be the URL slug that links to the store page"""
-    cover_image: Optional[str] = field(default=None)
-    """The application's default rich presence invite cover image hash"""
+    cover_image: Optional[Asset] = field(default=None)
+    """The application's default rich presence invite cover"""
     flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
     """The application's public flags"""
 
@@ -67,6 +67,9 @@ class Application(DiscordObject):
 
         if data.get("icon"):
             data["icon"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}", data["icon"])
+        if data.get("cover_image"):
+            data["cover_image"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}", data["cover_image"])
+
         return data
 
     @property
