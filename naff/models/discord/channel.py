@@ -495,12 +495,12 @@ class ThreadableMixin:
         reason: Absent[str] = None,
     ) -> "TYPE_THREAD_CHANNEL":
         """
-        Creates a nee thread in this channel. If a message is provided, it will be used as the initial message.
+        Creates a new thread in this channel. If a message is provided, it will be used as the initial message.
 
         Args:
             name: 1-100 character thread name
             message: The message to connect this thread to. Required for news channel.
-            thread_type: Is the thread private or public. Not applicable to news channel, it always be GUILD_NEWS_THREAD.
+            thread_type: Is the thread private or public. Not applicable to news channel, it will always be GUILD_NEWS_THREAD.
             invitable: whether non-moderators can add other non-moderators to a thread. Only applicable when creating a private thread.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
