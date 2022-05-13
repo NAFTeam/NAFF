@@ -211,7 +211,7 @@ class Embed(DictSerializationMixin):
         default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
-    type: EmbedTypes = field(default=EmbedTypes.RICH, converter=c_optional(EmbedTypes))
+    type: EmbedTypes = field(default=EmbedTypes.RICH, converter=c_optional(EmbedTypes), metadata=no_export_meta)
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
