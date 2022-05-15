@@ -476,7 +476,7 @@ class Message(BaseMessage):
                 )
                 rule = self.embeds[0].fields[0].value  # What rule was triggered
                 channel = self.embeds[0].fields[1].value  # Channel that the action took place in
-                return f'AutoMod has blocked a message. "{message_content}" from {self.author.mention} in <#{channel}>. Rule: {rule}.'                
+                return f'AutoMod has blocked a message. "{message_content}" from {self.author.mention} in <#{channel}>. Rule: {rule}.'
             case _:
                 return None
 
