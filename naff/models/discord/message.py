@@ -469,6 +469,14 @@ class Message(BaseMessage):
                 if referenced_message := self.get_referenced_message():
                     return referenced_message.content
                 return "Sorry, we couldn't load the first message in this thread"
+            case MessageTypes.AUTO_MODERATION_ACTION:
+                keyword_matched_content = self.embeds[0].fields[4].value  # The words that triggered the action
+                message_content = self.embeds[0].description.replace(
+                    keyword_matched_content, f"**{keyword_matched_content}**"
+                )
+                rule = self.embeds[0].fields[0].value  # What rule was triggered
+                channel = self.embeds[0].fields[1].value  # Channel that the action took place in
+                return f'AutoMod has blocked a message. "{message_content}" from {self.author.mention} in <#{channel}>. Rule: {rule}.'                
             case _:
                 return None
 
