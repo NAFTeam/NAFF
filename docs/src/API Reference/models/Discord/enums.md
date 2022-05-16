@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.enums
+::: naff.models.discord.enums

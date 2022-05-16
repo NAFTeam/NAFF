@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.scheduled_event
+::: naff.models.discord.scheduled_event

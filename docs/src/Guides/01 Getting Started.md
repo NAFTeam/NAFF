@@ -83,7 +83,7 @@ There are two different ways to install this library and create your bot.
     Now let's get a basic bot going, for your code, you'll want something like this:
 
     ```python
-    from dis_snek import Snake, Intents, listen
+    from naff import Snake, Intents, listen
 
     bot = Snake(intents=Intents.DEFAULT)
     # intents are what events we want to receive from discord, `DEFAULT` is usually fine

@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.invite
+::: naff.models.discord.invite

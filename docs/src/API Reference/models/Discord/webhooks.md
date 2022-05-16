@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.webhooks
+::: naff.models.discord.webhooks

@@ -1,1 +1,1 @@
-::: dis_snek.ext.paginators
+::: naff.ext.paginators

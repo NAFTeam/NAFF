@@ -1,10 +1,10 @@
 # Migration From discord.py
 
 1. Dis-Snek requires python 3.10 (as compared to dpy's 3.5), you may need to upgrade python.
-     - If you see `ERROR: Could not find a version that satisfies the requirement dis_snek (from versions: none)` when trying to `pip install dis-snek`, this is your problem.
+     - If you see `ERROR: Could not find a version that satisfies the requirement naff (from versions: none)` when trying to `pip install dis-snek`, this is your problem.
 
 2. Classes/Models
-     - Your client is `dis_snek.Snake`.  (Note that commands are a first-class feature, so this is a replacement to both `discord.Client` and `discord.ext.commands.Bot`)
+     - Your client is `naff.Snake`.  (Note that commands are a first-class feature, so this is a replacement to both `discord.Client` and `discord.ext.commands.Bot`)
      - Cogs are `Scales`.
      - `Member` is not a subclass of `User`, if you're using `isinstance`, you'll want to check both explicitly.
 
@@ -15,7 +15,7 @@
      - For a full example, see [here](/Guides/20 Scales/)
 
 4. Event handlers
-     - Register event handlers with `@dis_snek.listen`
+     - Register event handlers with `@naff.listen`
      - Where possible, we use the official names for events, most notably `on_message_create` instead of dpy's `on_message`.
        - A full list can be found [here](/API Reference/events/discord/).
      - Event details are stored on a model, passed as a single parameter. (eg: `on_member_update(before, after)` becomes `on_member_update(event)`, where event has a `.before` and `.after`.
@@ -23,7 +23,7 @@
 
 5. Migrating your commands
      - If you were already using dpy's command extension, migrating to slash commands is fairly simple.  You just need to convert the decorators as per the [Slash Commands guide](/Guides/03 Creating Commands/)
-     - If you wish to keep using prefixed commands (sometimes called message or text-based commands), you can use our `@dis_snek.prefixed_command` decorator, which has an [extensive guide for them](/Guides/07 Creating Prefixed Commands). The syntax should be very similar to discord.py with a few exceptions.
+     - If you wish to keep using prefixed commands (sometimes called message or text-based commands), you can use our `@naff.prefixed_command` decorator, which has an [extensive guide for them](/Guides/07 Creating Prefixed Commands). The syntax should be very similar to discord.py with a few exceptions.
      - If you were manually handling commands with `on_message`, you'll probably need to figure it out yourself, as this guide doesn't know how you wrote your parser.  Consider using the provided command handlers.
 
 ??? Note
