@@ -1100,7 +1100,7 @@ class GuildChannel(BaseChannel):
             The newly created channel.
 
         """
-        await self.guild.create_channel(
+        return await self.guild.create_channel(
             channel_type=self.type,
             name=name if name else self.name,
             topic=getattr(self, "topic", MISSING),
