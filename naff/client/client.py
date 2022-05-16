@@ -143,6 +143,7 @@ class Client(
         prefixed_context: Type[PrefixedContext]: The object to instantiate for Prefixed Context
         component_context: Type[ComponentContext]: The object to instantiate for Component Context
         autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
+        modal_context: Type[ModalContext]: The object to instantiate for Modal Context
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
@@ -180,6 +181,7 @@ class Client(
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
+        modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
         send_command_tracebacks: bool = True,
         shard_id: int = 0,
@@ -227,6 +229,8 @@ class Client(
         """The object to instantiate for Component Context"""
         self.autocomplete_context: Type[AutocompleteContext] = autocomplete_context
         """The object to instantiate for Autocomplete Context"""
+        self.modal_context: Type[ModalContext] = modal_context
+        """The object to instantiate for Modal Context"""
 
         # flags
         self._ready = asyncio.Event()
@@ -393,6 +397,7 @@ class Client(
             self.prefixed_context: PrefixedContext,
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
+            self.modal_context: ModalContext,
         }
         for obj, expected in contexts.items():
             if not issubclass(obj, expected):
@@ -1294,7 +1299,7 @@ class Client(
                     cls = self.autocomplete_context.from_dict(data, self)
 
                 case InteractionTypes.MODAL_RESPONSE:
-                    cls = ModalContext.from_dict(data, self)
+                    cls = self.modal_context.from_dict(data, self)
 
                 case _:
                     cls = self.interaction_context.from_dict(data, self)
