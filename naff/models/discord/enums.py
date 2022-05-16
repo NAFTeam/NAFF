@@ -292,6 +292,18 @@ class MessageTypes(IntEnum):
     AUTO_MODERATION_ACTION = 24
 
 
+class EmbedTypes(Enum):
+    """Types of embed."""
+
+    RICH = "rich"
+    IMAGE = "image"
+    VIDEO = "video"
+    GIFV = "gifv"
+    ARTICLE = "article"
+    LINK = "link"
+    AUTOMOD_MESSAGE = "auto_moderation_message"
+
+
 class MessageActivityTypes(IntEnum):
     """An activity object, similar to an embed."""
 
