@@ -7,7 +7,7 @@
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
 
 # What is this?
-This is `Dis-Snek`, a python API wrapper for Discord.
+This is `NAFF`, a python API wrapper for Discord.
 Snek is intended to be fast, easy to use, and easily modified to suit your needs.
 
 ### Features:
