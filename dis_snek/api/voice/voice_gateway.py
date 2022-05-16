@@ -15,7 +15,7 @@ from dis_snek.client.const import logger_name
 from dis_snek.client.errors import VoiceWebSocketClosed
 from dis_snek.client.utils.input_utils import OverriddenJson
 
-__all__ = ["VoiceGateway"]
+__all__ = ("VoiceGateway",)
 
 log = logging.getLogger(logger_name)
 

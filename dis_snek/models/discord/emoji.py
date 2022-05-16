@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import list_converter
-from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.attr_converters import list_converter
+from dis_snek.client.utils.attr_converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none, no_export_meta
 from dis_snek.models.discord.snowflake import SnowflakeObject, to_snowflake
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.role import Role
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji"]
+__all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji")
 
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
@@ -71,6 +71,8 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
         return s
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, PartialEmoji):
+            return False
         if self.id:
             return self.id == other.id
         return self.name == other.name

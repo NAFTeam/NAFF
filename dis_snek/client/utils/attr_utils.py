@@ -1,11 +1,13 @@
 import logging
 from functools import partial
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, Callable
 
 import attrs
-from dis_snek.client.const import logger_name, MISSING, T
+from attr import Attribute
 
-__all__ = ["define", "field", "docs", "str_validator"]
+from dis_snek.client.const import MISSING, logger_name
+
+__all__ = ("define", "field", "docs", "str_validator")
 
 log = logging.getLogger(logger_name)
 
@@ -46,3 +48,29 @@ def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
             f"Value of {attribute.name} has been automatically converted to a string. Please use strings in future.\n"
             "Note: Discord will always return value as a string"
         )
+
+
+def attrs_validator(
+    validator: Callable, skip_fields: list[str] | None = None
+) -> Callable[[Any, list[Attribute]], list[Attribute]]:
+    """
+    Sets a validator to all fields of an attrs-dataclass.
+
+    Args:
+        validator: The validator to set
+        skip_fields: A list of fields to skip adding the validator to
+
+    Returns:
+        The new fields for the attrs class
+    """
+
+    def operation(_, attributes: list[Attribute]) -> list[Attribute]:
+        new_attrs = []
+        for attr in attributes:
+            if skip_fields and attr.name in skip_fields:
+                new_attrs.append(attr)
+            else:
+                new_attrs.append(attr.evolve(validator=validator))
+        return new_attrs
+
+    return operation

@@ -4,7 +4,7 @@ import dis_snek.models as models
 
 from dis_snek.models.snek.application_commands import SlashCommandOption
 
-__all__ = [
+__all__ = (
     "slash_attachment_option",
     "slash_bool_option",
     "slash_channel_option",
@@ -14,7 +14,7 @@ __all__ = [
     "slash_role_option",
     "slash_str_option",
     "slash_user_option",
-]
+)
 
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ def slash_str_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.STRING,
     )
     return option  # type: ignore
@@ -74,7 +74,7 @@ def slash_float_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         max_value=max_value,
         min_value=min_value,
         type=models.OptionTypes.NUMBER,
@@ -107,7 +107,7 @@ def slash_int_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         max_value=max_value,
         min_value=min_value,
         type=models.OptionTypes.INTEGER,
@@ -183,7 +183,7 @@ def slash_channel_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         channel_types=channel_types,
         type=models.OptionTypes.CHANNEL,
     )
@@ -211,7 +211,7 @@ def slash_role_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.ROLE,
     )
     return option  # type: ignore
@@ -238,7 +238,7 @@ def slash_mentionable_option(
         description=description,
         required=required,
         autocomplete=autocomplete,
-        choices=choices,
+        choices=choices or [],
         type=models.OptionTypes.MENTIONABLE,
     )
     return option  # type: ignore

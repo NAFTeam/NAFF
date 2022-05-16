@@ -5,9 +5,9 @@ import discord_typings
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permissions, OverwriteTypes
 from ..route import Route
-from dis_snek.client.utils.serializer import dict_filter_none, dict_filter_missing
+from dis_snek.client.utils.serializer import dict_filter_none
 
-__all__ = ["ChannelRequests"]
+__all__ = ("ChannelRequests",)
 
 
 if TYPE_CHECKING:

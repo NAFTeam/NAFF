@@ -19,7 +19,7 @@ from dis_snek.models import (
 )
 from .utils import debug_embed
 
-__all__ = ["DebugAppCMD"]
+__all__ = ("DebugAppCMD",)
 
 app_cmds_def = {
     "group_name": "app_cmds",
@@ -47,7 +47,7 @@ class DebugAppCMD(Scale):
 
         e.add_field("Local application cmds (incld. Subcommands)", str(cmds))
         e.add_field("Component callbacks", str(len(self.bot._component_callbacks)))
-        e.add_field("Message commands", str(len(self.bot.commands)))
+        e.add_field("Prefixed commands", str(len(self.bot.prefixed_commands)))
         e.add_field(
             "Tracked Scopes", str(len(Counter(scope for scope in self.bot._interaction_scopes.values()).keys()))
         )

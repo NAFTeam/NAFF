@@ -5,11 +5,10 @@ import discord_typings
 from dis_snek.client.const import Absent, MISSING
 from dis_snek.client.utils.serializer import dict_filter_missing, dict_filter_none
 
-from urllib.parse import urlencode
 
 from ..route import Route
 
-__all__ = ["GuildRequests"]
+__all__ = ("GuildRequests",)
 
 
 if TYPE_CHECKING:

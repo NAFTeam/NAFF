@@ -6,7 +6,7 @@ import aiohttp  # type: ignore
 
 from dis_snek.client.const import logger_name
 
-__all__ = ["OverriddenJson", "response_decode", "get_args", "get_first_word"]
+__all__ = ("OverriddenJson", "response_decode", "get_args", "get_first_word")
 
 log = logging.getLogger(logger_name)
 
@@ -36,7 +36,7 @@ _quotes = {
     "《": "》",
     "〈": "〉",
 }
-_pending_regex = r"(1.*2|[^\s]+)"
+_pending_regex = r"(1.*2|[^\t\f\v ]+)"
 _pending_regex = _pending_regex.replace("1", f"[{''.join(list(_quotes.keys()))}]")
 _pending_regex = _pending_regex.replace("2", f"[{''.join(list(_quotes.values()))}]")
 

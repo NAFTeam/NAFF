@@ -1,16 +1,18 @@
+import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from aiohttp import FormData
-from dis_snek.models.discord.file import UPLOADABLE_TYPE
 
 import dis_snek.models.discord.message as message
+from dis_snek.models.discord.timestamp import Timestamp
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import AlreadyDeferred
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.attr_converters import optional
 from dis_snek.models.discord.enums import MessageFlags, CommandTypes
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.message import Attachment
 from dis_snek.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from dis_snek.models.snek.application_commands import CallbackTypes, OptionTypes
@@ -31,15 +33,15 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
     from dis_snek.models.snek.command import BaseCommand
 
-__all__ = [
+__all__ = (
     "Resolved",
     "Context",
     "InteractionContext",
     "ComponentContext",
     "AutocompleteContext",
     "ModalContext",
-    "MessageContext",
-]
+    "PrefixedContext",
+)
 
 log = logging.getLogger(logger_name)
 
@@ -105,7 +107,7 @@ class Context:
     """Represents the context of a command."""
 
     _client: "Snake" = field(default=None)
-    invoked_name: str = field(default=None, metadata=docs("The name of the command to be invoked"))
+    invoke_target: str = field(default=None, metadata=docs("The name of the command to be invoked"))
     command: Optional["BaseCommand"] = field(default=None, metadata=docs("The command to be invoked"))
 
     args: List = field(factory=list, metadata=docs("The list of arguments to be passed to the command"))
@@ -168,7 +170,7 @@ class _BaseInteractionContext(Context):
             token=data["token"],
             interaction_id=data["id"],
             data=data,
-            invoked_name=data["data"].get("name"),
+            invoke_target=data["data"].get("name"),
             guild_id=data.get("guild_id"),
             context_type=data["data"].get("type", 0),
             locale=data.get("locale"),
@@ -196,17 +198,16 @@ class _BaseInteractionContext(Context):
     def _process_options(self, data: dict) -> None:
         kwargs = {}
         guild_id = to_snowflake(data.get("guild_id", 0))
-
         if options := data["data"].get("options"):
             o_type = options[0]["type"]
             if o_type in (OptionTypes.SUB_COMMAND, OptionTypes.SUB_COMMAND_GROUP):
                 # this is a subcommand, process accordingly
                 if o_type == OptionTypes.SUB_COMMAND:
-                    self.invoked_name = f"{self.invoked_name} {options[0]['name']}"
+                    self.invoke_target = f"{self.invoke_target} {options[0]['name']}"
                     options = options[0].get("options", [])
                 else:
-                    self.invoked_name = (
-                        f"{self.invoked_name} {options[0]['name']} "
+                    self.invoke_target = (
+                        f"{self.invoke_target} {options[0]['name']} "
                         f"{next(x for x in options[0]['options'] if x['type'] == OptionTypes.SUB_COMMAND)['name']}"
                     )
                     options = options[0]["options"][0].get("options", [])
@@ -242,6 +243,22 @@ class _BaseInteractionContext(Context):
                 kwargs[option["name"].lower()] = value
         self.kwargs = kwargs
         self.args = list(kwargs.values())
+
+    @property
+    def expires_at(self) -> Timestamp:
+        """The timestamp the interaction is expected to expire at."""
+        if self.responded:
+            return Timestamp.from_snowflake(self.interaction_id) + datetime.timedelta(minutes=15)
+        return Timestamp.from_snowflake(self.interaction_id) + datetime.timedelta(seconds=3)
+
+    @property
+    def expired(self) -> bool:
+        """Has the interaction expired yet?"""
+        return Timestamp.utcnow() >= self.expires_at
+
+    @property
+    def invoked_name(self) -> str:
+        return self.command.get_localised_name(self.locale)
 
     async def send_modal(self, modal: Union[dict, "Modal"]) -> Union[dict, "Modal"]:
         """
@@ -328,6 +345,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         ephemeral: bool = False,
     ) -> "Message":
@@ -345,6 +363,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
+            suppress_embeds: Should embeds be suppressed on this send
             flags: Message flags to apply.
             ephemeral bool: Should this message be sent as ephemeral (hidden)
 
@@ -355,6 +374,11 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         if ephemeral:
             flags = MessageFlags.EPHEMERAL
             self.ephemeral = True
+
+        if suppress_embeds:
+            if isinstance(flags, int):
+                flags = MessageFlags(flags)
+            flags = flags | MessageFlags.SUPPRESS_EMBEDS
 
         return await super().send(
             content,
@@ -595,11 +619,11 @@ class ModalContext(InteractionContext):
 
 
 @define
-class MessageContext(Context, SendMixin):
+class PrefixedContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
     @classmethod
-    def from_message(cls, client: "Snake", message: "Message") -> "MessageContext":
+    def from_message(cls, client: "Snake", message: "Message") -> "PrefixedContext":
         new_cls = cls(
             client=client,
             message=message,
@@ -611,7 +635,7 @@ class MessageContext(Context, SendMixin):
 
     @property
     def content_parameters(self) -> str:
-        return self.message.content.removeprefix(f"{self.prefix}{self.invoked_name}").strip()
+        return self.message.content.removeprefix(f"{self.prefix}{self.invoke_target}").strip()
 
     async def reply(
         self,

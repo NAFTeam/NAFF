@@ -52,29 +52,29 @@ bot.start("Token")
 
 ```python
 
-from dis_snek import message_command, Button, ActionRow, ButtonStyles, Scale
+from dis_snek import prefixed_command, Button, ActionRow, ButtonStyles, Scale
 
 
 class ButtonExampleSkin(Scale):
-    @message_command()
+    @prefixed_command()
     async def blurple_button(self, ctx):
         await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
 
-    @message_command()
+    @prefixed_command()
     async def multiple_buttons(self, ctx):
         await ctx.send(
             "2 buttons in a row",
             components=[Button(ButtonStyles.BLURPLE, "A blurple button"), Button(ButtonStyles.RED, "A red button")],
         )
 
-    @message_command()
+    @prefixed_command()
     async def action_rows(self, ctx):
         await ctx.send(
             "2 buttons in 2 rows, using nested lists",
             components=[[Button(ButtonStyles.BLURPLE, "A blurple button")], [Button(ButtonStyles.RED, "A red button")]],
         )
 
-    @message_command()
+    @prefixed_command()
     async def action_rows_more(self, ctx):
         await ctx.send(
             "2 buttons in 2 rows, using explicit action_rows lists",

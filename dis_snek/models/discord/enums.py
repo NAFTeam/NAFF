@@ -8,7 +8,7 @@ from dis_snek.client.const import logger_name
 
 _log = logging.getLogger(logger_name)
 
-__all__ = [
+__all__ = (
     "WebSocketOPCodes",
     "Intents",
     "UserFlags",
@@ -45,7 +45,7 @@ __all__ = [
     "ScheduledEventType",
     "ScheduledEventStatus",
     "AuditLogEventType",
-]
+)
 
 
 class AntiFlag:
@@ -129,13 +129,15 @@ class Intents(DiscordIntFlag):  # type: ignore
     DIRECT_MESSAGES = 1 << 12
     DIRECT_MESSAGE_REACTIONS = 1 << 13
     DIRECT_MESSAGE_TYPING = 1 << 14
+    GUILD_MESSAGE_CONTENT = 1 << 15
+    GUILD_SCHEDULED_EVENTS = 1 << 16
 
     # Shortcuts/grouping/aliases
     MESSAGES = GUILD_MESSAGES | DIRECT_MESSAGES
     REACTIONS = GUILD_MESSAGE_REACTIONS | DIRECT_MESSAGE_REACTIONS
     TYPING = GUILD_MESSAGE_TYPING | DIRECT_MESSAGE_TYPING
 
-    PRIVILEGED = GUILD_PRESENCES | GUILD_MEMBERS
+    PRIVILEGED = GUILD_PRESENCES | GUILD_MEMBERS | GUILD_MESSAGE_CONTENT
     NON_PRIVILEGED = AntiFlag(PRIVILEGED)
     DEFAULT = NON_PRIVILEGED
 
@@ -161,6 +163,8 @@ class Intents(DiscordIntFlag):  # type: ignore
         direct_messages=False,
         direct_message_reactions=False,
         direct_message_typing=False,
+        guild_message_content=False,
+        guild_scheduled_events=False,
         messages=False,
         reactions=False,
         typing=False,
@@ -285,6 +289,7 @@ class MessageTypes(IntEnum):
     THREAD_STARTER_MESSAGE = 21
     GUILD_INVITE_REMINDER = 22
     CONTEXT_MENU_COMMAND = 23
+    AUTO_MOD = 24
 
 
 class MessageActivityTypes(IntEnum):
@@ -459,6 +464,20 @@ class ChannelTypes(IntEnum):
     """Temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission"""
     GUILD_STAGE_VOICE = 13
     """Voice channel for hosting events with an audience"""
+
+    @classmethod
+    def converter(cls, value) -> "ChannelTypes":
+        """A converter to handle discord creating new channel types that the lib isn't aware of, without losing type info"""
+        try:
+            out = cls(value)
+            return out
+        except ValueError:
+            # construct a new enum item to represent this new unknown type - without losing the value
+            new = int.__new__(cls)
+            new._name_ = f"UNKNOWN-TYPE-{value}"
+            new._value_ = value
+
+            return cls._value2member_map_.setdefault(value, new)
 
     @property
     def guild(self) -> bool:
@@ -779,3 +798,4 @@ class AuditLogEventType(IntEnum):
     THREAD_CREATE = 110
     THREAD_UPDATE = 111
     THREAD_DELETE = 112
+    APPLICATION_COMMAND_PERMISSION_UPDATE = 121

@@ -6,7 +6,7 @@ from dis_snek.client.const import MISSING
 from dis_snek.client.utils.attr_utils import define, field
 from dis_snek.models.discord.emoji import PartialEmoji
 from dis_snek.models.discord.snowflake import to_snowflake
-from dis_snek.models.snek.iterator import AsyncIterator
+from dis_snek.models.misc.iterator import AsyncIterator
 from .base import ClientObject
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from dis_snek.models import Message, TYPE_ALL_CHANNEL
     from dis_snek.models.discord.user import User
 
-__all__ = ["ReactionUsers", "Reaction"]
+__all__ = ("ReactionUsers", "Reaction")
 
 
 class ReactionUsers(AsyncIterator):

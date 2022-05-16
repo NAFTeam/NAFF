@@ -11,14 +11,15 @@ from dis_snek.client.const import MISSING, logger_name
 from dis_snek.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.misc_utils import get_parameters
+from dis_snek.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from dis_snek.client.utils.serializer import no_export_meta
 from dis_snek.models.snek.cooldowns import Cooldown, Buckets, MaxConcurrency
+from dis_snek.models.snek.protocols import Converter
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import Context
 
-__all__ = ["BaseCommand", "MessageCommand", "message_command", "check", "cooldown", "max_concurrency"]
+__all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")
 
 log = logging.getLogger(logger_name)
 
@@ -80,6 +81,9 @@ class BaseCommand(DictSerializationMixin):
             if hasattr(self.callback, "max_concurrency"):
                 self.max_concurrency = self.callback.max_concurrency
 
+    def __hash__(self) -> int:
+        return id(self)
+
     async def __call__(self, context: "Context", *args, **kwargs) -> None:
         """
         Calls this command.
@@ -90,6 +94,10 @@ class BaseCommand(DictSerializationMixin):
             kwargs: Any
 
         """
+        # signals if a semaphore has been acquired, for exception handling
+        # if present assume one will be acquired
+        max_conc_acquired = self.max_concurrency is not MISSING
+
         try:
             if await self._can_run(context):
                 if self.pre_run_callback is not None:
@@ -109,6 +117,9 @@ class BaseCommand(DictSerializationMixin):
                         await postrun(context, *args, **kwargs)
 
         except Exception as e:
+            # if a MaxConcurrencyReached-exception is raised a connection was never acquired
+            max_conc_acquired = not isinstance(e, MaxConcurrencyReached)
+
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
             elif self.scale and self.scale.scale_error:
@@ -116,13 +127,38 @@ class BaseCommand(DictSerializationMixin):
             else:
                 raise
         finally:
-            if self.max_concurrency is not MISSING:
+            if self.max_concurrency is not MISSING and max_conc_acquired:
                 await self.max_concurrency.release(context)
 
-    async def try_convert(self, converter: Callable, context: "Context", value: Any) -> Any:
+    @staticmethod
+    def _get_converter_function(anno: type[Converter] | Converter, name: str) -> Callable[[Context, str], Any]:
+        num_params = len(get_parameters(anno.convert))
+
+        # if we have three parameters for the function, it's likely it has a self parameter
+        # so we need to get rid of it by initing - typehinting hates this, btw!
+        # the below line will error out if we aren't supposed to init it, so that works out
+        try:
+            actual_anno: Converter = anno() if num_params == 3 else anno  # type: ignore
+        except TypeError:
+            raise ValueError(
+                f"{get_object_name(anno)} for {name} is invalid: converters must have exactly 2 arguments."
+            ) from None
+
+        # we can only get to this point while having three params if we successfully inited
+        if num_params == 3:
+            num_params -= 1
+
+        if num_params != 2:
+            raise ValueError(
+                f"{get_object_name(anno)} for {name} is invalid: converters must have exactly 2 arguments."
+            )
+
+        return actual_anno.convert
+
+    async def try_convert(self, converter: Optional[Callable], context: "Context", value: Any) -> Any:
         if converter is None:
             return value
-        return await converter(context, value)
+        return await maybe_coroutine(converter, context, value)
 
     def param_config(self, annotation: Any, name: str) -> Tuple[Callable, Optional[dict]]:
         # This thing is complicated. Snek-annotations can either be annotated directly, or they can be annotated with Annotated[str, CMD_*]
@@ -147,7 +183,16 @@ class BaseCommand(DictSerializationMixin):
 
         c_args = copy.copy(context.args)
         for param in parameters.values():
-            convert = functools.partial(self.try_convert, getattr(param.annotation, "convert", None), context)
+            if isinstance(param.annotation, Converter):
+                # for any future dev looking at this:
+                # this checks if the class here has a convert function
+                # it does NOT check if the annotation is actually a subclass of Converter
+                # this is an intended behavior for Protocols with the runtime_checkable decorator
+                convert = functools.partial(
+                    self.try_convert, self._get_converter_function(param.annotation, param.name), context
+                )
+            else:
+                convert = functools.partial(self.try_convert, None, context)
             func, config = self.param_config(param.annotation, "_annotation_dat")
             if config:
                 # if user has used an snek-annotation, run the annotation, and pass the result to the user
@@ -175,7 +220,7 @@ class BaseCommand(DictSerializationMixin):
                             args.append(await convert(c_args.pop(0)))
                         except IndexError:
                             raise ValueError(
-                                f"{context.invoked_name} expects {len([p for p in parameters.values() if p.default is p.empty])+len(callback.args)}"
+                                f"{context.invoke_target} expects {len([p for p in parameters.values() if p.default is p.empty]) + len(callback.args)}"
                                 f" arguments but received {len(context.args)} instead"
                             ) from None
                     else:
@@ -247,35 +292,6 @@ class BaseCommand(DictSerializationMixin):
             raise TypeError("post_run must be coroutine")
         self.post_run_callback = call
         return call
-
-
-@define()
-class MessageCommand(BaseCommand):
-    """Represents a command triggered by standard message."""
-
-    name: str = field(metadata=docs("The name of the command"))
-
-
-def message_command(
-    name: str = None,
-) -> Callable[[Callable[..., Coroutine]], MessageCommand]:
-    """
-    A decorator to declare a coroutine as a message command.
-
-    Args:
-        name: The name of the command, defaults to the name of the coroutine
-    Returns:
-        Message Command Object
-
-    """
-
-    def wrapper(func) -> MessageCommand:
-        if not asyncio.iscoroutinefunction(func):
-            raise ValueError("Commands must be coroutines")
-        cmd = MessageCommand(name=name or func.__name__, callback=func)
-        return cmd
-
-    return wrapper
 
 
 def check(check: Callable[["Context"], Awaitable[bool]]) -> Callable[[Coroutine], Coroutine]:

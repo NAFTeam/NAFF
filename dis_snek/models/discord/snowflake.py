@@ -4,7 +4,7 @@ import dis_snek.models as models
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
 
-__all__ = ["to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type"]
+__all__ = ("to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type")
 
 
 # Snowflake_Type should be used in FUNCTION args of user-facing APIs (combined with to_snowflake to sanitize input)
@@ -33,7 +33,7 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
 
     if 22 > snowflake.bit_length() > 64:
         raise ValueError(
-            f"ID (snowflake) is not in correct Discord format! Bit length of int should be from 22 to 64"
+            f"ID (snowflake) is not in correct Discord format! Bit length of int should be from 22 to 64 "
             f"Got '{snowflake}' (bit length {snowflake.bit_length()})"
         )
 
@@ -57,7 +57,9 @@ class SnowflakeObject:
     id: int = field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
-        return self.id == other.id
+        if hasattr(other, "id"):
+            other = other.id
+        return self.id == other
 
     def __ne__(self, other: "SnowflakeObject") -> bool:
         return self.id != other.id

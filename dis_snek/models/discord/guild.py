@@ -1,21 +1,22 @@
 import asyncio
-from collections import namedtuple
 import logging
 import time
+from collections import namedtuple
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
-from dis_snek.models.discord.file import UPLOADABLE_TYPE
-from io import IOBase
-from dis_snek.models.snek import AsyncIterator
+
 from aiohttp import FormData
 
 import dis_snek.models as models
 from dis_snek.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
 from dis_snek.client.errors import EventLocationNotProvided, NotFound
 from dis_snek.client.mixins.serialization import DictSerializationMixin
+from dis_snek.client.utils.attr_converters import optional
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.attr_utils import define, field, docs
-from dis_snek.client.utils.converters import optional
-from dis_snek.client.utils.converters import timestamp_converter
-from dis_snek.client.utils.serializer import to_dict, to_image_data, dict_filter_none, no_export_meta
+from dis_snek.client.utils.deserialise_app_cmds import deserialize_app_cmds
+from dis_snek.client.utils.serializer import to_image_data, no_export_meta
+from dis_snek.models.discord.file import UPLOADABLE_TYPE
+from dis_snek.models.misc.iterator import AsyncIterator
 from .base import DiscordObject, ClientObject
 from .enums import (
     NSFWLevels,
@@ -35,8 +36,9 @@ from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_s
 
 if TYPE_CHECKING:
     from dis_snek.client.client import Snake
+    from dis_snek import InteractionCommand
 
-__all__ = [
+__all__ = (
     "GuildBan",
     "BaseGuild",
     "GuildWelcome",
@@ -51,7 +53,7 @@ __all__ = [
     "AuditLogEntry",
     "AuditLog",
     "AuditLogHistory",
-]
+)
 
 log = logging.getLogger(logger_name)
 
@@ -442,7 +444,6 @@ class Guild(BaseGuild):
             Member object or None
 
         """
-        # TODO: maybe precache owner instead of using `fetch_owner`
         return await self._client.cache.fetch_member(self.id, self._owner_id)
 
     def get_owner(self) -> "models.Member":
@@ -519,6 +520,17 @@ class Guild(BaseGuild):
         """
         if self.chunked.is_set():
             self.chunked.clear()
+
+        if presences := chunk.get("presences"):
+            # combine the presence dict into the members dict
+            for presence in presences:
+                u_id = presence["user"]["id"]
+                # find the user this presence is for
+                member_index = next(
+                    (index for (index, d) in enumerate(chunk.get("members")) if d["user"]["id"] == u_id), None
+                )
+                del presence["user"]
+                chunk["members"][member_index]["user"] = chunk["members"][member_index]["user"] | presence
 
         if not self._chunk_cache:
             self._chunk_cache: List = chunk.get("members")
@@ -623,7 +635,6 @@ class Guild(BaseGuild):
         afk_timeout: Absent[Optional[int]] = MISSING,
         system_channel: Absent[Optional[Union["models.GuildText", Snowflake_Type]]] = MISSING,
         system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
-        # ToDo: these are not tested. Mostly, since I do not have access to those features
         owner: Absent[Optional[Union["models.Member", Snowflake_Type]]] = MISSING,
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         splash: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
@@ -1181,7 +1192,6 @@ class Guild(BaseGuild):
         payload = FormData()
         payload.add_field("name", name)
 
-        # TODO Validate image type?
         file_buffer = models.open_file(imagefile)
         if isinstance(imagefile, models.File):
             payload.add_field("file", file_buffer, filename=imagefile.file_name)
@@ -1276,7 +1286,6 @@ class Guild(BaseGuild):
         color: Absent[Optional[Union["models.Color", int]]] = MISSING,
         hoist: Optional[bool] = False,
         mentionable: Optional[bool] = False,
-        # ToDo: icon needs testing. I have to access to that
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.Role":
@@ -1877,9 +1886,9 @@ class AuditLogChange(ClientObject):
 class AuditLogEntry(DiscordObject):
     target_id: Optional["Snowflake_Type"] = field(converter=optional(to_snowflake))
     """id of the affected entity (webhook, user, role, etc.)"""
-    user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    user_id: "Snowflake_Type" = field(converter=optional(to_snowflake))
     """the user who made the changes"""
-    action_type: "AuditLogEventType" = field(converter=to_snowflake)
+    action_type: "AuditLogEventType" = field(converter=AuditLogEventType)
     """type of action that occurred"""
     changes: Optional[List[AuditLogChange]] = field(default=MISSING)
     """changes made to the target_id"""
@@ -1900,6 +1909,8 @@ class AuditLogEntry(DiscordObject):
 class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 
+    application_commands: list["InteractionCommand"] = field(factory=list, converter=optional(deserialize_app_cmds))
+    """list of application commands that have had their permissions updated"""
     entries: Optional[List["AuditLogEntry"]] = field(default=MISSING)
     """list of audit log entries"""
     scheduled_events: Optional[List["models.ScheduledEvent"]] = field(default=MISSING)

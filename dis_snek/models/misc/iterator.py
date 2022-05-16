@@ -5,9 +5,9 @@ from collections.abc import AsyncIterator as _AsyncIterator
 from typing import List, Any
 
 from dis_snek.client.const import MISSING, Absent
-from dis_snek.models.discord.snowflake import to_snowflake, Snowflake_Type
+from dis_snek.models.discord import snowflake
 
-__all__ = ["AsyncIterator"]
+__all__ = ("AsyncIterator",)
 
 
 class AsyncIterator(_AsyncIterator, ABC):
@@ -81,9 +81,9 @@ class AsyncIterator(_AsyncIterator, ABC):
         """Flatten this iterator into a list of objects."""
         return [elem async for elem in self]
 
-    async def search(self, target_id: "Snowflake_Type") -> bool:
+    async def search(self, target_id: "snowflake.Snowflake_Type") -> bool:
         """Search the iterator for an object with the given ID."""
-        target_id = to_snowflake(target_id)
+        target_id = snowflake.to_snowflake(target_id)
 
         if target_id in [o.id for o in self._retrieved_objects]:
             return True

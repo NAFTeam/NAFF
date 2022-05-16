@@ -1,30 +1,30 @@
 from dis_snek import Scale
 from dis_snek.client.errors import ScaleLoadException, CommandCheckFailure, ExtensionLoadException
 from dis_snek.models import (
-    message_command,
-    MessageContext,
+    prefixed_command,
+    PrefixedContext,
     Context,
 )
 
-__all__ = ["DebugScales"]
+__all__ = ("DebugScales",)
 
 
 class DebugScales(Scale):
-    @message_command("debug_regrow")
-    async def regrow(self, ctx: MessageContext, module: str) -> None:
+    @prefixed_command("debug_regrow")
+    async def regrow(self, ctx: PrefixedContext, module: str) -> None:
         try:
             await self.shed_scale.callback(ctx, module)
         except (ExtensionLoadException, ScaleLoadException):
             pass
         await self.grow_scale.callback(ctx, module)
 
-    @message_command("debug_grow")
-    async def grow_scale(self, ctx: MessageContext, module: str) -> None:
+    @prefixed_command("debug_grow")
+    async def grow_scale(self, ctx: PrefixedContext, module: str) -> None:
         self.bot.grow_scale(module)
         await ctx.message.add_reaction("🪴")
 
-    @message_command("debug_shed")
-    async def shed_scale(self, ctx: MessageContext, module: str) -> None:
+    @prefixed_command("debug_shed")
+    async def shed_scale(self, ctx: PrefixedContext, module: str) -> None:
         self.bot.shed_scale(module)
         await ctx.message.add_reaction("💥")
 

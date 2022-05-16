@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union, List
 
-__all__ = ["BaseTrigger", "IntervalTrigger", "DateTrigger", "TimeTrigger", "OrTrigger"]
+__all__ = ("BaseTrigger", "IntervalTrigger", "DateTrigger", "TimeTrigger", "OrTrigger")
 
 
 class BaseTrigger(ABC):

@@ -11,9 +11,8 @@ from dis_snek import (
     ButtonStyles,
     spread_to_rows,
     ComponentCommand,
-    get_components_ids,
     Context,
-    MessageContext,
+    PrefixedContext,
     Message,
     MISSING,
     Snowflake_Type,
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     from dis_snek import Snake
     from dis_snek.models.discord.emoji import PartialEmoji
 
-__all__ = ["Paginator"]
+__all__ = ("Paginator",)
 
 
 @define(kw_only=False)
@@ -355,7 +354,7 @@ class Paginator:
 
         return self._message
 
-    async def reply(self, ctx: MessageContext) -> Message:
+    async def reply(self, ctx: PrefixedContext) -> Message:
         """
         Reply this paginator to ctx.
 

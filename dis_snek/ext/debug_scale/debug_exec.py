@@ -21,7 +21,7 @@ from dis_snek.models import (
     File,
 )
 
-__all__ = ["DebugExec"]
+__all__ = ("DebugExec",)
 
 
 class DebugExec(Scale):

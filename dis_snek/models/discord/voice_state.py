@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Optional, Dict, Any
 
 from dis_snek.client.const import MISSING
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.models.discord.snowflake import to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["VoiceState", "VoiceRegion"]
+__all__ = ("VoiceState", "VoiceRegion")
 
 
 @define()
@@ -55,13 +55,22 @@ class VoiceState(ClientObject):
     @property
     def channel(self) -> "TYPE_VOICE_CHANNEL":
         """The channel the user is connected to."""
-        channel = self._client.cache.get_channel(self._channel_id)
+        channel: "TYPE_VOICE_CHANNEL" = self._client.cache.get_channel(self._channel_id)
 
         # make sure the member is showing up as a part of the channel
         # this is relevant for VoiceStateUpdate.before
+        # noinspection PyProtectedMember
         if self._member_id not in channel._voice_member_ids:
-            # create a copy and add the member to that list
+            # the list of voice members need to be deepcopied, otherwise the cached obj will be updated
+            # noinspection PyProtectedMember
+            voice_member_ids = copy.deepcopy(channel._voice_member_ids)
+
+            # create a copy of the obj
             channel = copy.copy(channel)
+            channel._voice_member_ids = voice_member_ids
+
+            # add the member to that list
+            # noinspection PyProtectedMember
             channel._voice_member_ids.append(self._member_id)
 
         return channel

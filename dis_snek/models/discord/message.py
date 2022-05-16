@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Uni
 from aiohttp import FormData
 
 import dis_snek.models as models
-from dis_snek.client.const import MISSING, Absent
+from dis_snek.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
 from dis_snek.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.input_utils import OverriddenJson
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
@@ -29,7 +29,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optio
 if TYPE_CHECKING:
     from dis_snek.client import Snake
 
-__all__ = [
+__all__ = (
     "Attachment",
     "ChannelMention",
     "MessageActivity",
@@ -42,7 +42,7 @@ __all__ = [
     "process_allowed_mentions",
     "process_message_reference",
     "process_message_payload",
-]
+)
 
 channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
 
@@ -305,9 +305,7 @@ class Message(BaseMessage):
     """Sent if the message is a response to an Interaction"""
     components: Optional[List["models.ActionRow"]] = field(default=None)
     """Sent if the message contains components like buttons, action rows, or other interactive components"""
-    sticker_items: Optional[List["models.StickerItem"]] = field(
-        default=None
-    )  # TODO: Perhaps automatically get the full sticker data.
+    sticker_items: Optional[List["models.StickerItem"]] = field(default=None)
     """Sent if the message contains stickers"""
     _mention_ids: List["Snowflake_Type"] = field(factory=list)
     _mention_roles: List["Snowflake_Type"] = field(factory=list)
@@ -426,6 +424,53 @@ class Message(BaseMessage):
             data["sticker_items"] = models.StickerItem.from_list(data["sticker_items"], client)
 
         return data
+
+    @property
+    def system_content(self) -> Optional[str]:
+        """Content for system messages. (boosts, welcomes, etc)"""
+        match self.type:
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION:
+                return f"{self.author.mention} just boosted the server!"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 1!**"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 2!**"
+            case MessageTypes.USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3:
+                return f"{self.author.mention} just boosted the server! {self.guild.name} has achieved **Level 3!**"
+            case MessageTypes.GUILD_MEMBER_JOIN:
+                return GUILD_WELCOME_MESSAGES[
+                    int(self.timestamp.timestamp() * 1000)
+                    % len(GUILD_WELCOME_MESSAGES)
+                    # This is how Discord calculates the welcome message.
+                ].format(self.author.mention)
+            case MessageTypes.THREAD_CREATED:
+                return f"{self.author.mention} started a thread: {self.thread.mention}. See all **threads**."
+            case MessageTypes.CHANNEL_FOLLOW_ADD:
+                return f"{self.author.mention} has added **{self.content}** to this channel. Its most important updates will show up here."
+            case MessageTypes.RECIPIENT_ADD:
+                return f"{self.author.mention} added <@{self._mention_ids[0]}> to the thread."
+            case MessageTypes.RECIPIENT_REMOVE:
+                return f"{self.author.mention} removed <@{self._mention_ids[0]}> from the thread."
+            case MessageTypes.CHANNEL_NAME_CHANGE:
+                return f"{self.author.mention} changed the channel name: **{self.content}**."
+            case MessageTypes.CHANNEL_PINNED_MESSAGE:
+                return f"{self.author.mention} pinned a message. See all pinned messages"
+            case MessageTypes.GUILD_DISCOVERY_DISQUALIFIED:
+                return "This server has been removed from Server Discovery because it no longer passes all the requirements. Check Server Settings for more details."
+            case MessageTypes.GUILD_DISCOVERY_REQUALIFIED:
+                return "This server is eligible for Server Discovery again and has been automatically relisted!"
+            case MessageTypes.GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING:
+                return "This server has failed Discovery activity requirements for 1 week. If this server fails for 4 weeks in a row, it will be automatically removed from Discovery."
+            case MessageTypes.GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING:
+                return "This server has failed Discovery activity requirements for 3 weeks in a row. If this server fails for 1 more week, it will be removed from Discovery."
+            case MessageTypes.GUILD_INVITE_REMINDER:
+                return "**Invite your friends**\nThe best way to setup a server is with your buddies!"
+            case MessageTypes.THREAD_STARTER_MESSAGE:
+                if referenced_message := self.get_referenced_message():
+                    return referenced_message.content
+                return "Sorry, we couldn't load the first message in this thread"
+            case _:
+                return None
 
     @property
     def jump_url(self) -> str:
@@ -560,7 +605,7 @@ class Message(BaseMessage):
             ThreadOutsideOfGuild: if this is invoked on a message outside of a guild
 
         """
-        if not self.channel.type == ChannelTypes.GUILD_TEXT:
+        if self.channel.type not in (ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_NEWS):
             raise ThreadOutsideOfGuild
 
         thread_data = await self._client.http.create_thread(
@@ -643,7 +688,6 @@ class Message(BaseMessage):
             await self._client.http.remove_user_reaction(self._channel_id, self.id, emoji_str, user_id)
 
     async def clear_reactions(self, emoji: Union["models.PartialEmoji", dict, str]) -> None:
-        # TODO Should we combine this with clear_all_reactions?
         """
         Clear a specific reaction from message.
 

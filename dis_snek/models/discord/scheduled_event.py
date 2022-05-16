@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.errors import EventLocationNotProvided
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake
 from dis_snek.models.discord.timestamp import Timestamp
 from .base import DiscordObject
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.user import User
 
-__all__ = ["ScheduledEvent"]
+__all__ = ("ScheduledEvent",)
 
 
 @define()

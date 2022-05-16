@@ -5,9 +5,11 @@ from .auto_defer import *
 from .checks import *
 from .command import *
 from .context import *
+from .converters import *
 from .cooldowns import *
-from .iterator import *
 from .listener import *
+from .prefixed_commands import *
+from .protocols import *
 from .scale import *
 from .wait import *
 from .tasks import *

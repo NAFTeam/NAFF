@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Scale"]
+__all__ = ("Scale",)
 
 
 class Scale:
@@ -28,7 +28,7 @@ class Scale:
             def __init__(self, bot):
                 print("Scale Created")
 
-            @message_command
+            @prefixed_command()
             async def some_command(self, context):
                 await ctx.send(f"I was sent from a scale called {self.name}")
         ```
@@ -80,14 +80,19 @@ class Scale:
                 val.scale = new_cls
                 val = wrap_partial(val, new_cls)
 
-                new_cls._commands.append(val)
+                if not isinstance(val, snek.PrefixedCommand) or not val.is_subcommand:
+                    # we do not want to add prefixed subcommands
+                    new_cls._commands.append(val)
 
-                if isinstance(val, snek.ComponentCommand):
-                    bot.add_component_callback(val)
-                elif isinstance(val, snek.InteractionCommand):
-                    bot.add_interaction(val)
-                else:
-                    bot.add_message_command(val)
+                    if isinstance(val, snek.ModalCommand):
+                        bot.add_modal_callback(val)
+                    elif isinstance(val, snek.ComponentCommand):
+                        bot.add_component_callback(val)
+                    elif isinstance(val, snek.InteractionCommand):
+                        bot.add_interaction(val)
+                    else:
+                        bot.add_prefixed_command(val)
+
             elif isinstance(val, snek.Listener):
                 val = wrap_partial(val, new_cls)
                 bot.add_listener(val)
@@ -102,6 +107,13 @@ class Scale:
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
         new_cls.bot.scales[new_cls.name] = new_cls
+
+        if hasattr(new_cls, "async_start"):
+            if inspect.iscoroutinefunction(new_cls.async_start):
+                bot.async_startup_tasks.append(new_cls.async_start())
+            else:
+                raise TypeError("async_start is a reserved method and must be a coroutine")
+
         return new_cls
 
     @property
@@ -126,16 +138,21 @@ class Scale:
     def shed(self) -> None:
         """Called when this Scale is being removed."""
         for func in self._commands:
-            if isinstance(func, snek.ComponentCommand):
+            if isinstance(func, snek.ModalCommand):
                 for listener in func.listeners:
+                    # noinspection PyProtectedMember
+                    self.bot._modal_callbacks.pop(listener)
+            elif isinstance(func, snek.ComponentCommand):
+                for listener in func.listeners:
+                    # noinspection PyProtectedMember
                     self.bot._component_callbacks.pop(listener)
             elif isinstance(func, snek.InteractionCommand):
                 for scope in func.scopes:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
-            elif isinstance(func, snek.MessageCommand):
-                if self.bot.commands[func.name]:
-                    self.bot.commands.pop(func.name)
+            elif isinstance(func, snek.PrefixedCommand):
+                if self.bot.prefixed_commands[func.name]:
+                    self.bot.prefixed_commands.pop(func.name)
         for func in self.listeners:
             self.bot.listeners[func.event].remove(func)
 

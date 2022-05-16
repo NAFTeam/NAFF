@@ -5,14 +5,15 @@ from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 from dis_snek.client.const import MISSING, logger_name, Absent
 from dis_snek.client.errors import HTTPException, TooManyChanges
 from dis_snek.client.mixins.send import SendMixin
-from dis_snek.client.utils.attr_utils import define, field, class_defaults, docs
-from dis_snek.client.utils.converters import list_converter
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_utils import define, field, docs
+from dis_snek.client.utils.attr_converters import list_converter, optional
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.serializer import to_image_data
+from dis_snek.models.discord.activity import Activity
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.color import Color
-from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags
+from dis_snek.models.discord.enums import Permissions, PremiumTypes, UserFlags, Status
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.role import Role
 from dis_snek.models.discord.snowflake import Snowflake_Type
@@ -24,11 +25,10 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.guild import Guild
     from dis_snek.client import Snake
     from dis_snek.models.discord.timestamp import Timestamp
-    from dis_snek.models.discord.channel import TYPE_GUILD_CHANNEL, DM, GuildVoice
-    from dis_snek.models.discord.file import File
+    from dis_snek.models.discord.channel import DM, TYPE_GUILD_CHANNEL
     from dis_snek.models.discord.voice_state import VoiceState
 
-__all__ = ["BaseUser", "User", "SnakeBotUser", "Member"]
+__all__ = ("BaseUser", "User", "SnakeBotUser", "Member")
 
 log = logging.getLogger(logger_name)
 
@@ -117,6 +117,10 @@ class User(BaseUser):
         converter=optional_c(Color),
         metadata=docs("The user's banner color"),
     )
+    activities: list[Activity] = field(
+        factory=list, converter=list_converter(optional(Activity)), metadata=docs("A list of activities the user is in")
+    )
+    status: Absent[Status] = field(default=MISSING, metadata=docs("The user's status"), converter=optional(Status))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Snake") -> Dict[str, Any]:
@@ -505,6 +509,16 @@ class Member(DiscordObject, _SendDMMixin):
             communication_disabled_until=communication_disabled_until,
             reason=reason,
         )
+
+    async def move(self, channel_id: "Snowflake_Type") -> None:
+        """
+        Moves the member to a different voice channel.
+
+        Args:
+            channel_id: The voice channel to move the member to
+
+        """
+        await self._client.http.modify_guild_member(self._guild_id, self.id, channel_id=channel_id)
 
     async def kick(self, reason: Absent[str] = MISSING) -> None:
         """

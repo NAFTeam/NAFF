@@ -3,6 +3,7 @@ from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine, List, Optional
 import aiohttp
 
 from . import const
+from dis_snek.client.utils.misc_utils import escape_mentions
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.command import BaseCommand
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
     from dis_snek.models.snek.cooldowns import CooldownSystem, MaxConcurrency
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = [
+__all__ = (
     "SnakeException",
     "BotException",
     "GatewayNotFound",
@@ -33,6 +34,7 @@ __all__ = [
     "CommandOnCooldown",
     "MaxConcurrencyReached",
     "CommandCheckFailure",
+    "BadArgument",
     "MessageException",
     "EmptyMessageException",
     "EphemeralEditException",
@@ -45,7 +47,7 @@ __all__ = [
     "EventLocationNotProvided",
     "VoiceAlreadyConnected",
     "VoiceConnectionTimeout",
-]
+)
 
 
 class SnakeException(Exception):
@@ -308,6 +310,17 @@ class CommandCheckFailure(CommandException):
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
         self.context = context
+
+
+class BadArgument(CommandException):
+    """A prefixed command encountered an invalid argument."""
+
+    def __init__(self, message: Optional[str] = None, *args: Any) -> None:
+        if message is not None:
+            message = escape_mentions(message)
+            super().__init__(message, *args)
+        else:
+            super().__init__(*args)
 
 
 class MessageException(BotException):

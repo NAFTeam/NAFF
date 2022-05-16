@@ -1,13 +1,12 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import Any, List, TYPE_CHECKING, Union
 
 import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
 from dis_snek.models.discord.timestamp import Timestamp
-from dis_snek.client.utils.serializer import dict_filter_missing
 
-__all__ = ["MemberRequests"]
+__all__ = ("MemberRequests",)
 
 
 if TYPE_CHECKING:

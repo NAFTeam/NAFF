@@ -11,7 +11,7 @@ from dis_snek.models import to_snowflake, BaseMessage
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
-__all__ = ["MessageEvents"]
+__all__ = ("MessageEvents",)
 
 log = logging.getLogger(logger_name)
 
@@ -29,7 +29,6 @@ class MessageEvents(EventMixinTemplate):
         msg = self.cache.place_message_data(event.data)
         if not msg._guild_id and event.data.get("guild_id"):
             msg._guild_id = event.data["guild_id"]
-            # todo: Determine why this isn't set *always*
 
         if not msg.author:
             # sometimes discord will only send an author ID, not the author. this catches that

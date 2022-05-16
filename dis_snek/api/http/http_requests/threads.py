@@ -4,9 +4,10 @@ import discord_typings
 
 from dis_snek.client.const import MISSING, Absent
 from ..route import Route
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import timestamp_converter
+from dis_snek.models.discord.enums import ChannelTypes
 
-__all__ = ["ThreadRequests"]
+__all__ = ("ThreadRequests",)
 
 
 if TYPE_CHECKING:
@@ -185,6 +186,6 @@ class ThreadRequests:
                 Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), data=payload, reason=reason
             )
         else:
-            payload["type"] = thread_type
+            payload["type"] = thread_type or ChannelTypes.GUILD_PUBLIC_THREAD
             payload["invitable"] = invitable
             return await self.request(Route("POST", f"/channels/{channel_id}/threads"), data=payload, reason=reason)

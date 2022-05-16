@@ -1,11 +1,11 @@
 from functools import partial, total_ordering
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, TypeVar
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 
 import attrs
 
 from dis_snek.client.const import MISSING, Absent, T
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import optional as optional_c
 from dis_snek.client.utils.serializer import dict_filter_missing
 from dis_snek.models.discord.asset import Asset
 from dis_snek.models.discord.emoji import PartialEmoji
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import Member
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["Role"]
+__all__ = ("Role",)
 
 
 def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool:

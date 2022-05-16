@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     )
     from dis_snek.models.discord.sticker import Sticker
 
-__all__ = ["WebhookTypes", "Webhook"]
+__all__ = ("WebhookTypes", "Webhook")
 
 
 class WebhookTypes(IntEnum):
@@ -179,6 +179,7 @@ class Webhook(DiscordObject, SendMixin):
         files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
         file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         username: str = None,
         avatar_url: str = None,
@@ -200,6 +201,7 @@ class Webhook(DiscordObject, SendMixin):
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
+            suppress_embeds: Should embeds be suppressed on this send
             flags: Message flags to apply.
             username: The username to use
             avatar_url: The url of an image to use as the avatar
@@ -215,6 +217,12 @@ class Webhook(DiscordObject, SendMixin):
 
         if not content and not (embeds or embed) and not (files or file) and not stickers:
             raise EmptyMessageException("You cannot send a message without any content, embeds, files, or stickers")
+
+        if suppress_embeds:
+            if isinstance(flags, int):
+                flags = MessageFlags(flags)
+            flags = flags | MessageFlags.SUPPRESS_EMBEDS
+
         message_payload = process_message_payload(
             content=content,
             embeds=embeds or embed,

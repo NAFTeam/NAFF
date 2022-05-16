@@ -1,4 +1,3 @@
-import functools
 import uuid
 from enum import IntEnum
 from typing import Union, Optional, List
@@ -11,7 +10,7 @@ from dis_snek.models.snek.application_commands import CallbackTypes
 from dis_snek.models.discord.components import InteractiveComponent, ComponentTypes
 from dis_snek.client.utils.attr_utils import define, field, str_validator
 
-__all__ = ["InputText", "Modal", "ParagraphText", "ShortText", "TextStyles"]
+__all__ = ("InputText", "Modal", "ParagraphText", "ShortText", "TextStyles")
 
 
 class TextStyles(IntEnum):

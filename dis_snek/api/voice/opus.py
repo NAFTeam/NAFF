@@ -3,16 +3,14 @@ import sys
 import array
 import ctypes
 import ctypes.util
-import typing
-from email.policy import default
 from enum import IntEnum
-from typing import Type, Any
+from typing import Any
 
 import attr
 
 from dis_snek.client.const import MISSING
 
-__all__ = ["Encoder"]
+__all__ = ("Encoder",)
 
 
 c_int_ptr = ctypes.POINTER(ctypes.c_int)

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional
+from dis_snek.client.utils.attr_converters import optional
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from dis_snek.models.discord.user import User
     from dis_snek.models.discord.snowflake import Snowflake_Type
 
-__all__ = ["StickerTypes", "StickerFormatTypes", "StickerItem", "Sticker", "StickerPack"]
+__all__ = ("StickerTypes", "StickerFormatTypes", "StickerItem", "Sticker", "StickerPack")
 
 
 class StickerTypes(IntEnum):

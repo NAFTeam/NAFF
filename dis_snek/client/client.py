@@ -38,7 +38,8 @@ from dis_snek.api.events.internal import Component, BaseEvent
 from dis_snek.api.gateway.gateway import GatewayClient
 from dis_snek.api.gateway.state import ConnectionState
 from dis_snek.api.http.http_client import HTTPClient
-from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent
+from dis_snek.client import errors
+from dis_snek.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
 from dis_snek.client.errors import (
     BotException,
     ScaleLoadException,
@@ -49,6 +50,7 @@ from dis_snek.client.errors import (
     HTTPException,
     NotFound,
 )
+from dis_snek.client.smart_cache import GlobalCache
 from dis_snek.client.utils.input_utils import get_first_word, get_args
 from dis_snek.client.utils.misc_utils import wrap_partial, get_event_name
 from dis_snek.client.utils.serializer import to_image_data
@@ -69,14 +71,14 @@ from dis_snek.models import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
-    MessageCommand,
+    PrefixedCommand,
     BaseCommand,
     to_snowflake,
     to_snowflake_list,
     ComponentContext,
     InteractionContext,
     ModalContext,
-    MessageContext,
+    PrefixedContext,
     AutocompleteContext,
     ComponentCommand,
     Context,
@@ -85,22 +87,24 @@ from dis_snek.models import (
     VoiceRegion,
 )
 from dis_snek.models import Wait
+from dis_snek.models.discord.color import BrandColors
 from dis_snek.models.discord.components import get_components_ids, BaseComponent
+from dis_snek.models.discord.embed import Embed
 from dis_snek.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.modal import Modal
+from dis_snek.models.snek.active_voice_state import ActiveVoiceState
+from dis_snek.models.snek.application_commands import ModalCommand
 from dis_snek.models.snek.auto_defer import AutoDefer
 from dis_snek.models.snek.listener import Listener
 from dis_snek.models.snek.tasks import Task
-from .smart_cache import GlobalCache
-from ..models.snek.active_voice_state import ActiveVoiceState
 
 if TYPE_CHECKING:
     from dis_snek.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Snake"]
+__all__ = ("Snake",)
 
 
 class Snake(
@@ -124,7 +128,7 @@ class Snake(
     Attributes:
         intents: Union[int, Intents]: The intents to use
 
-        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for message commands. Defaults to your bot being mentioned.
+        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
         generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
         status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
         activity: Union[Activity, str]: The activity the bot should log in "playing"
@@ -136,12 +140,13 @@ class Snake(
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
-        message_context: Type[MessageContext]: The object to instantiate for Message Context
+        prefixed_context: Type[PrefixedContext]: The object to instantiate for Prefixed Context
         component_context: Type[ComponentContext]: The object to instantiate for Component Context
         autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
+        send_command_tracebacks: bool: Should the traceback of command errors be sent in reply to the command invocation
 
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
@@ -160,25 +165,28 @@ class Snake(
 
     def __init__(
         self,
-        intents: Union[int, Intents] = Intents.DEFAULT,
+        *,
+        activity: Union[Activity, str] = None,
+        auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
+        autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
+        component_context: Type[ComponentContext] = ComponentContext,
+        debug_scope: Absent["Snowflake_Type"] = MISSING,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
-        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
-        sync_interactions: bool = True,
         delete_unused_application_cmds: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
-        debug_scope: Absent["Snowflake_Type"] = MISSING,
-        status: Status = Status.ONLINE,
-        activity: Union[Activity, str] = None,
-        auto_defer: Absent[Union[AutoDefer, bool]] = MISSING,
-        interaction_context: Type[InteractionContext] = InteractionContext,
-        message_context: Type[MessageContext] = MessageContext,
-        component_context: Type[ComponentContext] = ComponentContext,
-        autocomplete_context: Type[AutocompleteContext] = AutocompleteContext,
-        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
         global_post_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
-        total_shards: int = 1,
+        global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
+        intents: Union[int, Intents] = Intents.DEFAULT,
+        interaction_context: Type[InteractionContext] = InteractionContext,
+        prefixed_context: Type[PrefixedContext] = PrefixedContext,
+        send_command_tracebacks: bool = True,
         shard_id: int = 0,
+        status: Status = Status.ONLINE,
+        sync_interactions: bool = True,
+        sync_scales: bool = True,
+        total_shards: int = 1,
         **kwargs,
     ) -> None:
 
@@ -188,12 +196,16 @@ class Snake(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
+        self.sync_scales: bool = sync_scales
+        """Should we sync whenever a scale is (un)loaded"""
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
-        """The default prefix to be used for message commands"""
+        """The default prefix to be used for prefixed commands"""
         self.generate_prefixes = generate_prefixes if generate_prefixes is not MISSING else self.generate_prefixes
         """A coroutine that returns a prefix or an iterable of prefixes, for dynamic prefixes"""
+        self.send_command_tracebacks: bool = send_command_tracebacks
+        """Should the traceback of command errors be sent in reply to the command invocation"""
         if auto_defer is True:
             auto_defer = AutoDefer(enabled=True)
         else:
@@ -209,8 +221,8 @@ class Snake(
         # context objects
         self.interaction_context: Type[InteractionContext] = interaction_context
         """The object to instantiate for Interaction Context"""
-        self.message_context: Type[MessageContext] = message_context
-        """The object to instantiate for Message Context"""
+        self.prefixed_context: Type[PrefixedContext] = prefixed_context
+        """The object to instantiate for Prefixed Context"""
         self.component_context: Type[ComponentContext] = component_context
         """The object to instantiate for Component Context"""
         self.autocomplete_context: Type[AutocompleteContext] = autocomplete_context
@@ -249,11 +261,12 @@ class Snake(
         self._app: Absent[Application] = MISSING
 
         # collections
-        self.commands: Dict[str, MessageCommand] = {}
-        """A dictionary of registered commands: `{name: command}`"""
+        self.prefixed_commands: Dict[str, PrefixedCommand] = {}
+        """A dictionary of registered prefixed commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
+        self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.processors: Dict[str, Callable[..., Coroutine]] = {}
         self.__extensions = {}
@@ -261,6 +274,9 @@ class Snake(
         """A dictionary of mounted Scales"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
+
+        self.async_startup_tasks: list[Coroutine] = []
+        """A list of coroutines to run during startup"""
 
         # callbacks
         if global_pre_run_callback:
@@ -376,7 +392,7 @@ class Snake(
         log.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
-            self.message_context: MessageContext,
+            self.prefixed_context: PrefixedContext,
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
         }
@@ -478,7 +494,43 @@ class Snake(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"cmd /`{ctx.invoked_name}`", error, *args, **kwargs)
+        await self.on_error(f"cmd /`{ctx.invoke_target}`", error, *args, **kwargs)
+        try:
+            if isinstance(error, errors.CommandOnCooldown):
+                await ctx.send(
+                    embeds=Embed(
+                        description=f"This command is on cooldown!\n"
+                        f"Please try again in {int(error.cooldown.get_cooldown_time())} seconds",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.MaxConcurrencyReached):
+                await ctx.send(
+                    embeds=Embed(
+                        description="This command has reached its maximum concurrent usage!\n"
+                        "Please try again shortly.",
+                        color=BrandColors.FUCHSIA,
+                    )
+                )
+            elif isinstance(error, errors.CommandCheckFailure):
+                await ctx.send(
+                    embeds=Embed(
+                        description="You do not have permission to run this command!",
+                        color=BrandColors.YELLOW,
+                    )
+                )
+            elif self.send_command_tracebacks:
+                out = "".join(traceback.format_exception(error))
+                out = out.replace(self.http.token, "[REDACTED TOKEN]")
+                await ctx.send(
+                    embeds=Embed(
+                        title=f"Error: {type(error).__name__}",
+                        color=BrandColors.RED,
+                        description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
+                    )
+                )
+        except errors.SnakeException:
+            pass
 
     async def on_command(self, ctx: Context) -> None:
         """
@@ -490,13 +542,13 @@ class Snake(
             ctx: The context of the command that was called
 
         """
-        if isinstance(ctx, MessageContext):
+        if isinstance(ctx, PrefixedContext):
             symbol = "@"
         elif isinstance(ctx, InteractionContext):
             symbol = "/"
         else:
             symbol = "?"  # likely custom context
-        log.info(f"Command Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -520,7 +572,7 @@ class Snake(
 
         """
         symbol = "¢"
-        log.info(f"Component Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -532,7 +584,7 @@ class Snake(
 
         """
         return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoked_name} - Option: {ctx.focussed_option}",
+            f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
             error,
             *args,
             **kwargs,
@@ -549,7 +601,7 @@ class Snake(
 
         """
         symbol = "$"
-        log.info(f"Autocomplete Called: {symbol}{ctx.invoked_name} with {ctx.args = } | {ctx.kwargs = }")
+        log.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     @Listener.create()
     async def on_resume(self) -> None:
@@ -586,6 +638,13 @@ class Snake(
             if len(self.cache.guild_cache) == len(expected_guilds):
                 # all guilds cached
                 break
+
+        # run any pending startup tasks
+        if self.async_startup_tasks:
+            try:
+                await asyncio.gather(*self.async_startup_tasks)
+            except Exception as e:
+                await self.on_error("async-scale-loader", e)
 
         # cache slash commands
         if not self._startup:
@@ -900,18 +959,24 @@ class Snake(
 
         return True
 
-    def add_message_command(self, command: MessageCommand) -> None:
+    def add_prefixed_command(self, command: PrefixedCommand) -> None:
         """
-        Add a message command to the client.
+        Add a prefixed command to the client.
 
         Args:
-            command InteractionCommand: The command to add
+            command PrefixedCommand: The command to add
 
         """
-        if command.name not in self.commands:
-            self.commands[command.name] = command
-            return
-        raise ValueError(f"Duplicate Command! Multiple commands share the name `{command.name}`")
+        command._parse_parameters()
+
+        if command.name in self.prefixed_commands:
+            raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{command.name}`")
+        self.prefixed_commands[command.name] = command
+
+        for alias in command.aliases:
+            if alias in self.prefixed_commands:
+                raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{alias}`")
+            self.prefixed_commands[alias] = command
 
     def add_component_callback(self, command: ComponentCommand) -> None:
         """
@@ -929,18 +994,36 @@ class Snake(
             else:
                 raise ValueError(f"Duplicate Component! Multiple component callbacks for `{listener}`")
 
+    def add_modal_callback(self, command: ModalCommand) -> None:
+        """
+        Add a modal callback to the client.
+
+        Args:
+            command: The command to add
+        """
+        for listener in command.listeners:
+            if listener not in self._modal_callbacks.keys():
+                self._modal_callbacks[listener] = command
+                continue
+            else:
+                raise ValueError(f"Duplicate Component! Multiple modal callbacks for `{listener}`")
+
     def _gather_commands(self) -> None:
         """Gathers commands from __main__ and self."""
 
         def process(_cmds) -> None:
 
             for func in _cmds:
-                if isinstance(func, ComponentCommand):
+                if isinstance(func, ModalCommand):
+                    self.add_modal_callback(func)
+                elif isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
-                elif isinstance(func, MessageCommand):
-                    self.add_message_command(func)
+                elif (
+                    isinstance(func, PrefixedCommand) and not func.is_subcommand
+                ):  # subcommands will be added with main comamnds
+                    self.add_prefixed_command(func)
                 elif isinstance(func, Listener):
                     self.add_listener(func)
 
@@ -1004,17 +1087,18 @@ class Snake(
             found = set()  # this is a temporary hack to fix subcommand detection
             if scope in self.interactions:
                 for cmd in self.interactions[scope].values():
-                    cmd_data = remote_cmds.get(cmd.name, MISSING)
+                    cmd_name = str(cmd.name)
+                    cmd_data = remote_cmds.get(cmd_name, MISSING)
                     if cmd_data is MISSING:
-                        if cmd.name not in found:
+                        if cmd_name not in found:
                             if warn_missing:
                                 log.error(
-                                    f'Detected yet to sync slash command "/{cmd.name}" for scope '
+                                    f'Detected yet to sync slash command "/{cmd_name}" for scope '
                                     f"{'global' if scope == GLOBAL_SCOPE else scope}"
                                 )
                         continue
                     else:
-                        found.add(cmd.name)
+                        found.add(cmd_name)
                     self._interaction_scopes[str(cmd_data["id"])] = scope
                     cmd.cmd_id[scope] = int(cmd_data["id"])
 
@@ -1037,7 +1121,6 @@ class Snake(
             # if we're not deleting, just check the scopes we have cmds registered in
             cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
-        guild_perms = {}
         local_cmds_json = application_commands_to_dict(self.interactions)
 
         async def sync_scope(cmd_scope) -> None:
@@ -1058,7 +1141,7 @@ class Snake(
                         (v for v in remote_commands if int(v["id"]) == local_cmd.cmd_id.get(cmd_scope)), None
                     )
                     # get json representation of this command
-                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == local_cmd.name))
+                    local_cmd_json = next((c for c in local_cmds_json[cmd_scope] if c["name"] == str(local_cmd.name)))
 
                     # this works by adding any command we *want* on Discord, to a payload, and synchronising that
                     # this allows us to delete unused commands, add new commands, or do nothing in 1 or less API calls
@@ -1087,64 +1170,12 @@ class Snake(
                 else:
                     log.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
 
-                for local_cmd in self.interactions.get(cmd_scope, {}).values():
-
-                    if not local_cmd.permissions:
-                        continue
-                    for perm in local_cmd.permissions:
-                        if perm.guild_id == cmd_scope:
-                            if perm.guild_id not in guild_perms:
-                                guild_perms[perm.guild_id] = []
-                            payload = [perm.to_dict() for perm in local_cmd.permissions]
-                            perm_json = {
-                                "id": local_cmd.get_cmd_id(perm.guild_id),
-                                "permissions": [dict(tup) for tup in {tuple(d.items()) for d in payload}],
-                            }
-                            if perm_json not in guild_perms[perm.guild_id]:
-                                guild_perms[perm.guild_id].append(perm_json)
-
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
             except HTTPException as e:
                 self._raise_sync_exception(e, local_cmds_json, cmd_scope)
 
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
-
-        for perm_scope in guild_perms:
-            perms_to_sync = {}
-            for cmd in guild_perms[perm_scope]:
-                c = self.get_application_cmd_by_id(cmd["id"])
-
-                if len(cmd["permissions"]) > 10:
-                    log.error(
-                        f"Error in command `{c.name}`: Command has {len(cmd['permissions'])} permissions. Maximum is 10 per guild."
-                    )
-
-                try:
-                    remote_perms = await self.http.get_application_command_permissions(
-                        self.app.id, perm_scope, c.get_cmd_id(perm_scope)
-                    )
-                except HTTPException:
-                    remote_perms = {}
-                cmd_perms = [perm for perm in guild_perms[perm_scope] if perm["id"] == c.get_cmd_id(perm_scope)][0]
-                perms_to_sync[c.get_cmd_id(perm_scope)] = [
-                    perm for perm in cmd_perms["permissions"] if perm not in remote_perms.get("permissions", [])
-                ]
-            perms_to_sync = [cmd for cmd in perms_to_sync.values() if cmd]
-            if perms_to_sync:
-                try:
-                    log.debug(f"Updating {len(guild_perms[perm_scope])} command permissions in {perm_scope}")
-                    await self.http.batch_edit_application_command_permissions(
-                        application_id=self.app.id, scope=perm_scope, data=guild_perms[perm_scope]
-                    )
-                except Forbidden:
-                    log.error(
-                        f"Unable to sync permissions for guild `{perm_scope}` -- Ensure the bot was added to that guild with `application.commands` scope."
-                    )
-                except HTTPException as e:
-                    self._raise_sync_exception(e, local_cmds_json, perm_scope)
-            else:
-                log.debug(f"Permissions in {perm_scope} are already up-to-date!")
 
         t = time.perf_counter() - s
         log.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
@@ -1233,12 +1264,12 @@ class Snake(
         ...
 
     @overload
-    async def get_context(self, data: Message, interaction: Literal[False] = False) -> MessageContext:
+    async def get_context(self, data: Message, interaction: Literal[False] = False) -> PrefixedContext:
         ...
 
     async def get_context(
         self, data: InteractionData | dict | Message, interaction: bool = False
-    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext:
+    ) -> ComponentContext | AutocompleteContext | ModalContext | InteractionContext | PrefixedContext:
         """
         Return a context object based on data passed.
 
@@ -1254,7 +1285,7 @@ class Snake(
 
         """
         # this line shuts up IDE warnings
-        cls: ComponentContext | AutocompleteContext | ModalContext | InteractionContext | MessageContext
+        cls: ComponentContext | AutocompleteContext | ModalContext | InteractionContext | PrefixedContext
 
         if interaction:
             match data["type"]:
@@ -1274,7 +1305,7 @@ class Snake(
                 cls.channel = await self.cache.fetch_channel(data["channel_id"])
 
         else:
-            cls = self.message_context.from_message(self, data)
+            cls = self.prefixed_context.from_message(self, data)
             if not cls.channel:
                 cls.channel = await self.cache.fetch_channel(data._channel_id)
 
@@ -1284,8 +1315,8 @@ class Snake(
         """Overrideable method that executes slash commands, can be used to wrap callback execution"""
         return await command(ctx, **ctx.kwargs)
 
-    async def _run_message_command(self, command: MessageCommand, ctx: MessageContext) -> Any:
-        """Overrideable method that executes message commands, can be used to wrap callback execution"""
+    async def _run_prefixed_command(self, command: PrefixedCommand, ctx: PrefixedContext) -> Any:
+        """Overrideable method that executes prefixed commands, can be used to wrap callback execution"""
         return await command(ctx)
 
     @processors.Processor.define("raw_interaction_create")
@@ -1311,7 +1342,7 @@ class Snake(
             if scope in self.interactions:
                 ctx = await self.get_context(interaction_data, True)
 
-                ctx.command: SlashCommand = self.interactions[scope][ctx.invoked_name]  # type: ignore
+                ctx.command: SlashCommand = self.interactions[scope][ctx.invoke_target]  # type: ignore
                 log.debug(f"{scope} :: {ctx.command.name} should be called")
 
                 if ctx.command.auto_defer:
@@ -1369,31 +1400,46 @@ class Snake(
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
             ctx = await self.get_context(interaction_data, True)
             self.dispatch(events.ModalResponse(ctx))
+
+            # todo: Polls remove this icky code duplication - love from past-polls ❤️
+            if callback := self._modal_callbacks.get(ctx.custom_id):
+                ctx.command = callback
+
+                try:
+                    if self.pre_run_callback:
+                        await self.pre_run_callback(ctx)
+                    await callback(ctx)
+                    if self.post_run_callback:
+                        await self.post_run_callback(ctx)
+                except Exception as e:
+                    await self.on_component_error(ctx, e)
+                finally:
+                    await self.on_component(ctx)
+
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
     @Listener.create("message_create")
-    async def _dispatch_msg_commands(self, event: MessageCreate) -> None:
-        """Determine if a command is being triggered, and dispatch it."""
+    async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
+        """Determine if a prefixed command is being triggered, and dispatch it."""
         message = event.message
 
         if not message.content:
             return
 
         if not message.author.bot:
-            prefixes = await self.generate_prefixes(self, message)
+            prefixes: str | Iterable[str] = await self.generate_prefixes(self, message)
 
             if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
                 # its easier to treat everything as if it may be an iterable
                 # rather than building a special case for this
-                prefixes = (prefixes,)
+                prefixes = (prefixes,)  # type: ignore
 
             prefix_used = None
 
             for prefix in prefixes:
                 if prefix == MENTION_PREFIX:
-                    mention = self._mention_reg.search(message.content)
-                    if mention:
+                    if mention := self._mention_reg.search(message.content):  # type: ignore
                         prefix = mention.group()
                     else:
                         continue
@@ -1403,19 +1449,56 @@ class Snake(
                     break
 
             if prefix_used:
-                invoked_name = get_first_word(message.content.removeprefix(prefix_used))
-                command = self.commands.get(invoked_name)
+                context = await self.get_context(message)
+                context.prefix = prefix_used
+
+                # interestingly enough, we cannot count on ctx.invoke_target
+                # being correct as its hard to account for newlines and the like
+                # with the way we get subcommands here
+                # we'll have to reconstruct it by getting the content_parameters
+                # then removing the prefix and the parameters from the message
+                # content
+                content_parameters = message.content.removeprefix(prefix_used)  # type: ignore
+                command = self  # yes, this is a hack
+
+                while True:
+                    first_word: str = get_first_word(content_parameters)  # type: ignore
+                    if isinstance(command, PrefixedCommand):
+                        new_command = command.subcommands.get(first_word)
+                    else:
+                        new_command = command.prefixed_commands.get(first_word)
+                    if not new_command or not new_command.enabled:
+                        break
+
+                    command = new_command
+                    content_parameters = content_parameters.removeprefix(first_word).strip()
+
+                    if command.subcommands and command.hierarchical_checking:
+                        try:
+                            await new_command._can_run(context)  # will error out if we can't run this command
+                        except Exception as e:
+                            if new_command.error_callback:
+                                await new_command.error_callback(e, context)
+                            elif new_command.scale and new_command.scale.scale_error:
+                                await new_command.scale.scale_error(context)
+                            else:
+                                await self.on_command_error(context, e)
+                            return
+
+                if not isinstance(command, PrefixedCommand):
+                    command = None
 
                 if command and command.enabled:
-                    context = await self.get_context(message)
+                    # yeah, this looks ugly
                     context.command = command
-                    context.invoked_name = invoked_name
-                    context.prefix = prefix_used
+                    context.invoke_target = (
+                        message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
+                    )
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:
                             await self.pre_run_callback(context)
-                        await self._run_message_command(command, context)
+                        await self._run_prefixed_command(command, context)
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:
@@ -1427,22 +1510,38 @@ class Snake(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_scale(self, name) -> Optional[Scale]:
+    def get_scales(self, name: str) -> list[Scale]:
         """
-        Get a scale.
+        Get all scales with a name or extension name.
 
         Args:
             name: The name of the scale, or the name of it's extension
 
         Returns:
-            Scale or None if no scale is found
+            List of Scales
         """
+        out = []
         if name not in self.scales.keys():
             for scale in self.scales.values():
                 if scale.extension_name == name:
-                    return scale
+                    out.append(scale)
+            return out
 
-        return self.scales.get(name, None)
+        return [self.scales.get(name, None)]
+
+    def get_scale(self, name: str) -> Scale | None:
+        """
+        Get a scale with a name or extension name.
+
+        Args:
+            name: The name of the scale, or the name of it's extension
+
+        Returns:
+            A scale, if found
+        """
+        if scales := self.get_scales(name):
+            return scales[0]
+        return None
 
     def grow_scale(self, file_name: str, package: str = None, **load_kwargs) -> None:
         """
@@ -1455,6 +1554,12 @@ class Snake(
 
         """
         self.load_extension(file_name, package, **load_kwargs)
+        if self.sync_scales and self._ready.is_set():
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return
+            asyncio.create_task(self.synchronise_interactions())
 
     def shed_scale(self, scale_name: str, **unload_kwargs) -> None:
         """
@@ -1465,10 +1570,18 @@ class Snake(
             unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
-        if scale := self.get_scale(scale_name):
-            return self.unload_extension(inspect.getmodule(scale).__name__, **unload_kwargs)
+        if scale := self.get_scales(scale_name):
+            self.unload_extension(inspect.getmodule(scale[0]).__name__, **unload_kwargs)
 
-        raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
+            if self.sync_scales and self._ready.is_set():
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    return
+                asyncio.create_task(self.synchronise_interactions())
+
+        else:
+            raise ScaleLoadException(f"Unable to shed scale: No scale exists with name: `{scale_name}`")
 
     def regrow_scale(
         self, scale_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
@@ -1545,7 +1658,7 @@ class Snake(
         except AttributeError:
             pass
 
-        if scale := self.get_scale(name):
+        for scale in self.get_scales(name):
             scale.shed(**unload_kwargs)
 
         del sys.modules[name]

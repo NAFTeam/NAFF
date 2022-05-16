@@ -1,7 +1,6 @@
 import asyncio
 import inspect
 import logging
-from asyncio import AbstractEventLoop
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
 from typing import Callable, Optional
@@ -12,7 +11,7 @@ from .triggers import BaseTrigger
 
 log = logging.getLogger(logger_name)
 
-__all__ = ["Task"]
+__all__ = ("Task",)
 
 
 class Task:

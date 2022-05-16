@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, TypeVar, Type
+from typing import Any, Dict, List, Type
 
 import attrs
 
@@ -7,7 +7,7 @@ import dis_snek.client.const as const
 from dis_snek.client.utils.attr_utils import define
 import dis_snek.client.utils.serializer as serializer
 
-__all__ = ["DictSerializationMixin"]
+__all__ = ("DictSerializationMixin",)
 
 log = logging.getLogger(const.logger_name)
 
@@ -100,7 +100,6 @@ class DictSerializationMixin:
 
     def _check_object(self) -> None:
         """Logic to check object properties just before export to json data for sending to discord api."""
-        pass
 
     def to_dict(self) -> Dict[str, Any]:
         """

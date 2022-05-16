@@ -38,10 +38,11 @@ from collections import defaultdict
 from importlib.metadata import version as _v
 from typing import TypeVar, Union
 
-__all__ = [
+__all__ = (
     "__version__",
     "__repo_url__",
     "__py_version__",
+    "__api_version__",
     "logger_name",
     "kwarg_spam",
     "DISCORD_EPOCH",
@@ -69,7 +70,8 @@ __all__ = [
     "PREMIUM_GUILD_LIMITS",
     "Absent",
     "T",
-]
+    "T_co",
+)
 
 _ver_info = sys.version_info
 
@@ -79,7 +81,9 @@ except Exception:
     __version__ = "0.0.0"
 __repo_url__ = "https://github.com/Discord-Snake-Pit/Dis-Snek"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
+__api_version__ = 10
 logger_name = "dis.snek"
+default_locale = "english_us"
 kwarg_spam = False
 
 DISCORD_EPOCH = 1420070400000
@@ -171,5 +175,23 @@ PREMIUM_GUILD_LIMITS = defaultdict(
     },
 )
 
+
+GUILD_WELCOME_MESSAGES = [
+    "{0} joined the party.",
+    "{0} is here.",
+    "Welcome, {0}. We hope you brought pizza.",
+    "A wild {0} appeared.",
+    "{0} just landed.",
+    "{0} just slid into the server.",
+    "{0} just showed up!",
+    "Welcome {0}. Say hi!",
+    "{0} hopped into the server.",
+    "Everyone welcome {0}!",
+    "Glad you're here, {0}.",
+    "Good to see you, {0}.",
+    "Yay you made it, {0}!",
+]
+
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 Absent = Union[T, Missing]

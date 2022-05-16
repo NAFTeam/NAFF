@@ -1,3 +1,4 @@
+import logging
 import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
@@ -5,19 +6,19 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import dis_snek.models as models
-from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent
+from dis_snek.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
 from dis_snek.client.errors import NotFound
 from dis_snek.client.mixins.send import SendMixin
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import optional as optional_c
-from dis_snek.client.utils.converters import timestamp_converter
+from dis_snek.client.utils.attr_converters import optional as optional_c
+from dis_snek.client.utils.attr_converters import timestamp_converter
 from dis_snek.client.utils.misc_utils import get
 from dis_snek.client.utils.serializer import to_dict, to_image_data
 from dis_snek.models.discord.base import DiscordObject
 from dis_snek.models.discord.file import UPLOADABLE_TYPE
 from dis_snek.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
-from dis_snek.models.snek import AsyncIterator
+from dis_snek.models.misc import AsyncIterator
 from .enums import (
     ChannelTypes,
     OverwriteTypes,
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
     from dis_snek import Snake
     from dis_snek.models.snek.active_voice_state import ActiveVoiceState
 
-__all__ = [
+__all__ = (
     "ChannelHistory",
     "PermissionOverwrite",
     "MessageableMixin",
@@ -63,7 +64,9 @@ __all__ = [
     "TYPE_VOICE_CHANNEL",
     "TYPE_CHANNEL_MAPPING",
     "TYPE_MESSAGEABLE_CHANNEL",
-]
+)
+
+log = logging.getLogger(logger_name)
 
 
 class ChannelHistory(AsyncIterator):
@@ -109,7 +112,6 @@ class ChannelHistory(AsyncIterator):
 
         elif self.around:
             messages = await self.channel.fetch_messages(limit=self.get_limit, around=self.around)
-            # todo: decide how getting *more* messages from `around` would work
             self._limit = 1  # stops history from getting more messages
 
         else:
@@ -702,7 +704,7 @@ class WebhookMixin:
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(repr=True, default=None)
     """The name of the channel (1-100 characters)"""
-    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes)
+    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes.converter)
     """The channel topic (0-1024 characters)"""
 
     @classmethod
@@ -721,7 +723,8 @@ class BaseChannel(DiscordObject):
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
         if not channel_class:
-            raise TypeError(f"Unsupported channel type for {data} ({channel_type}), please consult the docs.")
+            log.error(f"Unsupported channel type for {data} ({channel_type}).")
+            channel_class = BaseChannel
 
         return channel_class.from_dict(data, client)
 
@@ -1040,6 +1043,7 @@ class GuildChannel(BaseChannel):
             await self.edit_permission(exists, reason)
         else:
             permission_overwrites = self.permission_overwrites
+            permission_overwrites.append(overwrite)
             await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
@@ -1928,12 +1932,12 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
 
 @define()
-class GuildVoice(VoiceChannel, InvitableMixin):
+class GuildVoice(VoiceChannel, InvitableMixin, MessageableMixin):
     pass
 
 
 @define()
-class GuildStageVoice(GuildVoice):
+class GuildStageVoice(VoiceChannel, InvitableMixin):
     stage_instance: "models.StageInstance" = field(default=MISSING)
     """The stage instance that this voice channel belongs to"""
 
@@ -2046,7 +2050,7 @@ TYPE_VOICE_CHANNEL = Union[GuildVoice, GuildStageVoice]
 
 
 TYPE_MESSAGEABLE_CHANNEL = Union[
-    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread
+    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread, GuildVoice
 ]
 
 

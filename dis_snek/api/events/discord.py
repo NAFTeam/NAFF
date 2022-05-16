@@ -28,7 +28,7 @@ from dis_snek.client.const import MISSING, Absent
 from dis_snek.client.utils.attr_utils import define, field, docs
 from .internal import BaseEvent, GuildEvent
 
-__all__ = [
+__all__ = (
     "BanCreate",
     "BanRemove",
     "ChannelCreate",
@@ -76,7 +76,7 @@ __all__ = [
     "TypingStart",
     "VoiceStateUpdate",
     "WebhooksUpdate",
-]
+)
 
 
 if TYPE_CHECKING:
@@ -321,7 +321,6 @@ class RoleDelete(BaseEvent, GuildEvent):
     """The deleted role"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class GuildMembersChunk(BaseEvent, GuildEvent):
     """
@@ -490,7 +489,6 @@ class WebhooksUpdate(BaseEvent, GuildEvent):
     """The ID of the webhook was updated"""
 
 
-# todo implementation missing
 @define(kw_only=False)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""

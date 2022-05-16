@@ -3,7 +3,6 @@ import logging
 from typing import TYPE_CHECKING
 
 import dis_snek.api.events as events
-from dis_snek.models.discord.channel import BaseChannel
 from dis_snek.models.discord.invite import Invite
 from dis_snek.client.const import MISSING, logger_name
 from ._template import EventMixinTemplate, Processor
@@ -11,7 +10,7 @@ from ._template import EventMixinTemplate, Processor
 if TYPE_CHECKING:
     from dis_snek.api.events import RawGatewayEvent
 
-__all__ = ["ChannelEvents"]
+__all__ = ("ChannelEvents",)
 
 log = logging.getLogger(logger_name)
 

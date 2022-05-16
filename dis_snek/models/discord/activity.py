@@ -2,20 +2,20 @@ from typing import Optional, List
 
 from dis_snek.client.mixins.serialization import DictSerializationMixin
 from dis_snek.client.utils.attr_utils import define, field
-from dis_snek.client.utils.converters import timestamp_converter, optional
+from dis_snek.client.utils.attr_converters import timestamp_converter, optional
 from dis_snek.client.utils.serializer import dict_filter_none
 from dis_snek.models.discord.emoji import PartialEmoji
 from dis_snek.models.discord.enums import ActivityType, ActivityFlags
 from dis_snek.models.discord.snowflake import Snowflake_Type
 from dis_snek.models.discord.timestamp import Timestamp
 
-__all__ = [
+__all__ = (
     "ActivityTimestamps",
     "ActivityParty",
     "ActivityAssets",
     "ActivitySecrets",
     "Activity",
-]
+)
 
 
 @define()
@@ -109,5 +109,3 @@ class Activity(DictSerializationMixin):
 
     def to_dict(self) -> dict:
         return dict_filter_none({"name": self.name, "type": self.type, "url": self.url})
-
-    # todo: handle incoming presence data

@@ -1,13 +1,13 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from dis_snek.client.errors import AlreadyDeferred, NotFound
+from dis_snek.client.errors import AlreadyDeferred, NotFound, BadRequest
 from dis_snek.client.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
     from dis_snek.models.snek.context import InteractionContext
 
-__all__ = ["AutoDefer"]
+__all__ = ("AutoDefer",)
 
 
 @define()
@@ -36,5 +36,5 @@ class AutoDefer:
         if not ctx.responded or not ctx.deferred:
             try:
                 await ctx.defer(self.ephemeral)
-            except (AlreadyDeferred, NotFound):
+            except (AlreadyDeferred, NotFound, BadRequest):
                 pass
