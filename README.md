@@ -8,7 +8,7 @@
 
 # What is this?
 This is `NAFF`, a python API wrapper for Discord.
-Snek is intended to be fast, easy to use, and easily modified to suit your needs.
+NAFF is intended to be fast, easy to use, and easily modified to suit your needs.
 
 ### Features:
 - ✅ 100% coverage of the application commands API
