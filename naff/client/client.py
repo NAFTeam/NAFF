@@ -87,10 +87,11 @@ from naff.models import (
     VoiceRegion,
 )
 from naff.models import Wait
+from naff.models.discord.channel import BaseChannel
 from naff.models.discord.color import BrandColors
 from naff.models.discord.components import get_components_ids, BaseComponent
 from naff.models.discord.embed import Embed
-from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status
+from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes, Status, ChannelTypes
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
@@ -1300,7 +1301,12 @@ class Client(
                     cls = self.interaction_context.from_dict(data, self)
 
             if not cls.channel:
-                cls.channel = await self.cache.fetch_channel(data["channel_id"])
+                try:
+                    cls.channel = await self.cache.fetch_channel(data["channel_id"])
+                except Forbidden:
+                    cls.channel = BaseChannel.from_dict_factory(
+                        {"id": data["channel_id"], "type": ChannelTypes.GUILD_TEXT}, self
+                    )
 
         else:
             cls = self.prefixed_context.from_message(self, data)
