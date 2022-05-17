@@ -125,7 +125,7 @@ class ChannelRequests:
                 user_limit=user_limit,
             )
 
-        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), payload=payload, reason=reason)
 
     async def move_channel(
         self,
@@ -152,7 +152,7 @@ class ChannelRequests:
         if parent_id:
             payload["parent_id"] = parent_id
 
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), data=payload, reason=reason)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), payload=payload, reason=reason)
 
     async def modify_channel(
         self, channel_id: "Snowflake_Type", data: dict, reason: Absent[str] = MISSING
@@ -169,7 +169,7 @@ class ChannelRequests:
             Channel object on success
 
         """
-        return await self.request(Route("PATCH", f"/channels/{channel_id}"), data=data, reason=reason)
+        return await self.request(Route("PATCH", f"/channels/{channel_id}"), payload=data, reason=reason)
 
     async def delete_channel(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
         """
@@ -233,7 +233,7 @@ class ChannelRequests:
         if target_application_id:
             payload["target_application_id"] = target_application_id
 
-        return await self.request(Route("POST", f"/channels/{channel_id}/invites"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/channels/{channel_id}/invites"), payload=payload, reason=reason)
 
     async def get_invite(
         self,
@@ -301,7 +301,7 @@ class ChannelRequests:
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
-            data={"allow": allow, "deny": deny, "type": perm_type},
+            payload={"allow": allow, "deny": deny, "type": perm_type},
             reason=reason,
         )
 
@@ -334,7 +334,7 @@ class ChannelRequests:
 
         """
         return await self.request(
-            Route("POST", f"/channels/{channel_id}/followers"), data={"webhook_channel_id": webhook_channel_id}
+            Route("POST", f"/channels/{channel_id}/followers"), payload={"webhook_channel_id": webhook_channel_id}
         )
 
     async def trigger_typing_indicator(self, channel_id: "Snowflake_Type") -> None:
@@ -382,7 +382,7 @@ class ChannelRequests:
         """
         return await self.request(
             Route("POST", "/stage-instances"),
-            data={
+            payload={
                 "channel_id": channel_id,
                 "topic": topic,
                 "privacy_level": StagePrivacyLevel(privacy_level),
@@ -421,7 +421,7 @@ class ChannelRequests:
         """
         return await self.request(
             Route("PATCH", f"/stage-instances/{channel_id}"),
-            data=dict_filter_none({"topic": topic, "privacy_level": privacy_level}),
+            payload=dict_filter_none({"topic": topic, "privacy_level": privacy_level}),
             reason=reason,
         )
 

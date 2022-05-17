@@ -136,7 +136,7 @@ class GuildRequests:
 
         # only do the request if there is something to modify
         if kwargs_copy:
-            await self.request(Route("PATCH", f"/guilds/{guild_id}"), data=kwargs_copy, reason=reason)
+            await self.request(Route("PATCH", f"/guilds/{guild_id}"), payload=kwargs_copy, reason=reason)
 
     async def delete_guild(self, guild_id: "Snowflake_Type") -> None:
         """
@@ -175,7 +175,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
-            data=dict_filter_none(
+            payload=dict_filter_none(
                 {"access_token": access_token, "nick": nick, "roles": roles, "mute": mute, "deaf": deaf}
             ),
         )
@@ -257,7 +257,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PUT", f"/guilds/{guild_id}/bans/{user_id}"),
-            data={"delete_message_days": delete_message_days},
+            payload={"delete_message_days": delete_message_days},
             reason=reason,
         )
 
@@ -322,7 +322,7 @@ class GuildRequests:
         if include_roles:
             payload["include_roles"] = ", ".join(include_roles)
 
-        return await self.request(Route("POST", f"/guilds/{guild_id}/prune"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/prune"), payload=payload, reason=reason)
 
     async def get_guild_invites(self, guild_id: "Snowflake_Type") -> List[discord_typings.InviteData]:
         """
@@ -352,7 +352,7 @@ class GuildRequests:
             Role object
 
         """
-        return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/roles"), payload=payload, reason=reason)
 
     async def modify_guild_role_positions(
         self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", position: int, reason: Absent[str] = MISSING
@@ -371,7 +371,7 @@ class GuildRequests:
 
         """
         return await self.request(
-            Route("PATCH", f"/guilds/{guild_id}/roles"), data={"id": role_id, "position": position}, reason=reason
+            Route("PATCH", f"/guilds/{guild_id}/roles"), payload={"id": role_id, "position": position}, reason=reason
         )
 
     async def modify_guild_role(
@@ -390,7 +390,7 @@ class GuildRequests:
             Role object
 
         """
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), data=payload, reason=reason)
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/roles/{role_id}"), payload=payload, reason=reason)
 
     async def delete_guild_role(
         self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", reason: Absent[str] = MISSING
@@ -575,7 +575,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/widget"),
-            data=dict_filter_none({"enabled": enabled, "channel_id": channel_id}),
+            payload=dict_filter_none({"enabled": enabled, "channel_id": channel_id}),
         )
 
     async def modify_guild_welcome_screen(
@@ -596,7 +596,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/welcome-screen"),
-            data={"enabled": enabled, "welcome_channels": welcome_channels, "description": description},
+            payload={"enabled": enabled, "welcome_channels": welcome_channels, "description": description},
         )
 
     async def modify_current_user_voice_state(
@@ -618,7 +618,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/@me"),
-            data=dict_filter_none(
+            payload=dict_filter_none(
                 {
                     "channel_id": channel_id,
                     "suppress": suppress,
@@ -642,7 +642,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/voice-states/{user_id}"),
-            data=dict_filter_none({"channel_id": channel_id, "suppress": suppress}),
+            payload=dict_filter_none({"channel_id": channel_id, "suppress": suppress}),
         )
 
     async def create_guild(
@@ -661,7 +661,7 @@ class GuildRequests:
     ) -> dict:
         return await self.request(
             Route("POST", "/guilds"),
-            data=dict_filter_missing(
+            payload=dict_filter_missing(
                 {
                     "name": name,
                     "icon": icon,
@@ -697,7 +697,7 @@ class GuildRequests:
 
         """
         return await self.request(
-            Route("POST", f"/guilds/templates/{template_code}"), data={"name": name, "icon": icon}
+            Route("POST", f"/guilds/templates/{template_code}"), payload={"name": name, "icon": icon}
         )
 
     async def get_guild_templates(self, guild_id: "Snowflake_Type") -> List[discord_typings.GuildTemplateData]:
@@ -730,7 +730,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("POST", f"/guilds/{guild_id}/templates"),
-            data={"name": name, "description": description},
+            payload={"name": name, "description": description},
         )
 
     async def sync_guild_template(
@@ -771,7 +771,7 @@ class GuildRequests:
         """
         return await self.request(
             Route("PATCH", f"/guilds/{guild_id}/templates/{template_code}"),
-            data={"name": name, "description": description},
+            payload={"name": name, "description": description},
         )
 
     async def delete_guild_template(

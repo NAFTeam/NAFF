@@ -45,7 +45,7 @@ class UserRequests:
             payload: The data to send.
 
         """
-        return await self.request(Route("PATCH", "/users/@me"), data=payload)
+        return await self.request(Route("PATCH", "/users/@me"), payload=payload)
 
     async def get_user_guilds(self) -> List[discord_typings.GuildData]:
         """
@@ -74,7 +74,7 @@ class UserRequests:
             recipient_id: The recipient to open a DM channel with.
 
         """
-        return await self.request(Route("POST", "/users/@me/channels"), data={"recipient_id": recipient_id})
+        return await self.request(Route("POST", "/users/@me/channels"), payload={"recipient_id": recipient_id})
 
     async def create_group_dm(self, payload: dict) -> discord_typings.GroupDMChannelData:
         """
@@ -84,7 +84,7 @@ class UserRequests:
             payload: The data to send.
 
         """
-        return await self.request(Route("POST", "/users/@me/channels"), data=payload)
+        return await self.request(Route("POST", "/users/@me/channels"), payload=payload)
 
     async def get_user_connections(self) -> list:
         """
@@ -110,7 +110,7 @@ class UserRequests:
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/recipients/{user_id}"),
-            data={"access_token": access_token, "nick": nick},
+            payload={"access_token": access_token, "nick": nick},
         )
 
     async def group_dm_remove_recipient(self, channel_id: "Snowflake_Type", user_id: "Snowflake_Type") -> None:
@@ -133,4 +133,4 @@ class UserRequests:
             nickname: The new nickname to use
 
         """
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/@me/nick"), data={"nick": nickname})
+        return await self.request(Route("PATCH", f"/guilds/{guild_id}/members/@me/nick"), payload={"nick": nickname})

@@ -198,8 +198,10 @@ class MessageableMixin(SendMixin):
     last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     """When the last pinned message was pinned. This may be None when a message is not pinned."""
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        return await self._client.http.create_message(message_payload, self.id)
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
+        return await self._client.http.create_message(message_payload, self.id, files=files)
 
     async def fetch_message(self, message_id: Snowflake_Type) -> Optional["models.Message"]:
         """

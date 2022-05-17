@@ -4,7 +4,6 @@ import time
 from collections import namedtuple
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 
-from aiohttp import FormData
 
 import naff.models as models
 from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
@@ -1189,20 +1188,13 @@ class Guild(BaseGuild):
             New Sticker instance
 
         """
-        payload = FormData()
-        payload.add_field("name", name)
-
-        file_buffer = models.open_file(imagefile)
-        if isinstance(imagefile, models.File):
-            payload.add_field("file", file_buffer, filename=imagefile.file_name)
-        else:
-            payload.add_field("file", file_buffer)
+        payload = {"name": name}
 
         if description:
-            payload.add_field("description", description)
+            payload["description"] = description
 
         if tags:
-            payload.add_field("tags", tags)
+            payload["tags"] = tags
 
         sticker_data = await self._client.http.create_guild_sticker(payload, self.id, reason)
         return models.Sticker.from_dict(sticker_data, self._client)
