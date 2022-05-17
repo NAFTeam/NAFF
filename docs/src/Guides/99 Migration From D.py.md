@@ -5,10 +5,10 @@
 
 2. Classes/Models
      - Your client is `naff.Snake`.  (Note that commands are a first-class feature, so this is a replacement to both `discord.Client` and `discord.ext.commands.Bot`)
-     - Cogs are `Scales`.
+     - Extensions are `Scales`.
      - `Member` is not a subclass of `User`, if you're using `isinstance`, you'll want to check both explicitly.
 
-3. Scales (Cogs)
+3. Scales (Extensions)
      - These work mostly the same, with a few notable changes:
      - Your setup function doesn't need to do `bot.add_cog()`.  Simply call `MyCog(bot)`, and it'll automatically register itself.
      - Scales already define `self.bot`, you don't need to do that in your `__init__` function.

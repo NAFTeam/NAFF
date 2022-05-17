@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 from typing import Any, Optional
 
 from naff import (
-    Cog,
+    Extension,
     slash_command,
     InteractionContext,
     Modal,
@@ -13,7 +13,7 @@ from naff import (
     MISSING,
     ModalContext,
 )
-from naff.ext.debug_cog.utils import debug_embed
+from naff.ext.debug_extension.utils import debug_embed
 from naff.ext.paginators import Paginator
 from naff.models import (
     Embed,
@@ -24,7 +24,7 @@ from naff.models import (
 __all__ = ("DebugExec",)
 
 
-class DebugExec(Cog):
+class DebugExec(Extension):
     def __init__(self, bot) -> None:
         self.cache: dict[int, str] = {}
 

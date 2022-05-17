@@ -15,31 +15,31 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(logger_name)
 
-__all__ = ("Cog",)
+__all__ = ("Extension",)
 
 
-class Cog:
+class Extension:
     """
-    A class that allows you to separate your commands and listeners into separate files. Skins require an entrypoint in the same file called `setup`, this function allows client to load the Cog.
+    A class that allows you to separate your commands and listeners into separate files. Skins require an entrypoint in the same file called `setup`, this function allows client to load the Extension.
 
     ??? Hint "Example Usage:"
         ```python
-        class ExampleCog(Cog):
+        class ExampleExt(Extension):
             def __init__(self, bot):
-                print("Cog Created")
+                print("Extension Created")
 
             @prefixed_command()
             async def some_command(self, context):
-                await ctx.send(f"I was sent from a cog called {self.name}")
+                await ctx.send(f"I was sent from a extension called {self.name}")
         ```
 
     Attributes:
         bot Client: A reference to the client
-        name str: The name of this Cog (`read-only`)
-        description str: A description of this Cog
-        cog_checks str: A list of checks to be ran on any command in this cog
-        cog_prerun List: A list of coroutines to be run before any command in this cog
-        cog_postrun List: A list of coroutines to be run after any command in this cog
+        name str: The name of this Extension (`read-only`)
+        description str: A description of this Extension
+        extension_checks str: A list of checks to be ran on any command in this extension
+        extension_prerun List: A list of coroutines to be run before any command in this extension
+        extension_postrun List: A list of coroutines to be run after any command in this extension
 
     """
 
@@ -47,22 +47,22 @@ class Cog:
     __name: str
     extension_name: str
     description: str
-    cog_checks: List
-    cog_prerun: List
-    cog_postrun: List
-    cog_error: Optional[Callable[..., Coroutine]]
+    extension_checks: List
+    extension_prerun: List
+    extension_postrun: List
+    extension_error: Optional[Callable[..., Coroutine]]
     _commands: List
     _listeners: List
     auto_defer: "AutoDefer"
 
-    def __new__(cls, bot: "Client", *args, **kwargs) -> "Cog":
+    def __new__(cls, bot: "Client", *args, **kwargs) -> "Extension":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
         new_cls.__name = cls.__name__
-        new_cls.cog_checks = []
-        new_cls.cog_prerun = []
-        new_cls.cog_postrun = []
-        new_cls.cog_error = None
+        new_cls.extension_checks = []
+        new_cls.extension_prerun = []
+        new_cls.extension_postrun = []
+        new_cls.extension_error = None
         new_cls.auto_defer = MISSING
 
         new_cls.description = kwargs.get("Description", None)
@@ -77,7 +77,7 @@ class Cog:
             new_cls, predicate=lambda x: isinstance(x, (naff.BaseCommand, naff.Listener, Task))
         ):
             if isinstance(val, naff.BaseCommand):
-                val.cog = new_cls
+                val.extension = new_cls
                 val = wrap_partial(val, new_cls)
 
                 if not isinstance(val, naff.PrefixedCommand) or not val.is_subcommand:
@@ -106,7 +106,7 @@ class Cog:
         )
 
         new_cls.extension_name = inspect.getmodule(new_cls).__name__
-        new_cls.bot.cogs[new_cls.name] = new_cls
+        new_cls.bot.ext[new_cls.name] = new_cls
 
         if hasattr(new_cls, "async_start"):
             if inspect.iscoroutinefunction(new_cls.async_start):
@@ -122,21 +122,21 @@ class Cog:
 
     @property
     def commands(self) -> List["BaseCommand"]:
-        """Get the commands from this Cog."""
+        """Get the commands from this Extension."""
         return self._commands
 
     @property
     def listeners(self) -> List["Listener"]:
-        """Get the listeners from this Cog."""
+        """Get the listeners from this Extension."""
         return self._listeners
 
     @property
     def name(self) -> str:
-        """Get the name of this Cog."""
+        """Get the name of this Extension."""
         return self.__name
 
-    def shed(self) -> None:
-        """Called when this Cog is being removed."""
+    def drop(self) -> None:
+        """Called when this Extension is being removed."""
         for func in self._commands:
             if isinstance(func, naff.ModalCommand):
                 for listener in func.listeners:
@@ -156,12 +156,12 @@ class Cog:
         for func in self.listeners:
             self.bot.listeners[func.event].remove(func)
 
-        self.bot.cogs.pop(self.name, None)
-        log.debug(f"{self.name} has been shed")
+        self.bot.ext.pop(self.name, None)
+        log.debug(f"{self.name} has been drop")
 
-    def add_cog_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
+    def add_ext_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
         """
-        Add a auto defer for all commands in this cog.
+        Add a auto defer for all commands in this extension.
 
         Args:
             ephemeral: Should the command be deferred as ephemeral
@@ -170,14 +170,14 @@ class Cog:
         """
         self.auto_defer = naff.AutoDefer(enabled=True, ephemeral=ephemeral, time_until_defer=time_until_defer)
 
-    def add_cog_check(self, coroutine: Callable[["Context"], Awaitable[bool]]) -> None:
+    def add_ext_check(self, coroutine: Callable[["Context"], Awaitable[bool]]) -> None:
         """
-        Add a coroutine as a check for all commands in this cog to run. This coroutine must take **only** the parameter `context`.
+        Add a coroutine as a check for all commands in this extension to run. This coroutine must take **only** the parameter `context`.
 
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.add_cog_check(self.example)
+                self.add_ext_check(self.example)
 
             @staticmethod
             async def example(context: Context):
@@ -192,14 +192,14 @@ class Cog:
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Check must be a coroutine")
 
-        if not self.cog_checks:
-            self.cog_checks = []
+        if not self.extension_checks:
+            self.extension_checks = []
 
-        self.cog_checks.append(coroutine)
+        self.extension_checks.append(coroutine)
 
-    def add_cog_prerun(self, coroutine: Callable[..., Coroutine]) -> None:
+    def add_extension_prerun(self, coroutine: Callable[..., Coroutine]) -> None:
         """
-        Add a coroutine to be run **before** all commands in this Cog.
+        Add a coroutine to be run **before** all commands in this Extension.
 
         Note:
             Pre-runs will **only** be run if the commands checks pass
@@ -207,7 +207,7 @@ class Cog:
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.add_cog_prerun(self.example)
+                self.add_extension_prerun(self.example)
 
             async def example(self, context: Context):
                 await ctx.send("I ran first")
@@ -220,18 +220,18 @@ class Cog:
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Callback must be a coroutine")
 
-        if not self.cog_prerun:
-            self.cog_prerun = []
-        self.cog_prerun.append(coroutine)
+        if not self.extension_prerun:
+            self.extension_prerun = []
+        self.extension_prerun.append(coroutine)
 
-    def add_cog_postrun(self, coroutine: Callable[..., Coroutine]) -> None:
+    def add_extension_postrun(self, coroutine: Callable[..., Coroutine]) -> None:
         """
-        Add a coroutine to be run **after** all commands in this Cog.
+        Add a coroutine to be run **after** all commands in this Extension.
 
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.add_cog_postrun(self.example)
+                self.add_extension_postrun(self.example)
 
             async def example(self, context: Context):
                 await ctx.send("I ran first")
@@ -244,18 +244,18 @@ class Cog:
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Callback must be a coroutine")
 
-        if not self.cog_postrun:
-            self.cog_postrun = []
-        self.cog_postrun.append(coroutine)
+        if not self.extension_postrun:
+            self.extension_postrun = []
+        self.extension_postrun.append(coroutine)
 
-    def set_cog_error(self, coroutine: Callable[..., Coroutine]) -> None:
+    def set_extension_error(self, coroutine: Callable[..., Coroutine]) -> None:
         """
-        Add a coroutine to handle any exceptions raised in this cog.
+        Add a coroutine to handle any exceptions raised in this extension.
 
         ??? Hint "Example Usage:"
             ```python
             def __init__(self, bot):
-                self.set_cog_error(self.example)
+                self.set_extension_error(self.example)
 
         Args:
             coroutine: The coroutine to run
@@ -264,6 +264,6 @@ class Cog:
         if not asyncio.iscoroutinefunction(coroutine):
             raise TypeError("Callback must be a coroutine")
 
-        if self.cog_error:
-            log.warning("Cog error callback has been overridden!")
-        self.cog_error = coroutine
+        if self.extension_error:
+            log.warning("Extension error callback has been overridden!")
+        self.extension_error = coroutine

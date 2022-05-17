@@ -1,4 +1,4 @@
-# Advanced Cog Usage
+# Advanced Extension Usage
 
 You have learned how to create interactions and how to keep your code clean with scales.
 The following examples show you how to elevate your scales to the next level.
@@ -12,10 +12,10 @@ Checks prohibit the interaction from running if they return `False`.
 
 You can add your own check to your scale. In this example, we only want a user whose name starts with "a" to run any command from this scale.
 ```python
-class MyScale(Cog):
+class MyScale(Extension):
     def __init__(self, client: Snake):
         self.client = client
-        self.add_cog_check(self.a_check)
+        self.add_ext_check(self.a_check)
 
     async def a_check(ctx: InteractionContext) -> bool:
         return bool(ctx.author.name.startswith("a"))
@@ -34,11 +34,11 @@ Pre- and Post-Run events are similar to checks. They run before and after an int
 
 In this example, we are just printing some stats before and after the interaction.
 ```python
-class MyScale(Cog):
+class MyExt(Extension):
     def __init__(self, client: Snake):
         self.client = client
-        self.add_cog_prerun(self.pre_run)
-        self.add_cog_postrun(self.post_run)
+        self.add_extension_prerun(self.pre_run)
+        self.add_extension_postrun(self.post_run)
 
     async def pre_run(ctx: InteractionContext):
         print(f"Command started at: {datetime.datetime.now()}")
@@ -64,10 +64,10 @@ By subclassing your own custom scale, your can still split your code into as man
 
 ### File 1
 ```python
-class CustomScale(Cog):
+class CustomScale(Extension):
     def __init__(self, client: Snake):
         self.client = client
-        self.add_cog_check(self.a_check)
+        self.add_ext_check(self.a_check)
 
     async def a_check(ctx: InteractionContext) -> bool:
         return bool(ctx.author.name.startswith("a"))

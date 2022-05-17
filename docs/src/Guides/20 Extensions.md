@@ -130,7 +130,7 @@ Below is an example of a bot, one with scales, one without.
             await ctx.edit_origin("test")
 
 
-        bot.mount_cog("test_components")
+        bot.load_extension("test_components")
         bot.start("Token")
 
         ```
@@ -141,10 +141,10 @@ Below is an example of a bot, one with scales, one without.
         from naff.models.command import prefixed_command
         from naff.models.discord_objects.components import Button, ActionRow
         from naff.models.enums import ButtonStyles
-        from naff.models.scale import Cog
+        from naff.models.scale import Extension
 
 
-        class ButtonExampleSkin(Cog):
+        class ButtonExampleSkin(Extension):
             @prefixed_command()
             async def blurple_button(self, ctx):
                 await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
@@ -178,19 +178,19 @@ Below is an example of a bot, one with scales, one without.
             ButtonExampleSkin(bot)
         ```
 
-Scales are effectively just another python file that contains a class that inherits from an object called `Cog`,
+Scales are effectively just another python file that contains a class that inherits from an object called `Extension`,
 inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
-from naff import Cog
+from naff import Extension
 
 
-class SomeClass(Cog):
+class SomeClass(Extension):
     ...
 
 
 def setup(bot):
-    # This is called by naff so it knows how to load the Cog
+    # This is called by naff so it knows how to load the Extension
     SomeClass(bot)
 ```
 As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek,
@@ -201,31 +201,31 @@ To load a scale, you simply add the following to your `main` script, just above 
 ```python
 ...
 
-bot.mount_cog("Filename_here")
+bot.load_extension("Filename_here")
 
 bot.start("token")
 ```
 
 Now, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
-To do this, simply run `bot.reload_cog("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
+To do this, simply run `bot.reload_extension("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
 is doing will be abruptly stopped.
 
 
-You can pass keyword-arguments to the `mount_cog`, `drop_cog` and `reload_cog` scale management methods.
-Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Cog.shed` method.
+You can pass keyword-arguments to the `load_extension`, `unload_extension` and `reload_extension` scale management methods.
+Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Extension.drop` method.
 
-Here is a basic "Cog switching" example:
+Here is a basic "Extension switching" example:
 
 ```python
-from naff import Cog
+from naff import Extension
 
 
-class SomeScale(Cog):
+class SomeScale(Extension):
     def __init__(self, bot, some_arg: int = 0):
         ...
 
 
-class AnotherScale(Cog):
+class AnotherScale(Extension):
     def __init__(self, bot, another_arg: float = 0.0):
         ...
 
@@ -239,7 +239,7 @@ def setup(bot, default_scale: bool, **kwargs):  # We don't care about other argu
 
 ...
 
-bot.mount_cog("Filename_here", default_scale=False, another_arg=3.14)
+bot.load_extension("Filename_here", default_scale=False, another_arg=3.14)
 # OR
-bot.mount_cog("Filename_here", default_scale=True, some_arg=555)
+bot.load_extension("Filename_here", default_scale=True, some_arg=555)
 ```

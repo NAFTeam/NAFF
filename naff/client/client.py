@@ -42,7 +42,6 @@ from naff.client import errors
 from naff.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
 from naff.client.errors import (
     BotException,
-    CogLoadException,
     ExtensionLoadException,
     ExtensionNotFound,
     Forbidden,
@@ -61,7 +60,7 @@ from naff.models import (
     Guild,
     GuildTemplate,
     Message,
-    Cog,
+    Extension,
     NaffUser,
     User,
     Member,
@@ -185,7 +184,7 @@ class Client(
         shard_id: int = 0,
         status: Status = Status.ONLINE,
         sync_interactions: bool = True,
-        sync_cogs: bool = True,
+        sync_ext: bool = True,
         total_shards: int = 1,
         **kwargs,
     ) -> None:
@@ -196,8 +195,8 @@ class Client(
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
-        self.sync_cogs: bool = sync_cogs
-        """Should we sync whenever a cog is (un)loaded"""
+        self.sync_ext: bool = sync_ext
+        """Should we sync whenever a extension is (un)loaded"""
         self.debug_scope = to_snowflake(debug_scope) if debug_scope is not MISSING else MISSING
         """Sync global commands as guild for quicker command updates during debug"""
         self.default_prefix = default_prefix
@@ -269,9 +268,9 @@ class Client(
         self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
         self.processors: Dict[str, Callable[..., Coroutine]] = {}
-        self.__extensions = {}
-        self.cogs = {}
-        """A dictionary of mounted cogs"""
+        self.__modules = {}
+        self.ext = {}
+        """A dictionary of mounted ext"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
 
@@ -642,7 +641,7 @@ class Client(
             try:
                 await asyncio.gather(*self.async_startup_tasks)
             except Exception as e:
-                await self.on_error("async-cog-loader", e)
+                await self.on_error("async-extension-loader", e)
 
         # cache slash commands
         if not self._startup:
@@ -1045,7 +1044,7 @@ class Client(
         interactions and cache their scopes.
 
         """
-        # allow for cogs and main to share the same decorator
+        # allow for ext and main to share the same decorator
         try:
             if self.sync_interactions:
                 await self.synchronise_interactions()
@@ -1345,8 +1344,8 @@ class Client(
 
                 if ctx.command.auto_defer:
                     auto_defer = ctx.command.auto_defer
-                elif ctx.command.cog and ctx.command.cog.auto_defer:
-                    auto_defer = ctx.command.cog.auto_defer
+                elif ctx.command.extension and ctx.command.extension.auto_defer:
+                    auto_defer = ctx.command.extension.auto_defer
                 else:
                     auto_defer = self.auto_defer
 
@@ -1477,8 +1476,8 @@ class Client(
                         except Exception as e:
                             if new_command.error_callback:
                                 await new_command.error_callback(e, context)
-                            elif new_command.cog and new_command.cog.cog_error:
-                                await new_command.cog.cog_error(context)
+                            elif new_command.extension and new_command.extension.extension_error:
+                                await new_command.extension.extension_error(context)
                             else:
                                 await self.on_command_error(context, e)
                             return
@@ -1508,94 +1507,34 @@ class Client(
     async def _disconnect(self) -> None:
         self._ready.clear()
 
-    def get_cogs(self, name: str) -> list[Cog]:
+    def get_extensions(self, name: str) -> list[Extension]:
         """
-        Get all cogs with a name or extension name.
+        Get all ext with a name or extension name.
 
         Args:
-            name: The name of the cog, or the name of it's extension
+            name: The name of the extension, or the name of it's extension
 
         Returns:
-            List of Cogs
+            List of Extensions
         """
-        if name not in self.cogs.keys():
-            return [cog for cog in self.cogs.values() if cog.extension_name == name]
+        if name not in self.ext.keys():
+            return [ext for ext in self.ext.values() if ext.extension_name == name]
 
-        return [self.cogs.get(name, None)]
+        return [self.ext.get(name, None)]
 
-    def get_cog(self, name: str) -> Cog | None:
+    def get_ext(self, name: str) -> Extension | None:
         """
-        Get a cog with a name or extension name.
+        Get a extension with a name or extension name.
 
         Args:
-            name: The name of the cog, or the name of it's extension
+            name: The name of the extension, or the name of it's extension
 
         Returns:
-            A cog, if found
+            A extension, if found
         """
-        if cog := self.get_cogs(name):
-            return cog[0]
+        if ext := self.get_extensions(name):
+            return ext[0]
         return None
-
-    def mount_cog(self, file_name: str, package: str = None, **load_kwargs) -> None:
-        """
-        A helper method to load a cog.
-
-        Args:
-            file_name: The name of the file to load the cog from.
-            package: The package this cog is in.
-            load_kwargs: The auto-filled mapping of the load keyword arguments
-
-        """
-        self.load_extension(file_name, package, **load_kwargs)
-        if self.sync_cogs and self._ready.is_set():
-            try:
-                asyncio.get_running_loop()
-            except RuntimeError:
-                return
-            asyncio.create_task(self.synchronise_interactions())
-
-    def drop_cog(self, cog_name: str, **unload_kwargs) -> None:
-        """
-        Helper method to unload a cog.
-
-        Args:
-            cog_name: The name of the cog to unload.
-            unload_kwargs: The auto-filled mapping of the unload keyword arguments
-
-        """
-        if cog := self.get_cogs(cog_name):
-            self.unload_extension(inspect.getmodule(cog[0]).__name__, **unload_kwargs)
-
-            if self.sync_cogs and self._ready.is_set():
-                try:
-                    asyncio.get_running_loop()
-                except RuntimeError:
-                    return
-                asyncio.create_task(self.synchronise_interactions())
-
-        else:
-            raise CogLoadException(f"Unable to shed cog: No cog exists with name: `{cog_name}`")
-
-    def reload_cog(
-        self, cog_name: str, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
-    ) -> None:
-        """
-        Helper method to reload a cog.
-
-        Args:
-            cog_name: The name of the cog to reload
-            load_kwargs: The manually-filled mapping of the load keyword arguments
-            unload_kwargs: The manually-filled mapping of the unload keyword arguments
-
-        """
-        if not load_kwargs:
-            load_kwargs = {}
-        if not unload_kwargs:
-            unload_kwargs = {}
-
-        self.drop_cog(cog_name, **unload_kwargs)
-        self.mount_cog(cog_name, **load_kwargs)
 
     def load_extension(self, name: str, package: str = None, **load_kwargs) -> None:
         """
@@ -1608,7 +1547,7 @@ class Client(
 
         """
         name = importlib.util.resolve_name(name, package)
-        if name in self.__extensions:
+        if name in self.__modules:
             raise Exception(f"{name} already loaded")
 
         module = importlib.import_module(name, package)
@@ -1627,8 +1566,14 @@ class Client(
 
         else:
             log.debug(f"Loaded Extension: {name}")
-            self.__extensions[name] = module
-            return
+            self.__modules[name] = module
+
+            if self.sync_ext and self._ready.is_set():
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    return
+                asyncio.create_task(self.synchronise_interactions())
 
     def unload_extension(self, name, package=None, **unload_kwargs) -> None:
         """
@@ -1641,7 +1586,7 @@ class Client(
 
         """
         name = importlib.util.resolve_name(name, package)
-        module = self.__extensions.get(name)
+        module = self.__modules.get(name)
 
         if module is None:
             raise ExtensionNotFound(f"No extension called {name} is loaded")
@@ -1652,11 +1597,19 @@ class Client(
         except AttributeError:
             pass
 
-        for cog in self.get_cogs(name):
-            cog.shed(**unload_kwargs)
+        for ext in self.get_extensions(name):
+            ext.drop(**unload_kwargs)
 
         del sys.modules[name]
-        del self.__extensions[name]
+        del self.__modules[name]
+
+        if self.sync_ext and self._ready.is_set():
+            if self.sync_ext and self._ready.is_set():
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    return
+                asyncio.create_task(self.synchronise_interactions())
 
     def reload_extension(
         self, name, package=None, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
@@ -1672,7 +1625,7 @@ class Client(
 
         """
         name = importlib.util.resolve_name(name, package)
-        module = self.__extensions.get(name)
+        module = self.__modules.get(name)
 
         if module is None:
             log.warning("Attempted to reload extension thats not loaded. Loading extension instead")

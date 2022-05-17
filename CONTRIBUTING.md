@@ -7,7 +7,7 @@ logging.basicConfig()
 cls_log = logging.getLogger(dis_snek.const.logger_name)
 cls_log.setLevel(logging.DEBUG)
 
-bot.mount_cog("naff.ext.debug_cog")
+bot.load_extension("naff.ext.debug_extension")
 
 bot = Snake(..., asyncio_debug=True)
 ```

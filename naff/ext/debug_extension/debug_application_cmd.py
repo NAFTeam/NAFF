@@ -3,7 +3,7 @@ import pprint
 from collections import Counter
 from typing import Optional
 
-from naff import Cog
+from naff import Extension
 from naff.client.client import Client
 from naff.client.const import GLOBAL_SCOPE
 from naff.client.errors import HTTPException
@@ -27,9 +27,9 @@ app_cmds_def = {
 }
 
 
-class DebugAppCMD(Cog):
+class DebugAppCMD(Extension):
     def __init__(self, bot: Client) -> None:
-        self.add_cog_check(checks.is_owner())
+        self.add_ext_check(checks.is_owner())
 
     @slash_command(
         "debug",
