@@ -14,7 +14,7 @@ from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.misc_utils import get
-from naff.client.utils.serializer import to_dict, to_image_data, dict_filter_missing
+from naff.client.utils.serializer import to_dict, to_image_data
 from naff.models.discord.base import DiscordObject
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
@@ -2099,31 +2099,24 @@ class GuildForum(GuildChannel):
         if applied_tags != MISSING:
             applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
 
-        if file or files:
-            extra = dict_filter_missing(
-                {
-                    "name": name,
-                    "auto_archive_duration": auto_archive_duration,
-                    "rate_limit_per_user": rate_limit_per_user,
-                    "applied_tags": applied_tags,
-                }
-            )
-        else:
-            extra = {}
-
         message_payload = models.discord.message.process_message_payload(
             content=content,
             embeds=embeds or embed,
             components=components,
             stickers=stickers,
             allowed_mentions=allowed_mentions,
-            files=files or file,
             tts=tts,
-            **extra,
         )
 
         data = await self._client.http.create_forum_thread(
-            self.id, name, auto_archive_duration, message_payload, applied_tags, rate_limit_per_user, reason=reason
+            self.id,
+            name,
+            auto_archive_duration,
+            message_payload,
+            applied_tags,
+            rate_limit_per_user,
+            files=files or file,
+            reason=reason,
         )
         return self._client.cache.place_channel_data(data)
 

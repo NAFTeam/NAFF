@@ -13,6 +13,7 @@ __all__ = ("ThreadRequests",)
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class ThreadRequests:
@@ -199,6 +200,7 @@ class ThreadRequests:
         message: dict | FormData,
         applied_tags: List[str] = None,
         rate_limit_per_user: Absent[int] = MISSING,
+        files: Absent["UPLOADABLE_TYPE"] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> dict:
         """
@@ -215,19 +217,17 @@ class ThreadRequests:
         Returns:
             The created thread object
         """
-        if isinstance(message, dict):
-            payload = {
+        # note: `{"use_nested_fields": 1}` seems to be a temporary flag until forums launch
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/threads"),
+            payload={
                 "name": name,
                 "auto_archive_duration": auto_archive_duration,
                 "rate_limit_per_user": rate_limit_per_user,
                 "applied_tags": applied_tags,
-            }
-            payload.update(message)
-        else:
-            # handle FormData payloads
-            payload = message
-
-        # note: `?has_message=true` seems to be a temporary flag until forums launch
-        return await self.request(
-            Route("POST", f"/channels/{channel_id}/threads?has_message=true"), data=payload, reason=reason
+                "message": message,
+            },
+            params={"use_nested_fields": 1},
+            files=files,
+            reason=reason,
         )
