@@ -3,7 +3,7 @@
 These files contain useful features that help you develop a bot
 
 - [Debug Extension](debug_ext)
-    - A scale preloaded with a load of debugging utilities to help you find and fix bugs
+    - An extension preloaded with a load of debugging utilities to help you find and fix bugs
 
 - [Paginators](paginators)
     - An automatic message paginator to help you get a lot of information across

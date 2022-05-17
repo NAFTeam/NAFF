@@ -23,7 +23,7 @@ There are two different ways to install this library and create your bot.
     ### Template Feature
     - Basic, ready to go bot
     - Implementation of best practises
-    - Scales, and general extensibility
+    - NAFF, and general extensibility
     - Example command, context menu, component, and event
     - Logging to both console and file
     - Pip and poetry config

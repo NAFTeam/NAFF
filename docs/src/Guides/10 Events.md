@@ -30,7 +30,7 @@ Be aware that your `Intents` must be set to receive the event you are looking fo
 There are two ways to register events. **Decorators** are the recommended way to do this.
 
 === ":one: Decorators"
-    To use decorators, they need to be in the same file where you defined your `bot = Snake()`.
+    To use decorators, they need to be in the same file where you defined your `bot = Client()`.
 
     ```python
     bot = Snake(intents=Intents.DEFAULT)

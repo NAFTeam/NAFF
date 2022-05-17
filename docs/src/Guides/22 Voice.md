@@ -53,4 +53,4 @@ async def play_file(ctx: naff.InteractionContext):
     await ctx.voice_state.play(audio)
 ```
 
-Check out [Active Voice State](/API Reference/models/Snek/active_voice_state/) for a list of available methods and attributes.
+Check out [Active Voice State](/API Reference/models/naff/active_voice_state/) for a list of available methods and attributes.

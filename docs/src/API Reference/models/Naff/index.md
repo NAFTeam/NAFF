@@ -1,4 +1,4 @@
-# Snek Models Index
+# NAFF Models Index
 
 - [Active Voice State](active_voice_state)
 - [Application Commands](application_commands)
@@ -8,10 +8,10 @@
 - [Context](context)
 - [Converters](converters)
 - [Cooldowns](cooldowns)
+- [Extension](extension)
 - [Listeners](listener)
 - [Localisation](localisation)
 - [Prefixed Commands](prefixed_commands)
 - [Protocols](protocols)
-- [Scales](extension)
 - [Tasks](tasks.md)
 - [Waits](wait)

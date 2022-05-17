@@ -194,7 +194,7 @@ class Embed(DictSerializationMixin):
     )
     """Timestamp of embed content"""
     fields: List[EmbedField] = field(factory=list, converter=EmbedField.from_list, repr=True)
-    """A list of [fields][naff.models.discord_objects.embed.EmbedField] to go in the embed"""
+    """A list of [fields][naff.models.discord.embed.EmbedField] to go in the embed"""
     author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
     thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))

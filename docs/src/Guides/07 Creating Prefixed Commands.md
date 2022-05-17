@@ -7,7 +7,7 @@ Prefixed commands, called by Discord as "text commands" and sometimes called "me
 
 While slash commands have been released, and is typically the way you should be making commands these days, there are many cases where the "legacy" commands may want to be kept due to various reasons, like wanting to use types not well-supported by Discord or to allow for greater flexibility for permission handling.
 
-Whatever the reason is, `Dis-Snek` has an extensive yet familiar prefixed command architecture ready to be used.
+Whatever the reason is, `NAFF` has an extensive yet familiar prefixed command architecture ready to be used.
 
 ## Your First Prefixed Command
 
@@ -20,7 +20,7 @@ async def my_command_function(ctx: PrefixedContext):
 ```
 
 ??? note "Command Name"
-    If `name` is not specified, `Dis-Snek` will automatically use the function's name as the command's name.
+    If `name` is not specified, `NAFF` will automatically use the function's name as the command's name.
 
 If the bot's prefix was set to `!`, then a user could invoke it like so:
 
@@ -123,7 +123,7 @@ The result looks like this:
 
 Parameters, by default, are assumed to be strings, since `Message.content`, the content used for prefixed commands, is one. However, there are many times where you want to have a parameter be a more specific type, like a integer or boolean.
 
-`Dis-Snek` provides an easy syntax to do so:
+`NAFF` provides an easy syntax to do so:
 
 ```python
 @prefixed_command()
@@ -133,7 +133,7 @@ async def test(ctx: PrefixedContext, an_int: int, a_float: float):
 
 ![Basic Type Conversion](../images/PrefixedCommands/BasicTypeConversion.png "The above running with the arguments: 1 2.5")
 
-Words/arguments will automatically be converted to the specified type. If `Dis-Snek` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarily to how it is handled with [slash commands](/Guides/03 Creating Commands).
+Words/arguments will automatically be converted to the specified type. If `NAFF` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarily to how it is handled with [slash commands](/Guides/03 Creating Commands).
 
 You can even pass in a function for parameters:
 
@@ -151,7 +151,7 @@ async def test(ctx: PrefixedContext, uppered: to_upper):
 ??? note "Functions"
     If functions are used as arguments, they can either have one parameter (which is the passed argument as a string) or two parameters (which are the context and the argument).
     They can also be asynchronous or synchronous.
-    Also, your typechecker will likely complain about this. You can ignore it for `Dis-Snek`.
+    Also, your typechecker will likely complain about this. You can ignore it for `NAFF`.
 
 #### Booleans
 
@@ -188,7 +188,7 @@ A table of supported objects and their converters can be found [here](/Guides/08
 
 #### `typing.Union`
 
-`typing.Union` allows for a parameter/argument to be of multiple types instead of one. `Dis-Snek` will attempt to convert a given argument into each type specified (starting from the first one), going down the "list" until a valid match is found.
+`typing.Union` allows for a parameter/argument to be of multiple types instead of one. `NAFF` will attempt to convert a given argument into each type specified (starting from the first one), going down the "list" until a valid match is found.
 
 For example, the below will try to convert an argument to a `GuildText` first, then a `User` if it cannot do so.
 
@@ -221,7 +221,7 @@ And if a user omits the `delete_message_days` parameter, it would act as so:
 
 #### `typing.Literal`
 
-`typing.Literal` specifies that a parameter *must* be one of the values in the list. `Dis-Snek` also forces that here (though this only works with values of basic types, like `str` or `int`):
+`typing.Literal` specifies that a parameter *must* be one of the values in the list. `NAFF` also forces that here (though this only works with values of basic types, like `str` or `int`):
 
 ```python
 @prefixed_command()
@@ -245,11 +245,11 @@ async def judgement(ctx: PrefixedContext, judgment: Annotated[str, JudgementConv
     await ctx.reply(judgment)
 ```
 
-`Dis-Snek` will use the second parameter in `Annotated` as the actual converter.
+`NAFF` will use the second parameter in `Annotated` as the actual converter.
 
 #### `Greedy`
 
-The `Greedy` class, included in this library, specifies `Dis-Snek` to keep converting as many arguments as it can until it fails to do so. For example:
+The `Greedy` class, included in this library, specifies `NAFF` to keep converting as many arguments as it can until it fails to do so. For example:
 
 ```python
 @prefixed_command()
@@ -267,7 +267,7 @@ async def slap(ctx: PrefixedContext, members: Greedy[Member]):
 
 ## Help Command
 
-There is no automatically added help command in `Dis-Snek`. However, you can use `PrefixedHelpCommand` to create one with ease. Using it looks like so:
+There is no automatically added help command in `NAFF`. However, you can use `PrefixedHelpCommand` to create one with ease. Using it looks like so:
 
 ```python
 from naff.ext.prefixed_help import PrefixedHelpCommand

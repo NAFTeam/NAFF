@@ -4,7 +4,7 @@
 
 We've all hit that point where Discord won't let you send enough characters, at that point you can either flood the channel with multiple messages, or you can start paginating your messages.
 
-Snek comes builtin with a pagination utility that splits your messages up into pages, which your user can navigate through.
+NAFF comes builtin with a pagination utility that splits your messages up into pages, which your user can navigate through.
 
 ![Paginator example](../images/paginator%20example.png)
 
@@ -17,7 +17,7 @@ paginator = Paginator.create_from_string(bot, your_content, page_size=1000)
 await paginator.send(ctx)
 ```
 
-But let's say you have fancy embedded content you want to use. Well don't worry, snek can handle that too:
+But let's say you have fancy embedded content you want to use. Well don't worry, NAFF can handle that too:
 ```python
 embeds = [Embed("Page 1 content"), Embed("Page 2 embed"), Embed("Page 3 embed"), Embed("Page 4 embed")]
 paginator = Paginator.create_from_embeds(bot, *embeds)
