@@ -10,23 +10,27 @@ __all__ = ("MessageRequests",)
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class MessageRequests:
     request: Any
 
-    async def create_message(self, payload: dict, channel_id: "Snowflake_Type") -> discord_typings.MessageData:
+    async def create_message(
+        self, payload: dict, channel_id: "Snowflake_Type", files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> discord_typings.MessageData:
         """
         Send a message to the specified channel.
 
         Args:
             payload: The message to send
+            files: Any files to send with this message
 
         Returns:
             The resulting message object
 
         """
-        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), data=payload)
+        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), payload=payload, files=files)
 
     async def delete_message(
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: Absent[str] = MISSING
@@ -55,7 +59,9 @@ class MessageRequests:
 
         """
         return await self.request(
-            Route("POST", f"/channels/{channel_id}/messages/bulk-delete"), data={"messages": message_ids}, reason=reason
+            Route("POST", f"/channels/{channel_id}/messages/bulk-delete"),
+            payload={"messages": message_ids},
+            reason=reason,
         )
 
     async def get_message(
@@ -101,6 +107,7 @@ class MessageRequests:
         payload: dict,
         channel_id: "Snowflake_Type",
         message_id: "Snowflake_Type",
+        files: list["UPLOADABLE_TYPE"] | None = None,
     ) -> discord_typings.MessageData:
         """
         Edit an existing message.
@@ -109,12 +116,15 @@ class MessageRequests:
             payload:
             channel_id: Channel of message to edit.
             message_id: Message to edit.
+            files: Any files to send with this message
 
         Returns:
             Message object of edited message
 
         """
-        return await self.request(Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), data=payload)
+        return await self.request(
+            Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), payload=payload, files=files
+        )
 
     async def crosspost_message(
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type"

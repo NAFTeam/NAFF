@@ -17,6 +17,7 @@ from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.attr_converters import optional as c_optional
 from naff.client.utils.serializer import no_export_meta, export_converter
 from naff.models.discord.color import Color, process_color
+from naff.models.discord.enums import EmbedTypes
 from naff.models.discord.timestamp import Timestamp
 
 __all__ = (
@@ -210,6 +211,7 @@ class Embed(DictSerializationMixin):
         default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
+    type: EmbedTypes = field(default=EmbedTypes.RICH, converter=c_optional(EmbedTypes), metadata=no_export_meta)
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:

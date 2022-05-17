@@ -4,8 +4,6 @@ import naff.client.errors as errors
 import naff.models as models
 
 if TYPE_CHECKING:
-    from aiohttp.formdata import FormData
-
     from naff.client import Client
     from naff.models.discord.file import UPLOADABLE_TYPE
     from naff.models.discord.components import BaseComponent
@@ -21,7 +19,7 @@ __all__ = ("SendMixin",)
 class SendMixin:
     _client: "Client"
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+    async def _send_http_request(self, message_payload: dict, files: list["UPLOADABLE_TYPE"] | None = None) -> dict:
         raise NotImplementedError
 
     async def send(
@@ -80,12 +78,11 @@ class SendMixin:
             stickers=stickers,
             allowed_mentions=allowed_mentions,
             reply_to=reply_to,
-            files=files or file,
             tts=tts,
             flags=flags,
             **kwargs,
         )
 
-        message_data = await self._send_http_request(message_payload)
+        message_data = await self._send_http_request(message_payload, files=files or file)
         if message_data:
             return self._client.cache.place_message_data(message_data)

@@ -50,10 +50,17 @@ class Application(DiscordObject):
     """If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists"""
     slug: Optional[str] = field(default=None)
     """If this application is a game sold on Discord, this field will be the URL slug that links to the store page"""
-    cover_image: Optional[str] = field(default=None)
-    """The application's default rich presence invite cover image hash"""
+    cover_image: Optional[Asset] = field(default=None)
+    """The application's default rich presence invite cover"""
     flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
     """The application's public flags"""
+    tags: Optional[List[str]] = field(default=None)
+    """The application's tags describing its functionality and content"""
+    # todo: implement an ApplicationInstallParams object. See https://discord.com/developers/docs/resources/application#install-params-object
+    install_params: Optional[dict] = field(default=None)
+    """The application's settings for in-app invitation to guilds"""
+    custom_install_url: Optional[str] = field(default=None)
+    """The application's custom authorization link for invitation to a guild"""
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -67,6 +74,9 @@ class Application(DiscordObject):
 
         if data.get("icon"):
             data["icon"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}", data["icon"])
+        if data.get("cover_image"):
+            data["cover_image"] = Asset.from_path_hash(client, f"app-icons/{data['id']}/{{}}", data["cover_image"])
+
         return data
 
     @property

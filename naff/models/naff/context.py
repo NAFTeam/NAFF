@@ -312,20 +312,24 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         self.ephemeral = ephemeral
         self.deferred = True
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
         if self.responded:
-            message_data = await self._client.http.post_followup(message_payload, self._client.app.id, self._token)
+            message_data = await self._client.http.post_followup(
+                message_payload, self._client.app.id, self._token, files=files
+            )
         else:
             if isinstance(message_payload, FormData) and not self.deferred:
                 await self.defer(self.ephemeral)
             if self.deferred:
                 message_data = await self._client.http.edit_interaction_message(
-                    message_payload, self._client.app.id, self._token
+                    message_payload, self._client.app.id, self._token, files=files
                 )
                 self.deferred = False
             else:
                 payload = {"type": CallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE, "data": message_payload}
-                await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+                await self._client.http.post_initial_response(payload, self.interaction_id, self._token, files=files)
                 message_data = await self._client.http.get_interaction_message(self._client.app.id, self._token)
             self.responded = True
 
@@ -520,7 +524,6 @@ class ComponentContext(InteractionContext):
             embeds=embeds or embed,
             components=components,
             allowed_mentions=allowed_mentions,
-            files=files or file,
             tts=tts,
         )
 
@@ -538,7 +541,9 @@ class ComponentContext(InteractionContext):
             self.defer_edit_origin = False
         else:
             payload = {"type": CallbackTypes.UPDATE_MESSAGE, "data": message_payload}
-            await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
+            await self._client.http.post_initial_response(
+                payload, self.interaction_id, self._token, files=files or file
+            )
             message_data = await self._client.http.get_interaction_message(self._client.app.id, self._token)
 
         if message_data:
@@ -647,5 +652,7 @@ class PrefixedContext(Context, SendMixin):
         """Reply to this message, takes all the same attributes as `send`."""
         return await self.send(content=content, reply_to=self.message, embeds=embeds or embed, **kwargs)
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        return await self._client.http.create_message(message_payload, self.channel.id)
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
+        return await self._client.http.create_message(message_payload, self.channel.id, files=files)

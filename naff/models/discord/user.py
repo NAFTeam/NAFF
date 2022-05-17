@@ -36,9 +36,11 @@ log = logging.getLogger(logger_name)
 class _SendDMMixin(SendMixin):
     id: "Snowflake_Type"
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
         dm_id = await self._client.cache.fetch_dm_channel_id(self.id)
-        return await self._client.http.create_message(message_payload, dm_id)
+        return await self._client.http.create_message(message_payload, dm_id, files=files)
 
 
 @define()

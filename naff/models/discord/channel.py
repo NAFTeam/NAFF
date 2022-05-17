@@ -203,8 +203,10 @@ class MessageableMixin(SendMixin):
     last_pin_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     """When the last pinned message was pinned. This may be None when a message is not pinned."""
 
-    async def _send_http_request(self, message_payload: Union[dict, "FormData"]) -> dict:
-        return await self._client.http.create_message(message_payload, self.id)
+    async def _send_http_request(
+        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> dict:
+        return await self._client.http.create_message(message_payload, self.id, files=files)
 
     async def fetch_message(self, message_id: Snowflake_Type) -> Optional["models.Message"]:
         """
@@ -500,12 +502,12 @@ class ThreadableMixin:
         reason: Absent[str] = None,
     ) -> "TYPE_THREAD_CHANNEL":
         """
-        Creates a nee thread in this channel. If a message is provided, it will be used as the initial message.
+        Creates a new thread in this channel. If a message is provided, it will be used as the initial message.
 
         Args:
             name: 1-100 character thread name
             message: The message to connect this thread to. Required for news channel.
-            thread_type: Is the thread private or public. Not applicable to news channel, it always be GUILD_NEWS_THREAD.
+            thread_type: Is the thread private or public. Not applicable to news channel, it will always be GUILD_NEWS_THREAD.
             invitable: whether non-moderators can add other non-moderators to a thread. Only applicable when creating a private thread.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
@@ -1048,6 +1050,7 @@ class GuildChannel(BaseChannel):
             await self.edit_permission(exists, reason)
         else:
             permission_overwrites = self.permission_overwrites
+            permission_overwrites.append(overwrite)
             await self.edit(permission_overwrites=permission_overwrites)
 
     async def edit_permission(self, overwrite: PermissionOverwrite, reason: Optional[str] = None) -> None:
@@ -1105,7 +1108,7 @@ class GuildChannel(BaseChannel):
             The newly created channel.
 
         """
-        await self.guild.create_channel(
+        return await self.guild.create_channel(
             channel_type=self.type,
             name=name if name else self.name,
             topic=getattr(self, "topic", MISSING),

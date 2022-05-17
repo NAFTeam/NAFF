@@ -184,12 +184,12 @@ class ThreadRequests:
         payload = {"name": name, "auto_archive_duration": auto_archive_duration}
         if message_id:
             return await self.request(
-                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), data=payload, reason=reason
+                Route("POST", f"/channels/{channel_id}/messages/{message_id}/threads"), payload=payload, reason=reason
             )
         else:
             payload["type"] = thread_type or ChannelTypes.GUILD_PUBLIC_THREAD
             payload["invitable"] = invitable
-            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), data=payload, reason=reason)
+            return await self.request(Route("POST", f"/channels/{channel_id}/threads"), payload=payload, reason=reason)
 
     async def create_forum_thread(
         self,

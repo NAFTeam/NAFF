@@ -69,7 +69,7 @@ class ScheduledEventsRequests:
             Scheduled Event or None
 
         """
-        return await self.request(Route("POST", f"/guilds/{guild_id}/scheduled-events"), data=payload, reason=reason)
+        return await self.request(Route("POST", f"/guilds/{guild_id}/scheduled-events"), payload=payload, reason=reason)
 
     async def modify_scheduled_event(
         self,
@@ -92,7 +92,7 @@ class ScheduledEventsRequests:
 
         """
         return await self.request(
-            Route("PATCH", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"), data=payload, reason=reason
+            Route("PATCH", f"/guilds/{guild_id}/scheduled-events/{scheduled_event_id}"), payload=payload, reason=reason
         )
 
     async def delete_scheduled_event(

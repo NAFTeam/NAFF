@@ -32,7 +32,8 @@ class BaseComponent(DictSerializationMixin):
     """
     A base component class.
 
-    This should never be instantiated.
+    !!! Warning
+        This should never be instantiated.
 
     """
 
@@ -56,7 +57,8 @@ class InteractiveComponent(BaseComponent):
     """
     A base interactive component class.
 
-    This should never be instantiated.
+    !!! Warning
+        This should never be instantiated.
 
     """
 

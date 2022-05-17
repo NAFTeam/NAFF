@@ -10,6 +10,7 @@ __all__ = ("InteractionRequests",)
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class InteractionRequests:
@@ -64,8 +65,8 @@ class InteractionRequests:
 
         """
         if guild_id == GLOBAL_SCOPE:
-            return await self.request(Route("PUT", f"/applications/{app_id}/commands"), data=data)
-        return await self.request(Route("PUT", f"/applications/{app_id}/guilds/{guild_id}/commands"), data=data)
+            return await self.request(Route("PUT", f"/applications/{app_id}/commands"), payload=data)
+        return await self.request(Route("PUT", f"/applications/{app_id}/guilds/{guild_id}/commands"), payload=data)
 
     async def create_application_command(
         self, app_id: "Snowflake_Type", command: Dict, guild_id: "Snowflake_Type"
@@ -82,10 +83,12 @@ class InteractionRequests:
             An application command object
         """
         if guild_id == GLOBAL_SCOPE:
-            return await self.request(Route("POST", f"/applications/{app_id}/commands"), data=command)
-        return await self.request(Route("POST", f"/applications/{app_id}/guilds/{guild_id}/commands"), data=command)
+            return await self.request(Route("POST", f"/applications/{app_id}/commands"), payload=command)
+        return await self.request(Route("POST", f"/applications/{app_id}/guilds/{guild_id}/commands"), payload=command)
 
-    async def post_initial_response(self, payload: dict, interaction_id: str, token: str) -> None:
+    async def post_initial_response(
+        self, payload: dict, interaction_id: str, token: str, files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> None:
         """
         Post an initial response to an interaction.
 
@@ -93,11 +96,16 @@ class InteractionRequests:
             payload: the payload to send
             interaction_id: the id of the interaction
             token: the token of the interaction
+            files: The files to send in this message
 
         """
-        return await self.request(Route("POST", f"/interactions/{interaction_id}/{token}/callback"), data=payload)
+        return await self.request(
+            Route("POST", f"/interactions/{interaction_id}/{token}/callback"), payload=payload, files=files
+        )
 
-    async def post_followup(self, payload: dict, application_id: "Snowflake_Type", token: str) -> None:
+    async def post_followup(
+        self, payload: dict, application_id: "Snowflake_Type", token: str, files: list["UPLOADABLE_TYPE"] | None = None
+    ) -> None:
         """
         Send a followup to an interaction.
 
@@ -105,12 +113,18 @@ class InteractionRequests:
             payload: the payload to send
             application_id: the id of the application
             token: the token of the interaction
+            files: The files to send with this interaction
 
         """
-        return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), data=payload)
+        return await self.request(Route("POST", f"/webhooks/{application_id}/{token}"), payload=payload, files=files)
 
     async def edit_interaction_message(
-        self, payload: dict, application_id: "Snowflake_Type", token: str, message_id: str = "@original"
+        self,
+        payload: dict,
+        application_id: "Snowflake_Type",
+        token: str,
+        message_id: str = "@original",
+        files: list["UPLOADABLE_TYPE"] | None = None,
     ) -> discord_typings.MessageData:
         """
         Edits an existing interaction message.
@@ -120,13 +134,14 @@ class InteractionRequests:
             application_id: The id of the application.
             token: The token of the interaction.
             message_id: The target message to edit. Defaults to @original which represents the initial response message.
+            files: The files to send with this interaction
 
         Returns:
             The edited message data.
 
         """
         return await self.request(
-            Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), data=payload
+            Route("PATCH", f"/webhooks/{application_id}/{token}/messages/{message_id}"), payload=payload, files=files
         )
 
     async def get_interaction_message(
@@ -168,7 +183,7 @@ class InteractionRequests:
         """
         return await self.request(
             Route("PUT", f"/applications/{application_id}/guilds/{scope}/commands/{cmd_id}/permissions"),
-            data=permissions,
+            payload=permissions,
         )
 
     async def get_application_command_permissions(

@@ -290,7 +290,19 @@ class MessageTypes(IntEnum):
     THREAD_STARTER_MESSAGE = 21
     GUILD_INVITE_REMINDER = 22
     CONTEXT_MENU_COMMAND = 23
-    AUTO_MOD = 24
+    AUTO_MODERATION_ACTION = 24
+
+
+class EmbedTypes(Enum):
+    """Types of embed."""
+
+    RICH = "rich"
+    IMAGE = "image"
+    VIDEO = "video"
+    GIFV = "gifv"
+    ARTICLE = "article"
+    LINK = "link"
+    AUTOMOD_MESSAGE = "auto_moderation_message"
 
 
 class MessageActivityTypes(IntEnum):
@@ -810,3 +822,7 @@ class AuditLogEventType(IntEnum):
     THREAD_UPDATE = 111
     THREAD_DELETE = 112
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    AUTO_MODERATION_RULE_CREATE = 140
+    AUTO_MODERATION_RULE_UPDATE = 141
+    AUTO_MODERATION_RULE_DELETE = 142
+    AUTO_MODERATION_BLOCK_MESSAGE = 143

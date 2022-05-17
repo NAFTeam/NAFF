@@ -2,7 +2,6 @@ import asyncio
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
-from aiohttp import FormData
 
 import naff.models as models
 from naff.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
@@ -11,7 +10,6 @@ from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.input_utils import OverriddenJson
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .base import DiscordObject
@@ -469,6 +467,14 @@ class Message(BaseMessage):
                 if referenced_message := self.get_referenced_message():
                     return referenced_message.content
                 return "Sorry, we couldn't load the first message in this thread"
+            case MessageTypes.AUTO_MODERATION_ACTION:
+                keyword_matched_content = self.embeds[0].fields[4].value  # The words that triggered the action
+                message_content = self.embeds[0].description.replace(
+                    keyword_matched_content, f"**{keyword_matched_content}**"
+                )
+                rule = self.embeds[0].fields[0].value  # What rule was triggered
+                channel = self.embeds[0].fields[1].value  # Channel that the action took place in
+                return f'AutoMod has blocked a message. "{message_content}" from {self.author.mention} in <#{channel}>. Rule: {rule}.'
             case _:
                 return None
 
@@ -527,7 +533,6 @@ class Message(BaseMessage):
             components=components,
             allowed_mentions=allowed_mentions,
             attachments=attachments,
-            files=files or file,
             tts=tts,
             flags=flags,
         )
@@ -535,7 +540,7 @@ class Message(BaseMessage):
         if self.flags == MessageFlags.EPHEMERAL:
             raise EphemeralEditException
 
-        message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id)
+        message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id, files=files)
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
@@ -799,11 +804,10 @@ def process_message_payload(
     allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
     reply_to: Optional[Union[MessageReference, Message, dict, "Snowflake_Type"]] = None,
     attachments: Optional[List[Union[Attachment, dict]]] = None,
-    files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
     tts: bool = False,
     flags: Optional[Union[int, MessageFlags]] = None,
     **kwargs,
-) -> Union[Dict, FormData]:
+) -> dict:
     """
     Format message content for it to be ready to send discord.
 
@@ -815,12 +819,11 @@ def process_message_payload(
         allowed_mentions: Allowed mentions for the message.
         reply_to: Message to reference, must be from the same channel.
         attachments: The attachments to keep, only used when editing message.
-        files: Files to send, defaults to None. You may send up to 10 files.
         tts: Should this message use Text To Speech.
         flags: Message flags to apply.
 
     Returns:
-        Dictionary or multipart data form.
+        Dictionary
 
     """
     embeds = models.process_embeds(embeds)
@@ -835,7 +838,7 @@ def process_message_payload(
     if attachments:
         attachments = [attachment.to_dict() for attachment in attachments]
 
-    message_data = dict_filter_none(
+    return dict_filter_none(
         {
             "content": content,
             "embeds": embeds,
@@ -849,22 +852,3 @@ def process_message_payload(
             **kwargs,
         }
     )
-
-    if files:
-        # We need to use multipart/form-data for file sending here.
-        form = FormData()
-        form.add_field("payload_json", OverriddenJson.dumps(message_data))
-
-        if not isinstance(files, list):
-            files = [files]
-
-        for index, file in enumerate(files):
-            file_buffer = models.open_file(file)
-            if isinstance(file, models.File):
-                form.add_field(f"files[{index}]", file_buffer, filename=file.file_name)
-            else:
-                form.add_field(f"files[{index}]", file_buffer)
-
-        return form
-    else:
-        return message_data
