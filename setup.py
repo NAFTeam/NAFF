@@ -24,7 +24,7 @@ setup(
     long_description_content_type="text/markdown",
     author="LordOfPolls",
     author_email="lordofpolls.dev@gmail.com",
-    url="https://github.com/Discord-Snake-Pit/Dis-Snek",
+    url="https://github.com/Discord-Snake-Pit/NAFF",
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
     include_package_data=True,

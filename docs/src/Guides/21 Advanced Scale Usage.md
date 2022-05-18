@@ -13,7 +13,7 @@ Checks prohibit the interaction from running if they return `False`.
 You can add your own check to your extension. In this example, we only want a user whose name starts with "a" to run any command from this extension.
 ```python
 class MyExtension(Extension):
-    def __init__(self, client: Snake):
+    def __init__(self, client: Client):
         self.client = client
         self.add_ext_check(self.a_check)
 
@@ -35,7 +35,7 @@ Pre- and Post-Run events are similar to checks. They run before and after an int
 In this example, we are just printing some stats before and after the interaction.
 ```python
 class MyExt(Extension):
-    def __init__(self, client: Snake):
+    def __init__(self, client: Client):
         self.client = client
         self.add_extension_prerun(self.pre_run)
         self.add_extension_postrun(self.post_run)
@@ -65,7 +65,7 @@ By subclassing your own custom extension, your can still split your code into as
 ### File 1
 ```python
 class CustomExtension(Extension):
-    def __init__(self, client: Snake):
+    def __init__(self, client: Client):
         self.client = client
         self.add_ext_check(self.a_check)
 

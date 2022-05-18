@@ -19,7 +19,7 @@ Below is an example of a bot, one with extensions, one without.
         import logging
 
         import naff.const
-        from naff.client import Snake
+        from naff.client import Client
         from naff.models.application_commands import slash_command, slash_option
         from naff.models.command import prefixed_command
         from naff.models.context import InteractionContext
@@ -33,7 +33,7 @@ Below is an example of a bot, one with extensions, one without.
         cls_log = logging.getLogger(naff.const.logger_name)
         cls_log.setLevel(logging.DEBUG)
 
-        bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
+        bot = Client(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 
 
         @listen()
@@ -94,7 +94,7 @@ Below is an example of a bot, one with extensions, one without.
         import logging
 
         import naff.const
-        from naff.client import Snake
+        from naff.client import Client
         from naff.models.context import ComponentContext
         from naff.models.enums import Intents
         from naff.models.events import Component
@@ -105,7 +105,7 @@ Below is an example of a bot, one with extensions, one without.
         cls_log = logging.getLogger(naff.const.logger_name)
         cls_log.setLevel(logging.DEBUG)
 
-        bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
+        bot = Client(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 
 
         @listen()
