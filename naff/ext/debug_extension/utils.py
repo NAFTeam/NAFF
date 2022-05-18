@@ -15,7 +15,7 @@ def debug_embed(title: str, **kwargs) -> Embed:
     """Create a debug embed with a standard header and footer."""
     e = Embed(
         f"Naff Debug: {title}",
-        url="https://github.com/Discord-Snake-Pit/Dis-Snek/tree/master/dis_snek/ext/debug_extension",
+        url="https://github.com/Discord-Snake-Pit/NAFF/tree/master/naff/ext/debug_extension",
         color=MaterialColors.BLUE_GREY,
         **kwargs,
     )
