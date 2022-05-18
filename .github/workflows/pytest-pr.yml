@@ -1,0 +1,100 @@
+name: Pytest PR
+on:
+  repository_dispatch:
+    types: [ok-to-test-command]
+
+jobs:
+  pytest:
+    name: runner / pytest tests
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        extras:
+          - .
+          - .[speedup]
+          - .[voice]
+          - .[all]
+          - .[docs]
+
+    steps:
+      - name: Create check run
+        uses: actions/github-script@v5
+        id: create-check-run
+        env:
+          number: ${{ github.event.client_payload.pull_request.number }}
+          job: ${{ github.job }}
+          conclusion: ${{ job.status }}
+          extra: ${{ matrix.extras }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: process.env.number
+            });
+            const ref = pull.head.sha;
+            const { data: result } = await github.rest.checks.create({
+              ...context.repo,
+              head_sha: ref,
+              name: `${process.env.job} (${process.env.extra})`
+            });
+            return result.id;
+
+      - name: Fork based /ok-to-test checkout
+        uses: actions/checkout@v2
+        with:
+          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.10'
+      - name: Install ffmpeg & opus
+        run: sudo apt-get install ffmpeg libopus-dev
+      - name: Install pytest
+        run: |
+          pip install -e ${{ matrix.extras }}
+          pip install pytest pytest-recording pytest-asyncio pytest-cov
+      - name: Run Tests
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          pytest
+          coverage xml -i
+      - name: Upload Coverage
+        run: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v2
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/TestResults.xml'
+          check_name: 'Pytest Results'
+
+      - name: Update check run
+        uses: actions/github-script@v5
+        id: update-check-run
+        if: ${{ always() }}
+        env:
+          number: ${{ github.event.client_payload.pull_request.number }}
+          job: ${{ github.job }}
+          conclusion: ${{ job.status }}
+          check_id: ${{steps.create-check-run.outputs.result}}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: process.env.number
+            });
+            const ref = pull.head.sha;
+            const { data: result } = await github.rest.checks.update({
+              ...context.repo,
+              check_run_id: process.env.check_id,
+              status: 'completed',
+              conclusion: process.env.conclusion
+            });
+            return result;
