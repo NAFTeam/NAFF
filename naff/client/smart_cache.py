@@ -648,7 +648,7 @@ class GlobalCache:
         role = self.role_cache.get(role_id)
         if role is None:
             data = await self._client.http.get_roles(guild_id)
-            role = self.place_role_data(guild_id, data)[role_id]
+            role = self.place_role_data(guild_id, data).get(role_id)
         return role
 
     def get_role(self, role_id: Optional["Snowflake_Type"]) -> Optional[Role]:
@@ -703,7 +703,7 @@ class GlobalCache:
         Args:
             role_id: The ID of the role
         """
-        role = self.role_cache.pop(to_snowflake(role_id))
+        role = self.role_cache.pop(to_snowflake(role_id), None)
         if guild := self.get_guild(role._guild_id):
             # noinspection PyProtectedMember
             guild._role_ids.discard(role_id)
