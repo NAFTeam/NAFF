@@ -83,6 +83,7 @@ class MemberRequests:
             mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
             deaf: Whether the user is deafened in voice channels
             channel_id: id of channel to move user to (if they are connected to voice)
+            communication_disabled_until: 	when the user's timeout will expire and the user will be able to communicate in the guild again
             reason: An optional reason for the audit log
 
         Returns:
