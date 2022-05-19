@@ -52,6 +52,21 @@ class Asset:
         ext = ".gif" if self.animated else ".png"
         return f"{self._url}{ext}?size=4096"
 
+    def as_url(self, *, extension: str | None = None, size: int = 4096) -> str:
+        """
+        Get the url of this asset.
+
+        args:
+            extension: The extension to override the assets default with
+            size: The size of asset to return
+
+        returns:
+            A url for this asset with the given parameters
+        """
+        if not extension:
+            extension = ".gif" if self.animated else ".png"
+        return f"{self._url}{extension}?size={size}"
+
     @property
     def animated(self) -> bool:
         """True if this asset is animated."""
