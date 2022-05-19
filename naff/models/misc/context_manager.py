@@ -1,6 +1,10 @@
 from asyncio import sleep, Task, create_task
+from typing import TYPE_CHECKING
 
-from naff import Absent, MISSING, MessageableMixin
+from naff.client.const import Absent, MISSING
+
+if TYPE_CHECKING:
+    from naff import MessageableMixin
 
 __all__ = ("Typing",)
 
@@ -13,9 +17,9 @@ class Typing:
         channel: The channel to send the typing state to
     """
 
-    def __init__(self, channel: MessageableMixin) -> None:
+    def __init__(self, channel: "MessageableMixin") -> None:
         self._task: Absent[Task] = MISSING
-        self.channel: MessageableMixin = channel
+        self.channel: "MessageableMixin" = channel
         self._stop: bool = False
 
     async def _typing_task(self) -> None:

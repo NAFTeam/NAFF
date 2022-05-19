@@ -29,6 +29,7 @@ from .enums import (
     MessageFlags,
     InviteTargetTypes,
 )
+from naff.models.misc.context_manager import Typing
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -421,6 +422,11 @@ class MessageableMixin(SendMixin):
     async def trigger_typing(self) -> None:
         """Trigger a typing animation in this channel."""
         await self._client.http.trigger_typing_indicator(self.id)
+
+    @property
+    def typing(self) -> Typing:
+        """A context manager to send a typing state to a given channel as long as long as the wrapped operation takes."""
+        return Typing(self)
 
 
 @define(slots=False)
