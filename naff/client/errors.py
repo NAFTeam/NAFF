@@ -390,6 +390,13 @@ class VoiceAlreadyConnected(BotException):
         super().__init__("Bot already connected to the voice channel")
 
 
+class VoiceNotConnected(BotException):
+    """Raised when you attempt to connect a voice channel that is not connected."""
+
+    def __init__(self) -> None:
+        super().__init__("Bot is not connected to any voice channels in given guild")
+
+
 class VoiceConnectionTimeout(NaffException):
     """Raised when the bot fails to connect to a voice channel."""
 

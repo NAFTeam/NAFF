@@ -7,7 +7,7 @@ import attrs
 
 import naff.models as models
 from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
-from naff.client.errors import NotFound
+from naff.client.errors import NotFound, VoiceNotConnected
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field
@@ -1930,6 +1930,18 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             return await self._client.connect_to_vc(self._guild_id, self.id, muted, deafened)
         await self.voice_state.move(self.id)
         return self.voice_state
+
+    async def disconnect(self) -> None:
+        """
+        Disconnect from the currently connected connected voice state.
+
+        Raises:
+            VoiceNotConnected if the bot is not connected to a voice channel
+        """
+        if self.voice_state:
+            return await self.voice_state.disconnect()
+        else:
+            raise VoiceNotConnected
 
 
 @define()
