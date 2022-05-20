@@ -522,6 +522,41 @@ class Member(DiscordObject, _SendDMMixin):
         """
         await self._client.http.modify_guild_member(self._guild_id, self.id, channel_id=channel_id)
 
+    async def edit(
+        self,
+        *,
+        nickname: Absent[str] = MISSING,
+        roles: Absent[list["Snowflake_Type"]] = MISSING,
+        mute: Absent[bool] = MISSING,
+        deaf: Absent[bool] = MISSING,
+        channel_id: Absent["Snowflake_Type"] = MISSING,
+        communication_disabled_until: Absent[Union["Timestamp", None]] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> None:
+        """
+        Modify attrbutes of this guild member.
+
+        Args:
+            nickname: Value to set users nickname to
+            roles: Array of role ids the member is assigned
+            mute: Whether the user is muted in voice channels. Will throw a 400 if the user is not in a voice channel
+            deaf: Whether the user is deafened in voice channels
+            channel_id: id of channel to move user to (if they are connected to voice)
+            communication_disabled_until: 	when the user's timeout will expire and the user will be able to communicate in the guild again
+            reason: An optional reason for the audit log
+        """
+        await self._client.http.modify_guild_member(
+            self._guild_id,
+            self.id,
+            nickname=nickname,
+            roles=roles,
+            mute=mute,
+            deaf=deaf,
+            channel_id=channel_id,
+            communication_disabled_until=communication_disabled_until,
+            reason=reason,
+        )
+
     async def kick(self, reason: Absent[str] = MISSING) -> None:
         """
         Remove a member from the guild.
