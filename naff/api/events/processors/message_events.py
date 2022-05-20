@@ -39,6 +39,11 @@ class MessageEvents(EventMixinTemplate):
             else:
                 await self.cache.fetch_user(to_snowflake(msg._author_id))
 
+        # noinspection PyProtectedMember
+        if not msg._guild_id and not msg.channel:
+            # dm message with no channel cached
+            await self.cache.fetch_dm_channel(msg.author.id)
+
         self.dispatch(events.MessageCreate(msg))
 
     @Processor.define()
