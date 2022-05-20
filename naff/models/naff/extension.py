@@ -44,7 +44,7 @@ class Extension:
     """
 
     bot: "Client"
-    __name: str
+    name: str
     extension_name: str
     description: str
     extension_checks: List
@@ -58,7 +58,7 @@ class Extension:
     def __new__(cls, bot: "Client", *args, **kwargs) -> "Extension":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
-        new_cls.__name = cls.__name__
+        new_cls.name = cls.__name__
         new_cls.extension_checks = []
         new_cls.extension_prerun = []
         new_cls.extension_postrun = []
@@ -129,11 +129,6 @@ class Extension:
     def listeners(self) -> List["Listener"]:
         """Get the listeners from this Extension."""
         return self._listeners
-
-    @property
-    def name(self) -> str:
-        """Get the name of this Extension."""
-        return self.__name
 
     def drop(self) -> None:
         """Called when this Extension is being removed."""
