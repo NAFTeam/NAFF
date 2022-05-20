@@ -65,6 +65,9 @@ class Asset:
         """
         if not extension:
             extension = ".gif" if self.animated else ".png"
+        elif not extension.startswith("."):
+            extension = f".{extension}"
+
         return f"{self._url}{extension}?size={size}"
 
     @property
