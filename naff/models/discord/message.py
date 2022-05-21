@@ -23,6 +23,7 @@ from .enums import (
     AutoArchiveDuration,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
+from naff.models.discord.channel import BaseChannel
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -241,7 +242,14 @@ class BaseMessage(DiscordObject):
     @property
     def channel(self) -> "models.TYPE_MESSAGEABLE_CHANNEL":
         """The channel the message was sent in"""
-        return self._client.cache.get_channel(self._channel_id)
+        channel = self._client.cache.get_channel(self._channel_id)
+
+        if not self._guild_id and not channel:
+            # allow dm operations without fetching a dm channel from API
+            channel = BaseChannel.from_dict_factory({"id": self._channel_id, "type": ChannelTypes.DM}, self._client)
+            if self.author:
+                channel.recipients = [self.author]
+        return channel
 
     @property
     def thread(self) -> "models.TYPE_THREAD_CHANNEL":
