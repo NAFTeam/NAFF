@@ -442,8 +442,12 @@ class GlobalCache:
         channel_id = to_snowflake(channel_id)
         channel = self.channel_cache.get(channel_id)
         if channel is None:
-            data = await self._client.http.get_channel(channel_id)
-            channel = self.place_channel_data(data)
+            try:
+                data = await self._client.http.get_channel(channel_id)
+                channel = self.place_channel_data(data)
+            except Forbidden:
+                log.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
+                channel = BaseChannel.from_dict({"id": channel_id, "type": MISSING}, self._client)
         return channel
 
     def get_channel(self, channel_id: Optional["Snowflake_Type"]) -> Optional["TYPE_ALL_CHANNEL"]:
