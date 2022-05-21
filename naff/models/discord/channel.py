@@ -835,7 +835,10 @@ class DMChannel(BaseChannel, MessageableMixin):
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
         if recipients := data.get("recipients", None):
-            data["recipients"] = [client.cache.place_user_data(recipient) for recipient in recipients]
+            data["recipients"] = [
+                client.cache.place_user_data(recipient) if isinstance(recipient, dict) else recipient
+                for recipient in recipients
+            ]
         return data
 
     @property
