@@ -141,7 +141,9 @@ class Audio(BaseAudio):
             f"{self.ffmpeg_args}".split()
         )
 
-        self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
+        self.process = subprocess.Popen(  # noqa: S603
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL
+        )
         self.read_ahead_task.start()
 
         # block until some data is in the buffer
@@ -149,6 +151,9 @@ class Audio(BaseAudio):
 
     def _read_ahead(self) -> None:
         while self.process:
+            if self.process.poll() is not None:
+                # ffmpeg has exited, stop reading ahead
+                return
             if not len(self.buffer) >= self._max_buffer_size:
                 self.buffer.extend(self.process.stdout.read(3840))
             else:
@@ -175,7 +180,7 @@ class Audio(BaseAudio):
 
     def cleanup(self) -> None:
         """Cleans up after this audio object."""
-        if self.process:
+        if self.process and self.process.poll() is None:
             self.process.terminate()
             self.process.wait()
 
