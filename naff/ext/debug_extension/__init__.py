@@ -1,25 +1,25 @@
 import logging
 import platform
 
-from naff import Client, Cog, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
+from naff import Client, Extension, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from naff.client.const import logger_name, __version__, __py_version__
 from naff.models.naff import checks
 from .debug_application_cmd import DebugAppCMD
 from .debug_exec import DebugExec
-from .debug_cogs import DebugCogs
+from .debug_exts import DebugExts
 from .utils import get_cache_state, debug_embed, strf_delta
 
-__all__ = ("DebugCog",)
+__all__ = ("DebugExtension",)
 
 log = logging.getLogger(logger_name)
 
 
-class DebugCog(DebugExec, DebugAppCMD, DebugCogs, Cog):
+class DebugExtension(DebugExec, DebugAppCMD, DebugExts, Extension):
     def __init__(self, bot: Client) -> None:
         super().__init__(bot)
-        self.add_cog_check(checks.is_owner())
+        self.add_ext_check(checks.is_owner())
 
-        log.info("Debug Cog is growing!")
+        log.info("Debug Extension is growing!")
 
     @listen()
     async def on_startup(self) -> None:
@@ -48,7 +48,7 @@ class DebugCog(DebugExec, DebugAppCMD, DebugCogs, Cog):
         if privileged_intents:
             e.add_field("Privileged Intents", " | ".join(privileged_intents))
 
-        e.add_field("Loaded Cogs", ", ".join(self.bot.cogs))
+        e.add_field("Loaded Exts", ", ".join(self.bot.ext))
 
         e.add_field("Guilds", str(len(self.bot.guilds)))
 
@@ -69,4 +69,4 @@ class DebugCog(DebugExec, DebugAppCMD, DebugCogs, Cog):
 
 
 def setup(bot: Client) -> None:
-    DebugCog(bot)
+    DebugExtension(bot)

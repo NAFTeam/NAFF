@@ -228,6 +228,7 @@ class InteractionCommand(BaseCommand):
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
         if self.dm_permission:
             return ctx.guild is not None
+        return True
 
 
 @define()

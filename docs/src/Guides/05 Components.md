@@ -87,7 +87,7 @@ If you use `ButtonStyles.URL`, you can pass an url to the button with `url`. Use
 components = Button(
     style=ButtonStyles.URL,
     label="Click Me",
-    url="https://github.com/Discord-Snake-Pit/Dis-Snek",
+    url="https://github.com/Discord-Snake-Pit/NAFF",
 )
 
 await channel.send("Look a Button!", components=components)

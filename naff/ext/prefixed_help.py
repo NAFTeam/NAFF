@@ -145,8 +145,8 @@ class PrefixedHelpCommand:
                     if not await _c(ctx):
                         continue
 
-                if cmd.cog and cmd.cog.cog_checks:
-                    for _c in cmd.cog.cog_checks:
+                if cmd.extension and cmd.extension.extension_checks:
+                    for _c in cmd.extension.extension_checks:
                         if not await _c(ctx):
                             continue
 

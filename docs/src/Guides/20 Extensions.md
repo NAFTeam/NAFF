@@ -1,25 +1,25 @@
-# Scales
+# Extensions
 
 Damn, your code is getting pretty messy now, huh? Wouldn't it be nice if you could organise your commands and listeners into separate files?
 
-Well let me introduce you to `Scales`<br>
-Scales allow you to split your commands and listeners into separate files to allow you to better organise your project,
-as well as that, they allow you to reload Scales without having to shut down your bot.
+Well let me introduce you to `Extensions`<br>
+Extensions allow you to split your commands and listeners into separate files to allow you to better organise your project,
+as well as that, they allow you to reload Extensions without having to shut down your bot.
 
 Sounds pretty good right? Well, let's go over how you can use them:
 
 ## Usage
 
-Below is an example of a bot, one with scales, one without.
+Below is an example of a bot, one with extensions, one without.
 
 ??? Hint "Example Usage:"
-    === "Without Scales"
+    === "Without Extensions"
         ```python
         # File: `main.py`
         import logging
 
         import naff.const
-        from naff.client import Snake
+        from naff.client import Client
         from naff.models.application_commands import slash_command, slash_option
         from naff.models.command import prefixed_command
         from naff.models.context import InteractionContext
@@ -33,7 +33,7 @@ Below is an example of a bot, one with scales, one without.
         cls_log = logging.getLogger(naff.const.logger_name)
         cls_log.setLevel(logging.DEBUG)
 
-        bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
+        bot = Client(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 
 
         @listen()
@@ -88,13 +88,13 @@ Below is an example of a bot, one with scales, one without.
         bot.start("Token")
         ```
 
-    === "With Scales"
+    === "With Extensions"
         ```python
         # File: `main.py`
         import logging
 
         import naff.const
-        from naff.client import Snake
+        from naff.client import Client
         from naff.models.context import ComponentContext
         from naff.models.enums import Intents
         from naff.models.events import Component
@@ -105,7 +105,7 @@ Below is an example of a bot, one with scales, one without.
         cls_log = logging.getLogger(naff.const.logger_name)
         cls_log.setLevel(logging.DEBUG)
 
-        bot = Snake(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
+        bot = Client(intents=Intents.DEFAULT, sync_interactions=True, asyncio_debug=True)
 
 
         @listen()
@@ -130,7 +130,7 @@ Below is an example of a bot, one with scales, one without.
             await ctx.edit_origin("test")
 
 
-        bot.mount_cog("test_components")
+        bot.load_extension("test_components")
         bot.start("Token")
 
         ```
@@ -141,10 +141,10 @@ Below is an example of a bot, one with scales, one without.
         from naff.models.command import prefixed_command
         from naff.models.discord_objects.components import Button, ActionRow
         from naff.models.enums import ButtonStyles
-        from naff.models.scale import Cog
+        from naff.models.extension import Extension
 
 
-        class ButtonExampleSkin(Cog):
+        class ButtonExampleSkin(Extension):
             @prefixed_command()
             async def blurple_button(self, ctx):
                 await ctx.send("hello there", components=Button(ButtonStyles.BLURPLE, "A blurple button"))
@@ -178,68 +178,68 @@ Below is an example of a bot, one with scales, one without.
             ButtonExampleSkin(bot)
         ```
 
-Scales are effectively just another python file that contains a class that inherits from an object called `Cog`,
-inside this scale, you can put whatever you would like. And upon loading, the contents are added to the bot.
+Extensions are effectively just another python file that contains a class that inherits from an object called `Extension`,
+inside this extension, you can put whatever you would like. And upon loading, the contents are added to the bot.
 
 ```python
-from naff import Cog
+from naff import Extension
 
 
-class SomeClass(Cog):
+class SomeClass(Extension):
     ...
 
 
 def setup(bot):
-    # This is called by naff so it knows how to load the Cog
+    # This is called by naff so it knows how to load the Extension
     SomeClass(bot)
 ```
-As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for dis-snek,
-so it knows how to load the scale properly.
+As you can see, there's one extra bit, a function called `setup`, this function acts as an entry point for NAFF,
+so it knows how to load the extension properly.
 
-To load a scale, you simply add the following to your `main` script, just above `bot.start`:
+To load a extension, you simply add the following to your `main` script, just above `bot.start`:
 
 ```python
 ...
 
-bot.mount_cog("Filename_here")
+bot.load_extension("Filename_here")
 
 bot.start("token")
 ```
 
-Now, for the cool bit of Scales, reloading. Scales allow you to edit your code, and reload it, without restarting the bot.
-To do this, simply run `bot.reload_cog("Filename_here")` and your new code will be used. Bare in mind any tasks your scale
+Now, for the cool bit of Extensions, reloading. Extensions allow you to edit your code, and reload it, without restarting the bot.
+To do this, simply run `bot.reload_extension("Filename_here")` and your new code will be used. Bare in mind any tasks your extension
 is doing will be abruptly stopped.
 
 
-You can pass keyword-arguments to the `mount_cog`, `drop_cog` and `reload_cog` scale management methods.
-Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Cog.shed` method.
+You can pass keyword-arguments to the `load_extension`, `unload_extension` and `reload_extension` extension management methods.
+Any arguments you pass to the `setup` or `teardown` methods, will also be passed to the `Extension.drop` method.
 
-Here is a basic "Cog switching" example:
+Here is a basic "Extension switching" example:
 
 ```python
-from naff import Cog
+from naff import Extension
 
 
-class SomeScale(Cog):
+class SomeExtension(Extension):
     def __init__(self, bot, some_arg: int = 0):
         ...
 
 
-class AnotherScale(Cog):
+class AnotherExtension(Extension):
     def __init__(self, bot, another_arg: float = 0.0):
         ...
 
 
-def setup(bot, default_scale: bool, **kwargs):  # We don't care about other arguments here.
-    if default_scale:
-        SomeScale(bot, **kwargs)
+def setup(bot, default_extension: bool, **kwargs):  # We don't care about other arguments here.
+    if default_extension:
+        SomeExtension(bot, **kwargs)
     else:
-        AnotherScale(bot, **kwargs)
+        AnotherExtension(bot, **kwargs)
 
 
 ...
 
-bot.mount_cog("Filename_here", default_scale=False, another_arg=3.14)
+bot.load_extension("Filename_here", default_extension=False, another_arg=3.14)
 # OR
-bot.mount_cog("Filename_here", default_scale=True, some_arg=555)
+bot.load_extension("Filename_here", default_extension=True, some_arg=555)
 ```

@@ -8,7 +8,7 @@ What events you subscribe to are defined at startup by setting your `Intents`.
 
 `Intents.DEFAULT` is a good place to start if your bot is new and small, otherwise, it is recommended to take your time and go through them one by one.
 ```python
-bot = Snake(intents=Intents.DEFAULT)
+bot = Client(intents=Intents.DEFAULT)
 bot.start("Put your token here")
 ```
 
@@ -30,10 +30,10 @@ Be aware that your `Intents` must be set to receive the event you are looking fo
 There are two ways to register events. **Decorators** are the recommended way to do this.
 
 === ":one: Decorators"
-    To use decorators, they need to be in the same file where you defined your `bot = Snake()`.
+    To use decorators, they need to be in the same file where you defined your `bot = Client()`.
 
     ```python
-    bot = Snake(intents=Intents.DEFAULT)
+    bot = Client(intents=Intents.DEFAULT)
 
     @listen()
     async def on_channel_create(event: ChannelCreate):
@@ -73,7 +73,7 @@ There are two ways to register events. **Decorators** are the recommended way to
         print(f"Channel created with name: {event.channel.name}")
 
 
-    bot = Snake(intents=Intents.DEFAULT)
+    bot = Client(intents=Intents.DEFAULT)
     bot.add_listener(Listener(func=on_channel_create, event="on_channel_create"))
     bot.start("Put your token here")
     ```

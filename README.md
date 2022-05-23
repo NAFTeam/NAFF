@@ -8,7 +8,7 @@
 
 # What is this?
 This is `NAFF`, a python API wrapper for Discord.
-Snek is intended to be fast, easy to use, and easily modified to suit your needs.
+NAFF is intended to be fast, easy to use, and easily modified to suit your needs.
 
 ### Features:
 - ✅ 100% coverage of the application commands API
@@ -47,7 +47,7 @@ async def user_context(ctx):
 
 bot.start("TOKEN")
 ```
-For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/dis-snek).
+For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/naff).
 
 If you get stuck join our [Discord server](https://discord.gg/dis-snek).
 

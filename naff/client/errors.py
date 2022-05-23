@@ -29,7 +29,6 @@ __all__ = (
     "ExtensionException",
     "ExtensionNotFound",
     "ExtensionLoadException",
-    "CogLoadException",
     "CommandException",
     "CommandOnCooldown",
     "MaxConcurrencyReached",
@@ -259,10 +258,6 @@ class ExtensionNotFound(ExtensionException):
 
 class ExtensionLoadException(ExtensionException):
     """An error occurred loading an extension."""
-
-
-class CogLoadException(ExtensionLoadException):
-    """A cog failed to load."""
 
 
 class CommandException(BotException):

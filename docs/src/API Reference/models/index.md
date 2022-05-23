@@ -1,11 +1,11 @@
 # Models
 
-Within these pages, you will find a list of all available models within Snek.
+Within these pages, you will find a list of all available models within NAFF.
 
 - [Discord](Discord)
     - Models representing Discord objects
 
-- [Snek](Naff)
+- [Client](Naff)
     - Models for library constructs
 
 - [Misc](Misc)

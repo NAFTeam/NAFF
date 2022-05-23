@@ -40,7 +40,9 @@ from naff.client.errors import NotFound
 
 __all__ = ()
 
-TOKEN = os.environ["BOT_TOKEN"]
+TOKEN = os.environ.get("BOT_TOKEN")
+if not TOKEN:
+    pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
 
 
 @pytest.fixture(scope="session")

@@ -28,7 +28,7 @@ from naff import LocalisedName
 async def hello_cmd(ctx: naff.InteractionContext):
     await ctx.send(f"Hello {ctx.author.display_name}")
 ```
-All we need to do is set the field to a `Localised` object, and dis-snek and discord wil handle the rest for you.
+All we need to do is set the field to a `Localised` object, and NAFF and discord wil handle the rest for you.
 For extra flavour lets make this command more dynamic.
 
 ```python

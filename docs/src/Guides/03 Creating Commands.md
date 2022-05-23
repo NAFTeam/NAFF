@@ -37,7 +37,7 @@ async def my_command_function(ctx: InteractionContext):
     await ctx.send("Hello World")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.slash_command).
+For more information, please visit the API reference [here](/API Reference/models/Naff/application_commands/#naff.models.naff.application_commands.slash_command).
 
 ## Subcommands
 
@@ -85,7 +85,7 @@ This will show up in discord as `/base group command`. There are two ways to add
 
 ## But I Need More Options
 
-Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.OptionTypes):
+Interactions can also have options. There are a bunch of different [types of options](/API Reference/models/Naff/application_commands/#naff.models.naff.application_commands.OptionTypes):
 
 | Option Type               | Return Type                                | Description                                                                                 |
 |---------------------------|--------------------------------------------|---------------------------------------------------------------------------------------------|
@@ -129,7 +129,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int = 5):
     await ctx.send(f"You input {integer_option}")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.slash_option).
+For more information, please visit the API reference [here](/API Reference/models/Naff/application_commands/#naff.models.naff.application_commands.slash_option).
 
 ## Restricting Options
 
@@ -190,7 +190,7 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
     await ctx.send(f"You input {integer_option} which is either 1 or 2")
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Snek/application_commands/#naff.models.snek.application_commands.SlashCommandChoice).
+For more information, please visit the API reference [here](/API Reference/models/Naff/application_commands/#naff.models.naff.application_commands.SlashCommandChoice).
 
 ## I Need More Than 25 Choices
 
@@ -385,10 +385,10 @@ There are a few pre-made checks for you to use, and you can simply create your o
     You can reuse checks in extensions by adding them to the extension check list
 
     ```py
-    class MyExtension(Cog):
+    class MyExtension(Extension):
         def __init__(self, bot) -> None:
             super().__init__(bot)
-            self.add_cog_check(is_owner())
+            self.add_ext_check(is_owner())
 
     @slash_command(name="my_command")
     async def my_command_function(ctx: InteractionContext):
@@ -436,18 +436,18 @@ The same principle can be used to reuse autocomplete options.
 
 ## Simplified Error Handling
 
-If you want error handling for all commands, you can override `Snake` and define your own.
+If you want error handling for all commands, you can override `Client` and define your own.
 Any error from interactions will trigger `on_command_error`. That includes context menus.
 
 In this example, we are logging the error and responding to the interaction if not done so yet:
 ```python
-class CustomSnake(Snake):
+class CustomClient(Client):
     async def on_command_error(self, ctx: InteractionContext, error: Exception):
         logger.error(error)
         if not ctx.responded:
             await ctx.send("Something went wrong.")
 
-client = CustomErrorSnake(...)
+client = CustomErrorClient(...)
 ```
 
 There also is `on_command` which you can overwrite too. That fires on every interactions usage.
