@@ -965,10 +965,9 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 raise ValueError(f"Conflicting `default_member_permissions` values found in `{cmd_list[0].name}`")
             if not all(c.dm_permission == cmd_list[0].dm_permission for c in cmd_list):
                 raise ValueError(f"Conflicting `dm_permission` values found in `{cmd_list[0].name}`")
-            if hasattr(cmd_list[0], "nsfw"):
-                if not all(c.nsfw == nsfw for c in cmd_list):
-                    log.warning(f"Conflicting `nsfw` values found in `{cmd_list[0].name} - `True` will be used")
-                    nsfw = True
+            if not all(c.nsfw == nsfw for c in cmd_list):
+                log.warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
+                nsfw = True
 
             for cmd in cmd_list:
                 cmd.scopes = list(scopes)
