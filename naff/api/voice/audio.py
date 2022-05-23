@@ -99,9 +99,9 @@ class Audio(BaseAudio):
     """How many seconds of audio should be buffered"""
     read_ahead_task: threading.Thread
     """A thread that reads ahead to create the buffer"""
-    ffmpeg_args: str
+    ffmpeg_args: str | list[str]
     """Args to pass to ffmpeg"""
-    ffmpeg_before_args: str
+    ffmpeg_before_args: str | list[str]
     """Args to pass to ffmpeg before the source"""
 
     def __init__(self, src: Union[str, Path]) -> None:
@@ -135,11 +135,27 @@ class Audio(BaseAudio):
         return True
 
     def _create_process(self) -> None:
-        cmd = (
-            f"ffmpeg {self.ffmpeg_before_args} "
-            f"-i {self.source} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1 -vn "
-            f"{self.ffmpeg_args}".split()
+        before = (
+            self.ffmpeg_before_args if isinstance(self.ffmpeg_before_args, list) else self.ffmpeg_before_args.split()
         )
+        after = self.ffmpeg_args if isinstance(self.ffmpeg_args, list) else self.ffmpeg_args.split()
+        cmd = [
+            "ffmpeg",
+            "-i",
+            self.source,
+            "-f",
+            "s16le",
+            "-ar",
+            "48000",
+            "-ac",
+            "2",
+            "-loglevel",
+            "warning",
+            "pipe:1",
+            "-vn",
+        ]
+        cmd[1:1] = before
+        cmd.extend(after)
 
         self.process = subprocess.Popen(  # noqa: S603
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL
