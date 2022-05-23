@@ -153,6 +153,10 @@ class Audio(BaseAudio):
         while self.process:
             if self.process.poll() is not None:
                 # ffmpeg has exited, stop reading ahead
+                if not self.buffer.initialised.is_set():
+                    # assume this is a small file and initialise the buffer
+                    self.buffer.initialised.set()
+
                 return
             if not len(self.buffer) >= self._max_buffer_size:
                 self.buffer.extend(self.process.stdout.read(3840))
