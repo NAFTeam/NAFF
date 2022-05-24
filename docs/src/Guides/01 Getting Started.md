@@ -1,13 +1,13 @@
 # Introduction
 
-Hi! So you want to make a bot powered by snakes. This guide aims to get you started as fast as possible, for more advanced use-cases check out the other guides.
+Hi! So you want to make a bot starting from naffing. This guide aims to get you started as fast as possible, for more advanced use-cases check out the other guides.
 
 ### Requirements
 
 - [x] Python 3.10 or greater
 - [x] Know how to use `pip`
 - [x] [A bot account](02 Creating Your Bot.md)
-- [ ] An aversion to snakes
+- [ ] An aversion to puns
 
 ## Installation Methods
 
@@ -23,7 +23,7 @@ There are two different ways to install this library and create your bot.
     ### Template Feature
     - Basic, ready to go bot
     - Implementation of best practises
-    - Scales, and general extensibility
+    - NAFF, and general extensibility
     - Example command, context menu, component, and event
     - Logging to both console and file
     - Pip and poetry config
@@ -83,9 +83,9 @@ There are two different ways to install this library and create your bot.
     Now let's get a basic bot going, for your code, you'll want something like this:
 
     ```python
-    from dis_snek import Snake, Intents, listen
+    from naff import Client, Intents, listen
 
-    bot = Snake(intents=Intents.DEFAULT)
+    bot = Client(intents=Intents.DEFAULT)
     # intents are what events we want to receive from discord, `DEFAULT` is usually fine
 
     @listen()  # this decorator tells snek that it needs to listen for the corresponding event, and run this coroutine

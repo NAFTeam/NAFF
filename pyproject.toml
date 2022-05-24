@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "dis-snek"
-version = "9.0.0"
-description = "An API wrapper for Discord filled with snakes"
-authors = ["LordOfPolls <ddavidallen13@gmail.com>"]
+name = "naff"
+version = "1.0.0"
+description = "Not another freaking fork"
+authors = ["LordOfPolls <lordofpolls.dev@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -26,4 +26,13 @@ profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
-plugins = "dis_snek.ext.mypy"
+plugins = "naff.ext.mypy"
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tools.coverage.run]
+source = ["naff",]

@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.sticker
+::: naff.models.discord.sticker

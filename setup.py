@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 with open("pyproject.toml", "rb") as f:
     pyproject = tomli.load(f)
 
-extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6"], "speedup": ["cchardet", "aiodns", "orjson"]}
+extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6"], "speedup": ["cchardet", "aiodns", "orjson", "Brotli"]}
 extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
 extras_require["docs"] = extras_require["all"] + [
     "pytkdocs @ git+https://github.com/LordOfPolls/pytkdocs.git",
@@ -18,13 +18,13 @@ extras_require["docs"] = extras_require["all"] + [
 ]
 
 setup(
-    name="dis-snek",
+    name="naff",
     description=pyproject["tool"]["poetry"]["description"],
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     author="LordOfPolls",
-    author_email="snekcord@gmail.com",
-    url="https://github.com/Discord-Snake-Pit/Dis-Snek",
+    author_email="lordofpolls.dev@gmail.com",
+    url="https://github.com/Discord-Snake-Pit/NAFF",
     version=pyproject["tool"]["poetry"]["version"],
     packages=find_packages(),
     include_package_data=True,
@@ -48,7 +48,6 @@ setup(
     project_urls={
         "Discord": "https://discord.gg/dis-snek",
         "Documentation": "https://dis-snek.readthedocs.io",
-        "Trello Board": "https://trello.com/b/LVjnmYKt/dev-board",
     },
     extras_require=extras_require,
 )

@@ -73,21 +73,21 @@ components = Button(
 await channel.send("Look a Button!", components=components)
 ```
 
-For more information, please visit the API reference [here](/API Reference/models/Discord/components/#dis_snek.models.discord.components.Button).
+For more information, please visit the API reference [here](/API Reference/models/Discord/components/#naff.models.discord.components.Button).
 
 ### I Need More Style
 
 You are in luck, there are a bunch of colours you can choose from.
     <br>![Button Colours](../images/Components/buttons.png "Button Colours")
 
-The colours correspond to the styles found in `ButtonStyles`. Click [here](/API Reference/models/Discord/enums/#dis_snek.models.discord.enums.ButtonStyles) for more information.
+The colours correspond to the styles found in `ButtonStyles`. Click [here](/API Reference/models/Discord/enums/#naff.models.discord.enums.ButtonStyles) for more information.
 
 If you use `ButtonStyles.URL`, you can pass an url to the button with `url`. Users who click the button will get redirected to your url.
 ```python
 components = Button(
     style=ButtonStyles.URL,
     label="Click Me",
-    url="https://github.com/Discord-Snake-Pit/Dis-Snek",
+    url="https://github.com/Discord-Snake-Pit/NAFF",
 )
 
 await channel.send("Look a Button!", components=components)
@@ -124,7 +124,7 @@ await channel.send("Look a Select!", components=components)
     ??? note
         You can only have upto 25 options in a Select
 
-For more information, please visit the API reference [here](/API Reference/models/Discord/components/#dis_snek.models.discord.components.Select).
+For more information, please visit the API reference [here](/API Reference/models/Discord/components/#naff.models.discord.components.Select).
 
 ## Responding
 

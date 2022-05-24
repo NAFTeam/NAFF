@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
 include requirements.txt
-include dis_snek/py.typed
-recursive-include dis_snek *.pyi
-recursive-include dis_snek *.dll
+include naff/py.typed
+recursive-include naff *.pyi
+recursive-include naff *.dll

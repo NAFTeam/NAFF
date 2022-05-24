@@ -12,12 +12,13 @@ Then you'll need to download [FFmpeg](https://ffmpeg.org) and place it in your p
 Now you've got those; let's make a simple play command to get you started.
 
 ```python
-import dis_snek
-from dis_snek.api.voice.audio import YTDLAudio
+import naff
+from naff.api.voice.audio import YTDLAudio
 
-@dis_snek.slash_command("play", "play a song!")
-@dis_snek.slash_option("song", "The song to play", 3, True)
-async def play(self, ctx: dis_snek.InteractionContext, song: str):
+
+@naff.slash_command("play", "play a song!")
+@naff.slash_option("song", "The song to play", 3, True)
+async def play(self, ctx: naff.InteractionContext, song: str):
     if not ctx.voice_state:
         # if we haven't already joined a voice channel
         # join the authors vc
@@ -42,13 +43,14 @@ If you want to play your own files, you can do that too! Create an `AudioVolume`
     If your audio is already encoded, use the standard `Audio` object instead. You'll lose volume manipulation, however.
 
 ```python
-import dis_snek
-from dis_snek.api.voice.audio import AudioVolume
+import naff
+from naff.api.voice.audio import AudioVolume
 
-@dis_snek.slash_command("play", "play a song!")
-async def play_file(ctx: dis_snek.InteractionContext):
+
+@naff.slash_command("play", "play a song!")
+async def play_file(ctx: naff.InteractionContext):
     audio = AudioVolume("some_file.wav")
     await ctx.voice_state.play(audio)
 ```
 
-Check out [Active Voice State](/API Reference/models/Snek/active_voice_state/) for a list of available methods and attributes.
+Check out [Active Voice State](/API Reference/models/naff/active_voice_state/) for a list of available methods and attributes.

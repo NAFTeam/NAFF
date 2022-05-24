@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.guild
+::: naff.models.discord.guild

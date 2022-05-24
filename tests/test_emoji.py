@@ -1,4 +1,4 @@
-from dis_snek.models.discord.emoji import PartialEmoji
+from naff.models.discord.emoji import PartialEmoji
 
 __all__ = ()
 

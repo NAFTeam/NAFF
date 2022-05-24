@@ -1,6 +1,6 @@
-site_name: Dis-Snek
-repo_url: https://github.com/Discord-Snake-Pit/Dis-Snek
-repo_name: Discord-Snake-Pit/Dis-Snek
+site_name: naff
+repo_url: https://github.com/Discord-Snake-Pit/naff
+repo_name: Discord-Snake-Pit/naff
 copyright: Copyright &copy; 2021 - Present LordOfPolls
 docs_dir: docs/src
 edit_uri: edit/master/docs/src
@@ -39,10 +39,10 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/discord
-      link: https://discord.gg/dis-snek
+      link: https://discord.gg/naff
       name: Discord Server
     - icon: fontawesome/brands/github
-      link: https://github.com/Discord-Snake-Pit/Dis-Snek
+      link: https://github.com/Discord-Snake-Pit/naff
       name: Github Repository
     - icon: fontawesome/brands/trello
       link: https://trello.com/b/LVjnmYKt/dev-board
@@ -75,7 +75,7 @@ plugins:
           heading_level: 2
           show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
     watch:
-      - dis_snek
+      - naff
 
 markdown_extensions:
   - tables

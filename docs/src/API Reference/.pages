@@ -1,5 +1,5 @@
 nav:
-    - Snake.md
+    - Client.md
     - const.md
     - errors.md
     - API_Communication

@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.user
+::: naff.models.discord.user

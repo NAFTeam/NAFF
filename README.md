@@ -7,8 +7,8 @@
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
 
 # What is this?
-This is `Dis-Snek`, a python API wrapper for Discord.
-Snek is intended to be fast, easy to use, and easily modified to suit your needs.
+This is `NAFF`, a python API wrapper for Discord.
+NAFF is intended to be fast, easy to use, and easily modified to suit your needs.
 
 ### Features:
 - ✅ 100% coverage of the application commands API
@@ -22,19 +22,23 @@ While this library shares features and some stylistic choices with `discord.py`,
 
 ## How do I use this?
 Here is a basic example:
-```python
-from dis_snek import Snake, Button, ButtonStyles, CommandTypes, context_menu, prefixed_command, listen
 
-bot = Snake(sync_interactions=True)
+```python
+from naff import Client, Button, ButtonStyles, CommandTypes, context_menu, prefixed_command, listen
+
+bot = Client(sync_interactions=True)
+
 
 @listen()
 async def on_startup():
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
 
+
 @prefixed_command()
 async def test_button(ctx):
     await ctx.send("Blurple button example!", components=Button(ButtonStyles.BLURPLE, "Click me"))
+
 
 @context_menu(name="User menu", context_type=CommandTypes.USER, scopes=[931832853770149918])
 async def user_context(ctx):
@@ -43,7 +47,7 @@ async def user_context(ctx):
 
 bot.start("TOKEN")
 ```
-For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/dis-snek).
+For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/naff).
 
 If you get stuck join our [Discord server](https://discord.gg/dis-snek).
 

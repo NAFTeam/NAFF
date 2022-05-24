@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.activity
+::: naff.models.discord.activity

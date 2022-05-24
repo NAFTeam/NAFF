@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.embed
+::: naff.models.discord.embed

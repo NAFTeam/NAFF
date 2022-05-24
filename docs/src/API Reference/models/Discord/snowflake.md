@@ -1,1 +1,1 @@
-::: dis_snek.models.discord.snowflake
+::: naff.models.discord.snowflake
