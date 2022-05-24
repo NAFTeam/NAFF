@@ -57,6 +57,5 @@ Of course, we welcome all contributions to this library. Just ensure you follow 
 If youre stuck for things to contribute, check out our [GitHub Projects](https://github.com/orgs/Discord-Snake-Pit/projects/1) for inspiration.
 
 ## Links:
-- Support Server: https://discord.gg/dis-snek
-- Documentation:  https://dis-snek.rtfd.io/
-- GitHub Projects: https://github.com/orgs/Discord-Snake-Pit/projects/1
+- Support Server: https://discord.gg/naff
+- Documentation:  https://naff-docs.readthedocs.io/en/latest/
