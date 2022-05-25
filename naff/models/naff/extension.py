@@ -146,9 +146,10 @@ class Extension:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
             elif isinstance(func, naff.PrefixedCommand):
-                self.bot.prefixed_commands.pop(func.name, None)
-                for alias in func.aliases:
-                    self.bot.prefixed_commands.pop(alias, None)
+                if not func.is_subcommand:
+                    self.bot.prefixed_commands.pop(func.name, None)
+                    for alias in func.aliases:
+                        self.bot.prefixed_commands.pop(alias, None)
         for func in self.listeners:
             self.bot.listeners[func.event].remove(func)
 
