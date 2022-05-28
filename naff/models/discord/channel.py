@@ -1191,8 +1191,8 @@ class GuildChannel(BaseChannel):
                 else:
                     deny |= getattr(Permissions, name.upper())
 
-        overwrite.add_allows(*allow)
-        overwrite.add_denies(*deny)
+        overwrite.add_allows(allow)
+        overwrite.add_denies(deny)
 
         await self.edit_permission(overwrite, reason)
 
