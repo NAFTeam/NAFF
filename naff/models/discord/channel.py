@@ -2071,7 +2071,10 @@ class GuildForum(GuildChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
-        data["available_tags"] = [ThreadTag.from_dict(tag_data, client) for tag_data in data["available_tags"]]
+        data["available_tags"] = [
+            ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
+            for tag_data in data["available_tags"]
+        ]
         return data
 
     async def create_post(
@@ -2170,13 +2173,19 @@ class GuildForum(GuildChannel):
         return [tag for tag in channel_data.available_tags if tag.name == name][0]
 
     async def edit_tag(
-        self, tag_id: "Snowflake_Type", name: str, emoji: Union["models.PartialEmoji", dict, str]
+        self,
+        tag_id: "Snowflake_Type",
+        *,
+        name: str | None = None,
+        emoji: Union["models.PartialEmoji", dict, str, None] = None,
     ) -> "ThreadTag":
         """
         Edit a tag for this forum.
 
-            Args:
-                tag_id: The ID of the tag to edit
+        Args:
+            tag_id: The id of the tag to edit
+            name: The name for this tag
+            emoji: The emoji for this tag
         """
         if isinstance(emoji, str):
             emoji = PartialEmoji.from_str(emoji)
