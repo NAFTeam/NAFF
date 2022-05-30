@@ -2077,7 +2077,7 @@ class GuildForum(GuildChannel):
     async def create_post(
         self,
         name: str,
-        content: str,
+        content: str | None,
         applied_tags: Optional[List[Union["Snowflake_Type", "ThreadTag"]]] = MISSING,
         *,
         auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
