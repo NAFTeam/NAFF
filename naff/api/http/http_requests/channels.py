@@ -457,7 +457,7 @@ class ChannelRequests:
         """
         return await self.request(
             Route("POST", f"/channels/{channel_id}/tags"),
-            data=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
+            payload=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
         )
 
     async def edit_tag(
@@ -483,7 +483,7 @@ class ChannelRequests:
         """
         return await self.request(
             Route("PUT", f"/channels/{channel_id}/tags/{tag_id}"),
-            data=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
+            payload=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
         )
 
     async def delete_tag(self, channel_id: "Snowflake_Type", tag_id: "Snowflake_Type") -> discord_typings.ChannelData:
