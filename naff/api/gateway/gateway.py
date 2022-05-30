@@ -141,20 +141,19 @@ class GatewayClient(WebsocketClient):
     async def run(self) -> None:
         """Start receiving events from the websocket."""
         while True:
-
-            stopping = asyncio.create_task(self._close_gateway.wait())
+            if self._stopping is None:
+                self._stopping = asyncio.create_task(self._close_gateway.wait())
             receiving = asyncio.create_task(self.receive())
-            done, _ = await asyncio.wait({stopping, receiving}, return_when=asyncio.FIRST_COMPLETED)
+            done, _ = await asyncio.wait({self._stopping, receiving}, return_when=asyncio.FIRST_COMPLETED)
 
             if receiving in done:
                 # Note that we check for a received message first, because if both completed at
                 # the same time, we don't want to discard that message.
                 msg = await receiving
-                stopping.cancel()
             else:
                 # This has to be the stopping task, which we join into the current task (even
                 # though that doesn't give any meaningful value in the return).
-                await stopping
+                await self._stopping
                 receiving.cancel()
                 return
 

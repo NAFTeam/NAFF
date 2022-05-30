@@ -63,6 +63,7 @@ class WebsocketClient:
         self._acknowledged.set()  # Initialize it as set
 
         self._close_gateway = asyncio.Event()
+        self._stopping: asyncio.Task | None = None
 
         # Sanity check, it is extremely important that an instance isn't reused.
         self._entered = False

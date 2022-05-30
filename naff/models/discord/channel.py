@@ -7,7 +7,7 @@ import attrs
 
 import naff.models as models
 from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
-from naff.client.errors import NotFound
+from naff.client.errors import NotFound, VoiceNotConnected
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field
@@ -32,6 +32,7 @@ from .enums import (
     MessageFlags,
     InviteTargetTypes,
 )
+from naff.models.misc.context_manager import Typing
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -426,6 +427,11 @@ class MessageableMixin(SendMixin):
     async def trigger_typing(self) -> None:
         """Trigger a typing animation in this channel."""
         await self._client.http.trigger_typing_indicator(self.id)
+
+    @property
+    def typing(self) -> Typing:
+        """A context manager to send a typing state to a given channel as long as long as the wrapped operation takes."""
+        return Typing(self)
 
 
 @define(slots=False)
@@ -841,7 +847,10 @@ class DMChannel(BaseChannel, MessageableMixin):
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
         if recipients := data.get("recipients", None):
-            data["recipients"] = [client.cache.place_user_data(recipient) for recipient in recipients]
+            data["recipients"] = [
+                client.cache.place_user_data(recipient) if isinstance(recipient, dict) else recipient
+                for recipient in recipients
+            ]
         return data
 
     @property
@@ -1975,6 +1984,18 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             return await self._client.connect_to_vc(self._guild_id, self.id, muted, deafened)
         await self.voice_state.move(self.id)
         return self.voice_state
+
+    async def disconnect(self) -> None:
+        """
+        Disconnect from the currently connected connected voice state.
+
+        Raises:
+            VoiceNotConnected if the bot is not connected to a voice channel
+        """
+        if self.voice_state:
+            return await self.voice_state.disconnect()
+        else:
+            raise VoiceNotConnected
 
 
 @define()

@@ -44,7 +44,7 @@ class Extension:
     """
 
     bot: "Client"
-    __name: str
+    name: str
     extension_name: str
     description: str
     extension_checks: List
@@ -58,7 +58,7 @@ class Extension:
     def __new__(cls, bot: "Client", *args, **kwargs) -> "Extension":
         new_cls = super().__new__(cls)
         new_cls.bot = bot
-        new_cls.__name = cls.__name__
+        new_cls.name = cls.__name__
         new_cls.extension_checks = []
         new_cls.extension_prerun = []
         new_cls.extension_postrun = []
@@ -130,11 +130,6 @@ class Extension:
         """Get the listeners from this Extension."""
         return self._listeners
 
-    @property
-    def name(self) -> str:
-        """Get the name of this Extension."""
-        return self.__name
-
     def drop(self) -> None:
         """Called when this Extension is being removed."""
         for func in self._commands:
@@ -151,8 +146,10 @@ class Extension:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
             elif isinstance(func, naff.PrefixedCommand):
-                if self.bot.prefixed_commands[func.name]:
-                    self.bot.prefixed_commands.pop(func.name)
+                if not func.is_subcommand:
+                    self.bot.prefixed_commands.pop(func.name, None)
+                    for alias in func.aliases:
+                        self.bot.prefixed_commands.pop(alias, None)
         for func in self.listeners:
             self.bot.listeners[func.event].remove(func)
 
