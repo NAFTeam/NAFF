@@ -14,7 +14,7 @@ extras_require["docs"] = extras_require["all"] + [
     "mkdocs-autorefs",
     "mkdocs-awesome-pages-plugin",
     "mkdocs-material",
-    "mkdocstrings",
+    "mkdocstrings==0.18",
 ]
 
 setup(
