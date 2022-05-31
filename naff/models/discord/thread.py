@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Dict, Any, Union, Optional, Self
+from typing import TYPE_CHECKING, List, Dict, Any, Union, Optional
 
 import naff.models as models
 from naff.client.const import MISSING
@@ -123,7 +123,7 @@ class ThreadTag(DiscordObject):
 
     async def edit(
         self, *, name: Optional[str] = None, emoji: Union["models.PartialEmoji", dict, str, None] = None
-    ) -> Self:
+    ) -> "ThreadTag":
         """
         Edit this tag
 
