@@ -14,7 +14,7 @@ extras_require["docs"] = extras_require["all"] + [
     "mkdocs-autorefs",
     "mkdocs-awesome-pages-plugin",
     "mkdocs-material",
-    "mkdocstrings",
+    "mkdocstrings==0.18",
 ]
 
 setup(
@@ -46,8 +46,8 @@ setup(
         "Typing :: Typed",
     ],
     project_urls={
-        "Discord": "https://discord.gg/dis-snek",
-        "Documentation": "https://dis-snek.readthedocs.io",
+        "Discord": "https://discord.gg/naff",
+        "Documentation": "https://naff-docs.readthedocs.io/en/latest/",
     },
     extras_require=extras_require,
 )

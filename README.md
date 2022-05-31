@@ -1,4 +1,4 @@
-[![PyPI](https://img.shields.io/pypi/v/dis-snek)](https://pypi.org/project/dis-snek/)
+[![PyPI](https://img.shields.io/pypi/v/naff)](https://pypi.org/project/naff/)
 [![Downloads](https://static.pepy.tech/personalized-badge/dis-snek?period=total&units=abbreviation&left_color=grey&right_color=green&left_text=pip%20installs)](https://pepy.tech/project/dis-snek)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![black-formatted](https://img.shields.io/github/workflow/status/Discord-Snake-Pit/dis-snek/black-action/master?label=Black%20Format&logo=github)](https://github.com/Discord-Snake-Pit/Dis-Snek/actions/workflows/black.yml)

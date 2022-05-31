@@ -120,7 +120,9 @@ class User(BaseUser):
         metadata=docs("The user's banner color"),
     )
     activities: list[Activity] = field(
-        factory=list, converter=list_converter(optional(Activity)), metadata=docs("A list of activities the user is in")
+        factory=list,
+        converter=list_converter(optional(Activity.from_dict)),
+        metadata=docs("A list of activities the user is in"),
     )
     status: Absent[Status] = field(default=MISSING, metadata=docs("The user's status"), converter=optional(Status))
 
