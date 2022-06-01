@@ -985,29 +985,63 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
     return output
 
 
+def _compare_commands(local_cmd: dict, remote_cmd: dict) -> bool:
+    """
+    Compares remote and local commands
+
+    Args:
+        local_cmd: The local command
+        remote_cmd: The remote command from discord
+
+    Returns:
+        True if the commands are the same
+    """
+    lookup: dict[str, tuple[str, any]] = {
+        "name": ("name", ""),
+        "description": ("description", ""),
+        "default_member_permissions": ("default_member_permissions", None),
+        "dm_permission": ("dm_permission", True),
+        "name_localized": ("name_localizations", {}),
+        "description_localized": ("description_localizations", {}),
+    }
+
+    for local_name, comparison_data in lookup.items():
+        remote_name, default_value = comparison_data
+        if local_cmd.get(local_name, default_value) != remote_cmd.get(remote_name, default_value):
+            return False
+    return True
+
+
 def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
+    options_lookup: dict[str, tuple[str, any]] = {
+        "name": ("name", ""),
+        "description": ("description", ""),
+        "required": ("required", False),
+        "autocomplete": ("autocomplete", False),
+        "name_localized": ("name_localizations", {}),
+        "description_localized": ("description_localizations", {}),
+        "choices": ("choices", []),
+    }
+
     if local_opt_list != remote_opt_list:
         if len(local_opt_list) != len(remote_opt_list):
             return False
         for i in range(len(local_opt_list)):
             local_option = local_opt_list[i]
             remote_option = remote_opt_list[i]
+
             if local_option["type"] == remote_option["type"]:
                 if local_option["type"] in (OptionTypes.SUB_COMMAND_GROUP, OptionTypes.SUB_COMMAND):
-                    if not _compare_options(local_option.get("options", []), remote_option.get("options", [])):
-                        return False
-                else:
-                    if (
-                        local_option["name"] != remote_option["name"]
-                        or local_option["description"] != remote_option["description"]
-                        or local_option["required"] != remote_option.get("required", False)
-                        or local_option["autocomplete"] != remote_option.get("autocomplete", False)
-                        or local_option.get("name_localized", {}) != remote_option.get("name_localized", {})
-                        or local_option.get("description_localized", {})
-                        != remote_option.get("description_localized", {})
-                        or local_option.get("choices", []) != remote_option.get("choices", [])
+                    if not _compare_commands(local_option, remote_option) or _compare_options(
+                        local_option.get("options", []), remote_option.get("options", [])
                     ):
                         return False
+                else:
+                    for local_name, comparison_data in options_lookup.items():
+                        remote_name, default_value = comparison_data
+                        if local_option.get(local_name, default_value) != remote_option.get(remote_name, default_value):
+                            return False
+
             else:
                 return False
     return True
@@ -1023,21 +1057,12 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
 
     Returns:
         Boolean indicating if a sync is needed
-
     """
     if not remote_cmd:
         # No remote version, command must be new
         return True
 
-    if (
-        local_cmd["name"] != remote_cmd["name"]
-        or local_cmd.get("description", "") != remote_cmd.get("description", "")
-        or local_cmd["default_member_permissions"] != remote_cmd.get("default_member_permissions", None)
-        or local_cmd["dm_permission"] != remote_cmd.get("dm_permission", True)
-        or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
-        or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
-        or local_cmd.get("nsfw", False) != remote_cmd.get("nsfw", False)
-    ):
+    if not _compare_commands(local_cmd, remote_cmd):
         # basic comparison of attributes
         return True
 
