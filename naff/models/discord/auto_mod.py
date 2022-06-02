@@ -77,6 +77,7 @@ class AlertMessage(BaseAction):
         return self._client.get_channel(self._channel_id)
 
 
+@define()
 class TimeoutUser(BaseAction):
     duration_seconds: int = field(repr=True)
 
