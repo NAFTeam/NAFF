@@ -10,6 +10,8 @@ from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
 from naff.models.discord.asset import Asset
+from naff.models.discord.file import UPLOADABLE_TYPE
+from naff.client.utils import to_image_data
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -165,6 +167,7 @@ class ScheduledEvent(DiscordObject):
         external_location: Absent[Optional[str]] = MISSING,
         entity_metadata: Absent[dict] = MISSING,
         privacy_level: Absent[ScheduledEventPrivacyLevel] = MISSING,
+        cover_image: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> None:
         """
@@ -180,6 +183,7 @@ class ScheduledEvent(DiscordObject):
             status: The status of the event
             entity_metadata: The metadata of the event
             privacy_level: The privacy level of the event
+            cover_image: the cover image of the scheduled event
             reason: The reason for editing the event
 
         !!! note:
@@ -209,5 +213,6 @@ class ScheduledEvent(DiscordObject):
             "status": status,
             "entity_metadata": entity_metadata,
             "privacy_level": privacy_level,
+            "image": to_image_data(cover_image) if cover_image else MISSING,
         }
         await self._client.http.modify_scheduled_event(self._guild_id, self.id, payload, reason)

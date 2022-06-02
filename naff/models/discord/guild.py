@@ -1115,6 +1115,7 @@ class Guild(BaseGuild):
         external_location: Absent[Optional[str]] = MISSING,
         entity_metadata: Optional[dict] = None,
         privacy_level: ScheduledEventPrivacyLevel = ScheduledEventPrivacyLevel.GUILD_ONLY,
+        cover_image: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.ScheduledEvent":
         """
@@ -1130,6 +1131,7 @@ class Guild(BaseGuild):
             external_location: event external location (For external events)
             entity_metadata: event metadata (additional data for the event)
             privacy_level: event privacy level
+            cover_image: the cover image of the scheduled event
             reason: reason for creating this scheduled event
 
         Returns:
@@ -1161,6 +1163,7 @@ class Guild(BaseGuild):
             "channel_id": channel_id,
             "entity_metadata": entity_metadata,
             "privacy_level": privacy_level,
+            "image": to_image_data(cover_image) if cover_image else MISSING,
         }
 
         scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)
