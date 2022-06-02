@@ -9,3 +9,4 @@ from .thread_events import *
 from .user_events import *
 from .voice_events import *
 from ._template import Processor
+from .auto_mod import *

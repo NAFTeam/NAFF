@@ -31,6 +31,7 @@ from .internal import BaseEvent, GuildEvent
 __all__ = (
     "BanCreate",
     "BanRemove",
+    "AutoModerationAction",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
@@ -93,6 +94,7 @@ if TYPE_CHECKING:
     from naff.models.discord.voice_state import VoiceState
     from naff.models.discord.stage_instance import StageInstance
     from naff.models.naff.context import ModalContext
+    from naff.models.discord.auto_mod import AutoModerationAction
 
 
 @define(kw_only=False)
@@ -106,6 +108,15 @@ class RawGatewayEvent(BaseEvent):
 
     data: dict = field(factory=dict)
     """Raw Data from the gateway"""
+
+
+@define(kw_only=False)
+class AutoModerationActionExecution(BaseEvent):
+    """Dispatched when an auto modation action is executed"""
+
+    execution: "AutoModerationAction" = field(metadata=docs("The executed auto mod action"))
+    channel: "BaseChannel" = field(metadata=docs("The channel the action was executed in"))
+    guild: "Guild" = field(metadata=docs("The guild the action was executed in"))
 
 
 @define(kw_only=False)

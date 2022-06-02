@@ -131,6 +131,8 @@ class Intents(DiscordIntFlag):  # type: ignore
     DIRECT_MESSAGE_TYPING = 1 << 14
     GUILD_MESSAGE_CONTENT = 1 << 15
     GUILD_SCHEDULED_EVENTS = 1 << 16
+    AUTO_MOD_CONFIG = 1 << 20
+    AUTO_MOD_ACTIONS = 1 << 21
 
     # Shortcuts/grouping/aliases
     MESSAGES = GUILD_MESSAGES | DIRECT_MESSAGES
@@ -822,3 +824,26 @@ class AuditLogEventType(IntEnum):
     ROLE_PROMPT_DELETE = 162
     GUILD_HOME_FEATURE_ITEM = 171
     GUILD_HOME_FEATURE_ITEM_UPDATE = 172
+
+
+class AutoModTriggerType(IntEnum):
+    KEYWORD = 1
+    HARMFUL_LINK = 2
+    SPAM = 3
+    KEYWORD_PRESET = 4
+
+
+class AutoModAction(IntEnum):
+    BLOCK_MESSAGE = 1
+    ALERT_MESSAGE = 2
+    TIMEOUT_USER = 3
+
+
+class AutoModEvent(IntEnum):
+    MESSAGE_SEND = 1
+
+
+class AutoModLanuguageType(Enum):
+    PROFANITY = "PROFANITY"
+    SEXUAL = "SEXUAL_CONTENT"
+    INSULTS_AND_SLURS = "SLURS"
