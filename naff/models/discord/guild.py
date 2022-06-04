@@ -31,6 +31,7 @@ from .enums import (
     ScheduledEventType,
     AuditLogEventType,
 )
+from naff.models.discord.auto_mod import AutoModRule
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
@@ -1550,6 +1551,17 @@ class Guild(BaseGuild):
             GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
             for ban_info in ban_infos
         ]
+
+    async def fetch_auto_moderation_rules(self) -> List[AutoModRule]:
+        """
+        Get this guild's auto moderation rules.
+
+        Returns:
+            A list of auto moderation rules
+        """
+        data = await self._client.http.get_auto_moderation_rules(self.id)
+
+        return [AutoModRule.from_dict(d, self._client) for d in data]
 
     async def unban(
         self, user: Union["models.User", "models.Member", Snowflake_Type], reason: Absent[str] = MISSING

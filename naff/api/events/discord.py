@@ -31,7 +31,7 @@ from .internal import BaseEvent, GuildEvent
 __all__ = (
     "BanCreate",
     "BanRemove",
-    "AutoModerationAction",
+    "AutoModerationActionExecution",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
