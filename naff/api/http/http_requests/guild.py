@@ -790,3 +790,30 @@ class GuildRequests:
         """
         # why on earth does this return the deleted template object?
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))
+
+    async def get_auto_moderation_rules(self, guild_id: "Snowflake_Type") -> list[dict]:
+        """
+        Get this guilds auto moderation rules.
+
+        Args:
+            guild_id: The ID of the guild to get
+
+        Returns:
+            A list of auto moderation rules
+        """
+        # todo: Add discord typings when added
+        return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules"))
+
+    async def get_auto_moderation_rule(self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type") -> dict:
+        """
+        Get a specific auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild
+            rule_id: The ID of the rule to get
+
+        Returns:
+            The auto moderation rule
+        """
+        # todo: Add discord typings when added
+        return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"))
