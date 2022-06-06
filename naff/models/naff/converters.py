@@ -71,7 +71,7 @@ __all__ = (
 )
 
 
-class NoArgumentConverter(Converter):
+class NoArgumentConverter(Converter[T_co]):
     """
     An indicator class for special type of converters that only uses the Context.
 
