@@ -286,7 +286,7 @@ class RoleColors(Color, Enum):
 
     # a certain other lib called the yellows this
     # i honestly cannot decide if they are or not
-    # so why not satify everyone here?
+    # so why not satisfy everyone here?
     GOLD = YELLOW
     DARK_GOLD = DARK_YELLOW
 
