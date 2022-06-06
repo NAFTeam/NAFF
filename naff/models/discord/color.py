@@ -273,8 +273,8 @@ class RoleColors(Color, Enum):
     DARK_PURPLE = "#71368A"
     MAGENTA = "#E91E63"
     DARK_MAGENTA = "#AD1457"
-    GOLD = "#F1C40F"
-    DARK_GOLD = "#C27C0E"
+    YELLOW = "#F1C40F"
+    DARK_YELLOW = "#C27C0E"
     ORANGE = "#E67E22"
     DARK_ORANGE = "#A84300"
     RED = "#E74C3C"
@@ -283,6 +283,12 @@ class RoleColors(Color, Enum):
     LIGHT_GRAY = "#979C9F"
     DARK_GRAY = "#607D8B"
     DARKER_GRAY = "#546E7A"
+
+    # a certain other lib called the yellows this
+    # i honestly cannot decide if they are or not
+    # so why not satify everyone here?
+    GOLD = YELLOW
+    DARK_GOLD = DARK_YELLOW
 
     # aliases
     LIGHT_GREY = LIGHT_GRAY
