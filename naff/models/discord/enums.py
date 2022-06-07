@@ -33,6 +33,7 @@ __all__ = (
     "NSFWLevels",
     "PremiumTiers",
     "SystemChannelFlags",
+    "ChannelFlags",
     "VideoQualityModes",
     "AutoArchiveDuration",
     "ActivityType",
@@ -374,6 +375,8 @@ class Permissions(DiscordIntFlag):  # type: ignore
     """Allows guild members to view a channel, which includes reading messages in text channels and joining voice channels"""
     SEND_MESSAGES = 1 << 11
     """	Allows for sending messages in a channel (does not allow sending messages in threads)"""
+    CREATE_POSTS = 1 << 11
+    """Allow members to create posts in this channel. Alias to SEND_MESSAGES"""
     SEND_TTS_MESSAGES = 1 << 12
     """	Allows for sending of `/tts` messages"""
     MANAGE_MESSAGES = 1 << 13
@@ -478,6 +481,8 @@ class ChannelTypes(IntEnum):
     """Temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission"""
     GUILD_STAGE_VOICE = 13
     """Voice channel for hosting events with an audience"""
+    GUILD_FORUM = 15
+    """A Forum channel"""
 
     @classmethod
     def converter(cls, value) -> "ChannelTypes":
@@ -652,6 +657,14 @@ class SystemChannelFlags(DiscordIntFlag):
     # Special members
     NONE = 0
     ALL = AntiFlag()
+
+
+class ChannelFlags(DiscordIntFlag):
+    PINNED = 1 << 1
+    """ Thread is pinned to the top of its parent forum channel """
+
+    # Special members
+    NONE = 0
 
 
 class VideoQualityModes(IntEnum):

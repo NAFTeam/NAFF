@@ -1,17 +1,19 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
 import discord_typings
+from aiohttp import FormData
 
 from naff.client.const import MISSING, Absent
-from ..route import Route
 from naff.client.utils.attr_converters import timestamp_converter
 from naff.models.discord.enums import ChannelTypes
+from naff.api.http.route import Route
 
 __all__ = ("ThreadRequests",)
 
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
+    from naff import UPLOADABLE_TYPE
 
 
 class ThreadRequests:
@@ -189,3 +191,43 @@ class ThreadRequests:
             payload["type"] = thread_type or ChannelTypes.GUILD_PUBLIC_THREAD
             payload["invitable"] = invitable
             return await self.request(Route("POST", f"/channels/{channel_id}/threads"), payload=payload, reason=reason)
+
+    async def create_forum_thread(
+        self,
+        channel_id: "Snowflake_Type",
+        name: str,
+        auto_archive_duration: int,
+        message: dict | FormData,
+        applied_tags: List[str] = None,
+        rate_limit_per_user: Absent[int] = MISSING,
+        files: Absent["UPLOADABLE_TYPE"] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> dict:
+        """
+        Create a thread within a forum channel.
+
+        Args:
+            channel_id: The id of the forum channel
+            name: The name of the thread
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            message: The message-content for the post/thread
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this thread
+
+        Returns:
+            The created thread object
+        """
+        # note: `{"use_nested_fields": 1}` seems to be a temporary flag until forums launch
+        return await self.request(
+            Route("POST", f"/channels/{channel_id}/threads"),
+            payload={
+                "name": name,
+                "auto_archive_duration": auto_archive_duration,
+                "rate_limit_per_user": rate_limit_per_user,
+                "applied_tags": applied_tags,
+                "message": message,
+            },
+            params={"use_nested_fields": 1},
+            files=files,
+            reason=reason,
+        )
