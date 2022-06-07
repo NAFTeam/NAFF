@@ -11,11 +11,13 @@ __all__ = (
     "BrandColors",
     "MaterialColors",
     "FlatUIColors",
+    "RoleColors",
     "process_color",
     "Colour",
     "BrandColours",
     "MaterialColours",
     "FlatUIColours",
+    "RoleColours",
     "process_colour",
 )
 
@@ -258,6 +260,43 @@ class FlatUIColors(Color, Enum):
     ASBESTOS = "#7F8C8D"
 
 
+class RoleColors(Color, Enum):
+    """A collection of the default role colors Discord provides."""
+
+    TEAL = "#1ABC9C"
+    DARK_TEAL = "#11806A"
+    GREEN = "#2ECC71"
+    DARK_GREEN = "#1F8B4C"
+    BLUE = "#3498DB"
+    DARK_BLUE = "#206694"
+    PURPLE = "#9B59B6"
+    DARK_PURPLE = "#71368A"
+    MAGENTA = "#E91E63"
+    DARK_MAGENTA = "#AD1457"
+    YELLOW = "#F1C40F"
+    DARK_YELLOW = "#C27C0E"
+    ORANGE = "#E67E22"
+    DARK_ORANGE = "#A84300"
+    RED = "#E74C3C"
+    DARK_RED = "#992D22"
+    LIGHTER_GRAY = "#95A5A6"
+    LIGHT_GRAY = "#979C9F"
+    DARK_GRAY = "#607D8B"
+    DARKER_GRAY = "#546E7A"
+
+    # a certain other lib called the yellows this
+    # i honestly cannot decide if they are or not
+    # so why not satisfy everyone here?
+    GOLD = YELLOW
+    DARK_GOLD = DARK_YELLOW
+
+    # aliases
+    LIGHT_GREY = LIGHT_GRAY
+    LIGHTER_GREY = LIGHTER_GRAY
+    DARK_GREY = DARK_GRAY
+    DARKER_GREY = DARKER_GRAY
+
+
 def process_color(color: Optional[Union[Color, dict, tuple, list, str, int]]) -> Optional[int]:
     """
     Process color to a format that can be used by discord.
@@ -286,4 +325,5 @@ Colour = Color
 BrandColours = BrandColors
 MaterialColours = MaterialColors
 FlatUIColours = FlatUIColors
+RoleColours = RoleColors
 process_colour = process_color
