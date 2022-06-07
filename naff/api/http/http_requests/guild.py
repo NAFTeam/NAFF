@@ -830,3 +830,16 @@ class GuildRequests:
             The created auto moderation rule
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/auto-moderation/rules"), payload=payload)
+
+    async def delete_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type", reason: Absent[str] = MISSING
+    ) -> dict:
+        """
+        Delete an auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild to delete this rule from
+            rule_id: The ID of the role to delete
+            reason: The reason for deleting this rule
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"), reason=reason)

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Union, Any
 
 import attrs
 
-from naff.client.const import logger_name, MISSING
+from naff.client.const import logger_name, MISSING, Absent
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter
 from naff.client.utils.attr_utils import define, field, docs
@@ -170,6 +170,15 @@ class AutoModRule(DiscordObject):
     @property
     def guild(self) -> "Guild":
         return self._client.cache.get_guild(self._guild_id)
+
+    async def delete(self, reason: Absent[str] = MISSING) -> None:
+        """
+        Delete this rule
+
+        Args:
+            reason: The reason for deleting this rule
+        """
+        await self._client.http.delete_auto_moderation_rule(self._guild_id, self.id, reason=reason)
 
 
 @define()

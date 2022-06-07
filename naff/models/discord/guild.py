@@ -1635,7 +1635,7 @@ class Guild(BaseGuild):
             client=self._client,
         )
         data = await self._client.http.create_auto_moderation_rule(self.id, rule.to_dict())
-        return rule.update_from_dict(data)
+        return AutoModRule.from_dict(data, self._client)
 
     async def fetch_auto_moderation_rules(self) -> List[AutoModRule]:
         """
@@ -1646,6 +1646,16 @@ class Guild(BaseGuild):
         """
         data = await self._client.http.get_auto_moderation_rules(self.id)
         return [AutoModRule.from_dict(d, self._client) for d in data]
+
+    async def delete_auto_moderation_rule(self, rule: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
+        """
+        Delete a given auto moderation rule.
+
+        Args:
+            rule: The rule to delete
+            reason: The reason for deleting this rule
+        """
+        await self._client.http.delete_auto_moderation_rule(self.id, to_snowflake(rule), reason=reason)
 
     async def unban(
         self, user: Union["models.User", "models.Member", Snowflake_Type], reason: Absent[str] = MISSING
