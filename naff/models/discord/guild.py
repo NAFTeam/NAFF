@@ -30,8 +30,9 @@ from .enums import (
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
     AuditLogEventType,
+    AutoModEvent,
 )
-from naff.models.discord.auto_mod import AutoModRule
+from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
@@ -1597,6 +1598,45 @@ class Guild(BaseGuild):
             for ban_info in ban_infos
         ]
 
+    async def create_auto_moderation_rule(
+        self,
+        name: str,
+        *,
+        trigger: BaseTrigger,
+        actions: list[BaseAction],
+        exempt_roles: list["Snowflake_Type"] = MISSING,
+        exempt_channels: list["Snowflake_Type"] = MISSING,
+        enabled: bool = True,
+        event_type: AutoModEvent = AutoModEvent.MESSAGE_SEND,
+    ) -> AutoModRule:
+        """
+        Create an auto-moderation rule in this guild.
+
+        Args:
+            name: The name of the rule
+            trigger: The trigger for this rule
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+
+        Returns:
+            The created rule
+        """
+        rule = AutoModRule(
+            name=name,
+            enabled=enabled,
+            actions=actions,
+            event_type=event_type,
+            trigger=trigger,
+            exempt_channels=exempt_channels if exempt_roles is not MISSING else [],
+            exempt_roles=exempt_roles if exempt_roles is not MISSING else [],
+            client=self._client,
+        )
+        data = await self._client.http.create_auto_moderation_rule(self.id, rule.to_dict())
+        return rule.update_from_dict(data)
+
     async def fetch_auto_moderation_rules(self) -> List[AutoModRule]:
         """
         Get this guild's auto moderation rules.
@@ -1605,7 +1645,6 @@ class Guild(BaseGuild):
             A list of auto moderation rules
         """
         data = await self._client.http.get_auto_moderation_rules(self.id)
-
         return [AutoModRule.from_dict(d, self._client) for d in data]
 
     async def unban(

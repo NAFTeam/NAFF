@@ -817,3 +817,16 @@ class GuildRequests:
         """
         # todo: Add discord typings when added
         return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"))
+
+    async def create_auto_moderation_rule(self, guild_id: "Snowflake_Type", payload: dict) -> dict:
+        """
+        Create an auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild to create this rule within
+            payload: A dict representing the auto moderation rule
+
+        Returns:
+            The created auto moderation rule
+        """
+        return await self.request(Route("POST", f"/guilds/{guild_id}/auto-moderation/rules"), payload=payload)
