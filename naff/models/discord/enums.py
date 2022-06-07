@@ -338,6 +338,8 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
     """This message is an Interaction Response and the bot is "thinking"""
     FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
     """This message failed to mention some roles and add their members to the thread"""
+    SHOULD_SHOW_LINK_NOT_DISCORD_WARNING = 1 << 10
+    """This message contains a abusive website link, pops up a warning when clicked"""
 
     # Special members
     NONE = 0
