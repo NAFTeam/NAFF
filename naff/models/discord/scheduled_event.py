@@ -9,6 +9,9 @@ from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
+from naff.models.discord.asset import Asset
+from naff.models.discord.file import UPLOADABLE_TYPE
+from naff.client.utils import to_image_data
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -45,6 +48,8 @@ class ScheduledEvent(DiscordObject):
     """The metadata associated with the entity_type"""
     user_count: int = field(default=MISSING)
     """Amount of users subscribed to the scheduled event"""
+    cover: Asset | None = field(default=None)
+    """The cover image of this event"""
 
     _guild_id: "Snowflake_Type" = field(converter=to_snowflake)
     _creator: Optional["User"] = field(default=MISSING)
@@ -80,6 +85,9 @@ class ScheduledEvent(DiscordObject):
             data["end_time"] = end_time
         else:
             data["end_time"] = None
+
+        if image := data.get("image"):
+            data["cover"] = Asset.from_path_hash(client, f"guild-events/{data['id']}/{{}}", image)
 
         data = super()._process_dict(data, client)
         return data
@@ -159,6 +167,7 @@ class ScheduledEvent(DiscordObject):
         external_location: Absent[Optional[str]] = MISSING,
         entity_metadata: Absent[dict] = MISSING,
         privacy_level: Absent[ScheduledEventPrivacyLevel] = MISSING,
+        cover_image: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[str] = MISSING,
     ) -> None:
         """
@@ -174,6 +183,7 @@ class ScheduledEvent(DiscordObject):
             status: The status of the event
             entity_metadata: The metadata of the event
             privacy_level: The privacy level of the event
+            cover_image: the cover image of the scheduled event
             reason: The reason for editing the event
 
         !!! note:
@@ -203,5 +213,6 @@ class ScheduledEvent(DiscordObject):
             "status": status,
             "entity_metadata": entity_metadata,
             "privacy_level": privacy_level,
+            "image": to_image_data(cover_image) if cover_image else MISSING,
         }
         await self._client.http.modify_scheduled_event(self._guild_id, self.id, payload, reason)

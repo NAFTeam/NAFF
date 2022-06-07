@@ -889,6 +889,48 @@ class Guild(BaseGuild):
             reason=reason,
         )
 
+    async def create_forum_channel(
+        self,
+        name: str,
+        topic: Absent[Optional[str]] = MISSING,
+        position: Absent[Optional[int]] = MISSING,
+        permission_overwrites: Absent[
+            Union[dict, "models.PermissionOverwrite", List[Union[dict, "models.PermissionOverwrite"]]]
+        ] = MISSING,
+        category: Union[Snowflake_Type, "models.GuildCategory"] = None,
+        nsfw: bool = False,
+        rate_limit_per_user: int = 0,
+        reason: Absent[Optional[str]] = MISSING,
+    ) -> "models.GuildForum":
+        """
+        Create a forum channel in this guild.
+
+        Args:
+            name: The name of the forum channel
+            topic: The topic of the forum channel
+            position: The position of the forum channel in the channel list
+            permission_overwrites: Permission overwrites to apply to the forum channel
+            category: The category this forum channel should be within
+            nsfw: Should this forum be marked nsfw
+            rate_limit_per_user: The time users must wait between sending messages
+            reason: The reason for creating this channel
+
+        Returns:
+           The newly created forum channel.
+
+        """
+        return await self.create_channel(
+            channel_type=ChannelTypes.GUILD_FORUM,
+            name=name,
+            topic=topic,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
+        )
+
     async def create_news_channel(
         self,
         name: str,
@@ -1115,6 +1157,7 @@ class Guild(BaseGuild):
         external_location: Absent[Optional[str]] = MISSING,
         entity_metadata: Optional[dict] = None,
         privacy_level: ScheduledEventPrivacyLevel = ScheduledEventPrivacyLevel.GUILD_ONLY,
+        cover_image: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[Optional[str]] = MISSING,
     ) -> "models.ScheduledEvent":
         """
@@ -1130,6 +1173,7 @@ class Guild(BaseGuild):
             external_location: event external location (For external events)
             entity_metadata: event metadata (additional data for the event)
             privacy_level: event privacy level
+            cover_image: the cover image of the scheduled event
             reason: reason for creating this scheduled event
 
         Returns:
@@ -1161,6 +1205,7 @@ class Guild(BaseGuild):
             "channel_id": channel_id,
             "entity_metadata": entity_metadata,
             "privacy_level": privacy_level,
+            "image": to_image_data(cover_image) if cover_image else MISSING,
         }
 
         scheduled_event_data = await self._client.http.create_scheduled_event(self.id, payload, reason)

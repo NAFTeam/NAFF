@@ -33,6 +33,7 @@ __all__ = (
     "NSFWLevels",
     "PremiumTiers",
     "SystemChannelFlags",
+    "ChannelFlags",
     "VideoQualityModes",
     "AutoArchiveDuration",
     "ActivityType",
@@ -338,6 +339,8 @@ class MessageFlags(DiscordIntFlag):  # type: ignore
     """This message is an Interaction Response and the bot is "thinking"""
     FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
     """This message failed to mention some roles and add their members to the thread"""
+    SHOULD_SHOW_LINK_NOT_DISCORD_WARNING = 1 << 10
+    """This message contains a abusive website link, pops up a warning when clicked"""
 
     # Special members
     NONE = 0
@@ -372,6 +375,8 @@ class Permissions(DiscordIntFlag):  # type: ignore
     """Allows guild members to view a channel, which includes reading messages in text channels and joining voice channels"""
     SEND_MESSAGES = 1 << 11
     """	Allows for sending messages in a channel (does not allow sending messages in threads)"""
+    CREATE_POSTS = 1 << 11
+    """Allow members to create posts in this channel. Alias to SEND_MESSAGES"""
     SEND_TTS_MESSAGES = 1 << 12
     """	Allows for sending of `/tts` messages"""
     MANAGE_MESSAGES = 1 << 13
@@ -476,6 +481,8 @@ class ChannelTypes(IntEnum):
     """Temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission"""
     GUILD_STAGE_VOICE = 13
     """Voice channel for hosting events with an audience"""
+    GUILD_FORUM = 15
+    """A Forum channel"""
 
     @classmethod
     def converter(cls, value) -> "ChannelTypes":
@@ -652,6 +659,14 @@ class SystemChannelFlags(DiscordIntFlag):
     ALL = AntiFlag()
 
 
+class ChannelFlags(DiscordIntFlag):
+    PINNED = 1 << 1
+    """ Thread is pinned to the top of its parent forum channel """
+
+    # Special members
+    NONE = 0
+
+
 class VideoQualityModes(IntEnum):
     """Video quality settings."""
 
@@ -815,3 +830,10 @@ class AuditLogEventType(IntEnum):
     AUTO_MODERATION_RULE_UPDATE = 141
     AUTO_MODERATION_RULE_DELETE = 142
     AUTO_MODERATION_BLOCK_MESSAGE = 143
+    CREATOR_MONETIZATION_REQUEST_CREATED = 150
+    CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
+    ROLE_PROMPT_CREATE = 160
+    ROLE_PROMPT_UPDATE = 161
+    ROLE_PROMPT_DELETE = 162
+    GUILD_HOME_FEATURE_ITEM = 171
+    GUILD_HOME_FEATURE_ITEM_UPDATE = 172
