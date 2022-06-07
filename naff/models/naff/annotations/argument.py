@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from naff.models import Member, User, TYPE_MESSAGEABLE_CHANNEL
 
 
-class CMD_BODY(NoArgumentConverter):
+class CMD_BODY(NoArgumentConverter[str]):
     """
     This argument is for the body of the message.
 
@@ -43,7 +43,7 @@ class CMD_CHANNEL(NoArgumentConverter):
         return context.channel
 
 
-class CMD_ARGS(NoArgumentConverter):
+class CMD_ARGS(NoArgumentConverter[list[str]]):
     """This argument is all of the arguments sent with this context."""
 
     @staticmethod
