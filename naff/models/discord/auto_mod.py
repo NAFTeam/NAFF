@@ -5,11 +5,11 @@ import attrs
 
 from naff.client.const import logger_name, MISSING, Absent
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils import list_converter
+from naff.client.utils import list_converter, optional
 from naff.client.utils.attr_utils import define, field, docs
 from naff.models.discord.base import ClientObject, DiscordObject
 from naff.models.discord.enums import AutoModTriggerType, AutoModAction, AutoModEvent, AutoModLanuguageType
-from naff.models.discord.snowflake import to_snowflake_list
+from naff.models.discord.snowflake import to_snowflake_list, to_snowflake
 
 if TYPE_CHECKING:
     from naff import (
@@ -147,7 +147,7 @@ class AutoModRule(DiscordObject):
 
     _guild_id: "Snowflake_Type" = field(default=MISSING)
     _creator_id: "Snowflake_Type" = field(default=MISSING)
-    id: "Snowflake_Type" = field(default=MISSING)
+    id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Client") -> dict:

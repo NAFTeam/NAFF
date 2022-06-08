@@ -831,6 +831,54 @@ class GuildRequests:
         """
         return await self.request(Route("POST", f"/guilds/{guild_id}/auto-moderation/rules"), payload=payload)
 
+    async def modify_auto_moderation_rule(
+        self,
+        guild_id: "Snowflake_Type",
+        rule_id: "Snowflake_Type",
+        name: Absent[str] = MISSING,
+        trigger_type: Absent[dict] = MISSING,
+        trigger_metadata: Absent[dict] = MISSING,
+        actions: Absent[list[dict]] = MISSING,
+        exempt_channels: Absent[list["Snowflake_Type"]] = MISSING,
+        exempt_roles: Absent[list["Snowflake_Type"]] = MISSING,
+        event_type: Absent[dict] = MISSING,
+        enabled: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> dict:
+        """
+        Modify an existing auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild the rule belongs to
+            rule_id: The ID of the rule to modify
+            name: The name of the rule
+            trigger_type: The type trigger for this rule
+            trigger_metadata: Metadata for the trigger
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+            reason: The reason for this change
+
+        Returns:
+            The updated rule object
+        """
+        payload = {
+            "name": name,
+            "trigger_type": trigger_type,
+            "trigger_metadata": trigger_metadata,
+            "actions": actions,
+            "exempt_roles": exempt_roles,
+            "exempt_channels": exempt_channels,
+            "event_type": event_type,
+            "enabled": enabled,
+        }
+
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"), payload=payload, reason=reason
+        )
+
     async def delete_auto_moderation_rule(
         self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type", reason: Absent[str] = MISSING
     ) -> dict:
