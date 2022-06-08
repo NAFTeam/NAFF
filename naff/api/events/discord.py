@@ -31,7 +31,7 @@ from .internal import BaseEvent, GuildEvent
 __all__ = (
     "BanCreate",
     "BanRemove",
-    "AutoModerationActionExecution",
+    "AutoModExec",
     "AutoModCreated",
     "AutoModUpdated",
     "AutoModDeleted",
@@ -114,7 +114,7 @@ class RawGatewayEvent(BaseEvent):
 
 
 @define(kw_only=False)
-class AutoModerationActionExecution(BaseEvent):
+class AutoModExec(BaseEvent):
     """Dispatched when an auto modation action is executed"""
 
     execution: "AutoModerationAction" = field(metadata=docs("The executed auto mod action"))
