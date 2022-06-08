@@ -32,6 +32,9 @@ __all__ = (
     "BanCreate",
     "BanRemove",
     "AutoModerationActionExecution",
+    "AutoModCreated",
+    "AutoModUpdated",
+    "AutoModDeleted",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
@@ -94,7 +97,7 @@ if TYPE_CHECKING:
     from naff.models.discord.voice_state import VoiceState
     from naff.models.discord.stage_instance import StageInstance
     from naff.models.naff.context import ModalContext
-    from naff.models.discord.auto_mod import AutoModerationAction
+    from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
 
 
 @define(kw_only=False)
@@ -117,6 +120,26 @@ class AutoModerationActionExecution(BaseEvent):
     execution: "AutoModerationAction" = field(metadata=docs("The executed auto mod action"))
     channel: "BaseChannel" = field(metadata=docs("The channel the action was executed in"))
     guild: "Guild" = field(metadata=docs("The guild the action was executed in"))
+
+
+@define(kw_only=False)
+class AutoModCreated(BaseEvent):
+    guild: "Guild" = field(metadata=docs("The guild the rule was modified in"))
+    rule: "AutoModRule" = field(metadata=docs("The rule that was modified"))
+
+
+@define(kw_only=False)
+class AutoModUpdated(AutoModCreated):
+    """Dispatched when an auto mod rule is modified"""
+
+    ...
+
+
+@define(kw_only=False)
+class AutoModDeleted(AutoModCreated):
+    """Dispatched when an auto mod rule is deleted"""
+
+    ...
 
 
 @define(kw_only=False)
