@@ -20,8 +20,15 @@ body:
       required: true
   - type: input
     attributes:
-      label: Describe the bug
+      label: Describe the Bug
       description: A simple summary of your bug report
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Results
+      description: >
+        A clear and concise description of what you expected to happen.
     validations:
       required: true
   - type: textarea
@@ -30,13 +37,6 @@ body:
       description: >
         A short snippet of code that showcases the bug.
       render: python
-  - type: textarea
-    attributes:
-      label: Expected Results
-      description: >
-        A clear and concise description of what you expected to happen.
-    validations:
-      required: true
   - type: textarea
     attributes:
       label: Traceback
