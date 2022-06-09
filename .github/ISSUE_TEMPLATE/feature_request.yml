@@ -2,7 +2,6 @@ name: Feature request
 description: I would like something added
 title: "[FEAT] Your title here"
 labels: enhancement
-assignees: ''
 body:
   - type: markdown
     attributes:
