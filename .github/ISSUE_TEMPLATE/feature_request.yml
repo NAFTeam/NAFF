@@ -1,5 +1,5 @@
 name: Feature Request
-description: I would like something added
+description: Request new functionality.
 title: "[FEAT] Your Title Here"
 labels: ["New Feature"]
 
@@ -28,6 +28,6 @@ body:
         A clear and concise description of any alternative solutions or features you've considered.
   - type: textarea
     attributes:
-      label: Additional information
+      label: Additional Information
       description: >
         A clear and concise description of what you expected to happen.

@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report broken or incorrect behaviour
+description: Report broken or incorrect behaviour.
 labels: ["Bug"]
 title: "[BUG] Your Title Here"
 
@@ -14,7 +14,7 @@ body:
 
   - type: input
     attributes:
-      label: Naff Version
+      label: NAFF Version
       description: What version of the library you are currently running.
     validations:
       required: true
