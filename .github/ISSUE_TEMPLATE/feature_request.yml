@@ -4,11 +4,7 @@ title: "[FEAT] Your Title Here"
 labels: ["New Feature"]
 
 body:
-  - type: markdown
-    attributes:
-      value: >
-        Please fill all the required fields.
-  - type: input
+  - type: textarea
     attributes:
       label: Is your feature request related to a problem? Please describe.
       description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
