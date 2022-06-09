@@ -1,16 +1,23 @@
 name: Bug Report
 description: Report broken or incorrect behaviour
-labels: bug
+labels: ["Bug"]
 title: "[BUG] Your Title Here"
+
 assignees:
   - LordOfPolls
 body:
   - type: markdown
     attributes:
       value: >
-        Thanks for taking the time to fill out a bug.
+        Thanks for taking the time to fill out a bug report.
         If you want real-time support, consider joining our [Discord](https://discord.gg/naff) instead.
 
+  - type: input
+    attributes:
+      label: Naff Version
+      description: What version of the library you are currently running.
+    validations:
+      required: true
   - type: input
     attributes:
       label: Describe the bug

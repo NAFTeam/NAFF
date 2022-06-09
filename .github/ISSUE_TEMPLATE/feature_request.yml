@@ -1,7 +1,8 @@
-name: Feature request
+name: Feature Request
 description: I would like something added
-title: "[FEAT] Your title here"
-labels: enhancement
+title: "[FEAT] Your Title Here"
+labels: ["New Feature"]
+
 body:
   - type: markdown
     attributes:
