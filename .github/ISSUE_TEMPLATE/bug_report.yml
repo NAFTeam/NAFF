@@ -26,13 +26,6 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: To Reproduce
-      description: >
-         The code you used to produce this bug, must be in a code-block.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
       label: Minimal Reproducible Code
       description: >
         A short snippet of code that showcases the bug.
