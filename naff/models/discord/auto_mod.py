@@ -78,6 +78,12 @@ class BaseTrigger(DictSerializationMixin):
         return data
 
 
+def _keyword_converter(filter: str | list[str]) -> list[str]:
+    if isinstance(filter, list):
+        return filter
+    return [filter]
+
+
 @define()
 class KeywordTrigger(BaseTrigger):
     type: AutoModTriggerType = field(
@@ -86,7 +92,9 @@ class KeywordTrigger(BaseTrigger):
         repr=True,
         metadata=docs("The type of trigger"),
     )
-    keyword_filter: list[str] = field(factory=list, repr=True, metadata=docs("What words will trigger this"))
+    keyword_filter: str | list[str] = field(
+        factory=list, repr=True, metadata=docs("What words will trigger this"), converter=_keyword_converter
+    )
 
 
 @define()
