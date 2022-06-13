@@ -1,7 +1,7 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from naff.client.errors import AlreadyDeferred, NotFound, BadRequest
+from naff.client.errors import AlreadyDeferred, NotFound, BadRequest, HTTPException
 from naff.client.utils.attr_utils import define, field
 
 if TYPE_CHECKING:
@@ -36,5 +36,5 @@ class AutoDefer:
         if not ctx.responded or not ctx.deferred:
             try:
                 await ctx.defer(self.ephemeral)
-            except (AlreadyDeferred, NotFound, BadRequest):
+            except (AlreadyDeferred, NotFound, BadRequest, HTTPException):
                 pass
