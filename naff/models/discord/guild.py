@@ -1690,7 +1690,7 @@ class Guild(BaseGuild):
             reason: The reason for this change
 
         Returns:
-
+            The updated rule
         """
         if trigger:
             _data = trigger.to_dict()
