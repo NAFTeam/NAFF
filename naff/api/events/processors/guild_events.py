@@ -69,12 +69,14 @@ class GuildEvents(EventMixinTemplate):
                 # noinspection PyProtectedMember
                 self._user._guild_ids.remove(guild_id)
 
+            # get the guild right before deleting it
+            guild = self.cache.get_guild(guild_id)
             self.cache.delete_guild(guild_id)
 
             self.dispatch(
                 events.GuildLeft(
                     guild_id,
-                    self.cache.get_guild(guild_id) or MISSING,
+                    guild or MISSING,
                 )
             )
 
