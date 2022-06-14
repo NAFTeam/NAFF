@@ -70,12 +70,12 @@ There are two different ways to install this library and create your bot.
 
     === ":material-linux: Linux"
         ```shell
-        python3 -m pip install dis-snek --upgrade
+        python3 -m pip install naff --upgrade
         ```
 
     === ":material-microsoft-windows: Windows"
         ```shell
-        py -3 -m pip install dis-snek --upgrade
+        py -3 -m pip install naff --upgrade
         ```
 
     ### Basic bot
