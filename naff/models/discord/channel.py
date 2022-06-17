@@ -2073,7 +2073,7 @@ class GuildForum(GuildChannel):
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data["available_tags"] = [
             ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
-            for tag_data in data["available_tags"]
+            for tag_data in data.get("available_tags", [])
         ]
         return data
 
