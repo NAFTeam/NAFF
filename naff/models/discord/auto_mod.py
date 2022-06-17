@@ -28,6 +28,12 @@ log = logging.getLogger(logger_name)
 
 @define()
 class BaseAction(DictSerializationMixin):
+    """A base implementation of a moderation action
+
+    Attributes:
+        type: The type of action that was taken
+    """
+
     type: AutoModAction = field(converter=AutoModAction)
 
     @classmethod
@@ -47,6 +53,12 @@ class BaseAction(DictSerializationMixin):
 
 @define()
 class BaseTrigger(DictSerializationMixin):
+    """A base implementation of an auto-mod trigger
+
+    Attributes:
+        type: The type of event this trigger is for
+    """
+
     type: AutoModTriggerType = field(converter=AutoModTriggerType, repr=True, metadata=docs("The type of trigger"))
 
     @classmethod
@@ -86,6 +98,8 @@ def _keyword_converter(filter: str | list[str]) -> list[str]:
 
 @define()
 class KeywordTrigger(BaseTrigger):
+    """A trigger that checks if content contains words from a user defined list of keywords"""
+
     type: AutoModTriggerType = field(
         default=AutoModTriggerType.KEYWORD,
         converter=AutoModTriggerType,
@@ -99,6 +113,8 @@ class KeywordTrigger(BaseTrigger):
 
 @define()
 class HarmfulLinkFilter(BaseTrigger):
+    """A trigger that checks if content contains any harmful links"""
+
     type: AutoModTriggerType = field(
         default=AutoModTriggerType.HARMFUL_LINK,
         converter=AutoModTriggerType,
@@ -110,6 +126,8 @@ class HarmfulLinkFilter(BaseTrigger):
 
 @define()
 class KeywordPresetTrigger(BaseTrigger):
+    """A trigger that checks if content contains words from internal pre-defined wordsets"""
+
     type: AutoModTriggerType = field(
         default=AutoModTriggerType.KEYWORD_PRESET,
         converter=AutoModTriggerType,
@@ -126,35 +144,52 @@ class KeywordPresetTrigger(BaseTrigger):
 
 @define()
 class BlockMessage(BaseAction):
+    """blocks the content of a message according to the rule"""
+
     type: AutoModAction = field(default=AutoModAction.BLOCK_MESSAGE, converter=AutoModAction)
     ...
 
 
 @define()
 class AlertMessage(BaseAction):
+    """logs user content to a specified channel"""
+
     channel_id: "Snowflake_Type" = field(repr=True)
     type: AutoModAction = field(default=AutoModAction.ALERT_MESSAGE, converter=AutoModAction)
 
 
 @define(kw_only=False)
 class TimeoutUser(BaseAction):
+    """timeout user for a specified duration"""
+
     duration_seconds: int = field(repr=True, default=60)
     type: AutoModAction = field(default=AutoModAction.TIMEOUT_USER, converter=AutoModAction)
 
 
 @define()
 class AutoModRule(DiscordObject):
+    """A representation of an auto mod rule"""
+
     name: str = field()
+    """The name of the rule"""
     enabled: bool = field(default=False)
+    """whether the rule is enabled"""
 
     actions: list[BaseAction] = field(factory=list)
+    """the actions which will execute when the rule is triggered"""
     event_type: AutoModEvent = field()
+    """the rule event type"""
     trigger: BaseTrigger = field()
+    """The trigger for this rule"""
     exempt_roles: list["Snowflake_Type"] = field(factory=list, converter=to_snowflake_list)
+    """the role ids that should not be affected by the rule (Maximum of 20)"""
     exempt_channels: list["Snowflake_Type"] = field(factory=list, converter=to_snowflake_list)
+    """the channel ids that should not be affected by the rule (Maximum of 50)"""
 
     _guild_id: "Snowflake_Type" = field(default=MISSING)
+    """the guild which this rule belongs to"""
     _creator_id: "Snowflake_Type" = field(default=MISSING)
+    """the user which first created this rule"""
     id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
 
     @classmethod
@@ -173,10 +208,12 @@ class AutoModRule(DiscordObject):
 
     @property
     def creator(self) -> "Member":
+        """The original creator of this rule"""
         return self._client.cache.get_member(self._guild_id, self._creator_id)
 
     @property
     def guild(self) -> "Guild":
+        """The guild this rule belongs to"""
         return self._client.cache.get_guild(self._guild_id)
 
     async def delete(self, reason: Absent[str] = MISSING) -> None:
