@@ -1112,12 +1112,19 @@ class Client(
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
 
-    async def synchronise_interactions(self) -> None:
-        """Synchronise registered interactions with discord."""
+    async def synchronise_interactions(self, *, scopes: list["Snowflake_Type"] = MISSING) -> None:
+        """
+        Synchronise registered interactions with discord.
+
+        Args:
+            scopes: Optionally specify which scopes are to be synced
+        """
         s = time.perf_counter()
         await self._cache_interactions()
 
-        if self.del_unused_app_cmd:
+        if scopes is not MISSING:
+            cmd_scopes = scopes
+        elif self.del_unused_app_cmd:
             # if we're deleting unused commands, we check all scopes
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
