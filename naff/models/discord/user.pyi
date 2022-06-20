@@ -13,7 +13,7 @@ from naff.models.discord.role import Role
 from naff.models.discord.snowflake import Snowflake_Type
 from naff.models.discord.timestamp import Timestamp
 from naff.models.discord.voice_state import VoiceState
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Set
 
 class _SendDMMixin(SendMixin):
     id: Snowflake_Type
@@ -52,6 +52,7 @@ class NaffUser(User):
     locale: Optional[str]
     bio: Optional[str]
     flags: UserFlags
+    _guild_ids: Set[Snowflake_Type]
     @property
     def guilds(self) -> List[Guild]: ...
     async def edit(self, username: Absent[str] = ..., avatar: Absent[UPLOADABLE_TYPE] = ...) -> None: ...
@@ -65,6 +66,8 @@ class Member(User):  # for typehinting purposes, we can lie
     pending: Optional[bool]
     guild_avatar: Asset
     communication_disabled_until: Optional[Timestamp]
+    _guild_id: Snowflake_Type
+    _role_ids: List[Snowflake_Type]
     def update_from_dict(self, data) -> None: ...
     @property
     def user(self) -> User: ...
