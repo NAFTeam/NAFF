@@ -210,7 +210,7 @@ class HTTPClient(
         Returns:
             Either a dictionary or multipart data form
         """
-        if not payload:
+        if payload in (None, MISSING):
             return None
 
         if isinstance(payload, dict):
