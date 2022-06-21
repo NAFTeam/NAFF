@@ -51,7 +51,7 @@ from naff.client.errors import (
 )
 from naff.client.smart_cache import GlobalCache
 from naff.client.utils.input_utils import get_first_word, get_args
-from naff.client.utils.misc_utils import wrap_partial, get_event_name
+from naff.client.utils.misc_utils import get_event_name, wrap_partial
 from naff.client.utils.serializer import to_image_data
 from naff.models import (
     Activity,
@@ -1036,7 +1036,11 @@ class Client(
             [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
         )
         process(
-            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
+            [
+                obj.copy_with_binding(self)
+                for _, obj in inspect.getmembers(self)
+                if isinstance(obj, (BaseCommand, Listener))
+            ]
         )
 
         [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, Task)]

@@ -402,8 +402,11 @@ class PrefixedCommand(BaseCommand):
         # clear out old parameters just in case
         self.parameters = []
 
-        # we don't care about the ctx variable
-        callback = functools.partial(self.callback, None)
+        # we don't care about the ctx or self variables
+        if self.has_binding:
+            callback = functools.partial(self.callback, None, None)
+        else:
+            callback = functools.partial(self.callback, None)
 
         params = inspect.signature(callback).parameters
         # this is used by keyword-only and variable args to make sure there isn't more than one of either
@@ -593,7 +596,7 @@ class PrefixedCommand(BaseCommand):
         """
         # sourcery skip: remove-empty-nested-block, remove-redundant-if, remove-unnecessary-else
         if len(self.parameters) == 0:
-            return await callback(ctx)
+            return await self.call_with_binding(callback, ctx)
         else:
             # this is slightly costly, but probably worth it
             new_args: list[Any] = []
@@ -652,7 +655,7 @@ class PrefixedCommand(BaseCommand):
             elif not self.ignore_extra and not args.finished:
                 raise BadArgument(f"Too many arguments passed to {self.name}.")
 
-            return await callback(ctx, *new_args, **kwargs)
+            return await self.call_with_binding(callback, *new_args, **kwargs)
 
 
 def prefixed_command(
