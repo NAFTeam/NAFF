@@ -46,6 +46,30 @@ class AutoShardedClient(Client):
         """Returns if the gateway has been started in all shards."""
         return all(state.gateway_started.is_set() for state in self._connection_states)
 
+    @property
+    def shards(self) -> list[ConnectionState]:
+        """Returns a list of all shards currently in use."""
+        return self._connection_states
+
+    @property
+    def latency(self) -> float:
+        """The average latency of all active gateways."""
+        if len(self._connection_states):
+            latencies = sum((g.latency for g in self._connection_states))
+            return latencies / len(self._connection_states)
+        else:
+            return float("inf")
+
+    @property
+    def latencies(self) -> dict[int, float]:
+        """
+        Return a dictionary of latencies for all shards.
+
+        Returns:
+            {shard_id: latency}
+        """
+        return {state.shard_id: state.latency for state in self._connection_states}
+
     async def stop(self) -> None:
         """Shutdown the bot."""
         log.debug("Stopping the bot.")
