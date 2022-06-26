@@ -42,11 +42,6 @@ class AutoShardedClient(Client):
         self.max_start_concurrency: int = 1
 
     @property
-    def is_closed(self) -> bool:
-        """Returns True if all shards are closed."""
-        ...
-
-    @property
     def gateway_started(self) -> bool:
         """Returns if the gateway has been started in all shards."""
         return all(state.gateway_started.is_set() for state in self._connection_states)
