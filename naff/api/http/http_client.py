@@ -40,6 +40,7 @@ from naff.client.utils.serializer import dict_filter_missing
 from naff.models import CooldownSystem
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .route import Route
+import discord_typings
 
 __all__ = ("HTTPClient",)
 
@@ -393,6 +394,13 @@ class HTTPClient(
         except HTTPException as exc:
             raise GatewayNotFound from exc
         return "{0}?encoding={1}&v={2}&compress=zlib-stream".format(data["url"], "json", __api_version__)
+
+    async def get_gateway_bot(self) -> discord_typings.GetGatewayBotData:
+        try:
+            data: dict = await self.request(Route("GET", "/gateway/bot"))
+        except HTTPException as exc:
+            raise GatewayNotFound from exc
+        return data
 
     async def websocket_connect(self, url: str) -> ClientWebSocketResponse:
         """
