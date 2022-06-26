@@ -28,13 +28,16 @@ log = logging.getLogger(logger_name)
 
 class AutoShardedClient(Client):
     def __init__(self, *args, **kwargs) -> None:
+        if "total_shards" not in kwargs:
+            self.auto_sharding = True
+        else:
+            self.auto_sharding = False
+
         super().__init__(*args, **kwargs)
 
         self._connection_state = None
 
-        self._connection_states: list[ConnectionState] = [
-            ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
-        ]
+        self._connection_states: list[ConnectionState] = []
 
         self.max_start_concurrency: int = 1
 
@@ -177,9 +180,15 @@ class AutoShardedClient(Client):
         data = await self.http.get_gateway_bot()
 
         self.max_start_concurrency = data["session_start_limit"]["max_concurrency"]
-
-        if data["shards"] != self.total_shards:
+        if self.auto_sharding:
+            self.total_shards = data["shards"]
+        elif data["shards"] != self.total_shards:
             recommended_shards = data["shards"]
             log.info(
                 f"Discord recommends you start with {recommended_shards} shard{'s' if recommended_shards != 1 else ''} instead of {self.total_shards}"
             )
+
+        log.debug(f"Starting bot with {self.total_shards} shard{'s' if self.total_shards != 1 else ''}")
+        self._connection_states: list[ConnectionState] = [
+            ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
+        ]
