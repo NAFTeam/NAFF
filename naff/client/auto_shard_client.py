@@ -2,11 +2,22 @@ import asyncio
 import logging
 import time
 from collections import defaultdict
+from typing import (
+    TYPE_CHECKING,
+)
 
-from naff import Guild, logger_name, Listener, to_snowflake, Snowflake_Type, MISSING
-from naff.api import events
+import naff.api.events as events
+from naff.client.const import logger_name, MISSING
+from naff.models import (
+    Guild,
+    to_snowflake,
+)
+from naff.models.naff.listener import Listener
 from naff.client.client import Client
-from ..api.gateway import state
+from naff.api.gateway.state import ConnectionState
+
+if TYPE_CHECKING:
+    from naff.models import Snowflake_Type
 
 __all__ = ("AutoShardedClient",)
 
@@ -21,8 +32,8 @@ class AutoShardedClient(Client):
 
         self._connection_state = None
 
-        self._connection_states: list[state.ConnectionState] = [
-            state.ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
+        self._connection_states: list[ConnectionState] = [
+            ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
         ]
 
         self.max_start_concurrency: int = 1
@@ -44,7 +55,7 @@ class AutoShardedClient(Client):
         await self.http.close()
         await asyncio.gather(*(state.stop() for state in self._connection_states))
 
-    def get_guild_websocket(self, id: Snowflake_Type) -> GatewayClient:
+    def get_guild_websocket(self, id: "Snowflake_Type") -> GatewayClient:
         shard_id = (id >> 22) % self.total_shards
         return next((state for state in self._connection_states if state.shard_id == shard_id), MISSING).gateway
 
