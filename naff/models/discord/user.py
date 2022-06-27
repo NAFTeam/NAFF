@@ -78,6 +78,11 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """The users display name, will return nickname if one is set, otherwise will return username."""
         return self.username  # for duck-typing compatibility with Member
 
+    @property
+    def display_avatar(self) -> "Asset":
+        """The users displayed avatar, will return `guild_avatar` if one is set, otherwise will return user avatar."""
+        return self.avatar
+
     async def fetch_dm(self) -> "DM":
         """Fetch the DM channel associated with this user."""
         return await self._client.cache.fetch_dm_channel(self.id)  # noqa
