@@ -227,7 +227,7 @@ class InteractionCommand(BaseCommand):
     async def _permission_enforcer(self, ctx: "Context") -> bool:
         """A check that enforces Discord permissions."""
         # I wish this wasn't needed, but unfortunately Discord permissions cant be trusted to actually prevent usage
-        if self.dm_permission:
+        if self.dm_permission is False:
             return ctx.guild is not None
         return True
 
