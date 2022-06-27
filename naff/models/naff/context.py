@@ -684,9 +684,7 @@ class SendableContext(Protocol):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[
-            Union[List[Union["Embed", dict]], Union["Embed", dict]]
-        ] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
             Union[
                 List[List[Union["BaseComponent", dict]]],
@@ -695,13 +693,9 @@ class SendableContext(Protocol):
                 dict,
             ]
         ] = None,
-        stickers: Optional[
-            Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]
-        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        reply_to: Optional[
-            Union["MessageReference", "Message", dict, "Snowflake_Type"]
-        ] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
         tts: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
