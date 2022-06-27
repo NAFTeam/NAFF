@@ -569,7 +569,7 @@ class Message(BaseMessage):
                 except Exception:  # noqa: S110
                     pass  # No real way to handle this
 
-            asyncio.ensure_future(delayed_delete())
+            asyncio.create_task(delayed_delete())
 
         else:
             await self._client.http.delete_message(self._channel_id, self.id)

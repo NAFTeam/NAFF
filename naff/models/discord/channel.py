@@ -18,8 +18,11 @@ from naff.client.utils.serializer import to_dict, to_image_data
 from naff.models.discord.base import DiscordObject
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
-from naff.models.misc import AsyncIterator
+from naff.models.misc.iterator import AsyncIterator
+from naff.models.discord.thread import ThreadTag
+from naff.models.discord.emoji import PartialEmoji
 from .enums import (
+    ChannelFlags,
     ChannelTypes,
     OverwriteTypes,
     Permissions,
@@ -33,7 +36,7 @@ from naff.models.misc.context_manager import Typing
 
 if TYPE_CHECKING:
     from aiohttp import FormData
-    from naff import Client
+    from naff import Client, Embed, BaseComponent, AllowedMentions, Sticker, Message
     from naff.models.naff.active_voice_state import ActiveVoiceState
 
 __all__ = (
@@ -52,6 +55,7 @@ __all__ = (
     "GuildNews",
     "GuildText",
     "ThreadChannel",
+    "GuildForum",
     "GuildNewsThread",
     "GuildPublicThread",
     "GuildPrivateThread",
@@ -113,6 +117,7 @@ class ChannelHistory(AsyncIterator):
 
         elif self.around:
             messages = await self.channel.fetch_messages(limit=self.get_limit, around=self.around)
+            # todo: decide how getting *more* messages from `around` would work
             self._limit = 1  # stops history from getting more messages
 
         else:
@@ -641,9 +646,10 @@ class ThreadableMixin:
         threads_data["threads"] = cleaned_threads_data_threads
 
         # delete the member data which is not needed
-        cleaned_member_data_threads = [
-            member for member in threads_data["members"] if member[id] not in removed_thread_ids
-        ]
+        cleaned_member_data_threads = []
+        for thread_member in threads_data["members"]:
+            if thread_member["id"] not in removed_thread_ids:
+                cleaned_member_data_threads.append(thread_member)
         threads_data["members"] = cleaned_member_data_threads
 
         return models.ThreadList.from_dict(threads_data, self._client)
@@ -1760,6 +1766,8 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
     """Timestamp when the thread's archive status was last changed, used for calculating recent activity"""
     create_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
     """Timestamp when the thread was created"""
+    flags: ChannelFlags = field(default=ChannelFlags.NONE, converter=ChannelFlags)
+    """Flags for the thread"""
 
     _guild_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
 
@@ -1781,7 +1789,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         return self._client.cache.get_guild(self._guild_id)
 
     @property
-    def parent_channel(self) -> GuildText:
+    def parent_channel(self) -> Union[GuildText, "GuildForum"]:
         """The channel this thread is a child of."""
         return self._client.cache.get_channel(self.parent_id)
 
@@ -1878,13 +1886,18 @@ class GuildNewsThread(ThreadChannel):
 
 @define()
 class GuildPublicThread(ThreadChannel):
+
+    _applied_tags: List[Snowflake_Type] = field(factory=list)
+
     async def edit(
         self,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        applied_tags: Absent[List[Union[Snowflake_Type, ThreadTag]]] = MISSING,
         locked: Absent[bool] = MISSING,
         rate_limit_per_user: Absent[int] = MISSING,
+        flags: Absent[Union[int, ChannelFlags]] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
     ) -> "GuildPublicThread":
@@ -1894,24 +1907,56 @@ class GuildPublicThread(ThreadChannel):
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
+            applied_tags: list of tags to apply to a forum post (!!! This is for forum threads only)
             auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
+            flags: channel flags for forum threads
             reason: The reason for this change
 
         Returns:
             The edited thread channel object.
-
         """
+        if applied_tags != MISSING:
+            applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
+
         return await super().edit(
             name=name,
             archived=archived,
             auto_archive_duration=auto_archive_duration,
+            applied_tags=applied_tags,
             locked=locked,
             rate_limit_per_user=rate_limit_per_user,
             reason=reason,
+            flags=flags,
             **kwargs,
         )
+
+    @property
+    def applied_tags(self) -> list[ThreadTag]:
+        """
+        The tags applied to this thread.
+
+        Note:
+            This is only on forum threads.
+
+        """
+        if not isinstance(self.parent_channel, GuildForum):
+            raise AttributeError("This is only available on forum threads.")
+        return [tag for tag in self.parent_channel.available_tags if str(tag.id) in self._applied_tags]
+
+    @property
+    def initial_post(self) -> Optional["Message"]:
+        """
+        The initial message posted by the OP.
+
+        Note:
+            This is only on forum threads.
+
+        """
+        if not isinstance(self.parent_channel, GuildForum):
+            raise AttributeError("This is only available on forum threads.")
+        return self.get_message(self.id)
 
 
 @define()
@@ -2071,7 +2116,7 @@ class GuildVoice(VoiceChannel, InvitableMixin, MessageableMixin):
 
 
 @define()
-class GuildStageVoice(VoiceChannel, InvitableMixin):
+class GuildStageVoice(GuildVoice):
     stage_instance: "models.StageInstance" = field(default=MISSING)
     """The stage instance that this voice channel belongs to"""
 
@@ -2129,6 +2174,155 @@ class GuildStageVoice(VoiceChannel, InvitableMixin):
         await self.stage_instance.delete(reason=reason)
 
 
+@define()
+class GuildForum(GuildChannel):
+    available_tags: List[ThreadTag] = field(factory=list)
+    """A list of tags available to assign to threads"""
+    last_message_id: Optional[Snowflake_Type] = field(default=None)
+    # TODO: Implement "template" once the API supports them
+
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data["available_tags"] = [
+            ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
+            for tag_data in data.get("available_tags", [])
+        ]
+        return data
+
+    async def create_post(
+        self,
+        name: str,
+        content: str | None,
+        applied_tags: Optional[List[Union["Snowflake_Type", "ThreadTag"]]] = MISSING,
+        *,
+        auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
+        rate_limit_per_user: Absent[int] = MISSING,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
+        components: Optional[
+            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
+        tts: bool = False,
+        reason: Absent[str] = MISSING,
+    ) -> "GuildPublicThread":
+        """
+        Create a post within this channel.
+
+        Args:
+            name: The name of the post
+            content: The text content of this post
+            applied_tags: A list of tag ids or tag objects to apply to this post
+            auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
+            rate_limit_per_user: The time users must wait between sending messages
+            embeds: Embedded rich content (up to 6000 characters).
+            embed: Embedded rich content (up to 6000 characters).
+            components: The components to include with the message.
+            stickers: IDs of up to 3 stickers in the server to send in the message.
+            allowed_mentions: Allowed mentions for the message.
+            files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
+            tts: Should this message use Text To Speech.
+            flags: Message flags to apply.
+            reason: The reason for creating this post
+
+        Returns:
+            A GuildPublicThread object representing the created post.
+        """
+        if applied_tags != MISSING:
+            applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
+
+        message_payload = models.discord.message.process_message_payload(
+            content=content,
+            embeds=embeds or embed,
+            components=components,
+            stickers=stickers,
+            allowed_mentions=allowed_mentions,
+            tts=tts,
+        )
+
+        data = await self._client.http.create_forum_thread(
+            self.id,
+            name,
+            auto_archive_duration,
+            message_payload,
+            applied_tags,
+            rate_limit_per_user,
+            files=files or file,
+            reason=reason,
+        )
+        return self._client.cache.place_channel_data(data)
+
+    async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
+        """
+        Create a tag for this forum.
+
+        Args:
+            name: The name of the tag
+            emoji: The emoji to use for the tag
+
+        Note:
+            If the emoji is a custom emoji, it must be from the same guild as the channel.
+
+        Returns:
+            The created tag object.
+
+        """
+        if isinstance(emoji, str):
+            emoji = PartialEmoji.from_str(emoji)
+        elif isinstance(emoji, dict):
+            emoji = PartialEmoji.from_dict(emoji)
+
+        if emoji.id:
+            data = await self._client.http.create_tag(self.id, name, emoji_id=emoji.id)
+        else:
+            data = await self._client.http.create_tag(self.id, name, emoji_name=emoji.name)
+
+        channel_data = self._client.cache.place_channel_data(data)
+        return [tag for tag in channel_data.available_tags if tag.name == name][0]
+
+    async def edit_tag(
+        self,
+        tag_id: "Snowflake_Type",
+        *,
+        name: str | None = None,
+        emoji: Union["models.PartialEmoji", dict, str, None] = None,
+    ) -> "ThreadTag":
+        """
+        Edit a tag for this forum.
+
+        Args:
+            tag_id: The id of the tag to edit
+            name: The name for this tag
+            emoji: The emoji for this tag
+        """
+        if isinstance(emoji, str):
+            emoji = PartialEmoji.from_str(emoji)
+        elif isinstance(emoji, dict):
+            emoji = PartialEmoji.from_dict(emoji)
+
+        if emoji.id:
+            data = await self._client.http.edit_tag(self.id, tag_id, name, emoji_id=emoji.id)
+        else:
+            data = await self._client.http.edit_tag(self.id, tag_id, name, emoji_name=emoji.name)
+
+        channel_data = self._client.cache.place_channel_data(data)
+        return [tag for tag in channel_data.available_tags if tag.name == name][0]
+
+    async def delete_tag(self, tag_id: "Snowflake_Type") -> None:
+        """
+        Delete a tag for this forum.
+
+        Args:
+            tag_id: The ID of the tag to delete
+        """
+        data = await self._client.http.delete_tag(self.id, tag_id)
+        self._client.cache.place_channel_data(data)
+
+
 def process_permission_overwrites(
     overwrites: Union[dict, PermissionOverwrite, List[Union[dict, PermissionOverwrite]]]
 ) -> List[dict]:
@@ -2159,6 +2353,7 @@ def process_permission_overwrites(
 
 TYPE_ALL_CHANNEL = Union[
     GuildText,
+    GuildForum,
     GuildNews,
     GuildVoice,
     GuildStageVoice,
@@ -2199,4 +2394,5 @@ TYPE_CHANNEL_MAPPING = {
     ChannelTypes.GUILD_NEWS_THREAD: GuildNewsThread,
     ChannelTypes.DM: DM,
     ChannelTypes.GROUP_DM: DMGroup,
+    ChannelTypes.GUILD_FORUM: GuildForum,
 }

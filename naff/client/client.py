@@ -143,6 +143,7 @@ class Client(
         prefixed_context: Type[PrefixedContext]: The object to instantiate for Prefixed Context
         component_context: Type[ComponentContext]: The object to instantiate for Component Context
         autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
+        modal_context: Type[ModalContext]: The object to instantiate for Modal Context
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
@@ -180,6 +181,7 @@ class Client(
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
+        modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
         send_command_tracebacks: bool = True,
         shard_id: int = 0,
@@ -227,6 +229,8 @@ class Client(
         """The object to instantiate for Component Context"""
         self.autocomplete_context: Type[AutocompleteContext] = autocomplete_context
         """The object to instantiate for Autocomplete Context"""
+        self.modal_context: Type[ModalContext] = modal_context
+        """The object to instantiate for Modal Context"""
 
         # flags
         self._ready = asyncio.Event()
@@ -393,6 +397,7 @@ class Client(
             self.prefixed_context: PrefixedContext,
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
+            self.modal_context: ModalContext,
         }
         for obj, expected in contexts.items():
             if not issubclass(obj, expected):
@@ -1107,12 +1112,23 @@ class Client(
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
 
-    async def synchronise_interactions(self) -> None:
-        """Synchronise registered interactions with discord."""
+    async def synchronise_interactions(
+        self, *, scopes: list["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
+    ) -> None:
+        """
+        Synchronise registered interactions with discord.
+
+        Args:
+            scopes: Optionally specify which scopes are to be synced
+            delete_commands: Override the client setting and delete commands
+        """
         s = time.perf_counter()
+        _delete_cmds = self.del_unused_app_cmd if delete_commands is MISSING else delete_commands
         await self._cache_interactions()
 
-        if self.del_unused_app_cmd:
+        if scopes is not MISSING:
+            cmd_scopes = scopes
+        elif self.del_unused_app_cmd:
             # if we're deleting unused commands, we check all scopes
             cmd_scopes = [to_snowflake(g_id) for g_id in self._user._guild_ids] + [GLOBAL_SCOPE]
         else:
@@ -1148,17 +1164,17 @@ class Client(
                         # determine if the local and remote commands are out-of-sync
                         sync_needed_flag = True
                         sync_payload.append(local_cmd_json)
-                    elif not self.del_unused_app_cmd and remote_cmd_json:
+                    elif not _delete_cmds and remote_cmd_json:
                         _remote_payload = {
                             k: v for k, v in remote_cmd_json.items() if k not in ("id", "application_id", "version")
                         }
                         sync_payload.append(_remote_payload)
-                    elif self.del_unused_app_cmd:
+                    elif _delete_cmds:
                         sync_payload.append(local_cmd_json)
 
                 sync_payload = [json.loads(_dump) for _dump in {json.dumps(_cmd) for _cmd in sync_payload}]
 
-                if sync_needed_flag or (self.del_unused_app_cmd and len(sync_payload) < len(remote_commands)):
+                if sync_needed_flag or (_delete_cmds and len(sync_payload) < len(remote_commands)):
                     # synchronise commands if flag is set, or commands are to be deleted
                     log.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
                     sync_response: list[dict] = await self.http.overwrite_application_commands(
@@ -1294,7 +1310,7 @@ class Client(
                     cls = self.autocomplete_context.from_dict(data, self)
 
                 case InteractionTypes.MODAL_RESPONSE:
-                    cls = ModalContext.from_dict(data, self)
+                    cls = self.modal_context.from_dict(data, self)
 
                 case _:
                     cls = self.interaction_context.from_dict(data, self)

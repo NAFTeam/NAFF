@@ -189,6 +189,7 @@ class InteractionCommand(BaseCommand):
         default=MISSING,
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
+    nsfw: bool = field(default=False, metadata=docs("This command should only work in NSFW channels"))
     _application_id: "Snowflake_Type" = field(default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
@@ -439,6 +440,7 @@ class SlashCommand(InteractionCommand):
             data["description_localizations"] = self.sub_cmd_description.to_locale_dict()
             data.pop("default_member_permissions", None)
             data.pop("dm_permission", None)
+            data.pop("nsfw", None)
         else:
             data["name_localizations"] = self.name.to_locale_dict()
             data["description_localizations"] = self.description.to_locale_dict()
@@ -497,6 +499,7 @@ class SlashCommand(InteractionCommand):
         sub_cmd_description: Absent[LocalisedDesc | str] = MISSING,
         group_description: Absent[LocalisedDesc | str] = MISSING,
         options: List[Union[SlashCommandOption, Dict]] = None,
+        nsfw: bool = False,
     ) -> Callable[..., "SlashCommand"]:
         def wrapper(call: Callable[..., Coroutine]) -> "SlashCommand":
             nonlocal sub_cmd_description
@@ -519,6 +522,7 @@ class SlashCommand(InteractionCommand):
                 options=options,
                 callback=call,
                 scopes=self.scopes,
+                nsfw=nsfw,
             )
 
         return wrapper
@@ -572,6 +576,7 @@ def slash_command(
     group_name: str | LocalisedName = None,
     sub_cmd_description: str | LocalisedDesc = "No Description Set",
     group_description: str | LocalisedDesc = "No Description Set",
+    nsfw: bool = False,
 ) -> Callable[[Callable[..., Coroutine]], SlashCommand]:
     """
     A decorator to declare a coroutine as a slash command.
@@ -592,6 +597,7 @@ def slash_command(
         sub_cmd_description: 1-100 character description of the subcommand
         group_name: 1-32 character name of the group
         group_description: 1-100 character description of the group
+        nsfw: This command should only work in NSFW channels
 
     Returns:
         SlashCommand Object
@@ -625,6 +631,7 @@ def slash_command(
             dm_permission=dm_permission,
             callback=func,
             options=options,
+            nsfw=nsfw,
         )
 
         return cmd
@@ -646,6 +653,7 @@ def subcommand(
     sub_group_desc: Optional[str | LocalisedDesc] = None,
     scopes: List["Snowflake_Type"] = None,
     options: List[dict] = None,
+    nsfw: bool = False,
 ) -> Callable[[Coroutine], SlashCommand]:
     """
     A decorator specifically tailored for creating subcommands.
@@ -663,6 +671,7 @@ def subcommand(
         sub_group_desc: An alias for `subcommand_group_description`
         scopes: The scopes of which this command is available, defaults to GLOBAL_SCOPE
         options: The options for this command
+        nsfw: This command should only work in NSFW channels
 
     Returns:
         A SlashCommand object
@@ -689,6 +698,7 @@ def subcommand(
             scopes=scopes if scopes else [GLOBAL_SCOPE],
             callback=func,
             options=options,
+            nsfw=nsfw,
         )
         return cmd
 
@@ -903,6 +913,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                     "dm_permission": subcommand.dm_permission,
                     "name_localizations": subcommand.name.to_locale_dict(),
                     "description_localizations": subcommand.description.to_locale_dict(),
+                    "nsfw": subcommand.nsfw,
                 }
             if bool(subcommand.group_name):
                 if str(subcommand.group_name) not in groups:
@@ -944,6 +955,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 ),
                 "No Description Set",
             )
+            nsfw = cmd_list[0].nsfw
 
             if not all(str(c.description) in (str(base_description), "No Description Set") for c in cmd_list):
                 log.warning(
@@ -953,6 +965,9 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
                 raise ValueError(f"Conflicting `default_member_permissions` values found in `{cmd_list[0].name}`")
             if not all(c.dm_permission == cmd_list[0].dm_permission for c in cmd_list):
                 raise ValueError(f"Conflicting `dm_permission` values found in `{cmd_list[0].name}`")
+            if not all(c.nsfw == nsfw for c in cmd_list):
+                log.warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
+                nsfw = True
 
             for cmd in cmd_list:
                 cmd.scopes = list(scopes)
@@ -970,29 +985,63 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
     return output
 
 
+def _compare_commands(local_cmd: dict, remote_cmd: dict) -> bool:
+    """
+    Compares remote and local commands
+
+    Args:
+        local_cmd: The local command
+        remote_cmd: The remote command from discord
+
+    Returns:
+        True if the commands are the same
+    """
+    lookup: dict[str, tuple[str, any]] = {
+        "name": ("name", ""),
+        "description": ("description", ""),
+        "default_member_permissions": ("default_member_permissions", None),
+        "dm_permission": ("dm_permission", True),
+        "name_localized": ("name_localizations", {}),
+        "description_localized": ("description_localizations", {}),
+    }
+
+    for local_name, comparison_data in lookup.items():
+        remote_name, default_value = comparison_data
+        if local_cmd.get(local_name, default_value) != remote_cmd.get(remote_name, default_value):
+            return False
+    return True
+
+
 def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
+    options_lookup: dict[str, tuple[str, any]] = {
+        "name": ("name", ""),
+        "description": ("description", ""),
+        "required": ("required", False),
+        "autocomplete": ("autocomplete", False),
+        "name_localized": ("name_localizations", {}),
+        "description_localized": ("description_localizations", {}),
+        "choices": ("choices", []),
+    }
+
     if local_opt_list != remote_opt_list:
         if len(local_opt_list) != len(remote_opt_list):
             return False
         for i in range(len(local_opt_list)):
             local_option = local_opt_list[i]
             remote_option = remote_opt_list[i]
+
             if local_option["type"] == remote_option["type"]:
                 if local_option["type"] in (OptionTypes.SUB_COMMAND_GROUP, OptionTypes.SUB_COMMAND):
-                    if not _compare_options(local_option.get("options", []), remote_option.get("options", [])):
-                        return False
-                else:
-                    if (
-                        local_option["name"] != remote_option["name"]
-                        or local_option["description"] != remote_option["description"]
-                        or local_option["required"] != remote_option.get("required", False)
-                        or local_option["autocomplete"] != remote_option.get("autocomplete", False)
-                        or local_option.get("name_localized", {}) != remote_option.get("name_localized", {})
-                        or local_option.get("description_localized", {})
-                        != remote_option.get("description_localized", {})
-                        or local_option.get("choices", []) != remote_option.get("choices", [])
+                    if not _compare_commands(local_option, remote_option) or _compare_options(
+                        local_option.get("options", []), remote_option.get("options", [])
                     ):
                         return False
+                else:
+                    for local_name, comparison_data in options_lookup.items():
+                        remote_name, default_value = comparison_data
+                        if local_option.get(local_name, default_value) != remote_option.get(remote_name, default_value):
+                            return False
+
             else:
                 return False
     return True
@@ -1008,20 +1057,12 @@ def sync_needed(local_cmd: dict, remote_cmd: Optional[dict] = None) -> bool:
 
     Returns:
         Boolean indicating if a sync is needed
-
     """
     if not remote_cmd:
         # No remote version, command must be new
         return True
 
-    if (
-        local_cmd["name"] != remote_cmd["name"]
-        or local_cmd.get("description", "") != remote_cmd.get("description", "")
-        or local_cmd["default_member_permissions"] != remote_cmd.get("default_member_permissions", None)
-        or local_cmd["dm_permission"] != remote_cmd.get("dm_permission", True)
-        or local_cmd.get("name_localized", {}) != remote_cmd.get("name_localized", {})
-        or local_cmd.get("description_localized", {}) != remote_cmd.get("description_localized", {})
-    ):
+    if not _compare_commands(local_cmd, remote_cmd):
         # basic comparison of attributes
         return True
 
