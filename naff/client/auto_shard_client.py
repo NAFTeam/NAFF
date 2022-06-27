@@ -77,12 +77,29 @@ class AutoShardedClient(Client):
         await self.http.close()
         await asyncio.gather(*(state.stop() for state in self._connection_states))
 
-    def get_guild_websocket(self, id: "Snowflake_Type") -> GatewayClient:
-        shard_id = (id >> 22) % self.total_shards
+    def get_guild_websocket(self, guild_id: "Snowflake_Type") -> GatewayClient:
+        """
+        Get the appropriate websocket for a given guild
+
+        Args:
+            guild_id: The ID of the guild
+
+        Returns:
+            A gateway client for the given ID
+        """
+        shard_id = (guild_id >> 22) % self.total_shards
         return next((state for state in self._connection_states if state.shard_id == shard_id), MISSING).gateway
 
     def get_shards_guild(self, shard_id: int) -> list[Guild]:
-        """Returns the guilds that the specified shard can see"""
+        """
+        Returns the guilds that the specified shard can see
+
+        Args:
+            shard_id: The ID of the shard
+
+        Returns:
+            A list of guilds
+        """
         return [guild for key, guild in self.cache.guild_cache.items() if ((key >> 22) % self.total_shards) == shard_id]
 
     @Listener.create()
