@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
 
 from aiohttp import FormData
 
@@ -41,6 +41,7 @@ __all__ = (
     "AutocompleteContext",
     "ModalContext",
     "PrefixedContext",
+    "SendableContext",
 )
 
 log = logging.getLogger(logger_name)
@@ -656,3 +657,54 @@ class PrefixedContext(Context, SendMixin):
         self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id, files=files)
+
+
+@runtime_checkable
+class SendableContext(Protocol):
+    """
+    A protocol that supports any context that can send messages.
+    Use it to type hint something that accepts both PrefixedContext and InteractionContext.
+    """
+
+    channel: "TYPE_MESSAGEABLE_CHANNEL"
+    invoke_target: str
+
+    author: Union["Member", "User"]
+    guild_id: "Snowflake_Type"
+    message: "Message"
+
+    @property
+    def bot(self) -> "Client":
+        ...
+
+    @property
+    def guild(self) -> Optional["Guild"]:
+        ...
+
+    async def send(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[
+            Union[List[Union["Embed", dict]], Union["Embed", dict]]
+        ] = None,
+        components: Optional[
+            Union[
+                List[List[Union["BaseComponent", dict]]],
+                List[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
+        ] = None,
+        stickers: Optional[
+            Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]
+        ] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[
+            Union["MessageReference", "Message", dict, "Snowflake_Type"]
+        ] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
+        **kwargs: Any,
+    ) -> "Message":
+        ...
