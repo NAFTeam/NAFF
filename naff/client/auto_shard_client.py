@@ -182,12 +182,8 @@ class AutoShardedClient(Client):
 
                 if self.max_start_concurrency == 1:
                     # connection ratelimiting when discord has asked for one connection concurrently
-                    # we could wait for `state._shard_ready`, but by waiting on the raw websocket ready
-                    # we can start our subsequent shards sooner - speeding up startup
-                    while not shard.gateway:
-                        await asyncio.sleep(0.1)
                     # noinspection PyProtectedMember
-                    await shard.gateway._ready.wait()
+                    await shard._shard_ready.wait()
                     await asyncio.sleep(5.1 - (time.perf_counter() - start))
 
             # wait for shards to finish starting
