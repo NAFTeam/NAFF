@@ -102,6 +102,7 @@ class Disconnect(BaseEvent):
     """The bot has just disconnected."""
 
 
+@define(kw_only=False)
 class ShardConnect(Connect):
     """A shard just connected to the discord Gateway."""
 
