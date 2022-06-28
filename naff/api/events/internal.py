@@ -106,10 +106,14 @@ class Disconnect(BaseEvent):
 class ShardConnect(Connect):
     """A shard just connected to the discord Gateway."""
 
+    shard_id: int = field(metadata=docs("The ID of the shard"))
+
 
 @define(kw_only=False)
 class ShardDisconnect(Disconnect):
     """A shard just disconnected."""
+
+    shard_id: int = field(metadata=docs("The ID of the shard"))
 
 
 @define(kw_only=False)

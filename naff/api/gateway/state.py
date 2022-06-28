@@ -106,7 +106,7 @@ class ConnectionState:
                     if self.client.total_shards == 1:
                         self.client.dispatch(events.Disconnect())
                     else:
-                        self.client.dispatch(events.ShardDisconnect())
+                        self.client.dispatch(events.ShardDisconnect(self.shard_id))
 
         except WebSocketClosed as ex:
             if ex.code == 4011:
