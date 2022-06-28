@@ -2,19 +2,17 @@ import asyncio
 import logging
 import time
 from collections import defaultdict
-from typing import (
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING
 
 import naff.api.events as events
+from naff.api.gateway.state import ConnectionState
+from naff.client.client import Client
 from naff.client.const import logger_name, MISSING
 from naff.models import (
     Guild,
     to_snowflake,
 )
 from naff.models.naff.listener import Listener
-from naff.client.client import Client
-from naff.api.gateway.state import ConnectionState
 
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type
