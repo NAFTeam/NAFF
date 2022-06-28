@@ -13,6 +13,7 @@ from naff.models import (
     to_snowflake,
 )
 from naff.models.naff.listener import Listener
+from ..api.events import ShardConnect
 
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type
@@ -134,7 +135,9 @@ class AutoShardedClient(Client):
             )
         # noinspection PyProtectedMember
         connection_state._shard_ready.set()
+        self.dispatch(ShardConnect(shard_id))
         log.debug(f"Shard {shard_id} is now ready")
+
         # noinspection PyProtectedMember
         await asyncio.gather(*[shard._shard_ready.wait() for shard in self._connection_states])
 
