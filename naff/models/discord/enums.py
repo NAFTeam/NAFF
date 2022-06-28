@@ -2,7 +2,7 @@ import logging
 from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, TypeVar
 
 from naff.client.const import logger_name
 
@@ -77,20 +77,18 @@ class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
         yield from _decompose(self.__class__, self)[0]
 
 
+SELF = TypeVar("SELF")
+
+
 class CursedIntEnum(IntEnum):
     @classmethod
-    def converter(cls, value) -> Enum:
-        """A converter to handle discord creating new types that the lib isn't aware of, without losing type info"""
-        try:
-            out = cls(value)
-            return out
-        except ValueError:
-            # construct a new enum item to represent this new unknown type - without losing the value
-            new = int.__new__(cls)
-            new._name_ = f"UNKNOWN-TYPE-{value}"
-            new._value_ = value
+    def _missing_(cls, value) -> SELF:
+        """Construct a new enum item to represent this new unknown type - without losing the value"""
+        new = int.__new__(cls)
+        new._name_ = f"UNKNOWN-TYPE-{value}"
+        new._value_ = value
 
-            return cls._value2member_map_.setdefault(value, new)
+        return cls._value2member_map_.setdefault(value, new)
 
 
 class WebSocketOPCodes(CursedIntEnum):

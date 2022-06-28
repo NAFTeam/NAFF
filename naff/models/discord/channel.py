@@ -717,7 +717,7 @@ class WebhookMixin:
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(repr=True, default=None)
     """The name of the channel (1-100 characters)"""
-    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes.converter)
+    type: Union[ChannelTypes, int] = field(repr=True, converter=ChannelTypes)
     """The channel topic (0-1024 characters)"""
 
     @classmethod
