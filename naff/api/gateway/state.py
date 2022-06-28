@@ -30,7 +30,7 @@ class ConnectionState:
     shard_id: int
     """The shard ID of this state"""
     _shard_ready: asyncio.Event = field(default=None)
-    """indicates this state is now ready"""
+    """Indicates that this state is now ready"""
 
     gateway: Absent[GatewayClient] = MISSING
     """The websocket connection for the Discord Gateway."""
