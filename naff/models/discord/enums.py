@@ -82,7 +82,7 @@ SELF = TypeVar("SELF")
 
 class CursedIntEnum(IntEnum):
     @classmethod
-    def _missing_(cls, value) -> SELF:
+    def _missing_(cls: Type[SELF], value) -> SELF:
         """Construct a new enum item to represent this new unknown type - without losing the value"""
         new = int.__new__(cls)
         new._name_ = f"UNKNOWN-TYPE-{value}"
