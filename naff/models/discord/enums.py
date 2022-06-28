@@ -2,7 +2,7 @@ import logging
 from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
-from typing import Iterator, Tuple, TypeVar
+from typing import Iterator, Tuple, TypeVar, Type
 
 from naff.client.const import logger_name
 
