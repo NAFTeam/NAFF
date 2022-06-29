@@ -132,6 +132,9 @@ class User(BaseUser):
         if "banner" in data:
             data["banner"] = Asset.from_path_hash(client, f"banners/{data['id']}/{{}}", data["banner"])
 
+        if data.get("premium_type", None) is None:
+            data["premium_type"] = 0
+
         return data
 
     @property
