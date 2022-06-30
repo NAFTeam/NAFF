@@ -154,6 +154,8 @@ class Client(
 
         debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
         asyncio_debug: bool: Enable asyncio debug features
+        basic_logging: bool: Utilise basic logging to output library data to console
+        logging_level: int: The level of logging to use for basic_logging
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
@@ -189,8 +191,13 @@ class Client(
         sync_interactions: bool = True,
         sync_ext: bool = True,
         total_shards: int = 1,
+        basic_logging: bool = False,
+        logging_level: int = logging.INFO,
         **kwargs,
     ) -> None:
+        if basic_logging:
+            logging.basicConfig()
+            log.setLevel(logging_level)
 
         # Configuration
 
