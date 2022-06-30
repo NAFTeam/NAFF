@@ -80,10 +80,19 @@ class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
 SELF = TypeVar("SELF")
 
 
+def _log_type_mismatch(cls, value) -> None:
+    _log.error(
+        f"Class `{cls.__name__}` received an invalid and unexpected value `{value}`. Please update NAFF or report this issue on GitHub - https://github.com/NAFTeam/NAFF/issues"
+    )
+
+
 class CursedIntEnum(IntEnum):
     @classmethod
     def _missing_(cls: Type[SELF], value) -> SELF:
         """Construct a new enum item to represent this new unknown type - without losing the value"""
+        # log mismatch
+        _log_type_mismatch(cls, value)
+
         new = int.__new__(cls)
         new._name_ = f"UNKNOWN-TYPE-{value}"
         new._value_ = value
