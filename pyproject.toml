@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "naff"
-version = "1.3.0"
+version = "1.4.1"
 description = "Not another freaking fork"
 authors = ["LordOfPolls <lordofpolls.dev@gmail.com>"]
 

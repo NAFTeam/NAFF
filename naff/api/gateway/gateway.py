@@ -252,7 +252,7 @@ class GatewayClient(WebsocketClient):
                 "intents": self.state.intents,
                 "shard": self.shard,
                 "large_threshold": 250,
-                "properties": {"$os": sys.platform, "$browser": "naff", "$device": "dis.naff"},
+                "properties": {"os": sys.platform, "browser": "naff", "device": "naff"},
                 "presence": self.state.presence,
             },
             "compress": True,
