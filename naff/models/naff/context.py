@@ -11,7 +11,7 @@ from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import optional
-from naff.models.discord.enums import MessageFlags, CommandTypes
+from naff.models.discord.enums import MessageFlags, CommandTypes, Permissions
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
@@ -146,6 +146,9 @@ class _BaseInteractionContext(Context):
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
         converter=optional(to_snowflake),
     )
+    app_permissions: Permissions = field(
+        default=0, converter=Permissions, metadata=docs("The permissions this interaction has")
+    )
     locale: str = field(
         default=None,
         metadata=docs(
@@ -175,6 +178,7 @@ class _BaseInteractionContext(Context):
             context_type=data["data"].get("type", 0),
             locale=data.get("locale"),
             guild_locale=data.get("guild_locale"),
+            app_permissions=data.get("app_permissions", 0),
         )
         new_cls.data = data
 
