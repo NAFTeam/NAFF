@@ -790,3 +790,104 @@ class GuildRequests:
         """
         # why on earth does this return the deleted template object?
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))
+
+    async def get_auto_moderation_rules(self, guild_id: "Snowflake_Type") -> list[dict]:
+        """
+        Get this guilds auto moderation rules.
+
+        Args:
+            guild_id: The ID of the guild to get
+
+        Returns:
+            A list of auto moderation rules
+        """
+        # todo: Add discord typings when added
+        return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules"))
+
+    async def get_auto_moderation_rule(self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type") -> dict:
+        """
+        Get a specific auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild
+            rule_id: The ID of the rule to get
+
+        Returns:
+            The auto moderation rule
+        """
+        # todo: Add discord typings when added
+        return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"))
+
+    async def create_auto_moderation_rule(self, guild_id: "Snowflake_Type", payload: dict) -> dict:
+        """
+        Create an auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild to create this rule within
+            payload: A dict representing the auto moderation rule
+
+        Returns:
+            The created auto moderation rule
+        """
+        return await self.request(Route("POST", f"/guilds/{guild_id}/auto-moderation/rules"), payload=payload)
+
+    async def modify_auto_moderation_rule(
+        self,
+        guild_id: "Snowflake_Type",
+        rule_id: "Snowflake_Type",
+        name: Absent[str] = MISSING,
+        trigger_type: Absent[dict] = MISSING,
+        trigger_metadata: Absent[dict] = MISSING,
+        actions: Absent[list[dict]] = MISSING,
+        exempt_channels: Absent[list["Snowflake_Type"]] = MISSING,
+        exempt_roles: Absent[list["Snowflake_Type"]] = MISSING,
+        event_type: Absent[dict] = MISSING,
+        enabled: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> dict:
+        """
+        Modify an existing auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild the rule belongs to
+            rule_id: The ID of the rule to modify
+            name: The name of the rule
+            trigger_type: The type trigger for this rule
+            trigger_metadata: Metadata for the trigger
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+            reason: The reason for this change
+
+        Returns:
+            The updated rule object
+        """
+        payload = {
+            "name": name,
+            "trigger_type": trigger_type,
+            "trigger_metadata": trigger_metadata,
+            "actions": actions,
+            "exempt_roles": exempt_roles,
+            "exempt_channels": exempt_channels,
+            "event_type": event_type,
+            "enabled": enabled,
+        }
+
+        return await self.request(
+            Route("PATCH", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"), payload=payload, reason=reason
+        )
+
+    async def delete_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type", reason: Absent[str] = MISSING
+    ) -> dict:
+        """
+        Delete an auto moderation rule.
+
+        Args:
+            guild_id: The ID of the guild to delete this rule from
+            rule_id: The ID of the role to delete
+            reason: The reason for deleting this rule
+        """
+        return await self.request(Route("DELETE", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"), reason=reason)

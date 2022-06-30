@@ -30,7 +30,10 @@ from .enums import (
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
     AuditLogEventType,
+    AutoModEvent,
+    AutoModTriggerType,
 )
+from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
@@ -1595,6 +1598,119 @@ class Guild(BaseGuild):
             GuildBan(reason=ban_info["reason"], user=self._client.cache.place_user_data(ban_info["user"]))
             for ban_info in ban_infos
         ]
+
+    async def create_auto_moderation_rule(
+        self,
+        name: str,
+        *,
+        trigger: BaseTrigger,
+        actions: list[BaseAction],
+        exempt_roles: list["Snowflake_Type"] = MISSING,
+        exempt_channels: list["Snowflake_Type"] = MISSING,
+        enabled: bool = True,
+        event_type: AutoModEvent = AutoModEvent.MESSAGE_SEND,
+    ) -> AutoModRule:
+        """
+        Create an auto-moderation rule in this guild.
+
+        Args:
+            name: The name of the rule
+            trigger: The trigger for this rule
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+
+        Returns:
+            The created rule
+        """
+        rule = AutoModRule(
+            name=name,
+            enabled=enabled,
+            actions=actions,
+            event_type=event_type,
+            trigger=trigger,
+            exempt_channels=exempt_channels if exempt_roles is not MISSING else [],
+            exempt_roles=exempt_roles if exempt_roles is not MISSING else [],
+            client=self._client,
+        )
+        data = await self._client.http.create_auto_moderation_rule(self.id, rule.to_dict())
+        return AutoModRule.from_dict(data, self._client)
+
+    async def fetch_auto_moderation_rules(self) -> List[AutoModRule]:
+        """
+        Get this guild's auto moderation rules.
+
+        Returns:
+            A list of auto moderation rules
+        """
+        data = await self._client.http.get_auto_moderation_rules(self.id)
+        return [AutoModRule.from_dict(d, self._client) for d in data]
+
+    async def delete_auto_moderation_rule(self, rule: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
+        """
+        Delete a given auto moderation rule.
+
+        Args:
+            rule: The rule to delete
+            reason: The reason for deleting this rule
+        """
+        await self._client.http.delete_auto_moderation_rule(self.id, to_snowflake(rule), reason=reason)
+
+    async def modify_auto_moderation_rule(
+        self,
+        rule: "Snowflake_Type",
+        *,
+        name: Absent[str] = MISSING,
+        trigger: Absent[BaseTrigger] = MISSING,
+        trigger_type: Absent[AutoModTriggerType] = MISSING,
+        trigger_metadata: Absent[dict] = MISSING,
+        actions: Absent[list[BaseAction]] = MISSING,
+        exempt_channels: Absent[list["Snowflake_Type"]] = MISSING,
+        exempt_roles: Absent[list["Snowflake_Type"]] = MISSING,
+        event_type: Absent[AutoModEvent] = MISSING,
+        enabled: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> AutoModRule:
+        """
+        Modify an existing automod rule.
+
+        Args:
+            rule: The rule to modify
+            name: The name of the rule
+            trigger: A trigger for this rule
+            trigger_type: The type trigger for this rule (ignored if trigger specified)
+            trigger_metadata: Metadata for the trigger (ignored if trigger specified)
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+            reason: The reason for this change
+
+        Returns:
+            The updated rule
+        """
+        if trigger:
+            _data = trigger.to_dict()
+            trigger_type = _data["trigger_type"]
+            trigger_metadata = _data.get("trigger_metadata", {})
+
+        out = await self._client.http.modify_auto_moderation_rule(
+            self.id,
+            to_snowflake(rule),
+            name=name,
+            trigger_type=trigger_type,
+            trigger_metadata=trigger_metadata,
+            actions=actions,
+            exempt_roles=to_snowflake_list(exempt_roles) if exempt_roles is not MISSING else MISSING,
+            exempt_channels=to_snowflake_list(exempt_channels) if exempt_channels is not MISSING else MISSING,
+            event_type=event_type,
+            enabled=enabled,
+            reason=reason,
+        )
+        return AutoModRule.from_dict(out, self._client)
 
     async def unban(
         self, user: Union["models.User", "models.Member", Snowflake_Type], reason: Absent[str] = MISSING

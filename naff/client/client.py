@@ -108,6 +108,7 @@ __all__ = ("Client",)
 
 
 class Client(
+    processors.AutoModEvents,
     processors.ChannelEvents,
     processors.GuildEvents,
     processors.MemberEvents,
