@@ -32,6 +32,7 @@ from discord_typings.interactions.receiving import (
 )
 
 import naff.api.events as events
+import naff.client.const as constants
 from naff.api.events import RawGatewayEvent, MessageCreate
 from naff.api.events import processors
 from naff.api.events.internal import Component, BaseEvent
@@ -39,7 +40,7 @@ from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
 from naff.client import errors
-from naff.client.const import logger_name, GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH
+from naff.client.const import GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH, logger
 from naff.client.errors import (
     BotException,
     ExtensionLoadException,
@@ -102,7 +103,6 @@ from naff.models.naff.tasks import Task
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type, TYPE_ALL_CHANNEL
 
-log = logging.getLogger(logger_name)
 
 __all__ = ("Client",)
 
@@ -153,6 +153,7 @@ class Client(
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
 
+        logger: logging.Logger: The logger NAFF should use
         debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
         asyncio_debug: bool: Enable asyncio debug features
 
@@ -182,6 +183,7 @@ class Client(
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
+        logger: logging.Logger = logger,
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
         send_command_tracebacks: bool = True,
@@ -193,8 +195,12 @@ class Client(
         **kwargs,
     ) -> None:
 
-        # Configuration
+        # Set Up logger and overwrite the constant
+        self.logger = logger
+        """The logger NAFF should use"""
+        constants.logger = logger
 
+        # Configuration
         self.sync_interactions = sync_interactions
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
@@ -392,7 +398,7 @@ class Client(
 
     def _sanity_check(self) -> None:
         """Checks for possible and common errors in the bot's configuration."""
-        log.debug("Running client sanity checks...")
+        self.logger.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
             self.prefixed_context: PrefixedContext,
@@ -405,20 +411,20 @@ class Client(
                 raise TypeError(f"{obj.__name__} must inherit from {expected.__name__}")
 
         if self.del_unused_app_cmd:
-            log.warning(
+            self.logger.warning(
                 "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
             )
 
         if Intents.GUILDS not in self._connection_state.intents:
-            log.warning("GUILD intent has not been enabled; this is very likely to cause errors")
+            self.logger.warning("GUILD intent has not been enabled; this is very likely to cause errors")
 
         if self.fetch_members and Intents.GUILD_MEMBERS not in self._connection_state.intents:
             raise BotException("Members Intent must be enabled in order to use fetch members")
         elif self.fetch_members:
-            log.warning("fetch_members enabled; startup will be delayed")
+            self.logger.warning("fetch_members enabled; startup will be delayed")
 
         if len(self.processors) == 0:
-            log.warning("No Processors are loaded! This means no events will be processed!")
+            self.logger.warning("No Processors are loaded! This means no events will be processed!")
 
     async def generate_prefixes(self, bot: "Client", message: Message) -> str | Iterable[str]:
         """
@@ -474,7 +480,7 @@ class Client(
             except Exception:  # noqa : S110
                 pass
 
-        log.error(
+        logger.error(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
@@ -552,7 +558,7 @@ class Client(
             symbol = "/"
         else:
             symbol = "?"  # likely custom context
-        log.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -576,7 +582,7 @@ class Client(
 
         """
         symbol = "¢"
-        log.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
         """
@@ -605,7 +611,7 @@ class Client(
 
         """
         symbol = "$"
-        log.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
 
     @Listener.create()
     async def on_resume(self) -> None:
@@ -631,11 +637,11 @@ class Client(
                     # ensure all guilds have completed chunking
                     for guild in self.guilds:
                         if guild and not guild.chunked.is_set():
-                            log.debug(f"Waiting for {guild.id} to chunk")
+                            self.logger.debug(f"Waiting for {guild.id} to chunk")
                             await guild.chunked.wait()
 
             except asyncio.TimeoutError:
-                log.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                self.logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
                 break
             self._guild_event.clear()
 
@@ -676,7 +682,7 @@ class Client(
         # so im gathering commands here
         self._gather_commands()
 
-        log.debug("Attempting to login")
+        self.logger.debug("Attempting to login")
         me = await self.http.login(token.strip())
         self._user = NaffUser.from_dict(me, self)
         self.cache.place_user_data(me)
@@ -727,7 +733,7 @@ class Client(
 
     async def stop(self) -> None:
         """Shutdown the bot."""
-        log.debug("Stopping the bot.")
+        self.logger.debug("Stopping the bot.")
         self._ready.clear()
         await self.http.close()
         await self._connection_state.stop()
@@ -742,7 +748,7 @@ class Client(
         """
         listeners = self.listeners.get(event.resolved_name, [])
         if listeners:
-            log.debug(f"Dispatching Event: {event.resolved_name}")
+            self.logger.debug(f"Dispatching Event: {event.resolved_name}")
             event.bot = self
             for _listen in listeners:
                 try:
@@ -1031,7 +1037,7 @@ class Client(
                 elif isinstance(func, Listener):
                     self.add_listener(func)
 
-            log.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
+            self.logger.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
 
         process(
             [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
@@ -1084,7 +1090,7 @@ class Client(
 
         for scope, remote_cmds in results.items():
             if remote_cmds == MISSING:
-                log.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
+                self.logger.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
                 continue
 
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
@@ -1096,7 +1102,7 @@ class Client(
                     if cmd_data is MISSING:
                         if cmd_name not in found:
                             if warn_missing:
-                                log.error(
+                                self.logger.error(
                                     f'Detected yet to sync slash command "/{cmd_name}" for scope '
                                     f"{'global' if scope == GLOBAL_SCOPE else scope}"
                                 )
@@ -1108,7 +1114,7 @@ class Client(
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
-                    log.error(
+                    self.logger.error(
                         f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
@@ -1147,7 +1153,7 @@ class Client(
                 try:
                     remote_commands = await self.http.get_application_commands(self.app.id, cmd_scope)
                 except Forbidden:
-                    log.warning(f"Bot is lacking `application.commands` scope in {cmd_scope}!")
+                    self.logger.warning(f"Bot is lacking `application.commands` scope in {cmd_scope}!")
                     return
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
@@ -1177,13 +1183,13 @@ class Client(
 
                 if sync_needed_flag or (_delete_cmds and len(sync_payload) < len(remote_commands)):
                     # synchronise commands if flag is set, or commands are to be deleted
-                    log.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
+                    self.logger.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
                     sync_response: list[dict] = await self.http.overwrite_application_commands(
                         self.app.id, sync_payload, cmd_scope
                     )
                     self._cache_sync_response(sync_response, cmd_scope)
                 else:
-                    log.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
+                    self.logger.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
 
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
@@ -1193,7 +1199,7 @@ class Client(
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
         t = time.perf_counter() - s
-        log.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
+        self.logger.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
 
     def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
         """
@@ -1223,9 +1229,9 @@ class Client(
                     output = e.search_for_message(e.errors[cmd_num], cmd)
                     if len(output) > 1:
                         output = "\n".join(output)
-                        log.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
+                        logger.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
                     else:
-                        log.error(f"Error in command `{cmd['name']}`: {output[0]}")
+                        logger.error(f"Error in command `{cmd['name']}`: {output[0]}")
             else:
                 raise e from None
         except Exception:
@@ -1363,7 +1369,7 @@ class Client(
                 ctx = await self.get_context(interaction_data, True)
 
                 ctx.command: SlashCommand = self.interactions[scope][ctx.invoke_target]  # type: ignore
-                log.debug(f"{scope} :: {ctx.command.name} should be called")
+                self.logger.debug(f"{scope} :: {ctx.command.name} should be called")
 
                 if ctx.command.auto_defer:
                     auto_defer = ctx.command.auto_defer
@@ -1392,7 +1398,7 @@ class Client(
                     finally:
                         await self.on_command(ctx)
             else:
-                log.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
+                self.logger.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
         elif interaction_data["type"] == InteractionTypes.MESSAGE_COMPONENT:
             # Buttons, Selects, ContextMenu::Message
@@ -1588,7 +1594,7 @@ class Client(
             raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
 
         else:
-            log.debug(f"Loaded Extension: {name}")
+            self.logger.debug(f"Loaded Extension: {name}")
             self.__modules[name] = module
 
             if self.sync_ext and self._ready.is_set():
@@ -1651,7 +1657,7 @@ class Client(
         module = self.__modules.get(name)
 
         if module is None:
-            log.warning("Attempted to reload extension thats not loaded. Loading extension instead")
+            self.logger.warning("Attempted to reload extension thats not loaded. Loading extension instead")
             return self.load_extension(name, package)
 
         if not load_kwargs:

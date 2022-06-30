@@ -1,12 +1,11 @@
 import asyncio
-import logging
 import time
 from collections import namedtuple
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 
 
 import naff.models as models
-from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
+from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
@@ -56,8 +55,6 @@ __all__ = (
     "AuditLog",
     "AuditLogHistory",
 )
-
-log = logging.getLogger(logger_name)
 
 
 @define()
@@ -540,10 +537,10 @@ class Guild(BaseGuild):
             self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
-            return log.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
+            return logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
         else:
             members = self._chunk_cache
-            log.info(f"Processing {len(members)} members for {self.id}")
+            logger.info(f"Processing {len(members)} members for {self.id}")
 
             s = time.monotonic()
             start_time = time.perf_counter()
@@ -559,7 +556,7 @@ class Guild(BaseGuild):
 
             total_time = time.perf_counter() - start_time
             self.chunk_cache = []
-            log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
+            logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
     async def fetch_audit_log(
@@ -596,7 +593,7 @@ class Guild(BaseGuild):
         limit: int = 100,
     ) -> "AuditLogHistory":
         """
-        Get an async iterator for the history of the audit log.
+        Get an async iterator for the history of the audit logger.
 
         Args:
             guild (:class:`Guild`): The guild to search through.
@@ -671,7 +668,7 @@ class Guild(BaseGuild):
             public_updates_channel: The text channel where updates from discord should appear.
             preferred_locale: The new preferred locale of the guild. Must be an ISO 639 code.
             features: The enabled guild features
-            reason: An optional reason for the audit log.
+            reason: An optional reason for the audit logger.
 
         """
         await self._client.http.modify_guild(
@@ -713,7 +710,7 @@ class Guild(BaseGuild):
             name: Name of the emoji
             imagefile: The emoji image. (Supports PNG, JPEG, WebP, GIF)
             roles: Roles allowed to use this emoji.
-            reason: An optional reason for the audit log.
+            reason: An optional reason for the audit logger.
 
         Returns:
             The new custom emoji created.
@@ -1340,7 +1337,7 @@ class Guild(BaseGuild):
             icon: Can be either a bytes like object or a path to an image, or a unicode emoji which is supported by discord.
             hoist: Whether the role is shown separately in the members list. `Default: False`
             mentionable: Whether the role can be mentioned. `Default: False`
-            reason: An optional reason for the audit log.
+            reason: An optional reason for the audit logger.
 
         Returns:
             A role object or None if the role is not found.

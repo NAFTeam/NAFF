@@ -12,7 +12,7 @@ __all__ = ("deserialize_app_cmds",)
 
 def deserialize_app_cmds(data: list[dict]) -> list["InteractionCommand"]:
     """
-    Deserializes the application_commands field of the audit log.
+    Deserializes the application_commands field of the audit logger.
 
     Args:
         data: The application commands data

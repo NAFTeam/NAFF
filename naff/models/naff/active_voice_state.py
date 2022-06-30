@@ -1,12 +1,11 @@
 import asyncio
-import logging
 from typing import Optional, TYPE_CHECKING
 
 from discord_typings import VoiceStateData
 
 from naff.api.voice.player import Player
 from naff.api.voice.voice_gateway import VoiceGateway
-from naff.client.const import logger_name, MISSING
+from naff.client.const import logger, MISSING
 from naff.client.errors import VoiceAlreadyConnected, VoiceConnectionTimeout
 from naff.client.utils import optional
 from naff.client.utils.attr_utils import define, field
@@ -18,8 +17,6 @@ if TYPE_CHECKING:
 
 
 __all__ = ("ActiveVoiceState",)
-
-log = logging.getLogger(logger_name)
 
 
 @define()
@@ -141,7 +138,7 @@ class ActiveVoiceState(VoiceState):
 
         await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
-        log.debug("Waiting for voice connection data...")
+        logger.debug("Waiting for voice connection data...")
 
         try:
             self._voice_state, self._voice_server = await asyncio.gather(
@@ -151,7 +148,7 @@ class ActiveVoiceState(VoiceState):
         except asyncio.TimeoutError:
             raise VoiceConnectionTimeout from None
 
-        log.debug("Attempting to initialise voice gateway...")
+        logger.debug("Attempting to initialise voice gateway...")
         await self.ws_connect()
 
     async def disconnect(self) -> None:
@@ -176,7 +173,7 @@ class ActiveVoiceState(VoiceState):
             self._channel_id = target_channel
             await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
-            log.debug("Waiting for voice connection data...")
+            logger.debug("Waiting for voice connection data...")
             try:
                 await self._client.wait_for("raw_voice_state_update", self._guild_predicate, timeout=timeout)
             except asyncio.TimeoutError:
@@ -246,7 +243,7 @@ class ActiveVoiceState(VoiceState):
         """
         if after is None:
             # bot disconnected
-            log.info(f"Disconnecting from voice channel {self._channel_id}")
+            logger.info(f"Disconnecting from voice channel {self._channel_id}")
             await self._close_connection()
             self._client.cache.delete_bot_voice_state(self._guild_id)
             return

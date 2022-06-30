@@ -1,4 +1,3 @@
-import logging
 import time
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
@@ -6,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import naff.models as models
-from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
+from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger
 from naff.client.errors import NotFound, VoiceNotConnected
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
@@ -70,8 +69,6 @@ __all__ = (
     "TYPE_CHANNEL_MAPPING",
     "TYPE_MESSAGEABLE_CHANNEL",
 )
-
-log = logging.getLogger(logger_name)
 
 
 class ChannelHistory(AsyncIterator):
@@ -736,7 +733,7 @@ class BaseChannel(DiscordObject):
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
         if not channel_class:
-            log.error(f"Unsupported channel type for {data} ({channel_type}).")
+            logger.error(f"Unsupported channel type for {data} ({channel_type}).")
             channel_class = BaseChannel
 
         return channel_class.from_dict(data, client)

@@ -1,15 +1,13 @@
-import logging
 from functools import partial
 from typing import Any, Dict, Callable
 
 import attrs
 from attr import Attribute
 
-from naff.client.const import MISSING, logger_name
+from naff.client.const import MISSING, logger
 
 __all__ = ("define", "field", "docs", "str_validator")
 
-log = logging.getLogger(logger_name)
 
 class_defaults = {
     "eq": False,
@@ -44,7 +42,7 @@ def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
         if value is MISSING:
             return
         setattr(self, attribute.name, str(value))
-        log.warning(
+        logger.warning(
             f"Value of {attribute.name} has been automatically converted to a string. Please use strings in future.\n"
             "Note: Discord will always return value as a string"
         )

@@ -5,7 +5,7 @@ Attributes:
     __version__ str: The version of the library.
     __repo_url__ str: The URL of the repository.
     __py_version__ str: The python version in use.
-    logger_name str: The logger name used by NAFF.
+    logger logging.Logger: The logger name used by NAFF. Updates from the default logger if a custom logger is passed to `Client`.
     kwarg_spam bool: Should ``unused kwargs`` be logged.
 
     ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.
@@ -33,6 +33,7 @@ Attributes:
 
 """
 import inspect
+import logging
 import sys
 from collections import defaultdict
 from importlib.metadata import version as _v
@@ -43,7 +44,7 @@ __all__ = (
     "__repo_url__",
     "__py_version__",
     "__api_version__",
-    "logger_name",
+    "logger",
     "kwarg_spam",
     "DISCORD_EPOCH",
     "ACTION_ROW_MAX_ITEMS",
@@ -82,7 +83,7 @@ except Exception:
 __repo_url__ = "https://github.com/Discord-Snake-Pit/NAFF"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
-logger_name = "dis.naff"
+logger = logging.getLogger("dis.naff")
 default_locale = "english_us"
 kwarg_spam = False
 

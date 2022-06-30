@@ -2,12 +2,11 @@ from __future__ import annotations
 import asyncio
 import copy
 import functools
-import logging
 import re
 import typing
 from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
-from naff.client.const import MISSING, logger_name
+from naff.client.const import MISSING
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field, docs
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
 
 __all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")
 
-log = logging.getLogger(logger_name)
 
 kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
