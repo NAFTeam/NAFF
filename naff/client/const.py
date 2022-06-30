@@ -5,7 +5,7 @@ Attributes:
     __version__ str: The version of the library.
     __repo_url__ str: The URL of the repository.
     __py_version__ str: The python version in use.
-    logger logging.Logger: The logger name used by NAFF. Updates from the default logger if a custom logger is passed to `Client`.
+    logger logging.Logger: The logger used throughout NAFF. If a custom logger is passed to `Client`, this obj is replaced with the new logger.
     kwarg_spam bool: Should ``unused kwargs`` be logged.
 
     ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.
