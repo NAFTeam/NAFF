@@ -2,7 +2,7 @@ import logging
 from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
 from functools import reduce
 from operator import or_
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, TypeVar, Type
 
 from naff.client.const import logger_name
 
@@ -69,7 +69,11 @@ class DistinctFlag(EnumMeta):
 
     def __call__(cls, value, names=None, *, module=None, qualname=None, type=None, start=1) -> "DistinctFlag":
         # To automatically convert string values into ints (eg for permissions)
-        return super().__call__(int(value), names, module=module, qualname=qualname, type=type, start=start)
+        try:
+            int_value = int(value)
+            return super().__call__(int_value, names, module=module, qualname=qualname, type=type, start=start)
+        except (TypeError, ValueError):
+            return _return_cursed_enum(cls, value)
 
 
 class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
@@ -77,7 +81,34 @@ class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
         yield from _decompose(self.__class__, self)[0]
 
 
-class WebSocketOPCodes(IntEnum):
+SELF = TypeVar("SELF")
+
+
+def _log_type_mismatch(cls, value) -> None:
+    _log.error(
+        f"Class `{cls.__name__}` received an invalid and unexpected value `{value}`. Please update NAFF or report this issue on GitHub - https://github.com/NAFTeam/NAFF/issues"
+    )
+
+
+def _return_cursed_enum(cls: Type[SELF], value) -> SELF:
+    # log mismatch
+    _log_type_mismatch(cls, value)
+
+    new = int.__new__(cls)
+    new._name_ = f"UNKNOWN-TYPE-{value}"
+    new._value_ = value
+
+    return cls._value2member_map_.setdefault(value, new)
+
+
+class CursedIntEnum(IntEnum):
+    @classmethod
+    def _missing_(cls: Type[SELF], value) -> SELF:
+        """Construct a new enum item to represent this new unknown type - without losing the value"""
+        return _return_cursed_enum(cls, value)
+
+
+class WebSocketOPCodes(CursedIntEnum):
     """Codes used by the Gateway to signify events."""
 
     DISPATCH = 0
@@ -249,14 +280,14 @@ class ApplicationFlags(DiscordIntFlag):  # type: ignore
     """Application is a voice channel activity (ie YouTube Together)"""
 
 
-class TeamMembershipState(IntEnum):
+class TeamMembershipState(CursedIntEnum):
     """Status of membership in the team."""
 
     INVITED = 1
     ACCEPTED = 2
 
 
-class PremiumTypes(IntEnum):
+class PremiumTypes(CursedIntEnum):
     """Types of premium membership."""
 
     NONE = 0
@@ -267,7 +298,7 @@ class PremiumTypes(IntEnum):
     """Full Nitro membership"""
 
 
-class MessageTypes(IntEnum):
+class MessageTypes(CursedIntEnum):
     """Types of message."""
 
     DEFAULT = 0
@@ -308,7 +339,7 @@ class EmbedTypes(Enum):
     AUTOMOD_MESSAGE = "auto_moderation_message"
 
 
-class MessageActivityTypes(IntEnum):
+class MessageActivityTypes(CursedIntEnum):
     """An activity object, similar to an embed."""
 
     JOIN = 1
@@ -461,7 +492,7 @@ class Permissions(DiscordIntFlag):  # type: ignore
     ALL = AntiFlag()
 
 
-class ChannelTypes(IntEnum):
+class ChannelTypes(CursedIntEnum):
     """Types of channel."""
 
     GUILD_TEXT = 0
@@ -487,20 +518,6 @@ class ChannelTypes(IntEnum):
     GUILD_FORUM = 15
     """A Forum channel"""
 
-    @classmethod
-    def converter(cls, value) -> "ChannelTypes":
-        """A converter to handle discord creating new channel types that the lib isn't aware of, without losing type info"""
-        try:
-            out = cls(value)
-            return out
-        except ValueError:
-            # construct a new enum item to represent this new unknown type - without losing the value
-            new = int.__new__(cls)
-            new._name_ = f"UNKNOWN-TYPE-{value}"
-            new._value_ = value
-
-            return cls._value2member_map_.setdefault(value, new)
-
     @property
     def guild(self) -> bool:
         """Whether this channel is a guild channel."""
@@ -512,7 +529,7 @@ class ChannelTypes(IntEnum):
         return self.value in {2, 13}
 
 
-class ComponentTypes(IntEnum):
+class ComponentTypes(CursedIntEnum):
     """The types of components supported by discord."""
 
     ACTION_ROW = 1
@@ -525,7 +542,7 @@ class ComponentTypes(IntEnum):
     """Text input object"""
 
 
-class CommandTypes(IntEnum):
+class CommandTypes(CursedIntEnum):
     """The interaction commands supported by discord."""
 
     CHAT_INPUT = 1
@@ -536,7 +553,7 @@ class CommandTypes(IntEnum):
     """A UI-based command that shows up when you right click or tap on a message"""
 
 
-class InteractionTypes(IntEnum):
+class InteractionTypes(CursedIntEnum):
     """The type of interaction received by discord."""
 
     PING = 1
@@ -546,7 +563,7 @@ class InteractionTypes(IntEnum):
     MODAL_RESPONSE = 5
 
 
-class ButtonStyles(IntEnum):
+class ButtonStyles(CursedIntEnum):
     """The styles of buttons supported."""
 
     # Based on discord api
@@ -579,21 +596,21 @@ class MentionTypes(str, Enum):
     USERS = "users"
 
 
-class OverwriteTypes(IntEnum):
+class OverwriteTypes(CursedIntEnum):
     """Types of permission overwrite."""
 
     ROLE = 0
     MEMBER = 1
 
 
-class DefaultNotificationLevels(IntEnum):
+class DefaultNotificationLevels(CursedIntEnum):
     """Default Notification levels for dms and guilds."""
 
     ALL_MESSAGES = 0
     ONLY_MENTIONS = 1
 
 
-class ExplicitContentFilterLevels(IntEnum):
+class ExplicitContentFilterLevels(CursedIntEnum):
     """Automatic filtering of explicit content."""
 
     DISABLED = 0
@@ -601,14 +618,14 @@ class ExplicitContentFilterLevels(IntEnum):
     ALL_MEMBERS = 2
 
 
-class MFALevels(IntEnum):
+class MFALevels(CursedIntEnum):
     """Does the user use 2FA."""
 
     NONE = 0
     ELEVATED = 1
 
 
-class VerificationLevels(IntEnum):
+class VerificationLevels(CursedIntEnum):
     """Levels of verification needed by a guild."""
 
     NONE = 0
@@ -623,7 +640,7 @@ class VerificationLevels(IntEnum):
     """Must have a verified phone number on their Discord Account"""
 
 
-class NSFWLevels(IntEnum):
+class NSFWLevels(CursedIntEnum):
     """A guilds NSFW Level."""
 
     DEFAULT = 0
@@ -632,7 +649,7 @@ class NSFWLevels(IntEnum):
     AGE_RESTRICTED = 3
 
 
-class PremiumTiers(IntEnum):
+class PremiumTiers(CursedIntEnum):
     """The boost level of a server."""
 
     NONE = 0
@@ -670,14 +687,14 @@ class ChannelFlags(DiscordIntFlag):
     NONE = 0
 
 
-class VideoQualityModes(IntEnum):
+class VideoQualityModes(CursedIntEnum):
     """Video quality settings."""
 
     AUTO = 1
     FULL = 2
 
 
-class AutoArchiveDuration(IntEnum):
+class AutoArchiveDuration(CursedIntEnum):
     """Thread archive duration, in minutes."""
 
     ONE_HOUR = 60
@@ -686,7 +703,7 @@ class AutoArchiveDuration(IntEnum):
     ONE_WEEK = 10080
 
 
-class ActivityType(IntEnum):
+class ActivityType(CursedIntEnum):
     """
     The types of presence activity that can be used in presences.
 
@@ -737,28 +754,28 @@ class Status(str, Enum):
     DO_NOT_DISTURB = DND
 
 
-class StagePrivacyLevel(IntEnum):
+class StagePrivacyLevel(CursedIntEnum):
     PUBLIC = 1
     GUILD_ONLY = 2
 
 
-class IntegrationExpireBehaviour(IntEnum):
+class IntegrationExpireBehaviour(CursedIntEnum):
     REMOVE_ROLE = 0
     KICK = 1
 
 
-class InviteTargetTypes(IntEnum):
+class InviteTargetTypes(CursedIntEnum):
     STREAM = 1
     EMBEDDED_APPLICATION = 2
 
 
-class ScheduledEventPrivacyLevel(IntEnum):
+class ScheduledEventPrivacyLevel(CursedIntEnum):
     """The privacy level of the scheduled event."""
 
     GUILD_ONLY = 2
 
 
-class ScheduledEventType(IntEnum):
+class ScheduledEventType(CursedIntEnum):
     """The type of entity that the scheduled event is attached to."""
 
     STAGE_INSTANCE = 1
@@ -769,7 +786,7 @@ class ScheduledEventType(IntEnum):
     """ External URL """
 
 
-class ScheduledEventStatus(IntEnum):
+class ScheduledEventStatus(CursedIntEnum):
     """The status of the scheduled event."""
 
     SCHEDULED = 1
@@ -778,7 +795,7 @@ class ScheduledEventStatus(IntEnum):
     CANCELED = 4
 
 
-class AuditLogEventType(IntEnum):
+class AuditLogEventType(CursedIntEnum):
     """The type of audit log entry type"""
 
     GUILD_UPDATE = 1
