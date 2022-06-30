@@ -69,7 +69,11 @@ class DistinctFlag(EnumMeta):
 
     def __call__(cls, value, names=None, *, module=None, qualname=None, type=None, start=1) -> "DistinctFlag":
         # To automatically convert string values into ints (eg for permissions)
-        return super().__call__(int(value), names, module=module, qualname=qualname, type=type, start=start)
+        try:
+            int_value = int(value)
+            return super().__call__(int_value, names, module=module, qualname=qualname, type=type, start=start)
+        except (TypeError, ValueError):
+            return _return_cursed_enum(cls, value)
 
 
 class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
@@ -86,18 +90,22 @@ def _log_type_mismatch(cls, value) -> None:
     )
 
 
+def _return_cursed_enum(cls: Type[SELF], value) -> SELF:
+    # log mismatch
+    _log_type_mismatch(cls, value)
+
+    new = int.__new__(cls)
+    new._name_ = f"UNKNOWN-TYPE-{value}"
+    new._value_ = value
+
+    return cls._value2member_map_.setdefault(value, new)
+
+
 class CursedIntEnum(IntEnum):
     @classmethod
     def _missing_(cls: Type[SELF], value) -> SELF:
         """Construct a new enum item to represent this new unknown type - without losing the value"""
-        # log mismatch
-        _log_type_mismatch(cls, value)
-
-        new = int.__new__(cls)
-        new._name_ = f"UNKNOWN-TYPE-{value}"
-        new._value_ = value
-
-        return cls._value2member_map_.setdefault(value, new)
+        return _return_cursed_enum(cls, value)
 
 
 class WebSocketOPCodes(CursedIntEnum):
