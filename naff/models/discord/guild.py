@@ -593,7 +593,7 @@ class Guild(BaseGuild):
         limit: int = 100,
     ) -> "AuditLogHistory":
         """
-        Get an async iterator for the history of the audit logger.
+        Get an async iterator for the history of the audit log.
 
         Args:
             guild (:class:`Guild`): The guild to search through.
@@ -668,7 +668,7 @@ class Guild(BaseGuild):
             public_updates_channel: The text channel where updates from discord should appear.
             preferred_locale: The new preferred locale of the guild. Must be an ISO 639 code.
             features: The enabled guild features
-            reason: An optional reason for the audit logger.
+            reason: An optional reason for the audit log.
 
         """
         await self._client.http.modify_guild(
@@ -710,7 +710,7 @@ class Guild(BaseGuild):
             name: Name of the emoji
             imagefile: The emoji image. (Supports PNG, JPEG, WebP, GIF)
             roles: Roles allowed to use this emoji.
-            reason: An optional reason for the audit logger.
+            reason: An optional reason for the audit log.
 
         Returns:
             The new custom emoji created.
@@ -1337,7 +1337,7 @@ class Guild(BaseGuild):
             icon: Can be either a bytes like object or a path to an image, or a unicode emoji which is supported by discord.
             hoist: Whether the role is shown separately in the members list. `Default: False`
             mentionable: Whether the role can be mentioned. `Default: False`
-            reason: An optional reason for the audit logger.
+            reason: An optional reason for the audit log.
 
         Returns:
             A role object or None if the role is not found.
