@@ -18,10 +18,14 @@ from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
+
     from naff.client import Client
     from naff.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from naff.models.discord.components import BaseComponent
     from naff.models.discord.embed import Embed
+    from naff.models.discord.file import File
     from naff.models.discord.guild import Guild
     from naff.models.discord.message import AllowedMentions, Message
     from naff.models.discord.user import User, Member
@@ -663,6 +667,7 @@ class PrefixedContext(Context, SendMixin):
 class SendableContext(Protocol):
     """
     A protocol that supports any context that can send messages.
+
     Use it to type hint something that accepts both PrefixedContext and InteractionContext.
     """
 
