@@ -26,6 +26,12 @@ log = logging.getLogger(logger_name)
 
 
 class AutoShardedClient(Client):
+    """
+    A client to automatically shard the bot.
+
+    You can optionally specify the total number of shards to start with, or it will be determined automatically.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         if "total_shards" not in kwargs:
             self.auto_sharding = True
