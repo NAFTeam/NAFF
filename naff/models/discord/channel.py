@@ -7,7 +7,7 @@ import attrs
 
 import naff.models as models
 from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger_name
-from naff.client.errors import NotFound, VoiceNotConnected
+from naff.client.errors import NotFound, VoiceNotConnected, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field
@@ -821,6 +821,11 @@ class BaseChannel(DiscordObject):
             **kwargs,
         }
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
+        if not channel_data:
+            raise TooManyChanges(
+                "You have changed this channel too frequently, you need to wait a while before trying again."
+            ) from None
+
         return self._client.cache.place_channel_data(channel_data)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
