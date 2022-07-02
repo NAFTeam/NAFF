@@ -115,10 +115,10 @@ class BucketLock:
         loop = asyncio.get_running_loop()
         loop.call_later(self.delta, self.unlock)
 
-    async def defer_unlock(self) -> None:
+    async def defer_unlock(self, reset_after: float | None = None) -> None:
         """Unlocks the BucketLock after a specified delay."""
         self.unlock_on_exit = False
-        await asyncio.sleep(self.delta)
+        await asyncio.sleep(reset_after or self.delta)
         self.unlock()
 
     async def __aenter__(self) -> None:
@@ -292,15 +292,25 @@ class HTTPClient(
 
                         if response.status == 429:
                             # ratelimit exceeded
-
                             if result.get("global", False):
+                                # global ratelimit is reached
                                 # if we get a global, that's pretty bad, this would usually happen if the user is hitting the api from 2 clients sharing a token
                                 log.error(
                                     f"Bot has exceeded global ratelimit, locking REST API for {result.get('retry_after')} seconds"
                                 )
                                 await self.global_lock.lock(float(result.get("retry_after")))
                                 continue
+                            elif result.get("message") == "The resource is being rate limited.":
+                                # resource ratelimit is reached
+                                log.warning(
+                                    f"{route.endpoint} The resource is being rate limited! "
+                                    f"Reset in {result.get('retry_after')} seconds"
+                                )
+                                # lock this resource and wait for unlock
+                                await lock.defer_unlock(float(result.get("retry_after")))
+                                continue
                             else:
+                                # endpoint ratelimit is reached
                                 # 429's are unfortunately unavoidable, but we can attempt to avoid them
                                 # so long as these are infrequent we're doing well
                                 log.warning(
