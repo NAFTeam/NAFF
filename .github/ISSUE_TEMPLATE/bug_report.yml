@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report broken or incorrect behaviour.
-labels: ["Bug"]
+labels: ["Bug::Library"]
 title: "[BUG] Your Title Here"
 
 assignees:
