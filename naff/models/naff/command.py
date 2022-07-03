@@ -7,7 +7,7 @@ import re
 import typing
 from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
-from callback import CallbackObject
+from naff.models.naff.callback import CallbackObject
 from naff.client.const import MISSING, logger_name
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
