@@ -491,7 +491,7 @@ class GlobalCache:
                 channel = BaseChannel.from_dict_factory(data, self._client)
             else:
                 channel.update_from_dict(data)
-                if guild := getattr(channel, "guild"):
+                if guild := getattr(channel, "guild", None):
                     guild._channel_gui_positions = {}
 
         return channel
