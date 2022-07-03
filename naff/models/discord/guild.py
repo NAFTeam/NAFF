@@ -1855,6 +1855,15 @@ class Guild(BaseGuild):
         ]
 
     def get_channel_gui_position(self, channel_id: "Snowflake_Type") -> int:
+        """
+        Get a given channels gui position.
+
+        Args:
+            channel_id: The ID of the channel to get the gui position for.
+
+        Returns:
+            The gui position of the channel.
+        """
         if not self._channel_gui_positions:
             self._calculate_gui_channel_positions()
         return self._channel_gui_positions.get(to_snowflake(channel_id), 0)
