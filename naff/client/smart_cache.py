@@ -562,6 +562,7 @@ class GlobalCache:
                 guild._thread_ids.discard(channel.id)
             elif isinstance(channel, GuildChannel):
                 guild._channel_ids.discard(channel.id)
+            guild._channel_gui_positions = {}
 
     # endregion Channel cache
 
