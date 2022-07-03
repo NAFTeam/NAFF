@@ -955,6 +955,11 @@ class GuildChannel(BaseChannel):
         """The parent category of this channel."""
         return self._client.cache.get_channel(self.parent_id)
 
+    @property
+    def gui_position(self) -> int:
+        """The position of this channel in the Discord interface."""
+        return self.guild.get_channel_gui_position(self.id)
+
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         if overwrites := data.get("permission_overwrites"):
