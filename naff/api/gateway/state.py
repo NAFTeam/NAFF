@@ -8,7 +8,7 @@ from naff.models.discord.enums import Intents, Status, ActivityType
 from naff.models.discord.activity import Activity
 from naff.client.errors import NaffException, WebSocketClosed
 from naff.client.const import logger_name, MISSING, Absent
-from naff.client.utils.attr_utils import define
+from naff.client.utils.attr_utils import define, field
 from .gateway import GatewayClient
 from naff.api import events
 import naff
@@ -29,6 +29,8 @@ class ConnectionState:
     """The event intents in use"""
     shard_id: int
     """The shard ID of this state"""
+    _shard_ready: asyncio.Event = field(default=None)
+    """Indicates that this state is now ready"""
 
     gateway: Absent[GatewayClient] = MISSING
     """The websocket connection for the Discord Gateway."""
@@ -43,6 +45,9 @@ class ConnectionState:
     """Event to check if the gateway has been started."""
 
     _shard_task: asyncio.Task | None = None
+
+    def __attrs_post_init__(self, *args, **kwargs) -> None:
+        self._shard_ready = asyncio.Event()
 
     @property
     def latency(self) -> float:
@@ -91,13 +96,17 @@ class ConnectionState:
 
     async def _ws_connect(self) -> None:
         """Connect to the Discord Gateway."""
-        log.info("Attempting to initially connect to gateway...")
+        log.info(f"Shard {self.shard_id} is attempting to connect to gateway...")
         try:
             async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
                     await self.gateway.run()
                 finally:
-                    self.client.dispatch(events.Disconnect())
+                    self._shard_ready.clear()
+                    if self.client.total_shards == 1:
+                        self.client.dispatch(events.Disconnect())
+                    else:
+                        self.client.dispatch(events.ShardDisconnect(self.shard_id))
 
         except WebSocketClosed as ex:
             if ex.code == 4011:

@@ -510,7 +510,8 @@ class Guild(BaseGuild):
             presences: Do you need presence data for members?
 
         """
-        await self._client.ws.request_member_chunks(self.id, limit=0, presences=presences)
+        ws = self._client.get_guild_websocket(self.id)
+        await ws.request_member_chunks(self.id, limit=0, presences=presences)
         if wait:
             await self.chunked.wait()
 
