@@ -1,6 +1,7 @@
 import asyncio
 import time
 from collections import namedtuple
+from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 
 
@@ -192,6 +193,7 @@ class Guild(BaseGuild):
     _member_ids: Set[Snowflake_Type] = field(factory=set)
     _role_ids: Set[Snowflake_Type] = field(factory=set)
     _chunk_cache: list = field(factory=list)
+    _channel_gui_positions: Dict[Snowflake_Type, int] = field(factory=dict)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -505,7 +507,8 @@ class Guild(BaseGuild):
             presences: Do you need presence data for members?
 
         """
-        await self._client.ws.request_member_chunks(self.id, limit=0, presences=presences)
+        ws = self._client.get_guild_websocket(self.id)
+        await ws.request_member_chunks(self.id, limit=0, presences=presences)
         if wait:
             await self.chunked.wait()
 
@@ -1837,6 +1840,78 @@ class Guild(BaseGuild):
         regions_data = await self._client.http.get_guild_voice_regions(self.id)
         regions = models.VoiceRegion.from_list(regions_data)
         return regions
+
+    @property
+    def gui_sorted_channels(self) -> list["models.TYPE_GUILD_CHANNEL"]:
+        """Return this guilds channels sorted by their gui positions"""
+        # create a sorted list of objects by their gui position
+        if not self._channel_gui_positions:
+            self._calculate_gui_channel_positions()
+        return [
+            self._client.get_channel(k)
+            for k, v in sorted(self._channel_gui_positions.items(), key=lambda item: item[1])
+        ]
+
+    def get_channel_gui_position(self, channel_id: "Snowflake_Type") -> int:
+        """
+        Get a given channels gui position.
+
+        Args:
+            channel_id: The ID of the channel to get the gui position for.
+
+        Returns:
+            The gui position of the channel.
+        """
+        if not self._channel_gui_positions:
+            self._calculate_gui_channel_positions()
+        return self._channel_gui_positions.get(to_snowflake(channel_id), 0)
+
+    def _calculate_gui_channel_positions(self) -> list["models.TYPE_GUILD_CHANNEL"]:
+        """
+        Calculates the GUI position for all known channels within this guild.
+
+        Note this is an expensive operation and should only be run when actually required.
+
+        Returns:
+            The list of channels in this guild, sorted by their GUI position.
+        """
+        # sorting is based on this https://github.com/discord/discord-api-docs/issues/4613#issuecomment-1059997612
+        sort_map = {
+            ChannelTypes.GUILD_NEWS_THREAD: 1,
+            ChannelTypes.GUILD_PUBLIC_THREAD: 1,
+            ChannelTypes.GUILD_PRIVATE_THREAD: 1,
+            ChannelTypes.GUILD_TEXT: 2,
+            ChannelTypes.GUILD_CATEGORY: 2,
+            ChannelTypes.GUILD_NEWS: 2,
+            ChannelTypes.GUILD_FORUM: 2,  # assumed value
+            ChannelTypes.GUILD_VOICE: 3,
+            ChannelTypes.GUILD_STAGE_VOICE: 3,
+        }
+
+        def channel_sort_func(a, b) -> int:
+            a_sorting = sort_map.get(a.type, 0)
+            b_sorting = sort_map.get(b.type, 0)
+
+            if a_sorting != b_sorting:
+                return a_sorting - b_sorting
+            return a.position - b.position or a.id - b.id
+
+        sorted_channels = sorted(self.channels, key=cmp_to_key(channel_sort_func))
+
+        for channel in sorted_channels[::-1]:
+            if channel.parent_id:
+                # sort channels under their respective categories
+                sorted_channels.remove(channel)
+                parent_index = sorted_channels.index(channel.category)
+                sorted_channels.insert(parent_index + 1, channel)
+            elif channel.type != ChannelTypes.GUILD_CATEGORY:
+                # move non-category channels to the top
+                sorted_channels.remove(channel)
+                sorted_channels.insert(0, channel)
+
+        self._channel_gui_positions = {channel.id: i for i, channel in enumerate(sorted_channels)}
+
+        return sorted_channels
 
 
 @define()

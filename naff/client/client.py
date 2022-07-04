@@ -228,6 +228,7 @@ class Client(
             auto_defer = auto_defer or AutoDefer()
         self.auto_defer = auto_defer
         """A system to automatically defer commands after a set duration"""
+        self.intents = intents
 
         # resources
 
@@ -347,11 +348,6 @@ class Client(
         return self._connection_state.gateway_started.is_set()
 
     @property
-    def intents(self) -> Intents:
-        """The intents being used by this bot."""
-        return self._connection_state.intents
-
-    @property
     def user(self) -> NaffUser:
         """Returns the bot's user."""
         return self._user
@@ -402,6 +398,9 @@ class Client(
     def ws(self) -> GatewayClient:
         """Returns the websocket client."""
         return self._connection_state.gateway
+
+    def get_guild_websocket(self, id: "Snowflake_Type") -> GatewayClient:
+        return self.ws
 
     def _sanity_check(self) -> None:
         """Checks for possible and common errors in the bot's configuration."""
@@ -655,6 +654,13 @@ class Client(
             if len(self.cache.guild_cache) == len(expected_guilds):
                 # all guilds cached
                 break
+
+        if self.fetch_members:
+            # ensure all guilds have completed chunking
+            for guild in self.guilds:
+                if guild and not guild.chunked.is_set():
+                    logger.debug(f"Waiting for {guild.id} to chunk")
+                    await guild.chunked.wait()
 
         # run any pending startup tasks
         if self.async_startup_tasks:

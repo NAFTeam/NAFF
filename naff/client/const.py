@@ -85,7 +85,7 @@ except Exception:
 __repo_url__ = "https://github.com/Discord-Snake-Pit/NAFF"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
-logger_name = "dis.naff"
+logger_name = "naff"
 logger = logging.getLogger(logger_name)
 default_locale = "english_us"
 kwarg_spam = False

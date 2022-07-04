@@ -479,6 +479,7 @@ class GlobalCache:
                     guild._thread_ids.add(channel.id)
                 elif isinstance(channel, GuildChannel):
                     guild._channel_ids.add(channel.id)
+                guild._channel_gui_positions = {}
         else:
             # Create entire new channel object if the type changes
             channel_type = data.get("type", None)
@@ -487,6 +488,8 @@ class GlobalCache:
                 channel = BaseChannel.from_dict_factory(data, self._client)
             else:
                 channel.update_from_dict(data)
+                if guild := getattr(channel, "guild", None):
+                    guild._channel_gui_positions = {}
 
         return channel
 
@@ -556,6 +559,7 @@ class GlobalCache:
                 guild._thread_ids.discard(channel.id)
             elif isinstance(channel, GuildChannel):
                 guild._channel_ids.discard(channel.id)
+            guild._channel_gui_positions = {}
 
     # endregion Channel cache
 

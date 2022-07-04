@@ -79,6 +79,7 @@ class GatewayClient(WebsocketClient):
         self._acknowledged = asyncio.Event()
         self._acknowledged.set()  # Initialize it as set
 
+        self._ready = asyncio.Event()
         self._close_gateway = asyncio.Event()
 
         # Santity check, it is extremely important that an instance isn't reused.
@@ -203,10 +204,11 @@ class GatewayClient(WebsocketClient):
     async def dispatch_event(self, data, seq, event) -> None:
         match event:
             case "READY":
+                self._ready.set()
                 self._trace = data.get("_trace", [])
                 self.sequence = seq
                 self.session_id = data["session_id"]
-                logger.info("Connected to gateway!")
+                logger.info(f"Shard {self.shard[0]} has connected to gateway!")
                 logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
@@ -274,7 +276,7 @@ class GatewayClient(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        logger.debug("Client is attempting to resume a connection")
+        logger.debug(f"{self.shard[0]} is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)

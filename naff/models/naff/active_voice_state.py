@@ -14,7 +14,7 @@ from naff.models.discord.voice_state import VoiceState
 
 if TYPE_CHECKING:
     from naff.api.voice.audio import BaseAudio
-
+    from naff.api.gateway.gateway import GatewayClient
 
 __all__ = ("ActiveVoiceState",)
 
@@ -96,6 +96,10 @@ class ActiveVoiceState(VoiceState):
             return False
         return self.ws._closed.is_set()
 
+    @property
+    def gateway(self) -> "GatewayClient":
+        return self._client.get_guild_websocket(self._guild_id)
+
     async def wait_for_stopped(self) -> None:
         """Wait for the player to stop playing."""
         if self.player:
@@ -135,8 +139,7 @@ class ActiveVoiceState(VoiceState):
         """
         if self.connected:
             raise VoiceAlreadyConnected
-
-        await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
+        await self.gateway.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
         logger.debug("Waiting for voice connection data...")
 
@@ -153,7 +156,7 @@ class ActiveVoiceState(VoiceState):
 
     async def disconnect(self) -> None:
         """Disconnect from the voice channel."""
-        await self._client.ws.voice_state_update(self._guild_id, None)
+        await self.gateway.voice_state_update(self._guild_id, None)
 
     async def move(self, channel: "Snowflake_Type", timeout: int = 5) -> None:
         """
@@ -171,7 +174,7 @@ class ActiveVoiceState(VoiceState):
                 self.player.pause()
 
             self._channel_id = target_channel
-            await self._client.ws.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
+            await self.gateway.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
             logger.debug("Waiting for voice connection data...")
             try:
