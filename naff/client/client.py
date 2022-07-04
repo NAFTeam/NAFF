@@ -153,7 +153,7 @@ class Client(
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
 
-        logger: logging.Logger: The logger NAFF should use
+        logger: logging.Logger: The logger NAFF should use. Note: Different loggers with multiple clients are not supported
         debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
         asyncio_debug: bool: Enable asyncio debug features
 
@@ -197,7 +197,7 @@ class Client(
 
         # Set Up logger and overwrite the constant
         self.logger = logger
-        """The logger NAFF should use"""
+        """The logger NAFF should use. Note: Different loggers with multiple clients are not supported"""
         constants.logger = logger
 
         # Configuration
