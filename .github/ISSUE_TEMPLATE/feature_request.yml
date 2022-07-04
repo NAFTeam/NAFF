@@ -1,7 +1,7 @@
 name: Feature Request
 description: Request new functionality.
 title: "[FEAT] Your Title Here"
-labels: ["New Feature"]
+labels: ["New Feature::Library"]
 
 body:
   - type: textarea

@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import naff.models as models
+
 from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger
-from naff.client.errors import NotFound, VoiceNotConnected
+from naff.client.errors import NotFound, VoiceNotConnected, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field
@@ -818,6 +819,11 @@ class BaseChannel(DiscordObject):
             **kwargs,
         }
         channel_data = await self._client.http.modify_channel(self.id, payload, reason)
+        if not channel_data:
+            raise TooManyChanges(
+                "You have changed this channel too frequently, you need to wait a while before trying again."
+            ) from None
+
         return self._client.cache.place_channel_data(channel_data)
 
     async def delete(self, reason: Absent[Optional[str]] = MISSING) -> None:
@@ -1086,6 +1092,118 @@ class GuildChannel(BaseChannel):
         """
         target = to_snowflake(target)
         await self._client.http.delete_channel_permission(self.id, target, reason)
+
+    async def set_permission(
+        self,
+        target: Union["models.Role", "models.Member", "models.User"],
+        *,
+        add_reactions: bool | None = None,
+        administrator: bool | None = None,
+        attach_files: bool | None = None,
+        ban_members: bool | None = None,
+        change_nickname: bool | None = None,
+        connect: bool | None = None,
+        create_instant_invite: bool | None = None,
+        deafen_members: bool | None = None,
+        embed_links: bool | None = None,
+        kick_members: bool | None = None,
+        manage_channels: bool | None = None,
+        manage_emojis_and_stickers: bool | None = None,
+        manage_events: bool | None = None,
+        manage_guild: bool | None = None,
+        manage_messages: bool | None = None,
+        manage_nicknames: bool | None = None,
+        manage_roles: bool | None = None,
+        manage_threads: bool | None = None,
+        manage_webhooks: bool | None = None,
+        mention_everyone: bool | None = None,
+        moderate_members: bool | None = None,
+        move_members: bool | None = None,
+        mute_members: bool | None = None,
+        priority_speaker: bool | None = None,
+        read_message_history: bool | None = None,
+        request_to_speak: bool | None = None,
+        send_messages: bool | None = None,
+        send_messages_in_threads: bool | None = None,
+        send_tts_messages: bool | None = None,
+        speak: bool | None = None,
+        start_embedded_activities: bool | None = None,
+        stream: bool | None = None,
+        use_application_commands: bool | None = None,
+        use_external_emojis: bool | None = None,
+        use_external_stickers: bool | None = None,
+        use_private_threads: bool | None = None,
+        use_public_threads: bool | None = None,
+        use_vad: bool | None = None,
+        view_audit_log: bool | None = None,
+        view_channel: bool | None = None,
+        view_guild_insights: bool | None = None,
+        reason: str = None,
+    ) -> None:
+        """
+        Set the Permission Overwrites for a given target.
+
+        Args:
+            target: The target to set permission overwrites for
+            add_reactions: Allows for the addition of reactions to messages
+            administrator: Allows all permissions and bypasses channel permission overwrites
+            attach_files: Allows for uploading images and files
+            ban_members: Allows banning members
+            change_nickname: Allows for modification of own nickname
+            connect: Allows for joining of a voice channel
+            create_instant_invite: Allows creation of instant invites
+            deafen_members: Allows for deafening of members in a voice channel
+            embed_links: Links sent by users with this permission will be auto-embedded
+            kick_members: Allows kicking members
+            manage_channels: Allows management and editing of channels
+            manage_emojis_and_stickers: Allows management and editing of emojis and stickers
+            manage_events: Allows for creating, editing, and deleting scheduled events
+            manage_guild: Allows management and editing of the guild
+            manage_messages: Allows for deletion of other users messages
+            manage_nicknames: Allows for modification of other users nicknames
+            manage_roles: Allows management and editing of roles
+            manage_threads: Allows for deleting and archiving threads, and viewing all private threads
+            manage_webhooks: Allows management and editing of webhooks
+            mention_everyone: Allows for using the `@everyone` tag to notify all users in a channel, and the `@here` tag to notify all online users in a channel
+            moderate_members: Allows for timing out users to prevent them from sending or reacting to messages in chat and threads, and from speaking in voice and stage channels
+            move_members: Allows for moving of members between voice channels
+            mute_members: Allows for muting members in a voice channel
+            priority_speaker: Allows for using priority speaker in a voice channel
+            read_message_history: Allows for reading of message history
+            request_to_speak: Allows for requesting to speak in stage channels. (This permission is under active development and may be changed or removed.)
+            send_messages:  Allows for sending messages in a channel (does not allow sending messages in threads)
+            send_messages_in_threads: Allows for sending messages in threads
+            send_tts_messages:  Allows for sending of `/tts` messages
+            speak: Allows for speaking in a voice channel
+            start_embedded_activities: Allows for using Activities (applications with the `EMBEDDED` flag) in a voice channel
+            stream: Allows the user to go live
+            use_application_commands: Allows members to use application commands, including slash commands and context menu commands
+            use_external_emojis: Allows the usage of custom emojis from other servers
+            use_external_stickers: Allows the usage of custom stickers from other servers
+            use_private_threads: Allows for creating private threads
+            use_public_threads:  Allows for creating public and announcement threads
+            use_vad: Allows for using voice-activity-detection in a voice channel
+            view_audit_log: Allows for viewing of audit logs
+            view_channel: Allows guild members to view a channel, which includes reading messages in text channels and joining voice channels
+            view_guild_insights: Allows for viewing guild insights
+            reason: The reason for creating this overwrite
+        """
+        overwrite = PermissionOverwrite.for_target(target)
+
+        allow: Permissions = Permissions.NONE
+        deny: Permissions = Permissions.NONE
+
+        for name, val in locals().items():
+            if isinstance(val, bool):
+                if val:
+                    allow |= getattr(Permissions, name.upper())
+                else:
+                    deny |= getattr(Permissions, name.upper())
+
+        overwrite.add_allows(allow)
+        overwrite.add_denies(deny)
+
+        await self.edit_permission(overwrite, reason)
 
     @property
     def members(self) -> List["models.Member"]:

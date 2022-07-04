@@ -216,8 +216,7 @@ class GatewayClient(WebsocketClient):
                 return
 
             case "GUILD_MEMBERS_CHUNK":
-                asyncio.create_task(self._process_member_chunk(data))
-                return
+                asyncio.create_task(self._process_member_chunk(data.copy()))
 
             case _:
                 # the above events are "special", and are handled by the gateway itself, the rest can be dispatched
@@ -225,14 +224,14 @@ class GatewayClient(WebsocketClient):
                 processor = self.state.client.processors.get(event_name)
                 if processor:
                     try:
-                        asyncio.create_task(processor(events.RawGatewayEvent(data, override_name=event_name)))
+                        asyncio.create_task(processor(events.RawGatewayEvent(data.copy(), override_name=event_name)))
                     except Exception as ex:
                         logger.error(f"Failed to run event processor for {event_name}: {ex}")
                 else:
                     logger.debug(f"No processor for `{event_name}`")
 
-        self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_gateway_event"))
-        self.state.client.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{event.lower()}"))
+        self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name="raw_gateway_event"))
+        self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name=f"raw_{event.lower()}"))
 
     def close(self) -> None:
         """Shutdown the websocket connection."""

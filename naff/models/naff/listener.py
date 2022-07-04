@@ -2,6 +2,7 @@ import asyncio
 import inspect
 from typing import Coroutine, Callable
 
+from naff.models.naff.callback import CallbackObject
 from naff.api.events.internal import BaseEvent
 from naff.client.const import MISSING, Absent
 from naff.client.utils import get_event_name
@@ -9,7 +10,7 @@ from naff.client.utils import get_event_name
 __all__ = ("Listener", "listen")
 
 
-class Listener:
+class Listener(CallbackObject):
 
     event: str
     """Name of the event to listen to."""
@@ -17,11 +18,10 @@ class Listener:
     """Coroutine to call when the event is triggered."""
 
     def __init__(self, func: Callable[..., Coroutine], event: str) -> None:
+        super().__init__()
+
         self.event = event
         self.callback = func
-
-    async def __call__(self, *args, **kwargs) -> None:
-        return await self.callback(*args, **kwargs)
 
     @classmethod
     def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:

@@ -92,7 +92,7 @@ class Extension:
                         bot.add_prefixed_command(val)
 
             elif isinstance(val, naff.Listener):
-                val = wrap_partial(val, new_cls)
+                val = val.copy_with_binding(new_cls)
                 bot.add_listener(val)
                 new_cls.listeners.append(val)
             elif isinstance(val, Task):

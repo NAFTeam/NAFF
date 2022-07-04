@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
 
 from aiohttp import FormData
 
@@ -10,17 +10,21 @@ from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import optional
-from naff.models.discord.enums import MessageFlags, CommandTypes
+from naff.models.discord.enums import MessageFlags, CommandTypes, Permissions
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
 from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
+    from io import IOBase
+    from pathlib import Path
+
     from naff.client import Client
     from naff.models.discord.channel import TYPE_MESSAGEABLE_CHANNEL
     from naff.models.discord.components import BaseComponent
     from naff.models.discord.embed import Embed
+    from naff.models.discord.file import File
     from naff.models.discord.guild import Guild
     from naff.models.discord.message import AllowedMentions, Message
     from naff.models.discord.user import User, Member
@@ -40,6 +44,7 @@ __all__ = (
     "AutocompleteContext",
     "ModalContext",
     "PrefixedContext",
+    "SendableContext",
 )
 
 
@@ -143,6 +148,9 @@ class _BaseInteractionContext(Context):
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
         converter=optional(to_snowflake),
     )
+    app_permissions: Permissions = field(
+        default=0, converter=Permissions, metadata=docs("The permissions this interaction has")
+    )
     locale: str = field(
         default=None,
         metadata=docs(
@@ -172,6 +180,7 @@ class _BaseInteractionContext(Context):
             context_type=data["data"].get("type", 0),
             locale=data.get("locale"),
             guild_locale=data.get("guild_locale"),
+            app_permissions=data.get("app_permissions", 0),
         )
         new_cls.data = data
 
@@ -653,3 +662,49 @@ class PrefixedContext(Context, SendMixin):
         self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id, files=files)
+
+
+@runtime_checkable
+class SendableContext(Protocol):
+    """
+    A protocol that supports any context that can send messages.
+
+    Use it to type hint something that accepts both PrefixedContext and InteractionContext.
+    """
+
+    channel: "TYPE_MESSAGEABLE_CHANNEL"
+    invoke_target: str
+
+    author: Union["Member", "User"]
+    guild_id: "Snowflake_Type"
+    message: "Message"
+
+    @property
+    def bot(self) -> "Client":
+        ...
+
+    @property
+    def guild(self) -> Optional["Guild"]:
+        ...
+
+    async def send(
+        self,
+        content: Optional[str] = None,
+        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        components: Optional[
+            Union[
+                List[List[Union["BaseComponent", dict]]],
+                List[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
+        ] = None,
+        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
+        reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
+        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        tts: bool = False,
+        flags: Optional[Union[int, "MessageFlags"]] = None,
+        **kwargs: Any,
+    ) -> "Message":
+        ...

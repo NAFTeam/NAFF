@@ -52,7 +52,7 @@ from naff.client.errors import (
 )
 from naff.client.smart_cache import GlobalCache
 from naff.client.utils.input_utils import get_first_word, get_args
-from naff.client.utils.misc_utils import wrap_partial, get_event_name
+from naff.client.utils.misc_utils import get_event_name, wrap_partial
 from naff.client.utils.serializer import to_image_data
 from naff.models import (
     Activity,
@@ -153,9 +153,11 @@ class Client(
         total_shards: int: The total number of shards in use
         shard_id: int: The zero based int ID of this shard
 
-        logger: logging.Logger: The logger NAFF should use. Note: Different loggers with multiple clients are not supported
         debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
         asyncio_debug: bool: Enable asyncio debug features
+        basic_logging: bool: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
+        logging_level: int: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
+        logger: logging.Logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
@@ -192,12 +194,17 @@ class Client(
         sync_interactions: bool = True,
         sync_ext: bool = True,
         total_shards: int = 1,
+        basic_logging: bool = False,
+        logging_level: int = logging.INFO,
         **kwargs,
     ) -> None:
+        if basic_logging:
+            logging.basicConfig()
+            logger.setLevel(logging_level)
 
         # Set Up logger and overwrite the constant
         self.logger = logger
-        """The logger NAFF should use. Note: Different loggers with multiple clients are not supported"""
+        """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported"""
         constants.logger = logger
 
         # Configuration
@@ -1043,7 +1050,11 @@ class Client(
             [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
         )
         process(
-            [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, (BaseCommand, Listener))]
+            [
+                obj.copy_with_binding(self)
+                for _, obj in inspect.getmembers(self)
+                if isinstance(obj, (BaseCommand, Listener))
+            ]
         )
 
         [wrap_partial(obj, self) for _, obj in inspect.getmembers(self) if isinstance(obj, Task)]

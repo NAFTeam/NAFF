@@ -1,4 +1,5 @@
 from .annotations import *
+from .callback import *
 from .active_voice_state import *
 from .application_commands import *
 from .auto_defer import *
