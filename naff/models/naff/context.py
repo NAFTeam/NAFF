@@ -1,12 +1,11 @@
 import datetime
-import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
 
 from aiohttp import FormData
 
 import naff.models.discord.message as message
 from naff.models.discord.timestamp import Timestamp
-from naff.client.const import MISSING, logger_name, Absent
+from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_utils import define, field, docs
@@ -47,8 +46,6 @@ __all__ = (
     "PrefixedContext",
     "SendableContext",
 )
-
-log = logging.getLogger(logger_name)
 
 
 @define()
@@ -426,7 +423,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
                 caches = ((self._client.cache.get_message, (self.channel.id, self.target_id)),)
             case _:
                 # Most likely a new context type, check all rational caches for the target_id
-                log.warning(f"New Context Type Detected. Please Report: {self._context_type}")
+                logger.warning(f"New Context Type Detected. Please Report: {self._context_type}")
                 caches = (
                     (self._client.cache.get_message, (self.channel.id, self.target_id)),
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
@@ -539,7 +536,7 @@ class ComponentContext(InteractionContext):
         message_data = None
         if self.deferred:
             if not self.defer_edit_origin:
-                log.warning(
+                logger.warning(
                     "If you want to edit the original message, and need to defer, you must set the `edit_origin` kwarg to True!"
                 )
 

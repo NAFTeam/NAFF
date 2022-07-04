@@ -1,18 +1,14 @@
 import copy
-import logging
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
 
-from naff.client.const import logger_name
 from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("VoiceEvents",)
-
-log = logging.getLogger(logger_name)
 
 
 class VoiceEvents(EventMixinTemplate):

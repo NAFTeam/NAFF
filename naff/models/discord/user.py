@@ -1,8 +1,7 @@
-import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
 
-from naff.client.const import MISSING, logger_name, Absent
+from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import HTTPException, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_utils import define, field, docs
@@ -29,8 +28,6 @@ if TYPE_CHECKING:
     from naff.models.discord.voice_state import VoiceState
 
 __all__ = ("BaseUser", "User", "NaffUser", "Member")
-
-log = logging.getLogger(logger_name)
 
 
 class _SendDMMixin(SendMixin):
@@ -274,7 +271,9 @@ class Member(DiscordObject, _SendDMMixin):
                     client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
                 )
             except Exception as e:
-                log.warning(f"[DEBUG NEEDED - REPORT THIS] Incomplete dictionary has been passed to member object: {e}")
+                logger.warning(
+                    f"[DEBUG NEEDED - REPORT THIS] Incomplete dictionary has been passed to member object: {e}"
+                )
                 raise
 
         data["role_ids"] = data.pop("roles", [])

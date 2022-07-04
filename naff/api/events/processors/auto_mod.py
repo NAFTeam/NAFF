@@ -1,7 +1,5 @@
-import logging
 from typing import TYPE_CHECKING
 
-from naff.client.const import logger_name
 from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
 from ._template import EventMixinTemplate, Processor
 from ... import events
@@ -10,8 +8,6 @@ if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("AutoModEvents",)
-
-log = logging.getLogger(logger_name)
 
 
 class AutoModEvents(EventMixinTemplate):

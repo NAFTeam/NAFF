@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import time
 from collections import namedtuple
 from functools import cmp_to_key
@@ -7,7 +6,7 @@ from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 
 
 import naff.models as models
-from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
+from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
@@ -57,8 +56,6 @@ __all__ = (
     "AuditLog",
     "AuditLogHistory",
 )
-
-log = logging.getLogger(logger_name)
 
 
 @define()
@@ -543,10 +540,10 @@ class Guild(BaseGuild):
             self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
-            return log.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
+            return logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
         else:
             members = self._chunk_cache
-            log.info(f"Processing {len(members)} members for {self.id}")
+            logger.info(f"Processing {len(members)} members for {self.id}")
 
             s = time.monotonic()
             start_time = time.perf_counter()
@@ -562,7 +559,7 @@ class Guild(BaseGuild):
 
             total_time = time.perf_counter() - start_time
             self.chunk_cache = []
-            log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
+            logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
     async def fetch_audit_log(

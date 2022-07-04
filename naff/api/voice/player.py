@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import shutil
 import threading
 from asyncio import AbstractEventLoop, run_coroutine_threadsafe
@@ -8,13 +7,11 @@ from typing import Optional, TYPE_CHECKING
 
 from naff.api.voice.audio import BaseAudio, AudioVolume
 from naff.api.voice.opus import Encoder
-from naff.client.const import logger_name
+from naff.client.const import logger
 
 if TYPE_CHECKING:
     from naff.models.naff.active_voice_state import ActiveVoiceState
 __all__ = ("Player",)
-
-log = logging.getLogger(logger_name)
 
 
 class Player(threading.Thread):
@@ -105,14 +102,14 @@ class Player(threading.Thread):
         self._stopped.clear()
 
         asyncio.run_coroutine_threadsafe(self.state.ws.speaking(True), self.loop)
-        log.debug(f"Now playing {self.current_audio!r}")
+        logger.debug(f"Now playing {self.current_audio!r}")
         start = None
 
         try:
             while not self._stop_event.is_set():
                 if not self.state.ws.ready.is_set() or not self._resume.is_set():
                     run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
-                    log.debug("Voice playback has been suspended!")
+                    logger.debug("Voice playback has been suspended!")
 
                     wait_for = []
 
@@ -128,7 +125,7 @@ class Player(threading.Thread):
                         continue
 
                     run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
-                    log.debug("Voice playback has been resumed!")
+                    logger.debug("Voice playback has been resumed!")
                     start = None
                     loops = 0
 
