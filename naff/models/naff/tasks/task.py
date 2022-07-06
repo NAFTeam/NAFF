@@ -1,15 +1,13 @@
 import asyncio
 import inspect
-import logging
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
 import naff
-from naff.client.const import logger_name, MISSING
+from naff.client.const import logger, MISSING
 from .triggers import BaseTrigger
 
-log = logging.getLogger(logger_name)
 
 __all__ = ("Task",)
 
@@ -95,7 +93,7 @@ class Task:
             self._stop.clear()
             self.task = asyncio.create_task(self._task_loop())
         except RuntimeError:
-            log.error(
+            logger.error(
                 "Unable to start task without a running event loop! We recommend starting tasks within an `on_startup` event."
             )
 

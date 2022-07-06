@@ -1,6 +1,5 @@
 """This file outlines the interaction between naff and Discord's Gateway API."""
 import asyncio
-import logging
 import sys
 import time
 import zlib
@@ -8,7 +7,7 @@ from types import TracebackType
 from typing import TypeVar, TYPE_CHECKING
 
 from naff.api import events
-from naff.client.const import logger_name
+from naff.client.const import logger
 from naff.client.utils.input_utils import OverriddenJson
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.enums import Status
@@ -22,8 +21,6 @@ if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 __all__ = ("GatewayClient",)
-
-log = logging.getLogger(logger_name)
 
 
 SELF = TypeVar("SELF", bound="WebsocketClient")
@@ -82,6 +79,7 @@ class GatewayClient(WebsocketClient):
         self._acknowledged = asyncio.Event()
         self._acknowledged.set()  # Initialize it as set
 
+        self._ready = asyncio.Event()
         self._close_gateway = asyncio.Event()
 
         # Santity check, it is extremely important that an instance isn't reused.
@@ -184,43 +182,43 @@ class GatewayClient(WebsocketClient):
                 self.latency.append(time.perf_counter() - self._last_heartbeat)
 
                 if self._last_heartbeat != 0 and self.latency[-1] >= 15:
-                    log.warning(
+                    logger.warning(
                         f"High Latency! shard ID {self.shard[0]} heartbeat took {self.latency[-1]:.1f}s to be acknowledged!"
                     )
                 else:
-                    log.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
+                    logger.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
 
                 return self._acknowledged.set()
 
             case OPCODE.RECONNECT:
-                log.info("Gateway requested reconnect. Reconnecting...")
+                logger.info("Gateway requested reconnect. Reconnecting...")
                 return await self.reconnect(resume=True)
 
             case OPCODE.INVALIDATE_SESSION:
-                log.warning("Gateway has invalidated session! Reconnecting...")
+                logger.warning("Gateway has invalidated session! Reconnecting...")
                 return await self.reconnect(resume=data)
 
             case _:
-                return log.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
+                return logger.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
 
     async def dispatch_event(self, data, seq, event) -> None:
         match event:
             case "READY":
+                self._ready.set()
                 self._trace = data.get("_trace", [])
                 self.sequence = seq
                 self.session_id = data["session_id"]
-                log.info("Connected to gateway!")
-                log.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
+                logger.info(f"Shard {self.shard[0]} has connected to gateway!")
+                logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
-                log.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
+                logger.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
                 self.state.client.dispatch(events.Resume())
                 return
 
             case "GUILD_MEMBERS_CHUNK":
-                asyncio.create_task(self._process_member_chunk(data))
-                return
+                asyncio.create_task(self._process_member_chunk(data.copy()))
 
             case _:
                 # the above events are "special", and are handled by the gateway itself, the rest can be dispatched
@@ -228,14 +226,14 @@ class GatewayClient(WebsocketClient):
                 processor = self.state.client.processors.get(event_name)
                 if processor:
                     try:
-                        asyncio.create_task(processor(events.RawGatewayEvent(data, override_name=event_name)))
+                        asyncio.create_task(processor(events.RawGatewayEvent(data.copy(), override_name=event_name)))
                     except Exception as ex:
-                        log.error(f"Failed to run event processor for {event_name}: {ex}")
+                        logger.error(f"Failed to run event processor for {event_name}: {ex}")
                 else:
-                    log.debug(f"No processor for `{event_name}`")
+                    logger.debug(f"No processor for `{event_name}`")
 
-        self.state.client.dispatch(events.RawGatewayEvent(data, override_name="raw_gateway_event"))
-        self.state.client.dispatch(events.RawGatewayEvent(data, override_name=f"raw_{event.lower()}"))
+        self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name="raw_gateway_event"))
+        self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name=f"raw_{event.lower()}"))
 
     def close(self) -> None:
         """Shutdown the websocket connection."""
@@ -261,7 +259,7 @@ class GatewayClient(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        log.debug(
+        logger.debug(
             f"Shard ID {self.shard[0]} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
 
@@ -278,11 +276,11 @@ class GatewayClient(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        log.debug("Client is attempting to resume a connection")
+        logger.debug(f"{self.shard[0]} is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
-        log.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
+        logger.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None) -> None:
         """Update the bot's presence status."""

@@ -33,6 +33,8 @@ __all__ = (
     "Component",
     "Connect",
     "Disconnect",
+    "ShardConnect",
+    "ShardDisconnect",
     "GuildEvent",
     "Login",
     "Ready",
@@ -98,6 +100,20 @@ class Resume(BaseEvent):
 @define(kw_only=False)
 class Disconnect(BaseEvent):
     """The bot has just disconnected."""
+
+
+@define(kw_only=False)
+class ShardConnect(Connect):
+    """A shard just connected to the discord Gateway."""
+
+    shard_id: int = field(metadata=docs("The ID of the shard"))
+
+
+@define(kw_only=False)
+class ShardDisconnect(Disconnect):
+    """A shard just disconnected."""
+
+    shard_id: int = field(metadata=docs("The ID of the shard"))
 
 
 @define(kw_only=False)

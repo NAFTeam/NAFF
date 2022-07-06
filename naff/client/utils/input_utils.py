@@ -1,19 +1,17 @@
-import logging
 import re
 from typing import Any, Dict, Union, Optional
 
 import aiohttp  # type: ignore
 
-from naff.client.const import logger_name
+
+from naff.client.const import logger
 
 __all__ = ("OverriddenJson", "response_decode", "get_args", "get_first_word")
-
-log = logging.getLogger(logger_name)
 
 try:
     import orjson as json
 except ImportError:
-    log.warning("orjson not installed, built-in json library will be used")
+    logger.warning("orjson not installed, built-in json library will be used")
     import json
 
 

@@ -2,12 +2,12 @@ from __future__ import annotations
 import asyncio
 import copy
 import functools
-import logging
 import re
 import typing
 from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
-from naff.client.const import MISSING, logger_name
+from naff.models.naff.callback import CallbackObject
+from naff.client.const import MISSING
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_utils import define, field, docs
@@ -21,14 +21,13 @@ if TYPE_CHECKING:
 
 __all__ = ("BaseCommand", "check", "cooldown", "max_concurrency")
 
-log = logging.getLogger(logger_name)
 
 kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
 
 
 @define()
-class BaseCommand(DictSerializationMixin):
+class BaseCommand(DictSerializationMixin, CallbackObject):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
 
@@ -101,7 +100,7 @@ class BaseCommand(DictSerializationMixin):
         try:
             if await self._can_run(context):
                 if self.pre_run_callback is not None:
-                    await self.pre_run_callback(context, *args, **kwargs)
+                    await self.call_with_binding(self.pre_run_callback, context, *args, **kwargs)
 
                 if self.extension is not None and self.extension.extension_prerun:
                     for prerun in self.extension.extension_prerun:
@@ -110,7 +109,7 @@ class BaseCommand(DictSerializationMixin):
                 await self.call_callback(self.callback, context)
 
                 if self.post_run_callback is not None:
-                    await self.post_run_callback(context, *args, **kwargs)
+                    await self.call_with_binding(self.post_run_callback, context, *args, **kwargs)
 
                 if self.extension is not None and self.extension.extension_postrun:
                     for postrun in self.extension.extension_postrun:
@@ -173,13 +172,17 @@ class BaseCommand(DictSerializationMixin):
         return (annotation, getattr(annotation, name, None))
 
     async def call_callback(self, callback: Callable, context: "Context") -> None:
-        callback = functools.partial(callback, context)  # first param must be ctx
+        _call = callback
+        if self.has_binding:
+            callback = functools.partial(callback, None, None)
+        else:
+            callback = functools.partial(callback, None)
         parameters = get_parameters(callback)
         args = []
         kwargs = {}
         if len(parameters) == 0:
             # if no params, user only wants context
-            return await callback()
+            return await self.call_with_binding(_call, context)
 
         c_args = copy.copy(context.args)
         for param in parameters.values():
@@ -232,7 +235,7 @@ class BaseCommand(DictSerializationMixin):
         if any(args_reg.match(str(param)) for param in parameters.values()):
             # user has `*args` pass all remaining args
             args = args + [await convert(c) for c in c_args]
-        return await callback(*args, **kwargs)
+        return await self.call_with_binding(_call, context, *args, **kwargs)
 
     async def _can_run(self, context: Context) -> bool:
         """

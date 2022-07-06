@@ -1,10 +1,9 @@
 import asyncio
 import inspect
-import logging
 from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
 import naff.models.naff as naff
-from naff.client.const import logger_name, MISSING
+from naff.client.const import logger, MISSING
 from naff.client.utils.misc_utils import wrap_partial
 from naff.models.naff.tasks import Task
 
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
     from naff.models.naff import AutoDefer, BaseCommand, Listener
     from naff.models.naff import Context
 
-log = logging.getLogger(logger_name)
 
 __all__ = ("Extension",)
 
@@ -94,13 +92,13 @@ class Extension:
                         bot.add_prefixed_command(val)
 
             elif isinstance(val, naff.Listener):
-                val = wrap_partial(val, new_cls)
+                val = val.copy_with_binding(new_cls)
                 bot.add_listener(val)
                 new_cls.listeners.append(val)
             elif isinstance(val, Task):
                 wrap_partial(val, new_cls)
 
-        log.debug(
+        logger.debug(
             f"{len(new_cls._commands)} commands and {len(new_cls.listeners)} listeners"
             f" have been loaded from `{new_cls.name}`"
         )
@@ -154,7 +152,7 @@ class Extension:
             self.bot.listeners[func.event].remove(func)
 
         self.bot.ext.pop(self.name, None)
-        log.debug(f"{self.name} has been drop")
+        logger.debug(f"{self.name} has been drop")
 
     def add_ext_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
         """
@@ -262,5 +260,5 @@ class Extension:
             raise TypeError("Callback must be a coroutine")
 
         if self.extension_error:
-            log.warning("Extension error callback has been overridden!")
+            logger.warning("Extension error callback has been overridden!")
         self.extension_error = coroutine

@@ -1,12 +1,12 @@
 import asyncio
-import logging
 import time
 from collections import namedtuple
+from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 
 
 import naff.models as models
-from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger_name, Absent
+from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
@@ -30,7 +30,10 @@ from .enums import (
     ScheduledEventPrivacyLevel,
     ScheduledEventType,
     AuditLogEventType,
+    AutoModEvent,
+    AutoModTriggerType,
 )
+from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
@@ -53,8 +56,6 @@ __all__ = (
     "AuditLog",
     "AuditLogHistory",
 )
-
-log = logging.getLogger(logger_name)
 
 
 @define()
@@ -192,6 +193,7 @@ class Guild(BaseGuild):
     _member_ids: Set[Snowflake_Type] = field(factory=set)
     _role_ids: Set[Snowflake_Type] = field(factory=set)
     _chunk_cache: list = field(factory=list)
+    _channel_gui_positions: Dict[Snowflake_Type, int] = field(factory=dict)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -505,7 +507,8 @@ class Guild(BaseGuild):
             presences: Do you need presence data for members?
 
         """
-        await self._client.ws.request_member_chunks(self.id, limit=0, presences=presences)
+        ws = self._client.get_guild_websocket(self.id)
+        await ws.request_member_chunks(self.id, limit=0, presences=presences)
         if wait:
             await self.chunked.wait()
 
@@ -537,10 +540,10 @@ class Guild(BaseGuild):
             self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
-            return log.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
+            return logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
         else:
             members = self._chunk_cache
-            log.info(f"Processing {len(members)} members for {self.id}")
+            logger.info(f"Processing {len(members)} members for {self.id}")
 
             s = time.monotonic()
             start_time = time.perf_counter()
@@ -556,7 +559,7 @@ class Guild(BaseGuild):
 
             total_time = time.perf_counter() - start_time
             self.chunk_cache = []
-            log.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
+            logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
     async def fetch_audit_log(
@@ -1596,6 +1599,119 @@ class Guild(BaseGuild):
             for ban_info in ban_infos
         ]
 
+    async def create_auto_moderation_rule(
+        self,
+        name: str,
+        *,
+        trigger: BaseTrigger,
+        actions: list[BaseAction],
+        exempt_roles: list["Snowflake_Type"] = MISSING,
+        exempt_channels: list["Snowflake_Type"] = MISSING,
+        enabled: bool = True,
+        event_type: AutoModEvent = AutoModEvent.MESSAGE_SEND,
+    ) -> AutoModRule:
+        """
+        Create an auto-moderation rule in this guild.
+
+        Args:
+            name: The name of the rule
+            trigger: The trigger for this rule
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+
+        Returns:
+            The created rule
+        """
+        rule = AutoModRule(
+            name=name,
+            enabled=enabled,
+            actions=actions,
+            event_type=event_type,
+            trigger=trigger,
+            exempt_channels=exempt_channels if exempt_roles is not MISSING else [],
+            exempt_roles=exempt_roles if exempt_roles is not MISSING else [],
+            client=self._client,
+        )
+        data = await self._client.http.create_auto_moderation_rule(self.id, rule.to_dict())
+        return AutoModRule.from_dict(data, self._client)
+
+    async def fetch_auto_moderation_rules(self) -> List[AutoModRule]:
+        """
+        Get this guild's auto moderation rules.
+
+        Returns:
+            A list of auto moderation rules
+        """
+        data = await self._client.http.get_auto_moderation_rules(self.id)
+        return [AutoModRule.from_dict(d, self._client) for d in data]
+
+    async def delete_auto_moderation_rule(self, rule: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
+        """
+        Delete a given auto moderation rule.
+
+        Args:
+            rule: The rule to delete
+            reason: The reason for deleting this rule
+        """
+        await self._client.http.delete_auto_moderation_rule(self.id, to_snowflake(rule), reason=reason)
+
+    async def modify_auto_moderation_rule(
+        self,
+        rule: "Snowflake_Type",
+        *,
+        name: Absent[str] = MISSING,
+        trigger: Absent[BaseTrigger] = MISSING,
+        trigger_type: Absent[AutoModTriggerType] = MISSING,
+        trigger_metadata: Absent[dict] = MISSING,
+        actions: Absent[list[BaseAction]] = MISSING,
+        exempt_channels: Absent[list["Snowflake_Type"]] = MISSING,
+        exempt_roles: Absent[list["Snowflake_Type"]] = MISSING,
+        event_type: Absent[AutoModEvent] = MISSING,
+        enabled: Absent[bool] = MISSING,
+        reason: Absent[str] = MISSING,
+    ) -> AutoModRule:
+        """
+        Modify an existing automod rule.
+
+        Args:
+            rule: The rule to modify
+            name: The name of the rule
+            trigger: A trigger for this rule
+            trigger_type: The type trigger for this rule (ignored if trigger specified)
+            trigger_metadata: Metadata for the trigger (ignored if trigger specified)
+            actions: A list of actions to take upon triggering
+            exempt_roles: Roles that ignore this rule
+            exempt_channels: Channels that ignore this role
+            enabled: Is this rule enabled?
+            event_type: The type of event that triggers this rule
+            reason: The reason for this change
+
+        Returns:
+            The updated rule
+        """
+        if trigger:
+            _data = trigger.to_dict()
+            trigger_type = _data["trigger_type"]
+            trigger_metadata = _data.get("trigger_metadata", {})
+
+        out = await self._client.http.modify_auto_moderation_rule(
+            self.id,
+            to_snowflake(rule),
+            name=name,
+            trigger_type=trigger_type,
+            trigger_metadata=trigger_metadata,
+            actions=actions,
+            exempt_roles=to_snowflake_list(exempt_roles) if exempt_roles is not MISSING else MISSING,
+            exempt_channels=to_snowflake_list(exempt_channels) if exempt_channels is not MISSING else MISSING,
+            event_type=event_type,
+            enabled=enabled,
+            reason=reason,
+        )
+        return AutoModRule.from_dict(out, self._client)
+
     async def unban(
         self, user: Union["models.User", "models.Member", Snowflake_Type], reason: Absent[str] = MISSING
     ) -> None:
@@ -1724,6 +1840,78 @@ class Guild(BaseGuild):
         regions_data = await self._client.http.get_guild_voice_regions(self.id)
         regions = models.VoiceRegion.from_list(regions_data)
         return regions
+
+    @property
+    def gui_sorted_channels(self) -> list["models.TYPE_GUILD_CHANNEL"]:
+        """Return this guilds channels sorted by their gui positions"""
+        # create a sorted list of objects by their gui position
+        if not self._channel_gui_positions:
+            self._calculate_gui_channel_positions()
+        return [
+            self._client.get_channel(k)
+            for k, v in sorted(self._channel_gui_positions.items(), key=lambda item: item[1])
+        ]
+
+    def get_channel_gui_position(self, channel_id: "Snowflake_Type") -> int:
+        """
+        Get a given channels gui position.
+
+        Args:
+            channel_id: The ID of the channel to get the gui position for.
+
+        Returns:
+            The gui position of the channel.
+        """
+        if not self._channel_gui_positions:
+            self._calculate_gui_channel_positions()
+        return self._channel_gui_positions.get(to_snowflake(channel_id), 0)
+
+    def _calculate_gui_channel_positions(self) -> list["models.TYPE_GUILD_CHANNEL"]:
+        """
+        Calculates the GUI position for all known channels within this guild.
+
+        Note this is an expensive operation and should only be run when actually required.
+
+        Returns:
+            The list of channels in this guild, sorted by their GUI position.
+        """
+        # sorting is based on this https://github.com/discord/discord-api-docs/issues/4613#issuecomment-1059997612
+        sort_map = {
+            ChannelTypes.GUILD_NEWS_THREAD: 1,
+            ChannelTypes.GUILD_PUBLIC_THREAD: 1,
+            ChannelTypes.GUILD_PRIVATE_THREAD: 1,
+            ChannelTypes.GUILD_TEXT: 2,
+            ChannelTypes.GUILD_CATEGORY: 2,
+            ChannelTypes.GUILD_NEWS: 2,
+            ChannelTypes.GUILD_FORUM: 2,  # assumed value
+            ChannelTypes.GUILD_VOICE: 3,
+            ChannelTypes.GUILD_STAGE_VOICE: 3,
+        }
+
+        def channel_sort_func(a, b) -> int:
+            a_sorting = sort_map.get(a.type, 0)
+            b_sorting = sort_map.get(b.type, 0)
+
+            if a_sorting != b_sorting:
+                return a_sorting - b_sorting
+            return a.position - b.position or a.id - b.id
+
+        sorted_channels = sorted(self.channels, key=cmp_to_key(channel_sort_func))
+
+        for channel in sorted_channels[::-1]:
+            if channel.parent_id:
+                # sort channels under their respective categories
+                sorted_channels.remove(channel)
+                parent_index = sorted_channels.index(channel.category)
+                sorted_channels.insert(parent_index + 1, channel)
+            elif channel.type != ChannelTypes.GUILD_CATEGORY:
+                # move non-category channels to the top
+                sorted_channels.remove(channel)
+                sorted_channels.insert(0, channel)
+
+        self._channel_gui_positions = {channel.id: i for i, channel in enumerate(sorted_channels)}
+
+        return sorted_channels
 
 
 @define()

@@ -1,10 +1,9 @@
 import copy
-import logging
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
 
-from naff.client.const import logger_name, MISSING
+from naff.client.const import MISSING
 from ._template import EventMixinTemplate, Processor
 from naff.models import GuildIntegration, Sticker, to_snowflake
 from naff.api.events.discord import (
@@ -22,8 +21,6 @@ if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("GuildEvents",)
-
-log = logging.getLogger(logger_name)
 
 
 class GuildEvents(EventMixinTemplate):

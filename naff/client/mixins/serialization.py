@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, List, Type
 
 import attrs
@@ -8,8 +7,6 @@ from naff.client.utils.attr_utils import define
 import naff.client.utils.serializer as serializer
 
 __all__ = ("DictSerializationMixin",)
-
-log = logging.getLogger(const.logger_name)
 
 
 @define(slots=False)
@@ -33,7 +30,7 @@ class DictSerializationMixin:
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
         if const.kwarg_spam:
             unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-            log.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
+            const.logger.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod

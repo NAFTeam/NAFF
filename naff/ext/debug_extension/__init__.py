@@ -2,7 +2,7 @@ import logging
 import platform
 
 from naff import Client, Extension, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
-from naff.client.const import logger_name, __version__, __py_version__
+from naff.client.const import logger, __version__, __py_version__
 from naff.models.naff import checks
 from .debug_application_cmd import DebugAppCMD
 from .debug_exec import DebugExec
@@ -11,21 +11,19 @@ from .utils import get_cache_state, debug_embed, strf_delta
 
 __all__ = ("DebugExtension",)
 
-log = logging.getLogger(logger_name)
-
 
 class DebugExtension(DebugExec, DebugAppCMD, DebugExts, Extension):
     def __init__(self, bot: Client) -> None:
         super().__init__(bot)
         self.add_ext_check(checks.is_owner())
 
-        log.info("Debug Extension is growing!")
+        logger.info("Debug Extension is growing!")
 
     @listen()
     async def on_startup(self) -> None:
-        log.info(f"Started {self.bot.user.tag} [{self.bot.user.id}] in Debug Mode")
+        logger.info(f"Started {self.bot.user.tag} [{self.bot.user.id}] in Debug Mode")
 
-        log.info(f"Caching System State: \n{get_cache_state(self.bot)}")
+        logger.info(f"Caching System State: \n{get_cache_state(self.bot)}")
 
     @slash_command(
         "debug",

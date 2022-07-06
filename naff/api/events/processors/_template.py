@@ -1,10 +1,9 @@
 import asyncio
 import functools
 import inspect
-import logging
 from typing import TYPE_CHECKING, Callable, Coroutine
 
-from naff.client.const import logger_name, MISSING, Absent
+from naff.client.const import Absent, MISSING
 
 from naff.models.discord.user import NaffUser
 
@@ -13,8 +12,6 @@ if TYPE_CHECKING:
     from naff.api.events.internal import BaseEvent
 
 __all__ = ("Processor", "EventMixinTemplate")
-
-log = logging.getLogger(logger_name)
 
 
 class Processor:

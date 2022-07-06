@@ -1,10 +1,9 @@
-import logging
 from contextlib import suppress
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import discord_typings
 
-from naff.client.const import MISSING, logger_name, Absent
+from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import NotFound, Forbidden
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.cache import TTLCache
@@ -25,8 +24,6 @@ if TYPE_CHECKING:
     from naff.client import Client
     from naff.models.discord.channel import DM, TYPE_ALL_CHANNEL
     from naff.models.discord.snowflake import Snowflake_Type
-
-log = logging.getLogger(logger_name)
 
 
 def create_cache(
@@ -80,7 +77,7 @@ class GlobalCache:
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):
-            log.warning(
+            logger.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
 
@@ -446,7 +443,7 @@ class GlobalCache:
                 data = await self._client.http.get_channel(channel_id)
                 channel = self.place_channel_data(data)
             except Forbidden:
-                log.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
+                logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
                 channel = BaseChannel.from_dict({"id": channel_id, "type": MISSING}, self._client)
         return channel
 
@@ -482,6 +479,7 @@ class GlobalCache:
                     guild._thread_ids.add(channel.id)
                 elif isinstance(channel, GuildChannel):
                     guild._channel_ids.add(channel.id)
+                guild._channel_gui_positions = {}
         else:
             # Create entire new channel object if the type changes
             channel_type = data.get("type", None)
@@ -490,6 +488,8 @@ class GlobalCache:
                 channel = BaseChannel.from_dict_factory(data, self._client)
             else:
                 channel.update_from_dict(data)
+                if guild := getattr(channel, "guild", None):
+                    guild._channel_gui_positions = {}
 
         return channel
 
@@ -559,6 +559,7 @@ class GlobalCache:
                 guild._thread_ids.discard(channel.id)
             elif isinstance(channel, GuildChannel):
                 guild._channel_ids.discard(channel.id)
+            guild._channel_gui_positions = {}
 
     # endregion Channel cache
 

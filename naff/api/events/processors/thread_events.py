@@ -1,9 +1,7 @@
-import logging
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
 
-from naff.client.const import logger_name
 from ._template import EventMixinTemplate, Processor
 from naff.models import to_snowflake
 
@@ -11,8 +9,6 @@ if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("ThreadEvents",)
-
-log = logging.getLogger(logger_name)
 
 
 class ThreadEvents(EventMixinTemplate):

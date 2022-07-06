@@ -16,6 +16,13 @@ extras_require["docs"] = extras_require["all"] + [
     "mkdocs-material",
     "mkdocstrings==0.18",
 ]
+extras_require["tests"] = [
+    "pytest",
+    "pytest-recording",
+    "pytest-asyncio",
+    "pytest-cov",
+    "typeguard",
+]
 
 setup(
     name="naff",

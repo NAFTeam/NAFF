@@ -1,8 +1,6 @@
-import logging
 from typing import Union, TYPE_CHECKING
 import naff.api.events as events
 
-from naff.client.const import logger_name
 from ._template import EventMixinTemplate, Processor
 from naff.models import User, Member, BaseChannel, Timestamp, to_snowflake, Activity
 from naff.models.discord.enums import Status
@@ -11,8 +9,6 @@ if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
 
 __all__ = ("UserEvents",)
-
-log = logging.getLogger(logger_name)
 
 
 class UserEvents(EventMixinTemplate):

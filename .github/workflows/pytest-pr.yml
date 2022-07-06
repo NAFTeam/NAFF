@@ -55,7 +55,7 @@ jobs:
       - name: Install pytest
         run: |
           pip install -e ${{ matrix.extras }}
-          pip install pytest pytest-recording pytest-asyncio pytest-cov
+          pip install .[tests]
       - name: Run Tests
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}

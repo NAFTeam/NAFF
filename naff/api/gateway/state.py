@@ -1,24 +1,21 @@
 import asyncio
-import logging
 import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
-from naff.models.discord.enums import Intents, Status, ActivityType
-from naff.models.discord.activity import Activity
-from naff.client.errors import NaffException, WebSocketClosed
-from naff.client.const import logger_name, MISSING, Absent
-from naff.client.utils.attr_utils import define
-from .gateway import GatewayClient
-from naff.api import events
 import naff
+from naff.api import events
+from naff.client.const import logger, MISSING, Absent
+from naff.client.errors import NaffException, WebSocketClosed
+from naff.client.utils.attr_utils import define, field
+from naff.models.discord.activity import Activity
+from naff.models.discord.enums import Intents, Status, ActivityType
+from .gateway import GatewayClient
 
 if TYPE_CHECKING:
     from naff import Client, Snowflake_Type
 
 __all__ = ("ConnectionState",)
-
-log = logging.getLogger(logger_name)
 
 
 @define(kw_only=False)
@@ -29,6 +26,8 @@ class ConnectionState:
     """The event intents in use"""
     shard_id: int
     """The shard ID of this state"""
+    _shard_ready: asyncio.Event = field(default=None)
+    """Indicates that this state is now ready"""
 
     gateway: Absent[GatewayClient] = MISSING
     """The websocket connection for the Discord Gateway."""
@@ -43,6 +42,9 @@ class ConnectionState:
     """Event to check if the gateway has been started."""
 
     _shard_task: asyncio.Task | None = None
+
+    def __attrs_post_init__(self, *args, **kwargs) -> None:
+        self._shard_ready = asyncio.Event()
 
     @property
     def latency(self) -> float:
@@ -66,7 +68,7 @@ class ConnectionState:
         """Connect to the Discord Gateway."""
         self.gateway_url = await self.client.http.get_gateway()
 
-        log.debug(f"Starting Shard ID {self.shard_id}")
+        logger.debug(f"Starting Shard ID {self.shard_id}")
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
 
@@ -78,7 +80,7 @@ class ConnectionState:
 
     async def stop(self) -> None:
         """Disconnect from the Discord Gateway."""
-        log.debug(f"Shutting down shard ID {self.shard_id}")
+        logger.debug(f"Shutting down shard ID {self.shard_id}")
         if self.gateway is not None:
             self.gateway.close()
             self.gateway = None
@@ -91,13 +93,17 @@ class ConnectionState:
 
     async def _ws_connect(self) -> None:
         """Connect to the Discord Gateway."""
-        log.info("Attempting to initially connect to gateway...")
+        logger.info(f"Shard {self.shard_id} is attempting to connect to gateway...")
         try:
             async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
                     await self.gateway.run()
                 finally:
-                    self.client.dispatch(events.Disconnect())
+                    self._shard_ready.clear()
+                    if self.client.total_shards == 1:
+                        self.client.dispatch(events.Disconnect())
+                    else:
+                        self.client.dispatch(events.ShardDisconnect(self.shard_id))
 
         except WebSocketClosed as ex:
             if ex.code == 4011:
@@ -112,7 +118,7 @@ class ConnectionState:
 
         except Exception as e:
             self.client.dispatch(events.Disconnect())
-            log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+            logger.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Absent[Union[Activity, str]] = MISSING
@@ -138,7 +144,7 @@ class ConnectionState:
 
                 if activity.type == ActivityType.STREAMING:
                     if not activity.url:
-                        log.warning("Streaming activity cannot be set without a valid URL attribute")
+                        logger.warning("Streaming activity cannot be set without a valid URL attribute")
                 elif activity.type not in [
                     ActivityType.GAME,
                     ActivityType.STREAMING,
@@ -146,7 +152,7 @@ class ConnectionState:
                     ActivityType.WATCHING,
                     ActivityType.COMPETING,
                 ]:
-                    log.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+                    logger.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
         else:
             activity = self.client.activity
 
@@ -161,7 +167,7 @@ class ConnectionState:
             if self.client.status:
                 status = self.client.status
             else:
-                log.warning("Status must be set to a valid status type, defaulting to online")
+                logger.warning("Status must be set to a valid status type, defaulting to online")
                 status = Status.ONLINE
 
         self.client._status = status
