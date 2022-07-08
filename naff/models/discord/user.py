@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Set, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
 
 from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import HTTPException, TooManyChanges
@@ -469,6 +469,18 @@ class Member(DiscordObject, _SendDMMixin):
         await self._client.http.add_guild_member_role(self._guild_id, self.id, role, reason=reason)
         self._role_ids.append(role)
 
+    async def add_roles(self, roles: Iterable[Union[Snowflake_Type, Role]], reason: Absent[str] = MISSING) -> None:
+        """
+        Atomically add multiple roles to this member.
+
+        Args:
+            roles: The roles to add
+            reason: The reason for adding the roles
+
+        """
+        new_roles = set(self._role_ids) | {to_snowflake(r) for r in roles}
+        await self.edit(roles=new_roles, reason=reason)
+
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = MISSING) -> None:
         """
         Remove a role from this user.
@@ -485,6 +497,18 @@ class Member(DiscordObject, _SendDMMixin):
             self._role_ids.remove(role)
         except ValueError:
             pass
+    
+    async def remove_roles(self, roles: Iterable[Union[Snowflake_Type, Role]], reason: Absent[str] = MISSING) -> None:
+        """
+        Atomically remove multiple roles from this member.
+
+        Args:
+            roles: The roles to remove
+            reason: The reason for removing the roles
+
+        """
+        new_roles = set(self._role_ids) - {to_snowflake(r) for r in roles}
+        await self.edit(roles=new_roles, reason=reason)
 
     def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool:
         """
@@ -535,7 +559,7 @@ class Member(DiscordObject, _SendDMMixin):
         self,
         *,
         nickname: Absent[str] = MISSING,
-        roles: Absent[list["Snowflake_Type"]] = MISSING,
+        roles: Absent[Iterable["Snowflake_Type"]] = MISSING,
         mute: Absent[bool] = MISSING,
         deaf: Absent[bool] = MISSING,
         channel_id: Absent["Snowflake_Type"] = MISSING,
