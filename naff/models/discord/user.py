@@ -497,7 +497,7 @@ class Member(DiscordObject, _SendDMMixin):
             self._role_ids.remove(role)
         except ValueError:
             pass
-    
+
     async def remove_roles(self, roles: Iterable[Union[Snowflake_Type, Role]], reason: Absent[str] = MISSING) -> None:
         """
         Atomically remove multiple roles from this member.
