@@ -18,7 +18,7 @@ repos:
       - id: autoflake
         args: [--remove-all-unused-imports, --in-place, --ignore-init-module-imports]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         args: [--target-version, py310, --line-length=120]

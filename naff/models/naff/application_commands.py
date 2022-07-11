@@ -292,6 +292,8 @@ class SlashCommandOption(DictSerializationMixin):
         channel_types: The channel types permitted. The option needs to be a channel
         min_value: The minimum value permitted. The option needs to be an integer or float
         max_value: The maximum value permitted. The option needs to be an integer or float
+        min_length: The minimum length of text a user can input. The option needs to be a string
+        max_length: The maximum length of text a user can input. The option needs to be a string
 
     """
 
@@ -304,6 +306,8 @@ class SlashCommandOption(DictSerializationMixin):
     channel_types: Optional[list[Union[ChannelTypes, int]]] = field(default=None)
     min_value: Optional[float] = field(default=None)
     max_value: Optional[float] = field(default=None)
+    min_length: Optional[int] = field(default=None)
+    max_length: Optional[int] = field(default=None)
 
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
@@ -351,6 +355,32 @@ class SlashCommandOption(DictSerializationMixin):
             if self.max_value and self.min_value:
                 if self.max_value < self.min_value:
                     raise ValueError("`min_value` needs to be <= than `max_value`")
+
+    @min_length.validator
+    def _min_length_validator(self, attribute: str, value: Optional[int]) -> None:
+        if value is not None:
+            if self.type != OptionTypes.STRING:
+                raise ValueError("`min_length` can only be supplied with string options")
+
+            if self.max_length is not None and self.min_length is not None:
+                if self.max_length < self.min_length:
+                    raise ValueError("`min_length` needs to be <= than `max_length`")
+
+            if self.min_length < 0:
+                raise ValueError("`min_length` needs to be >= 0")
+
+    @max_length.validator
+    def _max_length_validator(self, attribute: str, value: Optional[int]) -> None:
+        if value is not None:
+            if self.type != OptionTypes.STRING:
+                raise ValueError("`max_length` can only be supplied with string options")
+
+            if self.min_length is not None and self.max_length is not None:
+                if self.max_length < self.min_length:
+                    raise ValueError("`min_length` needs to be <= than `max_length`")
+
+            if self.max_length < 1:
+                raise ValueError("`max_length` needs to be >= 1")
 
     def as_dict(self) -> dict:
         data = attrs.asdict(self)
@@ -801,6 +831,8 @@ def slash_option(
     channel_types: Optional[list[Union[ChannelTypes, int]]] = None,
     min_value: Optional[float] = None,
     max_value: Optional[float] = None,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
 ) -> Any:
     r"""
     A decorator to add an option to a slash command.
@@ -814,6 +846,8 @@ def slash_option(
         channel_types: The channel types permitted. The option needs to be a channel
         min_value: The minimum value permitted. The option needs to be an integer or float
         max_value: The maximum value permitted. The option needs to be an integer or float
+        min_length: The minimum length of text a user can input. The option needs to be a string
+        max_length: The maximum length of text a user can input. The option needs to be a string
     """
 
     def wrapper(func: Coroutine) -> Coroutine:
@@ -830,6 +864,8 @@ def slash_option(
             channel_types=channel_types,
             min_value=min_value,
             max_value=max_value,
+            min_length=min_length,
+            max_length=max_length,
         )
         if not hasattr(func, "options"):
             func.options = []
@@ -1018,6 +1054,8 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "name_localized": ("name_localizations", {}),
         "description_localized": ("description_localizations", {}),
         "choices": ("choices", []),
+        "max_value": ("max_value", None),
+        "min_value": ("min_value", None),
     }
 
     if local_opt_list != remote_opt_list:

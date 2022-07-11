@@ -27,6 +27,8 @@ def slash_str_option(
     required: bool = False,
     autocomplete: bool = False,
     choices: List[Union["SlashCommandChoice", dict]] = None,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
 ) -> Type[str]:
     """
     Annotates an argument as a string type slash command option.
@@ -36,6 +38,8 @@ def slash_str_option(
         required: Is this option required?
         autocomplete: Use autocomplete for this option
         choices: The choices allowed by this command
+        min_length: The minimum length of text a user can input.
+        max_length: The maximum length of text a user can input.
 
     """
     option = SlashCommandOption(
@@ -44,6 +48,8 @@ def slash_str_option(
         required=required,
         autocomplete=autocomplete,
         choices=choices or [],
+        max_length=max_length,
+        min_length=min_length,
         type=models.OptionTypes.STRING,
     )
     return option  # type: ignore

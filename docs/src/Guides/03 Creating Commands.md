@@ -164,6 +164,21 @@ async def my_command_function(ctx: InteractionContext, integer_option: int):
     await ctx.send(f"You input {integer_option} which is always between 10 and 15")
 ```
 
+The same can be done with the length of an option when using `OptionTypes.STRING` by setting `min_length` and `max_length`:
+```python
+@slash_command(name="my_command", ...)
+@slash_option(
+    name="string_option",
+    description="String Option",
+    required=True,
+    opt_type=OptionTypes.STRING,
+    min_length=5,
+    max_length=10
+)
+async def my_command_function(ctx: InteractionContext, string_option: str):
+    await ctx.send(f"You input `{string_option}` which is between 5 and 10 characters long")
+```
+
 !!! danger "Option Names"
     Be aware that the option `name` and the function parameter need to be the same (In this example both are `integer_option`).
 

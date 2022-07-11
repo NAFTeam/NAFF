@@ -655,7 +655,7 @@ class PrefixedCommand(BaseCommand):
             elif not self.ignore_extra and not args.finished:
                 raise BadArgument(f"Too many arguments passed to {self.name}.")
 
-            return await self.call_with_binding(callback, *new_args, **kwargs)
+            return await self.call_with_binding(callback, ctx, *new_args, **kwargs)
 
 
 def prefixed_command(
