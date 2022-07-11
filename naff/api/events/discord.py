@@ -98,6 +98,7 @@ if TYPE_CHECKING:
     from naff.models.discord.stage_instance import StageInstance
     from naff.models.naff.context import ModalContext
     from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
+    from naff.models.discord.reaction import Reaction
 
 
 @define(kw_only=False)
@@ -452,6 +453,17 @@ class MessageReactionAdd(BaseEvent):
     message: "Message" = field(metadata=docs("The message that was reacted to"))
     emoji: "PartialEmoji" = field(metadata=docs("The emoji that was added to the message"))
     author: Union["Member", "User"] = field(metadata=docs("The user who added the reaction"))
+    # reaction can be None when the message is not in the cache, and it was the last reaction, and it was deleted in the event
+    reaction: Optional["Reaction"] = field(
+        default=None, metadata=docs("The reaction object corresponding to the emoji")
+    )
+
+    @property
+    def reaction_count(self) -> int:
+        """Times the emoji in the event has been used to react"""
+        if self.reaction is None:
+            return 0
+        return self.reaction.count
 
 
 @define(kw_only=False)
