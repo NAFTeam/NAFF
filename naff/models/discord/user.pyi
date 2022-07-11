@@ -13,7 +13,7 @@ from naff.models.discord.role import Role
 from naff.models.discord.snowflake import Snowflake_Type
 from naff.models.discord.timestamp import Timestamp
 from naff.models.discord.voice_state import VoiceState
-from typing import List, Optional, Union, Set
+from typing import Iterable, List, Optional, Union, Set
 
 class _SendDMMixin(SendMixin):
     id: Snowflake_Type
@@ -95,7 +95,9 @@ class Member(User):  # for typehinting purposes, we can lie
     def channel_permissions(self, channel: TYPE_GUILD_CHANNEL) -> Permissions: ...
     async def edit_nickname(self, new_nickname: Absent[str] = ..., reason: Absent[str] = ...) -> None: ...
     async def add_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = ...) -> None: ...
+    async def add_roles(self, roles: Iterable[Union[Snowflake_Type, Role]], reason: Absent[str] = ...) -> None: ...
     async def remove_role(self, role: Union[Snowflake_Type, Role], reason: Absent[str] = ...) -> None: ...
+    async def remove_roles(self, roles: Iterable[Union[Snowflake_Type, Role]], reason: Absent[str] = ...) -> None: ...
     def has_role(self, *roles: Union[Snowflake_Type, Role]) -> bool: ...
     async def timeout(
         self, communication_disabled_until: Union[Timestamp, datetime, int, float, str, None], reason: Absent[str] = ...
@@ -105,7 +107,7 @@ class Member(User):  # for typehinting purposes, we can lie
         self,
         *,
         nickname: Absent[str] = ...,
-        roles: Absent[list[Snowflake_Type]] = ...,
+        roles: Absent[Iterable[Snowflake_Type]] = ...,
         mute: Absent[bool] = ...,
         deaf: Absent[bool] = ...,
         channel_id: Absent[Snowflake_Type] = ...,
