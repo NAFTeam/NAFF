@@ -253,7 +253,10 @@ async def test_members(bot: Client, guild: Guild, channel: GuildText) -> None:
     ensure_attributes(member)
 
     await member.edit_nickname("Test Nickname")
+    with suppress(asyncio.exceptions.TimeoutError):
+        await bot.wait_for("member_update", timeout=2)
     assert member.display_name == "Test Nickname"
+
     await member.edit_nickname(None)
     with suppress(asyncio.exceptions.TimeoutError):
         await bot.wait_for("member_update", timeout=2)
