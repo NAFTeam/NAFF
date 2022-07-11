@@ -171,7 +171,7 @@ MISSING = Missing()
 MENTION_PREFIX = MentionPrefix()
 
 PREMIUM_GUILD_LIMITS = defaultdict(
-    lambda: {"emoji": 50, "stickers": 0, "bitrate": 96000, "filesize": 8388608},
+    lambda: {"emoji": 50, "stickers": 5, "bitrate": 96000, "filesize": 8388608},
     {
         1: {"emoji": 100, "stickers": 15, "bitrate": 128000, "filesize": 8388608},
         2: {"emoji": 150, "stickers": 30, "bitrate": 256000, "filesize": 52428800},
