@@ -1054,6 +1054,8 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "name_localized": ("name_localizations", {}),
         "description_localized": ("description_localizations", {}),
         "choices": ("choices", []),
+        "max_value": ("max_value", None),
+        "min_value": ("min_value", None),
     }
 
     if local_opt_list != remote_opt_list:
