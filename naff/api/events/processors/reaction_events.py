@@ -38,18 +38,17 @@ class ReactionEvents(EventMixinTemplate):
                     reaction = r
                     break
             else:
-                message.reactions.append(
-                    Reaction.from_dict(
-                        {
-                            "count": 1,
-                            "me": author.id == self.user.id,  # type: ignore
-                            "emoji": emoji.to_dict(),
-                            "message_id": message.id,
-                            "channel_id": message._channel_id,
-                        },
-                        self,  # type: ignore
-                    )
+                reaction = Reaction.from_dict(
+                    {
+                        "count": 1,
+                        "me": author.id == self.user.id,  # type: ignore
+                        "emoji": emoji.to_dict(),
+                        "message_id": message.id,
+                        "channel_id": message._channel_id,
+                    },
+                    self,  # type: ignore
                 )
+                message.reactions.append(reaction)
 
         else:
             message = await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("message_id"))
