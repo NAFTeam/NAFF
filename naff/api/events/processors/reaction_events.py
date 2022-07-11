@@ -20,6 +20,7 @@ class ReactionEvents(EventMixinTemplate):
 
         emoji = PartialEmoji.from_dict(event.data.get("emoji"))  # type: ignore
         message = self.cache.get_message(event.data.get("channel_id"), event.data.get("message_id"))
+        reaction = None
 
         if message:
             for i in range(len(message.reactions)):
@@ -34,6 +35,7 @@ class ReactionEvents(EventMixinTemplate):
                         message.reactions.pop(i)
                     else:
                         message.reactions[i] = r
+                    reaction = r
                     break
             else:
                 message.reactions.append(
@@ -51,11 +53,14 @@ class ReactionEvents(EventMixinTemplate):
 
         else:
             message = await self.cache.fetch_message(event.data.get("channel_id"), event.data.get("message_id"))
-
+            for r in message.reactions:
+                if r.emoji == emoji:
+                    reaction = r
+                    break
         if add:
-            self.dispatch(events.MessageReactionAdd(message=message, emoji=emoji, author=author))
+            self.dispatch(events.MessageReactionAdd(message=message, emoji=emoji, author=author, reaction=reaction))
         else:
-            self.dispatch(events.MessageReactionRemove(message=message, emoji=emoji, author=author))
+            self.dispatch(events.MessageReactionRemove(message=message, emoji=emoji, author=author, reaction=reaction))
 
     @Processor.define()
     async def _on_raw_message_reaction_add(self, event: "RawGatewayEvent") -> None:
