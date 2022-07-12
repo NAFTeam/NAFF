@@ -1,6 +1,6 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
-from typing import Any, Optional
+from typing import Any, cast
 from urllib.parse import quote as _uriquote
 from weakref import WeakValueDictionary
 
@@ -29,8 +29,6 @@ from naff.client.const import (
     __repo_url__,
     __version__,
     logger,
-    MISSING,
-    Absent,
     __api_version__,
 )
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
@@ -78,7 +76,7 @@ class BucketLock:
 
         self.unlock_on_exit: bool = True
 
-        self.bucket_hash: Optional[str] = None
+        self.bucket_hash: str | None = None
         self.limit: int = -1
         self.remaining: int = -1
         self.delta: float = 0.0
@@ -145,10 +143,10 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(self, connector: Optional[BaseConnector] = None) -> None:
-        self.connector: Optional[BaseConnector] = connector
-        self.__session: Absent[Optional[ClientSession]] = MISSING
-        self.token: Optional[str] = None
+    def __init__(self, connector: BaseConnector | None = None) -> None:
+        self.connector: BaseConnector | None = connector
+        self.__session: ClientSession | None = None
+        self.token: str | None = None
         self.global_lock: GlobalLock = GlobalLock()
         self._max_attempts: int = 3
 
@@ -197,7 +195,9 @@ class HTTPClient(
             self.ratelimit_locks[bucket_lock.bucket_hash] = bucket_lock
 
     @staticmethod
-    def _process_payload(payload: dict | list[dict], files: Absent[list[UPLOADABLE_TYPE]]) -> dict | FormData | None:
+    def _process_payload(
+        payload: dict | list[dict] | None, files: UPLOADABLE_TYPE | list[UPLOADABLE_TYPE] | None
+    ) -> dict | list[dict] | FormData | None:
         """
         Processes a payload into a format safe for discord. Converts the payload into FormData where required
 
@@ -208,7 +208,7 @@ class HTTPClient(
         Returns:
             Either a dictionary or multipart data form
         """
-        if payload in (None, MISSING):
+        if payload is None:
             return None
 
         if isinstance(payload, dict):
@@ -236,12 +236,12 @@ class HTTPClient(
     async def request(
         self,
         route: Route,
-        payload: Absent[dict] = MISSING,
-        files: Absent[list[UPLOADABLE_TYPE]] = MISSING,
-        reason: Absent[str] = MISSING,
-        params: Absent[dict] = MISSING,
+        payload: list | dict | None = None,
+        files: list[UPLOADABLE_TYPE] | None = None,
+        reason: str | None = None,
+        params: dict | None = None,
         **kwargs: dict,
-    ) -> Any:
+    ) -> str | dict[str, Any] | None:
         """
         Make a request to discord.
 
@@ -256,7 +256,7 @@ class HTTPClient(
         kwargs["headers"] = {"User-Agent": self.user_agent}
         if self.token:
             kwargs["headers"]["Authorization"] = f"Bot {self.token}"
-        if reason not in (None, MISSING):
+        if reason:
             kwargs["headers"]["X-Audit-Log-Reason"] = _uriquote(reason, safe="/ ")
 
         if isinstance(payload, (list, dict)) and not files:
@@ -275,28 +275,31 @@ class HTTPClient(
                     await self.global_lock.rate_limit()
                     # prevent us exceeding the global rate limit by throttling http requests
 
-                    if self.__session.closed:
-                        await self.login(self.token)
+                    if cast(ClientSession, self.__session).closed:
+                        await self.login(cast(str, self.token))
 
                     processed_data = self._process_payload(payload, files)
                     if isinstance(processed_data, FormData):
-                        kwargs["data"] = processed_data
+                        kwargs["data"] = processed_data  # pyright: ignore
                     else:
-                        kwargs["json"] = processed_data
+                        kwargs["json"] = processed_data  # pyright: ignore
 
-                    async with self.__session.request(route.method, route.url, **kwargs) as response:
+                    async with cast(ClientSession, self.__session).request(
+                        route.method, route.url, **kwargs
+                    ) as response:
                         result = await response_decode(response)
                         self.ingest_ratelimit(route, response.headers, lock)
 
                         if response.status == 429:
                             # ratelimit exceeded
+                            result = cast(dict[str, str], result)
                             if result.get("global", False):
                                 # global ratelimit is reached
                                 # if we get a global, that's pretty bad, this would usually happen if the user is hitting the api from 2 clients sharing a token
                                 logger.error(
-                                    f"Bot has exceeded global ratelimit, locking REST API for {result.get('retry_after')} seconds"
+                                    f"Bot has exceeded global ratelimit, locking REST API for {result['retry_after']} seconds"
                                 )
-                                await self.global_lock.lock(float(result.get("retry_after")))
+                                await self.global_lock.lock(float(result["retry_after"]))
                                 continue
                             elif result.get("message") == "The resource is being rate limited.":
                                 # resource ratelimit is reached
@@ -305,7 +308,7 @@ class HTTPClient(
                                     f"Reset in {result.get('retry_after')} seconds"
                                 )
                                 # lock this resource and wait for unlock
-                                await lock.defer_unlock(float(result.get("retry_after")))
+                                await lock.defer_unlock(float(result["retry_after"]))
                                 continue
                             else:
                                 # endpoint ratelimit is reached
@@ -356,14 +359,14 @@ class HTTPClient(
         else:
             raise HTTPException(response, response_data=result, route=route)
 
-    async def request_cdn(self, url, asset) -> bytes:
+    async def request_cdn(self, url, asset) -> bytes:  # pyright: ignore [reportGeneralTypeIssues]
         logger.debug(f"{asset} requests {url} from CDN")
-        async with self.__session.get(url) as response:
+        async with cast(ClientSession, self.__session).get(url) as response:
             if response.status == 200:
                 return await response.read()
             await self._raise_exception(response, asset, await response_decode(response))
 
-    async def login(self, token: str) -> dict:
+    async def login(self, token: str) -> dict[str, Any]:
         """
         "Login" to the gateway, basically validates the token and grabs user data.
 
@@ -377,7 +380,8 @@ class HTTPClient(
         self.__session = ClientSession(connector=self.connector)
         self.token = token
         try:
-            return await self.request(Route("GET", "/users/@me"))
+            result = await self.request(Route("GET", "/users/@me"))
+            return cast(dict[str, Any], result)
         except HTTPException as e:
             if e.status == 401:
                 raise LoginError("An improper token was passed") from e
@@ -397,17 +401,18 @@ class HTTPClient(
 
         """
         try:
-            data: dict = await self.request(Route("GET", "/gateway"))
+            result = await self.request(Route("GET", "/gateway"))
+            result = cast(dict[str, Any], result)
         except HTTPException as exc:
             raise GatewayNotFound from exc
-        return "{0}?encoding={1}&v={2}&compress=zlib-stream".format(data["url"], "json", __api_version__)
+        return "{0}?encoding={1}&v={2}&compress=zlib-stream".format(result["url"], "json", __api_version__)
 
     async def get_gateway_bot(self) -> discord_typings.GetGatewayBotData:
         try:
-            data: dict = await self.request(Route("GET", "/gateway/bot"))
+            result = await self.request(Route("GET", "/gateway/bot"))
         except HTTPException as exc:
             raise GatewayNotFound from exc
-        return data
+        return cast(discord_typings.GetGatewayBotData, result)
 
     async def websocket_connect(self, url: str) -> ClientWebSocketResponse:
         """
@@ -417,6 +422,6 @@ class HTTPClient(
             url: the url to connect to
 
         """
-        return await self.__session.ws_connect(
+        return await cast(ClientSession, self.__session).ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0
         )
