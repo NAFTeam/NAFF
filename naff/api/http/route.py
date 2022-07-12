@@ -5,7 +5,9 @@ from naff.client.const import __api_version__
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
-__all__ = ("Route",)
+__all__ = ("Route", "PAYLOAD_TYPE")
+
+PAYLOAD_TYPE = dict[str, int | str | bool | list | None]
 
 
 class Route:
