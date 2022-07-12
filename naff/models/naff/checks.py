@@ -1,18 +1,18 @@
-from typing import Awaitable, Callable, Union, TYPE_CHECKING
+from typing import Awaitable, Callable
 
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.naff.context import Context
 
-if TYPE_CHECKING:
-    from naff.models.discord.role import Role
-    from naff.models.discord.user import Member
+from naff.models.discord.role import Role
+from naff.models.discord.user import Member
+
 
 __all__ = ("has_role", "has_any_role", "has_id", "is_owner", "guild_only", "dm_only")
 
 TYPE_CHECK_FUNCTION = Callable[[Context], Awaitable[bool]]
 
 
-def has_role(role: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
+def has_role(role: Snowflake_Type | Role) -> TYPE_CHECK_FUNCTION:
     """
     Check if the user has the given role.
 
@@ -24,13 +24,13 @@ def has_role(role: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
     async def check(ctx: Context) -> bool:
         if ctx.guild is None:
             return False
-        author: "Member" = ctx.author  # pyright: ignore [reportGeneralTypeIssues]
+        author: Member = ctx.author  # pyright: ignore [reportGeneralTypeIssues]
         return author.has_role(role)
 
     return check
 
 
-def has_any_role(*roles: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
+def has_any_role(*roles: Snowflake_Type | Role) -> TYPE_CHECK_FUNCTION:
     """
     Checks if the user has any of the given roles.
 
@@ -42,7 +42,7 @@ def has_any_role(*roles: Union[Snowflake_Type, Role]) -> TYPE_CHECK_FUNCTION:
         if ctx.guild is None:
             return False
 
-        author: "Member" = ctx.author  # pyright: ignore [reportGeneralTypeIssues]
+        author: Member = ctx.author  # pyright: ignore [reportGeneralTypeIssues]
         if any(author.has_role(to_snowflake(r)) for r in roles):
             return True
         return False
