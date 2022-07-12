@@ -34,6 +34,9 @@ profile = "black"
 ignore_missing_imports = true
 plugins = "naff.ext.mypy"
 
+[tool.pyright]
+useLibraryCodeForTypes = true
+
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 
