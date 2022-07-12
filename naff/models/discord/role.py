@@ -1,15 +1,15 @@
 from functools import partial, total_ordering
-from typing import Any, Dict, Optional, TYPE_CHECKING, Union
+from typing import Any, TYPE_CHECKING
 
 import attrs
 
-from naff.client.const import MISSING, Absent, T, Missing
+from naff.client.const import MISSING, T, Missing
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
-from naff.client.utils.serializer import dict_filter_missing
+from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.asset import Asset
 from naff.models.discord.emoji import PartialEmoji
-from naff.models.discord.color import Color
+from naff.models.discord.color import COLOR_TYPES, Color, process_color
 from naff.models.discord.enums import Permissions
 from .base import DiscordObject
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("Role",)
 
 
-def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool | T:
+def sentinel_converter(value: bool | T | None, sentinel: T = attrs.NOTHING) -> bool | T:
     if value is sentinel:
         return False
     elif value is None:
@@ -43,11 +43,11 @@ class Role(DiscordObject):
     managed: bool = field(default=False)
     mentionable: bool = field(default=True)
     premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-    _icon: Optional[Asset] = field(default=None)
-    _unicode_emoji: Optional[PartialEmoji] = field(default=None, converter=optional_c(PartialEmoji.from_str))
+    _icon: Asset | None = field(default=None)
+    _unicode_emoji: PartialEmoji | None = field(default=None, converter=optional_c(PartialEmoji.from_str))
     _guild_id: "Snowflake_Type" = field()
-    _bot_id: Optional["Snowflake_Type"] = field(default=None)
-    _integration_id: Optional["Snowflake_Type"] = field(default=None)  # todo integration object?
+    _bot_id: "Snowflake_Type" | None = field(default=None)
+    _integration_id: "Snowflake_Type" | None = field(default=None)  # todo integration object?
 
     def __lt__(self: "Role", other: "Role") -> bool:
         if not isinstance(self, Role) or not isinstance(other, Role):
@@ -72,7 +72,7 @@ class Role(DiscordObject):
         return False
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+    def _process_dict(cls, data: dict[str, Any], client: "Client") -> dict[str, Any]:
         data.update(data.pop("tags", {}))
 
         if icon_hash := data.get("icon"):
@@ -80,7 +80,7 @@ class Role(DiscordObject):
 
         return data
 
-    async def fetch_bot(self) -> Optional["Member"]:
+    async def fetch_bot(self) -> "Member" | None:
         """
         Fetch the bot associated with this role if any.
 
@@ -92,7 +92,7 @@ class Role(DiscordObject):
             return None
         return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
 
-    def get_bot(self) -> Optional["Member"]:
+    def get_bot(self) -> "Member" | None:
         """
         Get the bot associated with this role if any.
 
@@ -135,7 +135,7 @@ class Role(DiscordObject):
         return [member for member in self.guild.members if member.has_role(self)]
 
     @property
-    def icon(self) -> Optional[Asset | PartialEmoji]:
+    def icon(self) -> Asset | PartialEmoji | None:
         """
         The icon of this role
 
@@ -167,11 +167,11 @@ class Role(DiscordObject):
 
     async def edit(
         self,
-        name: Absent[str] = MISSING,
-        permissions: Absent[str] = MISSING,
-        color: Absent[Union[int, Color]] = MISSING,
-        hoist: Absent[bool] = MISSING,
-        mentionable: Absent[bool] = MISSING,
+        name: str | None = None,
+        permissions: str | None = None,
+        color: Color | COLOR_TYPES | None = None,
+        hoist: bool | None = None,
+        mentionable: bool | None = None,
     ) -> "Role":
         """
         Edit this role, all arguments are optional.
@@ -187,10 +187,9 @@ class Role(DiscordObject):
             Role with updated information
 
         """
-        if isinstance(color, Color):
-            color = color.value
+        color = process_color(color)
 
-        payload = dict_filter_missing(
+        payload = dict_filter_none(
             {"name": name, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
         )
 
