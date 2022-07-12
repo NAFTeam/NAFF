@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
 import naff.client.errors as errors
 import naff.models as models
@@ -19,21 +19,21 @@ __all__ = ("SendMixin",)
 class SendMixin:
     _client: "Client"
 
-    async def _send_http_request(self, message_payload: dict, files: list["UPLOADABLE_TYPE"] | None = None) -> dict:
+    async def _send_http_request(self, message_payload: dict, files: Iterable["UPLOADABLE_TYPE"] | None = None) -> dict:
         raise NotImplementedError
 
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[Iterable[Iterable[Union["BaseComponent", dict]]], Iterable[Union["BaseComponent", dict]], "BaseComponent", dict]
         ] = None,
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union["UPLOADABLE_TYPE", List["UPLOADABLE_TYPE"]]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", Iterable["UPLOADABLE_TYPE"]]] = None,
         file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
         suppress_embeds: bool = False,
