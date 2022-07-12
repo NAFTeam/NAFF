@@ -40,14 +40,12 @@ repos:
           - flake8-print
           - flake8-dunder-all
         language_version: python3.10
-  - repo: local
+
+  - repo: https://github.com/kumaraditya303/mirrors-pyright
+    rev: "v1.1.258"
     hooks:
       - id: pyright
-        name: pyright
-        entry: pyright
-        language: node
-        types: [ python ]
-        additional_dependencies: [ 'pyright@1.1.258' ]
+        args: [--warnings]
 
 ci:
   autoupdate_branch: 'dev'
