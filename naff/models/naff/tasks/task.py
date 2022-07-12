@@ -2,13 +2,12 @@ import asyncio
 import inspect
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
 
 import naff
 from naff.client.const import logger
 
-if TYPE_CHECKING:
-    from .triggers import BaseTrigger
+from .triggers import BaseTrigger
 
 
 __all__ = ("Task",)
@@ -29,12 +28,12 @@ class Task:
     """
 
     callback: Callable
-    trigger: "BaseTrigger"
+    trigger: BaseTrigger
     task: _Task | None
     _stop: asyncio.Event
     iteration: int
 
-    def __init__(self, callback: Callable, trigger: "BaseTrigger") -> None:
+    def __init__(self, callback: Callable, trigger: BaseTrigger) -> None:
         self.callback = callback
         self.trigger = trigger
         self._stop = asyncio.Event()
@@ -129,7 +128,7 @@ class Task:
         self.stop()
         self.start()
 
-    def reschedule(self, trigger: "BaseTrigger") -> None:
+    def reschedule(self, trigger: BaseTrigger) -> None:
         """
         Change the trigger being used by this task.
 
@@ -141,7 +140,7 @@ class Task:
         self.restart()
 
     @classmethod
-    def create(cls, trigger: "BaseTrigger") -> Callable[[Callable], "Task"]:
+    def create(cls, trigger: BaseTrigger) -> Callable[[Callable], "Task"]:
         """
         A decorator to create a task.
 
