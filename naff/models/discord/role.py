@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 
 import attrs
 
-from naff.client.const import MISSING, Absent, T
+from naff.client.const import MISSING, Absent, T, Missing
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.serializer import dict_filter_missing
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("Role",)
 
 
-def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool:
+def sentinel_converter(value: Optional[bool | T], sentinel: T = attrs.NOTHING) -> bool | T:
     if value is sentinel:
         return False
     elif value is None:
@@ -107,7 +107,7 @@ class Role(DiscordObject):
     @property
     def guild(self) -> "Guild":
         """The guild object this role is from."""
-        return self._client.cache.get_guild(self._guild_id)
+        return self._client.cache.get_guild(self._guild_id)  # pyright: ignore [reportGeneralTypeIssues]
 
     @property
     def default(self) -> bool:
@@ -155,7 +155,7 @@ class Role(DiscordObject):
         """
         return (self.default or self.guild.me.top_role > self) and not self.managed
 
-    async def delete(self, reason: str = None) -> None:
+    async def delete(self, reason: str | Missing = MISSING) -> None:
         """
         Delete this role.
 
@@ -195,5 +195,6 @@ class Role(DiscordObject):
         )
 
         r_data = await self._client.http.modify_guild_role(self._guild_id, self.id, payload)
+        r_data = dict(r_data)  # to convert typed dict to regular dict
         r_data["guild_id"] = self._guild_id
         return self.from_dict(r_data, self._client)

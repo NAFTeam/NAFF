@@ -36,6 +36,7 @@ plugins = "naff.ext.mypy"
 
 [tool.pyright]
 useLibraryCodeForTypes = true
+reportMissingImports = false
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
