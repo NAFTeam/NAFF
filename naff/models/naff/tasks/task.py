@@ -2,11 +2,13 @@ import asyncio
 import inspect
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
-from typing import Callable, Optional
+from typing import Callable, TYPE_CHECKING
 
 import naff
-from naff.client.const import logger, MISSING
-from .triggers import BaseTrigger
+from naff.client.const import logger
+
+if TYPE_CHECKING:
+    from .triggers import BaseTrigger
 
 
 __all__ = ("Task",)
@@ -27,30 +29,49 @@ class Task:
     """
 
     callback: Callable
-    trigger: BaseTrigger
-    task: _Task
+    trigger: "BaseTrigger"
+    task: _Task | None
     _stop: asyncio.Event
     iteration: int
 
-    def __init__(self, callback: Callable, trigger: BaseTrigger) -> None:
+    def __init__(self, callback: Callable, trigger: "BaseTrigger") -> None:
         self.callback = callback
         self.trigger = trigger
         self._stop = asyncio.Event()
-        self.task = MISSING
+        self.task = None
         self.iteration = 0
 
     @property
-    def next_run(self) -> Optional[datetime]:
-        """Get the next datetime this task will run."""
-        if not self.task.done():
-            return self.trigger.next_fire()
-        return None
+    def started(self) -> bool:
+        """Whether the task is started"""
+        return self.task is not None
 
     @property
-    def delta_until_run(self) -> Optional[timedelta]:
+    def running(self) -> bool:
+        """Whether the task is running"""
+        return self.task is not None and not self.task.done()
+
+    @property
+    def done(self) -> bool:
+        """Whether the task is done/finished"""
+        return self.task is not None and self.task.done()
+
+    @property
+    def next_run(self) -> datetime | None:
+        """Get the next datetime this task will run."""
+        if not self.running:
+            return None
+
+        return self.trigger.next_fire()
+
+    @property
+    def delta_until_run(self) -> timedelta | None:
         """Get the time until the next run of this task."""
-        if not self.task.done():
-            return self.next_run - datetime.now()
+        if not self.running:
+            return None
+
+        next_run = self.next_run
+        return next_run - datetime.now() if next_run is not None else None
 
     def on_error(self, error: Exception) -> None:
         """Error handler for this task. Called when an exception is raised during execution of the task."""
@@ -108,7 +129,7 @@ class Task:
         self.stop()
         self.start()
 
-    def reschedule(self, trigger: BaseTrigger) -> None:
+    def reschedule(self, trigger: "BaseTrigger") -> None:
         """
         Change the trigger being used by this task.
 
@@ -120,7 +141,7 @@ class Task:
         self.restart()
 
     @classmethod
-    def create(cls, trigger: BaseTrigger) -> Callable[[Callable], "Task"]:
+    def create(cls, trigger: "BaseTrigger") -> Callable[[Callable], "Task"]:
         """
         A decorator to create a task.
 
