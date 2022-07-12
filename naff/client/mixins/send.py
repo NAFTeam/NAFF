@@ -28,7 +28,12 @@ class SendMixin:
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[Iterable[Iterable[Union["BaseComponent", dict]]], Iterable[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
         ] = None,
         stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
