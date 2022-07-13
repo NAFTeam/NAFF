@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class GuildRequests(CanRequest):
     async def get_guilds(
-        self, limit: int = 200, before: "Snowflake_Type" | None = None, after: "Snowflake_Type" | None = None
+        self, limit: int = 200, before: "Snowflake_Type | None" = None, after: "Snowflake_Type | None" = None
     ) -> list[discord_typings.GuildData]:
         """
         Get a list of partial guild objects the current user is a member of req. `guilds` scope.
@@ -205,8 +205,8 @@ class GuildRequests(CanRequest):
     async def get_guild_bans(
         self,
         guild_id: "Snowflake_Type",
-        before: "Snowflake_Type" | None = None,
-        after: "Snowflake_Type" | None = None,
+        before: "Snowflake_Type | None" = None,
+        after: "Snowflake_Type | None" = None,
         limit: int = 1000,
     ) -> list[discord_typings.BanData]:
         """
@@ -427,10 +427,10 @@ class GuildRequests(CanRequest):
     async def get_audit_log(
         self,
         guild_id: "Snowflake_Type",
-        user_id: "Snowflake_Type" | None = None,
-        action_type: "AuditLogEventType" | None = None,
-        before: "Snowflake_Type" | None = None,
-        after: "Snowflake_Type" | None = None,
+        user_id: "Snowflake_Type | None" = None,
+        action_type: "AuditLogEventType | None" = None,
+        before: "Snowflake_Type | None" = None,
+        after: "Snowflake_Type | None" = None,
         limit: int = 100,
     ) -> discord_typings.AuditLogData:
         """
@@ -591,7 +591,7 @@ class GuildRequests(CanRequest):
         return cast(list[discord_typings.ChannelData], result)
 
     async def modify_guild_widget(
-        self, guild_id: "Snowflake_Type", enabled: bool | None = None, channel_id: "Snowflake_Type" | None = None
+        self, guild_id: "Snowflake_Type", enabled: bool | None = None, channel_id: "Snowflake_Type | None" = None
     ) -> discord_typings.GuildWidgetData:
         """
         Modify a guild widget.
@@ -698,9 +698,9 @@ class GuildRequests(CanRequest):
         explicit_content_filter: int | None = None,
         roles: list[dict] | None = None,
         channels: list[dict] | None = None,
-        afk_channel_id: "Snowflake_Type" | None = None,
+        afk_channel_id: "Snowflake_Type | None" = None,
         afk_timeout: int | None = None,
-        system_channel_id: "Snowflake_Type" | None = None,
+        system_channel_id: "Snowflake_Type | None" = None,
         system_channel_flags: int | None = None,
     ) -> discord_typings.GuildData:
 
