@@ -1,7 +1,7 @@
 import asyncio
 import textwrap
 import uuid
-from typing import List, TYPE_CHECKING, Optional, Callable, Coroutine, Union
+from typing import Iterable, List, TYPE_CHECKING, Optional, Callable, Coroutine, Sequence, Union
 
 from naff import (
     Embed,
@@ -81,7 +81,7 @@ class Paginator:
 
     page_index: int = field(kw_only=True, default=0)
     """The index of the current page being displayed"""
-    pages: List[Page | Embed] = field(factory=list, kw_only=True)
+    pages: Sequence[Page | Embed] = field(factory=list, kw_only=True)
     """The pages this paginator holds"""
     timeout_interval: int = field(default=0, kw_only=True)
     """How long until this paginator disables itself"""
@@ -416,3 +416,4 @@ class Paginator:
             else:
                 # silently ignore
                 return await ctx.defer(edit_origin=True)
+        return None
