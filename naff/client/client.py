@@ -19,6 +19,7 @@ from typing import (
     Mapping,
     NoReturn,
     Optional,
+    Sequence,
     Type,
     Union,
     overload,
@@ -1137,7 +1138,7 @@ class Client(
                     )
 
     async def synchronise_interactions(
-        self, *, scopes: list["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
+        self, *, scopes: Sequence["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
     ) -> None:
         """
         Synchronise registered interactions with discord.

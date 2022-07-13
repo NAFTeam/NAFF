@@ -21,7 +21,7 @@ These are events dispatched by Discord. This is intended as a reference so you k
 
 """
 
-from typing import TYPE_CHECKING, List, Union, Optional
+from typing import TYPE_CHECKING, List, Sequence, Union, Optional
 
 import naff.models
 from naff.client.const import MISSING, Absent
@@ -194,7 +194,7 @@ class ThreadDelete(ThreadCreate):
 class ThreadListSync(BaseEvent):
     """Dispatched when gaining access to a channel, contains all active threads in that channel."""
 
-    channel_ids: List["Snowflake_Type"] = field()
+    channel_ids: Sequence["Snowflake_Type"] = field()
     """The parent channel ids whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data."""
     threads: List["BaseChannel"] = field()
     """all active threads in the given channels that the current user can access"""

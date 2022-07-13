@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Iterator
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Union, Iterator
 
 import attrs
 
@@ -240,7 +240,7 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: List[Union[dict, Select, Button]] = field(repr=True, factory=list)
+    components: Sequence[Union[dict, Select, Button]] = field(repr=True, factory=list)
     type: Union[ComponentTypes, int] = field(
         default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
