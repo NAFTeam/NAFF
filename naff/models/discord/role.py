@@ -46,8 +46,8 @@ class Role(DiscordObject):
     _icon: Asset | None = field(default=None)
     _unicode_emoji: PartialEmoji | None = field(default=None, converter=optional_c(PartialEmoji.from_str))
     _guild_id: "Snowflake_Type" = field()
-    _bot_id: "Snowflake_Type" | None = field(default=None)
-    _integration_id: "Snowflake_Type" | None = field(default=None)  # todo integration object?
+    _bot_id: "Snowflake_Type | None" = field(default=None)
+    _integration_id: "Snowflake_Type | None" = field(default=None)  # todo integration object?
 
     def __lt__(self: "Role", other: "Role") -> bool:
         if not isinstance(self, Role) or not isinstance(other, Role):
@@ -80,7 +80,7 @@ class Role(DiscordObject):
 
         return data
 
-    async def fetch_bot(self) -> "Member" | None:
+    async def fetch_bot(self) -> "Member | None":
         """
         Fetch the bot associated with this role if any.
 
@@ -92,7 +92,7 @@ class Role(DiscordObject):
             return None
         return await self._client.cache.fetch_member(self._guild_id, self._bot_id)
 
-    def get_bot(self) -> "Member" | None:
+    def get_bot(self) -> "Member | None":
         """
         Get the bot associated with this role if any.
 
