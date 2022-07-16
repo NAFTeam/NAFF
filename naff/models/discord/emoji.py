@@ -6,6 +6,7 @@ from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import list_converter
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.serializer import dict_filter_none, no_export_meta
+from naff.models.discord.base import ClientObject
 from naff.models.discord.snowflake import SnowflakeObject, to_snowflake
 
 if TYPE_CHECKING:
@@ -87,7 +88,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
 
 
 @define()
-class CustomEmoji(PartialEmoji):
+class CustomEmoji(PartialEmoji, ClientObject):
     """Represent a custom emoji in a guild with all its properties."""
 
     _client: "Client" = field(metadata=no_export_meta)
