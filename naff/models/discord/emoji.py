@@ -58,10 +58,11 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
         """
         parsed = emoji_regex.findall(emoji_str)
         if parsed:
-            if len(parsed[0]) == 3:
-                return cls(name=parsed[0][1], id=parsed[0][2], animated=True)
+            parsed = tuple(filter(None, parsed[0]))
+            if len(parsed) == 3:
+                return cls(name=parsed[1], id=parsed[2], animated=True)
             else:
-                return cls(name=parsed[0][0], id=parsed[0][1])
+                return cls(name=parsed[0], id=parsed[1])
         else:
             return cls(name=emoji_str)
 
