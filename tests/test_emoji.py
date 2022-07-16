@@ -1,4 +1,4 @@
-from naff.models.discord.emoji import PartialEmoji, process_emoji_req_format, process_emoji
+from naff.models.discord.emoji import PartialEmoji, process_emoji, process_emoji_req_format
 
 __all__ = ()
 
@@ -30,7 +30,7 @@ def test_emoji_formatting() -> None:
 
 def test_emoji_processing() -> None:
     raw_sample = "<:sparklesnek:910496037708374016>"
-    dict_sample = {"id": 910496037708374016, "name": "sparklesnek", "animated": True}
+    dict_sample = {"id": 910496037708374016, "name": "sparklesnek", "animated": False}
     unicode_sample = "👍"
     target = "sparklesnek:910496037708374016"
 
@@ -45,3 +45,12 @@ def test_emoji_processing() -> None:
     assert isinstance(raw_emoji, dict) and raw_emoji == dict_sample
     assert isinstance(dict_emoji, dict) and dict_emoji == dict_sample
     assert isinstance(unicode_emoji, dict) and unicode_emoji == {"name": "👍", "animated": False}
+
+    from_str = PartialEmoji.from_str(raw_sample)
+    assert from_str.req_format == target
+    assert from_str.id == 910496037708374016
+    assert from_str.name == "sparklesnek"
+    assert from_str.animated is False
+    assert str(from_str) == raw_sample
+
+    assert PartialEmoji.from_str("<a:sparklesnek:910496037708374016>").animated is True

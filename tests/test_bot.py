@@ -480,6 +480,12 @@ async def test_emoji(bot: Client, guild: Guild) -> None:
         assert emoji.animated == fetched_emoji.animated
         ensure_attributes(emoji)
         ensure_attributes(fetched_emoji)
+
+        await emoji.edit(name="testEditedName")
+        await asyncio.sleep(1)
+        fetched_emoji = await bot.fetch_custom_emoji(emoji.id, guild.id)
+        assert fetched_emoji.name == "testEditedName"
+
     finally:
         if emoji:
             await emoji.delete()
