@@ -422,7 +422,7 @@ async def test_webhooks(bot: Client, guild: Guild) -> None:
 @pytest.mark.asyncio
 async def test_voice(bot: Client, guild: Guild) -> None:
     try:
-        import pynacl  # noqa
+        import nacl  # noqa
     except ImportError:
         # testing on a non-voice extra
         return
