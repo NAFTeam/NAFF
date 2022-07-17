@@ -40,6 +40,8 @@ from naff.client.errors import NotFound
 
 __all__ = ()
 
+from tests.utils import generate_dummy_context
+
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
@@ -489,3 +491,39 @@ async def test_emoji(bot: Client, guild: Guild) -> None:
     finally:
         if emoji:
             await emoji.delete()
+
+
+@pytest.mark.asyncio
+async def test_checks(bot: Client, guild: Guild) -> None:
+    user_id = 123456789012345678
+
+    is_owner = naff.is_owner()
+    assert await is_owner(generate_dummy_context(user_id=bot.owner.id, client=bot)) is True
+    assert await is_owner(generate_dummy_context(user_id=user_id, client=bot)) is False
+
+    has_id = naff.has_id(user_id)
+    assert await has_id(generate_dummy_context(user_id=user_id, client=bot)) is True
+    assert await has_id(generate_dummy_context(user_id=bot.owner.id, client=bot)) is False
+
+    guild_only = naff.guild_only()
+    assert await guild_only(generate_dummy_context(guild_id=guild.id, client=bot)) is True
+    assert await guild_only(generate_dummy_context(dm=True)) is False
+
+    dm_only = naff.dm_only()
+    assert await dm_only(generate_dummy_context(guild_id=guild.id, client=bot)) is False
+    assert await dm_only(generate_dummy_context(dm=True)) is True
+
+    member = bot.get_member(bot.app.id, guild.id)
+    has_role = await guild.create_role(name="has_role")
+    lacks_role = await guild.create_role(name="lacks_role")
+    await member.add_role(has_role)
+
+    context = generate_dummy_context(guild_id=guild.id, client=bot)
+    context.author = member
+    assert await naff.has_role(has_role)(context) is True
+    assert await naff.has_role(lacks_role)(context) is False
+    assert await naff.has_role(has_role)(generate_dummy_context(dm=True)) is False
+
+    assert await naff.has_any_role(has_role)(context) is True
+    assert await naff.has_any_role(lacks_role)(context) is False
+    assert await naff.has_any_role(has_role)(generate_dummy_context(dm=True)) is False

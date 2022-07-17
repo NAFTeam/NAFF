@@ -9,9 +9,11 @@ def generate_dummy_context(
     channel_id: Snowflake_Type | None = None,
     guild_id: Snowflake_Type | None = None,
     message_id: Snowflake_Type | None = None,
+    dm: bool = False,
+    client: Client | None = None,
 ) -> Context:
     """Generates a dummy context for testing."""
-    client = Client()
+    client = Client() if client is None else client
     author = SAMPLE_USER_DATA()
     channel = SAMPLE_CHANNEL_DATA()
     message = SAMPLE_MESSAGE_DATA()
@@ -29,9 +31,14 @@ def generate_dummy_context(
     if guild_id is not None:
         channel["guild_id"] = guild_id
 
+    if dm:
+        channel["guild_id"] = None
+        guild_id = None
+
     return Context(
         author=User.from_dict(author, client),
         channel=BaseChannel.from_dict(channel, client),
         guild_id=guild_id,
         message=Message.from_dict(message, client),
+        client=client,
     )
