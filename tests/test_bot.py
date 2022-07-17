@@ -45,12 +45,12 @@ if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def event_loop() -> AbstractEventLoop:
     return asyncio.get_event_loop()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def bot() -> Client:
     bot = naff.Client(activity="Testing someones code")
     await bot.login(TOKEN)
@@ -61,7 +61,7 @@ async def bot() -> Client:
     yield bot
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def guild(bot) -> Guild:
     guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
     community_channel = await guild.create_text_channel("community_channel")
@@ -80,7 +80,7 @@ async def guild(bot) -> Guild:
     await guild.delete()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def channel(bot, guild) -> GuildText:
     channel = await guild.create_text_channel("test_scene")
     return channel
