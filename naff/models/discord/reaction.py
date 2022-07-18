@@ -83,7 +83,7 @@ class Reaction(ClientObject):
     @property
     def message(self) -> "Message":
         """The message this reaction is on."""
-        return self._client.cache.get_message((self._channel_id, self._message_id))
+        return self._client.cache.get_message(self._channel_id, self._message_id)
 
     @property
     def channel(self) -> "TYPE_ALL_CHANNEL":
