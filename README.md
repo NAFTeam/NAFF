@@ -3,7 +3,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![black-formatted](https://img.shields.io/github/workflow/status/Discord-Snake-Pit/dis-snek/black-action/master?label=Black%20Format&logo=github)](https://github.com/Discord-Snake-Pit/Dis-Snek/actions/workflows/black.yml)
 [![CodeQL](https://img.shields.io/github/workflow/status/Discord-Snake-Pit/dis-snek/CodeQL/master?label=CodeQL&logo=Github)](https://github.com/Discord-Snake-Pit/Dis-Snek/actions/workflows/codeql-analysis.yml)
-[![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/dis-snek)
+[![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/naff)
 [![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
 
 # What is this?
@@ -49,7 +49,7 @@ bot.start("TOKEN")
 ```
 For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/naff).
 
-If you get stuck join our [Discord server](https://discord.gg/dis-snek).
+If you get stuck join our [Discord server](https://discord.gg/naff).
 
 
 ## "Can I contribute to this project?"
