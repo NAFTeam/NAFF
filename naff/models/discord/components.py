@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Union, Iterator
+from typing import Any, Dict, Iterator, List, Optional, Sequence, TYPE_CHECKING, Union
 
 import attrs
 
