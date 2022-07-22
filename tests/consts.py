@@ -56,4 +56,5 @@ def SAMPLE_GUILD_DATA() -> discord_typings.GuildData:
         "public_updates_channel_id": None,
         "nsfw_level": 0,
         "stickers": [],
+        "premium_progress_bar_enabled": False,
     }

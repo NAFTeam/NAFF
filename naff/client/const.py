@@ -145,7 +145,7 @@ class Sentinel(metaclass=Singleton):
 
 class GlobalScope(Sentinel, int):
     def __getattr__(self, _) -> "GlobalScope":
-        return 0
+        return 0  # type: ignore
 
     def __hash__(self) -> int:
         return 0
