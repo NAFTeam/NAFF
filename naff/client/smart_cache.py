@@ -802,6 +802,9 @@ class GlobalCache:
         Args:
             state: The voice state to cache
         """
+        if state._guild_id is None:
+            return
+
         # noinspection PyProtectedMember
         self.bot_voice_state_cache[to_snowflake(state._guild_id)] = state
 
