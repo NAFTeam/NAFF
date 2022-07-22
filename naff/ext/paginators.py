@@ -1,7 +1,7 @@
 import asyncio
 import textwrap
 import uuid
-from typing import Iterable, List, TYPE_CHECKING, Optional, Callable, Coroutine, Sequence, Union
+from typing import Callable, Coroutine, List, Optional, Sequence, TYPE_CHECKING, Union
 
 from naff import (
     Embed,
