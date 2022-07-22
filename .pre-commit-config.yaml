@@ -41,11 +41,11 @@ repos:
           - flake8-dunder-all
         language_version: python3.10
 
-  - repo: https://github.com/kumaraditya303/mirrors-pyright
-    rev: "v1.1.258"
-    hooks:
-      - id: pyright
-        args: [--warnings]
+  # - repo: https://github.com/kumaraditya303/mirrors-pyright
+  #   rev: "v1.1.258"
+  #   hooks:
+  #     - id: pyright
+  #       args: [--warnings]
 
 ci:
   autoupdate_branch: 'dev'
