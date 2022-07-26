@@ -43,7 +43,7 @@ __all__ = (
     "process_message_payload",
 )
 
-channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
+channel_mention = re.compile(r"<#(?P<id>[0-9]{17,})>")
 
 
 @define()
