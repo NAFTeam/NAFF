@@ -182,8 +182,16 @@ class Audio(BaseAudio):
                     self.buffer.initialised.set()
                 time.sleep(0.1)
 
-    def pre_buffer(self) -> None:
-        """Start pre-buffering the audio."""
+    def pre_buffer(self, duration: None | float = None) -> None:
+        """
+        Start pre-buffering the audio.
+
+        Args:
+            duration: The duration of audio to pre-buffer.
+        """
+        if duration:
+            self.buffer_seconds = duration
+
         if self.process and self.process.poll() is None:
             raise RuntimeError("Cannot pre-buffer an already running process")
         # sanity value enforcement to prevent audio weirdness
