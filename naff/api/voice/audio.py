@@ -134,7 +134,7 @@ class Audio(BaseAudio):
                 return False
         return True
 
-    def _create_process(self) -> None:
+    def _create_process(self, *, block: bool = True) -> None:
         before = (
             self.ffmpeg_before_args if isinstance(self.ffmpeg_before_args, list) else self.ffmpeg_before_args.split()
         )
@@ -162,8 +162,9 @@ class Audio(BaseAudio):
         )
         self.read_ahead_task.start()
 
-        # block until some data is in the buffer
-        self.buffer.initialised.wait()
+        if block:
+            # block until some data is in the buffer
+            self.buffer.initialised.wait()
 
     def _read_ahead(self) -> None:
         while self.process:
@@ -181,6 +182,16 @@ class Audio(BaseAudio):
                     self.buffer.initialised.set()
                 time.sleep(0.1)
 
+    def pre_buffer(self) -> None:
+        """Start pre-buffering the audio."""
+        if self.process and self.process.poll() is None:
+            raise RuntimeError("Cannot pre-buffer an already running process")
+        # sanity value enforcement to prevent audio weirdness
+        self.buffer = AudioBuffer()
+        self.buffer.initialised.clear()
+
+        self._create_process(block=False)
+
     def read(self, frame_size: int) -> bytes:
         """
         Reads frame_size bytes of audio from the buffer.
@@ -190,6 +201,9 @@ class Audio(BaseAudio):
         """
         if not self.process:
             self._create_process()
+        if not self.buffer.initialised.is_set():
+            # we cannot start playing until the buffer is initialised
+            self.buffer.initialised.wait()
 
         data = self.buffer.read(frame_size)
 

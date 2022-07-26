@@ -84,10 +84,7 @@ class Player(threading.Thread):
         """Start playing."""
         self._stop_event.clear()
         self._resume.set()
-        try:
-            self.start()
-        finally:
-            self.current_audio.cleanup()
+        self.start()
 
     def run(self) -> None:
         """The main player loop to send audio to the voice websocket."""
