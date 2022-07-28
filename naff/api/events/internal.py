@@ -163,9 +163,11 @@ class Button(Component):
 class Select(Component):
     """Dispatched when a user uses a Select."""
 
+
 @define(kw_only=False)
 class Error(BaseEvent):
     """Dispatched when the library encounters an error."""
+
     source: str
     error: Exception
     args: tuple[Any] = field(factory=tuple)

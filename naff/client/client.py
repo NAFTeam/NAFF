@@ -460,7 +460,7 @@ class Client(
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                if isinstance(event, events.Error): 
+                if isinstance(event, events.Error):
                     # No infinite loops please
                     self.default_error_handler(repr(event), e)
                 else:
@@ -608,13 +608,15 @@ class Client(
         Override this to change error handling behavior
 
         """
-        return self.dispatch(events.Error(
-            f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
-            error,
-            args,
-            kwargs,
-            ctx
-        ))
+        return self.dispatch(
+            events.Error(
+                f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
+                error,
+                args,
+                kwargs,
+                ctx,
+            )
+        )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
         """
