@@ -460,7 +460,11 @@ class Client(
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                await self.on_error(event, e)
+                if isinstance(event, events.Error): 
+                    # No infinite loops please
+                    self.default_error_handler(repr(event), e)
+                else:
+                    self.dispatch(events.Error(repr(event), e))
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
@@ -490,6 +494,10 @@ class Client(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
+    @Listener.create()
+    async def _on_error(self, event: events.Error) -> None:
+        self.on_error(event.source, event.error, *event.args, **event.kwargs)
+
     async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by the library.
@@ -510,7 +518,7 @@ class Client(
         Override this to change error handling behavior
 
         """
-        await self.on_error(f"cmd /`{ctx.invoke_target}`", error, *args, **kwargs)
+        self.dispatch(events.Error(f"cmd /`{ctx.invoke_target}`", error, args, kwargs, ctx))
         try:
             if isinstance(error, errors.CommandOnCooldown):
                 await ctx.send(
@@ -537,7 +545,8 @@ class Client(
                 )
             elif self.send_command_tracebacks:
                 out = "".join(traceback.format_exception(error))
-                out = out.replace(self.http.token, "[REDACTED TOKEN]")
+                if self.http.token is not None:
+                    out = out.replace(self.http.token, "[REDACTED TOKEN]")
                 await ctx.send(
                     embeds=Embed(
                         title=f"Error: {type(error).__name__}",
@@ -575,7 +584,7 @@ class Client(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"Component Callback for {ctx.custom_id}", error, *args, **kwargs)
+        return self.dispatch(events.Error(f"Component Callback for {ctx.custom_id}", error, args, kwargs, ctx))
 
     async def on_component(self, ctx: ComponentContext) -> None:
         """
@@ -599,12 +608,13 @@ class Client(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(
+        return self.dispatch(events.Error(
             f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
             error,
-            *args,
-            **kwargs,
-        )
+            args,
+            kwargs,
+            ctx
+        ))
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
         """
@@ -667,7 +677,7 @@ class Client(
             try:
                 await asyncio.gather(*self.async_startup_tasks)
             except Exception as e:
-                await self.on_error("async-extension-loader", e)
+                self.dispatch(events.Error("async-extension-loader", e))
 
         # cache slash commands
         if not self._startup:
@@ -1081,7 +1091,7 @@ class Client(
             else:
                 await self._cache_interactions(warn_missing=False)
         except Exception as e:
-            await self.on_error("Interaction Syncing", e)
+            self.dispatch(events.Error("Interaction Syncing", e))
 
     async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
