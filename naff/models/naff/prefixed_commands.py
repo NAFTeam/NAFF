@@ -480,17 +480,16 @@ class PrefixedCommand(BaseCommand):
         """
         cmd.parent = self  # just so we know this is a subcommand
 
-        cmd_names = frozenset(self.subcommands)
-        if cmd.name in cmd_names:
+        if self.subcommands.get(cmd.name):
             raise ValueError(
-                f"Duplicate Command! Multiple commands share the name/alias `{self.qualified_name} {cmd.name}`"
+                f"Duplicate command! Multiple commands share the name/alias: {self.qualified_name} {cmd.name}."
             )
         self.subcommands[cmd.name] = cmd
 
         for alias in cmd.aliases:
-            if alias in cmd_names:
+            if self.subcommands.get(alias):
                 raise ValueError(
-                    f"Duplicate Command! Multiple commands share the name/alias `{self.qualified_name} {cmd.name}`"
+                    f"Duplicate command! Multiple commands share the name/alias: {self.qualified_name} {cmd.name}."
                 )
             self.subcommands[alias] = cmd
 
