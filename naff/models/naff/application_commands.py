@@ -206,6 +206,23 @@ class InteractionCommand(BaseCommand):
 
         return data
 
+    def mention(self, scope: Optional["Snowflake_Type"] = None) -> str:
+        """
+        Returns a string that would mention the interaction.
+
+        Args:
+            scope: If the command is available in multiple scope, specify which scope to get the mention for. Defaults to the first available one if not specified.
+
+        Returns:
+            The markdown mention.
+        """
+        if scope:
+            cmd_id = self.get_cmd_id(scope=scope)
+        else:
+            cmd_id = list(self.cmd_id.values())[0]
+
+        return f"</{self.resolved_name}:{cmd_id}>"
+
     @property
     def resolved_name(self) -> str:
         """A representation of this interaction's name."""

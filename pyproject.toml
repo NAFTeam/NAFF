@@ -2,7 +2,7 @@
 name = "naff"
 version = "1.6.0"
 description = "Not another freaking fork"
-authors = ["LordOfPolls <lordofpolls.dev@gmail.com>"]
+authors = ["LordOfPolls <naff@lordofpolls.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"

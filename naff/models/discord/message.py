@@ -43,7 +43,7 @@ __all__ = (
     "process_message_payload",
 )
 
-channel_mention = re.compile(r"<#(?P<id>[0-9]{17,18})>")
+channel_mention = re.compile(r"<#(?P<id>[0-9]{17,})>")
 
 
 @define()
@@ -482,7 +482,7 @@ class Message(BaseMessage):
                 )
                 rule = self.embeds[0].fields[0].value  # What rule was triggered
                 channel = self.embeds[0].fields[1].value  # Channel that the action took place in
-                return f'AutoMod has blocked a message. "{message_content}" from {self.author.mention} in <#{channel}>. Rule: {rule}.'
+                return f'AutoMod has blocked a message in <#{channel}>. "{message_content}" from {self.author.mention}. Rule: {rule}.'
             case _:
                 return None
 
