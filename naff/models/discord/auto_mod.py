@@ -294,7 +294,7 @@ class AutoModerationAction(ClientObject):
     @classmethod
     def _process_dict(cls, data: dict, client: "Client") -> dict:
         data = super()._process_dict(data, client)
-        data["action"] = BaseAction.from_dict_factory(data["action"], client)
+        data["action"] = BaseAction.from_dict_factory(data["action"])
         return data
 
     @property
