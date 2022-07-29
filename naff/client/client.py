@@ -993,12 +993,12 @@ class Client(
         command._parse_parameters()
 
         if self.prefixed_commands.get(command.name):
-            raise ValueError("Duplicate command! Multiple commands share the name/alias:" f" {command.name}.")
+            raise ValueError(f"Duplicate command! Multiple commands share the name/alias: {command.name}.")
         self.prefixed_commands[command.name] = command
 
         for alias in command.aliases:
             if self.prefixed_commands.get(alias):
-                raise ValueError("Duplicate command! Multiple commands share the name/alias:" f" {alias}.")
+                raise ValueError(f"Duplicate command! Multiple commands share the name/alias: {alias}.")
             self.prefixed_commands[alias] = command
 
     def add_component_callback(self, command: ComponentCommand) -> None:
