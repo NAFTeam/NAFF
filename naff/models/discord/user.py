@@ -387,7 +387,7 @@ class Member(DiscordObject, _SendDMMixin):
             If `member` has both permissions, `True` gets returned.
 
         Args:
-            permissions: The permission(s) to check whether the user has it.
+            *permissions: The permission(s) to check whether the user has it.
 
         """
         # Get the user's permissions
@@ -515,7 +515,7 @@ class Member(DiscordObject, _SendDMMixin):
         Checks if the user has the given role(s).
 
         Args:
-            roles: The role(s) to check whether the user has it.
+            *roles: The role(s) to check whether the user has it.
 
         """
         return all(to_snowflake(role) in self._role_ids for role in roles)
