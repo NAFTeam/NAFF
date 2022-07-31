@@ -168,8 +168,8 @@ class Select(Component):
 class Error(BaseEvent):
     """Dispatched when the library encounters an error."""
 
-    source: str
-    error: Exception
+    source: str = field(metadata=docs("The source of the error"))
+    error: Exception = field(metadata=docs("The error that was encountered"))
     args: tuple[Any] = field(factory=tuple)
     kwargs: dict[str, Any] = field(factory=dict)
-    ctx: Optional["Context"] = field(default=None)
+    ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))
