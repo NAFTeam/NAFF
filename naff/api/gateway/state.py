@@ -188,7 +188,7 @@ class ConnectionState:
         return self.client.cache.get_bot_voice_state(guild_id)
 
     async def voice_connect(
-        self, guild_id, channel_id, muted: bool = False, deafened: bool = False
+        self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
     ) -> "naff.ActiveVoiceState":
         """
         Connect to a voice channel.
