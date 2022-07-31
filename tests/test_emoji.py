@@ -1,4 +1,4 @@
-from naff.models.discord.emoji import PartialEmoji
+from naff.models.discord.emoji import PartialEmoji, process_emoji, process_emoji_req_format
 
 __all__ = ()
 
@@ -15,3 +15,42 @@ def test_emoji_comparisons() -> None:
     assert not e == custom_emoji
     assert e.name == "sparklesnek"
     assert e.id == 910496037708374016
+
+
+def test_emoji_formatting() -> None:
+    sample = "<:sparklesnek:910496037708374016>"
+    target = "sparklesnek:910496037708374016"
+
+    emoji = PartialEmoji.from_str(sample)
+
+    assert emoji.req_format == target
+    assert process_emoji_req_format(sample) == target
+    assert process_emoji_req_format({"id": 910496037708374016, "name": "sparklesnek", "animated": True}) == target
+
+
+def test_emoji_processing() -> None:
+    raw_sample = "<:sparklesnek:910496037708374016>"
+    dict_sample = {"id": 910496037708374016, "name": "sparklesnek", "animated": False}
+    unicode_sample = "👍"
+    target = "sparklesnek:910496037708374016"
+
+    assert process_emoji_req_format(raw_sample) == target
+    assert process_emoji_req_format(dict_sample) == target
+    assert process_emoji_req_format(unicode_sample) == unicode_sample
+
+    raw_emoji = process_emoji(raw_sample)
+    dict_emoji = process_emoji(dict_sample)
+    unicode_emoji = process_emoji(unicode_sample)
+
+    assert isinstance(raw_emoji, dict) and raw_emoji == dict_sample
+    assert isinstance(dict_emoji, dict) and dict_emoji == dict_sample
+    assert isinstance(unicode_emoji, dict) and unicode_emoji == {"name": "👍", "animated": False}
+
+    from_str = PartialEmoji.from_str(raw_sample)
+    assert from_str.req_format == target
+    assert from_str.id == 910496037708374016
+    assert from_str.name == "sparklesnek"
+    assert from_str.animated is False
+    assert str(from_str) == raw_sample
+
+    assert PartialEmoji.from_str("<a:sparklesnek:910496037708374016>").animated is True

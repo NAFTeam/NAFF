@@ -27,6 +27,24 @@ def SAMPLE_DM_DATA() -> discord_typings.DMChannelData:
     }
 
 
+def SAMPLE_CHANNEL_DATA() -> discord_typings.ChannelData:
+    return {
+        "id": "123456789012345678",
+        "type": 0,
+        "guild_id": "123456789012345670",
+        "name": "test_channel",
+        "topic": "",
+        "position": 0,
+        "permission_overwrites": [],
+        "bitrate": 0,
+        "user_limit": 0,
+        "rate_limit_per_user": 0,
+        "last_message_id": None,
+        "permissions": 0,
+        "nsfw": False,
+    }
+
+
 def SAMPLE_GUILD_DATA() -> discord_typings.GuildData:
     return {
         "id": "123456789012345670",
@@ -56,4 +74,37 @@ def SAMPLE_GUILD_DATA() -> discord_typings.GuildData:
         "public_updates_channel_id": None,
         "nsfw_level": 0,
         "stickers": [],
+    }
+
+
+def SAMPLE_MESSAGE_DATA() -> discord_typings.MessageCreateData:
+    return {
+        "id": "123456789012345678",
+        "channel_id": "123456789012345678",
+        "author": SAMPLE_USER_DATA(),
+        "content": "test_message",
+        "timestamp": "2022-07-16T20:56:55.999419+01:00",
+        "edited_timestamp": None,
+        "tts": False,
+        "mention_everyone": False,
+        "mentions": [SAMPLE_USER_DATA()],
+        "mention_roles": [],
+        "mention_channels": [],
+        "attachments": [],
+        "embeds": [],
+        "reactions": [],
+        "nonce": None,
+        "pinned": False,
+        "webhook_id": None,
+        "type": 0,
+        "activity": None,
+        "application": None,
+        "application_id": None,
+        "message_reference": None,
+        "flags": 0,
+        "refereces_message": None,
+        # "interaction": None,
+        "thread": None,
+        "components": [],
+        "sticker_items": [],
     }
