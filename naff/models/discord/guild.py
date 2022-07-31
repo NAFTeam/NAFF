@@ -498,7 +498,7 @@ class Guild(BaseGuild):
         """
         await self.me.edit_nickname(new_nickname, reason=reason)
 
-    async def chunk_guild(self, wait=True, presences=False) -> None:
+    async def chunk_guild(self, wait: bool = True, presences: bool = False) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
 
@@ -599,7 +599,6 @@ class Guild(BaseGuild):
         Get an async iterator for the history of the audit log.
 
         Args:
-            guild (:class:`Guild`): The guild to search through.
             user_id (:class:`Snowflake_Type`): The user ID to search for.
             action_type (:class:`AuditLogEventType`): The action type to search for.
             before: get entries before this message ID
