@@ -169,7 +169,7 @@ class Paginator:
 
         Args:
             client: A reference to the NAFF client
-            embeds: The embeds to use for each page
+            *embeds: The embeds to use for each page
             timeout: A timeout to wait before closing the paginator
 
         Returns:
