@@ -41,6 +41,8 @@ class PrefixedCommandParameter:
     type: Type = attrs.field(
         default=None, metadata=docs("The type of the parameter.")
     )  # yes i can use type here, mkdocs doesnt like that
+    kind: inspect._ParameterKind = attrs.field(default=inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    """The kind of parameter this is as related to the function."""
     converters: list[Callable[["PrefixedContext", str], Any]] = attrs.field(
         factory=list, metadata=docs("A list of the converter functions for the parameter that convert to its type.")
     )
@@ -424,6 +426,7 @@ class PrefixedCommand(BaseCommand):
 
             cmd_param = PrefixedCommandParameter()
             cmd_param.name = name
+            cmd_param.kind = param.kind
             cmd_param.default = param.default if param.default is not param.empty else MISSING
 
             cmd_param.type = anno = param.annotation
@@ -641,7 +644,10 @@ class PrefixedCommand(BaseCommand):
                             break
 
                     converted, used_default = await _convert(param, ctx, arg)
-                    if not param.consume_rest:
+                    if param.kind in {
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.VAR_POSITIONAL,
+                    }:
                         new_args.append(converted)
                     else:
                         kwargs[param.name] = converted
@@ -655,7 +661,10 @@ class PrefixedCommand(BaseCommand):
                     if not param.optional:
                         raise BadArgument(f"{param.name} is a required argument that is missing.")
                     else:
-                        if not param.consume_rest:
+                        if param.kind in {
+                            inspect.Parameter.POSITIONAL_ONLY,
+                            inspect.Parameter.VAR_POSITIONAL,
+                        }:
                             new_args.append(param.default)
                         else:
                             kwargs[param.name] = param.default
