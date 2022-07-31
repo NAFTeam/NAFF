@@ -786,15 +786,12 @@ class Client(
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
         self.dispatch(events.Login())
 
-    async def astart(self, token) -> None:
+    async def astart(self, token: str) -> None:
         """
         Asynchronous method to start the bot.
 
         Args:
             token: Your bot's token
-
-        Returns:
-
         """
         await self.login(token)
         try:
@@ -802,16 +799,12 @@ class Client(
         finally:
             await self.stop()
 
-    def start(self, token) -> None:
+    def start(self, token: str) -> None:
         """
         Start the bot.
 
         info:
             This is the recommended method to start the bot
-
-        Args:
-            token: Your bot's token
-
         """
         try:
             asyncio.run(self.astart(token))
@@ -915,7 +908,7 @@ class Client(
             The context of the modal response
 
         Raises:
-            `asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+            asyncio.TimeoutError: if no response is received that satisfies the predicate before timeout seconds have passed
 
         """
         author = to_snowflake(author) if author else None
@@ -952,7 +945,7 @@ class Client(
             `Component` that was invoked. Use `.context` to get the `ComponentContext`.
 
         Raises:
-            `asyncio.TimeoutError` if timed out
+            asyncio.TimeoutError: if timed out
 
         """
         if not (messages or components):
@@ -1685,14 +1678,14 @@ class Client(
             return ext[0]
         return None
 
-    def load_extension(self, name: str, package: str = None, **load_kwargs) -> None:
+    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Mapping[str, Any]) -> None:
         """
         Load an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
-            load_kwargs: The auto-filled mapping of the load keyword arguments
+            **load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1724,14 +1717,14 @@ class Client(
                     return
                 asyncio.create_task(self.synchronise_interactions())
 
-    def unload_extension(self, name, package=None, **unload_kwargs) -> None:
+    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Mapping[str, Any]) -> None:
         """
         Unload an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
-            unload_kwargs: The auto-filled mapping of the unload keyword arguments
+            **unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1761,7 +1754,12 @@ class Client(
                 asyncio.create_task(self.synchronise_interactions())
 
     def reload_extension(
-        self, name, package=None, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
+        self,
+        name: str,
+        package: str | None = None,
+        *,
+        load_kwargs: Mapping[str, Any] = None,
+        unload_kwargs: Mapping[str, Any] = None,
     ) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.
@@ -1972,7 +1970,9 @@ class Client(
         Fetch a scheduled event by id.
 
         Args:
-            event_id: The id of the scheduled event.
+            guild_id: The ID of the guild to get the scheduled event from
+            scheduled_event_id: The ID of the scheduled event to get
+            with_user_count: Whether to include the user count in the response
 
         Returns:
             The scheduled event if found, otherwise None
