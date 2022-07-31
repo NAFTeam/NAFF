@@ -280,6 +280,7 @@ class PrefixedCommand(BaseCommand):
         metadata=docs("A dict of all subcommands for the command."), factory=dict
     )
     _usage: Optional[str] = field(default=None)
+    _inspect_signature: Optional[inspect.Signature] = field(default=None)
 
     def __attrs_post_init__(self) -> None:
         super().__attrs_post_init__()  # we want checks to work
@@ -402,13 +403,17 @@ class PrefixedCommand(BaseCommand):
         # clear out old parameters just in case
         self.parameters = []
 
-        # we don't care about the ctx or self variables
-        if self.has_binding:
-            callback = functools.partial(self.callback, None, None)
-        else:
-            callback = functools.partial(self.callback, None)
+        if not self._inspect_signature:
+            # we don't care about the ctx or self variables
+            if self.has_binding:
+                callback = functools.partial(self.callback, None, None)
+            else:
+                callback = functools.partial(self.callback, None)
 
-        params = inspect.signature(callback).parameters
+            self._inspect_signature = inspect.signature(callback)
+
+        params = self._inspect_signature.parameters
+
         # this is used by keyword-only and variable args to make sure there isn't more than one of either
         # mind you, we also don't want one keyword-only and one variable arg either
         finished_params = False
