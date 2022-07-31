@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Mapping, Any
 
 import discord_typings
 
@@ -98,14 +98,16 @@ class GuildRequests(CanRequest):
         result = await self.request(Route("GET", f"/guilds/{int(guild_id)}/roles"))
         return cast(list[discord_typings.RoleData], result)
 
-    async def modify_guild(self, guild_id: "Snowflake_Type", reason: str | None = None, **kwargs) -> None:
+    async def modify_guild(
+        self, guild_id: "Snowflake_Type", reason: str | None = None, **kwargs: Mapping[str, Any]
+    ) -> None:
         """
         Modify a guild's attributes.
 
         Args:
             guild_id: The ID of the guild we want to modify
             reason: The reason for this change
-            kwargs: The params to change
+            **kwargs: The params to change
 
         """
         expected = (
