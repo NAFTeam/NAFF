@@ -414,6 +414,7 @@ async def test_webhooks(bot: Client, guild: Guild) -> None:
         await hook.send("Test", username="Different Name", wait=True)
         await hook.send("Test", avatar_url=bot.user.avatar.url, wait=True)
         _m = await hook.send("Test", thread=test_thread, wait=True)
+        assert _m is not None
         assert _m.channel == test_thread
 
         await hook.delete()

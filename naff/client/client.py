@@ -19,6 +19,7 @@ from typing import (
     Mapping,
     NoReturn,
     Optional,
+    Sequence,
     Type,
     Union,
     overload,
@@ -97,6 +98,7 @@ from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
 from naff.models.naff.application_commands import ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.context import SendableContext
 from naff.models.naff.listener import Listener
 from naff.models.naff.tasks import Task
 
@@ -509,7 +511,7 @@ class Client(
         """
         self.default_error_handler(source, error)
 
-    async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
+    async def on_command_error(self, ctx: SendableContext, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by commands.
 
@@ -1149,7 +1151,7 @@ class Client(
                     )
 
     async def synchronise_interactions(
-        self, *, scopes: list["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
+        self, *, scopes: Sequence["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
     ) -> None:
         """
         Synchronise registered interactions with discord.

@@ -2,11 +2,11 @@ import colorsys
 import re
 from enum import Enum
 from random import randint
-from typing import Tuple, Union, Optional
 
 from naff.client.utils.attr_utils import define, field
 
 __all__ = (
+    "COLOR_TYPES",
     "Color",
     "BrandColors",
     "MaterialColors",
@@ -21,6 +21,8 @@ __all__ = (
     "process_colour",
 )
 
+COLOR_TYPES = tuple[int, int, int] | list[int] | str | int
+
 hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
 
@@ -29,11 +31,12 @@ class Color:
     value: int = field(repr=True)
     """The color value as an integer."""
 
-    def __init__(self, color=None) -> None:
+    def __init__(self, color: COLOR_TYPES | None = None) -> None:
         color = color or (0, 0, 0)
         if isinstance(color, int):
             self.value = color
         elif isinstance(color, (tuple, list)):
+            color = tuple(color)
             self.rgb = color
         elif isinstance(color, str):
             if re.match(hex_regex, color):
@@ -142,19 +145,19 @@ class Color:
         return self._get_byte(0)
 
     @property
-    def rgb(self) -> Tuple[int, int, int]:
+    def rgb(self) -> tuple[int, int, int]:
         """The red, green, blue color values in a tuple"""
         return self.r, self.g, self.b
 
     @rgb.setter
-    def rgb(self, value: Tuple[int, int, int]) -> None:
+    def rgb(self, value: tuple[int, int, int]) -> None:
         """Set the color value from a tuple of (r, g, b) values"""
         # noinspection PyTypeChecker
         r, g, b = (self.clamp(v) for v in value)
         self.value = (r << 16) + (g << 8) + b
 
     @property
-    def rgb_float(self) -> Tuple[float, float, float]:
+    def rgb_float(self) -> tuple[float, float, float]:
         """The red, green, blue color values in a tuple"""
         # noinspection PyTypeChecker
         return tuple(v / 255 for v in self.rgb)
@@ -173,7 +176,7 @@ class Color:
         self.rgb = tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
 
     @property
-    def hsv(self) -> Tuple[float, float, float]:
+    def hsv(self) -> tuple[float, float, float]:
         """The hue, saturation, value color values in a tuple"""
         return colorsys.rgb_to_hsv(*self.rgb_float)
 
@@ -297,7 +300,7 @@ class RoleColors(Color, Enum):
     DARKER_GREY = DARKER_GRAY
 
 
-def process_color(color: Optional[Union[Color, dict, tuple, list, str, int]]) -> Optional[int]:
+def process_color(color: Color | dict | COLOR_TYPES | None) -> int | None:
     """
     Process color to a format that can be used by discord.
 
@@ -309,7 +312,7 @@ def process_color(color: Optional[Union[Color, dict, tuple, list, str, int]]) ->
 
     """
     if not color:
-        return color
+        return None
     elif isinstance(color, Color):
         return color.value
     elif isinstance(color, dict):

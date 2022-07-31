@@ -2,6 +2,9 @@ import typing
 from typing import Protocol, Any, TYPE_CHECKING
 
 from naff.client.const import T_co
+from naff.api.http.route import Route
+from naff.models.discord.file import UPLOADABLE_TYPE
+
 
 if TYPE_CHECKING:
     from naff.models.naff.context import Context
@@ -26,4 +29,17 @@ class Converter(Protocol[T_co]):
         Returns:
             Any: The converted argument.
         """
+        raise NotImplementedError("Derived classes need to implement this.")
+
+
+class CanRequest(Protocol[T_co]):
+    async def request(
+        self,
+        route: Route,
+        payload: list | dict | None = None,
+        files: list[UPLOADABLE_TYPE] | None = None,
+        reason: str | None = None,
+        params: dict | None = None,
+        **kwargs: dict,
+    ) -> str | dict[str, Any] | None:
         raise NotImplementedError("Derived classes need to implement this.")
