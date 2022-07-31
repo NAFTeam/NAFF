@@ -1,6 +1,6 @@
-site_name: naff
-repo_url: https://github.com/Discord-Snake-Pit/naff
-repo_name: Discord-Snake-Pit/naff
+site_name: NAFF
+repo_url: https://github.com/NAFTeam/NAFF
+repo_name: NAFTeam/NAFF
 copyright: Copyright &copy; 2021 - Present LordOfPolls
 docs_dir: docs/src
 edit_uri: edit/master/docs/src
@@ -8,7 +8,7 @@ edit_uri: edit/master/docs/src
 theme:
   name: material
   favicon: images/favicon.png
-  custom_dir: docs/overrides
+#  custom_dir: docs/overrides
   features:
     - header.autohide
     - navigation.instant
@@ -59,7 +59,7 @@ plugins:
 - awesome-pages
 - autorefs
 - mkdocstrings:
-    custom_templates: docs/templates
+#    custom_templates: docs/templates
     enable_inventory: true
     handlers:
       python:

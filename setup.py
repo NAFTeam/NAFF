@@ -10,11 +10,10 @@ with open("pyproject.toml", "rb") as f:
 extras_require = {"voice": ["PyNaCl>=1.5.0,<1.6"], "speedup": ["cchardet", "aiodns", "orjson", "Brotli"]}
 extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
 extras_require["docs"] = extras_require["all"] + [
-    "pytkdocs @ git+https://github.com/LordOfPolls/pytkdocs.git",
     "mkdocs-autorefs",
     "mkdocs-awesome-pages-plugin",
     "mkdocs-material",
-    "mkdocstrings==0.18",
+    "mkdocstrings-python",
 ]
 extras_require["tests"] = [
     "pytest",
