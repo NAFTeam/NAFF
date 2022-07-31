@@ -107,6 +107,74 @@ if TYPE_CHECKING:
 __all__ = ("Client",)
 
 
+# see https://discord.com/developers/docs/topics/gateway#list-of-intents
+_INTENT_EVENTS: dict[str, list[Intents]] = {
+    # Intents.GUILDS
+    "guild_join": [Intents.GUILDS],
+    "guild_left": [Intents.GUILDS],
+    "guild_update": [Intents.GUILDS],
+    "role_create": [Intents.GUILDS],
+    "role_delete": [Intents.GUILDS],
+    "role_update": [Intents.GUILDS],
+    "channel_create": [Intents.GUILDS],
+    "channel_delete": [Intents.GUILDS],
+    "channel_update": [Intents.GUILDS],
+    "thread_create": [Intents.GUILDS],
+    "thread_delete": [Intents.GUILDS],
+    "thread_list_sync": [Intents.GUILDS],
+    "thread_member_update": [Intents.GUILDS],
+    "thread_update": [Intents.GUILDS],
+    "stage_instance_create": [Intents.GUILDS],
+    "stage_instance_delete": [Intents.GUILDS],
+    "stage_instance_update": [Intents.GUILDS],
+    # Intents.GUILD_MEMBERS
+    "member_add": [Intents.GUILD_MEMBERS],
+    "member_remove": [Intents.GUILD_MEMBERS],
+    "member_update": [Intents.GUILD_MEMBERS],
+    # Intents.GUILD_BANS
+    "ban_create": [Intents.GUILD_BANS],
+    "ban_remove": [Intents.GUILD_BANS],
+    # Intents.GUILD_EMOJIS_AND_STICKERS
+    "guild_emojis_update": [Intents.GUILD_EMOJIS_AND_STICKERS],
+    "guild_stickers_update": [Intents.GUILD_EMOJIS_AND_STICKERS],
+    # Intents.GUILD_BANS
+    "integration_create": [Intents.GUILD_INTEGRATIONS],
+    "integration_delete": [Intents.GUILD_INTEGRATIONS],
+    "integration_update": [Intents.GUILD_INTEGRATIONS],
+    # Intents.GUILD_WEBHOOKS
+    "webhooks_update": [Intents.GUILD_WEBHOOKS],
+    # Intents.GUILD_INVITES
+    "invite_create": [Intents.GUILD_INVITES],
+    "invite_delete": [Intents.GUILD_INVITES],
+    # Intents.GUILD_VOICE_STATES
+    "voice_state_update": [Intents.GUILD_VOICE_STATES],
+    # Intents.GUILD_PRESENCES
+    "presence_update": [Intents.GUILD_PRESENCES],
+    # Intents.GUILD_MESSAGES
+    "message_delete_bulk": [Intents.GUILD_MESSAGES],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    "auto_mod_exec": [Intents.AUTO_MODERATION_EXECUTION, Intents.AUTO_MOD],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    "auto_mod_created": [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    "auto_mod_updated": [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    "auto_mod_deleted": [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    # multiple intents
+    "thread_members_update": [Intents.GUILDS, Intents.GUILD_MEMBERS],
+    "typing_start": [Intents.GUILD_MESSAGE_TYPING, Intents.DIRECT_MESSAGE_TYPING, Intents.TYPING],
+    "message_update": [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    "message_create": [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    "message_delete": [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    "channel_pins_update": [Intents.GUILDS, Intents.DIRECT_MESSAGES],
+    "message_reaction_add": [Intents.GUILD_MESSAGE_REACTIONS, Intents.DIRECT_MESSAGE_REACTIONS, Intents.REACTIONS],
+    "message_reaction_remove": [Intents.GUILD_MESSAGE_REACTIONS, Intents.DIRECT_MESSAGE_REACTIONS, Intents.REACTIONS],
+    "message_reaction_remove_all": [
+        Intents.GUILD_MESSAGE_REACTIONS,
+        Intents.DIRECT_MESSAGE_REACTIONS,
+        Intents.REACTIONS,
+    ],
+}
+
+
 class Client(
     processors.AutoModEvents,
     processors.ChannelEvents,
@@ -228,7 +296,7 @@ class Client(
             auto_defer = auto_defer or AutoDefer()
         self.auto_defer = auto_defer
         """A system to automatically defer commands after a set duration"""
-        self.intents = intents
+        self.intents = intents if isinstance(intents, Intents) else Intents(intents)
 
         # resources
 
@@ -961,6 +1029,13 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
+        # check that the required intents are enabled
+        if required_intents := _INTENT_EVENTS.get(get_event_name(listener.event)):
+            if not any(required_intent in self.intents for required_intent in required_intents):
+                self.logger.warning(
+                    f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: {required_intents}"
+                )
+
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
@@ -1002,6 +1077,12 @@ class Client(
             command PrefixedCommand: The command to add
 
         """
+        # check that the required intent is enabled
+        if Intents.GUILD_MESSAGE_CONTENT not in self.intents:
+            self.logger.warning(
+                f"Prefixed commands will not work since the required intent is not set -> Requires: {Intents.GUILD_MESSAGE_CONTENT.__repr__()}"
+            )
+
         command._parse_parameters()
 
         if self.prefixed_commands.get(command.name):
