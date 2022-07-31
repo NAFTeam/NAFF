@@ -162,7 +162,7 @@ class AutoShardedClient(Client):
                 self.dispatch(events.Startup())
             self.dispatch(events.Ready())
 
-    async def astart(self, token) -> None:
+    async def astart(self, token: str) -> None:
         """
         Asynchronous method to start the bot.
 
