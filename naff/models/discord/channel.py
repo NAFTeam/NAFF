@@ -103,7 +103,7 @@ class ChannelHistory(AsyncIterator):
             List of objects
 
         Raises:
-              QueueEmpty when no more objects are available.
+              QueueEmpty: when no more objects are available.
 
         """
         if self.after:
@@ -240,7 +240,7 @@ class MessageableMixin(SendMixin):
 
     def history(
         self,
-        limit=100,
+        limit: int = 100,
         before: Snowflake_Type = None,
         after: Snowflake_Type = None,
         around: Snowflake_Type = None,
@@ -1674,7 +1674,6 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             name: 1-100 character thread name.
-            thread_type: Is the thread private or public.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
 
@@ -1701,7 +1700,6 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             name: 1-100 character thread name.
-            message: The message to connect this thread to.
             invitable: whether non-moderators can add other non-moderators to a thread.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
@@ -2107,10 +2105,10 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     async def disconnect(self) -> None:
         """
-        Disconnect from the currently connected connected voice state.
+        Disconnect from the currently connected voice state.
 
         Raises:
-            VoiceNotConnected if the bot is not connected to a voice channel
+            VoiceNotConnected: if the bot is not connected to a voice channel
         """
         if self.voice_state:
             return await self.voice_state.disconnect()
@@ -2234,7 +2232,6 @@ class GuildForum(GuildChannel):
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
-            flags: Message flags to apply.
             reason: The reason for creating this post
 
         Returns:
