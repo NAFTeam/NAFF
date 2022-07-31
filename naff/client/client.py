@@ -198,38 +198,37 @@ class Client(
     note:
         By default, all non-privileged intents will be enabled
 
-    Attributes:
-        intents: Union[int, Intents]: The intents to use
+    Args:
+        intents: The intents to use
 
-        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
-        generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
-        status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
-        activity: Union[Activity, str]: The activity the bot should log in "playing"
+        default_prefix: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
+        generate_prefixes: A coroutine that returns a string or an iterable of strings to determine prefixes.
+        status: The status the bot should log in with (IE ONLINE, DND, IDLE)
+        activity: The activity the bot should log in "playing"
 
-        sync_interactions: bool: Should application commands be synced with discord?
-        delete_unused_application_cmds: bool: Delete any commands from discord that aren't implemented in this client
-        enforce_interaction_perms: bool: Enforce discord application command permissions, locally
-        fetch_members: bool: Should the client fetch members from guilds upon startup (this will delay the client being ready)
+        sync_interactions: Should application commands be synced with discord?
+        delete_unused_application_cmds: Delete any commands from discord that aren't implemented in this client
+        enforce_interaction_perms: Enforce discord application command permissions, locally
+        fetch_members: Should the client fetch members from guilds upon startup (this will delay the client being ready)
 
-        auto_defer: AutoDefer: A system to automatically defer commands after a set duration
-        interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
-        prefixed_context: Type[PrefixedContext]: The object to instantiate for Prefixed Context
-        component_context: Type[ComponentContext]: The object to instantiate for Component Context
-        autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
-        modal_context: Type[ModalContext]: The object to instantiate for Modal Context
+        auto_defer: A system to automatically defer commands after a set duration
+        interaction_context: The object to instantiate for Interaction Context
+        prefixed_context: The object to instantiate for Prefixed Context
+        component_context: The object to instantiate for Component Context
+        autocomplete_context: The object to instantiate for Autocomplete Context
+        modal_context: The object to instantiate for Modal Context
 
-        global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
-        global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
-        send_command_tracebacks: bool: Should the traceback of command errors be sent in reply to the command invocation
+        global_pre_run_callback: A coroutine to run before every command is executed
+        global_post_run_callback: A coroutine to run after every command is executed
+        send_command_tracebacks: Should the traceback of command errors be sent in reply to the command invocation
 
-        total_shards: int: The total number of shards in use
-        shard_id: int: The zero based int ID of this shard
+        total_shards: The total number of shards in use
+        shard_id: The zero based int ID of this shard
 
-        debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
-        asyncio_debug: bool: Enable asyncio debug features
-        basic_logging: bool: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
-        logging_level: int: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
-        logger: logging.Logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
+        debug_scope: Force all application commands to be registered within this scope
+        basic_logging: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
+        logging_level: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
+        logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
@@ -280,7 +279,7 @@ class Client(
         constants.logger = logger
 
         # Configuration
-        self.sync_interactions = sync_interactions
+        self.sync_interactions: bool = sync_interactions
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
