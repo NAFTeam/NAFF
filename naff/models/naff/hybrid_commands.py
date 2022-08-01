@@ -6,7 +6,7 @@ import typing
 from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, Annotated
 
 
-from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE
+from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE, T
 from naff.client.errors import BadArgument
 from naff.client.utils.attr_utils import field
 from naff.client.utils.misc_utils import get_object_name
@@ -80,6 +80,20 @@ def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Corou
         raise ValueError("Attachments are not supported in hybrid commands right now.")
 
     raise ValueError(f"{option_type} is an unsupported option type right now.")
+
+
+def _search_through_annotation(param_annotation: Any, type_: T) -> Optional[T]:
+    found_annotation = None
+
+    if isinstance(param_annotation, type_):  # type: ignore
+        found_annotation = param_annotation
+    elif typing.get_origin(param_annotation) == Annotated:
+        for arg_anno in typing.get_args(param_annotation):
+            if isinstance(arg_anno, type_):  # type: ignore
+                found_annotation = arg_anno
+                break
+
+    return found_annotation
 
 
 def _generate_permission_check(permissions: "Permissions") -> "TYPE_CHECK_FUNCTION":
@@ -289,19 +303,9 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
         if ori_param := old_params.pop(str(option.name), None):
             if ori_param.annotation != inspect._empty:
-                param_converter = None
-
-                if isinstance(ori_param.annotation, Converter):
-                    param_converter = ori_param.annotation
-                elif typing.get_origin(ori_param.annotation) == Annotated:
-                    for arg_anno in typing.get_args(ori_param.annotation):
-                        if isinstance(arg_anno, Converter):
-                            param_converter = arg_anno
-                            break
-
-                if param_converter:
+                if param_converter := _search_through_annotation(ori_param.annotation, Converter):
                     annotation = _StackedConverter(
-                        annotation, _get_converter_function(param_converter, str(option.name))
+                        annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
                     )
 
             default = inspect._empty if option.required else ori_param.default
@@ -320,17 +324,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
     for remaining_param in old_params.values():
         # no argument converters need to be passed on
-        param_converter = None
-
-        if isinstance(remaining_param.annotation, NoArgumentConverter):
-            param_converter = remaining_param.annotation
-        elif typing.get_origin(remaining_param.annotation) == Annotated:
-            for arg_anno in typing.get_args(remaining_param.annotation):
-                if isinstance(arg_anno, NoArgumentConverter):
-                    param_converter = arg_anno
-                    break
-
-        if param_converter:
+        if param_converter := _search_through_annotation(remaining_param.annotation, NoArgumentConverter):
             new_parameters.append(
                 inspect.Parameter(
                     str(remaining_param.name),
