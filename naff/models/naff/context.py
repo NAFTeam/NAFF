@@ -44,6 +44,7 @@ __all__ = (
     "AutocompleteContext",
     "ModalContext",
     "PrefixedContext",
+    "HybridContext",
     "SendableContext",
 )
 
