@@ -288,17 +288,6 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             annotation = _NarrowedChannelConverter(option.channel_types).convert
 
         if ori_param := old_params.pop(str(option.name), None):
-            kind = (
-                ori_param.kind
-                if ori_param.kind not in {inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD}
-                else inspect.Parameter.POSITIONAL_OR_KEYWORD
-            )
-            kind = (
-                ori_param.kind
-                if ori_param.kind != inspect.Parameter.VAR_POSITIONAL
-                else inspect.Parameter.POSITIONAL_ONLY
-            )
-
             if ori_param.annotation != inspect._empty:
                 param_converter = None
 
@@ -317,14 +306,13 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
             default = inspect._empty if option.required else ori_param.default
         else:
-            kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
             # in case they use something like **kwargs, though this isn't a perfect solution
             default = inspect._empty if option.required else None
 
         new_parameters.append(
             inspect.Parameter(
                 str(option.name),
-                kind,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
                 default=default,
                 annotation=annotation,
             )
