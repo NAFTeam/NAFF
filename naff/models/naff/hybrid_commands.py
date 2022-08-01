@@ -8,6 +8,7 @@ from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, Annotated
 
 from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE
 from naff.client.errors import BadArgument
+from naff.client.utils.attr_utils import field
 from naff.client.utils.misc_utils import get_object_name
 from naff.models.naff.command import BaseCommand
 from naff.models.naff.application_commands import (
@@ -151,9 +152,27 @@ class HybridCommand(SlashCommand):
 
 
 class _HybridPrefixedCommand(PrefixedCommand):
+    _uses_subcommand_base: bool = field(default=False)
+
     async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
         new_ctx = HybridContext.from_prefixed_context(context)
         return await super().__call__(new_ctx, *args, **kwargs)
+
+    def add_command(self, cmd: "_HybridPrefixedCommand") -> None:
+        super().add_command(cmd)
+
+        if not self._uses_subcommand_base:
+
+            async def _subcommand_base(*args, **kwargs) -> None:
+                if self.is_subcommand:
+                    raise BadArgument("Cannot run this subcommand group without a subcommand.")
+                else:
+                    raise BadArgument("Cannot run this base command without a subcommand.")
+
+            self.callback = _subcommand_base
+            self._inspect_signature = inspect.Signature(None)
+            self.parameters = []
+            self._uses_subcommand_base = True
 
 
 class _ChoicesConverter(_LiteralConverter):
