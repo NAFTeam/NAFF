@@ -5,7 +5,7 @@ This file holds the entire API reference in a single page; should that be your p
 
 ---
 ## Clients
-::: naff.client.Client
+::: naff.client.client
 ::: naff.client.auto_shard_client
 ::: naff.models.naff.active_voice_state
 
