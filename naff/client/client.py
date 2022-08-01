@@ -514,6 +514,16 @@ class Client(
             bot: A reference to the client
             message: A message to determine the prefix from.
 
+        Example:
+            ```python
+            async def generate_prefixes(bot, message):
+                if message.guild.id == 870046872864165888:
+                    return ["!"]
+                return bot.default_prefix
+
+            bot = Client(generate_prefixes=generate_prefixes, ...)
+            ```
+
         Returns:
             A string or an iterable of strings to use as a prefix. By default, this will return `client.default_prefix`
 

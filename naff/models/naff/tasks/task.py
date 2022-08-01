@@ -144,6 +144,17 @@ class Task:
         """
         A decorator to create a task.
 
+        Example:
+            ```python
+            @Task.create(IntervalTrigger(minutes=5))
+            async def my_task():
+                print("It's been 5 minutes!")
+
+            @listen()
+            async def on_startup():
+                my_task.start()
+            ```
+
         Args:
             trigger: The trigger to use for this task
 
