@@ -5,8 +5,8 @@ This file holds the entire API reference in a single page; should that be your p
 
 ---
 ## Clients
-::: NAFF.client.client
-::: NAFF.client.auto_shard_client
+::: naff.client.Client
+::: naff.client.auto_shard_client
 ::: naff.models.naff.active_voice_state
 
 ---
@@ -32,7 +32,6 @@ This file holds the entire API reference in a single page; should that be your p
 
 ---
 ## UX.
-
 ::: NAFF.models.discord.embed
 ::: NAFF.models.discord.asset
 ::: NAFF.models.discord.color
