@@ -1,7 +1,7 @@
 # Mono-Doc
 This file holds the entire API reference in a single page; should that be your preference.
 
-[//]: # (":::: NAFF" - while this would be an option, the order sucks)
+[//]: # (":::: naff" - while this would be an option, the order sucks)
 
 ---
 ## Clients
@@ -11,61 +11,61 @@ This file holds the entire API reference in a single page; should that be your p
 
 ---
 ## User
-::: NAFF.models.discord.user
-::: NAFF.models.discord.voice_state
+::: naff.models.discord.user
+::: naff.models.discord.voice_state
 
 ---
 ## Guild
-::: NAFF.models.discord.guild
-::: NAFF.models.discord.scheduled_event
-::: NAFF.models.discord.sticker
-::: NAFF.models.discord.webhooks
-::: NAFF.models.discord.channel
-::: NAFF.models.discord.invite
-::: NAFF.models.discord.role
-::: NAFF.models.discord.emoji
+::: naff.models.discord.guild
+::: naff.models.discord.scheduled_event
+::: naff.models.discord.sticker
+::: naff.models.discord.webhooks
+::: naff.models.discord.channel
+::: naff.models.discord.invite
+::: naff.models.discord.role
+::: naff.models.discord.emoji
 
 ---
 ## Message
-::: NAFF.models.discord.message
-::: NAFF.models.discord.reaction
+::: naff.models.discord.message
+::: naff.models.discord.reaction
 
 ---
 ## UX.
-::: NAFF.models.discord.embed
-::: NAFF.models.discord.asset
-::: NAFF.models.discord.color
-::: NAFF.models.discord.file
+::: naff.models.discord.embed
+::: naff.models.discord.asset
+::: naff.models.discord.color
+::: naff.models.discord.file
 
 ---
 ## Commands
-::: NAFF.models.naff.command
-::: NAFF.models.naff.prefixed_command
+::: naff.models.naff.command
+::: naff.models.naff.prefixed_command
 
 ---
 ## Application Commands
 
-::: NAFF.models.discord.components
-::: NAFF.models.discord.modal
-::: NAFF.models.naff.application_commands
+::: naff.models.discord.components
+::: naff.models.discord.modal
+::: naff.models.naff.application_commands
 
 ---
 ## Context
-::: NAFF.models.naff.context
+::: naff.models.naff.context
 
 ---
 ## Presence
-::: NAFF.models.discord.activity
+::: naff.models.discord.activity
 
 ---
 ## Data
-::: NAFF.models.discord.application
-::: NAFF.models.discord.team
-::: NAFF.models.discord.enums
+::: naff.models.discord.application
+::: naff.models.discord.team
+::: naff.models.discord.enums
 ::: naff.models.discord.timestamp
 
 ---
-## NAFF Models
+## naff Models
 ::: naff.models.naff.extension
 ::: naff.models.naff.cooldowns
 ::: naff.models.naff.checks
