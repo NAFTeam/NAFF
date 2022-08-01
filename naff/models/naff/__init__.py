@@ -12,5 +12,6 @@ from .listener import *
 from .prefixed_commands import *
 from .protocols import *
 from .extension import *
+from .hybrid_commands import *
 from .wait import *
 from .tasks import *
