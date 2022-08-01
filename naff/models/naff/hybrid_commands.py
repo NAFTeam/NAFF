@@ -80,14 +80,14 @@ def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Corou
     raise ValueError(f"{option_type} is an unsupported option type right now.")
 
 
-def _generate_permission_check(permissions: "Permissions") -> TYPE_CHECK_FUNCTION:
+def _generate_permission_check(permissions: "Permissions") -> "TYPE_CHECK_FUNCTION":
     async def _permission_check(ctx: HybridContext) -> bool:
         return ctx.author.has_permission(*permissions) if ctx.guild_id else True  # type: ignore
 
     return _permission_check  # type: ignore
 
 
-def _generate_scope_check(_scopes: list["Snowflake_Type"]) -> TYPE_CHECK_FUNCTION:
+def _generate_scope_check(_scopes: list["Snowflake_Type"]) -> "TYPE_CHECK_FUNCTION":
     scopes = frozenset(int(s) for s in _scopes)
 
     async def _scope_check(ctx: HybridContext) -> bool:
