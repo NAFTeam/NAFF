@@ -14,6 +14,7 @@ extras_require["docs"] = extras_require["all"] + [
     "mkdocs-awesome-pages-plugin",
     "mkdocs-material",
     "mkdocstrings-python",
+    "mkdocs-minify-plugin",
 ]
 extras_require["tests"] = [
     "pytest",

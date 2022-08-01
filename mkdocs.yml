@@ -72,10 +72,12 @@ plugins:
           show_bases: True
           show_root_toc_entry: False
           group_by_category: False
-          heading_level: 2
+          heading_level: 3
           show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
     watch:
       - naff
+- minify:
+    minify_html: true
 
 markdown_extensions:
   - tables
@@ -99,7 +101,7 @@ markdown_extensions:
   - pymdownx.tilde
   - toc:
       permalink: true
-      toc_depth: 2
+      toc_depth: 6
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
