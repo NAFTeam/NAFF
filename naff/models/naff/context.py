@@ -739,6 +739,29 @@ class HybridContext(Context):
         """Returns if responses to this interaction are ephemeral, if this is an interaction. Otherwise, returns False."""
         return self._interaction_context.ephemeral if self._interaction_context else False
 
+    @property
+    def expires_at(self) -> Optional[Timestamp]:
+        """The timestamp the context is expected to expire at, or None if the context never expires."""
+        if not self._interaction_context:
+            return None
+
+        if self.responded:
+            return Timestamp.from_snowflake(self._interaction_context.interaction_id) + datetime.timedelta(minutes=15)
+        return Timestamp.from_snowflake(self._interaction_context.interaction_id) + datetime.timedelta(seconds=3)
+
+    @property
+    def expired(self) -> bool:
+        """Has the context expired yet?"""
+        return Timestamp.utcnow() >= self.expires_at if self.expires_at else False
+
+    @property
+    def invoked_name(self) -> str:
+        return (
+            self.command.get_localised_name(self._interaction_context.locale)
+            if self._interaction_context
+            else self.invoke_target
+        )
+
     async def defer(self, ephemeral: bool = False) -> None:
         """
         Either defers the response (if used in an interaction) or triggers a typing indicator for 10 seconds (if used for messages).
