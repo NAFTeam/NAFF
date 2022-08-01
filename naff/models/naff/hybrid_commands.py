@@ -334,6 +334,26 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
     return prefixed_cmd
 
 
+def _basic_subcommand_generator(
+    name: str, aliases: list[str], description: str, group: bool = False
+) -> _HybridPrefixedCommand:
+    async def _subcommand_base(*args, **kwargs) -> None:
+        if group:
+            raise BadArgument("Cannot run this base command without a subcommand.")
+        else:
+            raise BadArgument("Cannot run this subcommand group without a subcommand.")
+
+    subcommand_base = _HybridPrefixedCommand(
+        callback=_subcommand_base,
+        name=name,
+        aliases=aliases,
+        help=description,
+        inspect_signature=inspect.Signature(None),  # type: ignore
+    )
+
+    return subcommand_base
+
+
 def hybrid_command(
     name: str | LocalisedName,
     *,
