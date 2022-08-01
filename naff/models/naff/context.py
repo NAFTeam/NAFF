@@ -704,9 +704,9 @@ class HybridContext(Context):
         # this is a "best guess" on what the permissions are
         # this may or may not be totally accurate
         if hasattr(context.channel, "permissions_for"):
-            app_permissions = context.channel.permissions_for(context.author)  # type: ignore
+            app_permissions = context.channel.permissions_for(context.guild.me)  # type: ignore
         elif context.channel.type in {10, 11, 12}:  # it's a thread
-            app_permissions = context.channel.parent_channel.permissions_for(context.author)  # type: ignore
+            app_permissions = context.channel.parent_channel.permissions_for(context.guild.me)  # type: ignore
         else:
             # this is what happens with interaction contexts in dms
             app_permissions = 0
