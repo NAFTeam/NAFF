@@ -23,6 +23,7 @@ from naff.models.naff.prefixed_commands import _convert_to_bool, PrefixedCommand
 from naff.models.naff.protocols import Converter
 from naff.models.naff.converters import (
     _LiteralConverter,
+    NoArgumentConverter,
     MemberConverter,
     UserConverter,
     RoleConverter,
@@ -198,7 +199,7 @@ class _RangeConverter(Converter[float | int]):
         number_type: int,
         min_value: Optional[float | int],
         max_value: Optional[float | int],
-    ) -> Any:
+    ) -> None:
         self.number_convert = number_convert
         self.number_type = number_type
         self.min_value = min_value
@@ -257,7 +258,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
         else:
             old_func = functools.partial(cmd.callback, None)
 
-        old_params = inspect.signature(old_func).parameters
+        old_params = dict(inspect.signature(old_func).parameters)
     else:
         old_params = {}
 
@@ -286,7 +287,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
         elif option.type == OptionTypes.CHANNEL and option.channel_types:
             annotation = _NarrowedChannelConverter(option.channel_types).convert
 
-        if ori_param := old_params.get(str(option.name)):
+        if ori_param := old_params.pop(str(option.name), None):
             kind = (
                 ori_param.kind
                 if ori_param.kind not in {inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD}
@@ -328,6 +329,28 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                 annotation=annotation,
             )
         )
+
+    for remaining_param in old_params.values():
+        # no argument converters need to be passed on
+        param_converter = None
+
+        if isinstance(remaining_param.annotation, NoArgumentConverter):
+            param_converter = remaining_param.annotation
+        elif typing.get_origin(remaining_param.annotation) == Annotated:
+            for arg_anno in typing.get_args(remaining_param.annotation):
+                if isinstance(arg_anno, NoArgumentConverter):
+                    param_converter = arg_anno
+                    break
+
+        if param_converter:
+            new_parameters.append(
+                inspect.Parameter(
+                    str(remaining_param.name),
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=remaining_param.default,
+                    annotation=param_converter,
+                )
+            )
 
     prefixed_cmd = _HybridPrefixedCommand(
         name=str(cmd.name),
