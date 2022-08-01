@@ -96,6 +96,16 @@ def _search_through_annotation(param_annotation: Any, type_: T) -> Optional[T]:
     return found_annotation
 
 
+def _create_subcmd_func(group: bool = False) -> Callable:
+    async def _subcommand_base(*args, **kwargs) -> None:
+        if group:
+            raise BadArgument("Cannot run this base command without a valid subcommand.")
+        else:
+            raise BadArgument("Cannot run this subcommand group without a valid subcommand.")
+
+    return _subcommand_base
+
+
 def _generate_permission_check(permissions: "Permissions") -> "TYPE_CHECK_FUNCTION":
     async def _permission_check(ctx: HybridContext) -> bool:
         return ctx.author.has_permission(*permissions) if ctx.guild_id else True  # type: ignore
@@ -177,16 +187,10 @@ class _HybridPrefixedCommand(PrefixedCommand):
         super().add_command(cmd)
 
         if not self._uses_subcommand_base:
-
-            async def _subcommand_base(*args, **kwargs) -> None:
-                if self.is_subcommand:
-                    raise BadArgument("Cannot run this subcommand group without a subcommand.")
-                else:
-                    raise BadArgument("Cannot run this base command without a subcommand.")
-
-            self.callback = _subcommand_base
-            self._inspect_signature = inspect.Signature(None)
+            self.callback = _create_subcmd_func(self.is_subcommand)
             self.parameters = []
+            self.ignore_extra = False
+            self._inspect_signature = inspect.Signature(None)
             self._uses_subcommand_base = True
 
 
@@ -265,79 +269,92 @@ class _StackedConverter(Converter):
         return await self._additional_converter_func(ctx, part_one)
 
 
+def _base_subcommand_generator(
+    name: str, aliases: list[str], description: str, group: bool = False
+) -> _HybridPrefixedCommand:
+    return _HybridPrefixedCommand(
+        callback=_create_subcmd_func(group=group),
+        name=name,
+        aliases=aliases,
+        help=description,
+        ignore_extra=False,
+        inspect_signature=inspect.Signature(None),  # type: ignore
+    )
+
+
 def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
-    if cmd.callback:
+    new_parameters: list[inspect.Parameter] = []
+
+    if cmd.options:
         if cmd.has_binding:
             old_func = functools.partial(cmd.callback, None, None)
         else:
             old_func = functools.partial(cmd.callback, None)
 
         old_params = dict(inspect.signature(old_func).parameters)
-    else:
-        old_params = {}
 
-    new_parameters: list[inspect.Parameter] = []
+        standardized_options = ((SlashCommandOption(**o) if isinstance(o, dict) else o) for o in cmd.options)
+        for option in standardized_options:
+            annotation = _match_option_type(option.type)
 
-    standardized_options = ((SlashCommandOption(**o) if isinstance(o, dict) else o) for o in cmd.options)
-    for option in standardized_options:
-        annotation = _match_option_type(option.type)
+            if option.autocomplete:
+                # there isn't much we can do here
+                logger.warning(
+                    "While parsing a hybrid command, NAFF detected an option with"
+                    " autocomplete enabled - prefixed commands have no ability to replicate"
+                    " autocomplete due to the variety of technical challenges they impose,"
+                    " and so will pass in the user's raw input instead. Please add"
+                    " safeguards to convert the user's input as appropriate."
+                )
 
-        if option.autocomplete:
-            # there isn't much we can do here
-            logger.warning(
-                "While parsing a hybrid command, NAFF detected an option with"
-                " autocomplete enabled - prefixed commands have no ability to replicate"
-                " autocomplete due to the variety of technical challenges they impose,"
-                " and so will pass in the user's raw input instead. Please add"
-                " safeguards to convert the user's input as appropriate."
-            )
+            if annotation in {OptionTypes.STRING, OptionTypes.INTEGER, OptionTypes.NUMBER} and option.choices:
+                annotation = _ChoicesConverter(option.choices).convert
+            elif option.type in {OptionTypes.INTEGER, OptionTypes.NUMBER} and (
+                option.min_value is not None or option.max_value is not None
+            ):
+                annotation = _RangeConverter(annotation, option.type, option.min_value, option.max_value).convert
+            elif option.type == OptionTypes.CHANNEL and option.channel_types:
+                annotation = _NarrowedChannelConverter(option.channel_types).convert
 
-        if annotation in {OptionTypes.STRING, OptionTypes.INTEGER, OptionTypes.NUMBER} and option.choices:
-            annotation = _ChoicesConverter(option.choices).convert
-        elif option.type in {OptionTypes.INTEGER, OptionTypes.NUMBER} and (
-            option.min_value is not None or option.max_value is not None
-        ):
-            annotation = _RangeConverter(annotation, option.type, option.min_value, option.max_value).convert
-        elif option.type == OptionTypes.CHANNEL and option.channel_types:
-            annotation = _NarrowedChannelConverter(option.channel_types).convert
+            if ori_param := old_params.pop(str(option.name), None):
+                if ori_param.annotation != inspect._empty:
+                    if param_converter := _search_through_annotation(ori_param.annotation, Converter):
+                        annotation = _StackedConverter(
+                            annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
+                        )
 
-        if ori_param := old_params.pop(str(option.name), None):
-            if ori_param.annotation != inspect._empty:
-                if param_converter := _search_through_annotation(ori_param.annotation, Converter):
-                    annotation = _StackedConverter(
-                        annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
-                    )
+                default = inspect._empty if option.required else ori_param.default
+            else:
+                # in case they use something like **kwargs, though this isn't a perfect solution
+                default = inspect._empty if option.required else None
 
-            default = inspect._empty if option.required else ori_param.default
-        else:
-            # in case they use something like **kwargs, though this isn't a perfect solution
-            default = inspect._empty if option.required else None
-
-        new_parameters.append(
-            inspect.Parameter(
-                str(option.name),
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                default=default,
-                annotation=annotation,
-            )
-        )
-
-    for remaining_param in old_params.values():
-        # no argument converters need to be passed on
-        if param_converter := _search_through_annotation(remaining_param.annotation, NoArgumentConverter):
             new_parameters.append(
                 inspect.Parameter(
-                    str(remaining_param.name),
+                    str(option.name),
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    default=remaining_param.default,
-                    annotation=param_converter,
+                    default=default,
+                    annotation=annotation,
                 )
             )
 
+        for remaining_param in old_params.values():
+            # no argument converters need to be passed on
+            if param_converter := _search_through_annotation(remaining_param.annotation, NoArgumentConverter):
+                new_parameters.append(
+                    inspect.Parameter(
+                        str(remaining_param.name),
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                        default=remaining_param.default,
+                        annotation=param_converter,
+                    )
+                )
+
     prefixed_cmd = _HybridPrefixedCommand(
-        name=str(cmd.name),
-        aliases=list(cmd.name.to_locale_dict().values()),
-        help=str(cmd.description),  # there isn't much we can do here for locales
+        name=str(cmd.sub_cmd_name) if cmd.is_subcommand else str(cmd.name),
+        aliases=str(cmd.sub_cmd_name.to_locale_dict().values())
+        if cmd.is_subcommand
+        else list(cmd.name.to_locale_dict().values()),
+        help=str(cmd.sub_cmd_description) if cmd.is_subcommand else str(cmd.description),
         callback=cmd.callback,
         extension=cmd.extension,
         inspect_signature=inspect.Signature(new_parameters),  # type: ignore
@@ -356,26 +373,6 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             prefixed_cmd.checks.append(_guild_check)
 
     return prefixed_cmd
-
-
-def _basic_subcommand_generator(
-    name: str, aliases: list[str], description: str, group: bool = False
-) -> _HybridPrefixedCommand:
-    async def _subcommand_base(*args, **kwargs) -> None:
-        if group:
-            raise BadArgument("Cannot run this base command without a subcommand.")
-        else:
-            raise BadArgument("Cannot run this subcommand group without a subcommand.")
-
-    subcommand_base = _HybridPrefixedCommand(
-        callback=_subcommand_base,
-        name=name,
-        aliases=aliases,
-        help=description,
-        inspect_signature=inspect.Signature(None),  # type: ignore
-    )
-
-    return subcommand_base
 
 
 def hybrid_command(

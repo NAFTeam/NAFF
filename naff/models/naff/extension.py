@@ -86,6 +86,8 @@ class Extension:
                         bot.add_modal_callback(val)
                     elif isinstance(val, naff.ComponentCommand):
                         bot.add_component_callback(val)
+                    elif isinstance(val, naff.HybridCommand):
+                        bot.add_hybrid_command(val)
                     elif isinstance(val, naff.InteractionCommand):
                         bot.add_interaction(val)
                     else:

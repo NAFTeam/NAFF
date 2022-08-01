@@ -71,6 +71,7 @@ from naff.models import (
     InteractionCommand,
     SlashCommand,
     OptionTypes,
+    HybridCommand,
     PrefixedCommand,
     BaseCommand,
     to_snowflake,
@@ -97,6 +98,7 @@ from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
 from naff.models.naff.application_commands import ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.hybrid_commands import _prefixed_from_slash, _base_subcommand_generator
 from naff.models.naff.listener import Listener
 from naff.models.naff.tasks import Task
 
@@ -994,6 +996,42 @@ class Client(
 
         return True
 
+    def add_hybrid_command(self, command: HybridCommand) -> bool:
+        if self.debug_scope:
+            command.scopes = [self.debug_scope]
+
+        if command.callback is None:
+            return False
+
+        if command.is_subcommand:
+            prefixed_base = self.prefixed_commands.get(str(command.name))
+            if not prefixed_base:
+                prefixed_base = _base_subcommand_generator(
+                    str(command.name), list(command.name.to_locale_dict().values()), str(command.description)
+                )
+                self.add_prefixed_command(prefixed_base)
+
+            if command.group_name:  # if this is a group command
+                _prefixed_cmd = prefixed_base
+                prefixed_base = prefixed_base.subcommands.get(str(command.group_name))
+
+                if not prefixed_base:
+                    prefixed_base = _base_subcommand_generator(
+                        str(command.group_name),
+                        list(command.group_name.to_locale_dict().values()),
+                        str(command.group_description),
+                        group=True,
+                    )
+                    _prefixed_cmd.add_command(prefixed_base)
+
+            new_command = _prefixed_from_slash(command)
+            prefixed_base.add_command(new_command)
+        else:
+            new_command = _prefixed_from_slash(command)
+            self.add_prefixed_command(new_command)
+
+        return self.add_interaction(command)
+
     def add_prefixed_command(self, command: PrefixedCommand) -> None:
         """
         Add a prefixed command to the client.
@@ -1053,6 +1091,8 @@ class Client(
                     self.add_modal_callback(func)
                 elif isinstance(func, ComponentCommand):
                     self.add_component_callback(func)
+                elif isinstance(func, HybridCommand):
+                    self.add_hybrid_command(func)
                 elif isinstance(func, InteractionCommand):
                     self.add_interaction(func)
                 elif (

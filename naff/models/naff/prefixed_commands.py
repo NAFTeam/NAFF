@@ -146,7 +146,7 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
     elif typing.get_origin(anno) is Literal:
         literals = typing.get_args(anno)
         return _LiteralConverter(literals).convert
-    elif inspect.isfunction(anno):
+    elif inspect.ismethod(anno):
         num_params = len(inspect.signature(anno).parameters.values())
         match num_params:
             case 2:
