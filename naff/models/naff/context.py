@@ -774,6 +774,7 @@ class HybridContext(Context):
         if self._interaction_context:
             result = await self._interaction_context.send(**kwargs)
         else:
+            kwargs.pop("ephemeral")
             result = await self._prefixed_context.reply(**kwargs)  # type: ignore
 
         self.responded = True
@@ -831,6 +832,7 @@ class HybridContext(Context):
         if self._interaction_context:
             result = await self._interaction_context.send(**kwargs)
         else:
+            kwargs.pop("ephemeral")
             result = await self._prefixed_context.send(**kwargs)  # type: ignore
 
         self.responded = True
