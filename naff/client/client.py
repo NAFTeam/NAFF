@@ -1083,7 +1083,7 @@ class Client(
             if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
                 if not any(required_intent in self.intents for required_intent in required_intents):
                     self.logger.warning(
-                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: {required_intents}"
+                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
                     )
 
         if listener.event not in self.listeners:
@@ -1127,10 +1127,15 @@ class Client(
             command PrefixedCommand: The command to add
 
         """
-        # check that the required intent is enabled
-        if Intents.GUILD_MESSAGE_CONTENT not in self.intents:
+        # check that the required intent is enabled or the prefix is a mention
+        prefixes = (
+            self.default_prefix
+            if not isinstance(self.default_prefix, str) and not self.default_prefix == MENTION_PREFIX
+            else (self.default_prefix,)
+        )
+        if (MENTION_PREFIX not in prefixes) and (Intents.GUILD_MESSAGE_CONTENT not in self.intents):
             self.logger.warning(
-                f"Prefixed commands will not work since the required intent is not set -> Requires: {Intents.GUILD_MESSAGE_CONTENT.__repr__()}"
+                f"Prefixed commands will not work since the required intent is not set -> Requires: `{Intents.GUILD_MESSAGE_CONTENT.__repr__()}` or usage of the default `MENTION_PREFIX` as the prefix"
             )
 
         command._parse_parameters()
