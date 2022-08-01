@@ -496,7 +496,7 @@ class Client(
 
     @Listener.create()
     async def _on_error(self, event: events.Error) -> None:
-        self.on_error(event.source, event.error, *event.args, **event.kwargs)
+        await self.on_error(event.source, event.error, *event.args, **event.kwargs)
 
     async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
