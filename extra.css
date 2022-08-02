@@ -48,7 +48,7 @@ div.doc-contents:not(.first) {
 }
 
 .md-typeset p{
-  font-size: 0.8em;
+  font-size: 0.9em;
 }
 .md-typeset h1{
   font-size: 1.5em;
@@ -58,15 +58,32 @@ div.doc-contents:not(.first) {
 }
 
 .md-typeset ul{
-  font-size: 0.8em;
+  font-size: 0.9em;
 }
 .li{
-  font-size: 0.8em;
+  font-size: 0.9em;
 }
 
 .md-typeset code{
-  font-size: 0.8em;
+  font-size: 0.9em;
 }
 .highlighttable .linenos{
-  font-size: 0.8em;
+  font-size: 0.9em;
+}
+
+.md-nav__link{
+  font-size: 1em;
+  margin-top: 0.315em;
+}
+
+.doc-class-bases{
+  font-size: 0.8em !important;}
+
+.md-typeset table:not([class]) td{
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}
+.md-typeset table:not([class]) th {
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
 }
