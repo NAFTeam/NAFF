@@ -121,13 +121,22 @@ def build(ctx: Context) -> None:
 
 
 @duty(pre=["build"])
-def release(ctx: Context) -> None:
+def release(ctx: Context, *, test=False) -> None:
+    pypi_cmd = ["python", "-m", "twine", "upload", "dist/*"]
+    if test:
+        pypi_cmd += ["--repository", "testpypi"]
+
     with open("pyproject.toml", "rb") as f:
         pyproject = tomli.load(f)
     version = pyproject["tool"]["poetry"]["version"]
-    ctx.run("python -m twine upload dist/*", title=f"Uploading {version} to PyPI...")
 
-    ctx.run(
+    # this assumes you use pypirc to authenticate
+    pypi_out = ctx.run(pypi_cmd, title=f"Uploading {version} to {'Test' if test else ''}PyPI...")
+
+    release_url = ctx.run(
         ["gh", "release", "create", f"NAFF-{version}", "-d", "-t", f"NAFF {version}", "--generate-notes"],
         title=f"Creating release {version} on GitHub...",
     )
+
+    print(f"PyPi URL   : {pypi_out.split()[-1]}")  # noqa: T201
+    print(f"Release URL: {release_url}")  # noqa: T201
