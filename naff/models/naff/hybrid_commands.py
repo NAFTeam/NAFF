@@ -345,6 +345,12 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                             _get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
                         )
 
+                if not option.required and ori_param.default == inspect._empty:
+                    # prefixed commands would automatically fill this in, slash commands don't
+                    # technically, there would be an error for this, but it would
+                    # be unclear
+                    raise ValueError("Optional options must have a default value.")
+
                 default = inspect._empty if option.required else ori_param.default
             else:
                 # in case they use something like **kwargs, though this isn't a perfect solution
