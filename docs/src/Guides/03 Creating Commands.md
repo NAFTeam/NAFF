@@ -482,7 +482,7 @@ To use it, simply replace `@slash_command` with `@hybrid_command`, and `Interact
 ```python
 @hybrid_command(name="my_command", description="My hybrid command!")
 async def my_command_function(ctx: HybridContext):
-    await ctx.reply("Hello World")
+    await ctx.send("Hello World")
 ```
 
 Suggesting you are using the default mention settings for your bot, you should be able to run this command by `@BotPing my_command`.
