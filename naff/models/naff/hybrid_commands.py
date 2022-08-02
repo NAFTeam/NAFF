@@ -7,7 +7,7 @@ from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, TypeGuard
 
 from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE, T
 from naff.client.errors import BadArgument
-from naff.client.utils.attr_utils import field
+from naff.client.utils.attr_utils import define, field
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
 from naff.models.naff.command import BaseCommand
 from naff.models.naff.application_commands import (
@@ -214,6 +214,7 @@ class _StackedNoArgConverter(NoArgumentConverter):
         return await maybe_coroutine(self._additional_converter_func, ctx, part_one)
 
 
+@define()
 class HybridCommand(SlashCommand):
     async def __call__(self, context: InteractionContext, *args, **kwargs) -> None:
         new_ctx = context.bot.hybrid_context.from_interaction_context(context)
@@ -264,8 +265,9 @@ class HybridCommand(SlashCommand):
         return wrapper
 
 
+@define()
 class _HybridPrefixedCommand(PrefixedCommand):
-    _uses_subcommand_base: bool = field(default=False)
+    _uses_subcommand_func: bool = field(default=False)
 
     async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
         new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
@@ -274,12 +276,12 @@ class _HybridPrefixedCommand(PrefixedCommand):
     def add_command(self, cmd: "_HybridPrefixedCommand") -> None:
         super().add_command(cmd)
 
-        if not self._uses_subcommand_base:
+        if not self._uses_subcommand_func:
             self.callback = _create_subcmd_func(group=self.is_subcommand)
             self.parameters = []
             self.ignore_extra = False
             self._inspect_signature = inspect.Signature(None)
-            self._uses_subcommand_base = True
+            self._uses_subcommand_func = True
 
 
 def _base_subcommand_generator(
