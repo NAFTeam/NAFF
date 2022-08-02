@@ -112,9 +112,13 @@ plugins:
         - naff
   - minify:
       minify_html: true
-  - privacy:  # keep me at the bottom of the plugin list
+  # keep these at the bottom of the plugins list
+  - privacy:
       externals: bundle
-      enabled: !ENV [PRIVACY, False]
+      enabled: !ENV [DEPLOY, False]
+  - offline:
+      enabled: !ENV [DEPLOY, False]
+
 
 markdown_extensions:
   - meta
