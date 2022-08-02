@@ -603,6 +603,8 @@ class PrefixedCommand(BaseCommand):
         """
         # sourcery skip: remove-empty-nested-block, remove-redundant-if, remove-unnecessary-else
         if len(self.parameters) == 0:
+            if ctx.args and not self.ignore_extra:
+                raise BadArgument(f"Too many arguments passed to {self.name}.")
             return await self.call_with_binding(callback, ctx)
         else:
             # this is slightly costly, but probably worth it
