@@ -130,11 +130,11 @@ class _ChoicesConverter(_LiteralConverter):
     choice_values: dict
 
     def __init__(self, choices: list[SlashCommandChoice | dict]) -> None:
-        standardized_choices = ((SlashCommandChoice(**o) if isinstance(o, dict) else o) for o in choices)
+        standardized_choices = tuple((SlashCommandChoice(**o) if isinstance(o, dict) else o) for o in choices)
 
         names = tuple(c.name for c in standardized_choices)
-        self.values = {arg: type(arg) for arg in names}
-        self.choice_values = {c.name: c.value for c in standardized_choices}
+        self.values = {str(arg): str for arg in names}
+        self.choice_values = {str(c.name): c.value for c in standardized_choices}
 
     async def convert(self, ctx: HybridContext, argument: str) -> Any:
         val = await super().convert(ctx, argument)
@@ -325,7 +325,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                 # there isn't much we can do here
                 raise ValueError("Cannot use autocomplete in hybrid commands.")
 
-            if annotation in {OptionTypes.STRING, OptionTypes.INTEGER, OptionTypes.NUMBER} and option.choices:
+            if option.type in {OptionTypes.STRING, OptionTypes.INTEGER, OptionTypes.NUMBER} and option.choices:
                 annotation = _ChoicesConverter(option.choices).convert
             elif option.type in {OptionTypes.INTEGER, OptionTypes.NUMBER} and (
                 option.min_value is not None or option.max_value is not None
