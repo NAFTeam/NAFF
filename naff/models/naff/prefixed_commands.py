@@ -651,6 +651,15 @@ class PrefixedCommand(BaseCommand):
 
             if param_index < len(self.parameters):
                 for param in self.parameters[param_index:]:
+                    if param.no_argument:
+                        converted, _ = await _convert(param, ctx, None)  # type: ignore
+                        if not param.consume_rest:
+                            new_args.append(converted)
+                        else:
+                            kwargs[param.name] = converted
+                            break
+                        continue
+
                     if not param.optional:
                         raise BadArgument(f"{param.name} is a required argument that is missing.")
                     else:
