@@ -85,7 +85,7 @@ def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Any]:
     if option_type == 10:
         return lambda ctx, arg: float(arg)
     if option_type == 11:
-        return _BasicAttachmentConverter()  # type: ignore
+        return _BasicAttachmentConverter  # type: ignore
 
     raise ValueError(f"{option_type} is an unsupported option type right now.")
 
@@ -107,9 +107,9 @@ def _search_through_annotation(param_annotation: Any, type_: T) -> Optional[T]:
 def _create_subcmd_func(group: bool = False) -> Callable:
     async def _subcommand_base(*args, **kwargs) -> None:
         if group:
-            raise BadArgument("Cannot run this base command without a valid subcommand.")
-        else:
             raise BadArgument("Cannot run this subcommand group without a valid subcommand.")
+        else:
+            raise BadArgument("Cannot run this command without a valid subcommand.")
 
     return _subcommand_base
 
@@ -195,7 +195,7 @@ class _HybridPrefixedCommand(PrefixedCommand):
         super().add_command(cmd)
 
         if not self._uses_subcommand_base:
-            self.callback = _create_subcmd_func(self.is_subcommand)
+            self.callback = _create_subcmd_func(group=self.is_subcommand)
             self.parameters = []
             self.ignore_extra = False
             self._inspect_signature = inspect.Signature(None)
@@ -354,7 +354,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                         else:
                             annotation = _StackedNoArgConverter(
                                 _get_converter_function(annotation, ""), _get_converter_function(param_converter, str(option.name))  # type: ignore
-                            )()
+                            )
 
                 default = inspect._empty if option.required else ori_param.default
             else:
