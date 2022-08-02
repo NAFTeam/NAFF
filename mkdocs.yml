@@ -86,10 +86,10 @@ plugins:
   - search
   - awesome-pages
   - autorefs
-  - git-committers:
-        repository: NAFTeam/NAFF
-        branch: docs-refresh
-        token: !ENV [GH_TOKEN]
+#  - git-committers:
+#        repository: NAFTeam/NAFF
+#        branch: docs-refresh
+#        token: !ENV [GH_TOKEN]
   - git-revision-date-localized:
         fallback_to_build_date: true
   - mkdocstrings:
