@@ -79,6 +79,7 @@ from naff.models import (
     ModalContext,
     PrefixedContext,
     AutocompleteContext,
+    HybridContext,
     ComponentCommand,
     Context,
     application_commands_to_dict,
@@ -217,6 +218,7 @@ class Client(
         component_context: Type[ComponentContext]: The object to instantiate for Component Context
         autocomplete_context: Type[AutocompleteContext]: The object to instantiate for Autocomplete Context
         modal_context: Type[ModalContext]: The object to instantiate for Modal Context
+        hybrid_context: Type[HybridContext]: The object to instantiate for Hybrid Context
 
         global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
         global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
@@ -260,6 +262,7 @@ class Client(
         logger: logging.Logger = logger,
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
+        hybrid_context: Type[HybridContext] = HybridContext,
         send_command_tracebacks: bool = True,
         shard_id: int = 0,
         status: Status = Status.ONLINE,
@@ -318,6 +321,8 @@ class Client(
         """The object to instantiate for Autocomplete Context"""
         self.modal_context: Type[ModalContext] = modal_context
         """The object to instantiate for Modal Context"""
+        self.hybrid_context: Type[HybridContext] = hybrid_context
+        """The object to instantiate for Hybrid Context"""
 
         # flags
         self._ready = asyncio.Event()
@@ -483,6 +488,7 @@ class Client(
             self.component_context: ComponentContext,
             self.autocomplete_context: AutocompleteContext,
             self.modal_context: ModalContext,
+            self.hybrid_context: HybridContext,
         }
         for obj, expected in contexts.items():
             if not issubclass(obj, expected):

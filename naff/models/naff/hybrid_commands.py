@@ -136,7 +136,7 @@ async def _guild_check(ctx: HybridContext) -> bool:
 
 class HybridCommand(SlashCommand):
     async def __call__(self, context: InteractionContext, *args, **kwargs) -> None:
-        new_ctx = HybridContext.from_interaction_context(context)
+        new_ctx = context.bot.hybrid_context.from_interaction_context(context)
         return await super().__call__(new_ctx, *args, **kwargs)
 
     def group(self, name: str = None, description: str = "No Description Set") -> "HybridCommand":
@@ -188,7 +188,7 @@ class _HybridPrefixedCommand(PrefixedCommand):
     _uses_subcommand_base: bool = field(default=False)
 
     async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
-        new_ctx = HybridContext.from_prefixed_context(context)
+        new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
         return await super().__call__(new_ctx, *args, **kwargs)
 
     def add_command(self, cmd: "_HybridPrefixedCommand") -> None:
