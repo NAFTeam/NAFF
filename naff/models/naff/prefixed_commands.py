@@ -144,13 +144,17 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
     elif typing.get_origin(anno) is Literal:
         literals = typing.get_args(anno)
         return _LiteralConverter(literals).convert
-    elif inspect.isfunction(anno):
+    elif inspect.isroutine(anno):
         num_params = len(inspect.signature(anno).parameters.values())
         match num_params:
             case 2:
-                return lambda ctx, arg: anno(ctx, arg)
+                return anno
             case 1:
-                return lambda ctx, arg: anno(arg)
+
+                async def _one_function_cmd(ctx, arg) -> Any:
+                    return await maybe_coroutine(anno, arg)
+
+                return _one_function_cmd
             case 0:
                 ValueError(f"{get_object_name(anno)} for {name} has 0 arguments, which is unsupported.")
             case _:
