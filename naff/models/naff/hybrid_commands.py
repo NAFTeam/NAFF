@@ -316,7 +316,8 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             if option.type == OptionTypes.ATTACHMENT:
                 if attachment_option:
                     raise ValueError("Cannot have multiple attachment options.")
-                attachment_option = True
+                else:
+                    attachment_option = True
 
             if option.autocomplete:
                 # there isn't much we can do here
@@ -362,17 +363,16 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                 )
             )
 
-        for remaining_param in old_params.values():
-            # no argument converters need to be passed on
-            if _check_if_annotation(remaining_param.annotation, NoArgumentConverter):
-                new_parameters.append(
-                    inspect.Parameter(
-                        str(remaining_param.name),
-                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                        default=remaining_param.default,
-                        annotation=remaining_param.annotation,
-                    )
-                )
+        new_parameters.extend(
+            inspect.Parameter(
+                str(remaining_param.name),
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                default=remaining_param.default,
+                annotation=remaining_param.annotation,
+            )
+            for remaining_param in old_params.values()
+            if _check_if_annotation(remaining_param.annotation, NoArgumentConverter)
+        )
 
     prefixed_cmd = _HybridPrefixedCommand(
         name=str(cmd.sub_cmd_name) if cmd.is_subcommand else str(cmd.name),
