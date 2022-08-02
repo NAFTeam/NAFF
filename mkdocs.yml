@@ -85,7 +85,7 @@ plugins:
   - autorefs
   - git-committers:
         repository: NAFTeam/NAFF
-        token: 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
+        token: !ENV [GH_TOKEN]
   - git-revision-date-localized:
         fallback_to_build_date: true
   - mkdocstrings:

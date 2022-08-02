@@ -1,0 +1,21 @@
+name: docs-builder
+on:
+  push:
+    branches:
+      - docs-refresh
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - run: pip install -e .[docs]
+      - run: pip install git+https://${GH_TOKEN}@github.com/squidfunk/mkdocs-material-insiders.git
+      - run: mkdocs gh-deploy
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}

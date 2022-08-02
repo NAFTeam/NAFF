@@ -15,6 +15,8 @@ extras_require["docs"] = extras_require["all"] + [
     "mkdocs-material",
     "mkdocstrings-python",
     "mkdocs-minify-plugin",
+    "mkdocs-git-committers-plugin-2",
+    "mkdocs-git-revision-date-localized-plugin",
 ]
 extras_require["tests"] = [
     "pytest",
