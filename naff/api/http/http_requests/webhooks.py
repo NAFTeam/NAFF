@@ -133,7 +133,6 @@ class WebhookRequests:
             payload: The JSON payload for the message
             wait: Waits for server confirmation of message send before response
             thread_id: Send a message to the specified thread
-            suffix: An optional suffix to add to the end of the endpoint address
             files: The files to send with this message
 
         Returns:

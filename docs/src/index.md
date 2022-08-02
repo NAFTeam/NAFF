@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+  - toc
+---
 !!! danger "Remember"
     These docs are not completed. Please do not panic if something is missing or inaccurate.
 

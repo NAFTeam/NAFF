@@ -155,7 +155,7 @@ class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
 
-    Args:
+    Attributes:
         scope: Denotes whether its global or for specific guild.
         default_member_permissions: What permissions members need to have by default to use this command.
         dm_permission: Should this command be available in DMs.
@@ -251,7 +251,7 @@ class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
 
-    Args:
+    Attributes:
         name: The name of this entry.
         type: The type of entry (user or message).
 
@@ -282,7 +282,7 @@ class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
 
-    Args:
+    Attributes:
         name: The name the user will see
         value: The data sent to your code when this choice is used
 
@@ -300,7 +300,7 @@ class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
 
-    Args:
+    Attributes:
         name: The name of this option
         type: The type of option
         description: The description of this option
@@ -803,7 +803,7 @@ def component_callback(*custom_id: str) -> Callable[[Coroutine], ComponentComman
     Your callback will be given a single argument, `ComponentContext`
 
     Args:
-        custom_id: The custom ID of the component to wait for
+        *custom_id: The custom ID of the component to wait for
 
     """
 

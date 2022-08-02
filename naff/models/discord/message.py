@@ -1,7 +1,7 @@
 import asyncio
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Sequence, Union, Mapping
 
 import naff.models as models
 from naff.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
@@ -499,19 +499,19 @@ class Message(BaseMessage):
     async def edit(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
+        embeds: Optional[Union[Sequence[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
         embed: Optional[Union["models.Embed", dict]] = None,
         components: Optional[
             Union[
-                List[List[Union["models.BaseComponent", dict]]],
-                List[Union["models.BaseComponent", dict]],
+                Sequence[Sequence[Union["models.BaseComponent", dict]]],
+                Sequence[Union["models.BaseComponent", dict]],
                 "models.BaseComponent",
                 dict,
             ]
         ] = None,
         allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
-        attachments: Optional[Optional[List[Union[Attachment, dict]]]] = None,
-        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        attachments: Optional[Optional[Sequence[Union[Attachment, dict]]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Sequence[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
@@ -579,7 +579,7 @@ class Message(BaseMessage):
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
         embed: Optional[Union["models.Embed", dict]] = None,
-        **kwargs,
+        **kwargs: Mapping[str, Any],
     ) -> "Message":
         """
         Reply to this message, takes all the same attributes as `send`.
@@ -607,8 +607,7 @@ class Message(BaseMessage):
 
         Args:
             name: The name of this thread
-            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity,
-            can be set to: 60, 1440, 4320, 10080
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             reason: The optional reason for creating this thread
 
         Returns:

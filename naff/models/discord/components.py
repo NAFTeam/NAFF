@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Iterator
+from typing import Any, Dict, Iterator, List, Optional, Sequence, TYPE_CHECKING, Union
 
 import attrs
 
@@ -240,7 +240,7 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: List[Union[dict, Select, Button]] = field(repr=True, factory=list)
+    components: Sequence[Union[dict, Select, Button]] = field(repr=True, factory=list)
     type: Union[ComponentTypes, int] = field(
         default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
@@ -278,7 +278,7 @@ class ActionRow(BaseComponent):
         Add one or more component(s) to this action row.
 
         Args:
-            components: The components to add
+            *components: The components to add
 
         """
         self.components += [self._component_checks(c) for c in components]
@@ -335,7 +335,7 @@ def process_components(
     raise ValueError(f"Invalid components: {components}")
 
 
-def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row=5) -> List[ActionRow]:
+def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row: int = 5) -> List[ActionRow]:
     """
     A helper function that spreads your components into `ActionRow`s of a set size.
 

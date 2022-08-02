@@ -12,7 +12,7 @@ try:
     import orjson as json
 except ImportError:
     logger.warning("orjson not installed, built-in json library will be used")
-    import json
+    import json as json
 
 
 _quotes = {

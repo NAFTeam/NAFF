@@ -52,7 +52,7 @@ class AsyncIterator(_AsyncIterator, ABC):
             List of objects
 
         Raises:
-              QueueEmpty when no more objects are available.
+            QueueEmpty:  when no more objects are available.
 
         """
         ...
