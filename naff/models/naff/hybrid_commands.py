@@ -144,7 +144,7 @@ class _ChoicesConverter(_LiteralConverter):
 class _RangeConverter(Converter[float | int]):
     def __init__(
         self,
-        number_convert: Callable[[HybridContext, Any], Coroutine],
+        number_convert: Callable[[HybridContext, Any], Any],
         number_type: int,
         min_value: Optional[float | int],
         max_value: Optional[float | int],
@@ -156,7 +156,7 @@ class _RangeConverter(Converter[float | int]):
 
     async def convert(self, ctx: HybridContext, argument: str) -> float | int:
         try:
-            converted: float | int = await self.number_convert(ctx, argument)
+            converted: float | int = await maybe_coroutine(self.number_convert, ctx, argument)
 
             if self.min_value and converted < self.min_value:
                 raise BadArgument(f'Value "{argument}" is less than {self.min_value}.')
@@ -189,8 +189,8 @@ class _NarrowedChannelConverter(BaseChannelConverter):
 class _StackedConverter(Converter):
     def __init__(
         self,
-        ori_converter_func: Callable[[HybridContext, Any], Coroutine],
-        additional_converter_func: Callable[[HybridContext, Any], Coroutine],
+        ori_converter_func: Callable[[HybridContext, Any], Any],
+        additional_converter_func: Callable[[HybridContext, Any], Any],
     ) -> None:
         self._ori_converter_func = ori_converter_func
         self._additional_converter_func = additional_converter_func
@@ -203,8 +203,8 @@ class _StackedConverter(Converter):
 class _StackedNoArgConverter(NoArgumentConverter):
     def __init__(
         self,
-        ori_converter_func: Callable[[HybridContext, Any], Coroutine],
-        additional_converter_func: Callable[[HybridContext, Any], Coroutine],
+        ori_converter_func: Callable[[HybridContext, Any], Any],
+        additional_converter_func: Callable[[HybridContext, Any], Any],
     ) -> None:
         self._ori_converter_func = ori_converter_func
         self._additional_converter_func = additional_converter_func
