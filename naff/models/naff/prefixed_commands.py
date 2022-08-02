@@ -3,7 +3,7 @@ import inspect
 import typing
 from collections import deque
 from types import NoneType, UnionType
-from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING, Type
+from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING, Type, TypeGuard
 
 import attrs
 
@@ -112,6 +112,10 @@ class _PrefixedArgsIterator:
         return self.index >= self.length
 
 
+def _check_for_no_arg(anno: Any) -> TypeGuard[NoArgumentConverter]:
+    return isinstance(anno, NoArgumentConverter) or (inspect.isclass(anno) and issubclass(anno, NoArgumentConverter))
+
+
 def _convert_to_bool(argument: str) -> bool:
     lowered = argument.lower()
     if lowered in {"yes", "y", "true", "t", "1", "enable", "on"}:
@@ -146,13 +150,17 @@ def _get_converter(anno: type, name: str) -> Callable[["PrefixedContext", str], 
     elif typing.get_origin(anno) is Literal:
         literals = typing.get_args(anno)
         return _LiteralConverter(literals).convert
-    elif inspect.isfunction(anno):
+    elif inspect.isroutine(anno):
         num_params = len(inspect.signature(anno).parameters.values())
         match num_params:
             case 2:
-                return lambda ctx, arg: anno(ctx, arg)
+                return anno
             case 1:
-                return lambda ctx, arg: anno(arg)
+
+                async def _one_function_cmd(ctx, arg) -> Any:
+                    return await maybe_coroutine(anno, arg)
+
+                return _one_function_cmd
             case 0:
                 ValueError(f"{get_object_name(anno)} for {name} has 0 arguments, which is unsupported.")
             case _:
@@ -441,7 +449,7 @@ class PrefixedCommand(BaseCommand):
             if typing.get_origin(anno) in {Union, UnionType}:
                 cmd_param.union = True
                 for arg in typing.get_args(anno):
-                    if isinstance(anno, NoArgumentConverter):
+                    if _check_for_no_arg(anno):
                         cmd_param.no_argument = True
 
                     if arg != NoneType:
@@ -450,7 +458,7 @@ class PrefixedCommand(BaseCommand):
                     elif not cmd_param.optional:  # d.py-like behavior
                         cmd_param.default = None
             else:
-                if isinstance(anno, NoArgumentConverter):
+                if _check_for_no_arg(anno):
                     cmd_param.no_argument = True
 
                 converter = _get_converter(anno, name)
@@ -607,6 +615,8 @@ class PrefixedCommand(BaseCommand):
         """
         # sourcery skip: remove-empty-nested-block, remove-redundant-if, remove-unnecessary-else
         if len(self.parameters) == 0:
+            if ctx.args and not self.ignore_extra:
+                raise BadArgument(f"Too many arguments passed to {self.name}.")
             return await self.call_with_binding(callback, ctx)
         else:
             # this is slightly costly, but probably worth it
@@ -658,6 +668,15 @@ class PrefixedCommand(BaseCommand):
 
             if param_index < len(self.parameters):
                 for param in self.parameters[param_index:]:
+                    if param.no_argument:
+                        converted, _ = await _convert(param, ctx, None)  # type: ignore
+                        if not param.consume_rest:
+                            new_args.append(converted)
+                        else:
+                            kwargs[param.name] = converted
+                            break
+                        continue
+
                     if not param.optional:
                         raise BadArgument(f"{param.name} is a required argument that is missing.")
                     else:

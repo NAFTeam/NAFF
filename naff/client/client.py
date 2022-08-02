@@ -33,9 +33,7 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.api.events import RawGatewayEvent, MessageCreate
-from naff.api.events import processors
-from naff.api.events.internal import Component, BaseEvent
+from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
@@ -107,6 +105,78 @@ if TYPE_CHECKING:
 
 
 __all__ = ("Client",)
+
+
+# see https://discord.com/developers/docs/topics/gateway#list-of-intents
+_INTENT_EVENTS: dict[BaseEvent, list[Intents]] = {
+    # Intents.GUILDS
+    events.GuildJoin: [Intents.GUILDS],
+    events.GuildLeft: [Intents.GUILDS],
+    events.GuildUpdate: [Intents.GUILDS],
+    events.RoleCreate: [Intents.GUILDS],
+    events.RoleDelete: [Intents.GUILDS],
+    events.RoleUpdate: [Intents.GUILDS],
+    events.ChannelCreate: [Intents.GUILDS],
+    events.ChannelDelete: [Intents.GUILDS],
+    events.ChannelUpdate: [Intents.GUILDS],
+    events.ThreadCreate: [Intents.GUILDS],
+    events.ThreadDelete: [Intents.GUILDS],
+    events.ThreadListSync: [Intents.GUILDS],
+    events.ThreadMemberUpdate: [Intents.GUILDS],
+    events.ThreadUpdate: [Intents.GUILDS],
+    events.StageInstanceCreate: [Intents.GUILDS],
+    events.StageInstanceDelete: [Intents.GUILDS],
+    events.StageInstanceUpdate: [Intents.GUILDS],
+    # Intents.GUILD_MEMBERS
+    events.MemberAdd: [Intents.GUILD_MEMBERS],
+    events.MemberRemove: [Intents.GUILD_MEMBERS],
+    events.MemberUpdate: [Intents.GUILD_MEMBERS],
+    # Intents.GUILD_BANS
+    events.BanCreate: [Intents.GUILD_BANS],
+    events.BanRemove: [Intents.GUILD_BANS],
+    # Intents.GUILD_EMOJIS_AND_STICKERS
+    events.GuildEmojisUpdate: [Intents.GUILD_EMOJIS_AND_STICKERS],
+    events.GuildStickersUpdate: [Intents.GUILD_EMOJIS_AND_STICKERS],
+    # Intents.GUILD_BANS
+    events.IntegrationCreate: [Intents.GUILD_INTEGRATIONS],
+    events.IntegrationDelete: [Intents.GUILD_INTEGRATIONS],
+    events.IntegrationUpdate: [Intents.GUILD_INTEGRATIONS],
+    # Intents.GUILD_WEBHOOKS
+    events.WebhooksUpdate: [Intents.GUILD_WEBHOOKS],
+    # Intents.GUILD_INVITES
+    events.InviteCreate: [Intents.GUILD_INVITES],
+    events.InviteDelete: [Intents.GUILD_INVITES],
+    # Intents.GUILD_VOICE_STATES
+    events.VoiceStateUpdate: [Intents.GUILD_VOICE_STATES],
+    # Intents.GUILD_PRESENCES
+    events.PresenceUpdate: [Intents.GUILD_PRESENCES],
+    # Intents.GUILD_MESSAGES
+    events.MessageDeleteBulk: [Intents.GUILD_MESSAGES],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    events.AutoModExec: [Intents.AUTO_MODERATION_EXECUTION, Intents.AUTO_MOD],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    events.AutoModCreated: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    events.AutoModUpdated: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    events.AutoModDeleted: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    # multiple intents
+    events.ThreadMembersUpdate: [Intents.GUILDS, Intents.GUILD_MEMBERS],
+    events.TypingStart: [Intents.GUILD_MESSAGE_TYPING, Intents.DIRECT_MESSAGE_TYPING, Intents.TYPING],
+    events.MessageUpdate: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.MessageCreate: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.MessageDelete: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.ChannelPinsUpdate: [Intents.GUILDS, Intents.DIRECT_MESSAGES],
+    events.MessageReactionAdd: [Intents.GUILD_MESSAGE_REACTIONS, Intents.DIRECT_MESSAGE_REACTIONS, Intents.REACTIONS],
+    events.MessageReactionRemove: [
+        Intents.GUILD_MESSAGE_REACTIONS,
+        Intents.DIRECT_MESSAGE_REACTIONS,
+        Intents.REACTIONS,
+    ],
+    events.MessageReactionRemoveAll: [
+        Intents.GUILD_MESSAGE_REACTIONS,
+        Intents.DIRECT_MESSAGE_REACTIONS,
+        Intents.REACTIONS,
+    ],
+}
 
 
 class Client(
@@ -230,7 +300,7 @@ class Client(
             auto_defer = auto_defer or AutoDefer()
         self.auto_defer = auto_defer
         """A system to automatically defer commands after a set duration"""
-        self.intents = intents
+        self.intents = intents if isinstance(intents, Intents) else Intents(intents)
 
         # resources
 
@@ -498,7 +568,7 @@ class Client(
 
     @Listener.create()
     async def _on_error(self, event: events.Error) -> None:
-        self.on_error(event.source, event.error, *event.args, **event.kwargs)
+        await self.on_error(event.source, event.error, *event.args, **event.kwargs)
 
     async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
@@ -963,6 +1033,15 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
+        # check that the required intents are enabled
+        event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
+        if event_class := globals().get(event_class_name):
+            if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
+                if not any(required_intent in self.intents for required_intent in required_intents):
+                    self.logger.warning(
+                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
+                    )
+
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
@@ -1040,6 +1119,17 @@ class Client(
             command PrefixedCommand: The command to add
 
         """
+        # check that the required intent is enabled or the prefix is a mention
+        prefixes = (
+            self.default_prefix
+            if not isinstance(self.default_prefix, str) and not self.default_prefix == MENTION_PREFIX
+            else (self.default_prefix,)
+        )
+        if (MENTION_PREFIX not in prefixes) and (Intents.GUILD_MESSAGE_CONTENT not in self.intents):
+            self.logger.warning(
+                f"Prefixed commands will not work since the required intent is not set -> Requires: `{Intents.GUILD_MESSAGE_CONTENT.__repr__()}` or usage of the default `MENTION_PREFIX` as the prefix"
+            )
+
         command._parse_parameters()
 
         if self.prefixed_commands.get(command.name):
