@@ -126,3 +126,8 @@ def release(ctx: Context) -> None:
         pyproject = tomli.load(f)
     version = pyproject["tool"]["poetry"]["version"]
     ctx.run("python -m twine upload dist/*", title=f"Uploading {version} to PyPI...")
+
+    ctx.run(
+        ["gh", "release", "create", f"NAFF-{version}", "-d", "-t", f"NAFF {version}", "--generate-notes"],
+        title=f"Creating release {version} on GitHub...",
+    )
