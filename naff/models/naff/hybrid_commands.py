@@ -216,6 +216,8 @@ class _StackedNoArgConverter(NoArgumentConverter):
 
 @define()
 class HybridCommand(SlashCommand):
+    """A subclass of SlashCommand that handles the logic for hybrid commands."""
+
     async def __call__(self, context: InteractionContext, *args, **kwargs) -> None:
         new_ctx = context.bot.hybrid_context.from_interaction_context(context)
         return await super().__call__(new_ctx, *args, **kwargs)
