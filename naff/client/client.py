@@ -1110,6 +1110,7 @@ class Client(
                     _prefixed_cmd.add_command(prefixed_base)
 
             new_command = _prefixed_from_slash(command)
+            new_command._parse_parameters()
             prefixed_base.add_command(new_command)
         else:
             new_command = _prefixed_from_slash(command)
