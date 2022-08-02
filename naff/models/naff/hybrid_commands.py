@@ -5,7 +5,7 @@ import asyncio
 from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, TypeGuard
 
 
-from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE, T
+from naff.client.const import Absent, GLOBAL_SCOPE, MISSING, T
 from naff.client.errors import BadArgument
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
@@ -323,13 +323,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
             if option.autocomplete:
                 # there isn't much we can do here
-                logger.warning(
-                    "While parsing a hybrid command, NAFF detected an option with"
-                    " autocomplete enabled - prefixed commands have no ability to replicate"
-                    " autocomplete due to the variety of technical challenges they impose,"
-                    " and so will pass in the user's raw input instead. Please add"
-                    " safeguards to convert the user's input as appropriate."
-                )
+                raise ValueError("Cannot use autocomplete in hybrid commands.")
 
             if annotation in {OptionTypes.STRING, OptionTypes.INTEGER, OptionTypes.NUMBER} and option.choices:
                 annotation = _ChoicesConverter(option.choices).convert
