@@ -2,14 +2,13 @@ import inspect
 import functools
 import asyncio
 
-import typing
-from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, Annotated
+from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, TypeGuard
 
 
 from naff.client.const import MISSING, Absent, logger, GLOBAL_SCOPE, T
 from naff.client.errors import BadArgument
 from naff.client.utils.attr_utils import field
-from naff.client.utils.misc_utils import get_object_name
+from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
 from naff.models.naff.command import BaseCommand
 from naff.models.naff.application_commands import (
     SlashCommand,
@@ -43,18 +42,10 @@ __all__ = ("HybridCommand", "hybrid_command", "hybrid_subcommand")
 _get_converter_function = BaseCommand._get_converter_function
 
 
-def _search_through_annotation(param_annotation: Any, type_: T) -> Optional[T]:
-    found_annotation = None
-
-    if isinstance(param_annotation, type_):  # type: ignore
-        found_annotation = param_annotation
-    elif typing.get_origin(param_annotation) == Annotated:
-        for arg_anno in typing.get_args(param_annotation):
-            if isinstance(arg_anno, type_):  # type: ignore
-                found_annotation = arg_anno
-                break
-
-    return found_annotation
+def _check_if_annotation(param_annotation: Any, type_: type[T]) -> TypeGuard[T]:
+    return (
+        isinstance(param_annotation, type_) or inspect.isclass(param_annotation) and issubclass(param_annotation, type_)
+    )
 
 
 def _create_subcmd_func(group: bool = False) -> Callable:
@@ -205,8 +196,8 @@ class _StackedConverter(Converter):
         self._additional_converter_func = additional_converter_func
 
     async def convert(self, ctx: HybridContext, argument: Any) -> Any:
-        part_one = await self._ori_converter_func(ctx, argument)
-        return await self._additional_converter_func(ctx, part_one)
+        part_one = await maybe_coroutine(self._ori_converter_func, ctx, argument)
+        return await maybe_coroutine(self._additional_converter_func, ctx, part_one)
 
 
 class _StackedNoArgConverter(NoArgumentConverter):
@@ -219,8 +210,8 @@ class _StackedNoArgConverter(NoArgumentConverter):
         self._additional_converter_func = additional_converter_func
 
     async def convert(self, ctx: HybridContext, _: Any) -> Any:
-        part_one = await self._ori_converter_func(ctx, _)
-        return await self._additional_converter_func(ctx, part_one)
+        part_one = await maybe_coroutine(self._ori_converter_func, ctx, _)
+        return await maybe_coroutine(self._additional_converter_func, ctx, part_one)
 
 
 class HybridCommand(SlashCommand):
@@ -345,16 +336,15 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                 annotation = _NarrowedChannelConverter(option.channel_types).convert
 
             if ori_param := old_params.pop(str(option.name), None):
-                if ori_param.annotation != inspect._empty:
-                    if param_converter := _search_through_annotation(ori_param.annotation, Converter):
-                        if option.type != OptionTypes.ATTACHMENT:
-                            annotation = _StackedConverter(
-                                annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
-                            )
-                        else:
-                            annotation = _StackedNoArgConverter(
-                                _get_converter_function(annotation, ""), _get_converter_function(param_converter, str(option.name))  # type: ignore
-                            )
+                if ori_param.annotation != inspect._empty and _check_if_annotation(ori_param.annotation, Converter):
+                    if option.type != OptionTypes.ATTACHMENT:
+                        annotation = _StackedConverter(
+                            annotation, _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
+                        )
+                    else:
+                        annotation = _StackedNoArgConverter(
+                            _get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
+                        )
 
                 default = inspect._empty if option.required else ori_param.default
             else:
@@ -372,13 +362,13 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
         for remaining_param in old_params.values():
             # no argument converters need to be passed on
-            if param_converter := _search_through_annotation(remaining_param.annotation, NoArgumentConverter):
+            if _check_if_annotation(remaining_param.annotation, NoArgumentConverter):
                 new_parameters.append(
                     inspect.Parameter(
                         str(remaining_param.name),
                         inspect.Parameter.POSITIONAL_OR_KEYWORD,
                         default=remaining_param.default,
-                        annotation=param_converter,
+                        annotation=remaining_param.annotation,
                     )
                 )
 
