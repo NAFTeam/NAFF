@@ -41,13 +41,14 @@ def docs(ctx: Context, host="127.0.0.1", port=8000, *, serve=False, clean=False)
 
 
 @duty
-def bump(ctx: Context, bump_type: str, *labels) -> None:
+def bump(ctx: Context, bump_type: str, *labels, commit=False) -> None:
     """
     Bump the version of the project.
 
     Args:
         ctx: The context of this duty
         bump_type: The type of bump, can be an explicit value, or "major", "minor", "patch", "label" or "strip"
+        commit: Whether to commit the changes
     """
     old_labels: list[str] = []
     with open("pyproject.toml", "rb") as f:
@@ -100,6 +101,11 @@ def bump(ctx: Context, bump_type: str, *labels) -> None:
         args=[bump_type],
         title=f"Bumping version {pyproject['tool']['poetry']['version']} -> {new_version}",
     )
+
+    if commit:
+        # commit the changes
+        ctx.run(["git", "add", "pyproject.toml"], title="Staging Commit...")
+        ctx.run(["git", "commit", "-m", "chore: Version bump"], title="Committing changes...")
 
 
 @duty
