@@ -3,7 +3,7 @@ import inspect
 import typing
 from collections import deque
 from types import NoneType, UnionType
-from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING, Type
+from typing import Optional, Any, Callable, Annotated, Literal, Union, TYPE_CHECKING, Type, TypeGuard
 
 import attrs
 
@@ -108,6 +108,10 @@ class _PrefixedArgsIterator:
     @property
     def finished(self) -> bool:
         return self.index >= self.length
+
+
+def _check_for_no_arg(anno: Any) -> TypeGuard[NoArgumentConverter]:
+    return isinstance(anno, NoArgumentConverter) or (inspect.isclass(anno) and issubclass(anno, NoArgumentConverter))
 
 
 def _convert_to_bool(argument: str) -> bool:
@@ -433,7 +437,7 @@ class PrefixedCommand(BaseCommand):
             if typing.get_origin(anno) in {Union, UnionType}:
                 cmd_param.union = True
                 for arg in typing.get_args(anno):
-                    if isinstance(anno, NoArgumentConverter):
+                    if _check_for_no_arg(anno):
                         cmd_param.no_argument = True
 
                     if arg != NoneType:
@@ -442,7 +446,7 @@ class PrefixedCommand(BaseCommand):
                     elif not cmd_param.optional:  # d.py-like behavior
                         cmd_param.default = None
             else:
-                if isinstance(anno, NoArgumentConverter):
+                if _check_for_no_arg(anno):
                     cmd_param.no_argument = True
 
                 converter = _get_converter(anno, name)
