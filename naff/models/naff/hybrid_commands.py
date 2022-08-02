@@ -34,6 +34,7 @@ from naff.models.naff.context import HybridContext, InteractionContext, Prefixed
 if TYPE_CHECKING:
     from naff.models.naff.checks import TYPE_CHECK_FUNCTION
     from naff.models.discord.channel import BaseChannel
+    from naff.models.discord.message import Attachment
     from naff.models.discord.enums import Permissions, ChannelTypes
     from naff.models.discord.snowflake import Snowflake_Type
 
@@ -58,13 +59,21 @@ class _UnionConverter(Converter):
         raise BadArgument(f'Could not convert "{arg}" into {union_types_str}.')
 
 
-def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Coroutine]:
+class _BasicAttachmentConverter(NoArgumentConverter):
+    def convert(self, ctx: HybridContext, _: Any) -> "Attachment":
+        try:
+            return ctx.message.attachments[0]
+        except (AttributeError, IndexError):
+            raise BadArgument("No attachment found.") from None
+
+
+def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Any]:
     if option_type == 3:
-        return lambda ctx, arg: str(arg)  # type: ignore
+        return lambda ctx, arg: str(arg)
     if option_type == 4:
-        return lambda ctx, arg: int(arg)  # type: ignore
+        return lambda ctx, arg: int(arg)
     if option_type == 5:
-        return lambda ctx, arg: _convert_to_bool(arg)  # type: ignore
+        return lambda ctx, arg: _convert_to_bool(arg)
     if option_type == 6:
         return _get_converter_function(_UnionConverter(MemberConverter, UserConverter), "")
     if option_type == 7:
@@ -74,10 +83,9 @@ def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Corou
     if option_type == 9:
         return _get_converter_function(_UnionConverter(MemberConverter, UserConverter, RoleConverter), "")
     if option_type == 10:
-        return lambda ctx, arg: float(arg)  # type: ignore
+        return lambda ctx, arg: float(arg)
     if option_type == 11:
-        # attachment support, currently not possible in prefixed commands
-        raise ValueError("Attachments are not supported in hybrid commands right now.")
+        return _BasicAttachmentConverter()  # type: ignore
 
     raise ValueError(f"{option_type} is an unsupported option type right now.")
 
@@ -269,6 +277,20 @@ class _StackedConverter(Converter):
         return await self._additional_converter_func(ctx, part_one)
 
 
+class _StackedNoArgConverter(NoArgumentConverter):
+    def __init__(
+        self,
+        ori_converter_func: Callable[[HybridContext, Any], Coroutine],
+        additional_converter_func: Callable[[HybridContext, Any], Coroutine],
+    ) -> None:
+        self._ori_converter_func = ori_converter_func
+        self._additional_converter_func = additional_converter_func
+
+    async def convert(self, ctx: HybridContext, _: Any) -> Any:
+        part_one = await self._ori_converter_func(ctx, _)
+        return await self._additional_converter_func(ctx, part_one)
+
+
 def _base_subcommand_generator(
     name: str, aliases: list[str], description: str, group: bool = False
 ) -> _HybridPrefixedCommand:
@@ -292,10 +314,16 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             old_func = functools.partial(cmd.callback, None)
 
         old_params = dict(inspect.signature(old_func).parameters)
+        attachment_option = False
 
         standardized_options = ((SlashCommandOption(**o) if isinstance(o, dict) else o) for o in cmd.options)
         for option in standardized_options:
             annotation = _match_option_type(option.type)
+
+            if option.type == OptionTypes.ATTACHMENT:
+                if attachment_option:
+                    raise ValueError("Cannot have multiple attachment options.")
+                attachment_option = True
 
             if option.autocomplete:
                 # there isn't much we can do here
@@ -319,9 +347,14 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             if ori_param := old_params.pop(str(option.name), None):
                 if ori_param.annotation != inspect._empty:
                     if param_converter := _search_through_annotation(ori_param.annotation, Converter):
-                        annotation = _StackedConverter(
-                            annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
-                        )
+                        if option.type != OptionTypes.ATTACHMENT:
+                            annotation = _StackedConverter(
+                                annotation, _get_converter_function(param_converter, str(option.name))  # type: ignore
+                            )
+                        else:
+                            annotation = _StackedNoArgConverter(
+                                _get_converter_function(annotation, ""), _get_converter_function(param_converter, str(option.name))  # type: ignore
+                            )()
 
                 default = inspect._empty if option.required else ori_param.default
             else:
@@ -395,7 +428,8 @@ def hybrid_command(
     Hybrid commands are a slash command that can also function as a prefixed command.
     These use a HybridContext instead of an InteractionContext, but otherwise are mostly identical to normal slash commands.
 
-    Note that hybrid commands do not support attachment options or autocompletes.
+    Note that hybrid commands does not support autocompletes.
+    They also only partially support attachments, allowing one attachment option for a command.
 
     note:
         While the base and group descriptions arent visible in the discord client, currently.
