@@ -43,53 +43,6 @@ __all__ = ("HybridCommand", "hybrid_command", "hybrid_subcommand")
 _get_converter_function = BaseCommand._get_converter_function
 
 
-class _UnionConverter(Converter):
-    def __init__(self, *converters: type[Converter]) -> None:
-        self._converters = converters
-
-    async def convert(self, ctx: HybridContext, arg: Any) -> Any:
-        for converter in self._converters:
-            try:
-                return await converter().convert(ctx, arg)
-            except Exception:  # noqa
-                continue
-
-        union_names = tuple(get_object_name(t).removesuffix("Converter") for t in self._converters)
-        union_types_str = ", ".join(union_names[:-1]) + f", or {union_names[-1]}"
-        raise BadArgument(f'Could not convert "{arg}" into {union_types_str}.')
-
-
-class _BasicAttachmentConverter(NoArgumentConverter):
-    def convert(self, ctx: HybridContext, _: Any) -> "Attachment":
-        try:
-            return ctx.message.attachments[0]
-        except (AttributeError, IndexError):
-            raise BadArgument("No attachment found.") from None
-
-
-def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Any]:
-    if option_type == 3:
-        return lambda ctx, arg: str(arg)
-    if option_type == 4:
-        return lambda ctx, arg: int(arg)
-    if option_type == 5:
-        return lambda ctx, arg: _convert_to_bool(arg)
-    if option_type == 6:
-        return _get_converter_function(_UnionConverter(MemberConverter, UserConverter), "")
-    if option_type == 7:
-        return _get_converter_function(BaseChannelConverter, "")
-    if option_type == 8:
-        return _get_converter_function(RoleConverter, "")
-    if option_type == 9:
-        return _get_converter_function(_UnionConverter(MemberConverter, UserConverter, RoleConverter), "")
-    if option_type == 10:
-        return lambda ctx, arg: float(arg)
-    if option_type == 11:
-        return _BasicAttachmentConverter  # type: ignore
-
-    raise ValueError(f"{option_type} is an unsupported option type right now.")
-
-
 def _search_through_annotation(param_annotation: Any, type_: T) -> Optional[T]:
     found_annotation = None
 
@@ -134,72 +87,51 @@ async def _guild_check(ctx: HybridContext) -> bool:
     return bool(ctx.guild_id)
 
 
-class HybridCommand(SlashCommand):
-    async def __call__(self, context: InteractionContext, *args, **kwargs) -> None:
-        new_ctx = context.bot.hybrid_context.from_interaction_context(context)
-        return await super().__call__(new_ctx, *args, **kwargs)
+def _match_option_type(option_type: int) -> Callable[[HybridContext, Any], Any]:
+    if option_type == 3:
+        return lambda ctx, arg: str(arg)
+    if option_type == 4:
+        return lambda ctx, arg: int(arg)
+    if option_type == 5:
+        return lambda ctx, arg: _convert_to_bool(arg)
+    if option_type == 6:
+        return _get_converter_function(_UnionConverter(MemberConverter, UserConverter), "")
+    if option_type == 7:
+        return _get_converter_function(BaseChannelConverter, "")
+    if option_type == 8:
+        return _get_converter_function(RoleConverter, "")
+    if option_type == 9:
+        return _get_converter_function(_UnionConverter(MemberConverter, UserConverter, RoleConverter), "")
+    if option_type == 10:
+        return lambda ctx, arg: float(arg)
+    if option_type == 11:
+        return _BasicAttachmentConverter  # type: ignore
 
-    def group(self, name: str = None, description: str = "No Description Set") -> "HybridCommand":
-        return HybridCommand(
-            name=self.name,
-            description=self.description,
-            group_name=name,
-            group_description=description,
-            scopes=self.scopes,
-        )
-
-    def subcommand(
-        self,
-        sub_cmd_name: LocalisedName | str,
-        group_name: LocalisedName | str = None,
-        sub_cmd_description: Absent[LocalisedDesc | str] = MISSING,
-        group_description: Absent[LocalisedDesc | str] = MISSING,
-        options: list[SlashCommandOption | dict] = None,
-        nsfw: bool = False,
-    ) -> Callable[..., "HybridCommand"]:
-        def wrapper(call: Callable[..., Coroutine]) -> "HybridCommand":
-            nonlocal sub_cmd_description
-
-            if not asyncio.iscoroutinefunction(call):
-                raise TypeError("Subcommand must be coroutine")
-
-            if sub_cmd_description is MISSING:
-                sub_cmd_description = call.__doc__ or "No Description Set"
-
-            return HybridCommand(
-                name=self.name,
-                description=self.description,
-                group_name=group_name or self.group_name,
-                group_description=group_description or self.group_description,
-                sub_cmd_name=sub_cmd_name,
-                sub_cmd_description=sub_cmd_description,
-                default_member_permissions=self.default_member_permissions,
-                dm_permission=self.dm_permission,
-                options=options,
-                callback=call,
-                scopes=self.scopes,
-                nsfw=nsfw,
-            )
-
-        return wrapper
+    raise ValueError(f"{option_type} is an unsupported option type right now.")
 
 
-class _HybridPrefixedCommand(PrefixedCommand):
-    _uses_subcommand_base: bool = field(default=False)
+class _UnionConverter(Converter):
+    def __init__(self, *converters: type[Converter]) -> None:
+        self._converters = converters
 
-    async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
-        new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
-        return await super().__call__(new_ctx, *args, **kwargs)
+    async def convert(self, ctx: HybridContext, arg: Any) -> Any:
+        for converter in self._converters:
+            try:
+                return await converter().convert(ctx, arg)
+            except Exception:  # noqa
+                continue
 
-    def add_command(self, cmd: "_HybridPrefixedCommand") -> None:
-        super().add_command(cmd)
+        union_names = tuple(get_object_name(t).removesuffix("Converter") for t in self._converters)
+        union_types_str = ", ".join(union_names[:-1]) + f", or {union_names[-1]}"
+        raise BadArgument(f'Could not convert "{arg}" into {union_types_str}.')
 
-        if not self._uses_subcommand_base:
-            self.callback = _create_subcmd_func(group=self.is_subcommand)
-            self.parameters = []
-            self.ignore_extra = False
-            self._inspect_signature = inspect.Signature(None)
-            self._uses_subcommand_base = True
+
+class _BasicAttachmentConverter(NoArgumentConverter):
+    def convert(self, ctx: HybridContext, _: Any) -> "Attachment":
+        try:
+            return ctx.message.attachments[0]
+        except (AttributeError, IndexError):
+            raise BadArgument("No attachment found.") from None
 
 
 class _ChoicesConverter(_LiteralConverter):
@@ -289,6 +221,74 @@ class _StackedNoArgConverter(NoArgumentConverter):
     async def convert(self, ctx: HybridContext, _: Any) -> Any:
         part_one = await self._ori_converter_func(ctx, _)
         return await self._additional_converter_func(ctx, part_one)
+
+
+class HybridCommand(SlashCommand):
+    async def __call__(self, context: InteractionContext, *args, **kwargs) -> None:
+        new_ctx = context.bot.hybrid_context.from_interaction_context(context)
+        return await super().__call__(new_ctx, *args, **kwargs)
+
+    def group(self, name: str = None, description: str = "No Description Set") -> "HybridCommand":
+        return HybridCommand(
+            name=self.name,
+            description=self.description,
+            group_name=name,
+            group_description=description,
+            scopes=self.scopes,
+        )
+
+    def subcommand(
+        self,
+        sub_cmd_name: LocalisedName | str,
+        group_name: LocalisedName | str = None,
+        sub_cmd_description: Absent[LocalisedDesc | str] = MISSING,
+        group_description: Absent[LocalisedDesc | str] = MISSING,
+        options: list[SlashCommandOption | dict] = None,
+        nsfw: bool = False,
+    ) -> Callable[..., "HybridCommand"]:
+        def wrapper(call: Callable[..., Coroutine]) -> "HybridCommand":
+            nonlocal sub_cmd_description
+
+            if not asyncio.iscoroutinefunction(call):
+                raise TypeError("Subcommand must be coroutine")
+
+            if sub_cmd_description is MISSING:
+                sub_cmd_description = call.__doc__ or "No Description Set"
+
+            return HybridCommand(
+                name=self.name,
+                description=self.description,
+                group_name=group_name or self.group_name,
+                group_description=group_description or self.group_description,
+                sub_cmd_name=sub_cmd_name,
+                sub_cmd_description=sub_cmd_description,
+                default_member_permissions=self.default_member_permissions,
+                dm_permission=self.dm_permission,
+                options=options,
+                callback=call,
+                scopes=self.scopes,
+                nsfw=nsfw,
+            )
+
+        return wrapper
+
+
+class _HybridPrefixedCommand(PrefixedCommand):
+    _uses_subcommand_base: bool = field(default=False)
+
+    async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
+        new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
+        return await super().__call__(new_ctx, *args, **kwargs)
+
+    def add_command(self, cmd: "_HybridPrefixedCommand") -> None:
+        super().add_command(cmd)
+
+        if not self._uses_subcommand_base:
+            self.callback = _create_subcmd_func(group=self.is_subcommand)
+            self.parameters = []
+            self.ignore_extra = False
+            self._inspect_signature = inspect.Signature(None)
+            self._uses_subcommand_base = True
 
 
 def _base_subcommand_generator(
