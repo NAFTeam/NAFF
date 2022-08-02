@@ -48,6 +48,9 @@ theme:
   icon:
     repo: fontawesome/brands/github-alt
     logo: material/book
+  font:
+    code: Roboto Mono
+
 
 extra:
   social:
@@ -111,7 +114,7 @@ plugins:
       minify_html: true
   - privacy:  # keep me at the bottom of the plugin list
       externals: bundle
-      enabled: !ENV [PRIVACY, false]
+      enabled: !ENV [PRIVACY, False]
 
 markdown_extensions:
   - meta
