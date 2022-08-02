@@ -8,7 +8,7 @@ div.doc-contents:not(.first) {
   padding-left: 25px;
   padding-right: 25px;
   border-left: 4px solid rgba(230, 230, 230);
-  margin-bottom: 2.5em;
+  margin-bottom: 1.5em;
 }
 
 /* Setup theme dependent syntax highlighting */
@@ -39,9 +39,34 @@ div.doc-contents:not(.first) {
   /* Keeps doc headings from overlapping with multiple classes in one file */
   height: 1.4em;
   overflow: hidden;
+  margin-top: 0.3em;
 }
 
 /* Makes negative checkboxes red */
 .md-typeset input[type="checkbox"]:not(:checked) + .task-list-indicator::before {
   background-color: #E25141;
+}
+
+.md-typeset p{
+  font-size: 0.8em;
+}
+.md-typeset h1{
+  font-size: 1.5em;
+}
+.md-typeset h3{
+  font-size: 1em;
+}
+
+.md-typeset ul{
+  font-size: 0.8em;
+}
+.li{
+  font-size: 0.8em;
+}
+
+.md-typeset code{
+  font-size: 0.8em;
+}
+.highlighttable .linenos{
+  font-size: 0.8em;
 }
