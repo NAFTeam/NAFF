@@ -1,3 +1,7 @@
+---
+search:
+  exclude: true
+---
 # Mono-Doc
 This file holds the entire API reference in a single page; should that be your preference.
 

@@ -17,21 +17,34 @@ theme:
     - search.suggest
     - search.share
     - navigation.indexes
+    - navigation.prune
+    - toc.follow
+    - content.tooltips
+    - content.code.annotate
   palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: light green
       accent: lime
       toggle:
-        icon: material/weather-night
+        icon: material/brightness-7
         name: Switch to dark mode
+
+    # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: green
       accent: lime
       toggle:
-        icon: material/weather-sunny
-        name: Switch to light mode
+        icon: material/brightness-4
+        name: Switch to system preference
   icon:
     repo: fontawesome/brands/github-alt
     logo: material/book
@@ -47,39 +60,60 @@ extra:
     - icon: fontawesome/brands/trello
       link: https://trello.com/b/LVjnmYKt/dev-board
       name: Trello Board
-  analytics:
-      provider: google
-      property: G-9R5R4B0NDT
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+    actions:
+      - accept
+      - reject
+    cookies:
+      analytics:
+        provider: google
+        property: G-9R5R4B0NDT
+        checked: false
+
 
 extra_css:
   - extra.css
 
 plugins:
-- search
-- awesome-pages
-- autorefs
-- mkdocstrings:
-#    custom_templates: docs/templates
-    enable_inventory: true
-    handlers:
-      python:
-        selection:
-          inherited_members: true
-          filters:
-            - "!^_"
-        rendering:
-          members_order: source
-          show_bases: True
-          show_root_toc_entry: False
-          group_by_category: False
-          heading_level: 3
-          show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
-    watch:
-      - naff
-- minify:
-    minify_html: true
+  - search
+  - awesome-pages
+  - autorefs
+  - git-committers:
+        repository: NAFTeam/NAFF
+        token: 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
+  - git-revision-date-localized:
+        fallback_to_build_date: true
+  - mkdocstrings:
+      #    custom_templates: docs/templates
+      enable_inventory: true
+      handlers:
+        python:
+          selection:
+            inherited_members: true
+            filters:
+              - "!^_"
+          rendering:
+            members_order: source
+            show_bases: True
+            show_root_toc_entry: False
+            group_by_category: False
+            heading_level: 3
+            show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
+      watch:
+        - naff
+  - minify:
+      minify_html: true
+  - privacy:  # keep me at the bottom of the plugin list
+      externals: bundle
+      enabled: !ENV [PRIVACY, false]
 
 markdown_extensions:
+  - meta
   - tables
   - admonition
   - pymdownx.details
@@ -107,3 +141,6 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tabbed:
       alternate_style: true
+  - abbr
+  - attr_list
+  - md_in_html

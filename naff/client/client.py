@@ -193,6 +193,7 @@ class Client(
     processors.VoiceEvents,
 ):
     """
+
     The bot client.
 
     note:
@@ -236,6 +237,7 @@ class Client(
 
     !!! note
         Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
+
 
     """
 
