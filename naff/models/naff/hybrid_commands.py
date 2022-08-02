@@ -182,7 +182,7 @@ class _NarrowedChannelConverter(BaseChannelConverter):
     async def convert(self, ctx: HybridContext, argument: str) -> "BaseChannel":
         channel = await super().convert(ctx, argument)
         if channel.type not in self.channel_types:
-            raise BadArgument(f'Channel "{argument}" is not an allowed channel type.')
+            raise BadArgument(f'Channel "{channel.mention}" is not an allowed channel type.')
         return channel
 
 
