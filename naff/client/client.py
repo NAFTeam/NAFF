@@ -196,9 +196,6 @@ class Client(
 
     The bot client.
 
-    note:
-        By default, all non-privileged intents will be enabled
-
     Args:
         intents: The intents to use
 
@@ -235,7 +232,10 @@ class Client(
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
     as an example, this is a recommended attribute `message_cache=create_cache(250, 50)`,
 
-    !!! note
+    ???+ note "Intents Note"
+        By default, all non-privileged intents will be enabled
+
+    ???+ note "Caching Note"
         Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
 
 
