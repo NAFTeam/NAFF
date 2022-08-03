@@ -67,7 +67,6 @@ extra:
   analytics:
     provider: google
     property: G-817ZC2FC56
-    checked: false
     feedback:
       title: Was this page helpful?
       ratings:
@@ -90,9 +89,6 @@ extra:
     actions:
       - accept
       - reject
-    cookies:
-      analytics:
-        name: Google Analytics
 
 extra_css:
   - extra.css
