@@ -1,9 +1,10 @@
 site_name: NAFF
 repo_url: https://github.com/NAFTeam/NAFF
 repo_name: NAFTeam/NAFF
-copyright: Copyright &copy; 2021 - Present LordOfPolls
+copyright: Copyright &copy; 2021 - Present LordOfPolls – <a href="#__consent">Change cookie settings</a>
 docs_dir: docs/src
 edit_uri: edit/master/docs/src
+site_url: https://naff.info/
 
 theme:
   name: material
@@ -63,6 +64,23 @@ extra:
     - icon: fontawesome/brands/trello
       link: https://trello.com/b/LVjnmYKt/dev-board
       name: Trello Board
+  analytics:
+    provider: google
+    property: G-817ZC2FC56
+    checked: false
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/heart
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/heart-broken
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Please create an issue on <a href="https://github.com/NAFTeam/NAFF">Github</a> if you have any suggestions.
   consent:
     title: Cookie consent
     description: >-
@@ -74,13 +92,13 @@ extra:
       - reject
     cookies:
       analytics:
-        provider: google
-        property: G-817ZC2FC56
-        checked: false
-
+        name: Google Analytics
 
 extra_css:
   - extra.css
+
+extra_javascript:
+  - scripts/feedback.js
 
 plugins:
   - search
