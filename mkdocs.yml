@@ -75,7 +75,7 @@ extra:
     cookies:
       analytics:
         provider: google
-        property: G-9R5R4B0NDT
+        property: G-817ZC2FC56
         checked: false
 
 
