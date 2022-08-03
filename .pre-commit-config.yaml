@@ -47,5 +47,8 @@ repos:
   #     - id: pyright
   #       args: [--warnings]
 
+exclude:
+  CNAME
+
 ci:
   autoupdate_branch: 'dev'
