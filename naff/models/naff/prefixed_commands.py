@@ -41,6 +41,8 @@ class PrefixedCommandParameter:
     type: Type = attrs.field(
         default=None, metadata=docs("The type of the parameter.")
     )  # yes i can use type here, mkdocs doesnt like that
+    kind: inspect._ParameterKind = attrs.field(default=inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    """The kind of parameter this is as related to the function."""
     converters: list[Callable[["PrefixedContext", str], Any]] = attrs.field(
         factory=list, metadata=docs("A list of the converter functions for the parameter that convert to its type.")
     )
@@ -288,6 +290,7 @@ class PrefixedCommand(BaseCommand):
         metadata=docs("A dict of all subcommands for the command."), factory=dict
     )
     _usage: Optional[str] = field(default=None)
+    _inspect_signature: Optional[inspect.Signature] = field(default=None)
 
     def __attrs_post_init__(self) -> None:
         super().__attrs_post_init__()  # we want checks to work
@@ -410,13 +413,17 @@ class PrefixedCommand(BaseCommand):
         # clear out old parameters just in case
         self.parameters = []
 
-        # we don't care about the ctx or self variables
-        if self.has_binding:
-            callback = functools.partial(self.callback, None, None)
-        else:
-            callback = functools.partial(self.callback, None)
+        if not self._inspect_signature:
+            # we don't care about the ctx or self variables
+            if self.has_binding:
+                callback = functools.partial(self.callback, None, None)
+            else:
+                callback = functools.partial(self.callback, None)
 
-        params = inspect.signature(callback).parameters
+            self._inspect_signature = inspect.signature(callback)
+
+        params = self._inspect_signature.parameters
+
         # this is used by keyword-only and variable args to make sure there isn't more than one of either
         # mind you, we also don't want one keyword-only and one variable arg either
         finished_params = False
@@ -427,6 +434,7 @@ class PrefixedCommand(BaseCommand):
 
             cmd_param = PrefixedCommandParameter()
             cmd_param.name = name
+            cmd_param.kind = param.kind
             cmd_param.default = param.default if param.default is not param.empty else MISSING
 
             cmd_param.type = anno = param.annotation
@@ -646,7 +654,10 @@ class PrefixedCommand(BaseCommand):
                             break
 
                     converted, used_default = await _convert(param, ctx, arg)
-                    if not param.consume_rest:
+                    if param.kind in {
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.VAR_POSITIONAL,
+                    }:
                         new_args.append(converted)
                     else:
                         kwargs[param.name] = converted
@@ -669,7 +680,10 @@ class PrefixedCommand(BaseCommand):
                     if not param.optional:
                         raise BadArgument(f"{param.name} is a required argument that is missing.")
                     else:
-                        if not param.consume_rest:
+                        if param.kind in {
+                            inspect.Parameter.POSITIONAL_ONLY,
+                            inspect.Parameter.VAR_POSITIONAL,
+                        }:
                             new_args.append(param.default)
                         else:
                             kwargs[param.name] = param.default
