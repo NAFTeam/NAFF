@@ -145,6 +145,29 @@ class Extension:
                 for scope in func.scopes:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
+
+                if isinstance(func, naff.HybridCommand):
+                    # here's where things get complicated - we need to unload the prefixed command
+                    if not func.callback:  # not like it was added
+                        return
+
+                    if not func.is_subcommand:
+                        self.bot.prefixed_commands.pop(str(func.name), None)
+                        for alias in list(func.name.to_locale_dict().values()):
+                            self.bot.prefixed_commands.pop(alias, None)
+                    else:
+                        prefixed_base = self.bot.prefixed_commands.get(str(func.name))
+                        if not prefixed_base:
+                            # if something weird happened here, here's a safeguard
+                            continue
+
+                        if func.group_name:
+                            prefixed_base = prefixed_base.subcommands.get(str(func.group_name))
+                            if not prefixed_base:
+                                continue
+
+                        prefixed_base.remove_command(str(func.sub_cmd_name))
+
             elif isinstance(func, naff.PrefixedCommand):
                 if not func.is_subcommand:
                     self.bot.prefixed_commands.pop(func.name, None)
