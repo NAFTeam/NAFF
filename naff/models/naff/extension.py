@@ -156,6 +156,7 @@ class Extension:
                     def _remove_base_cmd(func: naff.HybridCommand) -> None:
                         if cmd := self.bot.prefixed_commands.pop(str(func.name), None):
                             for alias in cmd.aliases:
+                                alias = alias  # wtf, flake?
                                 self.bot.prefixed_commands.pop(alias, None)
 
                     if not func.is_subcommand:
