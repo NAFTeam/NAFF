@@ -152,14 +152,10 @@ class Extension:
                     if not func.callback:  # not like it was added
                         return
 
-                    # trust me, this'll make the code look better
-                    def _remove_base_cmd(func: naff.HybridCommand) -> None:
+                    if not func.is_subcommand:
                         self.bot.prefixed_commands.pop(str(func.name), None)
                         for alias in list(func.name.to_locale_dict().values()):
                             self.bot.prefixed_commands.pop(alias, None)
-
-                    if not func.is_subcommand:
-                        _remove_base_cmd(func)
                     else:
                         prefixed_base = self.bot.prefixed_commands.get(str(func.name))
                         _base_cmd = prefixed_base
@@ -181,9 +177,13 @@ class Extension:
 
                                 # and now the base command is empty
                                 if not _base_cmd.subcommands:  # type: ignore
-                                    _remove_base_cmd(func)
+                                    self.bot.prefixed_commands.pop(str(func.name), None)
+                                    for alias in list(func.name.to_locale_dict().values()):
+                                        self.bot.prefixed_commands.pop(alias, None)
                             else:
-                                _remove_base_cmd(func)
+                                self.bot.prefixed_commands.pop(str(func.name), None)
+                                for alias in list(func.name.to_locale_dict().values()):
+                                    self.bot.prefixed_commands.pop(alias, None)
 
             elif isinstance(func, naff.PrefixedCommand):
                 if not func.is_subcommand:
