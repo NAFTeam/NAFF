@@ -148,15 +148,21 @@ class Extension:
 
                 if isinstance(func, naff.HybridCommand):
                     # here's where things get complicated - we need to unload the prefixed command
+                    # by necessity, there's a lot of logic here to determine what needs to be unloaded
                     if not func.callback:  # not like it was added
                         return
 
+                    # trust me, this'll make the code look better
+                    def _remove_base_cmd(func: naff.HybridCommand) -> None:
+                        if cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                            for alias in cmd.aliases:
+                                self.bot.prefixed_commands.pop(alias, None)
+
                     if not func.is_subcommand:
-                        self.bot.prefixed_commands.pop(str(func.name), None)
-                        for alias in list(func.name.to_locale_dict().values()):
-                            self.bot.prefixed_commands.pop(alias, None)
+                        _remove_base_cmd(func)
                     else:
                         prefixed_base = self.bot.prefixed_commands.get(str(func.name))
+                        _base_cmd = prefixed_base
                         if not prefixed_base:
                             # if something weird happened here, here's a safeguard
                             continue
@@ -167,6 +173,17 @@ class Extension:
                                 continue
 
                         prefixed_base.remove_command(str(func.sub_cmd_name))
+
+                        if not prefixed_base.subcommands:
+                            # the base cmd is now empty, delete it
+                            if func.group_name:
+                                _base_cmd.remove_command(str(func.group_name))  # type: ignore
+
+                                # and now the base command is empty
+                                if not _base_cmd.subcommands:  # type: ignore
+                                    _remove_base_cmd(func)
+                            else:
+                                _remove_base_cmd(func)
 
             elif isinstance(func, naff.PrefixedCommand):
                 if not func.is_subcommand:
