@@ -152,11 +152,7 @@ class Extension:
                     if not func.callback:  # not like it was added
                         return
 
-                    if not func.is_subcommand:
-                        self.bot.prefixed_commands.pop(str(func.name), None)
-                        for alias in list(func.name.to_locale_dict().values()):
-                            self.bot.prefixed_commands.pop(alias, None)
-                    else:
+                    if func.is_subcommand:
                         prefixed_base = self.bot.prefixed_commands.get(str(func.name))
                         _base_cmd = prefixed_base
                         if not prefixed_base:
@@ -177,13 +173,20 @@ class Extension:
 
                                 # and now the base command is empty
                                 if not _base_cmd.subcommands:  # type: ignore
-                                    self.bot.prefixed_commands.pop(str(func.name), None)
-                                    for alias in list(func.name.to_locale_dict().values()):
-                                        self.bot.prefixed_commands.pop(alias, None)
-                            else:
-                                self.bot.prefixed_commands.pop(str(func.name), None)
-                                for alias in list(func.name.to_locale_dict().values()):
+                                    # in case you're curious, i did try to put the below behavior
+                                    # in a function here, but then it turns out a weird python
+                                    # bug can happen if i did that
+                                    if cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                                        for alias in cmd.aliases:
+                                            self.bot.prefixed_commands.pop(alias, None)
+
+                            elif cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                                for alias in cmd.aliases:
                                     self.bot.prefixed_commands.pop(alias, None)
+
+                    elif cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                        for alias in cmd.aliases:
+                            self.bot.prefixed_commands.pop(alias, None)
 
             elif isinstance(func, naff.PrefixedCommand):
                 if not func.is_subcommand:
