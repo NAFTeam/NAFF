@@ -6,4 +6,5 @@ nav:
     - events
     - models
     - ext
+    - utils.md
     - monopage.md
