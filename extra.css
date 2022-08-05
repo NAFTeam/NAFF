@@ -1,6 +1,4 @@
-/*colours*/
-:root {
-
+[data-md-color-scheme=slate] {
     /* Primary color */
     --md-primary-fg-color: #5865F2;
     --md-primary-fg-color--light: #5865F2;
@@ -11,10 +9,19 @@
     --md-accent-fg-color--transparent: #5865F2;
 
     /*background Color*/
-
-}
-[data-md-color-scheme=slate] {
     --md-default-bg-color: #2c2f33;
+    --md-default-bg-color: #2c2f33;
+}
+:root, [data-md-color-scheme="default"]{
+    /* Primary color */
+    --md-primary-fg-color: #5865F2;
+    --md-primary-fg-color--light: #5865F2;
+    --md-primary-fg-color--dark: #5865F2;
+
+    /* Accent color */
+    --md-accent-fg-color: #5865F2;
+    --md-accent-fg-color--transparent: #5865F2;
+
 }
 
 /* Makes the content wider */
