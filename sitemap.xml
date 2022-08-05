@@ -36,6 +36,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://naff.info/API%20Reference/utils.html</loc>
+         <lastmod>2022-08-05</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://naff.info/API%20Reference/API_Communication/HTTP/HTTP_client.html</loc>
          <lastmod>2022-08-05</lastmod>
          <changefreq>daily</changefreq>
