@@ -411,6 +411,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://naff.info/Guides/40%20Tasks.html</loc>
+         <lastmod>2022-08-05</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://naff.info/Guides/80%20Sharding.html</loc>
          <lastmod>2022-08-05</lastmod>
          <changefreq>daily</changefreq>
