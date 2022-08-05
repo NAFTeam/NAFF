@@ -19,7 +19,7 @@ Tasks work by creating an `asyncio.Task` to run a loop to check if the task is r
 
 === ":two: Manual Registration"
     You can also manually register tasks
-    
+
     ```python
     from naff import Task, IntervalTrigger
 
@@ -94,7 +94,7 @@ To start a task that has been created, you need to run the `Task.start()` method
     ```
 
 === ":two: Manual Registration"
-    
+
     ```python
     from naff import Client, Intents, Task, IntervalTrigger, listen
 
