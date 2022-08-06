@@ -2,437 +2,437 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://naff.info/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/FAQ.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/AutoShardClient.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/Client.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/const.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/errors.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/monopage.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/utils.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/HTTP/HTTP_client.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/HTTP/Supported_Endpoints.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/gateway/connection_state.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/gateway/gateway.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/voice/audio.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/voice/player.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/API_Communication/voice/voice_gateway.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/events/discord.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/events/internal.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/ext/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/ext/debug_ext.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/ext/paginators.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/ext/prefixed_help_command.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/activity.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/application.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/asset.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/base.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/channel.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/color.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/components.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/embed.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/emoji.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/enums.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/file.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/guild.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/invite.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/message.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/modals.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/reaction.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/role.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/scheduled_event.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/snowflake.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/stage_instance.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/sticker.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/team.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/thread.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/timestamp.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/user.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/voice_state.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Discord/webhooks.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Misc/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Misc/iterator.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/index.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/active_voice_state.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/annotations.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/application_commands.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/auto_defer.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/checks.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/command.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/context.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/converters.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/cooldowns.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/extension.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/listener.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/localisation.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/prefixed_commands.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/protocols.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/tasks.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/API%20Reference/models/Naff/wait.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/01%20Getting%20Started.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/02%20Creating%20Your%20Bot.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/03%20Creating%20Commands.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/04%20Context%20Menus.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/05%20Components.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/06%20Modals.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/07%20Creating%20Prefixed%20Commands.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/08%20Converters.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/10%20Events.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/20%20Extensions.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/21%20Advanced%20Extension%20Usage.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/22%20Voice.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/23%20Localisation.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/30%20Pagination.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/40%20Tasks.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/80%20Sharding.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/90%20Example.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://naff.info/Guides/99%20Migration%20From%20D.py.html</loc>
-         <lastmod>2022-08-05</lastmod>
+         <lastmod>2022-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
