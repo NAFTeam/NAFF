@@ -488,6 +488,6 @@ async def my_command_function(ctx: HybridContext):
 Suggesting you are using the default mention settings for your bot, you should be able to run this command by `@BotPing my_command`.
 
 As you can see, the only difference between hybrid commands and slash commands, from a developer perspective, is that they use `HybridContext`, which attempts
-to seemlessly allow using the same context for slash and prefixed commands. You can always get the underlying context via `inner_context`, though.
+to seamlessly allow using the same context for slash and prefixed commands. You can always get the underlying context via `inner_context`, though.
 
 There are only two limitations with them: they only support one attachment option, and they do not support autocomplete.

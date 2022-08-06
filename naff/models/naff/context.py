@@ -670,7 +670,7 @@ class HybridContext(Context):
     """
     Represents the context for hybrid commands, a slash command that can also be used as a prefixed command.
 
-    This attempts to create a compatibility layer to allow contexts for an interaction or a message to be used seemlessly.
+    This attempts to create a compatibility layer to allow contexts for an interaction or a message to be used seamlessly.
     """
 
     deferred: bool = field(default=False, metadata=docs("Is this context deferred?"))

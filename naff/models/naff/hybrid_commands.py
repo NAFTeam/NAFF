@@ -422,11 +422,11 @@ def hybrid_command(
     Hybrid commands are a slash command that can also function as a prefixed command.
     These use a HybridContext instead of an InteractionContext, but otherwise are mostly identical to normal slash commands.
 
-    Note that hybrid commands does not support autocompletes.
+    Note that hybrid commands do not support autocompletes.
     They also only partially support attachments, allowing one attachment option for a command.
 
     note:
-        While the base and group descriptions arent visible in the discord client, currently.
+        While the base and group descriptions aren't visible in the discord client, currently.
         We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
         one of the future ui updates.
         They are also visible as the description for their prefixed command counterparts.
