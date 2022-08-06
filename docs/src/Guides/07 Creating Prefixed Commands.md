@@ -177,7 +177,7 @@ Prefixed commands can be typehinted with some Discord models, like so:
 ```python
 @prefixed_command()
 async def poke(ctx: PrefixedContext, target: Member):
-    await ctx.reply(f"{target.user.mention}, you got poked by {ctx.author.mention}!")
+    await ctx.reply(f"{target.mention}, you got poked by {ctx.author.mention}!")
 ```
 
 The argument here will automatically be converted into a `Member` object:
@@ -212,7 +212,7 @@ For example, you could use the following code:
 @prefixed_command()
 async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optional[int] = 0, *, reason: str):
     await member.ban(delete_message_days=delete_message_days, reason=reason)
-    await ctx.reply(f"Banned {member.user.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
+    await ctx.reply(f"Banned {member.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
 ```
 
 And if a user omits the `delete_message_days` parameter, it would act as so:
