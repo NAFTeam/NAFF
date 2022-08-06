@@ -177,7 +177,7 @@ Prefixed commands can be typehinted with some Discord models, like so:
 ```python
 @prefixed_command()
 async def poke(ctx: PrefixedContext, target: Member):
-    await ctx.send(f"{target.user.mention}, you got poked by {ctx.author.mention}!")
+    await ctx.reply(f"{target.user.mention}, you got poked by {ctx.author.mention}!")
 ```
 
 The argument here will automatically be converted into a `Member` object:
@@ -236,7 +236,7 @@ async def one_or_two(ctx: PrefixedContext, num: Literal[1, 2]):
 Using `typing.Annotated` can allow you to have more proper typehints when using converters:
 
 ```python
-class JudgementConverter(molter.Converter):
+class JudgementConverter(Converter):
     async def convert(self, ctx: PrefixedContext, argument: str):
         return f"{ctx.author.mention} is {argument}."
 
