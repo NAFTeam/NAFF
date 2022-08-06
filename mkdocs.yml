@@ -9,7 +9,7 @@ site_url: https://naff.info/
 theme:
   name: material
   favicon: images/favicon.png
-#  custom_dir: docs/overrides
+  #  custom_dir: docs/overrides
   features:
     - header.autohide
     - navigation.instant
@@ -44,7 +44,8 @@ theme:
         name: Switch to system preference
   icon:
     repo: fontawesome/brands/github-alt
-    logo: material/book
+
+  logo: images/logo-minified.svg
   font:
     code: Roboto Mono
 
@@ -96,12 +97,12 @@ plugins:
   - search
   - awesome-pages
   - autorefs
-#  - git-committers:
-#        repository: NAFTeam/NAFF
-#        branch: docs-refresh
-#        token: !ENV [GH_TOKEN]
+  #  - git-committers:
+  #        repository: NAFTeam/NAFF
+  #        branch: docs-refresh
+  #        token: !ENV [GH_TOKEN]
   - git-revision-date-localized:
-        fallback_to_build_date: true
+      fallback_to_build_date: true
   - mkdocstrings:
       #    custom_templates: docs/templates
       enable_inventory: true
@@ -125,9 +126,9 @@ plugins:
   # keep these at the bottom of the plugins list
   - privacy:
       externals: bundle
-      enabled: !ENV [DEPLOY, False]
+      enabled: !ENV [ DEPLOY, False ]
   - offline:
-      enabled: !ENV [DEPLOY, False]
+      enabled: !ENV [ DEPLOY, False ]
 
 
 markdown_extensions:
