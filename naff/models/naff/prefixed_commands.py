@@ -258,7 +258,7 @@ async def _greedy_convert(
 @define()
 class PrefixedCommand(BaseCommand):
     name: str = field(metadata=docs("The name of the command."))
-    parameters: list[PrefixedCommandParameter] = field(metadata=docs("The paramters of the command."), factory=list)
+    parameters: list[PrefixedCommandParameter] = field(metadata=docs("The parameters of the command."), factory=list)
     aliases: list[str] = field(
         metadata=docs("The list of aliases the command can be invoked under."),
         factory=list,
@@ -402,7 +402,7 @@ class PrefixedCommand(BaseCommand):
         """
         Parses the parameters that this command has into a form naff can use.
 
-        This is purposely seperated like this to allow "lazy parsing" - parsing
+        This is purposely separated like this to allow "lazy parsing" - parsing
         as the command is added to a bot rather than being parsed immediately.
         This allows variables like "self" to be filtered out, and is useful for
         potential future additions.
