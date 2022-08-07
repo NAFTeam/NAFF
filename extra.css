@@ -16,6 +16,7 @@
     --md-card-color: #2f3136;
     --md-footer-bg-color: #2f3136;
     --md-footer-bg-color--dark: #202225;
+    --md-code-bg-color: #2f3136;
 }
 
 :root, [data-md-color-scheme="default"] {
@@ -33,7 +34,7 @@
     --md-card-color: #f2f3f5;
     --md-footer-bg-color: #f2f3f5;
     --md-footer-bg-color--dark: #e3e5e8;
-
+    --md-code-bg-color: #f2f3f5;
 }
 
 /* Makes the content wider */
