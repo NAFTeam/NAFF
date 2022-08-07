@@ -133,7 +133,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
-    !!! Note
+    !!! note
         `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """

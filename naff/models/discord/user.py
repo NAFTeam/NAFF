@@ -93,7 +93,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """
         Get a list of mutual guilds shared between this user and the client.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         return [
@@ -144,7 +144,7 @@ class User(BaseUser):
         """
         Returns the member object for all guilds both the bot and the user are in.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         member_objs = [

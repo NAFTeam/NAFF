@@ -1515,7 +1515,7 @@ class Guild(BaseGuild):
         """
         Delete the guild.
 
-        !!! Note
+        !!! note
             You must own this guild to do this.
 
         """
@@ -1527,7 +1527,7 @@ class Guild(BaseGuild):
         """
         Kick a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `kick members` permission
 
         Args:
@@ -1546,7 +1546,7 @@ class Guild(BaseGuild):
         """
         Ban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:
@@ -1717,7 +1717,7 @@ class Guild(BaseGuild):
         """
         Unban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:

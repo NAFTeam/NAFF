@@ -116,7 +116,7 @@ class Invite(ClientObject):
         """
         Delete this invite.
 
-        !!! Note
+        !!! note
             You must have the `manage_channels` permission on the channel this invite belongs to.
 
         !!! note

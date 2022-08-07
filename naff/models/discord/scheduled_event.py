@@ -61,8 +61,8 @@ class ScheduledEvent(DiscordObject):
         """
         Returns the user who created this event.
 
-        !!! note     Events made before October 25th, 2021 will not
-        have a creator.
+        !!! note
+            Events made before October 25th, 2021 will not have a creator.
 
         """
         return await self._client.cache.fetch_user(self._creator_id) if self._creator_id else None

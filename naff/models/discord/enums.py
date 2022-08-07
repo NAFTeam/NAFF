@@ -705,8 +705,8 @@ class ActivityType(CursedIntEnum):
     """
     The types of presence activity that can be used in presences.
 
-    !!! note     Only `GAME` `STREAMING` `LISTENING` `WATCHING` and
-    `COMPETING` are usable by bots
+    !!! note
+        Only `GAME` `STREAMING` `LISTENING` `WATCHING` and `COMPETING` are usable by bots
 
     """
 
@@ -719,7 +719,7 @@ class ActivityType(CursedIntEnum):
     WATCHING = 3
     """Watching {name}; Example: Watching YouTube Together"""
     CUSTOM = 4
-    """{emoji} {name}; Example: :smiley: I am cool"""
+    """{emoji} {name}; Example: `:smiley: I am cool`"""
     COMPETING = 5
     """Competing in {name}; Example: Competing in Arena World Champions"""
 

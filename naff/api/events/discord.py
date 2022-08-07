@@ -237,8 +237,8 @@ class GuildJoin(BaseEvent):
     """
     Dispatched when a guild is joined, created, or becomes available.
 
-    !!! note     This is called multiple times during startup, check the
-    bot is ready before responding to this.
+    !!! note
+        This is called multiple times during startup, check the bot is ready before responding to this.
 
     """
 
