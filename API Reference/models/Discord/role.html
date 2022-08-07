@@ -273,7 +273,7 @@
         <span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>        The icon of this role</span>
 
-<span class=sd>        Note:</span>
+<span class=sd>        !!! note</span>
 <span class=sd>            You have to use this method instead of the `_icon` attribute, because the first does account for unicode emojis</span>
 <span class=sd>        &quot;&quot;&quot;</span>
         <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_icon</span> <span class=ow>or</span> <span class=bp>self</span><span class=o>.</span><span class=n>_unicode_emoji</span>
@@ -283,7 +283,7 @@
         <span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>        Can this role be assigned or removed by this bot?</span>
 
-<span class=sd>        Note:</span>
+<span class=sd>        !!! note</span>
 <span class=sd>            This does not account for permissions, only the role hierarchy</span>
 
 <span class=sd>        &quot;&quot;&quot;</span>
@@ -415,7 +415,7 @@
 <span class=k>def</span> <span class=nf>members</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>list</span><span class=p>[</span><span class=s2>&quot;Member&quot;</span><span class=p>]:</span>
     <span class=sd>&quot;&quot;&quot;List of members with this role&quot;&quot;&quot;</span>
     <span class=k>return</span> <span class=p>[</span><span class=n>member</span> <span class=k>for</span> <span class=n>member</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>guild</span><span class=o>.</span><span class=n>members</span> <span class=k>if</span> <span class=n>member</span><span class=o>.</span><span class=n>has_role</span><span class=p>(</span><span class=bp>self</span><span class=p>)]</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h4 id=naff.models.discord.role.Role.icon class="doc doc-heading"> <code class="highlight language-python"><span class=n>icon</span><span class=p>()</span></code> <span class="doc doc-labels"> <small class="doc doc-label doc-label-property"><code>property</code></small> </span> <a href=#naff.models.discord.role.Role.icon class=headerlink title="Permanent link">&para;</a></h4> <div class="doc doc-contents "> <p>The icon of this role</p> <details class=note> <summary>Note</summary> <p>You have to use this method instead of the <code>_icon</code> attribute, because the first does account for unicode emojis</p> </details> <details class=quote> <summary>Source code in <code>naff/models/discord/role.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>137</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h4 id=naff.models.discord.role.Role.icon class="doc doc-heading"> <code class="highlight language-python"><span class=n>icon</span><span class=p>()</span></code> <span class="doc doc-labels"> <small class="doc doc-label doc-label-property"><code>property</code></small> </span> <a href=#naff.models.discord.role.Role.icon class=headerlink title="Permanent link">&para;</a></h4> <div class="doc doc-contents "> <p>The icon of this role</p> <div class="admonition note"> <p class=admonition-title>Note</p> <p>You have to use this method instead of the <code>_icon</code> attribute, because the first does account for unicode emojis</p> </div> <details class=quote> <summary>Source code in <code>naff/models/discord/role.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>137</span>
 <span class=normal>138</span>
 <span class=normal>139</span>
 <span class=normal>140</span>
@@ -428,11 +428,11 @@
     <span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    The icon of this role</span>
 
-<span class=sd>    Note:</span>
+<span class=sd>    !!! note</span>
 <span class=sd>        You have to use this method instead of the `_icon` attribute, because the first does account for unicode emojis</span>
 <span class=sd>    &quot;&quot;&quot;</span>
     <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_icon</span> <span class=ow>or</span> <span class=bp>self</span><span class=o>.</span><span class=n>_unicode_emoji</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h4 id=naff.models.discord.role.Role.is_assignable class="doc doc-heading"> <code class="highlight language-python"><span class=n>is_assignable</span><span class=p>()</span></code> <span class="doc doc-labels"> <small class="doc doc-label doc-label-property"><code>property</code></small> </span> <a href=#naff.models.discord.role.Role.is_assignable class=headerlink title="Permanent link">&para;</a></h4> <div class="doc doc-contents "> <p>Can this role be assigned or removed by this bot?</p> <details class=note> <summary>Note</summary> <p>This does not account for permissions, only the role hierarchy</p> </details> <details class=quote> <summary>Source code in <code>naff/models/discord/role.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>147</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h4 id=naff.models.discord.role.Role.is_assignable class="doc doc-heading"> <code class="highlight language-python"><span class=n>is_assignable</span><span class=p>()</span></code> <span class="doc doc-labels"> <small class="doc doc-label doc-label-property"><code>property</code></small> </span> <a href=#naff.models.discord.role.Role.is_assignable class=headerlink title="Permanent link">&para;</a></h4> <div class="doc doc-contents "> <p>Can this role be assigned or removed by this bot?</p> <div class="admonition note"> <p class=admonition-title>Note</p> <p>This does not account for permissions, only the role hierarchy</p> </div> <details class=quote> <summary>Source code in <code>naff/models/discord/role.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>147</span>
 <span class=normal>148</span>
 <span class=normal>149</span>
 <span class=normal>150</span>
@@ -446,7 +446,7 @@
     <span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    Can this role be assigned or removed by this bot?</span>
 
-<span class=sd>    Note:</span>
+<span class=sd>    !!! note</span>
 <span class=sd>        This does not account for permissions, only the role hierarchy</span>
 
 <span class=sd>    &quot;&quot;&quot;</span>

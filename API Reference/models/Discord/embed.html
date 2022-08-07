@@ -251,7 +251,7 @@
         <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=n>ingest</span><span class=p>)</span>
     <span class=k>else</span><span class=p>:</span>
         <span class=k>return</span> <span class=bp>cls</span><span class=o>.</span><span class=n>from_dict</span><span class=p>(</span><span class=n>ingest</span><span class=p>)</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> </div> </div> </div> <div class="doc doc-object doc-class"> <h3 id=naff.models.discord.embed.EmbedProvider class="doc doc-heading"> <code>EmbedProvider</code> <a href=#naff.models.discord.embed.EmbedProvider class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p class="doc doc-class-bases"> Bases: <code><span title=naff.client.mixins.serialization.DictSerializationMixin>DictSerializationMixin</span></code></p> <p>Represents an embed's provider.</p> <details class=note> <summary>Note</summary> <p>Only used by system embeds, not bots</p> </details> <p><strong>Attributes:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>name</code></td> <td> <code><span title=typing.Optional>Optional</span>[str]</code> </td> <td><p>Provider name</p></td> </tr> <tr> <td><code>url</code></td> <td> <code><span title=typing.Optional>Optional</span>[str]</code> </td> <td><p>Provider url</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>naff/models/discord/embed.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>157</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> </div> </div> </div> <div class="doc doc-object doc-class"> <h3 id=naff.models.discord.embed.EmbedProvider class="doc doc-heading"> <code>EmbedProvider</code> <a href=#naff.models.discord.embed.EmbedProvider class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p class="doc doc-class-bases"> Bases: <code><span title=naff.client.mixins.serialization.DictSerializationMixin>DictSerializationMixin</span></code></p> <p>Represents an embed's provider.</p> <div class="admonition note"> <p class=admonition-title>Note</p> <p>Only used by system embeds, not bots</p> </div> <p><strong>Attributes:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>name</code></td> <td> <code><span title=typing.Optional>Optional</span>[str]</code> </td> <td><p>Provider name</p></td> </tr> <tr> <td><code>url</code></td> <td> <code><span title=typing.Optional>Optional</span>[str]</code> </td> <td><p>Provider url</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>naff/models/discord/embed.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>157</span>
 <span class=normal>158</span>
 <span class=normal>159</span>
 <span class=normal>160</span>
@@ -271,7 +271,7 @@
     <span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    Represents an embed&#39;s provider.</span>
 
-<span class=sd>    Note:</span>
+<span class=sd>    !!! note</span>
 <span class=sd>        Only used by system embeds, not bots</span>
 
 <span class=sd>    Attributes:</span>
