@@ -70,7 +70,7 @@ def is_owner() -> TYPE_CHECK_FUNCTION:
     """
 
     async def check(ctx: Context) -> bool:
-        _owner_ids: set = ctx.client.owner_ids.copy()
+        _owner_ids: set = ctx.bot.owner_ids.copy()
         if ctx.bot.app.team:
             [_owner_ids.add(m.id) for m in ctx.bot.app.team.members]
         return ctx.author.id in _owner_ids
