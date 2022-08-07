@@ -9,8 +9,9 @@
     --md-accent-fg-color--transparent: #5865F2;
 
     /*background Color*/
-    --md-default-bg-color: #2c2f33;
-    --md-default-bg-color: #2c2f33;
+    --md-default-bg-color: #36393f;
+    --md-default-bg-color: #36393f;
+    --md-card-color: #36393f;
 }
 
 :root, [data-md-color-scheme="default"] {
@@ -22,6 +23,7 @@
     /* Accent color */
     --md-accent-fg-color: #5865F2;
     --md-accent-fg-color--transparent: #5865F2;
+    --md-card-color: #f2f3f5;
 
 }
 
@@ -175,5 +177,5 @@ div.doc-contents:not(.first) {
 }
 
 .md-typeset .grid.cards > :is(ul, ol) > li, .md-typeset .grid > .card{
-    background-color: #36393f;
+    background-color: var(--md-card-color);
 }
