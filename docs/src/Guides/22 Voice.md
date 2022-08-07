@@ -13,7 +13,7 @@ Now you've got those; let's make a simple play command to get you started.
 
 ```python
 import naff
-from naff.api.voice.audio import YTDLAudio
+from naff.api.voice.audio import AudioVolume
 
 
 @naff.slash_command("play", "play a song!")
@@ -25,8 +25,8 @@ async def play(self, ctx: naff.InteractionContext, song: str):
         await ctx.author.voice.channel.connect()
 
     # Get the audio using YTDL
-    audio = await YTDLAudio.from_url(song)
-    await ctx.send(f"Now Playing: **{audio.entry['title']}**")
+    audio = await AudioVolume(song)
+    await ctx.send(f"Now Playing: **{song}**")
     # Play the audio
     await ctx.voice_state.play(audio)
 ```
@@ -54,3 +54,21 @@ async def play_file(ctx: naff.InteractionContext):
 ```
 
 Check out [Active Voice State](/API Reference/models/naff/active_voice_state/) for a list of available methods and attributes.
+
+## Okay, but what about Soundcloud?
+
+NAFF has an extension library called [`NAFFAudio`](https://github.com/NAFTeam/NAFF-Audio) which can help with that.
+It has an object called `YTAudio` which can be used to play audio from Soundcloud and other video platforms.
+
+```
+pip install naff_audio
+```
+
+```python
+from naff_audio import YTAudio
+
+audio = await YTAudio.from_url("https://soundcloud.com/rick-astley-official/never-gonna-give-you-up-4")
+await voice_state.play(audio)
+```
+
+`NAFFAudio` also contains other useful features for audio-bots. Check it out if that's your *jam*.
