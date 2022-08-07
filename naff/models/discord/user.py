@@ -447,7 +447,7 @@ class Member(DiscordObject, _SendDMMixin):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """

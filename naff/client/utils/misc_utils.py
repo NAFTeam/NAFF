@@ -27,7 +27,7 @@ def escape_mentions(content: str) -> str:
     """
     Escape mentions that could ping someone in a string.
 
-    note:
+    !!! note
         This does not escape channel mentions as they do not ping anybody
 
     Args:

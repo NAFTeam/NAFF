@@ -730,7 +730,7 @@ class GuildRequests(CanRequest):
         """
         Creates a new guild based on a template.
 
-        note:
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Args:

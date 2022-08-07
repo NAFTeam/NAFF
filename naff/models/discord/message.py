@@ -633,7 +633,7 @@ class Message(BaseMessage):
         """
         Suppress embeds for this message.
 
-        Note:
+        !!! note
             Requires the `Permissions.MANAGE_MESSAGES` permission.
 
         """

@@ -277,7 +277,9 @@ class Client(
 
         # Set Up logger and overwrite the constant
         self.logger = logger
-        """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported"""
+        """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`.
+        !!! note
+            Different loggers with multiple clients are not supported"""
         constants.logger = logger
 
         # Configuration
@@ -1419,7 +1421,7 @@ class Client(
         """
         Return a context object based on data passed.
 
-        note:
+        !!! note
             If you want to use custom context objects, this is the method to override. Your replacement must take the same arguments as this, and return a Context-like object.
 
         Args:
@@ -1804,7 +1806,7 @@ class Client(
         """
         Fetch a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1824,7 +1826,7 @@ class Client(
         """
         Get a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -1845,7 +1847,7 @@ class Client(
         """
         Creates a new guild based on a template.
 
-        note:
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Args:
@@ -1869,7 +1871,7 @@ class Client(
         """
         Fetch a channel.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1889,7 +1891,7 @@ class Client(
         """
         Get a channel.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -1905,7 +1907,7 @@ class Client(
         """
         Fetch a user.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1925,7 +1927,7 @@ class Client(
         """
         Get a user.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -1941,7 +1943,7 @@ class Client(
         """
         Fetch a member from a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1962,7 +1964,7 @@ class Client(
         """
         Get a member from a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -2117,7 +2119,7 @@ class Client(
             status: The status for the bot to be. i.e. online, afk, etc.
             activity: The activity for the bot to be displayed as doing.
 
-        Note::
+        !!! note
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """

@@ -478,7 +478,7 @@ class Guild(BaseGuild):
         Returns:
             True if the user is the owner of the guild, False otherwise.
 
-        Note:
+        !!! note
             the `user` argument can be any type that meets `Snowflake_Type`
 
         """
@@ -492,7 +492,7 @@ class Guild(BaseGuild):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """

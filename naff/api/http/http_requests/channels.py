@@ -561,9 +561,9 @@ class ChannelRequests(CanRequest, ABC):
             emoji_id: The ID of the emoji to use for the tag
             emoji_name: The name of the emoji to use for the tag
 
-        Note:
-            Can either have an emoji_id or an emoji_name, but not both.
-            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        !!! note
+            Can either have an `emoji_id` or an `emoji_name`, but not both.
+            `emoji_id` is meant for custom emojis, `emoji_name` is meant for unicode emojis.
         """
         payload: PAYLOAD_TYPE = {
             "name": name,
@@ -593,9 +593,9 @@ class ChannelRequests(CanRequest, ABC):
             emoji_id: The ID of the emoji to use for the tag
             emoji_name: The name of the emoji to use for the tag
 
-        Note:
-            Can either have an emoji_id or an emoji_name, but not both.
-            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        !!! note
+            Can either have an `emoji_id` or an `emoji_name`, but not both.
+            emoji`_id is meant for custom emojis, `emoji_name` is meant for unicode emojis.
         """
         payload: PAYLOAD_TYPE = {
             "name": name,

@@ -1943,7 +1943,7 @@ class GuildPublicThread(ThreadChannel):
         """
         The tags applied to this thread.
 
-        Note:
+        !!! note
             This is only on forum threads.
 
         """
@@ -1956,7 +1956,7 @@ class GuildPublicThread(ThreadChannel):
         """
         The initial message posted by the OP.
 
-        Note:
+        !!! note
             This is only on forum threads.
 
         """
@@ -2078,7 +2078,12 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     @property
     def voice_members(self) -> List["models.Member"]:
-        """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
+        """
+        Returns a list of members that are currently in the channel.
+
+        !!! note
+            This will not be accurate if the bot was offline while users joined the channel
+        """
         return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
 
     @property
@@ -2269,7 +2274,7 @@ class GuildForum(GuildChannel):
             name: The name of the tag
             emoji: The emoji to use for the tag
 
-        Note:
+        !!! note
             If the emoji is a custom emoji, it must be from the same guild as the channel.
 
         Returns:

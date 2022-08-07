@@ -625,7 +625,7 @@ def slash_command(
     """
     A decorator to declare a coroutine as a slash command.
 
-    note:
+    !!! note
         While the base and group descriptions arent visible in the discord client, currently.
         We strongly advise defining them anyway, if you're using subcommands, as Discord has said they will be visible in
         one of the future ui updates.

@@ -139,7 +139,7 @@ class Role(DiscordObject):
         """
         The icon of this role
 
-        Note:
+        !!! note
             You have to use this method instead of the `_icon` attribute, because the first does account for unicode emojis
         """
         return self._icon or self._unicode_emoji
@@ -149,7 +149,7 @@ class Role(DiscordObject):
         """
         Can this role be assigned or removed by this bot?
 
-        Note:
+        !!! note
             This does not account for permissions, only the role hierarchy
 
         """
