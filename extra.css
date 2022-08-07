@@ -10,8 +10,12 @@
 
     /*background Color*/
     --md-default-bg-color: #36393f;
-    --md-default-bg-color: #36393f;
-    --md-card-color: #36393f;
+    --md-footer-fg-color: #ffffff;
+    --md-footer-fg-color--light: #f2f3f5;
+    --md-footer-fg-color--lighter: #bfc0c2;
+    --md-card-color: #2f3136;
+    --md-footer-bg-color: #2f3136;
+    --md-footer-bg-color--dark: #202225;
 }
 
 :root, [data-md-color-scheme="default"] {
@@ -23,7 +27,12 @@
     /* Accent color */
     --md-accent-fg-color: #5865F2;
     --md-accent-fg-color--transparent: #5865F2;
+    --md-footer-fg-color: #262626;
+    --md-footer-fg-color--light: #262626;
+    --md-footer-fg-color--lighter: #686363;
     --md-card-color: #f2f3f5;
+    --md-footer-bg-color: #f2f3f5;
+    --md-footer-bg-color--dark: #e3e5e8;
 
 }
 
