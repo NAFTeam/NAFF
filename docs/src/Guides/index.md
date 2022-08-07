@@ -57,7 +57,7 @@ These guides are meant to help you get started with the library and offer a poin
 
     HEY! LISTEN! If you want to know more about events, you can check out this guide.
 
--   [__::material-cogs: Extensions__](20 Extensions.md)
+-   [__:material-cogs: Extensions__](20 Extensions.md)
 
     ---
 
