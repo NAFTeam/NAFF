@@ -256,6 +256,7 @@ class Client(
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
         logger: logging.Logger = logger,
+        owner_ids: Iterable["Snowflake_Type"] = (),
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
         send_command_tracebacks: bool = True,
@@ -363,6 +364,7 @@ class Client(
         """A dictionary of mounted ext"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
+        self.owner_ids: set[Snowflake_Type] = set(owner_ids)
 
         self.async_startup_tasks: list[Coroutine] = []
         """A list of coroutines to run during startup"""
@@ -434,6 +436,11 @@ class Client(
             return self.app.owner
         except TypeError:
             return MISSING
+
+    @property
+    def owners(self) -> List["User"]:
+        """Returns the bot's owners as declared via `client.owner_ids`."""
+        return [self.get_user(u_id) for u_id in self.owner_ids]
 
     @property
     def guilds(self) -> List["Guild"]:
@@ -783,6 +790,10 @@ class Client(
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
+
+        if self.app.owner:
+            self.owner_ids.add(self.app.owner.id)
+
         self.dispatch(events.Login())
 
     async def astart(self, token) -> None:
