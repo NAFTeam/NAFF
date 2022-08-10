@@ -965,6 +965,7 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         if overwrites := data.get("permission_overwrites"):
             data["permission_overwrites"] = PermissionOverwrite.from_list(overwrites)
         return data
@@ -1806,6 +1807,11 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         """Returns a string that would mention this thread."""
         return f"<#{self.id}>"
 
+    @property
+    def permission_overwrites(self) -> List["PermissionOverwrite"]:
+        """The permission overwrites for this channel."""
+        return []
+
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
         members_data = await self._client.http.list_thread_members(self.id)
@@ -2191,6 +2197,7 @@ class GuildForum(GuildChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         data["available_tags"] = [
             ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
             for tag_data in data.get("available_tags", [])
