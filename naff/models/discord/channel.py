@@ -1807,6 +1807,11 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         """Returns a string that would mention this thread."""
         return f"<#{self.id}>"
 
+    @property
+    def permission_overwrites(self) -> List["PermissionOverwrite"]:
+        """The permission overwrites for this channel."""
+        return []
+
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
         members_data = await self._client.http.list_thread_members(self.id)
