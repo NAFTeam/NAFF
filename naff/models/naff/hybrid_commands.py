@@ -346,7 +346,7 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             ):
                 annotation = _RangeConverter(annotation, option.type, option.min_value, option.max_value).convert
             elif option.type == OptionTypes.STRING and (option.min_length is not None or option.max_length is not None):
-                annotation = _StringLengthConverter(option.min_length, option.max_length)
+                annotation = _StringLengthConverter(option.min_length, option.max_length).convert
             elif option.type == OptionTypes.CHANNEL and option.channel_types:
                 annotation = _NarrowedChannelConverter(option.channel_types).convert
 
