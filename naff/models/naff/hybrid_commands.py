@@ -141,6 +141,20 @@ class _ChoicesConverter(_LiteralConverter):
         return self.choice_values[val]
 
 
+class _StringLengthConverter(Converter[str]):
+    def __init__(self, min_length: Optional[int], max_length: Optional[int]) -> None:
+        self.min_length = min_length
+        self.max_length = max_length
+
+    async def convert(self, ctx: HybridContext, argument: str) -> str:
+        if self.min_length and len(argument) < self.min_length:
+            raise BadArgument(f'The string "{argument}" is shorter than {self.min_length} character(s).')
+        elif self.max_length and len(argument) > self.max_length:
+            raise BadArgument(f'The string "{argument}" is longer than {self.max_length} character(s).')
+
+        return argument
+
+
 class _RangeConverter(Converter[float | int]):
     def __init__(
         self,
@@ -331,6 +345,8 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
                 option.min_value is not None or option.max_value is not None
             ):
                 annotation = _RangeConverter(annotation, option.type, option.min_value, option.max_value).convert
+            elif option.type == OptionTypes.STRING and (option.min_length is not None or option.max_length is not None):
+                annotation = _StringLengthConverter(option.min_length, option.max_length)
             elif option.type == OptionTypes.CHANNEL and option.channel_types:
                 annotation = _NarrowedChannelConverter(option.channel_types).convert
 
