@@ -263,6 +263,11 @@ class GatewayClient(WebsocketClient):
             f"Shard ID {self.shard[0]} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
 
+    async def reconnect(self, *, resume: bool = False, code: int = 1012, url: str | None = None) -> None:
+        self.state.clear_ready()
+        self._ready.clear()
+        await super().reconnect(resume=resume, code=code, url=url)
+
     async def _resume_connection(self) -> None:
         """Send a resume payload to the gateway."""
         if self.ws is None:

@@ -91,6 +91,11 @@ class ConnectionState:
 
         self.gateway_started.clear()
 
+    def clear_ready(self) -> None:
+        """Clear the ready event."""
+        self._shard_ready.clear()
+        self.client._ready.clear()  # noinspection PyProtectedMember
+
     async def _ws_connect(self) -> None:
         """Connect to the Discord Gateway."""
         logger.info(f"Shard {self.shard_id} is attempting to connect to gateway...")
