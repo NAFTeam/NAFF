@@ -965,6 +965,7 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         if overwrites := data.get("permission_overwrites"):
             data["permission_overwrites"] = PermissionOverwrite.from_list(overwrites)
         return data
@@ -2191,6 +2192,7 @@ class GuildForum(GuildChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         data["available_tags"] = [
             ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
             for tag_data in data.get("available_tags", [])
