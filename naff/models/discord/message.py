@@ -313,6 +313,7 @@ class Message(BaseMessage):
     """Sent if the message contains components like buttons, action rows, or other interactive components"""
     sticker_items: Optional[List["models.StickerItem"]] = field(default=None)
     """Sent if the message contains stickers"""
+    thread: Optional["models.ThreadChannel"] = field(default=None)
     _mention_ids: List["Snowflake_Type"] = field(factory=list)
     _mention_roles: List["Snowflake_Type"] = field(factory=list)
     _referenced_message_id: Optional["Snowflake_Type"] = field(default=None)
