@@ -313,7 +313,6 @@ class Message(BaseMessage):
     """Sent if the message contains components like buttons, action rows, or other interactive components"""
     sticker_items: Optional[List["models.StickerItem"]] = field(default=None)
     """Sent if the message contains stickers"""
-    thread: Optional["models.ThreadChannel"] = field(default=None)
     _mention_ids: List["Snowflake_Type"] = field(factory=list)
     _mention_roles: List["Snowflake_Type"] = field(factory=list)
     _referenced_message_id: Optional["Snowflake_Type"] = field(default=None)
@@ -329,6 +328,11 @@ class Message(BaseMessage):
         """A generator of roles mentioned in this message"""
         for r_id in self._mention_roles:
             yield await self._client.cache.fetch_role(self._guild_id, r_id)
+
+    @property
+    def thread(self) -> "models.TYPE_THREAD_CHANNEL":
+        """The thread that was started from this message, if any"""
+        return self._client.cache.get_channel(self.id)
 
     async def fetch_referenced_message(self) -> Optional["Message"]:
         """
