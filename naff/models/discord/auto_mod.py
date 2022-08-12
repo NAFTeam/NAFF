@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union, Any
+from typing import TYPE_CHECKING, Union, Any, Optional
 
 import attrs
 
@@ -283,8 +283,8 @@ class AutoModerationAction(ClientObject):
     action: BaseAction = field(default=MISSING, repr=True)
 
     matched_keyword: str = field(repr=True)
-    matched_content: str = field()
-    content: str = field()
+    matched_content: Optional[str] = field(default=None)
+    content: Optional[str] = field(default=None)
 
     _message_id: Union["Snowflake_Type", None] = field(default=None)
     _alert_system_message_id: "Snowflake_Type" = field()
