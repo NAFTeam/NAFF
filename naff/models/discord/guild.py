@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
-
+from warnings import warn
 
 import naff.models as models
 from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
@@ -498,19 +498,70 @@ class Guild(BaseGuild):
         """
         await self.me.edit_nickname(new_nickname, reason=reason)
 
-    async def chunk_guild(self, wait=True, presences=False) -> None:
+    async def http_chunk(self) -> None:
+        """Populates all members of this guild using the REST API."""
+        start_time = time.perf_counter()
+        members = []
+
+        # request all guild members
+        after = MISSING
+        while True:
+            if members:
+                after = members[-1]["user"]["id"]
+            rcv: list = await self._client.http.list_members(self.id, limit=1000, after=after)
+            members.extend(rcv)
+            if len(rcv) < 1000:
+                # we're done
+                break
+
+        # process all members
+        s = time.monotonic()
+        for member in members:
+            self._client.cache.place_member_data(self.id, member)
+            if (time.monotonic() - s) > 0.05:
+                # look, i get this *could* be a thread, but because it needs to modify data in the main thread,
+                # it is still blocking. So by periodically yielding to the event loop, we can avoid blocking, and still
+                # process this data properly
+                await asyncio.sleep(0)
+                s = time.monotonic()
+        self.chunked.set()
+        logger.info(f"Cached {len(members)} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds")
+
+    async def gateway_chunk(self, wait=True, presences=False) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
 
         Args:
             wait: Wait for chunking to be completed before continuing
             presences: Do you need presence data for members?
-
         """
         ws = self._client.get_guild_websocket(self.id)
         await ws.request_member_chunks(self.id, limit=0, presences=presences)
         if wait:
             await self.chunked.wait()
+
+    async def chunk(self) -> None:
+        """Populates all members of this guild using the REST API."""
+        await self.http_chunk()
+
+    async def chunk_guild(self, wait=True, presences=False) -> None:
+        """
+        Trigger a gateway `get_members` event, populating this object with members.
+
+        !!! warning "Depreciation Warning"
+            Gateway chunking is deprecated and replaced by http chunking. Use `guild.gateway_chunk` if you need gateway chunking.
+
+        Args:
+            wait: Wait for chunking to be completed before continuing
+            presences: Do you need presence data for members?
+
+        """
+        warn(
+            "Gateway chunking is deprecated and replaced by http chunking. Use `guild.gateway_chunk` if you need gateway chunking.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        await self.gateway_chunk(wait=wait, presences=presences)
 
     async def process_member_chunk(self, chunk: dict) -> None:
         """
