@@ -329,6 +329,11 @@ class Message(BaseMessage):
         for r_id in self._mention_roles:
             yield await self._client.cache.fetch_role(self._guild_id, r_id)
 
+    @property
+    def thread(self) -> "models.TYPE_THREAD_CHANNEL":
+        """The thread that was started from this message, if any"""
+        return self._client.cache.get_channel(self.id)
+
     async def fetch_referenced_message(self) -> Optional["Message"]:
         """
         Fetch the message this message is referencing, if any.
