@@ -21,10 +21,10 @@ And this is great when debugging.  But it consumes your rate limit, can run into
 
 # So what should I do instead?
 
-NAFF contains built-in support for Sentry.io, a cloud error tracking platform. 
+NAFF contains built-in support for Sentry.io, a cloud error tracking platform.
 
 To enable it, call `bot.load_extension('naff.ext.sentry', token=SENTRY_TOKEN)` as early as possible in your startup. (Load it before your own extensions, so it can catch intitialization errors in those extensions)
 
 # What does this do that vanilla Sentry doesn't?
 
-We add some [tags](https://docs.sentry.io/platforms/python/enriching-events/tags/) and [contexts](https://docs.sentry.io/platforms/python/enriching-events/context/) that might be useful, and filter out some non-errors that you probably don't want to see. 
+We add some [tags](https://docs.sentry.io/platforms/python/enriching-events/tags/) and [contexts](https://docs.sentry.io/platforms/python/enriching-events/context/) that might be useful, and filter out some non-errors that you probably don't want to see.
