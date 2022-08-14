@@ -725,47 +725,68 @@ class Client(
         expected_guilds = {to_snowflake(guild["id"]) for guild in data["guilds"]}
         self._user._add_guilds(expected_guilds)
 
-        while True:
-            try:  # wait to let guilds cache
-                await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
-                if self.fetch_members:
-                    # ensure all guilds have completed chunking
-                    for guild in self.guilds:
-                        if guild and not guild.chunked.is_set():
-                            logger.debug(f"Waiting for {guild.id} to chunk")
-                            await guild.chunked.wait()
-
-            except asyncio.TimeoutError:
-                logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
-                break
-            self._guild_event.clear()
-
-            if len(self.cache.guild_cache) == len(expected_guilds):
-                # all guilds cached
-                break
-
-        if self.fetch_members:
-            # ensure all guilds have completed chunking
-            for guild in self.guilds:
-                if guild and not guild.chunked.is_set():
-                    logger.debug(f"Waiting for {guild.id} to chunk")
-                    await guild.chunked.wait()
-
-        # run any pending startup tasks
-        if self.async_startup_tasks:
-            try:
-                await asyncio.gather(*self.async_startup_tasks)
-            except Exception as e:
-                self.dispatch(events.Error("async-extension-loader", e))
-
-        # cache slash commands
         if not self._startup:
-            await self._init_interactions()
+            while True:
+                try:  # wait to let guilds cache
+                    await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+                    if self.fetch_members:
+                        # ensure all guilds have completed chunking
+                        for guild in self.guilds:
+                            if guild and not guild.chunked.is_set():
+                                logger.debug(f"Waiting for {guild.id} to chunk")
+                                await guild.chunked.wait()
 
-        self._ready.set()
-        if not self._startup:
+                except asyncio.TimeoutError:
+                    logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    break
+                self._guild_event.clear()
+
+                if len(self.cache.guild_cache) == len(expected_guilds):
+                    # all guilds cached
+                    break
+
+            if self.fetch_members:
+                # ensure all guilds have completed chunking
+                for guild in self.guilds:
+                    if guild and not guild.chunked.is_set():
+                        logger.debug(f"Waiting for {guild.id} to chunk")
+                        await guild.chunked.wait()
+
+            # run any pending startup tasks
+            if self.async_startup_tasks:
+                try:
+                    await asyncio.gather(*self.async_startup_tasks)
+                except Exception as e:
+                    self.dispatch(events.Error("async-extension-loader", e))
+
+            # cache slash commands
+            if not self._startup:
+                await self._init_interactions()
+
             self._startup = True
             self.dispatch(events.Startup())
+
+        else:
+            # reconnect ready
+            ready_guilds = set()
+
+            async def _temp_listener(_event: events.RawGatewayEvent) -> None:
+                ready_guilds.add(_event.data["id"])
+
+            listener = Listener.create("_on_raw_guild_create")(_temp_listener)
+            self.add_listener(listener)
+
+            while True:
+                try:
+                    await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+                    if len(ready_guilds) == len(expected_guilds):
+                        break
+                except asyncio.TimeoutError:
+                    break
+
+            self.listeners["raw_guild_create"].remove(listener)
+
+        self._ready.set()
         self.dispatch(events.Ready())
 
     async def login(self, token) -> None:
