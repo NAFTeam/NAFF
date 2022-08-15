@@ -2389,7 +2389,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice, GuildForum]
 
 
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
