@@ -1803,6 +1803,11 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         return self._client.cache.get_channel(self.parent_id)
 
     @property
+    def parent_message(self) -> Optional["Message"]:
+        """The message this thread is a child of."""
+        return self._client.cache.get_message(self.parent_id, self.id)
+
+    @property
     def mention(self) -> str:
         """Returns a string that would mention this thread."""
         return f"<#{self.id}>"
@@ -2384,7 +2389,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice, GuildForum]
 
 
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]

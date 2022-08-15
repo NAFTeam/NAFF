@@ -791,7 +791,9 @@ class GuildRequests:
         # why on earth does this return the deleted template object?
         return await self.request(Route("DELETE", f"/guilds/{guild_id}/templates/{template_code}"))
 
-    async def get_auto_moderation_rules(self, guild_id: "Snowflake_Type") -> list[dict]:
+    async def get_auto_moderation_rules(
+        self, guild_id: "Snowflake_Type"
+    ) -> list[discord_typings.AutoModerationRuleData]:
         """
         Get this guilds auto moderation rules.
 
@@ -801,10 +803,11 @@ class GuildRequests:
         Returns:
             A list of auto moderation rules
         """
-        # todo: Add discord typings when added
         return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules"))
 
-    async def get_auto_moderation_rule(self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type") -> dict:
+    async def get_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type"
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Get a specific auto moderation rule.
 
@@ -815,10 +818,11 @@ class GuildRequests:
         Returns:
             The auto moderation rule
         """
-        # todo: Add discord typings when added
         return await self.request(Route("GET", f"/guilds/{guild_id}/auto-moderation/rules/{rule_id}"))
 
-    async def create_auto_moderation_rule(self, guild_id: "Snowflake_Type", payload: dict) -> dict:
+    async def create_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", payload: discord_typings.AutoModerationRuleData
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Create an auto moderation rule.
 
@@ -844,7 +848,7 @@ class GuildRequests:
         event_type: Absent[dict] = MISSING,
         enabled: Absent[bool] = MISSING,
         reason: Absent[str] = MISSING,
-    ) -> dict:
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Modify an existing auto moderation rule.
 
@@ -881,7 +885,7 @@ class GuildRequests:
 
     async def delete_auto_moderation_rule(
         self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type", reason: Absent[str] = MISSING
-    ) -> dict:
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Delete an auto moderation rule.
 
