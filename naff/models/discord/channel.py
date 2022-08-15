@@ -965,6 +965,7 @@ class GuildChannel(BaseChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         if overwrites := data.get("permission_overwrites"):
             data["permission_overwrites"] = PermissionOverwrite.from_list(overwrites)
         return data
@@ -1802,9 +1803,19 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         return self._client.cache.get_channel(self.parent_id)
 
     @property
+    def parent_message(self) -> Optional["Message"]:
+        """The message this thread is a child of."""
+        return self._client.cache.get_message(self.parent_id, self.id)
+
+    @property
     def mention(self) -> str:
         """Returns a string that would mention this thread."""
         return f"<#{self.id}>"
+
+    @property
+    def permission_overwrites(self) -> List["PermissionOverwrite"]:
+        """The permission overwrites for this channel."""
+        return []
 
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
@@ -2191,6 +2202,7 @@ class GuildForum(GuildChannel):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
         data["available_tags"] = [
             ThreadTag.from_dict(tag_data | {"parent_channel_id": data["id"]}, client)
             for tag_data in data.get("available_tags", [])
@@ -2377,7 +2389,7 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice]
+TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice, GuildForum]
 
 
 TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]

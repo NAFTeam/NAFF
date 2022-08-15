@@ -40,17 +40,19 @@ from naff.client.errors import NotFound
 
 __all__ = ()
 
+from tests.utils import generate_dummy_context
+
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def event_loop() -> AbstractEventLoop:
     return asyncio.get_event_loop()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def bot() -> Client:
     bot = naff.Client(activity="Testing someones code")
     await bot.login(TOKEN)
@@ -61,7 +63,7 @@ async def bot() -> Client:
     yield bot
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def guild(bot) -> Guild:
     guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
     community_channel = await guild.create_text_channel("community_channel")
@@ -80,7 +82,7 @@ async def guild(bot) -> Guild:
     await guild.delete()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def channel(bot, guild) -> GuildText:
     channel = await guild.create_text_channel("test_scene")
     return channel
@@ -422,7 +424,7 @@ async def test_webhooks(bot: Client, guild: Guild) -> None:
 @pytest.mark.asyncio
 async def test_voice(bot: Client, guild: Guild) -> None:
     try:
-        import pynacl  # noqa
+        import nacl  # noqa
     except ImportError:
         # testing on a non-voice extra
         return
@@ -480,6 +482,48 @@ async def test_emoji(bot: Client, guild: Guild) -> None:
         assert emoji.animated == fetched_emoji.animated
         ensure_attributes(emoji)
         ensure_attributes(fetched_emoji)
+
+        await emoji.edit(name="testEditedName")
+        await asyncio.sleep(1)
+        fetched_emoji = await bot.fetch_custom_emoji(emoji.id, guild.id)
+        assert fetched_emoji.name == "testEditedName"
+
     finally:
         if emoji:
             await emoji.delete()
+
+
+@pytest.mark.asyncio
+async def test_checks(bot: Client, guild: Guild) -> None:
+    user_id = 123456789012345678
+
+    is_owner = naff.is_owner()
+    assert await is_owner(generate_dummy_context(user_id=bot.owner.id, client=bot)) is True
+    assert await is_owner(generate_dummy_context(user_id=user_id, client=bot)) is False
+
+    has_id = naff.has_id(user_id)
+    assert await has_id(generate_dummy_context(user_id=user_id, client=bot)) is True
+    assert await has_id(generate_dummy_context(user_id=bot.owner.id, client=bot)) is False
+
+    guild_only = naff.guild_only()
+    assert await guild_only(generate_dummy_context(guild_id=guild.id, client=bot)) is True
+    assert await guild_only(generate_dummy_context(dm=True)) is False
+
+    dm_only = naff.dm_only()
+    assert await dm_only(generate_dummy_context(guild_id=guild.id, client=bot)) is False
+    assert await dm_only(generate_dummy_context(dm=True)) is True
+
+    member = bot.get_member(bot.app.id, guild.id)
+    has_role = await guild.create_role(name="has_role")
+    lacks_role = await guild.create_role(name="lacks_role")
+    await member.add_role(has_role)
+
+    context = generate_dummy_context(guild_id=guild.id, client=bot)
+    context.author = member
+    assert await naff.has_role(has_role)(context) is True
+    assert await naff.has_role(lacks_role)(context) is False
+    assert await naff.has_role(has_role)(generate_dummy_context(dm=True)) is False
+
+    assert await naff.has_any_role(has_role)(context) is True
+    assert await naff.has_any_role(lacks_role)(context) is False
+    assert await naff.has_any_role(has_role)(generate_dummy_context(dm=True)) is False

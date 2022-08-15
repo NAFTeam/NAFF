@@ -33,9 +33,7 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.api.events import RawGatewayEvent, MessageCreate
-from naff.api.events import processors
-from naff.api.events.internal import Component, BaseEvent
+from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
@@ -105,6 +103,78 @@ if TYPE_CHECKING:
 
 
 __all__ = ("Client",)
+
+
+# see https://discord.com/developers/docs/topics/gateway#list-of-intents
+_INTENT_EVENTS: dict[BaseEvent, list[Intents]] = {
+    # Intents.GUILDS
+    events.GuildJoin: [Intents.GUILDS],
+    events.GuildLeft: [Intents.GUILDS],
+    events.GuildUpdate: [Intents.GUILDS],
+    events.RoleCreate: [Intents.GUILDS],
+    events.RoleDelete: [Intents.GUILDS],
+    events.RoleUpdate: [Intents.GUILDS],
+    events.ChannelCreate: [Intents.GUILDS],
+    events.ChannelDelete: [Intents.GUILDS],
+    events.ChannelUpdate: [Intents.GUILDS],
+    events.ThreadCreate: [Intents.GUILDS],
+    events.ThreadDelete: [Intents.GUILDS],
+    events.ThreadListSync: [Intents.GUILDS],
+    events.ThreadMemberUpdate: [Intents.GUILDS],
+    events.ThreadUpdate: [Intents.GUILDS],
+    events.StageInstanceCreate: [Intents.GUILDS],
+    events.StageInstanceDelete: [Intents.GUILDS],
+    events.StageInstanceUpdate: [Intents.GUILDS],
+    # Intents.GUILD_MEMBERS
+    events.MemberAdd: [Intents.GUILD_MEMBERS],
+    events.MemberRemove: [Intents.GUILD_MEMBERS],
+    events.MemberUpdate: [Intents.GUILD_MEMBERS],
+    # Intents.GUILD_BANS
+    events.BanCreate: [Intents.GUILD_BANS],
+    events.BanRemove: [Intents.GUILD_BANS],
+    # Intents.GUILD_EMOJIS_AND_STICKERS
+    events.GuildEmojisUpdate: [Intents.GUILD_EMOJIS_AND_STICKERS],
+    events.GuildStickersUpdate: [Intents.GUILD_EMOJIS_AND_STICKERS],
+    # Intents.GUILD_BANS
+    events.IntegrationCreate: [Intents.GUILD_INTEGRATIONS],
+    events.IntegrationDelete: [Intents.GUILD_INTEGRATIONS],
+    events.IntegrationUpdate: [Intents.GUILD_INTEGRATIONS],
+    # Intents.GUILD_WEBHOOKS
+    events.WebhooksUpdate: [Intents.GUILD_WEBHOOKS],
+    # Intents.GUILD_INVITES
+    events.InviteCreate: [Intents.GUILD_INVITES],
+    events.InviteDelete: [Intents.GUILD_INVITES],
+    # Intents.GUILD_VOICE_STATES
+    events.VoiceStateUpdate: [Intents.GUILD_VOICE_STATES],
+    # Intents.GUILD_PRESENCES
+    events.PresenceUpdate: [Intents.GUILD_PRESENCES],
+    # Intents.GUILD_MESSAGES
+    events.MessageDeleteBulk: [Intents.GUILD_MESSAGES],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    events.AutoModExec: [Intents.AUTO_MODERATION_EXECUTION, Intents.AUTO_MOD],
+    # Intents.AUTO_MODERATION_CONFIGURATION
+    events.AutoModCreated: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    events.AutoModUpdated: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    events.AutoModDeleted: [Intents.AUTO_MODERATION_CONFIGURATION, Intents.AUTO_MOD],
+    # multiple intents
+    events.ThreadMembersUpdate: [Intents.GUILDS, Intents.GUILD_MEMBERS],
+    events.TypingStart: [Intents.GUILD_MESSAGE_TYPING, Intents.DIRECT_MESSAGE_TYPING, Intents.TYPING],
+    events.MessageUpdate: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.MessageCreate: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.MessageDelete: [Intents.GUILD_MESSAGES, Intents.DIRECT_MESSAGES, Intents.MESSAGES],
+    events.ChannelPinsUpdate: [Intents.GUILDS, Intents.DIRECT_MESSAGES],
+    events.MessageReactionAdd: [Intents.GUILD_MESSAGE_REACTIONS, Intents.DIRECT_MESSAGE_REACTIONS, Intents.REACTIONS],
+    events.MessageReactionRemove: [
+        Intents.GUILD_MESSAGE_REACTIONS,
+        Intents.DIRECT_MESSAGE_REACTIONS,
+        Intents.REACTIONS,
+    ],
+    events.MessageReactionRemoveAll: [
+        Intents.GUILD_MESSAGE_REACTIONS,
+        Intents.DIRECT_MESSAGE_REACTIONS,
+        Intents.REACTIONS,
+    ],
+}
 
 
 class Client(
@@ -186,6 +256,7 @@ class Client(
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
         logger: logging.Logger = logger,
+        owner_ids: Iterable["Snowflake_Type"] = (),
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
         send_command_tracebacks: bool = True,
@@ -228,7 +299,7 @@ class Client(
             auto_defer = auto_defer or AutoDefer()
         self.auto_defer = auto_defer
         """A system to automatically defer commands after a set duration"""
-        self.intents = intents
+        self.intents = intents if isinstance(intents, Intents) else Intents(intents)
 
         # resources
 
@@ -293,6 +364,7 @@ class Client(
         """A dictionary of mounted ext"""
         self.listeners: Dict[str, List] = {}
         self.waits: Dict[str, List] = {}
+        self.owner_ids: set[Snowflake_Type] = set(owner_ids)
 
         self.async_startup_tasks: list[Coroutine] = []
         """A list of coroutines to run during startup"""
@@ -364,6 +436,11 @@ class Client(
             return self.app.owner
         except TypeError:
             return MISSING
+
+    @property
+    def owners(self) -> List["User"]:
+        """Returns the bot's owners as declared via `client.owner_ids`."""
+        return [self.get_user(u_id) for u_id in self.owner_ids]
 
     @property
     def guilds(self) -> List["Guild"]:
@@ -460,7 +537,11 @@ class Client(
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                await self.on_error(event, e)
+                if isinstance(event, events.Error):
+                    # No infinite loops please
+                    self.default_error_handler(repr(event), e)
+                else:
+                    self.dispatch(events.Error(repr(event), e))
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
@@ -490,6 +571,10 @@ class Client(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
+    @Listener.create()
+    async def _on_error(self, event: events.Error) -> None:
+        await self.on_error(event.source, event.error, *event.args, **event.kwargs)
+
     async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by the library.
@@ -510,7 +595,7 @@ class Client(
         Override this to change error handling behavior
 
         """
-        await self.on_error(f"cmd /`{ctx.invoke_target}`", error, *args, **kwargs)
+        self.dispatch(events.Error(f"cmd /`{ctx.invoke_target}`", error, args, kwargs, ctx))
         try:
             if isinstance(error, errors.CommandOnCooldown):
                 await ctx.send(
@@ -537,7 +622,8 @@ class Client(
                 )
             elif self.send_command_tracebacks:
                 out = "".join(traceback.format_exception(error))
-                out = out.replace(self.http.token, "[REDACTED TOKEN]")
+                if self.http.token is not None:
+                    out = out.replace(self.http.token, "[REDACTED TOKEN]")
                 await ctx.send(
                     embeds=Embed(
                         title=f"Error: {type(error).__name__}",
@@ -575,7 +661,7 @@ class Client(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(f"Component Callback for {ctx.custom_id}", error, *args, **kwargs)
+        return self.dispatch(events.Error(f"Component Callback for {ctx.custom_id}", error, args, kwargs, ctx))
 
     async def on_component(self, ctx: ComponentContext) -> None:
         """
@@ -599,11 +685,14 @@ class Client(
         Override this to change error handling behavior
 
         """
-        return await self.on_error(
-            f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
-            error,
-            *args,
-            **kwargs,
+        return self.dispatch(
+            events.Error(
+                f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
+                error,
+                args,
+                kwargs,
+                ctx,
+            )
         )
 
     async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
@@ -636,47 +725,68 @@ class Client(
         expected_guilds = {to_snowflake(guild["id"]) for guild in data["guilds"]}
         self._user._add_guilds(expected_guilds)
 
-        while True:
-            try:  # wait to let guilds cache
-                await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
-                if self.fetch_members:
-                    # ensure all guilds have completed chunking
-                    for guild in self.guilds:
-                        if guild and not guild.chunked.is_set():
-                            logger.debug(f"Waiting for {guild.id} to chunk")
-                            await guild.chunked.wait()
-
-            except asyncio.TimeoutError:
-                logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
-                break
-            self._guild_event.clear()
-
-            if len(self.cache.guild_cache) == len(expected_guilds):
-                # all guilds cached
-                break
-
-        if self.fetch_members:
-            # ensure all guilds have completed chunking
-            for guild in self.guilds:
-                if guild and not guild.chunked.is_set():
-                    logger.debug(f"Waiting for {guild.id} to chunk")
-                    await guild.chunked.wait()
-
-        # run any pending startup tasks
-        if self.async_startup_tasks:
-            try:
-                await asyncio.gather(*self.async_startup_tasks)
-            except Exception as e:
-                await self.on_error("async-extension-loader", e)
-
-        # cache slash commands
         if not self._startup:
-            await self._init_interactions()
+            while True:
+                try:  # wait to let guilds cache
+                    await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+                    if self.fetch_members:
+                        # ensure all guilds have completed chunking
+                        for guild in self.guilds:
+                            if guild and not guild.chunked.is_set():
+                                logger.debug(f"Waiting for {guild.id} to chunk")
+                                await guild.chunked.wait()
 
-        self._ready.set()
-        if not self._startup:
+                except asyncio.TimeoutError:
+                    logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    break
+                self._guild_event.clear()
+
+                if len(self.cache.guild_cache) == len(expected_guilds):
+                    # all guilds cached
+                    break
+
+            if self.fetch_members:
+                # ensure all guilds have completed chunking
+                for guild in self.guilds:
+                    if guild and not guild.chunked.is_set():
+                        logger.debug(f"Waiting for {guild.id} to chunk")
+                        await guild.chunked.wait()
+
+            # run any pending startup tasks
+            if self.async_startup_tasks:
+                try:
+                    await asyncio.gather(*self.async_startup_tasks)
+                except Exception as e:
+                    self.dispatch(events.Error("async-extension-loader", e))
+
+            # cache slash commands
+            if not self._startup:
+                await self._init_interactions()
+
             self._startup = True
             self.dispatch(events.Startup())
+
+        else:
+            # reconnect ready
+            ready_guilds = set()
+
+            async def _temp_listener(_event: events.RawGatewayEvent) -> None:
+                ready_guilds.add(_event.data["id"])
+
+            listener = Listener.create("_on_raw_guild_create")(_temp_listener)
+            self.add_listener(listener)
+
+            while True:
+                try:
+                    await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
+                    if len(ready_guilds) == len(expected_guilds):
+                        break
+                except asyncio.TimeoutError:
+                    break
+
+            self.listeners["raw_guild_create"].remove(listener)
+
+        self._ready.set()
         self.dispatch(events.Ready())
 
     async def login(self, token) -> None:
@@ -701,6 +811,10 @@ class Client(
         self.cache.place_user_data(me)
         self._app = Application.from_dict(await self.http.get_current_bot_information(), self)
         self._mention_reg = re.compile(rf"^(<@!?{self.user.id}*>\s)")
+
+        if self.app.owner:
+            self.owner_ids.add(self.app.owner.id)
+
         self.dispatch(events.Login())
 
     async def astart(self, token) -> None:
@@ -949,6 +1063,15 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
+        # check that the required intents are enabled
+        event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
+        if event_class := globals().get(event_class_name):
+            if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
+                if not any(required_intent in self.intents for required_intent in required_intents):
+                    self.logger.warning(
+                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
+                    )
+
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
@@ -990,15 +1113,26 @@ class Client(
             command PrefixedCommand: The command to add
 
         """
+        # check that the required intent is enabled or the prefix is a mention
+        prefixes = (
+            self.default_prefix
+            if not isinstance(self.default_prefix, str) and not self.default_prefix == MENTION_PREFIX
+            else (self.default_prefix,)
+        )
+        if (MENTION_PREFIX not in prefixes) and (Intents.GUILD_MESSAGE_CONTENT not in self.intents):
+            self.logger.warning(
+                f"Prefixed commands will not work since the required intent is not set -> Requires: `{Intents.GUILD_MESSAGE_CONTENT.__repr__()}` or usage of the default `MENTION_PREFIX` as the prefix"
+            )
+
         command._parse_parameters()
 
-        if command.name in self.prefixed_commands:
-            raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{command.name}`")
+        if self.prefixed_commands.get(command.name):
+            raise ValueError(f"Duplicate command! Multiple commands share the name/alias: {command.name}.")
         self.prefixed_commands[command.name] = command
 
         for alias in command.aliases:
-            if alias in self.prefixed_commands:
-                raise ValueError(f"Duplicate Command! Multiple commands share the name/alias `{alias}`")
+            if self.prefixed_commands.get(alias):
+                raise ValueError(f"Duplicate command! Multiple commands share the name/alias: {alias}.")
             self.prefixed_commands[alias] = command
 
     def add_component_callback(self, command: ComponentCommand) -> None:
@@ -1081,7 +1215,7 @@ class Client(
             else:
                 await self._cache_interactions(warn_missing=False)
         except Exception as e:
-            await self.on_error("Interaction Syncing", e)
+            self.dispatch(events.Error("Interaction Syncing", e))
 
     async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""

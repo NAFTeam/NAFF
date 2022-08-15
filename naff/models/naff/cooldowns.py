@@ -179,8 +179,8 @@ class CooldownSystem:
         self.determine_cooldown()
 
         if self._tokens == 0:
-            return False
-        return True
+            return True
+        return False
 
     def acquire_token(self) -> bool:
         """
@@ -208,6 +208,7 @@ class CooldownSystem:
             remaining cooldown time, will return 0 if the cooldown has not been reached
 
         """
+        self.determine_cooldown()
         if self._tokens != 0:
             return 0
         return self.interval - (time.time() - self.opened)

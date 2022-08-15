@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "naff"
-version = "1.7.1"
+version = "1.8.0"
 description = "Not another freaking fork"
 authors = ["LordOfPolls <naff@lordofpolls.com>"]
 
@@ -9,7 +9,7 @@ python = "^3.10"
 aiohttp = "^3.7.4"
 attrs = "^21.4.0"
 mypy = ">0.930"
-discord-typings = "^0.3.0"
+discord-typings = "^0.5.1"
 tomli = "^2.0.1"
 orjson = {version = "^3.6.8", optional = true}
 

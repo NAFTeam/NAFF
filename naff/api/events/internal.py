@@ -21,7 +21,7 @@ These are events dispatched by the client. This is intended as a reference so yo
 
 """
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 from naff.client.const import MISSING
 from naff.models.discord.snowflake import to_snowflake
@@ -33,6 +33,7 @@ __all__ = (
     "Component",
     "Connect",
     "Disconnect",
+    "Error",
     "ShardConnect",
     "ShardDisconnect",
     "GuildEvent",
@@ -47,7 +48,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     from naff import Client
-    from naff.models.naff.context import ComponentContext
+    from naff.models.naff.context import ComponentContext, Context
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.discord.guild import Guild
 
@@ -161,3 +162,14 @@ class Button(Component):
 @define(kw_only=False)
 class Select(Component):
     """Dispatched when a user uses a Select."""
+
+
+@define(kw_only=False)
+class Error(BaseEvent):
+    """Dispatched when the library encounters an error."""
+
+    source: str = field(metadata=docs("The source of the error"))
+    error: Exception = field(metadata=docs("The error that was encountered"))
+    args: tuple[Any] = field(factory=tuple)
+    kwargs: dict[str, Any] = field(factory=dict)
+    ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))

@@ -62,7 +62,7 @@ def has_id(user_id: int) -> TYPE_CHECK_FUNCTION:
 
 def is_owner() -> TYPE_CHECK_FUNCTION:
     """
-    Is the author the owner of the bot.
+    Checks if the author is the owner of the bot. This respects the `client.owner_ids` list.
 
     Args:
         coro: the function to check
@@ -70,9 +70,10 @@ def is_owner() -> TYPE_CHECK_FUNCTION:
     """
 
     async def check(ctx: Context) -> bool:
+        _owner_ids: set = ctx.bot.owner_ids.copy()
         if ctx.bot.app.team:
-            return ctx.bot.app.team.is_in_team(ctx.author.id)
-        return ctx.author.id == ctx.bot.owner.id
+            [_owner_ids.add(m.id) for m in ctx.bot.app.team.members]
+        return ctx.author.id in _owner_ids
 
     return check
 

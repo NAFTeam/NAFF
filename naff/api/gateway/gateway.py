@@ -7,7 +7,7 @@ from types import TracebackType
 from typing import TypeVar, TYPE_CHECKING
 
 from naff.api import events
-from naff.client.const import logger
+from naff.client.const import logger, MISSING
 from naff.client.utils.input_utils import OverriddenJson
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.enums import Status
@@ -66,6 +66,7 @@ class GatewayClient(WebsocketClient):
         self.session_id = None
 
         self.ws_url = state.gateway_url
+        self.ws_resume_url = MISSING
 
         # This lock needs to be held to send something over the gateway, but is also held when
         # reconnecting. That way there's no race conditions between sending and reconnecting.
@@ -192,11 +193,11 @@ class GatewayClient(WebsocketClient):
 
             case OPCODE.RECONNECT:
                 logger.info("Gateway requested reconnect. Reconnecting...")
-                return await self.reconnect(resume=True)
+                return await self.reconnect(resume=True, url=self.ws_resume_url)
 
             case OPCODE.INVALIDATE_SESSION:
                 logger.warning("Gateway has invalidated session! Reconnecting...")
-                return await self.reconnect(resume=data)
+                return await self.reconnect(resume=data, url=self.ws_resume_url if data else None)
 
             case _:
                 return logger.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
@@ -208,8 +209,10 @@ class GatewayClient(WebsocketClient):
                 self._trace = data.get("_trace", [])
                 self.sequence = seq
                 self.session_id = data["session_id"]
+                self.ws_resume_url = data["resume_gateway_url"]
                 logger.info(f"Shard {self.shard[0]} has connected to gateway!")
                 logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
+                # todo: future polls, improve guild caching here. run the debugger. you'll see why
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
@@ -262,6 +265,11 @@ class GatewayClient(WebsocketClient):
         logger.debug(
             f"Shard ID {self.shard[0]} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
+
+    async def reconnect(self, *, resume: bool = False, code: int = 1012, url: str | None = None) -> None:
+        self.state.clear_ready()
+        self._ready.clear()
+        await super().reconnect(resume=resume, code=code, url=url)
 
     async def _resume_connection(self) -> None:
         """Send a resume payload to the gateway."""
