@@ -527,7 +527,7 @@ class Guild(BaseGuild):
         self.chunked.set()
         logger.info(f"Cached {len(members)} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds")
 
-    async def gateway_chunk(self, wait=True, presences=False) -> None:
+    async def gateway_chunk(self, wait=True, presences=True) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
 
@@ -544,7 +544,7 @@ class Guild(BaseGuild):
         """Populates all members of this guild using the REST API."""
         await self.http_chunk()
 
-    async def chunk_guild(self, wait=True, presences=False) -> None:
+    async def chunk_guild(self, wait=True, presences=True) -> None:
         """
         Trigger a gateway `get_members` event, populating this object with members.
 
