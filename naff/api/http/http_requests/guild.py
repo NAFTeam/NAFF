@@ -845,7 +845,9 @@ class GuildRequests(CanRequest):
         result = await self.request(Route("DELETE", f"/guilds/{int(guild_id)}/templates/{template_code}"))
         return cast(discord_typings.GuildTemplateData, result)
 
-    async def get_auto_moderation_rules(self, guild_id: "Snowflake_Type") -> list[dict]:
+    async def get_auto_moderation_rules(
+        self, guild_id: "Snowflake_Type"
+    ) -> list[discord_typings.AutoModerationRuleData]:
         """
         Get this guilds auto moderation rules.
 
@@ -859,7 +861,9 @@ class GuildRequests(CanRequest):
         result = await self.request(Route("GET", f"/guilds/{int(guild_id)}/auto-moderation/rules"))
         return cast(list[dict], result)
 
-    async def get_auto_moderation_rule(self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type") -> dict:
+    async def get_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", rule_id: "Snowflake_Type"
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Get a specific auto moderation rule.
 
@@ -874,7 +878,9 @@ class GuildRequests(CanRequest):
         result = await self.request(Route("GET", f"/guilds/{int(guild_id)}/auto-moderation/rules/{int(rule_id)}"))
         return cast(dict, result)
 
-    async def create_auto_moderation_rule(self, guild_id: "Snowflake_Type", payload: dict) -> dict:
+    async def create_auto_moderation_rule(
+        self, guild_id: "Snowflake_Type", payload: discord_typings.AutoModerationRuleData
+    ) -> discord_typings.AutoModerationRuleData:
         """
         Create an auto moderation rule.
 

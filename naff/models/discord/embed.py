@@ -266,6 +266,20 @@ class Embed(DictSerializationMixin):
             total += sum(map(len, self.fields))
         return total
 
+    def __bool__(self) -> bool:
+        return any(
+            (
+                self.title,
+                self.description,
+                self.fields,
+                self.author,
+                self.thumbnail,
+                self.footer,
+                self.image,
+                self.video,
+            )
+        )
+
     def set_author(
         self,
         name: str,

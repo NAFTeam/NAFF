@@ -490,8 +490,7 @@ class Member(DiscordObject, _SendDMMixin):
             reason: The reason for this removal
 
         """
-        if isinstance(role, Role):
-            role = role.id
+        role = to_snowflake(role)
         await self._client.http.remove_guild_member_role(self._guild_id, self.id, role, reason=reason)
         try:
             self._role_ids.remove(role)

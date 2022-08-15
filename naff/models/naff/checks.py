@@ -66,17 +66,13 @@ def has_id(user_id: int) -> TYPE_CHECK_FUNCTION:
 
 
 def is_owner() -> TYPE_CHECK_FUNCTION:
-    """Checks if the author is the owner of the bot."""
+    """Checks if the author is the owner of the bot. This respects the `client.owner_ids` list."""
 
     async def check(ctx: Context) -> bool:
-        if app := ctx.bot.app:
-            if team := app.team:
-                return team.is_in_team(ctx.author.id)
-
-            if owner_id := app.owner_id:
-                return ctx.author.id == owner_id
-
-        return False
+        _owner_ids: set = ctx.bot.owner_ids.copy()
+        if ctx.bot.app.team:
+            [_owner_ids.add(m.id) for m in ctx.bot.app.team.members]
+        return ctx.author.id in _owner_ids
 
     return check
 

@@ -236,7 +236,7 @@ class WebsocketClient:
 
             return msg
 
-    async def reconnect(self, *, resume: bool = False, code: int = 1012) -> None:
+    async def reconnect(self, *, resume: bool = False, code: int = 1012, url: str | None = None) -> None:
         async with self._race_lock:
             self._closed.clear()
 
@@ -246,7 +246,7 @@ class WebsocketClient:
             self.ws = None
             self._zlib = zlib.decompressobj()
 
-            self.ws = await self.state.client.http.websocket_connect(self.ws_url)
+            self.ws = await self.state.client.http.websocket_connect(url or self.ws_url)
 
             hello = await self.receive(force=True)
             self.heartbeat_interval = hello["d"]["heartbeat_interval"] / 1000
