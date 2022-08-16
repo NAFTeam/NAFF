@@ -9,7 +9,7 @@ from attr import fields, has
 from naff.client.const import MISSING, T
 from naff.models.discord.file import UPLOADABLE_TYPE, File
 
-__all__ = ("no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter_missing", "to_image_data")
+__all__ = ("no_export_meta", "export_converter", "to_dict", "dict_filter_none", "dict_filter", "to_image_data")
 
 no_export_meta = {"no_export": True}
 
@@ -95,9 +95,9 @@ def dict_filter_none(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not None}
 
 
-def dict_filter_missing(data: dict) -> dict:
+def dict_filter(data: dict) -> dict:
     """
-    Filters out all values that are MISSING sentinel.
+    Filters out all values that are MISSING sentinel and converts all sets to lists.
 
     Args:
         data: The dict data to filter.
@@ -106,7 +106,13 @@ def dict_filter_missing(data: dict) -> dict:
         The filtered dict data.
 
     """
-    return {k: v for k, v in data.items() if v is not MISSING}
+    filtered = data.copy()
+    for k, v in data.items():
+        if v is MISSING:
+            filtered.pop(k)
+        elif isinstance(v, set):
+            filtered[k] = list(v)
+    return filtered
 
 
 def to_image_data(imagefile: Optional[UPLOADABLE_TYPE]) -> Optional[str]:
