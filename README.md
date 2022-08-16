@@ -1,10 +1,10 @@
 [![PyPI](https://img.shields.io/pypi/v/naff)](https://pypi.org/project/naff/)
 [![Downloads](https://static.pepy.tech/personalized-badge/dis-snek?period=total&units=abbreviation&left_color=grey&right_color=green&left_text=pip%20installs)](https://pepy.tech/project/dis-snek)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![black-formatted](https://img.shields.io/github/workflow/status/Discord-Snake-Pit/dis-snek/black-action/master?label=Black%20Format&logo=github)](https://github.com/Discord-Snake-Pit/Dis-Snek/actions/workflows/black.yml)
-[![CodeQL](https://img.shields.io/github/workflow/status/Discord-Snake-Pit/dis-snek/CodeQL/master?label=CodeQL&logo=Github)](https://github.com/Discord-Snake-Pit/Dis-Snek/actions/workflows/codeql-analysis.yml)
+[![black-formatted](https://img.shields.io/github/workflow/status/NAFTeam/NAFF/black-action/master?label=Black%20Format&logo=github)](https://github.com/NAFTeam/NAFF/actions/workflows/black.yml)
+[![CodeQL](https://img.shields.io/github/workflow/status/NAFTeam/NAFF/CodeQL/master?label=CodeQL&logo=Github)](https://github.com/NAFTeam/NAFF/actions/workflows/codeql-analysis.yml)
 [![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/naff)
-[![Documentation Status](https://readthedocs.org/projects/dis-snek/badge/?version=latest)](https://dis-snek.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/naff-docs/badge/?version=latest)](https://naff-docs.readthedocs.io/en/latest/?version=latest)
 
 # What is this?
 This is `NAFF`, a python API wrapper for Discord.
@@ -47,14 +47,14 @@ async def user_context(ctx):
 
 bot.start("TOKEN")
 ```
-For more examples check out [our examples repo](https://github.com/Discord-Snake-Pit/examples) or the [docs](https://dis-snek.readthedocs.io/). You also can [explore projects with the dis-snek topic](https://github.com/topics/naff).
+For more examples check out [our examples repo](https://github.com/NAFTeam/examples) or the [docs](https://naff-docs.readthedocs.io/). You also can [explore projects with the `NAFF` topic](https://github.com/topics/naff) or older [`dis-snek` topic](https://github.com/topics/dis-snek).
 
 If you get stuck join our [Discord server](https://discord.gg/naff).
 
 
 ## "Can I contribute to this project?"
 Of course, we welcome all contributions to this library. Just ensure you follow our [requirements](/CONTRIBUTING.md).
-If youre stuck for things to contribute, check out our [GitHub Projects](https://github.com/orgs/Discord-Snake-Pit/projects/1) for inspiration.
+If youre stuck for things to contribute, check out our [GitHub Projects](https://github.com/orgs/NAFTeam/projects/1) for inspiration.
 
 ## Links:
 - Support Server: https://discord.gg/naff

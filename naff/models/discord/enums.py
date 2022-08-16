@@ -251,6 +251,14 @@ class UserFlags(DiscordIntFlag):  # type: ignore
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
     """This user is a certified moderator"""
 
+    BOT_HTTP_INTERACTIONS = 1 << 19
+    """Bot uses only HTTP interactions and is shown in the online member list"""
+
+    SPAMMER = 1 << 20
+    """A user who is suspected of spamming"""
+    DISABLE_PREMIUM = 1 << 21
+    """Nitro features disabled for this user. Only used by Discord Staff for testing"""
+
     # Shortcuts/grouping/aliases
     HYPESQUAD = HOUSE_BRAVERY | HOUSE_BRILLIANCE | HOUSE_BALANCE
     BUG_HUNTER = BUG_HUNTER_LEVEL_1 | BUG_HUNTER_LEVEL_2
