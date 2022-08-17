@@ -27,4 +27,4 @@ To enable it, call `bot.load_extension('naff.ext.sentry', token=SENTRY_TOKEN)` a
 
 # What does this do that vanilla Sentry doesn't?
 
-We add some [tags](https://docs.sentry.io/platforms/python/enriching-events/tags/) and [contexts](https://docs.sentry.io/platforms/python/enriching-events/context/) that might be useful, and filter out some non-errors that you probably don't want to see.
+We add some [tags](https://docs.sentry.io/platforms/python/enriching-events/tags/) and [contexts](https://docs.sentry.io/platforms/python/enriching-events/context/) that might be useful, and filter out some internal-errors that you probably don't want to see.
