@@ -13,7 +13,7 @@ from naff.client.const import logger
 try:
     import sentry_sdk
 except ModuleNotFoundError:
-    logger.error("sentry-sdk not installed, cannot enable sentry integration")
+    logger.error("sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`")
     raise
 
 from naff import Extension, Client, listen
