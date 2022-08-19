@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord_typings
 
 from naff.client.const import Absent, MISSING
-from naff.client.utils.serializer import dict_filter_missing, dict_filter_none
+from naff.client.utils.serializer import dict_filter, dict_filter_none
 
 
 from ..route import Route
@@ -661,7 +661,7 @@ class GuildRequests:
     ) -> dict:
         return await self.request(
             Route("POST", "/guilds"),
-            payload=dict_filter_missing(
+            payload=dict_filter(
                 {
                     "name": name,
                     "icon": icon,
