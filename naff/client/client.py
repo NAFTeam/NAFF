@@ -737,13 +737,6 @@ class Client(
             while True:
                 try:  # wait to let guilds cache
                     await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
-                    if self.fetch_members:
-                        # ensure all guilds have completed chunking
-                        for guild in self.guilds:
-                            if guild and not guild.chunked.is_set():
-                                logger.debug(f"Waiting for {guild.id} to chunk")
-                                await guild.chunked.wait()
-
                 except asyncio.TimeoutError:
                     logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
                     break
