@@ -6,7 +6,7 @@ import attrs
 from naff.client.const import MISSING, T, Missing
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
-from naff.client.utils.serializer import dict_filter_none
+from naff.client.utils.serializer import dict_filter
 from naff.models.discord.asset import Asset
 from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.color import COLOR_TYPES, Color, process_color
@@ -189,7 +189,7 @@ class Role(DiscordObject):
         """
         color = process_color(color)
 
-        payload = dict_filter_none(
+        payload = dict_filter(
             {"name": name, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
         )
 

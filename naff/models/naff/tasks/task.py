@@ -79,9 +79,12 @@ class Task:
     async def __call__(self) -> None:
         try:
             if inspect.iscoroutinefunction(self.callback):
-                await self.callback()
+                val = await self.callback()
             else:
-                self.callback()
+                val = self.callback()
+
+            if isinstance(val, BaseTrigger):
+                self.trigger = val
         except Exception as e:
             self.on_error(e)
 

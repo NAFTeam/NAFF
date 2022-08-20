@@ -33,7 +33,7 @@ from naff.client.const import (
 )
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from naff.client.utils.input_utils import response_decode, OverriddenJson
-from naff.client.utils.serializer import dict_filter_missing
+from naff.client.utils.serializer import dict_filter
 from naff.models import CooldownSystem
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .route import Route
@@ -212,9 +212,9 @@ class HTTPClient(
             return None
 
         if isinstance(payload, dict):
-            payload = dict_filter_missing(payload)
+            payload = dict_filter(payload)
         else:
-            payload = [dict_filter_missing(x) if isinstance(x, dict) else x for x in payload]
+            payload = [dict_filter(x) if isinstance(x, dict) else x for x in payload]
 
         if not files:
             return payload
@@ -262,7 +262,7 @@ class HTTPClient(
         if isinstance(payload, (list, dict)) and not files:
             kwargs["headers"]["Content-Type"] = "application/json"
         if isinstance(params, dict):
-            kwargs["params"] = dict_filter_missing(params)
+            kwargs["params"] = dict_filter(params)
 
         lock = self.get_ratelimit(route)
         # this gets a BucketLock for this route.

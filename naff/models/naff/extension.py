@@ -86,6 +86,8 @@ class Extension:
                         bot.add_modal_callback(val)
                     elif isinstance(val, naff.ComponentCommand):
                         bot.add_component_callback(val)
+                    elif isinstance(val, naff.HybridCommand):
+                        bot.add_hybrid_command(val)
                     elif isinstance(val, naff.InteractionCommand):
                         bot.add_interaction(val)
                     else:
@@ -143,6 +145,49 @@ class Extension:
                 for scope in func.scopes:
                     if self.bot.interactions.get(scope):
                         self.bot.interactions[scope].pop(func.resolved_name, [])
+
+                if isinstance(func, naff.HybridCommand):
+                    # here's where things get complicated - we need to unload the prefixed command
+                    # by necessity, there's a lot of logic here to determine what needs to be unloaded
+                    if not func.callback:  # not like it was added
+                        return
+
+                    if func.is_subcommand:
+                        prefixed_base = self.bot.prefixed_commands.get(str(func.name))
+                        _base_cmd = prefixed_base
+                        if not prefixed_base:
+                            # if something weird happened here, here's a safeguard
+                            continue
+
+                        if func.group_name:
+                            prefixed_base = prefixed_base.subcommands.get(str(func.group_name))
+                            if not prefixed_base:
+                                continue
+
+                        prefixed_base.remove_command(str(func.sub_cmd_name))
+
+                        if not prefixed_base.subcommands:
+                            # the base cmd is now empty, delete it
+                            if func.group_name:
+                                _base_cmd.remove_command(str(func.group_name))  # type: ignore
+
+                                # and now the base command is empty
+                                if not _base_cmd.subcommands:  # type: ignore
+                                    # in case you're curious, i did try to put the below behavior
+                                    # in a function here, but then it turns out a weird python
+                                    # bug can happen if i did that
+                                    if cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                                        for alias in cmd.aliases:
+                                            self.bot.prefixed_commands.pop(alias, None)
+
+                            elif cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                                for alias in cmd.aliases:
+                                    self.bot.prefixed_commands.pop(alias, None)
+
+                    elif cmd := self.bot.prefixed_commands.pop(str(func.name), None):
+                        for alias in cmd.aliases:
+                            self.bot.prefixed_commands.pop(alias, None)
+
             elif isinstance(func, naff.PrefixedCommand):
                 if not func.is_subcommand:
                     self.bot.prefixed_commands.pop(func.name, None)

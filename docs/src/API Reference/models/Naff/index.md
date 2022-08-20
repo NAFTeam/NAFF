@@ -9,6 +9,7 @@
 - [Converters](converters)
 - [Cooldowns](cooldowns)
 - [Extension](extension)
+- [Hybrid Commands](hybrid_commands)
 - [Listeners](listener)
 - [Localisation](localisation)
 - [Prefixed Commands](prefixed_commands)

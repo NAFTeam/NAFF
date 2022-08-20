@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union, Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
 import attrs
 
@@ -286,9 +286,9 @@ class AutoModerationAction(ClientObject):
     matched_content: Optional[str] = field(default=None)
     content: Optional[str] = field(default=None)
 
-    _message_id: Union["Snowflake_Type", None] = field(default=None)
-    _alert_system_message_id: "Snowflake_Type" = field()
-    _channel_id: "Snowflake_Type" = field()
+    _message_id: Optional["Snowflake_Type"] = field(default=None)
+    _alert_system_message_id: Optional["Snowflake_Type"] = field(default=None)
+    _channel_id: Optional["Snowflake_Type"] = field(default=None)
     _guild_id: "Snowflake_Type" = field()
 
     @classmethod
@@ -302,11 +302,11 @@ class AutoModerationAction(ClientObject):
         return self._client.get_guild(self._guild_id)
 
     @property
-    def channel(self) -> "GuildText":
+    def channel(self) -> "Optional[GuildText]":
         return self._client.get_channel(self._channel_id)
 
     @property
-    def message(self) -> "Message":
+    def message(self) -> "Optional[Message]":
         return self._client.cache.get_message(self._channel_id, self._message_id)
 
 
