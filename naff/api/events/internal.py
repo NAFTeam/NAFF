@@ -21,11 +21,12 @@ These are events dispatched by the client. This is intended as a reference so yo
 
 """
 import re
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Callable, Coroutine
 
 from naff.client.const import MISSING
 from naff.models.discord.snowflake import to_snowflake
 from naff.client.utils.attr_utils import define, field, docs
+import naff.models as models
 
 __all__ = (
     "BaseEvent",
@@ -69,6 +70,32 @@ class BaseEvent:
         """The name of the event, defaults to the class name if not overridden."""
         name = self.override_name or self.__class__.__name__
         return _event_reg.sub("_", name).lower()
+
+    @classmethod
+    def listen(cls, coro: Callable[..., Coroutine], client: "Client") -> "models.Listener":
+        """
+        A shortcut for creating a listener for this event
+
+        Args:
+            coro: The coroutine to call when the event is triggered.
+            client: The client instance to listen to.
+
+
+        ??? Hint "Example Usage:"
+            ```python
+            class SomeClass:
+                def __init__(self, bot: Client):
+                    Ready.listen(self.some_func, bot)
+
+                async def some_func(self, event):
+                    print(f"{event.resolved_name} triggered")
+            ```
+        Returns:
+            A listener object.
+        """
+        listener = models.Listener.create(cls().resolved_name)(coro)
+        client.add_listener(listener)
+        return listener
 
 
 @define(slots=False, kw_only=False)
