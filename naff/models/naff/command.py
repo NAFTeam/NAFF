@@ -122,7 +122,7 @@ class BaseCommand(DictSerializationMixin, CallbackObject):
             if self.error_callback:
                 await self.error_callback(e, context, *args, **kwargs)
             elif self.extension and self.extension.extension_error:
-                await self.extension.extension_error(context, *args, **kwargs)
+                await self.extension.extension_error(e, context, *args, **kwargs)
             else:
                 raise
         finally:
