@@ -35,7 +35,7 @@ class InteractionRequests:
         )
 
     async def get_application_commands(
-        self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type"
+        self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type", with_localisations: bool = True
     ) -> List[discord_typings.ApplicationCommandData]:
         """
         Get all application commands for this application from discord.
@@ -43,14 +43,21 @@ class InteractionRequests:
         Args:
             application_id: the what application to query
             guild_id: specify a guild to get commands from
+            with_localisations: whether to include all localisations in the response
 
         Returns:
             Application command data
 
         """
         if guild_id == GLOBAL_SCOPE:
-            return await self.request(Route("GET", f"/applications/{application_id}/commands"))
-        return await self.request(Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"))
+            return await self.request(
+                Route("GET", f"/applications/{application_id}/commands"),
+                params={"with_localizations": int(with_localisations)},
+            )
+        return await self.request(
+            Route("GET", f"/applications/{application_id}/guilds/{guild_id}/commands"),
+            params={"with_localizations": int(with_localisations)},
+        )
 
     async def overwrite_application_commands(
         self, app_id: "Snowflake_Type", data: List[Dict], guild_id: "Snowflake_Type" = None
