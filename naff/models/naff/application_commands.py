@@ -1074,6 +1074,9 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),
     }
+    post_process: Dict[str, Callable] = {
+        "choices": lambda l: [d | {"name_localizations": {}} if len(d) == 2 else d for d in l],
+    }
 
     if local_opt_list != remote_opt_list:
         if len(local_opt_list) != len(remote_opt_list):
@@ -1091,7 +1094,9 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
                 else:
                     for local_name, comparison_data in options_lookup.items():
                         remote_name, default_value = comparison_data
-                        if local_option.get(local_name, default_value) != remote_option.get(remote_name, default_value):
+                        if local_option.get(local_name, default_value) != post_process.get(remote_name, lambda l: l)(
+                            remote_option.get(remote_name, default_value)
+                        ):
                             return False
 
             else:
