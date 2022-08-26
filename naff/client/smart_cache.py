@@ -232,7 +232,8 @@ class GlobalCache:
         guild_id = to_snowflake(guild_id)
 
         if member := self.member_cache.pop((guild_id, user_id), None):
-            member.guild._member_ids.discard(user_id)
+            if member.guild:
+                member.guild._member_ids.discard(user_id)
 
         self.delete_user_guild(user_id, guild_id)
 
