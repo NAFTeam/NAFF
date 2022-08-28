@@ -41,7 +41,7 @@ class GuildEvents(EventMixinTemplate):
 
         if self.fetch_members:  # noqa
             # delays events until chunking has completed
-            await guild.chunk_guild(presences=True)
+            await guild.chunk()
 
         self.dispatch(events.GuildJoin(guild))
 

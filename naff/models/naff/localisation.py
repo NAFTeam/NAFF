@@ -120,6 +120,9 @@ class LocalisedField:
                 if "locale-code" in attr.metadata:
                     if val := getattr(self, attr.name):
                         data[attr.metadata["locale-code"]] = val
+
+        if not data:
+            data = None  # handle discord being stupid
         return data
 
 
