@@ -39,7 +39,7 @@ class GuildEvents(EventMixinTemplate):
 
         self._guild_event.set()
 
-        if self.fetch_members:  # noqa
+        if self.fetch_members and not guild.chunked.is_set():  # noqa
             # delays events until chunking has completed
             await guild.chunk()
 

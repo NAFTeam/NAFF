@@ -1051,8 +1051,8 @@ def _compare_commands(local_cmd: dict, remote_cmd: dict) -> bool:
         "description": ("description", ""),
         "default_member_permissions": ("default_member_permissions", None),
         "dm_permission": ("dm_permission", True),
-        "name_localized": ("name_localizations", {}),
-        "description_localized": ("description_localizations", {}),
+        "name_localized": ("name_localizations", None),
+        "description_localized": ("description_localizations", None),
     }
 
     for local_name, comparison_data in lookup.items():
@@ -1068,11 +1068,14 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "description": ("description", ""),
         "required": ("required", False),
         "autocomplete": ("autocomplete", False),
-        "name_localized": ("name_localizations", {}),
-        "description_localized": ("description_localizations", {}),
+        "name_localized": ("name_localizations", None),
+        "description_localized": ("description_localizations", None),
         "choices": ("choices", []),
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),
+    }
+    post_process: Dict[str, Callable] = {
+        "choices": lambda l: [d | {"name_localizations": {}} if len(d) == 2 else d for d in l],
     }
 
     if local_opt_list != remote_opt_list:
@@ -1084,14 +1087,16 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
 
             if local_option["type"] == remote_option["type"]:
                 if local_option["type"] in (OptionTypes.SUB_COMMAND_GROUP, OptionTypes.SUB_COMMAND):
-                    if not _compare_commands(local_option, remote_option) or _compare_options(
+                    if not _compare_commands(local_option, remote_option) or not _compare_options(
                         local_option.get("options", []), remote_option.get("options", [])
                     ):
                         return False
                 else:
                     for local_name, comparison_data in options_lookup.items():
                         remote_name, default_value = comparison_data
-                        if local_option.get(local_name, default_value) != remote_option.get(remote_name, default_value):
+                        if local_option.get(local_name, default_value) != post_process.get(remote_name, lambda l: l)(
+                            remote_option.get(remote_name, default_value)
+                        ):
                             return False
 
             else:
