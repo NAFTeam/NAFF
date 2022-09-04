@@ -36,6 +36,11 @@ class AsyncIterator(_AsyncIterator, ABC):
         """Get how the maximum number of items that should be retrieved."""
         return min(self._limit - len(self._retrieved_objects), 100) if self._limit else 100
 
+    @property
+    def total_retrieved(self) -> int:
+        """Get the total number of objects this iterator has retrieved."""
+        return len(self._retrieved_objects)
+
     async def add_object(self, obj) -> None:
         """Add an object to iterator's queue."""
         return await self._queue.put(obj)
