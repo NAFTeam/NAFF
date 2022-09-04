@@ -140,6 +140,13 @@ class KeywordPresetTrigger(BaseTrigger):
 
 
 @define()
+class MentionSpamTrigger(BaseTrigger):
+    """A trigger that checks if content contains more mentions than allowed"""
+
+    mention_total_limit: int = field(default=3, repr=True, metadata=docs("The maximum number of mentions allowed"))
+
+
+@define()
 class BlockMessage(BaseAction):
     """blocks the content of a message according to the rule"""
 
@@ -320,4 +327,5 @@ TRIGGER_MAPPING = {
     AutoModTriggerType.KEYWORD: KeywordTrigger,
     AutoModTriggerType.HARMFUL_LINK: HarmfulLinkFilter,
     AutoModTriggerType.KEYWORD_PRESET: KeywordPresetTrigger,
+    AutoModTriggerType.MENTION_SPAM: MentionSpamTrigger,
 }
