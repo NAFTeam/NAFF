@@ -9,7 +9,7 @@ with open("pyproject.toml", "rb") as f:
 
 extras_require = {
     "voice": ["PyNaCl>=1.5.0,<1.6"],
-    "speedup": ["cchardet", "aiodns", "orjson", "Brotli"],
+    "speedup": ["aiodns", "orjson", "Brotli"],
     "sentry": ["sentry-sdk"],
 }
 extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
