@@ -1,5 +1,6 @@
 import asyncio
 import time
+from asyncio import QueueEmpty
 from collections import namedtuple
 from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
@@ -117,6 +118,26 @@ class GuildPreview(BaseGuild):
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         return super()._process_dict(data, client)
+
+
+class MemberIterator(AsyncIterator):
+    def __init__(self, guild: "Guild", limit: int = 0) -> None:
+        super().__init__(limit)
+        self.guild = guild
+        self._more = True
+
+    async def fetch(self) -> list:
+        if self._more:
+            expected = self.get_limit
+
+            rcv = await self.guild._client.http.list_members(
+                self.guild.id, limit=expected, after=self.last["id"] if self.last else MISSING
+            )
+            if not rcv:
+                raise QueueEmpty
+            self._more = len(rcv) == expected
+            return rcv
+        raise QueueEmpty
 
 
 @define()
@@ -501,31 +522,15 @@ class Guild(BaseGuild):
     async def http_chunk(self) -> None:
         """Populates all members of this guild using the REST API."""
         start_time = time.perf_counter()
-        members = []
 
-        # request all guild members
-        after = MISSING
-        while True:
-            if members:
-                after = members[-1]["user"]["id"]
-            rcv: list = await self._client.http.list_members(self.id, limit=1000, after=after)
-            members.extend(rcv)
-            if len(rcv) < 1000:
-                # we're done
-                break
-
-        # process all members
-        s = time.monotonic()
-        for member in members:
+        iterator = MemberIterator(self)
+        async for member in iterator:
             self._client.cache.place_member_data(self.id, member)
-            if (time.monotonic() - s) > 0.05:
-                # look, i get this *could* be a thread, but because it needs to modify data in the main thread,
-                # it is still blocking. So by periodically yielding to the event loop, we can avoid blocking, and still
-                # process this data properly
-                await asyncio.sleep(0)
-                s = time.monotonic()
+
         self.chunked.set()
-        logger.info(f"Cached {len(members)} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds")
+        logger.info(
+            f"Cached {iterator.total_retrieved} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds"
+        )
 
     async def gateway_chunk(self, wait=True, presences=True) -> None:
         """
