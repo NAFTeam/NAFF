@@ -53,7 +53,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             A PartialEmoji object
 
         Raises:
-            ValueError if the string cannot be parsed
+            ValueError: if the string cannot be parsed
 
         """
         parsed = emoji_regex.findall(emoji_str)

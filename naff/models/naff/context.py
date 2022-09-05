@@ -513,7 +513,6 @@ class ComponentContext(InteractionContext):
             embed: Embedded rich content (up to 6000 characters).
             components: The components to include with the message.
             allowed_mentions: Allowed mentions for the message.
-            reply_to: Message to reference, must be from the same channel.
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.

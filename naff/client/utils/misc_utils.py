@@ -27,7 +27,7 @@ def escape_mentions(content: str) -> str:
     """
     Escape mentions that could ping someone in a string.
 
-    note:
+    !!! note
         This does not escape channel mentions as they do not ping anybody
 
     Args:
@@ -92,7 +92,7 @@ def get(sequence: Iterable[T], **kwargs: Any) -> Optional[T]:
 
     Args:
         sequence: A sequence to be searched
-        kwargs: Keyword arguments to search the sequence for
+        **kwargs: Keyword arguments to search the sequence for
 
     Returns:
         A match if found, otherwise None
@@ -120,7 +120,7 @@ def get_all(sequence: Iterable[T], **kwargs: Any) -> List[T]:
 
     Args:
         sequence: A sequence to be searched
-        kwargs: Keyword arguments to search the sequence for
+        **kwargs: Keyword arguments to search the sequence for
 
     Returns:
         A list of matches
@@ -138,7 +138,7 @@ def get_all(sequence: Iterable[T], **kwargs: Any) -> List[T]:
     return matches
 
 
-def wrap_partial(obj, cls) -> Callable:
+def wrap_partial(obj: Any, cls: Any) -> Callable:
     """
     🎁 Wraps a commands callback objects into partials.
 

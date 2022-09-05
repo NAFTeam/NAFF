@@ -46,7 +46,7 @@ A user can use them like so:
 
 ## Parameters
 
-Often, when using prefixed commands, you typically want to parse in what the user says into seperated parameters/arguments. This can be done easily in this library using a Python-esque syntax.
+Often, when using prefixed commands, you typically want to parse what the user says into separated parameters/arguments. This can be done easily in this library using a Python-esque syntax.
 
 For example, to make a command that takes in one argument, we can do:
 ```python
@@ -79,7 +79,7 @@ async def test(ctx: PrefixedContext, arg1, arg2):
 
 ### Variable and Keyword-Only Arguments
 
-There may be times where you wish for an argument to be able to have multiple words without wrapping them in quotes. There are two ways of apporaching this.
+There may be times where you wish for an argument to be able to have multiple words without wrapping them in quotes. There are two ways of approaching this.
 
 #### Variable
 
@@ -121,7 +121,7 @@ The result looks like this:
 
 ### Basic Types
 
-Parameters, by default, are assumed to be strings, since `Message.content`, the content used for prefixed commands, is one. However, there are many times where you want to have a parameter be a more specific type, like a integer or boolean.
+Parameters, by default, are assumed to be strings, since `Message.content`, the content used for prefixed commands, is one. However, there are many times where you want to have a parameter be a more specific type, like an integer or boolean.
 
 `NAFF` provides an easy syntax to do so:
 
@@ -133,7 +133,7 @@ async def test(ctx: PrefixedContext, an_int: int, a_float: float):
 
 ![Basic Type Conversion](../images/PrefixedCommands/BasicTypeConversion.png "The above running with the arguments: 1 2.5")
 
-Words/arguments will automatically be converted to the specified type. If `NAFF` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarily to how it is handled with [slash commands](/Guides/03 Creating Commands).
+Words/arguments will automatically be converted to the specified type. If `NAFF` is unable to convert it (a user could easily pass a letter into `an_int`), then it will raise a `BadArgument` error, which can be handled by an error handler. Error handling is handled similarly to how it is handled with [slash commands](/Guides/03 Creating Commands).
 
 You can even pass in a function for parameters:
 
@@ -166,7 +166,7 @@ elif lowered in {"no", "n", "false", "f", "0", "disable", "off"}:
 
 ### Converters
 
-Converters work much of the same way as they do for other commands; see [the guide for converters for reference](/Guides/08 Converters).
+Converters work much in the same way as they do for other commands; see [the guide for converters for reference](/Guides/08 Converters).
 
 There are a few specific converters that only work with prefixed commands due to their nature, however.
 
@@ -177,7 +177,7 @@ Prefixed commands can be typehinted with some Discord models, like so:
 ```python
 @prefixed_command()
 async def poke(ctx: PrefixedContext, target: Member):
-    await ctx.send(f"{target.user.mention}, you got poked by {ctx.author.mention}!")
+    await ctx.reply(f"{target.mention}, you got poked by {ctx.author.mention}!")
 ```
 
 The argument here will automatically be converted into a `Member` object:
@@ -212,7 +212,7 @@ For example, you could use the following code:
 @prefixed_command()
 async def ban(ctx: PrefixedContext, member: Member, delete_message_days: Optional[int] = 0, *, reason: str):
     await member.ban(delete_message_days=delete_message_days, reason=reason)
-    await ctx.reply(f"Banned {member.user.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
+    await ctx.reply(f"Banned {member.mention} for {reason}. Deleted {delete_message_days} days of their messages.")
 ```
 
 And if a user omits the `delete_message_days` parameter, it would act as so:
@@ -236,7 +236,7 @@ async def one_or_two(ctx: PrefixedContext, num: Literal[1, 2]):
 Using `typing.Annotated` can allow you to have more proper typehints when using converters:
 
 ```python
-class JudgementConverter(molter.Converter):
+class JudgementConverter(Converter):
     async def convert(self, ctx: PrefixedContext, argument: str):
         return f"{ctx.author.mention} is {argument}."
 
@@ -282,6 +282,6 @@ With the default options, the result looks like:
 ![Help Command](../images/PrefixedCommands/HelpCommand.png "The help command running.")
 
 ## Other Notes
-- Checks, cooldowns, and concurrency all works as-is with prefixed commands.
-- Prefixed commands uses a different method to process `Converter`s compared to slash commands. While they should roughly give the same result, they may act slightly differently.
+- Checks, cooldowns, and concurrency all work as-is with prefixed commands.
+- Prefixed commands use a different method to process `Converter`s compared to slash commands. While they should roughly give the same result, they may act slightly differently.
 - All prefixed commands use `PrefixedContext`, which contains useful information based on the current instance of the command.

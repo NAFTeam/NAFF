@@ -499,7 +499,7 @@ class Guild(BaseGuild):
         Returns:
             True if the user is the owner of the guild, False otherwise.
 
-        Note:
+        !!! note
             the `user` argument can be any type that meets `Snowflake_Type`
 
         """
@@ -513,7 +513,7 @@ class Guild(BaseGuild):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """
@@ -655,7 +655,6 @@ class Guild(BaseGuild):
         Get an async iterator for the history of the audit log.
 
         Args:
-            guild (:class:`Guild`): The guild to search through.
             user_id (:class:`Snowflake_Type`): The user ID to search for.
             action_type (:class:`AuditLogEventType`): The action type to search for.
             before: get entries before this message ID
@@ -1572,7 +1571,7 @@ class Guild(BaseGuild):
         """
         Delete the guild.
 
-        !!! Note
+        !!! note
             You must own this guild to do this.
 
         """
@@ -1584,7 +1583,7 @@ class Guild(BaseGuild):
         """
         Kick a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `kick members` permission
 
         Args:
@@ -1603,7 +1602,7 @@ class Guild(BaseGuild):
         """
         Ban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:
@@ -1774,7 +1773,7 @@ class Guild(BaseGuild):
         """
         Unban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:

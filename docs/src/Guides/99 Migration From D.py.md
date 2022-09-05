@@ -19,6 +19,7 @@
      - Where possible, we use the official names for events, most notably `on_message_create` instead of dpy's `on_message`.
        - A full list can be found [here](/API Reference/events/discord/).
      - Event details are stored on a model, passed as a single parameter. (eg: `on_member_update(before, after)` becomes `on_member_update(event)`, where event has a `.before` and `.after`.
+     - `on_ready` is called whenever the gateway resumes. If you are looking to run stuff *once* upon startup, use the `on_startup` handler instead.
      - For more details, read [the Events guide](/Guides/10 Events).
 
 5. Migrating your commands

@@ -171,8 +171,7 @@ class ThreadRequests:
         Args:
             channel_id: The ID of the channel to create this thread in
             name: The name of the thread
-            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity,
-            can be set to: 60, 1440, 4320, 10080
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             thread_type: The type of thread, defaults to public. ignored if creating thread from a message
             invitable:
             message_id: An optional message to create a thread from.

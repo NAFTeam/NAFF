@@ -93,7 +93,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """
         Get a list of mutual guilds shared between this user and the client.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         return [
@@ -144,7 +144,7 @@ class User(BaseUser):
         """
         Returns the member object for all guilds both the bot and the user are in.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         member_objs = [
@@ -387,7 +387,7 @@ class Member(DiscordObject, _SendDMMixin):
             If `member` has both permissions, `True` gets returned.
 
         Args:
-            permissions: The permission(s) to check whether the user has it.
+            *permissions: The permission(s) to check whether the user has it.
 
         """
         # Get the user's permissions
@@ -447,7 +447,7 @@ class Member(DiscordObject, _SendDMMixin):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """
@@ -514,7 +514,7 @@ class Member(DiscordObject, _SendDMMixin):
         Checks if the user has the given role(s).
 
         Args:
-            roles: The role(s) to check whether the user has it.
+            *roles: The role(s) to check whether the user has it.
 
         """
         return all(to_snowflake(role) in self._role_ids for role in roles)

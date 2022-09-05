@@ -1,3 +1,9 @@
+---
+hide:
+  - navigation
+  - toc
+  - feedback
+---
 !!! danger "Remember"
     These docs are not completed. Please do not panic if something is missing or inaccurate.
 
@@ -38,4 +44,4 @@ ___
 ### `"Can I contribute to this project?"`
 Of course, you can contribute to this project by submitting a pull-request to the
 --8<-- "github_link.md"
-. We also have a [:fontawesome-brands-trello:Trello Board](https://trello.com/b/LVjnmYKt/dev-board) where you can see what we are working towards, feel free to do anything there.
+. We are open to all contributions, and we welcome everyone to join us.
