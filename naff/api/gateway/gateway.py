@@ -7,7 +7,7 @@ from types import TracebackType
 from typing import TypeVar, TYPE_CHECKING
 
 from naff.api import events
-from naff.client.const import logger, MISSING
+from naff.client.const import logger, MISSING, __api_version__
 from naff.client.utils.input_utils import OverriddenJson
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.enums import Status
@@ -48,7 +48,6 @@ class GatewayClient(WebsocketClient):
     Multiple `WebsocketClient` instances can be used to implement same-process sharding.
 
     Attributes:
-        buffer: A buffer to hold incoming data until its complete
         sequence: The sequence of this connection
         session_id: The session ID of this connection
 
@@ -83,7 +82,7 @@ class GatewayClient(WebsocketClient):
         self._ready = asyncio.Event()
         self._close_gateway = asyncio.Event()
 
-        # Santity check, it is extremely important that an instance isn't reused.
+        # Sanity check, it is extremely important that an instance isn't reused.
         self._entered = False
 
     async def __aenter__(self: SELF) -> SELF:
@@ -177,6 +176,7 @@ class GatewayClient(WebsocketClient):
         match op:
 
             case OPCODE.HEARTBEAT:
+                logger.debug("Received heartbeat request from gateway")
                 return await self.send_heartbeat()
 
             case OPCODE.HEARTBEAT_ACK:
@@ -192,12 +192,12 @@ class GatewayClient(WebsocketClient):
                 return self._acknowledged.set()
 
             case OPCODE.RECONNECT:
-                logger.info("Gateway requested reconnect. Reconnecting...")
+                logger.debug("Gateway requested reconnect. Reconnecting...")
                 return await self.reconnect(resume=True, url=self.ws_resume_url)
 
             case OPCODE.INVALIDATE_SESSION:
                 logger.warning("Gateway has invalidated session! Reconnecting...")
-                return await self.reconnect(resume=data, url=self.ws_resume_url if data else None)
+                return await self.reconnect()
 
             case _:
                 return logger.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
@@ -209,7 +209,9 @@ class GatewayClient(WebsocketClient):
                 self._trace = data.get("_trace", [])
                 self.sequence = seq
                 self.session_id = data["session_id"]
-                self.ws_resume_url = data["resume_gateway_url"]
+                self.ws_resume_url = (
+                    f"{data['resume_gateway_url']}?encoding=json&v={__api_version__}&compress=zlib-stream"
+                )
                 logger.info(f"Shard {self.shard[0]} has connected to gateway!")
                 logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
                 # todo: future polls, improve guild caching here. run the debugger. you'll see why
@@ -287,7 +289,7 @@ class GatewayClient(WebsocketClient):
         logger.debug(f"{self.shard[0]} is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:
-        await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, True)
+        await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, bypass=True)
         logger.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None) -> None:

@@ -865,20 +865,21 @@ class AuditLogEventType(CursedIntEnum):
     GUILD_HOME_FEATURE_ITEM_UPDATE = 172
 
 
-class AutoModTriggerType(IntEnum):
+class AutoModTriggerType(CursedIntEnum):
     KEYWORD = 1
     HARMFUL_LINK = 2
     SPAM = 3
     KEYWORD_PRESET = 4
+    MENTION_SPAM = 5
 
 
-class AutoModAction(IntEnum):
+class AutoModAction(CursedIntEnum):
     BLOCK_MESSAGE = 1
     ALERT_MESSAGE = 2
     TIMEOUT_USER = 3
 
 
-class AutoModEvent(IntEnum):
+class AutoModEvent(CursedIntEnum):
     MESSAGE_SEND = 1
 
 
