@@ -34,6 +34,7 @@ from naff.models.naff.localisation import LocalisedField
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.naff.context import Context
+    from naff import ApplicationCommandPermission
 
 __all__ = (
     "OptionTypes",
@@ -187,6 +188,7 @@ class InteractionCommand(BaseCommand):
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
     nsfw: bool = field(default=False, metadata=docs("This command should only work in NSFW channels"))
+    permissions: dict["Snowflake_Type", "ApplicationCommandPermission"] = field(factory=dict)
     _application_id: "Snowflake_Type" = field(default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
