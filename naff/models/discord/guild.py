@@ -1159,15 +1159,13 @@ class Guild(BaseGuild):
 
         """
         if isinstance(channel, (str, int)):
-            channel = await self._client.get_channel(channel)
+            channel = await self._client.fetch_channel(channel)
 
         if not channel:
             raise ValueError("Unable to find requested channel")
 
-        # TODO self._channel_ids is not updated properly when new guild channels are created so this check is
-        #  disabled for now
-        # if channel.id not in self._channel_ids:
-        #     raise ValueError("This guild does not hold the requested channel")
+        if channel.id not in self._channel_ids:
+            raise ValueError("This guild does not hold the requested channel")
 
         await channel.delete(reason)
 
