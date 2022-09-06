@@ -188,7 +188,7 @@ class InteractionCommand(BaseCommand):
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
     nsfw: bool = field(default=False, metadata=docs("This command should only work in NSFW channels"))
-    permissions: dict["Snowflake_Type", "ApplicationCommandPermission"] = field(factory=dict)
+    permissions: dict["Snowflake_Type", "ApplicationCommandPermission"] = field(factory=dict, metadata=no_export_meta)
     _application_id: "Snowflake_Type" = field(default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
