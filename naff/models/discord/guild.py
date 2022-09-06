@@ -1159,7 +1159,7 @@ class Guild(BaseGuild):
 
         """
         if isinstance(channel, (str, int)):
-            channel = await self._client.get_channel(channel)
+            channel = await self._client.fetch_channel(channel)
 
         if not channel:
             raise ValueError("Unable to find requested channel")
