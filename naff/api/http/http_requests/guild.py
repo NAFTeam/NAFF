@@ -696,7 +696,7 @@ class GuildRequests(CanRequest):
         name: str,
         icon: str | None = None,
         verification_level: int | None = None,
-        default_message_notifications: int | None = None,  # todo enum
+        default_message_notifications: int | None = None,
         explicit_content_filter: int | None = None,
         roles: list[dict] | None = None,
         channels: list[dict] | None = None,
