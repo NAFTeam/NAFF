@@ -857,7 +857,6 @@ class GuildRequests(CanRequest):
         Returns:
             A list of auto moderation rules
         """
-        # todo: Add discord typings when added
         result = await self.request(Route("GET", f"/guilds/{int(guild_id)}/auto-moderation/rules"))
         return cast(list[dict], result)
 
@@ -874,7 +873,6 @@ class GuildRequests(CanRequest):
         Returns:
             The auto moderation rule
         """
-        # todo: Add discord typings when added
         result = await self.request(Route("GET", f"/guilds/{int(guild_id)}/auto-moderation/rules/{int(rule_id)}"))
         return cast(dict, result)
 
