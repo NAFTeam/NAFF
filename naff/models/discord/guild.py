@@ -36,6 +36,7 @@ from .enums import (
 )
 from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
+from naff.models.discord.app_perms import CommandPermissions
 
 if TYPE_CHECKING:
     from naff.client.client import Client
@@ -207,6 +208,8 @@ class Guild(BaseGuild):
     """Stage instances in the guild."""
     chunked = field(factory=asyncio.Event, metadata=no_export_meta)
     """An event that is fired when this guild has been chunked"""
+    command_permissions: dict[Snowflake_Type, CommandPermissions] = field(factory=dict, metadata=no_export_meta)
+    """A cache of all command permissions for this guild"""
 
     _owner_id: Snowflake_Type = field(converter=to_snowflake)
     _channel_ids: Set[Snowflake_Type] = field(factory=set)

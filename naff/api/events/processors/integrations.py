@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from naff.models.discord.snowflake import to_snowflake
-from naff.models.discord.app_perms import ApplicationCommandPermission
+from naff.models.discord.app_perms import ApplicationCommandPermission, CommandPermissions
 from ._template import EventMixinTemplate, Processor
 from ... import events
 
@@ -16,16 +16,16 @@ class IntegrationEvents(EventMixinTemplate):
     async def _raw_application_command_permissions_update(self, event: "RawGatewayEvent") -> None:
         perms = [ApplicationCommandPermission.from_dict(perm, self) for perm in event.data["permissions"]]
         guild_id = to_snowflake(event.data["guild_id"])
-        cmd_id = to_snowflake(event.data["id"])
+        command_id = to_snowflake(event.data["id"])
 
-        if self.app.id == cmd_id:
-            # entire bot disabled in this guild
-            ...  # todo: cache this
-        else:
-            # specific command disabled in this guild
-            cmd = self.get_application_cmd_by_id(cmd_id)
+        if guild := self.get_guild(guild_id):
+            if guild.permissions:
+                if command_id not in guild.command_permissions:
+                    guild.command_permissions[command_id] = CommandPermissions(
+                        client=self, command_id=command_id, guild=guild
+                    )
 
-            if cmd:
-                cmd.permissions |= {perm.id: perm for perm in perms}
+                command_permissions = guild.command_permissions[command_id]
+                [command_permissions.set_permission(perm) for perm in perms]
 
-        self.dispatch(events.ApplicationCommandPermissionsUpdate(guild_id, cmd_id, perms))
+        self.dispatch(events.ApplicationCommandPermissionsUpdate(guild, perms))
