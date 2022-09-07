@@ -36,7 +36,7 @@ from .enums import (
 )
 from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
-from naff.models.discord.app_perms import CommandPermissions
+from naff.models.discord.app_perms import CommandPermissions, ApplicationCommandPermission
 
 if TYPE_CHECKING:
     from naff.client.client import Client
@@ -491,6 +491,26 @@ class Guild(BaseGuild):
         """
         data = await self._client.http.get_guild_channels(self.id)
         return [self._client.cache.place_channel_data(channel_data) for channel_data in data]
+
+    async def fetch_app_cmd_perms(self) -> dict[Snowflake_Type, "CommandPermissions"]:
+        """
+        Fetch the application command permissions for this guild.
+
+        Returns:
+            The application command permissions for this guild.
+
+        """
+        data = await self._client.http.batch_get_application_command_permissions(self._client.app.id, self.id)
+
+        for command in data:
+            command_permissions = CommandPermissions(client=self._client, command_id=command["id"], guild=self)
+            perms = [ApplicationCommandPermission.from_dict(perm, self) for perm in command["permissions"]]
+
+            [command_permissions.set_permission(perm) for perm in perms]
+
+            self.command_permissions[int(command["id"])] = command_permissions
+
+        return self.command_permissions
 
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
