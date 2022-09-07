@@ -253,15 +253,15 @@ class Guild(BaseGuild):
         client: "Client",
         *,
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
-        verification_level: Absent[int] = MISSING,
-        default_message_notifications: Absent[int] = MISSING,
-        explicit_content_filter: Absent[int] = MISSING,
+        verification_level: Absent["VerificationLevels"] = MISSING,
+        default_message_notifications: Absent["DefaultNotificationLevels"] = MISSING,
+        explicit_content_filter: Absent["ExplicitContentFilterLevels"] = MISSING,
         roles: Absent[list[dict]] = MISSING,
         channels: Absent[list[dict]] = MISSING,
         afk_channel_id: Absent["Snowflake_Type"] = MISSING,
         afk_timeout: Absent[int] = MISSING,
         system_channel_id: Absent["Snowflake_Type"] = MISSING,
-        system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
+        system_channel_flags: Absent["SystemChannelFlags"] = MISSING,
     ) -> "Guild":
         """
         Create a guild.
@@ -685,7 +685,7 @@ class Guild(BaseGuild):
         self,
         name: Absent[Optional[str]] = MISSING,
         description: Absent[Optional[str]] = MISSING,
-        verification_level: Absent[Optional["models.VerificationLevels"]] = MISSING,
+        verification_level: Absent[Optional["VerificationLevels"]] = MISSING,
         default_message_notifications: Absent[Optional["DefaultNotificationLevels"]] = MISSING,
         explicit_content_filter: Absent[Optional["ExplicitContentFilterLevels"]] = MISSING,
         afk_channel: Absent[Optional[Union["models.GuildVoice", Snowflake_Type]]] = MISSING,
