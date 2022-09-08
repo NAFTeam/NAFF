@@ -253,7 +253,7 @@ class GuildRequests(CanRequest):
         self,
         guild_id: "Snowflake_Type",
         user_id: "Snowflake_Type",
-        delete_message_days: int = 0,
+        delete_message_seconds: int = 0,
         reason: str | None = None,
     ) -> None:
         """
@@ -262,11 +262,11 @@ class GuildRequests(CanRequest):
         Args:
             guild_id: The ID of the guild to create the ban in
             user_id: The ID of the user to ban
-            delete_message_days: number of days to delete messages for (0-7)
+            delete_message_seconds: number of seconds to delete messages for (0-604800)
             reason: The reason for this action
 
         """
-        payload = {"delete_message_days": delete_message_days}
+        payload = {"delete_message_seconds": delete_message_seconds}
         await self.request(Route("PUT", f"/guilds/{int(guild_id)}/bans/{int(user_id)}"), payload=payload, reason=reason)
 
     async def remove_guild_ban(

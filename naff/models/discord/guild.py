@@ -1594,7 +1594,8 @@ class Guild(BaseGuild):
     async def ban(
         self,
         user: Union["models.User", "models.Member", Snowflake_Type],
-        delete_message_days: int = 0,
+        delete_message_days: Absent[int] = MISSING,
+        delete_message_seconds: int = 0,
         reason: Absent[str] = MISSING,
     ) -> None:
         """
@@ -1605,11 +1606,15 @@ class Guild(BaseGuild):
 
         Args:
             user: The user to ban
-            delete_message_days: How many days worth of messages to remove
+            delete_message_days: (deprecated) How many days worth of messages to remove
+            delete_message_seconds: How many seconds worth of messages to remove
             reason: The reason for the ban
 
         """
-        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+        if delete_message_days is not MISSING:
+            warn("delete_message_days is deprecated and will be removed in a future update", DeprecationWarning)
+            delete_message_seconds = delete_message_days * 3600
+        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_seconds, reason=reason)
 
     async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> Optional[GuildBan]:
         """
