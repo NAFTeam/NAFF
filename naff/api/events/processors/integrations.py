@@ -26,6 +26,6 @@ class IntegrationEvents(EventMixinTemplate):
                     )
 
                 command_permissions = guild.command_permissions[command_id]
-                [command_permissions.set_permission(perm) for perm in perms]
+                command_permissions.update_permissions(*perms)
 
         self.dispatch(events.ApplicationCommandPermissionsUpdate(guild, perms))

@@ -41,6 +41,7 @@ class CommandPermissions(ClientObject):
         bot_perms = self._guild.command_permissions.get(self._client.app.id)
 
         for obj_id in object_id:
+            obj_id = to_snowflake(obj_id)
             if permission := self.permissions.get(obj_id):
                 if not permission.permission:
                     return False
@@ -51,11 +52,27 @@ class CommandPermissions(ClientObject):
                         return False
         return True
 
-    def set_permission(self, permission: ApplicationCommandPermission) -> None:
+    def is_enabled_in_context(self, context) -> bool:
         """
-        Set a permission for the command.
+        Check if a command is enabled for the given context.
 
         Args:
-            permission: The permission to set.
+            context: The context to check for.
+
+        Returns:
+            Whether the command is enabled for the given context.
         """
-        self.permissions[permission.id] = permission
+        everyone_role = context.guild.id
+        all_channels = context.guild.id - 1  # why tf discord
+        return self.is_enabled(
+            context.channel.id, *context.author.roles, context.author.id, everyone_role, all_channels
+        )
+
+    def update_permissions(self, *permissions: ApplicationCommandPermission) -> None:
+        """
+        Update the permissions for the command.
+
+        Args:
+            permissions: The permission to set.
+        """
+        self.permissions = {perm.id: perm for perm in permissions}
