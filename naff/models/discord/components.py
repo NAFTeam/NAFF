@@ -5,6 +5,7 @@ import attrs
 
 from naff.client.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from naff.client.mixins.serialization import DictSerializationMixin
+from naff.client.utils import list_converter
 from naff.client.utils.attr_utils import define, field, str_validator
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
@@ -18,7 +19,7 @@ __all__ = (
     "InteractiveComponent",
     "Button",
     "SelectOption",
-    "Select",
+    "SelectMenu",
     "ActionRow",
     "process_components",
     "spread_to_rows",
@@ -143,6 +144,25 @@ class SelectOption(BaseComponent):
     )
     default: bool = field(repr=True, default=False)
 
+    @classmethod
+    def converter(cls, value: Any) -> "SelectOption":
+        if isinstance(value, SelectOption):
+            return value
+        if isinstance(value, dict):
+            return cls.from_dict(value)
+
+        if isinstance(value, str):
+            return cls(label=value, value=value)
+
+        try:
+            possible_iter = iter(value)
+
+            return cls(label=possible_iter[0], value=possible_iter[1])
+        except TypeError:
+            pass
+
+        raise TypeError(f"Cannot convert {value} of type {type(value)} to a SelectOption")
+
     @label.validator
     def _label_validator(self, attribute: str, value: str) -> None:
         if not value or len(value) > SELECT_MAX_NAME_LENGTH:
@@ -160,7 +180,7 @@ class SelectOption(BaseComponent):
 
 
 @define(kw_only=False)
-class Select(InteractiveComponent):
+class SelectMenu(InteractiveComponent):
     """
     Represents a select component.
 
@@ -175,18 +195,15 @@ class Select(InteractiveComponent):
 
     """
 
-    options: List[Union[SelectOption, Dict]] = field(repr=True, factory=list)
-    custom_id: str = field(repr=True, factory=lambda: str(uuid.uuid4()), validator=str_validator)
-    placeholder: str = field(repr=True, default=None)
-    min_values: Optional[int] = field(repr=True, default=1)
-    max_values: Optional[int] = field(repr=True, default=1)
-    disabled: bool = field(repr=True, default=False)
+    options: list[SelectOption | str] = field(repr=True, converter=list_converter(SelectOption.converter))
+    placeholder: Optional[str] = field(repr=True, default=None, kw_only=True)
+    min_values: int = field(repr=True, default=1, kw_only=True)
+    max_values: int = field(repr=True, default=1, kw_only=True)
+    disabled: bool = field(repr=True, default=False, kw_only=True)
+    custom_id: str = field(repr=True, factory=lambda: str(uuid.uuid4()), validator=str_validator, kw_only=True)
     type: Union[ComponentTypes, int] = field(
         repr=True, default=ComponentTypes.SELECT, init=False, on_setattr=attrs.setters.frozen
     )
-
-    def __len__(self) -> int:
-        return len(self.options)
 
     @placeholder.validator
     def _placeholder_validator(self, attribute: str, value: str) -> None:
@@ -196,17 +213,17 @@ class Select(InteractiveComponent):
     @min_values.validator
     def _min_values_validator(self, attribute: str, value: int) -> None:
         if value < 0:
-            raise ValueError("Select min value cannot be a negative number.")
+            raise ValueError("SelectMenu min value cannot be a negative number.")
 
     @max_values.validator
     def _max_values_validator(self, attribute: str, value: int) -> None:
         if value < 0:
-            raise ValueError("Select max value cannot be a negative number.")
+            raise ValueError("SelectMenu max value cannot be a negative number.")
 
     @options.validator
     def _options_validator(self, attribute: str, value: List[Union[SelectOption, Dict]]) -> None:
         if not all(isinstance(x, (SelectOption, Dict)) for x in value):
-            raise ValueError("Select options must be of type `SelectOption`")
+            raise ValueError("SelectMenu options must be of type `SelectOption`")
 
     def _check_object(self) -> None:
         if not self.custom_id:
@@ -221,9 +238,8 @@ class Select(InteractiveComponent):
         if self.max_values < self.min_values:
             raise TypeError("Selects max value cannot be less than min value.")
 
-    def add_option(self, option: SelectOption) -> None:
-        if not isinstance(option, (SelectOption, Dict)):
-            raise ValueError(f"Select option must be of `SelectOption` type, not {type(option)}")
+    def add_option(self, option: str | SelectOption) -> None:
+        option = SelectOption.converter(option)
         self.options.append(option)
 
 
@@ -233,19 +249,19 @@ class ActionRow(BaseComponent):
     Represents an action row.
 
     Attributes:
-        components List[Union[dict, Select, Button]]: The components within this action row
+        components List[Union[dict, SelectMenu, Button]]: The components within this action row
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
 
     """
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: Sequence[Union[dict, Select, Button]] = field(repr=True, factory=list)
+    components: Sequence[Union[dict, SelectMenu, Button]] = field(repr=True, factory=list)
     type: Union[ComponentTypes, int] = field(
         default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
 
-    def __init__(self, *components: Union[dict, Select, Button]) -> None:
+    def __init__(self, *components: Union[dict, SelectMenu, Button]) -> None:
         self.__attrs_init__(components)
         self.components = [self._component_checks(c) for c in self.components]
 
@@ -256,7 +272,7 @@ class ActionRow(BaseComponent):
     def from_dict(cls, data) -> "ActionRow":
         return cls(*data["components"])
 
-    def _component_checks(self, component: Union[dict, Select, Button]) -> Union[Select, Button]:
+    def _component_checks(self, component: Union[dict, SelectMenu, Button]) -> Union[SelectMenu, Button]:
         if isinstance(component, dict):
             component = BaseComponent.from_dict_factory(component)
 
@@ -273,7 +289,7 @@ class ActionRow(BaseComponent):
         if any(x.type == ComponentTypes.SELECT for x in self.components) and len(self.components) != 1:
             raise TypeError("Action row must have only one select component and nothing else.")
 
-    def add_components(self, *components: Union[dict, Button, Select]) -> None:
+    def add_components(self, *components: Union[dict, Button, SelectMenu]) -> None:
         """
         Add one or more component(s) to this action row.
 
@@ -335,7 +351,7 @@ def process_components(
     raise ValueError(f"Invalid components: {components}")
 
 
-def spread_to_rows(*components: Union[ActionRow, Button, Select], max_in_row: int = 5) -> List[ActionRow]:
+def spread_to_rows(*components: Union[ActionRow, Button, SelectMenu], max_in_row: int = 5) -> List[ActionRow]:
     """
     A helper function that spreads your components into `ActionRow`s of a set size.
 
@@ -418,10 +434,10 @@ def get_components_ids(component: Union[str, dict, list, InteractiveComponent]) 
         raise ValueError(f"Unknown component type of {component} ({type(component)}). " f"Expected str, dict or list")
 
 
-TYPE_ALL_COMPONENT = Union[ActionRow, Button, Select]
+TYPE_ALL_COMPONENT = Union[ActionRow, Button, SelectMenu]
 
 TYPE_COMPONENT_MAPPING = {
     ComponentTypes.ACTION_ROW: ActionRow,
     ComponentTypes.BUTTON: Button,
-    ComponentTypes.SELECT: Select,
+    ComponentTypes.SELECT: SelectMenu,
 }
