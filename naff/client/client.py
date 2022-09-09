@@ -34,7 +34,6 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.models.naff.context import SendableContext
 from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
@@ -99,6 +98,7 @@ from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
 from naff.models.naff.application_commands import ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.context import SendableContext
 from naff.models.naff.hybrid_commands import _prefixed_from_slash, _base_subcommand_generator
 from naff.models.naff.listener import Listener
 from naff.models.naff.tasks import Task
@@ -555,6 +555,10 @@ class Client(
     def _queue_task(self, coro: Listener, event: BaseEvent, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro: Listener, _event: BaseEvent, *_args, **_kwargs) -> None:
             try:
+                if not isinstance(_event, (events.Error, events.RawGatewayEvent)):
+                    if coro.delay_until_ready and not self.is_ready:
+                        await self.wait_until_ready()
+
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
                     await _coro()
