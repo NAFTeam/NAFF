@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import TYPE_CHECKING, cast
 from datetime import datetime
 
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 
-class MemberRequests(CanRequest, ABC):
+class MemberRequests(CanRequest):
     async def get_member(
         self, guild_id: "Snowflake_Type", user_id: "Snowflake_Type"
     ) -> discord_typings.GuildMemberData:
