@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
-import naff.client.errors as errors
 import naff.models as models
 
 if TYPE_CHECKING:
@@ -68,11 +67,6 @@ class SendMixin:
             New message object that was sent.
 
         """
-        if not content and not (embeds or embed) and not (files or file) and not stickers and not components:
-            raise errors.EmptyMessageException(
-                "You cannot send a message without any content, embeds, files, components, or stickers"
-            )
-
         if suppress_embeds:
             if isinstance(flags, int):
                 flags = MessageFlags(flags)
