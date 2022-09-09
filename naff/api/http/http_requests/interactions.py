@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import TYPE_CHECKING, cast
 
 import discord_typings
@@ -15,7 +14,7 @@ if TYPE_CHECKING:
     from naff import UPLOADABLE_TYPE
 
 
-class InteractionRequests(CanRequest, ABC):
+class InteractionRequests(CanRequest):
     async def delete_application_command(
         self, application_id: "Snowflake_Type", guild_id: "Snowflake_Type", command_id: "Snowflake_Type"
     ) -> None:

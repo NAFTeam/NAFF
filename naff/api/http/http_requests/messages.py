@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import TYPE_CHECKING, cast
 
 import discord_typings
@@ -15,7 +14,7 @@ if TYPE_CHECKING:
     from naff import UPLOADABLE_TYPE
 
 
-class MessageRequests(CanRequest, ABC):
+class MessageRequests(CanRequest):
     async def create_message(
         self,
         payload: dict,
