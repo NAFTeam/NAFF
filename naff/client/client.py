@@ -771,13 +771,6 @@ class Client(
                         logger.debug(f"Waiting for {guild.id} to chunk")
                         await guild.chunked.wait()
 
-            # run any pending startup tasks
-            if self.async_startup_tasks:
-                try:
-                    await asyncio.gather(*self.async_startup_tasks)
-                except Exception as e:
-                    self.dispatch(events.Error("async-extension-loader", e))
-
             # cache slash commands
             if not self._startup:
                 await self._init_interactions()
@@ -844,6 +837,14 @@ class Client(
             token: Your bot's token
         """
         await self.login(token)
+
+        # run any pending startup tasks
+        if self.async_startup_tasks:
+            try:
+                await asyncio.gather(*self.async_startup_tasks)
+            except Exception as e:
+                self.dispatch(events.Error("async-extension-loader", e))
+
         try:
             await self._connection_state.start()
         finally:
