@@ -97,7 +97,7 @@ from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes,
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
-from naff.models.naff.application_commands import ModalCommand
+from naff.models.naff.application_commands import ContextMenu, ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
 from naff.models.naff.hybrid_commands import _prefixed_from_slash, _base_subcommand_generator
 from naff.models.naff.listener import Listener
@@ -370,6 +370,10 @@ class Client(
         """A dictionary of registered prefixed commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self.interaction_tree: Dict[
+            "Snowflake_Type", Dict[str, InteractionCommand | Dict[str, InteractionCommand]]
+        ] = {}
+        """A dictionary of registered application commands in a tree"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
@@ -1103,6 +1107,8 @@ class Client(
         if command.callback is None:
             return False
 
+        base, group, sub, *_ = command.resolved_name.split(" ") + [None, None]
+
         for scope in command.scopes:
             if scope not in self.interactions:
                 self.interactions[scope] = {}
@@ -1114,6 +1120,21 @@ class Client(
                 command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
+
+            if scope not in self.interaction_tree:
+                self.interaction_tree[scope] = {}
+
+            if group is None or isinstance(command, ContextMenu):
+                self.interaction_tree[scope][command.resolved_name] = command
+            elif group is not None:
+                if base not in self.interaction_tree[scope]:
+                    self.interaction_tree[scope][base] = {}
+                if sub is None:
+                    self.interaction_tree[scope][base][group] = command
+                else:
+                    if group not in self.interaction_tree[scope][base]:
+                        self.interaction_tree[scope][base][group] = {}
+                    self.interaction_tree[scope][base][group][sub] = command
 
         return True
 
