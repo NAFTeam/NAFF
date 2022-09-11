@@ -553,6 +553,10 @@ class Client(
     def _queue_task(self, coro: Listener, event: BaseEvent, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro: Listener, _event: BaseEvent, *_args, **_kwargs) -> None:
             try:
+                if not isinstance(_event, (events.Error, events.RawGatewayEvent)):
+                    if coro.delay_until_ready and not self.is_ready:
+                        await self.wait_until_ready()
+
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
                     await _coro()

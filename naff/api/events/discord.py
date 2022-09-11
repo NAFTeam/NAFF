@@ -24,9 +24,9 @@ These are events dispatched by Discord. This is intended as a reference so you k
 from typing import TYPE_CHECKING, List, Sequence, Union, Optional
 
 import naff.models
+from naff.api.events.base import GuildEvent, BaseEvent
 from naff.client.const import MISSING, Absent
 from naff.client.utils.attr_utils import define, field, docs
-from .internal import BaseEvent, GuildEvent
 
 __all__ = (
     "BanCreate",
@@ -63,7 +63,6 @@ __all__ = (
     "MessageReactionRemoveAll",
     "MessageUpdate",
     "PresenceUpdate",
-    "RawGatewayEvent",
     "RoleCreate",
     "RoleDelete",
     "RoleUpdate",
@@ -97,19 +96,6 @@ if TYPE_CHECKING:
     from naff.models.discord.stage_instance import StageInstance
     from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
     from naff.models.discord.reaction import Reaction
-
-
-@define(kw_only=False)
-class RawGatewayEvent(BaseEvent):
-    """
-    An event dispatched from the gateway.
-
-    Holds the raw dict that the gateway dispatches
-
-    """
-
-    data: dict = field(factory=dict)
-    """Raw Data from the gateway"""
 
 
 @define(kw_only=False)
@@ -255,7 +241,7 @@ class GuildUpdate(BaseEvent):
 
 
 @define(kw_only=False)
-class GuildLeft(BaseEvent, GuildEvent):
+class GuildLeft(GuildEvent):
     """Dispatched when a guild is left."""
 
     guild: Optional["Guild"] = field(default=MISSING)
@@ -263,7 +249,7 @@ class GuildLeft(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class GuildUnavailable(BaseEvent, GuildEvent):
+class GuildUnavailable(GuildEvent):
     """Dispatched when a guild is not available."""
 
     guild: Optional["Guild"] = field(default=MISSING)
@@ -271,7 +257,7 @@ class GuildUnavailable(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class BanCreate(BaseEvent, GuildEvent):
+class BanCreate(GuildEvent):
     """Dispatched when someone was banned from a guild."""
 
     user: "BaseUser" = field(metadata=docs("The user"))
@@ -283,7 +269,7 @@ class BanRemove(BanCreate):
 
 
 @define(kw_only=False)
-class GuildEmojisUpdate(BaseEvent, GuildEvent):
+class GuildEmojisUpdate(GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
     before: List["CustomEmoji"] = field(factory=list)
@@ -293,7 +279,7 @@ class GuildEmojisUpdate(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class GuildStickersUpdate(BaseEvent, GuildEvent):
+class GuildStickersUpdate(GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
     stickers: List["Sticker"] = field(factory=list)
@@ -301,7 +287,7 @@ class GuildStickersUpdate(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class MemberAdd(BaseEvent, GuildEvent):
+class MemberAdd(GuildEvent):
     """Dispatched when a member is added to a guild."""
 
     member: "Member" = field(metadata=docs("The member who was added"))
@@ -317,7 +303,7 @@ class MemberRemove(MemberAdd):
 
 
 @define(kw_only=False)
-class MemberUpdate(BaseEvent, GuildEvent):
+class MemberUpdate(GuildEvent):
     """Dispatched when a member is updated."""
 
     before: "Member" = field()
@@ -327,7 +313,7 @@ class MemberUpdate(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class RoleCreate(BaseEvent, GuildEvent):
+class RoleCreate(GuildEvent):
     """Dispatched when a role is created."""
 
     role: "Role" = field()
@@ -335,7 +321,7 @@ class RoleCreate(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class RoleUpdate(BaseEvent, GuildEvent):
+class RoleUpdate(GuildEvent):
     """Dispatched when a role is updated."""
 
     before: Absent["Role"] = field()
@@ -345,7 +331,7 @@ class RoleUpdate(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class RoleDelete(BaseEvent, GuildEvent):
+class RoleDelete(GuildEvent):
     """Dispatched when a guild role is deleted."""
 
     id: "Snowflake_Type" = field()
@@ -355,7 +341,7 @@ class RoleDelete(BaseEvent, GuildEvent):
 
 
 @define(kw_only=False)
-class GuildMembersChunk(BaseEvent, GuildEvent):
+class GuildMembersChunk(GuildEvent):
     """
     Sent in response to Guild Request Members.
 
@@ -389,7 +375,7 @@ class IntegrationUpdate(IntegrationCreate):
 
 
 @define(kw_only=False)
-class IntegrationDelete(BaseEvent, GuildEvent):
+class IntegrationDelete(GuildEvent):
     """Dispatched when a guild integration is deleted."""
 
     id: "Snowflake_Type" = field()
@@ -435,7 +421,7 @@ class MessageDelete(BaseEvent):
 
 
 @define(kw_only=False)
-class MessageDeleteBulk(BaseEvent, GuildEvent):
+class MessageDeleteBulk(GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
 
     channel_id: "Snowflake_Type" = field()
@@ -470,7 +456,7 @@ class MessageReactionRemove(MessageReactionAdd):
 
 
 @define(kw_only=False)
-class MessageReactionRemoveAll(BaseEvent, GuildEvent):
+class MessageReactionRemoveAll(GuildEvent):
     """Dispatched when all reactions are removed from a message."""
 
     message: "Message" = field()
@@ -525,7 +511,7 @@ class TypingStart(BaseEvent):
 
 
 @define(kw_only=False)
-class WebhooksUpdate(BaseEvent, GuildEvent):
+class WebhooksUpdate(GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
 
     # Discord doesnt sent the webhook object for this event, for some reason
