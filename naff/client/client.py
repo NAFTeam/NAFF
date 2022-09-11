@@ -34,7 +34,6 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.models.naff.context import SendableContext
 from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
@@ -83,7 +82,6 @@ from naff.models import (
     AutocompleteContext,
     HybridContext,
     ComponentCommand,
-    Context,
     application_commands_to_dict,
     sync_needed,
     VoiceRegion,
@@ -567,7 +565,7 @@ class Client(
                     # No infinite loops please
                     self.default_error_handler(repr(event), e)
                 else:
-                    self.dispatch(events.Error(repr(event), e))
+                    self.dispatch(events.Error(source=repr(event), error=e))
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
@@ -597,62 +595,68 @@ class Client(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
-    @Listener.create()
-    async def _on_error(self, event: events.Error) -> None:
-        await self.on_error(event.source, event.error, *event.args, **event.kwargs)
-
-    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(delete_if_overwritten=True)
+    async def on_error(self, event: events.Error) -> None:
         """
         Catches all errors dispatched by the library.
 
-        By default it will format and print them to console
+        By default it will format and print them to console.
 
-        Override this to change error handling behaviour
+        Listen to the `Error` event to overwrite this behaviour.
 
         """
-        self.default_error_handler(source, error)
+        self.default_error_handler(event.source, event.error)
 
-    async def on_command_error(self, ctx: SendableContext, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(delete_if_overwritten=True)
+    async def on_command_error(self, event: events.CommandError) -> None:
         """
         Catches all errors dispatched by commands.
 
-        By default it will call `Client.on_error`
+        By default it will dispatch the `Error` event.
 
-        Override this to change error handling behavior
+        Listen to the `CommandError` event to overwrite this behaviour.
 
         """
-        self.dispatch(events.Error(f"cmd /`{ctx.invoke_target}`", error, args, kwargs, ctx))
+        self.dispatch(
+            events.Error(
+                source=f"cmd `/{event.ctx.invoke_target}`",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
         try:
-            if isinstance(error, errors.CommandOnCooldown):
-                await ctx.send(
+            if isinstance(event.error, errors.CommandOnCooldown):
+                await event.ctx.send(
                     embeds=Embed(
                         description=f"This command is on cooldown!\n"
-                        f"Please try again in {int(error.cooldown.get_cooldown_time())} seconds",
+                        f"Please try again in {int(event.error.cooldown.get_cooldown_time())} seconds",
                         color=BrandColors.FUCHSIA,
                     )
                 )
-            elif isinstance(error, errors.MaxConcurrencyReached):
-                await ctx.send(
+            elif isinstance(event.error, errors.MaxConcurrencyReached):
+                await event.ctx.send(
                     embeds=Embed(
                         description="This command has reached its maximum concurrent usage!\n"
                         "Please try again shortly.",
                         color=BrandColors.FUCHSIA,
                     )
                 )
-            elif isinstance(error, errors.CommandCheckFailure):
-                await ctx.send(
+            elif isinstance(event.error, errors.CommandCheckFailure):
+                await event.ctx.send(
                     embeds=Embed(
                         description="You do not have permission to run this command!",
                         color=BrandColors.YELLOW,
                     )
                 )
             elif self.send_command_tracebacks:
-                out = "".join(traceback.format_exception(error))
+                out = "".join(traceback.format_exception(event.error))
                 if self.http.token is not None:
                     out = out.replace(self.http.token, "[REDACTED TOKEN]")
-                await ctx.send(
+                await event.ctx.send(
                     embeds=Embed(
-                        title=f"Error: {type(error).__name__}",
+                        title=f"Error: {type(event.error).__name__}",
                         color=BrandColors.RED,
                         description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
                     )
@@ -660,79 +664,129 @@ class Client(
         except errors.NaffException:
             pass
 
-    async def on_command(self, ctx: Context) -> None:
+    @Listener.create(delete_if_overwritten=True)
+    async def on_command_completion(self, event: events.CommandCompletion) -> None:
         """
         Called *after* any command is ran.
 
-        By default, it will simply log the command, override this to change that behaviour
+        By default, it will simply log the command.
 
-        Args:
-            ctx: The context of the command that was called
+        Listen to the `CommandCompletion` event to overwrite this behaviour.
 
         """
-        if isinstance(ctx, PrefixedContext):
+        if isinstance(event.ctx, PrefixedContext):
             symbol = "@"
-        elif isinstance(ctx, InteractionContext):
+        elif isinstance(event.ctx, InteractionContext):
             symbol = "/"
+        elif isinstance(event.ctx, HybridContext):
+            symbol = "@/"
         else:
             symbol = "?"  # likely custom context
-        logger.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(
+            f"Command Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
+        )
 
-    async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(delete_if_overwritten=True)
+    async def on_component_error(self, event: events.ComponentError) -> None:
         """
         Catches all errors dispatched by components.
 
-        By default it will call `Naff.on_error`
+        By default it will dispatch the `Error` event.
 
-        Override this to change error handling behavior
-
-        """
-        return self.dispatch(events.Error(f"Component Callback for {ctx.custom_id}", error, args, kwargs, ctx))
-
-    async def on_component(self, ctx: ComponentContext) -> None:
-        """
-        Called *after* any component callback is ran.
-
-        By default, it will simply log the component use, override this to change that behaviour
-
-        Args:
-            ctx: The context of the component that was called
+        Listen to the `ComponentError` event to overwrite this behaviour.
 
         """
-        symbol = "¢"
-        logger.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
-
-    async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
-        """
-        Catches all errors dispatched by autocompletion options.
-
-        By default it will call `Naff.on_error`
-
-        Override this to change error handling behavior
-
-        """
-        return self.dispatch(
+        self.dispatch(
             events.Error(
-                f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
-                error,
-                args,
-                kwargs,
-                ctx,
+                source=f"Component Callback for {event.ctx.custom_id}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
             )
         )
 
-    async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
+    @Listener.create(delete_if_overwritten=True)
+    async def on_component_completion(self, event: events.ComponentCompletion) -> None:
+        """
+        Called *after* any component callback is ran.
+
+        By default, it will simply log the component use.
+
+        Listen to the `ComponentCompletion` event to overwrite this behaviour.
+
+        """
+        symbol = "¢"
+        self.logger.info(
+            f"Component Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
+        )
+
+    @Listener.create(delete_if_overwritten=True)
+    async def on_autocomplete_error(self, event: events.AutocompleteError) -> None:
+        """
+        Catches all errors dispatched by autocompletion options.
+
+        By default it will dispatch the `Error` event.
+
+        Listen to the `AutocompleteError` event to overwrite this behaviour.
+
+        """
+        self.dispatch(
+            events.Error(
+                source=f"Autocomplete Callback for /{event.ctx.invoke_target} - Option: {event.ctx.focussed_option}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
+
+    @Listener.create(delete_if_overwritten=True)
+    async def on_autocomplete_completion(self, event: events.AutocompleteCompletion) -> None:
         """
         Called *after* any autocomplete callback is ran.
 
-        By default, it will simply log the autocomplete callback, override this to change that behaviour
+        By default, it will simply log the autocomplete callback.
 
-        Args:
-            ctx: The context of the command that was called
+        Listen to the `AutocompleteCompletion` event to overwrite this behaviour.
 
         """
         symbol = "$"
-        logger.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(
+            f"Autocomplete Called: {symbol}{event.ctx.invoke_target} with {event.ctx.focussed_option = } | {event.ctx.kwargs = }"
+        )
+
+    @Listener.create(delete_if_overwritten=True)
+    async def on_modal_error(self, event: events.ModalError) -> None:
+        """
+        Catches all errors dispatched by modals.
+
+        By default it will dispatch the `Error` event.
+
+        Listen to the `ModalError` event to overwrite this behaviour.
+
+        """
+        self.dispatch(
+            events.Error(
+                source=f"Modal Callback for custom_id {event.ctx.custom_id}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
+
+    @Listener.create(delete_if_overwritten=True)
+    async def on_modal_completion(self, event: events.ModalCompletion) -> None:
+        """
+        Called *after* any modal callback is ran.
+
+        By default, it will simply log the modal callback.
+
+        Listen to the `ModalCompletion` event to overwrite this behaviour.
+
+        """
+        self.logger.info(f"Modal Called: {event.ctx.custom_id = } with {event.ctx.responses = }")
 
     @Listener.create()
     async def on_resume(self) -> None:
@@ -776,7 +830,7 @@ class Client(
                 try:
                     await asyncio.gather(*self.async_startup_tasks)
                 except Exception as e:
-                    self.dispatch(events.Error("async-extension-loader", e))
+                    self.dispatch(events.Error(source="async-extension-loader", error=e))
 
             # cache slash commands
             if not self._startup:
@@ -1273,7 +1327,7 @@ class Client(
             else:
                 await self._cache_interactions(warn_missing=False)
         except Exception as e:
-            self.dispatch(events.Error("Interaction Syncing", e))
+            self.dispatch(events.Error(source="Interaction Syncing", error=e))
 
     async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
@@ -1591,9 +1645,9 @@ class Client(
                     try:
                         await ctx.command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
                     except Exception as e:
-                        await self.on_autocomplete_error(ctx, e)
+                        self.dispatch(events.AutocompleteError(ctx=ctx, error=e))
                     finally:
-                        await self.on_autocomplete(ctx)
+                        self.dispatch(events.AutocompleteCompletion(ctx=ctx))
                 else:
                     try:
                         await auto_defer(ctx)
@@ -1603,9 +1657,9 @@ class Client(
                         if self.post_run_callback:
                             await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
-                        await self.on_command_error(ctx, e)
+                        self.dispatch(events.CommandError(ctx=ctx, error=e))
                     finally:
-                        await self.on_command(ctx)
+                        self.dispatch(events.CommandCompletion(ctx=ctx))
             else:
                 logger.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
@@ -1614,7 +1668,7 @@ class Client(
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            self.dispatch(events.Component(ctx))
+            self.dispatch(events.Component(ctx=ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 ctx.command = callback
                 try:
@@ -1624,9 +1678,9 @@ class Client(
                     if self.post_run_callback:
                         await self.post_run_callback(ctx)
                 except Exception as e:
-                    await self.on_component_error(ctx, e)
+                    self.dispatch(events.ComponentError(ctx=ctx, error=e))
                 finally:
-                    await self.on_component(ctx)
+                    self.dispatch(events.ComponentCompletion(ctx=ctx))
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
             if component_type == ComponentTypes.SELECT:
@@ -1634,7 +1688,7 @@ class Client(
 
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
             ctx = await self.get_context(interaction_data, True)
-            self.dispatch(events.ModalResponse(ctx))
+            self.dispatch(events.ModalCompletion(ctx=ctx))
 
             # todo: Polls remove this icky code duplication - love from past-polls ❤️
             if callback := self._modal_callbacks.get(ctx.custom_id):
@@ -1647,9 +1701,7 @@ class Client(
                     if self.post_run_callback:
                         await self.post_run_callback(ctx)
                 except Exception as e:
-                    await self.on_component_error(ctx, e)
-                finally:
-                    await self.on_component(ctx)
+                    self.dispatch(events.ModalError(ctx=ctx, error=e))
 
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
@@ -1717,7 +1769,7 @@ class Client(
                             elif new_command.extension and new_command.extension.extension_error:
                                 await new_command.extension.extension_error(context)
                             else:
-                                await self.on_command_error(context, e)
+                                self.dispatch(events.CommandError(ctx=context, error=e))
                             return
 
                 if not isinstance(command, PrefixedCommand):
@@ -1737,9 +1789,9 @@ class Client(
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:
-                        await self.on_command_error(context, e)
+                        self.dispatch(events.CommandError(ctx=context, error=e))
                     finally:
-                        await self.on_command(context)
+                        self.dispatch(events.CommandCompletion(ctx=context))
 
     @Listener.create("disconnect")
     async def _disconnect(self) -> None:

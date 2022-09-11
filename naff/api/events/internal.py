@@ -44,12 +44,28 @@ __all__ = (
     "Select",
     "Startup",
     "WebsocketReady",
+    "CommandError",
+    "ComponentError",
+    "AutocompleteError",
+    "ModalError",
+    "CommandCompletion",
+    "ComponentCompletion",
+    "AutocompleteCompletion",
+    "ModalCompletion",
 )
 
 
 if TYPE_CHECKING:
     from naff import Client
-    from naff.models.naff.context import ComponentContext, Context
+    from naff.models.naff.context import (
+        ComponentContext,
+        Context,
+        AutocompleteContext,
+        ModalContext,
+        InteractionContext,
+        PrefixedContext,
+        HybridContext,
+    )
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.discord.guild import Guild
 
@@ -191,12 +207,72 @@ class Select(Component):
     """Dispatched when a user uses a Select."""
 
 
-@define(kw_only=False)
-class Error(BaseEvent):
-    """Dispatched when the library encounters an error."""
+@define()
+class CommandCompletion(BaseEvent):
+    """Dispatched after the library ran any command callback."""
 
-    source: str = field(metadata=docs("The source of the error"))
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
+
+
+@define()
+class ComponentCompletion(BaseEvent):
+    """Dispatched after the library ran any component callback."""
+
+    ctx: "ComponentContext" = field(metadata=docs("The component context"))
+
+
+@define()
+class AutocompleteCompletion(BaseEvent):
+    """Dispatched after the library ran any autocomplete callback."""
+
+    ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
+
+
+@define()
+class ModalCompletion(BaseEvent):
+    """Dispatched after the library ran any modal callback."""
+
+    ctx: "ModalContext" = field(metadata=docs("The modal context"))
+
+
+@define()
+class _Error(BaseEvent):
     error: Exception = field(metadata=docs("The error that was encountered"))
     args: tuple[Any] = field(factory=tuple)
     kwargs: dict[str, Any] = field(factory=dict)
+
+
+@define()
+class Error(_Error):
+    """Dispatched when the library encounters an error."""
+
+    source: str = field(metadata=docs("The source of the error"))
     ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))
+
+
+@define()
+class CommandError(_Error):
+    """Dispatched when the library encounters an error in a command."""
+
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
+
+
+@define()
+class ComponentError(_Error):
+    """Dispatched when the library encounters an error in a component."""
+
+    ctx: "ComponentContext" = field(metadata=docs("The component context"))
+
+
+@define()
+class AutocompleteError(_Error):
+    """Dispatched when the library encounters an error in an autocomplete."""
+
+    ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
+
+
+@define()
+class ModalError(_Error):
+    """Dispatched when the library encounters an error in a modal."""
+
+    ctx: "ModalContext" = field(metadata=docs("The modal context"))

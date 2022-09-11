@@ -66,15 +66,18 @@ class Listener(CallbackObject):
         return wrapper
 
 
-def listen(event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Callable[..., Coroutine]], Listener]:
+def listen(
+    event_name: Absent[str | BaseEvent] = MISSING, delete_if_overwritten: bool = False
+) -> Callable[[Callable[..., Coroutine]], Listener]:
     """
     Decorator to make a function an event listener.
 
     Args:
         event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+        delete_if_overwritten: Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users
 
     Returns:
         A listener object.
 
     """
-    return Listener.create(event_name)
+    return Listener.create(event_name, delete_if_overwritten)
