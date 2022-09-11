@@ -377,7 +377,7 @@ class Client(
         self.__modules = {}
         self.ext = {}
         """A dictionary of mounted ext"""
-        self.listeners: Dict[str, List] = {}
+        self.listeners: Dict[str, list[Listener]] = {}
         self.waits: Dict[str, List] = {}
         self.owner_ids: set[Snowflake_Type] = set(owner_ids)
 
@@ -1087,6 +1087,13 @@ class Client(
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
+
+        # check if other listeners are to be deleted
+        potential_deletes = [c_listener.delete_if_overwritten for c_listener in self.listeners[listener.event]]
+        if any(potential_deletes) and not all(potential_deletes):
+            self.listeners[listener.event] = [
+                c_listener for c_listener in self.listeners[listener.event] if not c_listener.delete_if_overwritten
+            ]
 
     def add_interaction(self, command: InteractionCommand) -> bool:
         """

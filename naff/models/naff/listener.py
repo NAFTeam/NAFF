@@ -16,20 +16,26 @@ class Listener(CallbackObject):
     """Name of the event to listen to."""
     callback: Coroutine
     """Coroutine to call when the event is triggered."""
+    delete_if_overwritten: bool
+    """Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users"""
 
-    def __init__(self, func: Callable[..., Coroutine], event: str) -> None:
+    def __init__(self, func: Callable[..., Coroutine], event: str, delete_if_overwritten: bool = False) -> None:
         super().__init__()
 
         self.event = event
         self.callback = func
+        self.delete_if_overwritten = delete_if_overwritten
 
     @classmethod
-    def create(cls, event_name: Absent[str | BaseEvent] = MISSING) -> Callable[[Coroutine], "Listener"]:
+    def create(
+        cls, event_name: Absent[str | BaseEvent] = MISSING, delete_if_overwritten: bool = False
+    ) -> Callable[[Coroutine], "Listener"]:
         """
         Decorator for creating an event listener.
 
         Args:
             event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
+            delete_if_overwritten: Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users
 
         Returns:
             A listener object.
@@ -55,7 +61,7 @@ class Listener(CallbackObject):
                 if not name:
                     name = coro.__name__
 
-            return cls(coro, get_event_name(name))
+            return cls(coro, get_event_name(name), delete_if_overwritten)
 
         return wrapper
 
