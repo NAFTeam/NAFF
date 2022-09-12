@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
 import discord_typings
 
-from naff.client.const import MISSING, logger, Absent
+from naff.client.const import Absent, MISSING
 from naff.client.errors import NotFound, Forbidden
 from naff.client.utils.attr_utils import define, field
 from naff.client.utils.cache import TTLCache
@@ -77,7 +77,7 @@ class GlobalCache:
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):
-            logger.warning(
+            self._client.logger.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
 
@@ -446,7 +446,9 @@ class GlobalCache:
                 data = await self._client.http.get_channel(channel_id)
                 channel = self.place_channel_data(data)
             except Forbidden:
-                logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
+                self._client.logger.warning(
+                    f"Forbidden access to channel {channel_id}. Generating fallback channel object"
+                )
                 channel = BaseChannel.from_dict({"id": channel_id, "type": MISSING}, self._client)
         return channel
 

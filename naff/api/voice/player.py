@@ -99,14 +99,14 @@ class Player(threading.Thread):
         self._stopped.clear()
 
         asyncio.run_coroutine_threadsafe(self.state.ws.speaking(True), self.loop)
-        logger.debug(f"Now playing {self.current_audio!r}")
+        logger().debug(f"Now playing {self.current_audio!r}")
         start = None
 
         try:
             while not self._stop_event.is_set():
                 if not self.state.ws.ready.is_set() or not self._resume.is_set():
                     run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
-                    logger.debug("Voice playback has been suspended!")
+                    logger().debug("Voice playback has been suspended!")
 
                     wait_for = []
 
@@ -122,7 +122,7 @@ class Player(threading.Thread):
                         continue
 
                     run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
-                    logger.debug("Voice playback has been resumed!")
+                    logger().debug("Voice playback has been resumed!")
                     start = None
                     loops = 0
 
