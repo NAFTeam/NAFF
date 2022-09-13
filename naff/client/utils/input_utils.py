@@ -11,7 +11,7 @@ __all__ = ("OverriddenJson", "response_decode", "get_args", "get_first_word")
 try:
     import orjson as json
 except ImportError:
-    logger.warning("orjson not installed, built-in json library will be used")
+    logger().warning("orjson not installed, built-in json library will be used")
     import json as json
 
 
