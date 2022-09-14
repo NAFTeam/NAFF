@@ -14,7 +14,10 @@ __all__ = ("ThreadEvents",)
 class ThreadEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_thread_create(self, event: "RawGatewayEvent") -> None:
-        self.dispatch(events.ThreadCreate(self.cache.place_channel_data(event.data)))
+        thread = self.cache.place_channel_data(event.data)
+
+        if event.data.get("newly_created"):
+            self.dispatch(events.ThreadCreate(thread))
 
     @Processor.define()
     async def _on_raw_thread_update(self, event: "RawGatewayEvent") -> None:
