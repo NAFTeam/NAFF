@@ -7,7 +7,7 @@ from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from warnings import warn
 
 import naff.models as models
-from naff.client.const import Absent, MISSING, PREMIUM_GUILD_LIMITS
+from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
@@ -528,7 +528,7 @@ class Guild(BaseGuild):
             self._client.cache.place_member_data(self.id, member)
 
         self.chunked.set()
-        self._client.logger.info(
+        logger.info(
             f"Cached {iterator.total_retrieved} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds"
         )
 
@@ -596,10 +596,10 @@ class Guild(BaseGuild):
             self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
-            return self._client.logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
+            return logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
         else:
             members = self._chunk_cache
-            self._client.logger.info(f"Processing {len(members)} members for {self.id}")
+            logger.info(f"Processing {len(members)} members for {self.id}")
 
             s = time.monotonic()
             start_time = time.perf_counter()
@@ -615,7 +615,7 @@ class Guild(BaseGuild):
 
             total_time = time.perf_counter() - start_time
             self.chunk_cache = []
-            self._client.logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
+            logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
     async def fetch_audit_log(

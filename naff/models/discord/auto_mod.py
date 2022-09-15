@@ -37,7 +37,7 @@ class BaseAction(DictSerializationMixin):
     def from_dict_factory(cls, data: dict) -> "BaseAction":
         action_class = ACTION_MAPPING.get(data.get("type"))
         if not action_class:
-            logger().error(f"Unknown action type for {data}")
+            logger.error(f"Unknown action type for {data}")
             action_class = cls
 
         return action_class.from_dict({"type": data.get("type")} | data["metadata"])
@@ -73,7 +73,7 @@ class BaseTrigger(DictSerializationMixin):
         trigger_class = TRIGGER_MAPPING.get(data.get("trigger_type"))
         meta = data.get("trigger_metadata", {})
         if not trigger_class:
-            logger().error(f"Unknown trigger type for {data}")
+            logger.error(f"Unknown trigger type for {data}")
             trigger_class = cls
 
         payload = {"type": data.get("trigger_type"), "trigger_metadata": meta}

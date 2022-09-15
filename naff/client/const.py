@@ -86,15 +86,9 @@ __repo_url__ = "https://github.com/Discord-Snake-Pit/NAFF"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
 logger_name = "naff"
-_logger = logging.getLogger(logger_name)
+logger = logging.getLogger(logger_name)
 default_locale = "english_us"
 kwarg_spam = False
-
-
-def logger() -> logging.Logger:
-    global _logger
-    return _logger
-
 
 DISCORD_EPOCH = 1420070400000
 

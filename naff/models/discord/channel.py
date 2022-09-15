@@ -6,7 +6,7 @@ import attrs
 
 import naff.models as models
 
-from naff.client.const import Absent, DISCORD_EPOCH, MISSING
+from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger
 from naff.client.errors import NotFound, VoiceNotConnected, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
@@ -736,7 +736,7 @@ class BaseChannel(DiscordObject):
         channel_type = data.get("type", None)
         channel_class = TYPE_CHANNEL_MAPPING.get(channel_type, None)
         if not channel_class:
-            client.logger.error(f"Unsupported channel type for {data} ({channel_type}).")
+            logger.error(f"Unsupported channel type for {data} ({channel_type}).")
             channel_class = BaseChannel
 
         return channel_class.from_dict(data, client)

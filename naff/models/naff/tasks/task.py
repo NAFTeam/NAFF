@@ -116,7 +116,7 @@ class Task:
             self._stop.clear()
             self.task = asyncio.create_task(self._task_loop())
         except RuntimeError:
-            logger().error(
+            logger.error(
                 "Unable to start task without a running event loop! We recommend starting tasks within an `on_startup` event."
             )
 

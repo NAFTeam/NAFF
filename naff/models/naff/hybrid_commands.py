@@ -394,9 +394,9 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
     prefixed_cmd = _HybridPrefixedCommand(
         name=str(cmd.sub_cmd_name) if cmd.is_subcommand else str(cmd.name),
-        aliases=list((cmd.sub_cmd_name.to_locale_dict() or {}).values())
+        aliases=list(cmd.sub_cmd_name.to_locale_dict().values())
         if cmd.is_subcommand
-        else list((cmd.name.to_locale_dict() or {}).values()),
+        else list(cmd.name.to_locale_dict().values()),
         help=str(cmd.sub_cmd_description) if cmd.is_subcommand else str(cmd.description),
         callback=cmd.callback,
         extension=cmd.extension,
