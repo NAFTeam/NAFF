@@ -71,6 +71,7 @@ __all__ = (
     "StageInstanceDelete",
     "StageInstanceUpdate",
     "ThreadCreate",
+    "NewThreadCreate",
     "ThreadDelete",
     "ThreadListSync",
     "ThreadMemberUpdate",
@@ -161,9 +162,14 @@ class ChannelPinsUpdate(ChannelCreate):
 
 @define(kw_only=False)
 class ThreadCreate(BaseEvent):
-    """Dispatched when a thread is created."""
+    """Dispatched when a thread is created, or a thread is new to the client"""
 
     thread: "TYPE_THREAD_CHANNEL" = field(metadata=docs("The thread this event is dispatched from"))
+
+
+@define(kw_only=False)
+class NewThreadCreate(ThreadCreate):
+    """Dispatched when a thread is newly created."""
 
 
 @define(kw_only=False)
