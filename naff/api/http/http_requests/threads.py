@@ -210,23 +210,23 @@ class ThreadRequests:
             name: The name of the thread
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             message: The message-content for the post/thread
+            applied_tags: The tags to apply to the thread
             rate_limit_per_user: The time users must wait between sending messages
+            files: The files to upload
             reason: The reason for creating this thread
 
         Returns:
             The created thread object
         """
-        # note: `{"use_nested_fields": 1}` seems to be a temporary flag until forums launch
         return await self.request(
             Route("POST", f"/channels/{channel_id}/threads"),
             payload={
                 "name": name,
                 "auto_archive_duration": auto_archive_duration,
                 "rate_limit_per_user": rate_limit_per_user,
-                "applied_tags": applied_tags,
                 "message": message,
+                "applied_tags": applied_tags,
             },
-            params={"use_nested_fields": 1},
             files=files,
             reason=reason,
         )
