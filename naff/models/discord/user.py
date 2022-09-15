@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
 from warnings import warn
 
-from naff.client.const import Absent, MISSING
+from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import HTTPException, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_utils import define, field, docs
@@ -272,7 +272,7 @@ class Member(DiscordObject, _SendDMMixin):
                     client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
                 )
             except Exception as e:
-                client.logger.warning(
+                logger.warning(
                     f"[DEBUG NEEDED - REPORT THIS] Incomplete dictionary has been passed to member object: {e}"
                 )
                 raise

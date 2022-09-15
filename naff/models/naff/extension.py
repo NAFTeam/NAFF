@@ -3,7 +3,7 @@ import inspect
 from typing import Awaitable, Dict, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
 import naff.models.naff as naff
-from naff.client.const import MISSING
+from naff.client.const import logger, MISSING
 from naff.client.utils.misc_utils import wrap_partial
 from naff.models.naff.tasks import Task
 from naff.models.naff import ContextMenu
@@ -121,7 +121,7 @@ class Extension:
             elif isinstance(val, Task):
                 wrap_partial(val, new_cls)
 
-        bot.logger.debug(
+        logger.debug(
             f"{len(new_cls._commands)} commands and {len(new_cls.listeners)} listeners"
             f" have been loaded from `{new_cls.name}`"
         )
@@ -218,7 +218,7 @@ class Extension:
             self.bot.listeners[func.event].remove(func)
 
         self.bot.ext.pop(self.name, None)
-        self.bot.logger.debug(f"{self.name} has been drop")
+        logger.debug(f"{self.name} has been drop")
 
     def add_ext_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
         """
@@ -326,5 +326,5 @@ class Extension:
             raise TypeError("Callback must be a coroutine")
 
         if self.extension_error:
-            self.bot.logger.warning("Extension error callback has been overridden!")
+            logger.warning("Extension error callback has been overridden!")
         self.extension_error = coroutine

@@ -17,13 +17,13 @@ class DebugExtension(DebugExec, DebugAppCMD, DebugExts, Extension):
         super().__init__(bot)
         self.add_ext_check(checks.is_owner())
 
-        bot.logger.info("Debug Extension is growing!")
+        logger.info("Debug Extension is growing!")
 
     @listen()
     async def on_startup(self) -> None:
-        self.bot.logger.info(f"Started {self.bot.user.tag} [{self.bot.user.id}] in Debug Mode")
+        logger.info(f"Started {self.bot.user.tag} [{self.bot.user.id}] in Debug Mode")
 
-        self.bot.logger.info(f"Caching System State: \n{get_cache_state(self.bot)}")
+        logger.info(f"Caching System State: \n{get_cache_state(self.bot)}")
 
     @slash_command(
         "debug",

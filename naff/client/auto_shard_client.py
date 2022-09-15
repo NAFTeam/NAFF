@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import naff.api.events as events
 from naff.api.gateway.state import ConnectionState
 from naff.client.client import Client
-from naff.client.const import MISSING
+from naff.client.const import logger, MISSING
 from naff.models import (
     Guild,
     to_snowflake,
@@ -74,7 +74,7 @@ class AutoShardedClient(Client):
 
     async def stop(self) -> None:
         """Shutdown the bot."""
-        self.logger.debug("Stopping the bot.")
+        logger.debug("Stopping the bot.")
         self._ready.clear()
         await self.http.close()
         await asyncio.gather(*(state.stop() for state in self._connection_states))
@@ -122,7 +122,7 @@ class AutoShardedClient(Client):
                 try:
                     await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
                 except asyncio.TimeoutError:
-                    self.logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
                     break
                 self._guild_event.clear()
                 if all(self.cache.get_guild(g_id) is not None for g_id in expected_guilds):
@@ -130,16 +130,16 @@ class AutoShardedClient(Client):
                     break
 
             if self.fetch_members:
-                self.logger.info(f"Shard {shard_id} is waiting for members to be chunked")
+                logger.info(f"Shard {shard_id} is waiting for members to be chunked")
                 await asyncio.gather(*(guild.chunked.wait() for guild in self.guilds if guild.id in expected_guilds))
         else:
-            self.logger.warning(
+            logger.warning(
                 f"Shard {shard_id} reports it has 0 guilds, this is an indicator you may be using too many shards"
             )
         # noinspection PyProtectedMember
         connection_state._shard_ready.set()
         self.dispatch(ShardConnect(shard_id))
-        self.logger.debug(f"Shard {shard_id} is now ready")
+        logger.debug(f"Shard {shard_id} is now ready")
 
         # noinspection PyProtectedMember
         await asyncio.gather(*[shard._shard_ready.wait() for shard in self._connection_states])
@@ -169,7 +169,7 @@ class AutoShardedClient(Client):
         Args:
             token: Your bot's token
         """
-        self.logger.debug("Starting http client...")
+        logger.debug("Starting http client...")
         await self.login(token)
 
         tasks = []
@@ -182,7 +182,7 @@ class AutoShardedClient(Client):
 
         for bucket in shard_buckets.values():
             for shard in bucket:
-                self.logger.debug(f"Starting {shard.shard_id}")
+                logger.debug(f"Starting {shard.shard_id}")
                 start = time.perf_counter()
                 tasks.append(asyncio.create_task(shard.start()))
 
@@ -220,11 +220,11 @@ class AutoShardedClient(Client):
             self.total_shards = data["shards"]
         elif data["shards"] != self.total_shards:
             recommended_shards = data["shards"]
-            self.logger.info(
+            logger.info(
                 f"Discord recommends you start with {recommended_shards} shard{'s' if recommended_shards != 1 else ''} instead of {self.total_shards}"
             )
 
-        self.logger.debug(f"Starting bot with {self.total_shards} shard{'s' if self.total_shards != 1 else ''}")
+        logger.debug(f"Starting bot with {self.total_shards} shard{'s' if self.total_shards != 1 else ''}")
         self._connection_states: list[ConnectionState] = [
             ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
         ]
