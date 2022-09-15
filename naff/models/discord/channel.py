@@ -2315,6 +2315,29 @@ class GuildForum(GuildChannel):
         """
         return self._client.cache.get_channel(id)
 
+    def get_tag(self, value: str | Snowflake_Type, *, case_insensitive: bool = False) -> Optional["ThreadTag"]:
+        """
+        Get a tag within this channel.
+
+        Args:
+            value: The name or ID of the tag to get
+            case_insensitive: Whether to ignore case when searching for the tag
+
+        Returns:
+            A ThreadTag object representing the tag.
+        """
+
+        def maybe_insensitive(string: str) -> str:
+            return string.lower() if case_insensitive else string
+
+        def predicate(tag: ThreadTag) -> Optional["ThreadTag"]:
+            if str(tag.id) == str(value):
+                return tag
+            if maybe_insensitive(tag.name) == maybe_insensitive(value):
+                return tag
+
+        return next((tag for tag in self.available_tags if predicate(tag)), None)
+
     async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
         """
         Create a tag for this forum.
