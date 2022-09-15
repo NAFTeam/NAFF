@@ -5,22 +5,22 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import naff.models as models
-
 from naff.client.const import MISSING, DISCORD_EPOCH, Absent, logger
 from naff.client.errors import NotFound, VoiceNotConnected, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import define, field
 from naff.client.utils.misc_utils import get
 from naff.client.utils.serializer import to_dict, to_image_data
 from naff.models.discord.base import DiscordObject
+from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake, to_optional_snowflake, SnowflakeObject
-from naff.models.misc.iterator import AsyncIterator
 from naff.models.discord.thread import ThreadTag
-from naff.models.discord.emoji import PartialEmoji
+from naff.models.misc.context_manager import Typing
+from naff.models.misc.iterator import AsyncIterator
 from .enums import (
     ChannelFlags,
     ChannelTypes,
@@ -32,7 +32,6 @@ from .enums import (
     MessageFlags,
     InviteTargetTypes,
 )
-from naff.models.misc.context_manager import Typing
 
 if TYPE_CHECKING:
     from aiohttp import FormData
@@ -2279,6 +2278,18 @@ class GuildForum(GuildChannel):
             reason=reason,
         )
         return self._client.cache.place_channel_data(data)
+
+    async def list_posts(self) -> List["GuildPublicThread"]:
+        """
+        List all active posts within this channel.
+
+        Returns:
+            A list of GuildPublicThread objects representing the posts.
+        """
+        data = await self._client.http.list_active_threads(self._guild_id)
+        threads = [self._client.cache.place_channel_data(post_data) for post_data in data["threads"]]
+
+        return [thread for thread in threads if thread.parent_id == self.id]
 
     async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
         """
