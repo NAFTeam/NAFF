@@ -2291,6 +2291,30 @@ class GuildForum(GuildChannel):
 
         return [thread for thread in threads if thread.parent_id == self.id]
 
+    async def fetch_post(self, id: "Snowflake_Type") -> "GuildPublicThread":
+        """
+        Fetch a post within this channel.
+
+        Args:
+            id: The id of the post to fetch
+
+        Returns:
+            A GuildPublicThread object representing the post.
+        """
+        return await self._client.fetch_channel(id)
+
+    def get_post(self, id: "Snowflake_Type") -> "GuildPublicThread":
+        """
+        Get a post within this channel.
+
+        Args:
+            id: The id of the post to get
+
+        Returns:
+            A GuildPublicThread object representing the post.
+        """
+        return self._client.cache.get_channel(id)
+
     async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
         """
         Create a tag for this forum.
