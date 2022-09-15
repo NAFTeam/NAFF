@@ -2217,7 +2217,7 @@ class GuildForum(GuildChannel):
         self,
         name: str,
         content: str | None,
-        applied_tags: Optional[List[Union["Snowflake_Type", "ThreadTag"]]] = MISSING,
+        applied_tags: Optional[List[Union["Snowflake_Type", "ThreadTag", str]]] = MISSING,
         *,
         auto_archive_duration: AutoArchiveDuration = AutoArchiveDuration.ONE_DAY,
         rate_limit_per_user: Absent[int] = MISSING,
@@ -2256,7 +2256,18 @@ class GuildForum(GuildChannel):
             A GuildPublicThread object representing the created post.
         """
         if applied_tags != MISSING:
-            applied_tags = [str(tag.id) if isinstance(tag, ThreadTag) else str(tag) for tag in applied_tags]
+            processed = []
+            for tag in applied_tags:
+                if isinstance(tag, ThreadTag):
+                    tag = tag.id
+                if isinstance(tag, (str, int)):
+                    tag = self.get_tag(tag, case_insensitive=True)
+                    if not tag:
+                        continue
+                    tag = tag.id
+                processed.append(tag)
+
+            applied_tags = processed
 
         message_payload = models.discord.message.process_message_payload(
             content=content,
