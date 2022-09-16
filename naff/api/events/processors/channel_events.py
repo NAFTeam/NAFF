@@ -2,6 +2,7 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
+from naff.models.discord.channel import BaseChannel
 from naff.models.discord.invite import Invite
 from naff.client.const import MISSING
 from ._template import EventMixinTemplate, Processor
@@ -22,7 +23,7 @@ class ChannelEvents(EventMixinTemplate):
     async def _on_raw_channel_delete(self, event: "RawGatewayEvent") -> None:
         # for some reason this event returns the deleted channel data?
         # so we create an object from it
-        channel = self.cache.place_channel_data(event.data)
+        channel = BaseChannel.from_dict_factory(event.data, self)
         self.cache.delete_channel(event.data.get("id"))
         self.dispatch(events.ChannelDelete(channel))
 
