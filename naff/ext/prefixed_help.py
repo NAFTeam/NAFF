@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 import attrs
 from naff import Embed
-from naff.client.const import logger
 from naff.ext.paginators import Paginator
 from naff.models.discord.color import BrandColors, Color
 from naff.models.naff.context import PrefixedContext
@@ -62,7 +61,7 @@ class PrefixedHelpCommand:
 
         # replace existing help command if found
         if "help" in self.client.prefixed_commands:
-            logger.warning("Replacing existing help command.")
+            self.client.logger.warning("Replacing existing help command.")
             del self.client.prefixed_commands["help"]
 
         self.client.add_prefixed_command(self._cmd)  # type: ignore

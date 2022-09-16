@@ -1008,7 +1008,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             nsfw = cmd_list[0].nsfw
 
             if not all(str(c.description) in (str(base_description), "No Description Set") for c in cmd_list):
-                logger.warning(
+                logger().warning(
                     f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{str(base_description)}` will be used"
                 )
             if not all(c.default_member_permissions == cmd_list[0].default_member_permissions for c in cmd_list):
@@ -1016,7 +1016,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             if not all(c.dm_permission == cmd_list[0].dm_permission for c in cmd_list):
                 raise ValueError(f"Conflicting `dm_permission` values found in `{cmd_list[0].name}`")
             if not all(c.nsfw == nsfw for c in cmd_list):
-                logger.warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
+                logger().warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
                 nsfw = True
 
             for cmd in cmd_list:

@@ -8,7 +8,6 @@ from types import TracebackType
 from aiohttp import WSMsgType
 from typing import TypeVar, TYPE_CHECKING
 
-from naff.client.const import logger
 from naff.client.errors import WebSocketClosed
 from naff.models.naff.cooldowns import CooldownSystem
 
@@ -134,11 +133,11 @@ class WebsocketClient:
             bypass: Should the rate limit be ignored for this send (used for heartbeats)
 
         """
-        logger.debug(f"Sending data to websocket: {data}")
+        self.state.client.logger.debug(f"Sending data to websocket: {data}")
 
         async with self._race_lock:
             if self.ws is None:
-                return logger.warning("Attempted to send data while websocket is not connected!")
+                return self.state.client.logger.warning("Attempted to send data while websocket is not connected!")
             if not bypass:
                 await self.rl_manager.rate_limit()
 
@@ -177,7 +176,7 @@ class WebsocketClient:
             resp = await self.ws.receive()
 
             if resp.type == WSMsgType.CLOSE:
-                logger.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
+                self.state.client.logger.debug(f"Disconnecting from gateway! Reason: {resp.data}::{resp.extra}")
                 if resp.data >= 4000:
                     # This should propagate to __aexit__() which will forcefully shut down everything
                     # and cleanup correctly.
@@ -232,7 +231,7 @@ class WebsocketClient:
             try:
                 msg = OverriddenJson.loads(msg)
             except Exception as e:
-                logger.error(e)
+                self.state.client.logger.error(e)
                 continue
 
             return msg
@@ -270,7 +269,7 @@ class WebsocketClient:
             await self._start_bee_gees()
         except Exception:
             self.close()
-            logger.error("The heartbeater raised an exception!", exc_info=True)
+            self.state.client.logger.error("The heartbeater raised an exception!", exc_info=True)
 
     async def _start_bee_gees(self) -> None:
         if self.heartbeat_interval is None:
@@ -283,10 +282,10 @@ class WebsocketClient:
         else:
             return
 
-        logger.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
+        self.state.client.logger.debug(f"Sending heartbeat every {self.heartbeat_interval} seconds")
         while not self._kill_bee_gees.is_set():
             if not self._acknowledged.is_set():
-                logger.warning(
+                self.state.client.logger.warning(
                     f"Heartbeat has not been acknowledged for {self.heartbeat_interval} seconds,"
                     " likely zombied connection. Reconnect!"
                 )

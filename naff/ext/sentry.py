@@ -13,7 +13,9 @@ from naff.client.const import logger
 try:
     import sentry_sdk
 except ModuleNotFoundError:
-    logger.error("sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`")
+    logger().error(
+        "sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`"
+    )
     raise
 
 from naff import Extension, Client, listen
@@ -74,7 +76,7 @@ def setup(
     filter: Optional[Callable[[dict[str, Any], dict[str, Any]], Optional[dict[str, Any]]]] = None,
 ) -> None:
     if not token:
-        logger.error("Cannot enable sentry integration, no token provided")
+        bot.logger.error("Cannot enable sentry integration, no token provided")
         return
     if filter is None:
         filter = default_sentry_filter
