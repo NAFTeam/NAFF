@@ -20,11 +20,10 @@ class ChannelEvents(EventMixinTemplate):
 
     @Processor.define()
     async def _on_raw_channel_delete(self, event: "RawGatewayEvent") -> None:
-        # for some reason this event returns the deleted object?
-        # so we cache it regardless
+        # for some reason this event returns the deleted channel data?
+        # so we create an object from it
         channel = self.cache.place_channel_data(event.data)
-        if guild := getattr(channel, "guild", None):
-            guild._channel_ids.discard(channel.id)
+        self.cache.delete_channel(int(event.data.get("id")))
         self.dispatch(events.ChannelDelete(channel))
 
     @Processor.define()
