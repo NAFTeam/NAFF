@@ -23,7 +23,7 @@ class ChannelEvents(EventMixinTemplate):
         # for some reason this event returns the deleted channel data?
         # so we create an object from it
         channel = self.cache.place_channel_data(event.data)
-        self.cache.delete_channel(int(event.data.get("id")))
+        self.cache.delete_channel(event.data.get("id"))
         self.dispatch(events.ChannelDelete(channel))
 
     @Processor.define()
