@@ -1,4 +1,5 @@
 import time
+from asyncio import QueueEmpty
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 
@@ -125,6 +126,33 @@ class ChannelHistory(AsyncIterator):
             messages = await self.channel.fetch_messages(limit=self.get_limit, before=self.last.id)
             messages.sort(key=lambda x: x.id, reverse=True)
         return messages
+
+
+class ArchivedForumPosts(AsyncIterator):
+    def __init__(self, channel: "BaseChannel", limit: int = 50, before: Snowflake_Type = None) -> None:
+        self.channel: "BaseChannel" = channel
+        self.before: Snowflake_Type = before
+        self._more: bool = True
+        super().__init__(limit)
+
+        if self.before:
+            self.last = self.before
+
+    async def fetch(self) -> list["GuildForumPost"]:
+        if self._more:
+            expected = self.get_limit
+
+            rcv = await self.channel._client.http.list_public_archived_threads(
+                self.channel.id, limit=expected, before=self.last
+            )
+            threads = [self.channel._client.cache.place_channel_data(data) for data in rcv["threads"]]
+
+            if not rcv:
+                raise QueueEmpty
+
+            self._more = rcv.get("has_more", False)
+            return threads
+        raise QueueEmpty
 
 
 @define()
@@ -2364,19 +2392,30 @@ class GuildForum(GuildChannel):
         Returns:
             A list of GuildForumPost objects representing the posts.
         """
+        # I can guarantee this endpoint will need to be converted to an async iterator eventually
         data = await self._client.http.list_active_threads(self._guild_id)
         threads = [self._client.cache.place_channel_data(post_data) for post_data in data["threads"]]
 
         return [thread for thread in threads if thread.parent_id == self.id]
 
-    def get_posts(self) -> List["GuildForumPost"]:
+    def get_posts(self, *, exclude_archived: bool = True) -> List["GuildForumPost"]:
         """
         List all, cached, active posts within this channel.
+
+        Args:
+            exclude_archived: Whether to exclude archived posts from the response
 
         Returns:
             A list of GuildForumPost objects representing the posts.
         """
-        return [thread for thread in self.guild.threads if thread.parent_id == self.id]
+        out = [thread for thread in self.guild.threads if thread.parent_id == self.id]
+        if exclude_archived:
+            return [thread for thread in out if not thread.archived]
+        return out
+
+    def archived_posts(self, limit: int = 0, before: Snowflake_Type | None = None) -> ArchivedForumPosts:
+        """An async iterator for all archived posts in this channel."""
+        return ArchivedForumPosts(self, limit, before)
 
     async def fetch_post(self, id: "Snowflake_Type") -> "GuildForumPost":
         """
