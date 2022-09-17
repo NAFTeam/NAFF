@@ -2302,6 +2302,15 @@ class GuildForum(GuildChannel):
 
         return [thread for thread in threads if thread.parent_id == self.id]
 
+    def get_posts(self) -> List["GuildPublicThread"]:
+        """
+        List all, cached, active posts within this channel.
+
+        Returns:
+            A list of GuildPublicThread objects representing the posts.
+        """
+        return [thread for thread in self.guild.threads if thread.parent_id == self.id]
+
     async def fetch_post(self, id: "Snowflake_Type") -> "GuildPublicThread":
         """
         Fetch a post within this channel.
