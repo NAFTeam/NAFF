@@ -1977,11 +1977,11 @@ class GuildForumPost(GuildPublicThread):
         Args:
             name: 1-100 character channel name
             archived: whether the thread is archived
-            applied_tags: list of tags to apply to a forum post (!!! This is for forum threads only)
+            applied_tags: list of tags to apply
             auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
             locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
             rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
-            flags: channel flags for forum threads
+            flags: channel flags to apply
             reason: The reason for this change
 
         Returns:
