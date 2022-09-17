@@ -738,6 +738,12 @@ class BaseChannel(DiscordObject):
             logger.error(f"Unsupported channel type for {data} ({channel_type}).")
             channel_class = BaseChannel
 
+        if channel_class == GuildPublicThread:
+            # attempt to determine if this thread is a forum post (thanks discord)
+            parent_channel = client.cache.get_channel(data["parent_id"])
+            if parent_channel and parent_channel.type == ChannelTypes.GUILD_FORUM:
+                channel_class = GuildForumPost
+
         return channel_class.from_dict(data, client)
 
     @property
@@ -1904,8 +1910,54 @@ class GuildNewsThread(ThreadChannel):
 
 @define()
 class GuildPublicThread(ThreadChannel):
+    async def edit(
+        self,
+        name: Absent[str] = MISSING,
+        archived: Absent[bool] = MISSING,
+        auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
+        locked: Absent[bool] = MISSING,
+        rate_limit_per_user: Absent[int] = MISSING,
+        flags: Absent[Union[int, ChannelFlags]] = MISSING,
+        reason: Absent[str] = MISSING,
+        **kwargs,
+    ) -> "GuildPublicThread":
+        """
+        Edit this thread.
 
-    _applied_tags: List[Snowflake_Type] = field(factory=list)
+        Args:
+            name: 1-100 character channel name
+            archived: whether the thread is archived
+            auto_archive_duration: duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080
+            locked: whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+            rate_limit_per_user: amount of seconds a user has to wait before sending another message (0-21600)
+            flags: channel flags for forum threads
+            reason: The reason for this change
+
+        Returns:
+            The edited thread channel object.
+        """
+        return await super().edit(
+            name=name,
+            archived=archived,
+            auto_archive_duration=auto_archive_duration,
+            locked=locked,
+            rate_limit_per_user=rate_limit_per_user,
+            reason=reason,
+            flags=flags,
+            **kwargs,
+        )
+
+
+@define()
+class GuildForumPost(GuildPublicThread):
+    """
+    A forum post
+
+    !!! note
+        This model is an abstraction of the api - In reality all posts are GuildPublicThread
+    """
+
+    _applied_tags: list[Snowflake_Type] = field(factory=list)
 
     async def edit(
         self,
@@ -1952,26 +2004,14 @@ class GuildPublicThread(ThreadChannel):
 
     @property
     def applied_tags(self) -> list[ThreadTag]:
-        """
-        The tags applied to this thread.
-
-        !!! note
-            This is only on forum threads.
-
-        """
+        """The tags applied to this thread."""
         if not isinstance(self.parent_channel, GuildForum):
             raise AttributeError("This is only available on forum threads.")
         return [tag for tag in self.parent_channel.available_tags if str(tag.id) in self._applied_tags]
 
     @property
     def initial_post(self) -> Optional["Message"]:
-        """
-        The initial message posted by the OP.
-
-        !!! note
-            This is only on forum threads.
-
-        """
+        """The initial message posted by the OP."""
         if not isinstance(self.parent_channel, GuildForum):
             raise AttributeError("This is only available on forum threads.")
         return self.get_message(self.id)
