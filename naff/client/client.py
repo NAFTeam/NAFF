@@ -265,7 +265,7 @@ class Client(
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
-        logger: logging.Logger = logger,
+        logger: logging.Logger = MISSING,
         owner_ids: Iterable["Snowflake_Type"] = (),
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
@@ -280,6 +280,9 @@ class Client(
         logging_level: int = logging.INFO,
         **kwargs,
     ) -> None:
+        if logger is MISSING:
+            logger = constants.logger()
+
         if basic_logging:
             logging.basicConfig()
             logger.setLevel(logging_level)
