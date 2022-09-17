@@ -34,7 +34,6 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.models.naff.context import SendableContext
 from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
@@ -97,8 +96,9 @@ from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes,
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
-from naff.models.naff.application_commands import ModalCommand
+from naff.models.naff.application_commands import ContextMenu, ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
+from naff.models.naff.context import SendableContext
 from naff.models.naff.hybrid_commands import _prefixed_from_slash, _base_subcommand_generator
 from naff.models.naff.listener import Listener
 from naff.models.naff.tasks import Task
@@ -370,6 +370,10 @@ class Client(
         """A dictionary of registered prefixed commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self.interaction_tree: Dict[
+            "Snowflake_Type", Dict[str, InteractionCommand | Dict[str, InteractionCommand]]
+        ] = {}
+        """A dictionary of registered application commands in a tree"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
@@ -555,6 +559,10 @@ class Client(
     def _queue_task(self, coro: Listener, event: BaseEvent, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro: Listener, _event: BaseEvent, *_args, **_kwargs) -> None:
             try:
+                if not isinstance(_event, (events.Error, events.RawGatewayEvent)):
+                    if coro.delay_until_ready and not self.is_ready:
+                        await self.wait_until_ready()
+
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
                     await _coro()
@@ -771,13 +779,6 @@ class Client(
                         logger.debug(f"Waiting for {guild.id} to chunk")
                         await guild.chunked.wait()
 
-            # run any pending startup tasks
-            if self.async_startup_tasks:
-                try:
-                    await asyncio.gather(*self.async_startup_tasks)
-                except Exception as e:
-                    self.dispatch(events.Error("async-extension-loader", e))
-
             # cache slash commands
             if not self._startup:
                 await self._init_interactions()
@@ -844,6 +845,14 @@ class Client(
             token: Your bot's token
         """
         await self.login(token)
+
+        # run any pending startup tasks
+        if self.async_startup_tasks:
+            try:
+                await asyncio.gather(*self.async_startup_tasks)
+            except Exception as e:
+                self.dispatch(events.Error("async-extension-loader", e))
+
         try:
             await self._connection_state.start()
         finally:
@@ -1103,6 +1112,8 @@ class Client(
         if command.callback is None:
             return False
 
+        base, group, sub, *_ = command.resolved_name.split(" ") + [None, None]
+
         for scope in command.scopes:
             if scope not in self.interactions:
                 self.interactions[scope] = {}
@@ -1114,6 +1125,21 @@ class Client(
                 command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
+
+            if scope not in self.interaction_tree:
+                self.interaction_tree[scope] = {}
+
+            if group is None or isinstance(command, ContextMenu):
+                self.interaction_tree[scope][command.resolved_name] = command
+            elif group is not None:
+                if base not in self.interaction_tree[scope]:
+                    self.interaction_tree[scope][base] = {}
+                if sub is None:
+                    self.interaction_tree[scope][base][group] = command
+                else:
+                    if group not in self.interaction_tree[scope][base]:
+                        self.interaction_tree[scope][base][group] = {}
+                    self.interaction_tree[scope][base][group][sub] = command
 
         return True
 

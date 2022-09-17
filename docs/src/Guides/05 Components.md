@@ -103,7 +103,7 @@ Selects are very similar to Buttons. The main difference is that they need optio
 
 You can also define how many options users can choose by setting `min_values` and `max_values`.
 ```python
-components = Select(
+components = SelectMenu(
     options=[
         SelectOption(
             label="Pizza",

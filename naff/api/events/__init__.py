@@ -1,6 +1,7 @@
 from . import processors
 from .discord import *
 from .internal import *
+from .base import *
 
 __all__ = (
     "RawGatewayEvent",
