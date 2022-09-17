@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import TYPE_CHECKING, Optional, Sequence, cast, overload
 
 import discord_typings
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 
-class ChannelRequests(CanRequest, ABC):
+class ChannelRequests(CanRequest):
     async def get_channel(self, channel_id: "Snowflake_Type") -> discord_typings.ChannelData:
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.

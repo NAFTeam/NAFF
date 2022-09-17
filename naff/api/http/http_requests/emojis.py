@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import TYPE_CHECKING, cast
 
 import discord_typings
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 
-class EmojiRequests(CanRequest, ABC):
+class EmojiRequests(CanRequest):
     async def get_all_guild_emoji(self, guild_id: "Snowflake_Type") -> list[discord_typings.EmojiData]:
         """
         Get all the emoji from a guild.

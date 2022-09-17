@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
+from warnings import warn
 
 from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import HTTPException, TooManyChanges
@@ -599,13 +600,19 @@ class Member(DiscordObject, _SendDMMixin):
         """
         await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
 
-    async def ban(self, delete_message_days: int = 0, reason: Absent[str] = MISSING) -> None:
+    async def ban(
+        self, delete_message_days: Absent[int] = MISSING, delete_message_seconds: int = 0, reason: Absent[str] = MISSING
+    ) -> None:
         """
         Ban a member from the guild.
 
         Args:
-            delete_message_days: The number of days of messages to delete
+            delete_message_days: (deprecated) The number of days of messages to delete
+            delete_message_seconds: The number of seconds of messages to delete
             reason: The reason for this ban
 
         """
-        await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)
+        if delete_message_days is not MISSING:
+            warn("delete_message_days  is deprecated and will be removed in a future update", DeprecationWarning)
+            delete_message_seconds = delete_message_days * 3600
+        await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_seconds, reason=reason)

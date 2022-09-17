@@ -1129,7 +1129,7 @@ class Client(
             prefixed_base = self.prefixed_commands.get(str(command.name))
             if not prefixed_base:
                 prefixed_base = _base_subcommand_generator(
-                    str(command.name), list(command.name.to_locale_dict().values()), str(command.description)
+                    str(command.name), list((command.name.to_locale_dict() or {}).values()), str(command.description)
                 )
                 self.add_prefixed_command(prefixed_base)
 
@@ -1140,7 +1140,7 @@ class Client(
                 if not prefixed_base:
                     prefixed_base = _base_subcommand_generator(
                         str(command.group_name),
-                        list(command.group_name.to_locale_dict().values()),
+                        list((command.group_name.to_locale_dict() or {}).values()),
                         str(command.group_description),
                         group=True,
                     )

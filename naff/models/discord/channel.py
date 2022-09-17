@@ -305,7 +305,9 @@ class MessageableMixin(SendMixin):
         elif after:
             after = to_snowflake(after)
 
-        messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
+        messages_data = await self._client.http.get_channel_messages(
+            self.id, limit, around=around, before=before, after=after
+        )
         for m in messages_data:
             m["guild_id"] = self._guild_id
 
