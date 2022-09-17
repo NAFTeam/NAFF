@@ -341,6 +341,25 @@ class Embed(DictSerializationMixin):
         self.fields.append(EmbedField(name, str(value), inline))
         self._fields_validation("fields", self.fields)
 
+    def add_fields(self, *fields: EmbedField | str | dict) -> None:
+        """
+        Add multiple fields to the embed.
+
+        Args:
+            fields: The fields to add
+
+        """
+        for _field in fields:
+            if isinstance(_field, EmbedField):
+                self.fields.append(_field)
+                self._fields_validation("fields", self.fields)
+            elif isinstance(_field, str):
+                self.add_field(_field, _field)
+            elif isinstance(_field, dict):
+                self.add_field(**_field)
+            else:
+                raise TypeError(f"Expected EmbedField, str or dict, got {type(_field).__name__}")
+
 
 def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> Optional[List[dict]]:
     """
