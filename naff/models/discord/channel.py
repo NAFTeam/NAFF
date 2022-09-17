@@ -2290,9 +2290,9 @@ class GuildForum(GuildChannel):
         )
         return self._client.cache.place_channel_data(data)
 
-    async def list_posts(self) -> List["GuildPublicThread"]:
+    async def fetch_posts(self) -> List["GuildPublicThread"]:
         """
-        List all active posts within this channel.
+        Requests all active posts within this channel.
 
         Returns:
             A list of GuildPublicThread objects representing the posts.
