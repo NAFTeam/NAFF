@@ -2016,6 +2016,33 @@ class GuildForumPost(GuildPublicThread):
             raise AttributeError("This is only available on forum threads.")
         return self.get_message(self.id)
 
+    @property
+    def pinned(self) -> bool:
+        """Whether this thread is pinned."""
+        return ChannelFlags.PINNED in self.flags
+
+    async def pin(self, reason: Absent[str] = MISSING) -> None:
+        """
+        Pin this thread.
+
+        Args:
+            reason: The reason for this pin
+
+        """
+        flags = self.flags | ChannelFlags.PINNED
+        await self.edit(flags=flags, reason=reason)
+
+    async def unpin(self, reason: Absent[str] = MISSING) -> None:
+        """
+        Unpin this thread.
+
+        Args:
+            reason: The reason for this unpin
+
+        """
+        flags = self.flags & ~ChannelFlags.PINNED
+        await self.edit(flags=flags, reason=reason)
+
 
 @define()
 class GuildPrivateThread(ThreadChannel):
