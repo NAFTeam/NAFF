@@ -2355,7 +2355,7 @@ class GuildForum(GuildChannel):
             for tag in applied_tags:
                 if isinstance(tag, ThreadTag):
                     tag = tag.id
-                if isinstance(tag, (str, int)):
+                elif isinstance(tag, (str, int)):
                     tag = self.get_tag(tag, case_insensitive=True)
                     if not tag:
                         continue
