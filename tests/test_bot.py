@@ -383,7 +383,7 @@ async def test_components(bot: Client, channel: GuildText) -> None:
             components=naff.ActionRow(*[naff.Button(1, "test"), naff.Button(1, "test")]),
         )
         await thread.send(
-            "Test - Select",
+            "Test - SelectMenu",
             components=naff.Select([SelectOption("test", "test")]),
         )
 
