@@ -2425,7 +2425,7 @@ class GuildForum(GuildChannel):
 
         return next((tag for tag in self.available_tags if predicate(tag)), None)
 
-    async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str]) -> "ThreadTag":
+    async def create_tag(self, name: str, emoji: Union["models.PartialEmoji", dict, str, None] = None) -> "ThreadTag":
         """
         Create a tag for this forum.
 
@@ -2440,15 +2440,20 @@ class GuildForum(GuildChannel):
             The created tag object.
 
         """
-        if isinstance(emoji, str):
-            emoji = PartialEmoji.from_str(emoji)
-        elif isinstance(emoji, dict):
-            emoji = PartialEmoji.from_dict(emoji)
+        payload = {"channel_id": self.id, "name": name}
 
-        if emoji.id:
-            data = await self._client.http.create_tag(self.id, name, emoji_id=emoji.id)
-        else:
-            data = await self._client.http.create_tag(self.id, name, emoji_name=emoji.name)
+        if emoji:
+            if isinstance(emoji, str):
+                emoji = PartialEmoji.from_str(emoji)
+            elif isinstance(emoji, dict):
+                emoji = PartialEmoji.from_dict(emoji)
+
+            if emoji.id:
+                payload["emoji_id"] = emoji.id
+            else:
+                payload["emoji_name"] = emoji.name
+
+        data = await self._client.http.create_tag(**payload)
 
         channel_data = self._client.cache.place_channel_data(data)
         return [tag for tag in channel_data.available_tags if tag.name == name][0]
