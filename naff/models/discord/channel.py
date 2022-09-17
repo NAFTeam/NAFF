@@ -2299,7 +2299,7 @@ class GuildForum(GuildChannel):
         file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
         reason: Absent[str] = MISSING,
-    ) -> "GuildPublicThread":
+    ) -> "GuildForumPost":
         """
         Create a post within this channel.
 
@@ -2320,7 +2320,7 @@ class GuildForum(GuildChannel):
             reason: The reason for creating this post
 
         Returns:
-            A GuildPublicThread object representing the created post.
+            A GuildForumPost object representing the created post.
         """
         if applied_tags != MISSING:
             processed = []
@@ -2357,28 +2357,28 @@ class GuildForum(GuildChannel):
         )
         return self._client.cache.place_channel_data(data)
 
-    async def fetch_posts(self) -> List["GuildPublicThread"]:
+    async def fetch_posts(self) -> List["GuildForumPost"]:
         """
         Requests all active posts within this channel.
 
         Returns:
-            A list of GuildPublicThread objects representing the posts.
+            A list of GuildForumPost objects representing the posts.
         """
         data = await self._client.http.list_active_threads(self._guild_id)
         threads = [self._client.cache.place_channel_data(post_data) for post_data in data["threads"]]
 
         return [thread for thread in threads if thread.parent_id == self.id]
 
-    def get_posts(self) -> List["GuildPublicThread"]:
+    def get_posts(self) -> List["GuildForumPost"]:
         """
         List all, cached, active posts within this channel.
 
         Returns:
-            A list of GuildPublicThread objects representing the posts.
+            A list of GuildForumPost objects representing the posts.
         """
         return [thread for thread in self.guild.threads if thread.parent_id == self.id]
 
-    async def fetch_post(self, id: "Snowflake_Type") -> "GuildPublicThread":
+    async def fetch_post(self, id: "Snowflake_Type") -> "GuildForumPost":
         """
         Fetch a post within this channel.
 
@@ -2386,11 +2386,11 @@ class GuildForum(GuildChannel):
             id: The id of the post to fetch
 
         Returns:
-            A GuildPublicThread object representing the post.
+            A GuildForumPost object representing the post.
         """
         return await self._client.fetch_channel(id)
 
-    def get_post(self, id: "Snowflake_Type") -> "GuildPublicThread":
+    def get_post(self, id: "Snowflake_Type") -> "GuildForumPost":
         """
         Get a post within this channel.
 
@@ -2398,7 +2398,7 @@ class GuildForum(GuildChannel):
             id: The id of the post to get
 
         Returns:
-            A GuildPublicThread object representing the post.
+            A GuildForumPost object representing the post.
         """
         return self._client.cache.get_channel(id)
 
@@ -2528,6 +2528,7 @@ TYPE_ALL_CHANNEL = Union[
     GuildStageVoice,
     GuildCategory,
     GuildPublicThread,
+    GuildForumPost,
     GuildPrivateThread,
     GuildNewsThread,
     DM,
