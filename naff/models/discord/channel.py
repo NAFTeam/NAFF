@@ -1970,7 +1970,7 @@ class GuildForumPost(GuildPublicThread):
         flags: Absent[Union[int, ChannelFlags]] = MISSING,
         reason: Absent[str] = MISSING,
         **kwargs,
-    ) -> "GuildPublicThread":
+    ) -> "GuildForumPost":
         """
         Edit this thread.
 
