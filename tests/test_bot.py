@@ -384,7 +384,7 @@ async def test_components(bot: Client, channel: GuildText) -> None:
         )
         await thread.send(
             "Test - SelectMenu",
-            components=naff.Select([SelectOption("test", "test")]),
+            components=naff.SelectMenu([SelectOption("test", "test")]),
         )
 
         Modal("Test Modal", [ParagraphText("test", value="test value, press send")])
