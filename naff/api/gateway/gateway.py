@@ -214,7 +214,6 @@ class GatewayClient(WebsocketClient):
                 )
                 logger.info(f"Shard {self.shard[0]} has connected to gateway!")
                 logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
-                # todo: future polls, improve guild caching here. run the debugger. you'll see why
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
