@@ -62,7 +62,6 @@ __all__ = (
     "MessageReactionRemove",
     "MessageReactionRemoveAll",
     "MessageUpdate",
-    "ModalResponse",
     "PresenceUpdate",
     "RoleCreate",
     "RoleDelete",
@@ -95,7 +94,6 @@ if TYPE_CHECKING:
     from naff.models.discord.sticker import Sticker
     from naff.models.discord.voice_state import VoiceState
     from naff.models.discord.stage_instance import StageInstance
-    from naff.models.naff.context import ModalContext
     from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
     from naff.models.discord.reaction import Reaction
 
@@ -526,14 +524,6 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = field()
-
-
-@define(kw_only=False)
-class ModalResponse(BaseEvent):
-    """Dispatched when a modal receives a response"""
-
-    context: "ModalContext" = field()
-    """The context data of the modal"""
 
 
 @define(kw_only=False)

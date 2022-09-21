@@ -84,7 +84,7 @@ class Task:
                 val = self.callback()
 
             if isinstance(val, BaseTrigger):
-                self.trigger = val
+                self.reschedule(val)
         except Exception as e:
             self.on_error(e)
 

@@ -149,7 +149,7 @@ class AutoShardedClient(Client):
             try:
                 await asyncio.gather(*self.async_startup_tasks)
             except Exception as e:
-                self.dispatch(events.Error("async-extension-loader", e))
+                self.dispatch(events.Error(source="async-extension-loader", error=e))
 
         # cache slash commands
         if not self._startup:

@@ -116,7 +116,7 @@ class InteractionRequests(CanRequest):
             files: The files to send in this message
 
         """
-        await self.request(
+        return await self.request(
             Route("POST", f"/interactions/{interaction_id}/{token}/callback"), payload=payload, files=files
         )
 
@@ -133,7 +133,9 @@ class InteractionRequests(CanRequest):
             files: The files to send with this interaction
 
         """
-        await self.request(Route("POST", f"/webhooks/{int(application_id)}/{token}"), payload=payload, files=files)
+        return await self.request(
+            Route("POST", f"/webhooks/{int(application_id)}/{token}"), payload=payload, files=files
+        )
 
     async def edit_interaction_message(
         self,
