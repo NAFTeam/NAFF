@@ -2,12 +2,12 @@ import asyncio
 import shutil
 import threading
 from asyncio import AbstractEventLoop, run_coroutine_threadsafe
+from logging import Logger
 from time import sleep, perf_counter
 from typing import Optional, TYPE_CHECKING
 
 from naff.api.voice.audio import BaseAudio, AudioVolume
 from naff.api.voice.opus import Encoder
-from naff.client.const import logger
 
 if TYPE_CHECKING:
     from naff.models.naff.active_voice_state import ActiveVoiceState
@@ -22,6 +22,7 @@ class Player(threading.Thread):
         self.current_audio: Optional[BaseAudio] = audio
         self.state: "ActiveVoiceState" = v_state
         self.loop: AbstractEventLoop = loop
+        self.logger: Logger = self.state.ws.logger
 
         self._encoder: Encoder = Encoder()
 
@@ -99,14 +100,14 @@ class Player(threading.Thread):
         self._stopped.clear()
 
         asyncio.run_coroutine_threadsafe(self.state.ws.speaking(True), self.loop)
-        logger().debug(f"Now playing {self.current_audio!r}")
+        self.logger.debug(f"Now playing {self.current_audio!r}")
         start = None
 
         try:
             while not self._stop_event.is_set():
                 if not self.state.ws.ready.is_set() or not self._resume.is_set():
                     run_coroutine_threadsafe(self.state.ws.speaking(False), self.loop)
-                    logger().debug("Voice playback has been suspended!")
+                    self.logger.debug("Voice playback has been suspended!")
 
                     wait_for = []
 
@@ -122,7 +123,7 @@ class Player(threading.Thread):
                         continue
 
                     run_coroutine_threadsafe(self.state.ws.speaking(), self.loop)
-                    logger().debug("Voice playback has been resumed!")
+                    self.logger.debug("Voice playback has been resumed!")
                     start = None
                     loops = 0
 

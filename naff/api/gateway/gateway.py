@@ -7,7 +7,7 @@ from types import TracebackType
 from typing import TypeVar, TYPE_CHECKING
 
 from naff.api import events
-from naff.client.const import logger, MISSING, __api_version__
+from naff.client.const import MISSING, __api_version__
 from naff.client.utils.input_utils import OverriddenJson
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.enums import Status
@@ -176,31 +176,31 @@ class GatewayClient(WebsocketClient):
         match op:
 
             case OPCODE.HEARTBEAT:
-                logger().debug("Received heartbeat request from gateway")
+                self.logger.debug("Received heartbeat request from gateway")
                 return await self.send_heartbeat()
 
             case OPCODE.HEARTBEAT_ACK:
                 self.latency.append(time.perf_counter() - self._last_heartbeat)
 
                 if self._last_heartbeat != 0 and self.latency[-1] >= 15:
-                    logger().warning(
+                    self.logger.warning(
                         f"High Latency! shard ID {self.shard[0]} heartbeat took {self.latency[-1]:.1f}s to be acknowledged!"
                     )
                 else:
-                    logger().debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
+                    self.logger.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
 
                 return self._acknowledged.set()
 
             case OPCODE.RECONNECT:
-                logger().debug("Gateway requested reconnect. Reconnecting...")
+                self.logger.debug("Gateway requested reconnect. Reconnecting...")
                 return await self.reconnect(resume=True, url=self.ws_resume_url)
 
             case OPCODE.INVALIDATE_SESSION:
-                logger().warning("Gateway has invalidated session! Reconnecting...")
+                self.logger.warning("Gateway has invalidated session! Reconnecting...")
                 return await self.reconnect()
 
             case _:
-                return logger().debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
+                return self.logger.debug(f"Unhandled OPCODE: {op} = {OPCODE(op).name}")
 
     async def dispatch_event(self, data, seq, event) -> None:
         match event:
@@ -212,13 +212,13 @@ class GatewayClient(WebsocketClient):
                 self.ws_resume_url = (
                     f"{data['resume_gateway_url']}?encoding=json&v={__api_version__}&compress=zlib-stream"
                 )
-                logger().info(f"Shard {self.shard[0]} has connected to gateway!")
-                logger().debug(f"Session ID: {self.session_id} Trace: {self._trace}")
+                self.logger.info(f"Shard {self.shard[0]} has connected to gateway!")
+                self.logger.debug(f"Session ID: {self.session_id} Trace: {self._trace}")
                 # todo: future polls, improve guild caching here. run the debugger. you'll see why
                 return self.state.client.dispatch(events.WebsocketReady(data))
 
             case "RESUMED":
-                logger().info(f"Successfully resumed connection! Session_ID: {self.session_id}")
+                self.logger.info(f"Successfully resumed connection! Session_ID: {self.session_id}")
                 self.state.client.dispatch(events.Resume())
                 return
 
@@ -233,9 +233,9 @@ class GatewayClient(WebsocketClient):
                     try:
                         asyncio.create_task(processor(events.RawGatewayEvent(data.copy(), override_name=event_name)))
                     except Exception as ex:
-                        logger().error(f"Failed to run event processor for {event_name}: {ex}")
+                        self.logger.error(f"Failed to run event processor for {event_name}: {ex}")
                 else:
-                    logger().debug(f"No processor for `{event_name}`")
+                    self.logger.debug(f"No processor for `{event_name}`")
 
         self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name="raw_gateway_event"))
         self.state.client.dispatch(events.RawGatewayEvent(data.copy(), override_name=f"raw_{event.lower()}"))
@@ -264,7 +264,7 @@ class GatewayClient(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        logger().debug(
+        self.logger.debug(
             f"Shard ID {self.shard[0]} has identified itself to Gateway, requesting intents: {self.state.intents}!"
         )
 
@@ -286,11 +286,11 @@ class GatewayClient(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        logger().debug(f"{self.shard[0]} is attempting to resume a connection")
+        self.logger.debug(f"{self.shard[0]} is attempting to resume a connection")
 
     async def send_heartbeat(self) -> None:
         await self.send_json({"op": OPCODE.HEARTBEAT, "d": self.sequence}, bypass=True)
-        logger().debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
+        self.logger.debug(f"❤ Shard {self.shard[0]} is sending a Heartbeat")
 
     async def change_presence(self, activity=None, status: Status = Status.ONLINE, since=None) -> None:
         """Update the bot's presence status."""

@@ -319,7 +319,7 @@ class Client(
 
         # resources
 
-        self.http: HTTPClient = HTTPClient()
+        self.http: HTTPClient = HTTPClient(logger=self.logger)
         """The HTTP client to use when interacting with discord endpoints"""
 
         # context objects
@@ -1373,7 +1373,7 @@ class Client(
             # if we're not deleting, just check the scopes we have cmds registered in
             cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
-        local_cmds_json = application_commands_to_dict(self.interactions)
+        local_cmds_json = application_commands_to_dict(self.interactions, self)
 
         async def sync_scope(cmd_scope) -> None:
 

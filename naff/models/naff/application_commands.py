@@ -15,7 +15,6 @@ from naff.client.const import (
     SLASH_CMD_MAX_OPTIONS,
     SLASH_CMD_MAX_DESC_LENGTH,
     MISSING,
-    logger,
     Absent,
 )
 from naff.client.mixins.serialization import DictSerializationMixin
@@ -34,6 +33,7 @@ from naff.models.naff.localisation import LocalisedField
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
     from naff.models.naff.context import Context
+    from naff import Client
 
 __all__ = (
     "OptionTypes",
@@ -935,7 +935,9 @@ def auto_defer(ephemeral: bool = False, time_until_defer: float = 0.0) -> Callab
     return wrapper
 
 
-def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, InteractionCommand]]) -> dict:
+def application_commands_to_dict(
+    commands: Dict["Snowflake_Type", Dict[str, InteractionCommand]], client: "Client"
+) -> dict:
     """
     Convert the command list into a format that would be accepted by discord.
 
@@ -1008,7 +1010,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             nsfw = cmd_list[0].nsfw
 
             if not all(str(c.description) in (str(base_description), "No Description Set") for c in cmd_list):
-                logger().warning(
+                client.logger.warning(
                     f"Conflicting descriptions found in `{cmd_list[0].name}` subcommands; `{str(base_description)}` will be used"
                 )
             if not all(c.default_member_permissions == cmd_list[0].default_member_permissions for c in cmd_list):
@@ -1016,7 +1018,7 @@ def application_commands_to_dict(commands: Dict["Snowflake_Type", Dict[str, Inte
             if not all(c.dm_permission == cmd_list[0].dm_permission for c in cmd_list):
                 raise ValueError(f"Conflicting `dm_permission` values found in `{cmd_list[0].name}`")
             if not all(c.nsfw == nsfw for c in cmd_list):
-                logger().warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
+                client.logger.warning(f"Conflicting `nsfw` values found in {cmd_list[0].name} - `True` will be used")
                 nsfw = True
 
             for cmd in cmd_list:
