@@ -3,7 +3,7 @@ import platform
 import tracemalloc
 
 from naff import Client, Extension, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
-from naff.client.const import logger, __version__, __py_version__
+from naff.client.const import get_logger, __version__, __py_version__
 from naff.models.naff import checks
 from .debug_application_cmd import DebugAppCMD
 from .debug_exec import DebugExec

@@ -8,12 +8,12 @@ import logging
 from typing import Any, Callable, Optional
 
 from naff.api.events.internal import Error
-from naff.client.const import logger
+from naff.client.const import get_logger
 
 try:
     import sentry_sdk
 except ModuleNotFoundError:
-    logger().error(
+    get_logger().error(
         "sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`"
     )
     raise

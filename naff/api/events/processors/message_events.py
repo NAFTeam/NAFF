@@ -54,7 +54,7 @@ class MessageEvents(EventMixinTemplate):
         if not message:
             message = BaseMessage.from_dict(event.data, self)
         self.cache.delete_message(event.data["channel_id"], event.data["id"])
-        event.bot.logger.debug(f"Dispatching Event: {event.resolved_name}")
+        self.logger.debug(f"Dispatching Event: {event.resolved_name}")
         self.dispatch(events.MessageDelete(message))
 
     @Processor.define()

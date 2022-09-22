@@ -160,7 +160,7 @@ class HTTPClient(
         )
 
         if logger is MISSING:
-            logger = constants.logger()
+            logger = constants.get_logger()
         self.logger = logger
 
     def get_ratelimit(self, route: Route) -> BucketLock:

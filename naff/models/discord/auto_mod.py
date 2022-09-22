@@ -2,7 +2,7 @@ from typing import Any, Optional, TYPE_CHECKING
 
 import attrs
 
-from naff.client.const import logger, MISSING, Absent
+from naff.client.const import get_logger, MISSING, Absent
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter, optional
 from naff.client.utils.attr_utils import define, field, docs
@@ -37,7 +37,7 @@ class BaseAction(DictSerializationMixin):
     def from_dict_factory(cls, data: dict) -> "BaseAction":
         action_class = ACTION_MAPPING.get(data.get("type"))
         if not action_class:
-            logger().error(f"Unknown action type for {data}")
+            get_logger().error(f"Unknown action type for {data}")
             action_class = cls
 
         return action_class.from_dict({"type": data.get("type")} | data["metadata"])
@@ -73,7 +73,7 @@ class BaseTrigger(DictSerializationMixin):
         trigger_class = TRIGGER_MAPPING.get(data.get("trigger_type"))
         meta = data.get("trigger_metadata", {})
         if not trigger_class:
-            logger().error(f"Unknown trigger type for {data}")
+            get_logger().error(f"Unknown trigger type for {data}")
             trigger_class = cls
 
         payload = {"type": data.get("trigger_type"), "trigger_metadata": meta}

@@ -4,14 +4,14 @@ from typing import Any, Dict, Union, Optional
 import aiohttp  # type: ignore
 
 
-from naff.client.const import logger
+from naff.client.const import get_logger
 
 __all__ = ("OverriddenJson", "response_decode", "get_args", "get_first_word")
 
 try:
     import orjson as json
 except ImportError:
-    logger().warning("orjson not installed, built-in json library will be used")
+    get_logger().warning("orjson not installed, built-in json library will be used")
     import json as json
 
 

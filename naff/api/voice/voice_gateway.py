@@ -105,7 +105,7 @@ class VoiceGateway(WebsocketClient):
             resp = await self.ws.receive()
 
             if resp.type == WSMsgType.CLOSE:
-                self.state.client.logger.debug(f"Disconnecting from voice gateway! Reason: {resp.data}::{resp.extra}")
+                self.logger.debug(f"Disconnecting from voice gateway! Reason: {resp.data}::{resp.extra}")
                 if resp.data in (4006, 4009, 4014, 4015):
                     # these are all recoverable close codes, anything else means we're foobared
                     # codes: session expired, session timeout, disconnected, server crash
@@ -158,7 +158,7 @@ class VoiceGateway(WebsocketClient):
             try:
                 msg = OverriddenJson.loads(msg)
             except Exception as e:
-                self.state.client.logger.error(e)
+                self.logger.error(e)
 
             return msg
 
@@ -168,28 +168,28 @@ class VoiceGateway(WebsocketClient):
                 self.latency.append(time.perf_counter() - self._last_heartbeat)
 
                 if self._last_heartbeat != 0 and self.latency[-1] >= 15:
-                    self.state.client.logger.warning(
+                    self.logger.warning(
                         f"High Latency! Voice heartbeat took {self.latency[-1]:.1f}s to be acknowledged!"
                     )
                 else:
-                    self.state.client.logger.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
+                    self.logger.debug(f"❤ Heartbeat acknowledged after {self.latency[-1]:.5f} seconds")
 
                 return self._acknowledged.set()
 
             case OP.READY:
-                self.state.client.logger.debug("Discord send VC Ready! Establishing a socket connection...")
+                self.logger.debug("Discord send VC Ready! Establishing a socket connection...")
                 self.voice_ip = data["ip"]
                 self.voice_port = data["port"]
                 self.ssrc = data["ssrc"]
                 self.voice_modes = [mode for mode in data["modes"] if mode in Encryption.SUPPORTED]
 
                 if len(self.voice_modes) == 0:
-                    self.state.client.logger.critical("NO VOICE ENCRYPTION MODES SHARED WITH GATEWAY!")
+                    self.logger.critical("NO VOICE ENCRYPTION MODES SHARED WITH GATEWAY!")
 
                 await self.establish_voice_socket()
 
             case OP.SESSION_DESCRIPTION:
-                self.state.client.logger.info(f"Voice connection established; using {data['mode']}")
+                self.logger.info(f"Voice connection established; using {data['mode']}")
                 self.encryptor = Encryption(data["secret_key"])
                 self.ready.set()
                 if self.cond:
@@ -197,7 +197,7 @@ class VoiceGateway(WebsocketClient):
                         self.cond.notify()
 
             case _:
-                return self.state.client.logger.debug(f"Unhandled OPCODE: {op} = {data = }")
+                return self.logger.debug(f"Unhandled OPCODE: {op} = {data = }")
 
     async def reconnect(self, *, resume: bool = False, code: int = 1012) -> None:
         async with self._race_lock:
@@ -209,13 +209,13 @@ class VoiceGateway(WebsocketClient):
             self.ws = None
 
             if not resume:
-                self.state.client.logger.debug("Waiting for updated server information...")
+                self.logger.debug("Waiting for updated server information...")
                 try:
                     await asyncio.wait_for(self._voice_server_update.wait(), timeout=5)
                 except asyncio.TimeoutError:
                     self._kill_bee_gees.set()
                     self.close()
-                    self.state.client.logger.debug("Terminating VoiceGateway due to disconnection")
+                    self.logger.debug("Terminating VoiceGateway due to disconnection")
                     return
 
                 self._voice_server_update.clear()
@@ -249,7 +249,7 @@ class VoiceGateway(WebsocketClient):
 
     async def establish_voice_socket(self) -> None:
         """Establish the socket connection to discord"""
-        self.state.client.logger.debug("IP Discovery in progress...")
+        self.logger.debug("IP Discovery in progress...")
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setblocking(False)
@@ -261,14 +261,14 @@ class VoiceGateway(WebsocketClient):
 
         self.socket.sendto(packet, (self.voice_ip, self.voice_port))
         resp = await self.loop.sock_recv(self.socket, 70)
-        self.state.client.logger.debug(f"Voice Initial Response Received: {resp}")
+        self.logger.debug(f"Voice Initial Response Received: {resp}")
 
         ip_start = 4
         ip_end = resp.index(0, ip_start)
         self.me_ip = resp[ip_start:ip_end].decode("ascii")
 
         self.me_port = struct.unpack_from(">H", resp, len(resp) - 2)[0]
-        self.state.client.logger.debug(f"IP Discovered: {self.me_ip} #{self.me_port}")
+        self.logger.debug(f"IP Discovered: {self.me_ip} #{self.me_port}")
 
         await self._select_protocol()
 
@@ -302,7 +302,7 @@ class VoiceGateway(WebsocketClient):
 
     async def send_heartbeat(self) -> None:
         await self.send_json({"op": OP.HEARTBEAT, "d": random.uniform(0.0, 1.0)})
-        self.state.client.logger.debug("❤ Voice Connection is sending Heartbeat")
+        self.logger.debug("❤ Voice Connection is sending Heartbeat")
 
     async def _identify(self) -> None:
         """Send an identify payload to the voice gateway."""
@@ -318,7 +318,7 @@ class VoiceGateway(WebsocketClient):
         serialized = OverriddenJson.dumps(payload)
         await self.ws.send_str(serialized)
 
-        self.state.client.logger.debug("Voice Connection has identified itself to Voice Gateway")
+        self.logger.debug("Voice Connection has identified itself to Voice Gateway")
 
     async def _select_protocol(self) -> None:
         """Inform Discord of our chosen protocol."""

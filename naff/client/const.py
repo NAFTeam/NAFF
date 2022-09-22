@@ -45,7 +45,7 @@ __all__ = (
     "__repo_url__",
     "__py_version__",
     "__api_version__",
-    "logger",
+    "get_logger",
     "logger_name",
     "kwarg_spam",
     "DISCORD_EPOCH",
@@ -89,7 +89,7 @@ logger_name = "naff"
 _logger = logging.getLogger(logger_name)
 
 
-def logger() -> logging.Logger:
+def get_logger() -> logging.Logger:
     global _logger
     return _logger
 

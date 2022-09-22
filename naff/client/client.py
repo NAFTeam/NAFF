@@ -39,7 +39,7 @@ from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
 from naff.client import errors
-from naff.client.const import GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH, logger
+from naff.client.const import GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH, get_logger
 from naff.client.errors import (
     BotException,
     ExtensionLoadException,
@@ -279,7 +279,7 @@ class Client(
         **kwargs,
     ) -> None:
         if logger is MISSING:
-            logger = constants.logger()
+            logger = constants.get_logger()
 
         if basic_logging:
             logging.basicConfig()
@@ -602,7 +602,7 @@ class Client(
             except Exception:  # noqa : S110
                 pass
 
-        logger().error(
+        get_logger().error(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 

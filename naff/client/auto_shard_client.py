@@ -74,7 +74,7 @@ class AutoShardedClient(Client):
 
     async def stop(self) -> None:
         """Shutdown the bot."""
-        self.state.client.logger.debug("Stopping the bot.")
+        self.logger.debug("Stopping the bot.")
         self._ready.clear()
         await self.http.close()
         await asyncio.gather(*(state.stop() for state in self._connection_states))
