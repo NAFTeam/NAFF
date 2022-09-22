@@ -1,5 +1,5 @@
 aiohttp
 attrs
 discord-typings>=0.5.1
-tomli
 jurigged>=0.5.3
+tomli
