@@ -32,7 +32,7 @@ class Encryption:
                 raise RuntimeError(f"Unsupported encryption type requested: {mode}")
 
     def xsalsa20_poly1305_lite(self, header: bytes, data) -> bytes:
-        # todo: hi!
+        # todo: redundant but might be useful for some weird edge case
         ...
 
     def xsalsa20_poly1305_suffix(self, header: bytes, data) -> bytes:

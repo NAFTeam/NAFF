@@ -117,7 +117,6 @@ async def test_channels(bot: Client, guild: Guild) -> None:
                 assert channel.category == guild_category
 
             if isinstance(channel, MessageableMixin) and not isinstance(channel, GuildVoice):
-                # todo: remove the guild voice exception when text-in-voice releases
                 _m = await channel.send("test")
                 assert _m.channel == channel
 
