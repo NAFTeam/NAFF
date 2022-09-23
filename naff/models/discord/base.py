@@ -34,7 +34,6 @@ class ClientObject(DictSerializationMixin):
     def update_from_dict(self, data) -> T:
         data = self._process_dict(data, self._client)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
-            # todo improve
             setattr(self, key, value)
 
         return self

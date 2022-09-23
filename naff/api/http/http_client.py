@@ -6,6 +6,7 @@ from urllib.parse import quote as _uriquote
 from weakref import WeakValueDictionary
 
 import aiohttp
+import discord_typings
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
@@ -34,12 +35,12 @@ from naff.client.const import (
 )
 import naff.client.const as constants
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
+from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.input_utils import response_decode, OverriddenJson
 from naff.client.utils.serializer import dict_filter
 from naff.models import CooldownSystem
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .route import Route
-import discord_typings
 
 __all__ = ("HTTPClient",)
 
@@ -219,6 +220,13 @@ class HTTPClient(
 
         if isinstance(payload, dict):
             payload = dict_filter(payload)
+
+            for k, v in payload.items():
+                if isinstance(v, DictSerializationMixin):
+                    payload[k] = v.to_dict()
+                if isinstance(v, (list, tuple, set)):
+                    payload[k] = [i.to_dict() if isinstance(i, DictSerializationMixin) else i for i in v]
+
         else:
             payload = [dict_filter(x) if isinstance(x, dict) else x for x in payload]
 
