@@ -184,6 +184,7 @@ class Client(
     processors.AutoModEvents,
     processors.ChannelEvents,
     processors.GuildEvents,
+    processors.IntegrationEvents,
     processors.MemberEvents,
     processors.MessageEvents,
     processors.ReactionEvents,

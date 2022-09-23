@@ -44,6 +44,7 @@ __all__ = (
     "ScheduledEventType",
     "ScheduledEventStatus",
     "AuditLogEventType",
+    "InteractionPermissionTypes",
 )
 
 
@@ -567,6 +568,14 @@ class InteractionTypes(CursedIntEnum):
     MESSAGE_COMPONENT = 3
     AUTOCOMPLETE = 4
     MODAL_RESPONSE = 5
+
+
+class InteractionPermissionTypes(CursedIntEnum):
+    """The type of interaction permission received by discord."""
+
+    ROLE = 1
+    USER = 2
+    CHANNEL = 3
 
 
 class ButtonStyles(CursedIntEnum):

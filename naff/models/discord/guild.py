@@ -36,6 +36,7 @@ from .enums import (
 )
 from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
+from naff.models.discord.app_perms import CommandPermissions, ApplicationCommandPermission
 
 if TYPE_CHECKING:
     from naff.client.client import Client
@@ -207,6 +208,8 @@ class Guild(BaseGuild):
     """Stage instances in the guild."""
     chunked = field(factory=asyncio.Event, metadata=no_export_meta)
     """An event that is fired when this guild has been chunked"""
+    command_permissions: dict[Snowflake_Type, CommandPermissions] = field(factory=dict, metadata=no_export_meta)
+    """A cache of all command permissions for this guild"""
 
     _owner_id: Snowflake_Type = field(converter=to_snowflake)
     _channel_ids: Set[Snowflake_Type] = field(factory=set)
@@ -487,6 +490,26 @@ class Guild(BaseGuild):
         """
         data = await self._client.http.get_guild_channels(self.id)
         return [self._client.cache.place_channel_data(channel_data) for channel_data in data]
+
+    async def fetch_app_cmd_perms(self) -> dict[Snowflake_Type, "CommandPermissions"]:
+        """
+        Fetch the application command permissions for this guild.
+
+        Returns:
+            The application command permissions for this guild.
+
+        """
+        data = await self._client.http.batch_get_application_command_permissions(self._client.app.id, self.id)
+
+        for command in data:
+            command_permissions = CommandPermissions(client=self._client, command_id=command["id"], guild=self)
+            perms = [ApplicationCommandPermission.from_dict(perm, self) for perm in command["permissions"]]
+
+            command_permissions.update_permissions(*perms)
+
+            self.command_permissions[int(command["id"])] = command_permissions
+
+        return self.command_permissions
 
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
