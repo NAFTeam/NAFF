@@ -33,7 +33,7 @@ class DictSerializationMixin:
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
         if const.kwarg_spam:
             unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-            const.get_logger.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
+            const.get_logger().debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
