@@ -221,7 +221,6 @@ class Guild(BaseGuild):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
-        # todo: find a away to prevent this loop from blocking the event loop
         data = super()._process_dict(data, client)
         guild_id = data["id"]
 

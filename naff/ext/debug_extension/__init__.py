@@ -1,5 +1,6 @@
-import logging
+import asyncio
 import platform
+import tracemalloc
 
 from naff import Client, Extension, listen, slash_command, InteractionContext, Timestamp, TimestampStyles, Intents
 from naff.client.const import logger, __version__, __py_version__
@@ -14,10 +15,18 @@ __all__ = ("DebugExtension",)
 
 class DebugExtension(DebugExec, DebugAppCMD, DebugExts, Extension):
     def __init__(self, bot: Client) -> None:
+        logger.info("Debug Extension is mounting!")
+
         super().__init__(bot)
         self.add_ext_check(checks.is_owner())
 
-        logger.info("Debug Extension is growing!")
+        tracemalloc.start()
+        logger.warning("Tracemalloc started")
+
+    async def async_start(self) -> None:
+        loop = asyncio.get_running_loop()
+        loop.set_debug(True)
+        logger.warning("Asyncio debug mode is enabled")
 
     @listen()
     async def on_startup(self) -> None:

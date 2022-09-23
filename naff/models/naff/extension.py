@@ -1,15 +1,17 @@
 import asyncio
 import inspect
-from typing import Awaitable, List, TYPE_CHECKING, Callable, Coroutine, Optional
+from typing import Awaitable, Dict, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
 import naff.models.naff as naff
 from naff.client.const import logger, MISSING
 from naff.client.utils.misc_utils import wrap_partial
 from naff.models.naff.tasks import Task
+from naff.models.naff import ContextMenu
 
 if TYPE_CHECKING:
     from naff.client import Client
-    from naff.models.naff import AutoDefer, BaseCommand, Listener
+    from naff.models.discord import Snowflake_Type
+    from naff.models.naff import AutoDefer, BaseCommand, InteractionCommand, Listener
     from naff.models.naff import Context
 
 
@@ -38,6 +40,7 @@ class Extension:
         extension_checks str: A list of checks to be ran on any command in this extension
         extension_prerun List: A list of coroutines to be run before any command in this extension
         extension_postrun List: A list of coroutines to be run after any command in this extension
+        interaction_tree Dict: A dictionary of registered application commands in a tree
 
     """
 
@@ -49,6 +52,7 @@ class Extension:
     extension_prerun: List
     extension_postrun: List
     extension_error: Optional[Callable[..., Coroutine]]
+    interaction_tree: Dict["Snowflake_Type", Dict[str, "InteractionCommand" | Dict[str, "InteractionCommand"]]]
     _commands: List
     _listeners: List
     auto_defer: "AutoDefer"
@@ -61,6 +65,7 @@ class Extension:
         new_cls.extension_prerun = []
         new_cls.extension_postrun = []
         new_cls.extension_error = None
+        new_cls.interaction_tree = {}
         new_cls.auto_defer = MISSING
 
         new_cls.description = kwargs.get("Description", None)
@@ -89,7 +94,23 @@ class Extension:
                     elif isinstance(val, naff.HybridCommand):
                         bot.add_hybrid_command(val)
                     elif isinstance(val, naff.InteractionCommand):
-                        bot.add_interaction(val)
+                        if not bot.add_interaction(val):
+                            continue
+                        base, group, sub, *_ = val.resolved_name.split(" ") + [None, None]
+                        for scope in val.scopes:
+                            if scope not in new_cls.interaction_tree:
+                                new_cls.interaction_tree[scope] = {}
+                            if group is None or isinstance(val, ContextMenu):
+                                new_cls.interaction_tree[scope][val.resolved_name] = val
+                            elif group is not None:
+                                if base not in new_cls.interaction_tree[scope]:
+                                    new_cls.interaction_tree[scope][base] = {}
+                                if sub is None:
+                                    new_cls.interaction_tree[scope][base][group] = val
+                                else:
+                                    if group not in new_cls.interaction_tree[scope][base]:
+                                        new_cls.interaction_tree[scope][base][group] = {}
+                                    new_cls.interaction_tree[scope][base][group][sub] = val
                     else:
                         bot.add_prefixed_command(val)
 

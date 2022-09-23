@@ -216,7 +216,7 @@ class Encoder:
         self.lib_opus.opus_encoder_ctl(self.encoder, EncoderCTL.CTL_SET_PLP, self.expected_packet_loss)
 
     def encode(self, pcm: bytes) -> bytes:
-        """todo: doc"""
+        """Encode a frame of audio"""
         max_data_bytes = len(pcm)
         pcm = ctypes.cast(pcm, c_int16_ptr)
         data = (ctypes.c_char * max_data_bytes)()
