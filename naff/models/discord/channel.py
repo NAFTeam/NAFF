@@ -2360,6 +2360,8 @@ class GuildForum(GuildChannel):
                     if not tag:
                         continue
                     tag = tag.id
+                elif isinstance(tag, dict):
+                    tag = tag["id"]
                 processed.append(tag)
 
             applied_tags = processed
