@@ -133,7 +133,7 @@ class GuildRequests(CanRequest):
         )
         payload = kwargs.copy()
         for key, value in kwargs.items():
-            if key not in expected or value is None:  # todo review
+            if key not in expected or value is None:
                 del payload[key]
 
         # only do the request if there is something to modify
