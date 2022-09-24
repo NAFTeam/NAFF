@@ -91,7 +91,6 @@ class DictSerializationMixin:
         """
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
-            # todo improve
             setattr(self, key, value)
 
         return self

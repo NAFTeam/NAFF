@@ -35,6 +35,7 @@ __all__ = (
     "AutoModCreated",
     "AutoModUpdated",
     "AutoModDeleted",
+    "ApplicationCommandPermissionsUpdate",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
@@ -62,7 +63,6 @@ __all__ = (
     "MessageReactionRemove",
     "MessageReactionRemoveAll",
     "MessageUpdate",
-    "ModalResponse",
     "PresenceUpdate",
     "RoleCreate",
     "RoleDelete",
@@ -95,9 +95,9 @@ if TYPE_CHECKING:
     from naff.models.discord.sticker import Sticker
     from naff.models.discord.voice_state import VoiceState
     from naff.models.discord.stage_instance import StageInstance
-    from naff.models.naff.context import ModalContext
     from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
     from naff.models.discord.reaction import Reaction
+    from naff.models.discord.app_perms import ApplicationCommandPermission
 
 
 @define(kw_only=False)
@@ -127,6 +127,13 @@ class AutoModDeleted(AutoModCreated):
     """Dispatched when an auto mod rule is deleted"""
 
     ...
+
+
+@define(kw_only=False)
+class ApplicationCommandPermissionsUpdate(BaseEvent):
+    guild_id: "Snowflake_Type" = field(metadata=docs("The guild the command permissions were updated in"))
+    application_id: "Snowflake_Type" = field(metadata=docs("The application the command permissions were updated for"))
+    permissions: List["ApplicationCommandPermission"] = field(factory=list, metadata=docs("The updated permissions"))
 
 
 @define(kw_only=False)
@@ -526,14 +533,6 @@ class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = field()
-
-
-@define(kw_only=False)
-class ModalResponse(BaseEvent):
-    """Dispatched when a modal receives a response"""
-
-    context: "ModalContext" = field()
-    """The context data of the modal"""
 
 
 @define(kw_only=False)

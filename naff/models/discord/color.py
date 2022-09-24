@@ -42,7 +42,7 @@ class Color:
             if re.match(hex_regex, color):
                 self.hex = color
             else:
-                self.value = BrandColors[color].value  # todo exception handling for better message
+                self.value = BrandColors[color].value
         else:
             raise TypeError
 

@@ -105,11 +105,14 @@ class HTTPException(NaffException):
         super().__init__(f"{self.status}|{self.response.reason}: {f'({self.code}) ' if self.code else ''}{self.text}")
 
     def __str__(self) -> str:
-        try:
-            errors = self.search_for_message(self.errors)
-        except (KeyError, ValueError, TypeError):
-            errors = [self.text]
-        out = f"HTTPException: {self.status}|{self.response.reason}: " + "\n".join(errors)
+        if self.errors:
+            try:
+                errors = self.search_for_message(self.errors)
+            except (KeyError, ValueError, TypeError):
+                errors = [self.text]
+            out = f"HTTPException: {self.status}|{self.response.reason}: " + "\n".join(errors)
+        else:
+            out = f"HTTPException: {self.status}|{self.response.reason} || {self.text}"
         return out
 
     def __repr__(self) -> str:
