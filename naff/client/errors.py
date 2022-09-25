@@ -106,7 +106,10 @@ class HTTPException(NaffException):
 
     def __str__(self) -> str:
         if self.errors:
-            errors = self.search_for_message(self.errors)
+            try:
+                errors = self.search_for_message(self.errors)
+            except (KeyError, ValueError, TypeError):
+                errors = [self.text]
             out = f"HTTPException: {self.status}|{self.response.reason}: " + "\n".join(errors)
         else:
             out = f"HTTPException: {self.status}|{self.response.reason} || {self.text}"
