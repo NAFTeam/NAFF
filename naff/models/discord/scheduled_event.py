@@ -37,7 +37,7 @@ class ScheduledEvent(DiscordObject):
     """
     Privacy level of the scheduled event
 
-    ??? note:
+    ??? note
         Discord only has `GUILD_ONLY` at the momment.
     """
     status: Union[ScheduledEventStatus, int] = field(converter=ScheduledEventStatus)
@@ -61,8 +61,8 @@ class ScheduledEvent(DiscordObject):
         """
         Returns the user who created this event.
 
-        !!! note:     Events made before October 25th, 2021 will not
-        have a creator.
+        !!! note
+            Events made before October 25th, 2021 will not have a creator.
 
         """
         return await self._client.cache.fetch_user(self._creator_id) if self._creator_id else None
@@ -128,7 +128,7 @@ class ScheduledEvent(DiscordObject):
             before: Snowflake of a user to get before
             after: Snowflake of a user to get after
 
-        !!! note:
+        !!! note
             This method is paginated
 
         """
@@ -186,7 +186,7 @@ class ScheduledEvent(DiscordObject):
             cover_image: the cover image of the scheduled event
             reason: The reason for editing the event
 
-        !!! note:
+        !!! note
             If updating event_type to EXTERNAL:
                 `channel_id` is required and must be set to null
 

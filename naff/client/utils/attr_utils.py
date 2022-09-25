@@ -24,11 +24,19 @@ field = partial(attrs.field, **field_defaults)  # type: ignore
 
 
 def docs(doc_string: str) -> Dict[str, str]:
-    """Makes it easier to quickly type attr documentation."""
+    """
+    Makes it easier to quickly type attr documentation.
+
+    Args:
+        doc_string: The documentation string.
+
+    Returns:
+        The processed metadata dict
+    """
     return {"docs": doc_string}
 
 
-def str_validator(self, attribute: attrs.Attribute, value: Any) -> None:
+def str_validator(self: Any, attribute: attrs.Attribute, value: Any) -> None:
     """
     Validates that the value is a string. Helps convert and ives a warning if it isn't.
 

@@ -112,7 +112,7 @@ class Member(User):  # for typehinting purposes, we can lie
         self,
         *,
         nickname: Absent[str] = ...,
-        roles: Absent[Iterable["Snowflake_Type"]] = ...,
+        roles: Absent[Iterable[Snowflake_Type]] = ...,
         mute: Absent[bool] = ...,
         deaf: Absent[bool] = ...,
         channel_id: Absent["Snowflake_Type"] = ...,

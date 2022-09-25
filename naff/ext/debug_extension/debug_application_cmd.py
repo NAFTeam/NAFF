@@ -73,7 +73,7 @@ class DebugAppCMD(Extension):
         required=False,
     )
     async def cmd_lookup(
-        self, ctx: InteractionContext, cmd_id: str = None, scope: str = None, remote: bool = False
+        self, ctx: InteractionContext, cmd_id: str, scope: str, remote: bool = False
     ) -> Optional[Message]:
         await ctx.defer()
         try:

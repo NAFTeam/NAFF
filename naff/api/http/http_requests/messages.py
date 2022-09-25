@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, cast
 
 import discord_typings
 
-from naff.client.const import MISSING, Absent
+from naff.models.naff.protocols import CanRequest
+
 from ..route import Route
 
 __all__ = ("MessageRequests",)
@@ -13,27 +14,32 @@ if TYPE_CHECKING:
     from naff import UPLOADABLE_TYPE
 
 
-class MessageRequests:
-    request: Any
-
+class MessageRequests(CanRequest):
     async def create_message(
-        self, payload: dict, channel_id: "Snowflake_Type", files: list["UPLOADABLE_TYPE"] | None = None
+        self,
+        payload: dict,
+        channel_id: "Snowflake_Type",
+        files: list["UPLOADABLE_TYPE"] | None = None,  # todo type payload
     ) -> discord_typings.MessageData:
         """
         Send a message to the specified channel.
 
         Args:
             payload: The message to send
+            channel_id: id of the channel to send message in
             files: Any files to send with this message
 
         Returns:
             The resulting message object
 
         """
-        return await self.request(Route("POST", f"/channels/{channel_id}/messages"), payload=payload, files=files)
+        result = await self.request(
+            Route("POST", f"/channels/{int(channel_id)}/messages"), payload=payload, files=files
+        )
+        return cast(discord_typings.MessageData, result)
 
     async def delete_message(
-        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: Absent[str] = MISSING
+        self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type", reason: str | None = None
     ) -> None:
         """
         Deletes a message from the specified channel.
@@ -44,10 +50,10 @@ class MessageRequests:
             reason: The reason for this action
 
         """
-        await self.request(Route("DELETE", f"/channels/{channel_id}/messages/{message_id}"), reason=reason)
+        await self.request(Route("DELETE", f"/channels/{int(channel_id)}/messages/{int(message_id)}"), reason=reason)
 
     async def bulk_delete_messages(
-        self, channel_id: "Snowflake_Type", message_ids: List["Snowflake_Type"], reason: Absent[str] = MISSING
+        self, channel_id: "Snowflake_Type", message_ids: list["Snowflake_Type"], reason: str | None = None
     ) -> None:
         """
         Delete multiple messages in a single request.
@@ -58,10 +64,10 @@ class MessageRequests:
             reason: The reason for this action
 
         """
-        return await self.request(
-            Route("POST", f"/channels/{channel_id}/messages/bulk-delete"),
-            payload={"messages": message_ids},
-            reason=reason,
+        payload = {"messages": [int(message_id) for message_id in message_ids]}
+
+        await self.request(
+            Route("POST", f"/channels/{int(channel_id)}/messages/bulk-delete"), payload=payload, reason=reason
         )
 
     async def get_message(
@@ -78,7 +84,8 @@ class MessageRequests:
             message or None
 
         """
-        return await self.request(Route("GET", f"/channels/{channel_id}/messages/{message_id}"))
+        result = await self.request(Route("GET", f"/channels/{int(channel_id)}/messages/{int(message_id)}"))
+        return cast(discord_typings.MessageData, result)
 
     async def pin_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> None:
         """
@@ -89,7 +96,7 @@ class MessageRequests:
             message_id: Message to pin
 
         """
-        return await self.request(Route("PUT", f"/channels/{channel_id}/pins/{message_id}"))
+        await self.request(Route("PUT", f"/channels/{int(channel_id)}/pins/{int(message_id)}"))
 
     async def unpin_message(self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type") -> None:
         """
@@ -100,7 +107,7 @@ class MessageRequests:
             message_id: Message to unpin
 
         """
-        return await self.request(Route("DELETE", f"/channels/{channel_id}/pins/{message_id}"))
+        await self.request(Route("DELETE", f"/channels/{int(channel_id)}/pins/{int(message_id)}"))
 
     async def edit_message(
         self,
@@ -122,9 +129,10 @@ class MessageRequests:
             Message object of edited message
 
         """
-        return await self.request(
-            Route("PATCH", f"/channels/{channel_id}/messages/{message_id}"), payload=payload, files=files
+        result = await self.request(
+            Route("PATCH", f"/channels/{int(channel_id)}/messages/{int(message_id)}"), payload=payload, files=files
         )
+        return cast(discord_typings.MessageData, result)
 
     async def crosspost_message(
         self, channel_id: "Snowflake_Type", message_id: "Snowflake_Type"
@@ -139,4 +147,5 @@ class MessageRequests:
             message object
 
         """
-        return await self.request(Route("POST", f"/channels/{channel_id}/messages/{message_id}/crosspost"))
+        result = await self.request(Route("POST", f"/channels/{int(channel_id)}/messages/{int(message_id)}/crosspost"))
+        return cast(discord_typings.MessageData, result)

@@ -13,7 +13,8 @@ class Buckets(IntEnum):
     """
     Outlines the cooldown buckets that may be used. Should a bucket for guilds exist, and the command is invoked in a DM, a sane default will be used.
 
-    ??? note     To add your own, override this
+    ??? note
+         To add your own, override this
 
     """
 

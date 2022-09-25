@@ -159,7 +159,7 @@ class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
 
-    Note:
+    !!! note
         Only used by system embeds, not bots
 
     Attributes:

@@ -18,7 +18,7 @@ plugins = "naff.ext.mypy"
 ```
 """
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, Type
 from mypy.plugin import Plugin, ClassDefContext
 from mypy.plugins import attrs
 
@@ -36,6 +36,6 @@ class NaffPlugin(Plugin):
         return None
 
 
-def plugin(version: str) -> NaffPlugin:
+def plugin(version: str) -> Type[NaffPlugin]:
     # ignore version argument if the plugin works with all mypy versions.
     return NaffPlugin

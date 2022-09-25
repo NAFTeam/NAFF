@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
+from warnings import warn
 
 from naff.client.const import MISSING, logger, Absent
 from naff.client.errors import HTTPException, TooManyChanges
@@ -93,7 +94,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         """
         Get a list of mutual guilds shared between this user and the client.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         return [
@@ -144,7 +145,7 @@ class User(BaseUser):
         """
         Returns the member object for all guilds both the bot and the user are in.
 
-        !!! Note
+        !!! note
             This will only be accurate if the guild members are cached internally
         """
         member_objs = [
@@ -387,7 +388,7 @@ class Member(DiscordObject, _SendDMMixin):
             If `member` has both permissions, `True` gets returned.
 
         Args:
-            permissions: The permission(s) to check whether the user has it.
+            *permissions: The permission(s) to check whether the user has it.
 
         """
         # Get the user's permissions
@@ -447,7 +448,7 @@ class Member(DiscordObject, _SendDMMixin):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """
@@ -514,7 +515,7 @@ class Member(DiscordObject, _SendDMMixin):
         Checks if the user has the given role(s).
 
         Args:
-            roles: The role(s) to check whether the user has it.
+            *roles: The role(s) to check whether the user has it.
 
         """
         return all(to_snowflake(role) in self._role_ids for role in roles)
@@ -599,13 +600,19 @@ class Member(DiscordObject, _SendDMMixin):
         """
         await self._client.http.remove_guild_member(self._guild_id, self.id, reason=reason)
 
-    async def ban(self, delete_message_days: int = 0, reason: Absent[str] = MISSING) -> None:
+    async def ban(
+        self, delete_message_days: Absent[int] = MISSING, delete_message_seconds: int = 0, reason: Absent[str] = MISSING
+    ) -> None:
         """
         Ban a member from the guild.
 
         Args:
-            delete_message_days: The number of days of messages to delete
+            delete_message_days: (deprecated) The number of days of messages to delete
+            delete_message_seconds: The number of seconds of messages to delete
             reason: The reason for this ban
 
         """
-        await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_days, reason=reason)
+        if delete_message_days is not MISSING:
+            warn("delete_message_days  is deprecated and will be removed in a future update", DeprecationWarning)
+            delete_message_seconds = delete_message_days * 3600
+        await self._client.http.create_guild_ban(self._guild_id, self.id, delete_message_seconds, reason=reason)

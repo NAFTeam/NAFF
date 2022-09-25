@@ -135,7 +135,7 @@ class ConnectionState:
             status: The status for the bot to be. i.e. online, afk, etc.
             activity: The activity for the bot to be displayed as doing.
 
-        note::
+        !!! note
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """
@@ -193,7 +193,7 @@ class ConnectionState:
         return self.client.cache.get_bot_voice_state(guild_id)
 
     async def voice_connect(
-        self, guild_id, channel_id, muted: bool = False, deafened: bool = False
+        self, guild_id: "Snowflake_Type", channel_id: "Snowflake_Type", muted: bool = False, deafened: bool = False
     ) -> "naff.ActiveVoiceState":
         """
         Connect to a voice channel.

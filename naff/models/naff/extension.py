@@ -241,7 +241,7 @@ class Extension:
         """
         Add a coroutine to be run **before** all commands in this Extension.
 
-        Note:
+        !!! note
             Pre-runs will **only** be run if the commands checks pass
 
         ??? Hint "Example Usage:"

@@ -19,6 +19,7 @@ from typing import (
     Mapping,
     NoReturn,
     Optional,
+    Sequence,
     Type,
     Union,
     overload,
@@ -33,6 +34,7 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
+from naff.models.naff.context import SendableContext
 from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
@@ -194,23 +196,28 @@ class Client(
     processors.VoiceEvents,
 ):
     """
+
     The bot client.
 
-    note:
-        By default, all non-privileged intents will be enabled
+    Args:
+        intents: The intents to use
 
-    Attributes:
-        intents: Union[int, Intents]: The intents to use
+        default_prefix: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
+        generate_prefixes: A coroutine that returns a string or an iterable of strings to determine prefixes.
+        status: The status the bot should log in with (IE ONLINE, DND, IDLE)
+        activity: The activity the bot should log in "playing"
 
-        default_prefix: Union[str, Iterable[str]]: The default prefix (or prefixes) to use for prefixed commands. Defaults to your bot being mentioned.
-        generate_prefixes: Callable[..., Coroutine]: A coroutine that returns a string or an iterable of strings to determine prefixes.
-        status: Status: The status the bot should log in with (IE ONLINE, DND, IDLE)
-        activity: Union[Activity, str]: The activity the bot should log in "playing"
+        sync_interactions: Should application commands be synced with discord?
+        delete_unused_application_cmds: Delete any commands from discord that aren't implemented in this client
+        enforce_interaction_perms: Enforce discord application command permissions, locally
+        fetch_members: Should the client fetch members from guilds upon startup (this will delay the client being ready)
 
-        sync_interactions: bool: Should application commands be synced with discord?
-        delete_unused_application_cmds: bool: Delete any commands from discord that aren't implemented in this client
-        enforce_interaction_perms: bool: Enforce discord application command permissions, locally
-        fetch_members: bool: Should the client fetch members from guilds upon startup (this will delay the client being ready)
+        auto_defer: A system to automatically defer commands after a set duration
+        interaction_context: The object to instantiate for Interaction Context
+        prefixed_context: The object to instantiate for Prefixed Context
+        component_context: The object to instantiate for Component Context
+        autocomplete_context: The object to instantiate for Autocomplete Context
+        modal_context: The object to instantiate for Modal Context
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
@@ -220,25 +227,24 @@ class Client(
         modal_context: Type[ModalContext]: The object to instantiate for Modal Context
         hybrid_context: Type[HybridContext]: The object to instantiate for Hybrid Context
 
-        global_pre_run_callback: Callable[..., Coroutine]: A coroutine to run before every command is executed
-        global_post_run_callback: Callable[..., Coroutine]: A coroutine to run after every command is executed
-        send_command_tracebacks: bool: Should the traceback of command errors be sent in reply to the command invocation
+        total_shards: The total number of shards in use
+        shard_id: The zero based int ID of this shard
 
-        total_shards: int: The total number of shards in use
-        shard_id: int: The zero based int ID of this shard
-
-        debug_scope: Snowflake_Type: Force all application commands to be registered within this scope
-        asyncio_debug: bool: Enable asyncio debug features
-        basic_logging: bool: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
-        logging_level: int: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
-        logger: logging.Logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
+        debug_scope: Force all application commands to be registered within this scope
+        basic_logging: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
+        logging_level: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
+        logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
 
     Optionally, you can configure the caches here, by specifying the name of the cache, followed by a dict-style object to use.
     It is recommended to use `smart_cache.create_cache` to configure the cache here.
     as an example, this is a recommended attribute `message_cache=create_cache(250, 50)`,
 
-    !!! note
+    ???+ note "Intents Note"
+        By default, all non-privileged intents will be enabled
+
+    ???+ note "Caching Note"
         Setting a message cache hard limit to None is not recommended, as it could result in extremely high memory usage, we suggest a sane limit.
+
 
     """
 
@@ -280,11 +286,13 @@ class Client(
 
         # Set Up logger and overwrite the constant
         self.logger = logger
-        """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported"""
+        """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`.
+        !!! note
+            Different loggers with multiple clients are not supported"""
         constants.logger = logger
 
         # Configuration
-        self.sync_interactions = sync_interactions
+        self.sync_interactions: bool = sync_interactions
         """Should application commands be synced"""
         self.del_unused_app_cmd: bool = delete_unused_application_cmds
         """Should unused application commands be deleted?"""
@@ -528,6 +536,16 @@ class Client(
             bot: A reference to the client
             message: A message to determine the prefix from.
 
+        Example:
+            ```python
+            async def generate_prefixes(bot, message):
+                if message.guild.id == 870046872864165888:
+                    return ["!"]
+                return bot.default_prefix
+
+            bot = Client(generate_prefixes=generate_prefixes, ...)
+            ```
+
         Returns:
             A string or an iterable of strings to use as a prefix. By default, this will return `client.default_prefix`
 
@@ -594,7 +612,7 @@ class Client(
         """
         self.default_error_handler(source, error)
 
-    async def on_command_error(self, ctx: Context, error: Exception, *args, **kwargs) -> None:
+    async def on_command_error(self, ctx: SendableContext, error: Exception, *args, **kwargs) -> None:
         """
         Catches all errors dispatched by commands.
 
@@ -818,15 +836,12 @@ class Client(
 
         self.dispatch(events.Login())
 
-    async def astart(self, token) -> None:
+    async def astart(self, token: str) -> None:
         """
         Asynchronous method to start the bot.
 
         Args:
             token: Your bot's token
-
-        Returns:
-
         """
         await self.login(token)
         try:
@@ -834,16 +849,12 @@ class Client(
         finally:
             await self.stop()
 
-    def start(self, token) -> None:
+    def start(self, token: str) -> None:
         """
         Start the bot.
 
         info:
             This is the recommended method to start the bot
-
-        Args:
-            token: Your bot's token
-
         """
         try:
             asyncio.run(self.astart(token))
@@ -947,7 +958,7 @@ class Client(
             The context of the modal response
 
         Raises:
-            `asyncio.TimeoutError` if no response is received that satisfies the predicate before timeout seconds have passed
+            asyncio.TimeoutError: if no response is received that satisfies the predicate before timeout seconds have passed
 
         """
         author = to_snowflake(author) if author else None
@@ -984,7 +995,7 @@ class Client(
             `Component` that was invoked. Use `.context` to get the `ComponentContext`.
 
         Raises:
-            `asyncio.TimeoutError` if timed out
+            asyncio.TimeoutError: if timed out
 
         """
         if not (messages or components):
@@ -1117,7 +1128,7 @@ class Client(
             prefixed_base = self.prefixed_commands.get(str(command.name))
             if not prefixed_base:
                 prefixed_base = _base_subcommand_generator(
-                    str(command.name), list(command.name.to_locale_dict().values()), str(command.description)
+                    str(command.name), list((command.name.to_locale_dict() or {}).values()), str(command.description)
                 )
                 self.add_prefixed_command(prefixed_base)
 
@@ -1128,7 +1139,7 @@ class Client(
                 if not prefixed_base:
                     prefixed_base = _base_subcommand_generator(
                         str(command.group_name),
-                        list(command.group_name.to_locale_dict().values()),
+                        list((command.group_name.to_locale_dict() or {}).values()),
                         str(command.group_description),
                         group=True,
                     )
@@ -1311,7 +1322,7 @@ class Client(
                     )
 
     async def synchronise_interactions(
-        self, *, scopes: list["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
+        self, *, scopes: Sequence["Snowflake_Type"] = MISSING, delete_commands: Absent[bool] = MISSING
     ) -> None:
         """
         Synchronise registered interactions with discord.
@@ -1485,7 +1496,7 @@ class Client(
         """
         Return a context object based on data passed.
 
-        note:
+        !!! note
             If you want to use custom context objects, this is the method to override. Your replacement must take the same arguments as this, and return a Context-like object.
 
         Args:
@@ -1756,14 +1767,14 @@ class Client(
             return ext[0]
         return None
 
-    def load_extension(self, name: str, package: str = None, **load_kwargs) -> None:
+    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Mapping[str, Any]) -> None:
         """
         Load an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
-            load_kwargs: The auto-filled mapping of the load keyword arguments
+            **load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1795,14 +1806,14 @@ class Client(
                     return
                 asyncio.create_task(self.synchronise_interactions())
 
-    def unload_extension(self, name, package=None, **unload_kwargs) -> None:
+    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Mapping[str, Any]) -> None:
         """
         Unload an extension with given arguments.
 
         Args:
             name: The name of the extension.
             package: The package the extension is in
-            unload_kwargs: The auto-filled mapping of the unload keyword arguments
+            **unload_kwargs: The auto-filled mapping of the unload keyword arguments
 
         """
         name = importlib.util.resolve_name(name, package)
@@ -1832,7 +1843,12 @@ class Client(
                 asyncio.create_task(self.synchronise_interactions())
 
     def reload_extension(
-        self, name, package=None, *, load_kwargs: Mapping[str, Any] = None, unload_kwargs: Mapping[str, Any] = None
+        self,
+        name: str,
+        package: str | None = None,
+        *,
+        load_kwargs: Mapping[str, Any] = None,
+        unload_kwargs: Mapping[str, Any] = None,
     ) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.
@@ -1865,7 +1881,7 @@ class Client(
         """
         Fetch a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1885,7 +1901,7 @@ class Client(
         """
         Get a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -1906,7 +1922,7 @@ class Client(
         """
         Creates a new guild based on a template.
 
-        note:
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Args:
@@ -1930,7 +1946,7 @@ class Client(
         """
         Fetch a channel.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1950,7 +1966,7 @@ class Client(
         """
         Get a channel.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -1966,7 +1982,7 @@ class Client(
         """
         Fetch a user.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -1986,7 +2002,7 @@ class Client(
         """
         Get a user.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -2002,7 +2018,7 @@ class Client(
         """
         Fetch a member from a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will either return a cached object, or query discord for the object
             if its not already cached.
 
@@ -2023,7 +2039,7 @@ class Client(
         """
         Get a member from a guild.
 
-        Note:
+        !!! note
             This method is an alias for the cache which will return a cached object.
 
         Args:
@@ -2043,7 +2059,9 @@ class Client(
         Fetch a scheduled event by id.
 
         Args:
-            event_id: The id of the scheduled event.
+            guild_id: The ID of the guild to get the scheduled event from
+            scheduled_event_id: The ID of the scheduled event to get
+            with_user_count: Whether to include the user count in the response
 
         Returns:
             The scheduled event if found, otherwise None
@@ -2176,7 +2194,7 @@ class Client(
             status: The status for the bot to be. i.e. online, afk, etc.
             activity: The activity for the bot to be displayed as doing.
 
-        Note::
+        !!! note
             Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
 
         """

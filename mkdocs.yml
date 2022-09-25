@@ -1,14 +1,15 @@
-site_name: naff
-repo_url: https://github.com/Discord-Snake-Pit/naff
-repo_name: Discord-Snake-Pit/naff
-copyright: Copyright &copy; 2021 - Present LordOfPolls
+site_name: NAFF
+repo_url: https://github.com/NAFTeam/NAFF
+repo_name: NAFTeam/NAFF
+copyright: Copyright &copy; 2021 - Present LordOfPolls – <a href="#__consent">Change cookie settings</a>
 docs_dir: docs/src
 edit_uri: edit/master/docs/src
+site_url: https://naff.info/
 
 theme:
   name: material
   favicon: images/favicon.png
-  custom_dir: docs/overrides
+  #  custom_dir: docs/overrides
   features:
     - header.autohide
     - navigation.instant
@@ -17,24 +18,37 @@ theme:
     - search.suggest
     - search.share
     - navigation.indexes
+    - navigation.prune
+    - toc.follow
+    - content.tooltips
+    - content.code.annotate
   palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: light green
-      accent: lime
       toggle:
-        icon: material/weather-night
+        icon: material/brightness-7
         name: Switch to dark mode
+
+    # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: green
-      accent: lime
       toggle:
-        icon: material/weather-sunny
-        name: Switch to light mode
+        icon: material/brightness-4
+        name: Switch to system preference
   icon:
     repo: fontawesome/brands/github-alt
-    logo: material/book
+
+  logo: images/logo-minified.svg
+  font:
+    code: Roboto Mono
+
 
 extra:
   social:
@@ -48,36 +62,77 @@ extra:
       link: https://trello.com/b/LVjnmYKt/dev-board
       name: Trello Board
   analytics:
-      provider: google
-      property: G-9R5R4B0NDT
+    provider: google
+    property: G-817ZC2FC56
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/heart
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/heart-broken
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Please create an <a href="https://github.com/NAFTeam/NAFF/issues/new/choose">issue on Github</a> if you have any suggestions.
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+    actions:
+      - accept
+      - reject
 
 extra_css:
   - extra.css
 
+extra_javascript:
+  - scripts/feedback.js
+
 plugins:
-- search
-- awesome-pages
-- autorefs
-- mkdocstrings:
-    custom_templates: docs/templates
-    enable_inventory: true
-    handlers:
-      python:
-        selection:
-          inherited_members: true
-          filters:
-            - "!^_"
-        rendering:
-          members_order: source
-          show_bases: True
-          show_root_toc_entry: False
-          group_by_category: False
-          heading_level: 2
-          show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
-    watch:
-      - naff
+  - search
+  - awesome-pages
+  - autorefs
+  #  - git-committers:
+  #        repository: NAFTeam/NAFF
+  #        branch: docs-refresh
+  #        token: !ENV [GH_TOKEN]
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+  - mkdocstrings:
+      #    custom_templates: docs/templates
+      enable_inventory: true
+      handlers:
+        python:
+          selection:
+            inherited_members: true
+            filters:
+              - "!^_"
+          rendering:
+            members_order: source
+            show_bases: True
+            show_root_toc_entry: False
+            group_by_category: False
+            heading_level: 3
+            show_if_no_docstring: False # temporary, this will be reverted to False once we're done with docs
+      watch:
+        - naff
+  - minify:
+      minify_html: true
+  # keep these at the bottom of the plugins list
+  - privacy:
+      externals: bundle
+      enabled: !ENV [ DEPLOY, False ]
+  - offline:
+      enabled: !ENV [ DEPLOY, False ]
+
 
 markdown_extensions:
+  - meta
   - tables
   - admonition
   - pymdownx.details
@@ -99,9 +154,12 @@ markdown_extensions:
   - pymdownx.tilde
   - toc:
       permalink: true
-      toc_depth: 2
+      toc_depth: 6
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tabbed:
       alternate_style: true
+  - abbr
+  - attr_list
+  - md_in_html

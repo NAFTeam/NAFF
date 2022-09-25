@@ -1,11 +1,12 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Sequence, cast, overload
 
 import discord_typings
 
-from naff.client.const import MISSING, Absent
+from naff.models.naff.protocols import CanRequest
 from naff.models.discord.enums import ChannelTypes, StagePrivacyLevel, Permissions, OverwriteTypes
-from ..route import Route
 from naff.client.utils.serializer import dict_filter_none
+
+from ..route import Route, PAYLOAD_TYPE
 
 __all__ = ("ChannelRequests",)
 
@@ -15,9 +16,7 @@ if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
 
 
-class ChannelRequests:
-    request: Any
-
+class ChannelRequests(CanRequest):
     async def get_channel(self, channel_id: "Snowflake_Type") -> discord_typings.ChannelData:
         """
         Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included.
@@ -29,16 +28,56 @@ class ChannelRequests:
             channel
 
         """
-        return await self.request(Route("GET", f"/channels/{channel_id}"))
+        result = await self.request(Route("GET", f"/channels/{int(channel_id)}"))
+        return cast(discord_typings.ChannelData, result)
+
+    @overload
+    async def get_channel_messages(
+        self,
+        channel_id: "Snowflake_Type",
+        limit: int = 50,
+    ) -> list[discord_typings.MessageData]:
+        ...
+
+    @overload
+    async def get_channel_messages(
+        self,
+        channel_id: "Snowflake_Type",
+        limit: int = 50,
+        *,
+        around: "Snowflake_Type | None" = None,
+    ) -> list[discord_typings.MessageData]:
+        ...
+
+    @overload
+    async def get_channel_messages(
+        self,
+        channel_id: "Snowflake_Type",
+        limit: int = 50,
+        *,
+        before: "Snowflake_Type | None" = None,
+    ) -> list[discord_typings.MessageData]:
+        ...
+
+    @overload
+    async def get_channel_messages(
+        self,
+        channel_id: "Snowflake_Type",
+        limit: int = 50,
+        *,
+        after: "Snowflake_Type | None" = None,
+    ) -> list[discord_typings.MessageData]:
+        ...
 
     async def get_channel_messages(
         self,
         channel_id: "Snowflake_Type",
         limit: int = 50,
-        around: Optional["Snowflake_Type"] = None,
-        before: Optional["Snowflake_Type"] = None,
-        after: Optional["Snowflake_Type"] = None,
-    ) -> List[discord_typings.MessageData]:
+        *,
+        around: "Snowflake_Type | None" = None,
+        before: "Snowflake_Type | None" = None,
+        after: "Snowflake_Type | None" = None,
+    ) -> list[discord_typings.MessageData]:
         """
         Get the messages for a channel.
 
@@ -53,39 +92,35 @@ class ChannelRequests:
             List of message dicts
 
         """
-        params: Dict[str, Union[int, str]] = {"limit": limit}
-
-        params_used = 0
-
-        if before:
-            params_used += 1
-            params["before"] = before
-        if after:
-            params_used += 1
-            params["after"] = after
-        if around:
-            params_used += 1
-            params["around"] = around
-
-        if params_used > 1:
+        params_count = sum(bool(param) for param in (before, after, around))
+        if params_count > 1:
             raise ValueError("`before` `after` and `around` are mutually exclusive, only one may be passed at a time.")
 
-        return await self.request(Route("GET", f"/channels/{channel_id}/messages"), params=params)
+        params: PAYLOAD_TYPE = {
+            "limit": limit,
+            "before": int(before) if before else None,
+            "after": int(after) if after else None,
+            "around": int(around) if around else None,
+        }
+        params = dict_filter_none(params)
+
+        result = await self.request(Route("GET", f"/channels/{int(channel_id)}/messages"), params=params)
+        return cast(list[discord_typings.MessageData], result)
 
     async def create_guild_channel(
         self,
         guild_id: "Snowflake_Type",
         name: str,
-        channel_type: Union["ChannelTypes", int],
-        topic: Absent[Optional[str]] = MISSING,
-        position: Absent[Optional[int]] = MISSING,
-        permission_overwrites: Absent[Optional[List[Union["PermissionOverwrite", dict]]]] = MISSING,
-        parent_id: "Snowflake_Type" = MISSING,
+        channel_type: "ChannelTypes | int",
+        topic: str | None = None,
+        position: int | None = None,
+        permission_overwrites: Sequence["PermissionOverwrite | dict"] | None = None,
+        parent_id: "Snowflake_Type | None" = None,
         nsfw: bool = False,
         bitrate: int = 64000,
         user_limit: int = 0,
         rate_limit_per_user: int = 0,
-        reason: Absent[str] = MISSING,
+        reason: str | None = None,
     ) -> discord_typings.ChannelData:
         """
         Create a channel in a guild.
@@ -108,33 +143,34 @@ class ChannelRequests:
             The created channel object
 
         """
-        payload = {
+        payload: PAYLOAD_TYPE = {
             "name": name,
             "type": channel_type,
             "topic": topic,
             "position": position,
             "rate_limit_per_user": rate_limit_per_user,
             "nsfw": nsfw,
-            "parent_id": parent_id,
-            "permission_overwrites": permission_overwrites,
+            "parent_id": int(parent_id) if parent_id else None,
+            "permission_overwrites": list(permission_overwrites) if permission_overwrites else None,
         }
-
-        if channel_type in (2, 13):
+        if channel_type in (ChannelTypes.GUILD_VOICE, ChannelTypes.GUILD_STAGE_VOICE):
             payload.update(
                 bitrate=bitrate,
                 user_limit=user_limit,
             )
+        payload = dict_filter_none(payload)
 
-        return await self.request(Route("POST", f"/guilds/{guild_id}/channels"), payload=payload, reason=reason)
+        result = await self.request(Route("POST", f"/guilds/{int(guild_id)}/channels"), payload=payload, reason=reason)
+        return cast(discord_typings.ChannelData, result)
 
     async def move_channel(
         self,
         guild_id: "Snowflake_Type",
         channel_id: "Snowflake_Type",
         new_pos: int,
-        parent_id: "Snowflake_Type" = None,
+        parent_id: "Snowflake_Type | None" = None,
         lock_perms: bool = False,
-        reason: Absent[str] = MISSING,
+        reason: str | None = None,
     ) -> None:
         """
         Move a channel.
@@ -148,14 +184,18 @@ class ChannelRequests:
             reason: An optional reason for the audit log
 
         """
-        payload = {"id": channel_id, "position": new_pos, "lock_permissions": lock_perms}
-        if parent_id:
-            payload["parent_id"] = parent_id
+        payload: PAYLOAD_TYPE = {
+            "id": int(channel_id),
+            "position": new_pos,
+            "parent_id": int(parent_id) if parent_id else None,
+            "lock_permissions": lock_perms,
+        }
+        payload = dict_filter_none(payload)
 
-        return await self.request(Route("PATCH", f"/guilds/{guild_id}/channels"), payload=payload, reason=reason)
+        await self.request(Route("PATCH", f"/guilds/{int(guild_id)}/channels"), payload=payload, reason=reason)
 
     async def modify_channel(
-        self, channel_id: "Snowflake_Type", data: dict, reason: Absent[str] = MISSING
+        self, channel_id: "Snowflake_Type", data: dict, reason: str | None = None
     ) -> discord_typings.ChannelData:
         """
         Update a channel's settings, returns the updated channel object on success.
@@ -169,9 +209,10 @@ class ChannelRequests:
             Channel object on success
 
         """
-        return await self.request(Route("PATCH", f"/channels/{channel_id}"), payload=data, reason=reason)
+        result = await self.request(Route("PATCH", f"/channels/{int(channel_id)}"), payload=data, reason=reason)
+        return cast(discord_typings.ChannelData, result)
 
-    async def delete_channel(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
+    async def delete_channel(self, channel_id: "Snowflake_Type", reason: str | None = None) -> None:
         """
         Delete the channel.
 
@@ -180,9 +221,9 @@ class ChannelRequests:
             reason: An optional reason for the audit log
 
         """
-        return await self.request(Route("DELETE", f"/channels/{channel_id}"), reason=reason)
+        await self.request(Route("DELETE", f"/channels/{int(channel_id)}"), reason=reason)
 
-    async def get_channel_invites(self, channel_id: "Snowflake_Type") -> List[discord_typings.InviteData]:
+    async def get_channel_invites(self, channel_id: "Snowflake_Type") -> list[discord_typings.InviteData]:
         """
         Get the invites for the channel.
 
@@ -193,7 +234,49 @@ class ChannelRequests:
             List of invite objects
 
         """
-        return await self.request(Route("GET", f"/channels/{channel_id}/invites"))
+        result = await self.request(Route("GET", f"/channels/{int(channel_id)}/invites"))
+        return cast(list[discord_typings.InviteData], result)
+
+    @overload
+    async def create_channel_invite(
+        self,
+        channel_id: "Snowflake_Type",
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        *,
+        reason: str | None = None,
+    ) -> discord_typings.InviteData:
+        ...
+
+    @overload
+    async def create_channel_invite(
+        self,
+        channel_id: "Snowflake_Type",
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        *,
+        target_user_id: "Snowflake_Type | None" = None,
+        reason: str | None = None,
+    ) -> discord_typings.InviteData:
+        ...
+
+    @overload
+    async def create_channel_invite(
+        self,
+        channel_id: "Snowflake_Type",
+        max_age: int = 86400,
+        max_uses: int = 0,
+        temporary: bool = False,
+        unique: bool = False,
+        *,
+        target_application_id: "Snowflake_Type | None" = None,
+        reason: str | None = None,
+    ) -> discord_typings.InviteData:
+        ...
 
     async def create_channel_invite(
         self,
@@ -202,10 +285,10 @@ class ChannelRequests:
         max_uses: int = 0,
         temporary: bool = False,
         unique: bool = False,
-        target_type: int = None,
-        target_user_id: "Snowflake_Type" = None,
-        target_application_id: "Snowflake_Type" = None,
-        reason: Absent[str] = MISSING,
+        *,
+        target_user_id: "Snowflake_Type | None" = None,
+        target_application_id: "Snowflake_Type | None" = None,
+        reason: str | None = None,
     ) -> discord_typings.InviteData:
         """
         Create an invite for the given channel.
@@ -216,31 +299,45 @@ class ChannelRequests:
             max_uses: max number of uses or 0 for unlimited. between 0 and 100
             temporary: whether this invite only grants temporary membership
             unique: if true, don't try to reuse a similar invite (useful for creating many unique one time use invites)
-            target_type: the type of target for this voice channel invite
-            target_user_id: the id of the user whose stream to display for this invite, required if target_type is 1, the user must be streaming in the channel
-            target_application_id: the id of the embedded application to open for this invite, required if target_type is 2, the application must have the EMBEDDED flag
+            target_user_id: the id of the user whose stream to display for this invite, the user must be streaming in the channel
+            target_application_id: the id of the embedded application to open for this invite, the application must have the EMBEDDED flag
             reason: An optional reason for the audit log
 
         Returns:
             an invite object
 
         """
-        payload = {"max_age": max_age, "max_uses": max_uses, "temporary": temporary, "unique": unique}
-        if target_type:
-            payload["target_type"] = target_type
-        if target_user_id:
-            payload["target_user_id"] = target_user_id
-        if target_application_id:
-            payload["target_application_id"] = target_application_id
+        params_count = sum(bool(param) for param in (target_user_id, target_application_id))
+        if params_count > 1:
+            raise ValueError(
+                "`target_type` and `target_user_id` are mutually exclusive, only one may be passed at a time."
+            )
 
-        return await self.request(Route("POST", f"/channels/{channel_id}/invites"), payload=payload, reason=reason)
+        payload: PAYLOAD_TYPE = {
+            "max_age": max_age,
+            "max_uses": max_uses,
+            "temporary": temporary,
+            "unique": unique,
+        }
+        if target_user_id:
+            payload["target_type"] = 1
+            payload["target_user_id"] = int(target_user_id)
+        if target_application_id:
+            payload["target_type"] = 2
+            payload["target_application_id"] = int(target_application_id)
+        payload = dict_filter_none(payload)
+
+        result = await self.request(
+            Route("POST", f"/channels/{int(channel_id)}/invites"), payload=payload, reason=reason
+        )
+        return cast(discord_typings.InviteData, result)
 
     async def get_invite(
         self,
         invite_code: str,
         with_counts: bool = False,
         with_expiration: bool = True,
-        scheduled_event_id: "Snowflake_Type" = None,
+        scheduled_event_id: "Snowflake_Type | None" = None,
     ) -> discord_typings.InviteData:
         """
         Get an invite object for a given code.
@@ -255,16 +352,17 @@ class ChannelRequests:
             an invite object
 
         """
-        params = dict_filter_none(
-            {
-                "with_counts": with_counts,
-                "with_expiration": with_expiration,
-                "guild_scheduled_event_id": scheduled_event_id,
-            }
-        )
-        return await self.request(Route("GET", f"/invites/{invite_code}", params=params))
+        params: PAYLOAD_TYPE = {
+            "with_counts": with_counts,
+            "with_expiration": with_expiration,
+            "guild_scheduled_event_id": int(scheduled_event_id) if scheduled_event_id else None,
+        }
+        params = dict_filter_none(params)
 
-    async def delete_invite(self, invite_code: str, reason: Absent[str] = MISSING) -> discord_typings.InviteData:
+        result = await self.request(Route("GET", f"/invites/{invite_code}", params=params))
+        return cast(discord_typings.InviteData, result)
+
+    async def delete_invite(self, invite_code: str, reason: str | None = None) -> discord_typings.InviteData:
         """
         Delete an invite.
 
@@ -276,16 +374,17 @@ class ChannelRequests:
             The deleted invite object
 
         """
-        return await self.request(Route("DELETE", f"/invites/{invite_code}"), reason=reason)
+        result = await self.request(Route("DELETE", f"/invites/{invite_code}"), reason=reason)
+        return cast(discord_typings.InviteData, result)
 
     async def edit_channel_permission(
         self,
         channel_id: "Snowflake_Type",
         overwrite_id: "Snowflake_Type",
-        allow: Union["Permissions", int],
-        deny: Union["Permissions", int],
-        perm_type: Union["OverwriteTypes", int],
-        reason: Absent[str] = MISSING,
+        perm_type: "OverwriteTypes | int",
+        allow: "Permissions | int" = 0,
+        deny: "Permissions | int" = 0,
+        reason: str | None = None,
     ) -> None:
         """
         Edit the channel permission overwrites for a user or role in a channel.
@@ -299,14 +398,16 @@ class ChannelRequests:
             reason: The reason for this action
 
         """
-        return await self.request(
-            Route("PUT", f"/channels/{channel_id}/permissions/{overwrite_id}"),
-            payload={"allow": allow, "deny": deny, "type": perm_type},
+        payload: PAYLOAD_TYPE = {"allow": allow, "deny": deny, "type": perm_type}
+
+        await self.request(
+            Route("PUT", f"/channels/{int(channel_id)}/permissions/{int(overwrite_id)}"),
+            payload=payload,
             reason=reason,
         )
 
     async def delete_channel_permission(
-        self, channel_id: "Snowflake_Type", overwrite_id: int, reason: Absent[str] = MISSING
+        self, channel_id: "Snowflake_Type", overwrite_id: "Snowflake_Type", reason: str | None = None
     ) -> None:
         """
         Delete a channel permission overwrite for a user or role in a channel.
@@ -317,7 +418,7 @@ class ChannelRequests:
             reason: An optional reason for the audit log
 
         """
-        return await self.request(Route("DELETE", f"/channels/{channel_id}/{overwrite_id}"), reason=reason)
+        await self.request(Route("DELETE", f"/channels/{int(channel_id)}/{int(overwrite_id)}"), reason=reason)
 
     async def follow_news_channel(
         self, channel_id: "Snowflake_Type", webhook_channel_id: "Snowflake_Type"
@@ -333,9 +434,10 @@ class ChannelRequests:
             Followed channel object
 
         """
-        return await self.request(
-            Route("POST", f"/channels/{channel_id}/followers"), payload={"webhook_channel_id": webhook_channel_id}
-        )
+        payload = {"webhook_channel_id": int(webhook_channel_id)}
+
+        result = await self.request(Route("POST", f"/channels/{int(channel_id)}/followers"), payload=payload)
+        return cast(discord_typings.FollowedChannelData, result)
 
     async def trigger_typing_indicator(self, channel_id: "Snowflake_Type") -> None:
         """
@@ -345,9 +447,9 @@ class ChannelRequests:
             channel_id: The id of the channel to "type" in
 
         """
-        return await self.request(Route("POST", f"/channels/{channel_id}/typing"))
+        await self.request(Route("POST", f"/channels/{int(channel_id)}/typing"))
 
-    async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> List[discord_typings.MessageData]:
+    async def get_pinned_messages(self, channel_id: "Snowflake_Type") -> list[discord_typings.MessageData]:
         """
         Get all pinned messages from a channel.
 
@@ -358,14 +460,15 @@ class ChannelRequests:
             A list of pinned message objects
 
         """
-        return await self.request(Route("GET", f"/channels/{channel_id}/pins"))
+        result = await self.request(Route("GET", f"/channels/{int(channel_id)}/pins"))
+        return cast(list[discord_typings.MessageData], result)
 
     async def create_stage_instance(
         self,
         channel_id: "Snowflake_Type",
         topic: str,
-        privacy_level: StagePrivacyLevel = 1,
-        reason: Absent[str] = MISSING,
+        privacy_level: StagePrivacyLevel | int = StagePrivacyLevel.PUBLIC,
+        reason: str | None = None,
     ) -> discord_typings.StageInstanceData:
         """
         Create a new stage instance.
@@ -380,15 +483,14 @@ class ChannelRequests:
             The stage instance
 
         """
-        return await self.request(
-            Route("POST", "/stage-instances"),
-            payload={
-                "channel_id": channel_id,
-                "topic": topic,
-                "privacy_level": StagePrivacyLevel(privacy_level),
-            },
-            reason=reason,
-        )
+        payload: PAYLOAD_TYPE = {
+            "channel_id": int(channel_id),
+            "topic": topic,
+            "privacy_level": StagePrivacyLevel(privacy_level),
+        }
+
+        result = await self.request(Route("POST", "/stage-instances"), payload=payload, reason=reason)
+        return cast(discord_typings.StageInstanceData, result)
 
     async def get_stage_instance(self, channel_id: "Snowflake_Type") -> discord_typings.StageInstanceData:
         """
@@ -401,10 +503,15 @@ class ChannelRequests:
             A stage instance.
 
         """
-        return await self.request(Route("GET", f"/stage-instances/{channel_id}"))
+        result = await self.request(Route("GET", f"/stage-instances/{int(channel_id)}"))
+        return cast(discord_typings.StageInstanceData, result)
 
     async def modify_stage_instance(
-        self, channel_id: "Snowflake_Type", topic: str = None, privacy_level: int = None, reason: Absent[str] = MISSING
+        self,
+        channel_id: "Snowflake_Type",
+        topic: str | None = None,
+        privacy_level: int | None = None,
+        reason: str | None = None,
     ) -> discord_typings.StageInstanceData:
         """
         Update the fields of a given stage instance.
@@ -419,13 +526,14 @@ class ChannelRequests:
             The updated stage instance.
 
         """
-        return await self.request(
-            Route("PATCH", f"/stage-instances/{channel_id}"),
-            payload=dict_filter_none({"topic": topic, "privacy_level": privacy_level}),
-            reason=reason,
+        payload: PAYLOAD_TYPE = {"topic": topic, "privacy_level": privacy_level}
+        payload = dict_filter_none(payload)
+        result = await self.request(
+            Route("PATCH", f"/stage-instances/{int(channel_id)}"), payload=payload, reason=reason
         )
+        return cast(discord_typings.StageInstanceData, result)
 
-    async def delete_stage_instance(self, channel_id: "Snowflake_Type", reason: Absent[str] = MISSING) -> None:
+    async def delete_stage_instance(self, channel_id: "Snowflake_Type", reason: str | None = None) -> None:
         """
         Delete a stage instance.
 
@@ -434,7 +542,7 @@ class ChannelRequests:
             reason: The reason for the deletion
 
         """
-        return await self.request(Route("DELETE", f"/stage-instances/{channel_id}"), reason=reason)
+        await self.request(Route("DELETE", f"/stage-instances/{int(channel_id)}"), reason=reason)
 
     async def create_tag(
         self,
@@ -447,50 +555,64 @@ class ChannelRequests:
         Create a new tag.
 
         Args:
+            channel_id: The ID of the forum channel to create tag for.
             name: The name of the tag
             emoji_id: The ID of the emoji to use for the tag
             emoji_name: The name of the emoji to use for the tag
 
-        Note:
-            Can either have an emoji_id or an emoji_name, but not both.
-            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        !!! note
+            Can either have an `emoji_id` or an `emoji_name`, but not both.
+            `emoji_id` is meant for custom emojis, `emoji_name` is meant for unicode emojis.
         """
-        return await self.request(
-            Route("POST", f"/channels/{channel_id}/tags"),
-            payload=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
-        )
+        payload: PAYLOAD_TYPE = {
+            "name": name,
+            "emoji_id": int(emoji_id) if emoji_id else None,
+            "emoji_name": emoji_name,
+        }
+        payload = dict_filter_none(payload)
+
+        result = await self.request(Route("POST", f"/channels/{int(channel_id)}/tags"), payload=payload)
+        return cast(discord_typings.ChannelData, result)
 
     async def edit_tag(
         self,
         channel_id: "Snowflake_Type",
         tag_id: "Snowflake_Type",
         name: str,
-        emoji_id: Optional["Snowflake_Type"] = None,
-        emoji_name: Optional[str] = None,
+        emoji_id: "Snowflake_Type | None" = None,
+        emoji_name: str | None = None,
     ) -> discord_typings.ChannelData:
         """
         Update a tag.
 
         Args:
+            channel_id: The ID of the forum channel to edit tag it.
             tag_id: The ID of the tag to update
             name: The new name of the tag
             emoji_id: The ID of the emoji to use for the tag
             emoji_name: The name of the emoji to use for the tag
 
-        Note:
-            Can either have an emoji_id or an emoji_name, but not both.
-            emoji_id is meant for custom emojis, emoji_name is meant for unicode emojis.
+        !!! note
+            Can either have an `emoji_id` or an `emoji_name`, but not both.
+            emoji`_id is meant for custom emojis, `emoji_name` is meant for unicode emojis.
         """
-        return await self.request(
-            Route("PUT", f"/channels/{channel_id}/tags/{tag_id}"),
-            payload=dict_filter_none({"name": name, "emoji_id": emoji_id, "emoji_name": emoji_name}),
-        )
+        payload: PAYLOAD_TYPE = {
+            "name": name,
+            "emoji_id": int(emoji_id) if emoji_id else None,
+            "emoji_name": emoji_name,
+        }
+        payload = dict_filter_none(payload)
+
+        result = await self.request(Route("PUT", f"/channels/{int(channel_id)}/tags/{int(tag_id)}"), payload=payload)
+        return cast(discord_typings.ChannelData, result)
 
     async def delete_tag(self, channel_id: "Snowflake_Type", tag_id: "Snowflake_Type") -> discord_typings.ChannelData:
         """
         Delete a forum tag.
 
         Args:
+            channel_id: The ID of the forum channel to delete tag it.
             tag_id: The ID of the tag to delete
         """
-        return await self.request(Route("DELETE", f"/channels/{channel_id}/tags/{tag_id}"))
+        result = await self.request(Route("DELETE", f"/channels/{int(channel_id)}/tags/{int(tag_id)}"))
+        return cast(discord_typings.ChannelData, result)

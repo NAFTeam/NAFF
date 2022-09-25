@@ -103,7 +103,7 @@ class ChannelHistory(AsyncIterator):
             List of objects
 
         Raises:
-              QueueEmpty when no more objects are available.
+              QueueEmpty: when no more objects are available.
 
         """
         if self.after:
@@ -133,7 +133,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
 
-    !!! Note
+    !!! note
         `id` here is not an attribute of the overwrite, it is the ID of the overwritten instance
 
     """
@@ -240,7 +240,7 @@ class MessageableMixin(SendMixin):
 
     def history(
         self,
-        limit=100,
+        limit: int = 100,
         before: Snowflake_Type = None,
         after: Snowflake_Type = None,
         around: Snowflake_Type = None,
@@ -305,7 +305,9 @@ class MessageableMixin(SendMixin):
         elif after:
             after = to_snowflake(after)
 
-        messages_data = await self._client.http.get_channel_messages(self.id, limit, around, before, after)
+        messages_data = await self._client.http.get_channel_messages(
+            self.id, limit, around=around, before=before, after=after
+        )
         for m in messages_data:
             m["guild_id"] = self._guild_id
 
@@ -1675,7 +1677,6 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             name: 1-100 character thread name.
-            thread_type: Is the thread private or public.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
 
@@ -1702,7 +1703,6 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
         Args:
             name: 1-100 character thread name.
-            message: The message to connect this thread to.
             invitable: whether non-moderators can add other non-moderators to a thread.
             auto_archive_duration: Time before the thread will be automatically archived. Note 3 day and 7 day archive durations require the server to be boosted.
             reason: The reason for creating this thread.
@@ -1956,7 +1956,7 @@ class GuildPublicThread(ThreadChannel):
         """
         The tags applied to this thread.
 
-        Note:
+        !!! note
             This is only on forum threads.
 
         """
@@ -1969,7 +1969,7 @@ class GuildPublicThread(ThreadChannel):
         """
         The initial message posted by the OP.
 
-        Note:
+        !!! note
             This is only on forum threads.
 
         """
@@ -2091,7 +2091,12 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     @property
     def voice_members(self) -> List["models.Member"]:
-        """Returns a list of members that are currently in the channel. Note: This will not be accurate if the bot was offline while users joined the channel"""
+        """
+        Returns a list of members that are currently in the channel.
+
+        !!! note
+            This will not be accurate if the bot was offline while users joined the channel
+        """
         return [self._client.cache.get_member(self._guild_id, member_id) for member_id in self._voice_member_ids]
 
     @property
@@ -2118,10 +2123,10 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     async def disconnect(self) -> None:
         """
-        Disconnect from the currently connected connected voice state.
+        Disconnect from the currently connected voice state.
 
         Raises:
-            VoiceNotConnected if the bot is not connected to a voice channel
+            VoiceNotConnected: if the bot is not connected to a voice channel
         """
         if self.voice_state:
             return await self.voice_state.disconnect()
@@ -2246,7 +2251,6 @@ class GuildForum(GuildChannel):
             files: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
-            flags: Message flags to apply.
             reason: The reason for creating this post
 
         Returns:
@@ -2284,7 +2288,7 @@ class GuildForum(GuildChannel):
             name: The name of the tag
             emoji: The emoji to use for the tag
 
-        Note:
+        !!! note
             If the emoji is a custom emoji, it must be from the same guild as the channel.
 
         Returns:

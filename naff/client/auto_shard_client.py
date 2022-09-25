@@ -89,7 +89,7 @@ class AutoShardedClient(Client):
         Returns:
             A gateway client for the given ID
         """
-        shard_id = (guild_id >> 22) % self.total_shards
+        shard_id = (int(guild_id) >> 22) % self.total_shards
         return next((state for state in self._connection_states if state.shard_id == shard_id), MISSING).gateway
 
     def get_shards_guild(self, shard_id: int) -> list[Guild]:
@@ -162,7 +162,7 @@ class AutoShardedClient(Client):
                 self.dispatch(events.Startup())
             self.dispatch(events.Ready())
 
-    async def astart(self, token) -> None:
+    async def astart(self, token: str) -> None:
         """
         Asynchronous method to start the bot.
 

@@ -2,10 +2,11 @@ import asyncio
 import inspect
 from asyncio import Task as _Task
 from datetime import datetime, timedelta
-from typing import Callable, Optional
+from typing import Callable
 
 import naff
-from naff.client.const import logger, MISSING
+from naff.client.const import logger
+
 from .triggers import BaseTrigger
 
 
@@ -28,7 +29,7 @@ class Task:
 
     callback: Callable
     trigger: BaseTrigger
-    task: _Task
+    task: _Task | None
     _stop: asyncio.Event
     iteration: int
 
@@ -36,24 +37,47 @@ class Task:
         self.callback = callback
         self.trigger = trigger
         self._stop = asyncio.Event()
-        self.task = MISSING
+        self.task = None
         self.iteration = 0
 
     @property
-    def next_run(self) -> Optional[datetime]:
-        """Get the next datetime this task will run."""
-        if not self.task.done():
-            return self.trigger.next_fire()
-        return None
+    def started(self) -> bool:
+        """Whether the task is started"""
+        return self.task is not None
 
     @property
-    def delta_until_run(self) -> Optional[timedelta]:
+    def running(self) -> bool:
+        """Whether the task is running"""
+        return self.task is not None and not self.task.done()
+
+    @property
+    def done(self) -> bool:
+        """Whether the task is done/finished"""
+        return self.task is not None and self.task.done()
+
+    @property
+    def next_run(self) -> datetime | None:
+        """Get the next datetime this task will run."""
+        if not self.running:
+            return None
+
+        return self.trigger.next_fire()
+
+    @property
+    def delta_until_run(self) -> timedelta | None:
         """Get the time until the next run of this task."""
-        if not self.task.done():
-            return self.next_run - datetime.now()
+        if not self.running:
+            return None
+
+        next_run = self.next_run
+        return next_run - datetime.now() if next_run is not None else None
+
+    def on_error_sentry_hook(self, error: Exception) -> None:
+        """A dummy method for naff.ext.sentry to hook"""
 
     def on_error(self, error: Exception) -> None:
         """Error handler for this task. Called when an exception is raised during execution of the task."""
+        self.on_error_sentry_hook(error)
         naff.Client.default_error_handler("Task", error)
 
     async def __call__(self) -> None:
@@ -64,7 +88,7 @@ class Task:
                 val = self.callback()
 
             if isinstance(val, BaseTrigger):
-                self.trigger = val
+                self.reschedule(val)
         except Exception as e:
             self.on_error(e)
 
@@ -126,6 +150,17 @@ class Task:
     def create(cls, trigger: BaseTrigger) -> Callable[[Callable], "Task"]:
         """
         A decorator to create a task.
+
+        Example:
+            ```python
+            @Task.create(IntervalTrigger(minutes=5))
+            async def my_task():
+                print("It's been 5 minutes!")
+
+            @listen()
+            async def on_startup():
+                my_task.start()
+            ```
 
         Args:
             trigger: The trigger to use for this task

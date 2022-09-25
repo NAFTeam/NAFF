@@ -253,15 +253,15 @@ class Guild(BaseGuild):
         client: "Client",
         *,
         icon: Absent[Optional[UPLOADABLE_TYPE]] = MISSING,
-        verification_level: Absent[int] = MISSING,
-        default_message_notifications: Absent[int] = MISSING,
-        explicit_content_filter: Absent[int] = MISSING,
+        verification_level: Absent["VerificationLevels"] = MISSING,
+        default_message_notifications: Absent["DefaultNotificationLevels"] = MISSING,
+        explicit_content_filter: Absent["ExplicitContentFilterLevels"] = MISSING,
         roles: Absent[list[dict]] = MISSING,
         channels: Absent[list[dict]] = MISSING,
         afk_channel_id: Absent["Snowflake_Type"] = MISSING,
         afk_timeout: Absent[int] = MISSING,
         system_channel_id: Absent["Snowflake_Type"] = MISSING,
-        system_channel_flags: Absent[Union[SystemChannelFlags, int]] = MISSING,
+        system_channel_flags: Absent["SystemChannelFlags"] = MISSING,
     ) -> "Guild":
         """
         Create a guild.
@@ -499,7 +499,7 @@ class Guild(BaseGuild):
         Returns:
             True if the user is the owner of the guild, False otherwise.
 
-        Note:
+        !!! note
             the `user` argument can be any type that meets `Snowflake_Type`
 
         """
@@ -513,7 +513,7 @@ class Guild(BaseGuild):
             new_nickname: The new nickname to apply
             reason: The reason for this change
 
-        Note:
+        !!! note
             Leave `new_nickname` empty to clean user's nickname
 
         """
@@ -655,7 +655,6 @@ class Guild(BaseGuild):
         Get an async iterator for the history of the audit log.
 
         Args:
-            guild (:class:`Guild`): The guild to search through.
             user_id (:class:`Snowflake_Type`): The user ID to search for.
             action_type (:class:`AuditLogEventType`): The action type to search for.
             before: get entries before this message ID
@@ -686,7 +685,7 @@ class Guild(BaseGuild):
         self,
         name: Absent[Optional[str]] = MISSING,
         description: Absent[Optional[str]] = MISSING,
-        verification_level: Absent[Optional["models.VerificationLevels"]] = MISSING,
+        verification_level: Absent[Optional["VerificationLevels"]] = MISSING,
         default_message_notifications: Absent[Optional["DefaultNotificationLevels"]] = MISSING,
         explicit_content_filter: Absent[Optional["ExplicitContentFilterLevels"]] = MISSING,
         afk_channel: Absent[Optional[Union["models.GuildVoice", Snowflake_Type]]] = MISSING,
@@ -1160,15 +1159,13 @@ class Guild(BaseGuild):
 
         """
         if isinstance(channel, (str, int)):
-            channel = await self._client.get_channel(channel)
+            channel = await self._client.fetch_channel(channel)
 
         if not channel:
             raise ValueError("Unable to find requested channel")
 
-        # TODO self._channel_ids is not updated properly when new guild channels are created so this check is
-        #  disabled for now
-        # if channel.id not in self._channel_ids:
-        #     raise ValueError("This guild does not hold the requested channel")
+        if channel.id not in self._channel_ids:
+            raise ValueError("This guild does not hold the requested channel")
 
         await channel.delete(reason)
 
@@ -1572,7 +1569,7 @@ class Guild(BaseGuild):
         """
         Delete the guild.
 
-        !!! Note
+        !!! note
             You must own this guild to do this.
 
         """
@@ -1584,7 +1581,7 @@ class Guild(BaseGuild):
         """
         Kick a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `kick members` permission
 
         Args:
@@ -1597,22 +1594,27 @@ class Guild(BaseGuild):
     async def ban(
         self,
         user: Union["models.User", "models.Member", Snowflake_Type],
-        delete_message_days: int = 0,
+        delete_message_days: Absent[int] = MISSING,
+        delete_message_seconds: int = 0,
         reason: Absent[str] = MISSING,
     ) -> None:
         """
         Ban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:
             user: The user to ban
-            delete_message_days: How many days worth of messages to remove
+            delete_message_days: (deprecated) How many days worth of messages to remove
+            delete_message_seconds: How many seconds worth of messages to remove
             reason: The reason for the ban
 
         """
-        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_days, reason=reason)
+        if delete_message_days is not MISSING:
+            warn("delete_message_days is deprecated and will be removed in a future update", DeprecationWarning)
+            delete_message_seconds = delete_message_days * 3600
+        await self._client.http.create_guild_ban(self.id, to_snowflake(user), delete_message_seconds, reason=reason)
 
     async def fetch_ban(self, user: Union["models.User", "models.Member", Snowflake_Type]) -> Optional[GuildBan]:
         """
@@ -1774,7 +1776,7 @@ class Guild(BaseGuild):
         """
         Unban a user from the guild.
 
-        !!! Note
+        !!! note
             You must have the `ban members` permission
 
         Args:
