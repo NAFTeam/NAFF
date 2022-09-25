@@ -1987,6 +1987,12 @@ class GuildForumPost(GuildPublicThread):
 
     _applied_tags: list[Snowflake_Type] = field(factory=list)
 
+    @classmethod
+    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
+        data = super()._process_dict(data, client)
+        data["_applied_tags"] = data.pop("applied_tags") if "applied_tags" in data else []
+        return data
+
     async def edit(
         self,
         name: Absent[str] = MISSING,
