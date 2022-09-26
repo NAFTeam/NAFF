@@ -245,6 +245,33 @@ class InteractionCommand(BaseCommand):
             return ctx.guild is not None
         return True
 
+    def is_enabled(self, ctx: "Context") -> bool:
+        """
+        Check if this command is enabled in the given context.
+
+        Args:
+            ctx: The context to check.
+
+        Returns:
+            Whether this command is enabled in the given context.
+        """
+        if not self.dm_permission and ctx.guild is None:
+            return False
+        elif self.dm_permission and ctx.guild is None:
+            # remaining checks are impossible if this is a DM and DMs are enabled
+            return True
+
+        if self.nsfw and not ctx.channel.is_nsfw():
+            return False
+        if cmd_perms := ctx.guild.command_permissions.get(self.get_cmd_id(ctx.guild.id)):
+            if not cmd_perms.is_enabled_in_context(ctx):
+                return False
+        if self.default_member_permissions is not None:
+            channel_perms = ctx.author.channel_permissions(ctx.channel)
+            if any(perm not in channel_perms for perm in self.default_member_permissions):
+                return False
+        return True
+
 
 @define()
 class ContextMenu(InteractionCommand):

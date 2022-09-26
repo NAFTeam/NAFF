@@ -184,6 +184,7 @@ class Client(
     processors.AutoModEvents,
     processors.ChannelEvents,
     processors.GuildEvents,
+    processors.IntegrationEvents,
     processors.MemberEvents,
     processors.MessageEvents,
     processors.ReactionEvents,
@@ -597,8 +598,7 @@ class Client(
         if isinstance(error, HTTPException):
             # HTTPException's are of 3 known formats, we can parse them for human readable errors
             try:
-                errors = error.search_for_message(error.errors)
-                out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
+                out = [str(error)]
             except Exception:  # noqa : S110
                 pass
 

@@ -35,6 +35,7 @@ __all__ = (
     "AutoModCreated",
     "AutoModUpdated",
     "AutoModDeleted",
+    "ApplicationCommandPermissionsUpdate",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
@@ -70,6 +71,7 @@ __all__ = (
     "StageInstanceDelete",
     "StageInstanceUpdate",
     "ThreadCreate",
+    "NewThreadCreate",
     "ThreadDelete",
     "ThreadListSync",
     "ThreadMemberUpdate",
@@ -96,6 +98,7 @@ if TYPE_CHECKING:
     from naff.models.discord.stage_instance import StageInstance
     from naff.models.discord.auto_mod import AutoModerationAction, AutoModRule
     from naff.models.discord.reaction import Reaction
+    from naff.models.discord.app_perms import ApplicationCommandPermission
 
 
 @define(kw_only=False)
@@ -125,6 +128,13 @@ class AutoModDeleted(AutoModCreated):
     """Dispatched when an auto mod rule is deleted"""
 
     ...
+
+
+@define(kw_only=False)
+class ApplicationCommandPermissionsUpdate(BaseEvent):
+    guild_id: "Snowflake_Type" = field(metadata=docs("The guild the command permissions were updated in"))
+    application_id: "Snowflake_Type" = field(metadata=docs("The application the command permissions were updated for"))
+    permissions: List["ApplicationCommandPermission"] = field(factory=list, metadata=docs("The updated permissions"))
 
 
 @define(kw_only=False)
@@ -159,9 +169,14 @@ class ChannelPinsUpdate(ChannelCreate):
 
 @define(kw_only=False)
 class ThreadCreate(BaseEvent):
-    """Dispatched when a thread is created."""
+    """Dispatched when a thread is created, or a thread is new to the client"""
 
     thread: "TYPE_THREAD_CHANNEL" = field(metadata=docs("The thread this event is dispatched from"))
+
+
+@define(kw_only=False)
+class NewThreadCreate(ThreadCreate):
+    """Dispatched when a thread is newly created."""
 
 
 @define(kw_only=False)
