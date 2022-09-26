@@ -16,7 +16,6 @@ from typing import (
     Coroutine,
     Dict,
     List,
-    Mapping,
     NoReturn,
     Optional,
     Sequence,
@@ -1761,7 +1760,7 @@ class Client(
             return ext[0]
         return None
 
-    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Mapping[str, Any]) -> None:
+    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Any) -> None:
         """
         Load an extension with given arguments.
 
@@ -1800,7 +1799,7 @@ class Client(
                     return
                 asyncio.create_task(self.synchronise_interactions())
 
-    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Mapping[str, Any]) -> None:
+    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Any) -> None:
         """
         Unload an extension with given arguments.
 
@@ -1841,8 +1840,8 @@ class Client(
         name: str,
         package: str | None = None,
         *,
-        load_kwargs: Mapping[str, Any] = None,
-        unload_kwargs: Mapping[str, Any] = None,
+        load_kwargs: Any = None,
+        unload_kwargs: Any = None,
     ) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.
