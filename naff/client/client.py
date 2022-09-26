@@ -211,13 +211,7 @@ class Client(
         delete_unused_application_cmds: Delete any commands from discord that aren't implemented in this client
         enforce_interaction_perms: Enforce discord application command permissions, locally
         fetch_members: Should the client fetch members from guilds upon startup (this will delay the client being ready)
-
-        auto_defer: A system to automatically defer commands after a set duration
-        interaction_context: The object to instantiate for Interaction Context
-        prefixed_context: The object to instantiate for Prefixed Context
-        component_context: The object to instantiate for Component Context
-        autocomplete_context: The object to instantiate for Autocomplete Context
-        modal_context: The object to instantiate for Modal Context
+        send_command_tracebacks: Automatically send uncaught tracebacks if a command throws an exception
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
