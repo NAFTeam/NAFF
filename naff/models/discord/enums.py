@@ -3,7 +3,7 @@ from functools import reduce
 from operator import or_
 from typing import Iterator, Tuple, TypeVar, Type
 
-from naff.client.const import logger
+from naff.client.const import get_logger
 
 
 __all__ = (
@@ -84,7 +84,7 @@ SELF = TypeVar("SELF")
 
 
 def _log_type_mismatch(cls, value) -> None:
-    logger.error(
+    get_logger().error(
         f"Class `{cls.__name__}` received an invalid and unexpected value `{value}`. Please update NAFF or report this issue on GitHub - https://github.com/NAFTeam/NAFF/issues"
     )
 
