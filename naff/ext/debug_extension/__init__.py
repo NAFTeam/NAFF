@@ -8,13 +8,12 @@ from naff.models.naff import checks
 from .debug_application_cmd import DebugAppCMD
 from .debug_exec import DebugExec
 from .debug_exts import DebugExts
-from .debug_jurigged import DebugJurigged
 from .utils import get_cache_state, debug_embed, strf_delta
 
 __all__ = ("DebugExtension",)
 
 
-class DebugExtension(DebugExec, DebugAppCMD, DebugExts, DebugJurigged, Extension):
+class DebugExtension(DebugExec, DebugAppCMD, DebugExts, Extension):
     def __init__(self, bot: Client) -> None:
         logger.info("Debug Extension is mounting!")
 

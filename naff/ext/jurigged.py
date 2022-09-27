@@ -13,17 +13,18 @@ from naff.client.errors import ExtensionLoadException, ExtensionNotFound
 from naff.client.utils.misc_utils import find
 from naff.ext.debug_extension.utils import get_all_commands
 
-__all__ = ("DebugJurigged",)
+__all__ = ("Jurigged",)
 
 
-class DebugJurigged(Extension):
+class Jurigged(Extension):
     @listen(event_name="on_startup")
     async def jurigged_startup(self) -> None:
         """Jurigged starting utility."""
         self.command_cache = {}
+        self.bot.logger.warning("Setting sync_ext to True by default for syncing changes")
         self.bot.sync_ext = True
 
-        self.bot.logger.debug("Loading jurigged")
+        self.bot.logger.info("Loading jurigged")
         path = Path().resolve()
         self.watcher = watch(f"{path}/[!.]*.py", logger=self.jurigged_log)
         self.watcher.prerun.register(self.jurigged_prerun)
@@ -167,4 +168,4 @@ class DebugJurigged(Extension):
 
 
 def setup(bot) -> None:
-    DebugJurigged(bot)
+    Jurigged(bot)
