@@ -1851,6 +1851,25 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         """The permission overwrites for this channel."""
         return []
 
+    def permissions_for(self, instance: Snowflake_Type) -> Permissions:
+        """
+        Calculates permissions for an instance
+
+        Args:
+            instance: Member or Role instance (or its ID)
+
+        Returns:
+            Permissions data
+
+        Raises:
+            ValueError: If could not find any member or role by given ID
+            RuntimeError: If given instance is from another guild
+
+        """
+        if self.parent_channel:
+            return self.parent_channel.permissions_for(instance)
+        return Permissions.NONE
+
     async def fetch_members(self) -> List["models.ThreadMember"]:
         """Get the members that have access to this thread."""
         members_data = await self._client.http.list_thread_members(self.id)
