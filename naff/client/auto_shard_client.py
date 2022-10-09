@@ -1,7 +1,7 @@
 import asyncio
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import naff.api.events as events
 from naff.api.gateway.state import ConnectionState
@@ -12,7 +12,8 @@ from naff.models import (
     to_snowflake,
 )
 from naff.models.naff.listener import Listener
-from ..api.events import ShardConnect
+from naff.models.discord import Status, Activity
+from naff.api.events import ShardConnect
 
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type
@@ -228,3 +229,27 @@ class AutoShardedClient(Client):
         self._connection_states: list[ConnectionState] = [
             ConnectionState(self, self.intents, shard_id) for shard_id in range(self.total_shards)
         ]
+
+    async def change_presence(
+        self,
+        status: Optional[str | Status] = Status.ONLINE,
+        activity: Optional[str | Activity] = None,
+        *,
+        shard_id: int | None = None,
+    ) -> None:
+        """
+        Change the bot's presence.
+
+        Args:
+            status: The status for the bot to be. i.e. online, afk, etc.
+            activity: The activity for the bot to be displayed as doing.
+            shard_id: The shard to change the presence on. If not specified, the presence will be changed on all shards.
+
+        !!! note
+            Bots may only be `playing` `streaming` `listening` `watching` or `competing`, other activity types are likely to fail.
+
+        """
+        if shard_id is None:
+            await asyncio.gather(*[shard.change_presence(status, activity) for shard in self._connection_states])
+        else:
+            await self._connection_states[shard_id].change_presence(status, activity)
