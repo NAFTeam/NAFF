@@ -105,6 +105,18 @@ class AutoShardedClient(Client):
         """
         return [guild for key, guild in self.cache.guild_cache.items() if ((key >> 22) % self.total_shards) == shard_id]
 
+    def get_shard_id(self, guild_id: "Snowflake_Type") -> int:
+        """
+        Get the shard ID for a given guild.
+
+        Args:
+            guild_id: The ID of the guild
+
+        Returns:
+            The shard ID for the guild
+        """
+        return (int(guild_id) >> 22) % self.total_shards
+
     @Listener.create()
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
