@@ -30,10 +30,15 @@ def to_dict(inst) -> dict:
         The processed dict.
 
     """
-    if (converter := getattr(inst, "as_dict", None)) is not None:
-        return converter()
-
     attrs = fields(inst.__class__)
+
+    if (converter := getattr(inst, "as_dict", None)) is not None:
+        d = converter()
+        for a in attrs:
+            if a.metadata.get("no_export", False):
+                d.pop(a.name, None)
+        return d
+
     d = {}
 
     for a in attrs:
