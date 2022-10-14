@@ -1203,12 +1203,14 @@ class Client(
             if group is None or isinstance(command, ContextMenu):
                 self.interaction_tree[scope][command.resolved_name] = command
             elif group is not None:
-                if base not in self.interaction_tree[scope]:
+                if not (current := self.interaction_tree[scope].get(base)) or isinstance(current, SlashCommand):
                     self.interaction_tree[scope][base] = {}
                 if sub is None:
                     self.interaction_tree[scope][base][group] = command
                 else:
-                    if group not in self.interaction_tree[scope][base]:
+                    if not (current := self.interaction_tree[scope][base].get(group)) or isinstance(
+                        current, SlashCommand
+                    ):
                         self.interaction_tree[scope][base][group] = {}
                     self.interaction_tree[scope][base][group][sub] = command
 
