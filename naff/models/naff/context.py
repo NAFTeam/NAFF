@@ -459,6 +459,7 @@ class ComponentContext(InteractionContext):
         new_cls = super().from_dict(data, client)
         new_cls.token = data["token"]
         new_cls.interaction_id = data["id"]
+        new_cls.invoke_target = data["data"]["custom_id"]
         new_cls.custom_id = data["data"]["custom_id"]
         new_cls.component_type = data["data"]["component_type"]
         new_cls.message = client.cache.place_message_data(data["message"])

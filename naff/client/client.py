@@ -1703,7 +1703,7 @@ class Client(
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            self.dispatch(events.Component(ctx=ctx))
+            self.dispatch(events.Component(context=ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 ctx.command = callback
                 try:
