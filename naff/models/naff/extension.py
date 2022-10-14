@@ -103,12 +103,16 @@ class Extension:
                             if group is None or isinstance(val, ContextMenu):
                                 new_cls.interaction_tree[scope][val.resolved_name] = val
                             elif group is not None:
-                                if base not in new_cls.interaction_tree[scope]:
+                                if not (current := new_cls.interaction_tree[scope].get(base)) or isinstance(
+                                    current, naff.InteractionCommand
+                                ):
                                     new_cls.interaction_tree[scope][base] = {}
                                 if sub is None:
                                     new_cls.interaction_tree[scope][base][group] = val
                                 else:
-                                    if group not in new_cls.interaction_tree[scope][base]:
+                                    if not (current := new_cls.interaction_tree[scope][base].get(group)) or isinstance(
+                                        current, naff.InteractionCommand
+                                    ):
                                         new_cls.interaction_tree[scope][base][group] = {}
                                     new_cls.interaction_tree[scope][base][group][sub] = val
                     else:
