@@ -1208,7 +1208,9 @@ class Client(
                 if sub is None:
                     self.interaction_tree[scope][base][group] = command
                 else:
-                    if not (current := self.interaction_tree[scope][base].get(group)) or isinstance(current, SlashCommand):
+                    if not (current := self.interaction_tree[scope][base].get(group)) or isinstance(
+                        current, SlashCommand
+                    ):
                         self.interaction_tree[scope][base][group] = {}
                     self.interaction_tree[scope][base][group][sub] = command
 
