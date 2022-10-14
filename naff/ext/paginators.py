@@ -16,7 +16,7 @@ from naff import (
     Message,
     MISSING,
     Snowflake_Type,
-    SelectMenu,
+    StringSelectMenu,
     SelectOption,
     Color,
     BrandColors,
@@ -257,7 +257,7 @@ class Paginator:
         if self.show_select_menu:
             current = self.pages[self.page_index]
             output.append(
-                SelectMenu(
+                StringSelectMenu(
                     [
                         SelectOption(f"{i+1} {p.get_summary if isinstance(p, Page) else p.title}", str(i))
                         for i, p in enumerate(self.pages)

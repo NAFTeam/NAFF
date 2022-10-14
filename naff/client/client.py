@@ -1718,7 +1718,7 @@ class Client(
                     self.dispatch(events.ComponentCompletion(ctx=ctx))
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
-            if component_type == ComponentTypes.SELECT:
+            if component_type == ComponentTypes.STRING_SELECT:
                 self.dispatch(events.Select(ctx))
 
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
