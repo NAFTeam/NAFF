@@ -45,6 +45,7 @@ __all__ = (
     "GuildLeft",
     "GuildMembersChunk",
     "GuildStickersUpdate",
+    "GuildAvailable",
     "GuildUnavailable",
     "GuildUpdate",
     "IntegrationCreate",
@@ -261,6 +262,14 @@ class GuildLeft(GuildEvent):
 
     guild: Optional["Guild"] = field(default=MISSING)
     """The guild, if it was cached"""
+
+
+@define(kw_only=False)
+class GuildAvailable(GuildEvent):
+    """Dispatched when a guild becomes available."""
+
+    guild: "Guild" = field()
+    """The guild that became available"""
 
 
 @define(kw_only=False)
