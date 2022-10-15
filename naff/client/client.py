@@ -821,7 +821,10 @@ class Client(
                 try:  # wait to let guilds cache
                     await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
                 except asyncio.TimeoutError:
-                    self.logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    # this will *mostly* occur when a guild has been shadow deleted by discord T&S.
+                    # there is no way to check for this, so we just need to wait for this to time out.
+                    # We still log it though, just in case.
+                    self.logger.debug("Timeout waiting for guilds cache")
                     break
                 self._guild_event.clear()
 
