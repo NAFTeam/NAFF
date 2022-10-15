@@ -27,7 +27,7 @@ from naff.api.events.base import BaseEvent, RawGatewayEvent
 from naff.client.utils.attr_utils import define, field, docs
 
 __all__ = (
-    "Button",
+    "ButtonPressed",
     "Component",
     "Connect",
     "Disconnect",
@@ -137,7 +137,7 @@ class Component(BaseEvent):
 
 
 @define(kw_only=False)
-class Button(Component):
+class ButtonPressed(Component):
     """Dispatched when a user uses a Button."""
 
 
