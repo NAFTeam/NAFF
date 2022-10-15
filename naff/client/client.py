@@ -230,6 +230,7 @@ class Client(
         shard_id: The zero based int ID of this shard
 
         debug_scope: Force all application commands to be registered within this scope
+        disable_dm_commands: Should interaction commands be disabled in DMs?
         basic_logging: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
         logging_level: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
         logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
@@ -257,6 +258,7 @@ class Client(
         debug_scope: Absent["Snowflake_Type"] = MISSING,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
         delete_unused_application_cmds: bool = False,
+        disable_dm_commands: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
@@ -339,6 +341,7 @@ class Client(
         self._ready = asyncio.Event()
         self._closed = False
         self._startup = False
+        self.disable_dm_commands = disable_dm_commands
 
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
@@ -1178,6 +1181,9 @@ class Client(
         """
         if self.debug_scope:
             command.scopes = [self.debug_scope]
+
+        if self.disable_dm_commands:
+            command.dm_permission = False
 
         # for SlashCommand objs without callback (like objects made to hold group info etc)
         if command.callback is None:
