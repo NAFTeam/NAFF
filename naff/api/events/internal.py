@@ -133,7 +133,7 @@ class WebsocketReady(RawGatewayEvent):
 class Component(BaseEvent):
     """Dispatched when a user uses a Component."""
 
-    context: "ComponentContext" = field(metadata=docs("The context of the interaction"))
+    ctx: "ComponentContext" = field(metadata=docs("The context of the interaction"))
 
 
 @define(kw_only=False)
