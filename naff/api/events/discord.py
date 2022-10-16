@@ -29,13 +29,14 @@ from naff.client.const import MISSING, Absent
 from naff.client.utils.attr_utils import define, field, docs
 
 __all__ = (
+    "ApplicationCommandPermissionsUpdate",
+    "AutoModCreated",
+    "AutoModDeleted",
+    "AutoModExec",
+    "AutoModUpdated",
     "BanCreate",
     "BanRemove",
-    "AutoModExec",
-    "AutoModCreated",
-    "AutoModUpdated",
-    "AutoModDeleted",
-    "ApplicationCommandPermissionsUpdate",
+    "BaseVoiceEvent",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
@@ -63,6 +64,7 @@ __all__ = (
     "MessageReactionRemove",
     "MessageReactionRemoveAll",
     "MessageUpdate",
+    "NewThreadCreate",
     "PresenceUpdate",
     "RoleCreate",
     "RoleDelete",
@@ -71,21 +73,25 @@ __all__ = (
     "StageInstanceDelete",
     "StageInstanceUpdate",
     "ThreadCreate",
-    "NewThreadCreate",
     "ThreadDelete",
     "ThreadListSync",
-    "ThreadMemberUpdate",
     "ThreadMembersUpdate",
+    "ThreadMemberUpdate",
     "ThreadUpdate",
     "TypingStart",
     "VoiceStateUpdate",
+    "VoiceUserDeafen",
+    "VoiceUserJoin",
+    "VoiceUserLeave",
+    "VoiceUserMove",
+    "VoiceUserMute",
     "WebhooksUpdate",
 )
 
 
 if TYPE_CHECKING:
     from naff.models.discord.guild import Guild, GuildIntegration
-    from naff.models.discord.channel import BaseChannel, TYPE_THREAD_CHANNEL
+    from naff.models.discord.channel import BaseChannel, TYPE_THREAD_CHANNEL, VoiceChannel
     from naff.models.discord.message import Message
     from naff.models.discord.timestamp import Timestamp
     from naff.models.discord.user import Member, User, BaseUser
@@ -543,9 +549,71 @@ class InteractionCreate(BaseEvent):
 
 @define(kw_only=False)
 class VoiceStateUpdate(BaseEvent):
-    """Dispatched when a user joins/leaves/moves voice channels."""
+    """Dispatched when a user's voice state changes."""
 
     before: Optional["VoiceState"] = field()
     """The voice state before this event was created or None if the user was not in a voice channel"""
     after: Optional["VoiceState"] = field()
     """The voice state after this event was created or None if the user is no longer in a voice channel"""
+
+
+@define(kw_only=False)
+class BaseVoiceEvent(BaseEvent):
+    state: "VoiceState" = field()
+    """The current voice state of the user"""
+
+
+@define(kw_only=False)
+class VoiceUserMove(BaseVoiceEvent):
+    """Dispatched when a user moves voice channels."""
+
+    author: Union["User", "Member"] = field()
+
+    previous_channel: "VoiceChannel" = field()
+    """The previous voice channel the user was in"""
+    new_channel: "VoiceChannel" = field()
+    """The new voice channel the user is in"""
+
+
+@define(kw_only=False)
+class VoiceUserMute(BaseVoiceEvent):
+    """Dispatched when a user is muted or unmuted."""
+
+    author: Union["User", "Member"] = field()
+    """The user who was muted or unmuted"""
+    channel: "VoiceChannel" = field()
+    """The voice channel the user was muted or unmuted in"""
+    mute: bool = field()
+    """The new mute state of the user"""
+
+
+@define(kw_only=False)
+class VoiceUserDeafen(BaseVoiceEvent):
+    """Dispatched when a user is deafened or undeafened."""
+
+    author: Union["User", "Member"] = field()
+    """The user who was deafened or undeafened"""
+    channel: "VoiceChannel" = field()
+    """The voice channel the user was deafened or undeafened in"""
+    deaf: bool = field()
+    """The new deaf state of the user"""
+
+
+@define(kw_only=False)
+class VoiceUserJoin(BaseVoiceEvent):
+    """Dispatched when a user joins a voice channel."""
+
+    author: Union["User", "Member"] = field()
+    """The user who joined the voice channel"""
+    channel: "VoiceChannel" = field()
+    """The voice channel the user joined"""
+
+
+@define(kw_only=False)
+class VoiceUserLeave(BaseVoiceEvent):
+    """Dispatched when a user leaves a voice channel."""
+
+    author: Union["User", "Member"] = field()
+    """The user who left the voice channel"""
+    channel: "VoiceChannel" = field()
+    """The voice channel the user left"""
