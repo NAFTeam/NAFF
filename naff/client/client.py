@@ -1873,27 +1873,33 @@ class Client(
             **load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
-        name = importlib.util.resolve_name(name, package)
-        if name in self.__modules:
-            raise Exception(f"{name} already loaded")
+        module_name = importlib.util.resolve_name(name, package)
+        if module_name in self.__modules:
+            raise Exception(f"{module_name} already loaded")
 
-        module = importlib.import_module(name, package)
+        module = importlib.import_module(module_name, package)
         try:
             setup = getattr(module, "setup", None)
-            if not setup:
-                raise ExtensionLoadException(
-                    f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
-                ) from None
-            setup(self, **load_kwargs)
+            if setup:
+                setup(self, **load_kwargs)
+            else:
+                self.logger.debug("No setup function found in %s", module_name)
+
+                objects = {name: obj for name, obj in inspect.getmembers(module) if isinstance(obj, type)}
+                for obj_name, obj in objects.items():
+                    if Extension in obj.__bases__:
+                        self.logger.debug(f"Found extension class {obj_name} in {module_name}: Attempting to load")
+                        obj(self, **load_kwargs)
+
         except ExtensionLoadException:
             raise
         except Exception as e:
-            del sys.modules[name]
-            raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
+            del sys.modules[module_name]
+            raise ExtensionLoadException(f"Unexpected Error loading {module_name}") from e
 
         else:
-            self.logger.debug(f"Loaded Extension: {name}")
-            self.__modules[name] = module
+            self.logger.debug(f"Loaded Extension: {module_name}")
+            self.__modules[module_name] = module
 
             if self.sync_ext and self._ready.is_set():
                 try:
