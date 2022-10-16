@@ -47,9 +47,11 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             <a:emoji_name:emoji_id>
             a:emoji_name:emoji_id
             👋
+            :wave:
 
         Args:
             emoji_str: The string representation an emoji
+            language: The language to use for the unicode emoji parsing
 
         Returns:
             A PartialEmoji object
