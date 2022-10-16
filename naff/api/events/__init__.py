@@ -14,7 +14,7 @@ __all__ = (
     "BanCreate",
     "BanRemove",
     "BaseEvent",
-    "Button",
+    "ButtonPressed",
     "ChannelCreate",
     "ChannelDelete",
     "ChannelPinsUpdate",
