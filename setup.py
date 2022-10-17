@@ -27,6 +27,7 @@ extras_require["tests"] = [
     "pytest-recording",
     "pytest-asyncio",
     "pytest-cov",
+    "python-dotenv",
     "typeguard",
 ]
 

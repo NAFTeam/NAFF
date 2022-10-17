@@ -42,6 +42,13 @@ __all__ = ()
 
 from tests.utils import generate_dummy_context
 
+try:
+    import dotenv
+
+    dotenv.load_dotenv()
+except ImportError:
+    pass
+
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
