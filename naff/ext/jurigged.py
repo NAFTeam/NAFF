@@ -10,8 +10,7 @@ from jurigged.codetools import (
 )
 from naff import Extension, listen
 from naff.client.errors import ExtensionLoadException, ExtensionNotFound
-from naff.client.utils.misc_utils import find
-from naff.ext.debug_extension.utils import get_all_commands
+from naff.client.utils.misc_utils import find, get_all_commands
 
 __all__ = ("Jurigged",)
 

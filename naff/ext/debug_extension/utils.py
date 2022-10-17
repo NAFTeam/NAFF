@@ -1,15 +1,14 @@
 import datetime
 import inspect
-from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from naff.client.utils.cache import TTLCache
-from naff.models import Embed, Extension, MaterialColors, SlashCommand
+from naff.models import Embed, MaterialColors
 
 if TYPE_CHECKING:
     from naff.client import Client
 
-__all__ = ("debug_embed", "get_cache_state", "strf_delta", "get_all_commands")
+__all__ = ("debug_embed", "get_cache_state", "strf_delta")
 
 
 def debug_embed(title: str, **kwargs) -> Embed:
@@ -165,30 +164,3 @@ def make_table(rows: list[list[Any]], labels: Optional[list[Any]] = None, center
         lines.append(_make_data_line(column_widths, row, data_left, data_middle, data_right, align))
     lines.append(_make_solid_line(column_widths, "╰", "┴", "╯"))
     return "\n".join(lines)
-
-
-def get_all_commands(module: ModuleType) -> Dict[str, Callable]:
-    """
-    Get all SlashCommands from a specified module.
-
-    Args:
-        module: Module to extract commands from
-    """
-    commands = {}
-
-    def is_extension(e) -> bool:
-        """Check that an object is an extension."""
-        return inspect.isclass(e) and issubclass(e, Extension) and e is not Extension
-
-    def is_slashcommand(e) -> bool:
-        """Check that an object is a slash command."""
-        return isinstance(e, SlashCommand)
-
-    for _name, item in inspect.getmembers(module, is_extension):
-        inspect_result = inspect.getmembers(item, is_slashcommand)
-        exts = []
-        for _, val in inspect_result:
-            exts.append(val)
-        commands[f"{module.__name__}"] = exts
-
-    return {k: v for k, v in commands.items() if v is not None}
