@@ -1,10 +1,12 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
+import time
 from typing import Any, cast
 from urllib.parse import quote as _uriquote
 from weakref import WeakValueDictionary
 
 import aiohttp
+import discord_typings
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
@@ -34,38 +36,49 @@ from naff.client.const import (
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from naff.client.utils.input_utils import response_decode, OverriddenJson
 from naff.client.utils.serializer import dict_filter
-from naff.models import CooldownSystem
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .route import Route
-import discord_typings
 
 __all__ = ("HTTPClient",)
 
 
 class GlobalLock:
-    """Manages the global ratelimit"""
-
     def __init__(self) -> None:
-        self.cooldown_system: CooldownSystem = CooldownSystem(
-            45, 1
-        )  # global rate-limit is 50 per second, conservatively we use 45
-        self._lock: asyncio.Lock = asyncio.Lock()
+        self._lock = asyncio.Lock()
+        self.max_requests = 45
+        self._calls = 0
+        self._reset_time = 0
 
-    async def rate_limit(self) -> None:
-        async with self._lock:
-            while not self.cooldown_system.acquire_token():
-                await asyncio.sleep(self.cooldown_system.get_cooldown_time())
+    @property
+    def calls_remaining(self) -> int:
+        """Returns the amount of calls remaining."""
+        return self.max_requests - self._calls
 
-    async def lock(self, delta: float) -> None:
+    def reset_calls(self) -> None:
+        """Resets the calls to the max amount."""
+        self._calls = self.max_requests
+        self._reset_time = time.perf_counter() + 1
+
+    def set_reset_time(self, delta: float) -> None:
         """
-        Lock the global lock for a given duration.
+        Sets the reset time to the current time + delta.
 
+        To be called if a 429 is received.
         Args:
-            delta: The time to keep the lock acquired
+            delta: The time to wait before resetting the calls.
         """
-        await self._lock.acquire()
-        await asyncio.sleep(delta)
-        self._lock.release()
+        self._reset_time = time.perf_counter() + delta
+        self._calls = 0
+
+    async def wait(self) -> None:
+        """Throttles calls to prevent hitting the global rate limit."""
+        async with self._lock:
+            if self._reset_time <= time.perf_counter():
+                self.reset_calls()
+            elif self._calls <= 0:
+                await asyncio.sleep(self._reset_time - time.perf_counter())
+                self.reset_calls()
+            self._calls -= 1
 
 
 class BucketLock:
@@ -272,10 +285,7 @@ class HTTPClient(
         for attempt in range(self._max_attempts):
             async with lock:
                 try:
-                    await self.global_lock.rate_limit()
-                    # prevent us exceeding the global rate limit by throttling http requests
-
-                    if cast(ClientSession, self.__session).closed:
+                    if self.__session.closed:
                         await self.login(cast(str, self.token))
 
                     processed_data = self._process_payload(payload, files)
@@ -283,10 +293,9 @@ class HTTPClient(
                         kwargs["data"] = processed_data  # pyright: ignore
                     else:
                         kwargs["json"] = processed_data  # pyright: ignore
+                    await self.global_lock.wait()
 
-                    async with cast(ClientSession, self.__session).request(
-                        route.method, route.url, **kwargs
-                    ) as response:
+                    async with self.__session.request(route.method, route.url, **kwargs) as response:
                         result = await response_decode(response)
                         self.ingest_ratelimit(route, response.headers, lock)
 
@@ -299,7 +308,7 @@ class HTTPClient(
                                 logger.error(
                                     f"Bot has exceeded global ratelimit, locking REST API for {result['retry_after']} seconds"
                                 )
-                                await self.global_lock.lock(float(result["retry_after"]))
+                                self.global_lock.set_reset_time(float(result["retry_after"]))
                                 continue
                             elif result.get("message") == "The resource is being rate limited.":
                                 # resource ratelimit is reached
@@ -361,7 +370,7 @@ class HTTPClient(
 
     async def request_cdn(self, url, asset) -> bytes:  # pyright: ignore [reportGeneralTypeIssues]
         logger.debug(f"{asset} requests {url} from CDN")
-        async with cast(ClientSession, self.__session).get(url) as response:
+        async with self.__session.get(url) as response:
             if response.status == 200:
                 return await response.read()
             await self._raise_exception(response, asset, await response_decode(response))
@@ -377,7 +386,9 @@ class HTTPClient(
             The currently logged in bot's data
 
         """
-        self.__session = ClientSession(connector=self.connector)
+        self.__session = ClientSession(
+            connector=self.connector if self.connector else aiohttp.TCPConnector(limit=self.global_lock.max_requests),
+        )
         self.token = token
         try:
             result = await self.request(Route("GET", "/users/@me"))
@@ -422,6 +433,6 @@ class HTTPClient(
             url: the url to connect to
 
         """
-        return await cast(ClientSession, self.__session).ws_connect(
+        return await self.__session.ws_connect(
             url, timeout=30, max_msg_size=0, autoclose=False, headers={"User-Agent": self.user_agent}, compress=0
         )
