@@ -1714,7 +1714,7 @@ class Client(
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            self.dispatch(events.Component(ctx=ctx))
+            self.dispatch(events.Component(context=ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 ctx.command = callback
                 try:
@@ -1729,7 +1729,7 @@ class Client(
                     self.dispatch(events.ComponentCompletion(ctx=ctx))
             if component_type == ComponentTypes.BUTTON:
                 self.dispatch(events.Button(ctx))
-            if component_type == ComponentTypes.SELECT:
+            if component_type == ComponentTypes.STRING_SELECT:
                 self.dispatch(events.Select(ctx))
 
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
