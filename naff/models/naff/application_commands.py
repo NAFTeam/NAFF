@@ -1102,6 +1102,8 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "choices": ("choices", []),
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),
+        "max_length": ("max_length", None),
+        "min_length": ("max_length", None),
     }
     post_process: Dict[str, Callable] = {
         "choices": lambda l: [d | {"name_localizations": {}} if len(d) == 2 else d for d in l],

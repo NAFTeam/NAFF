@@ -1,6 +1,6 @@
 import datetime
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Protocol, Union, runtime_checkable
 
 from aiohttp import FormData
 
@@ -323,7 +323,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         self.deferred = True
 
     async def _send_http_request(
-        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+        self, message_payload: Union[dict, "FormData"], files: Iterable["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         if self.responded:
             message_data = await self._client.http.post_followup(
@@ -348,15 +348,20 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Iterable[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         suppress_embeds: bool = False,
@@ -498,13 +503,18 @@ class ComponentContext(InteractionContext):
     async def edit_origin(
         self,
         content: str = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
         ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Iterable[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
     ) -> "Message":
@@ -577,7 +587,7 @@ class AutocompleteContext(_BaseInteractionContext):
         """The text the user has entered so far."""
         return self.kwargs.get(self.focussed_option, "")
 
-    async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]) -> None:
+    async def send(self, choices: Iterable[Union[str, int, float, Dict[str, Union[str, int, float]]]]) -> None:
         """
         Send your autocomplete choices to discord. Choices must be either a list of strings, or a dictionary following the following format:
 
@@ -655,7 +665,7 @@ class PrefixedContext(Context, SendMixin):
     async def reply(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
@@ -663,7 +673,7 @@ class PrefixedContext(Context, SendMixin):
         return await self.send(content=content, reply_to=self.message, embeds=embeds or embed, **kwargs)
 
     async def _send_http_request(
-        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+        self, message_payload: Union[dict, "FormData"], files: Iterable["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id, files=files)
 
@@ -783,7 +793,7 @@ class HybridContext(Context):
     async def reply(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
@@ -809,17 +819,17 @@ class HybridContext(Context):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[
-                List[List[Union["BaseComponent", dict]]],
-                List[Union["BaseComponent", dict]],
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
                 "BaseComponent",
                 dict,
             ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
@@ -891,16 +901,16 @@ class SendableContext(Protocol):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
             Union[
-                List[List[Union["BaseComponent", dict]]],
-                List[Union["BaseComponent", dict]],
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
                 "BaseComponent",
                 dict,
             ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,

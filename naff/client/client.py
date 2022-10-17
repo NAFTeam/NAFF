@@ -16,7 +16,6 @@ from typing import (
     Coroutine,
     Dict,
     List,
-    Mapping,
     NoReturn,
     Optional,
     Sequence,
@@ -210,13 +209,7 @@ class Client(
         delete_unused_application_cmds: Delete any commands from discord that aren't implemented in this client
         enforce_interaction_perms: Enforce discord application command permissions, locally
         fetch_members: Should the client fetch members from guilds upon startup (this will delay the client being ready)
-
-        auto_defer: A system to automatically defer commands after a set duration
-        interaction_context: The object to instantiate for Interaction Context
-        prefixed_context: The object to instantiate for Prefixed Context
-        component_context: The object to instantiate for Component Context
-        autocomplete_context: The object to instantiate for Autocomplete Context
-        modal_context: The object to instantiate for Modal Context
+        send_command_tracebacks: Automatically send uncaught tracebacks if a command throws an exception
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
@@ -1872,7 +1865,7 @@ class Client(
             return ext[0]
         return None
 
-    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Mapping[str, Any]) -> None:
+    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Any) -> None:
         """
         Load an extension with given arguments.
 
@@ -1917,7 +1910,7 @@ class Client(
                     return
                 asyncio.create_task(self.synchronise_interactions())
 
-    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Mapping[str, Any]) -> None:
+    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Any) -> None:
         """
         Unload an extension with given arguments.
 
@@ -1958,8 +1951,8 @@ class Client(
         name: str,
         package: str | None = None,
         *,
-        load_kwargs: Mapping[str, Any] = None,
-        unload_kwargs: Mapping[str, Any] = None,
+        load_kwargs: Any = None,
+        unload_kwargs: Any = None,
     ) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.
