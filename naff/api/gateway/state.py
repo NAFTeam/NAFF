@@ -4,11 +4,13 @@ from datetime import datetime
 from logging import Logger
 from typing import TYPE_CHECKING, Optional, Union
 
+import attrs
+
 import naff
 from naff.api import events
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NaffException, WebSocketClosed
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.models.discord.activity import Activity
 from naff.models.discord.enums import Intents, Status, ActivityType
 from .gateway import GatewayClient
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ("ConnectionState",)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ConnectionState:
     client: "Client"
     """The bot's client"""

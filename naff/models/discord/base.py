@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Type
 
+import attrs
+
 from naff.client.const import T
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import no_export_meta
 from naff.models.discord.snowflake import SnowflakeObject
 
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
 __all__ = ("ClientObject", "DiscordObject")
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class ClientObject(DictSerializationMixin):
     """Serializable object that requires client reference."""
 
@@ -39,6 +41,6 @@ class ClientObject(DictSerializationMixin):
         return self
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class DiscordObject(SnowflakeObject, ClientObject):
     pass

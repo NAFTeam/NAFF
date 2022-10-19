@@ -3,6 +3,8 @@ import textwrap
 import uuid
 from typing import Callable, Coroutine, List, Optional, Sequence, TYPE_CHECKING, Union
 
+import attrs
+
 from naff import (
     Embed,
     ComponentContext,
@@ -21,7 +23,7 @@ from naff import (
     Color,
     BrandColors,
 )
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 
@@ -32,7 +34,7 @@ if TYPE_CHECKING:
 __all__ = ("Paginator",)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Timeout:
     paginator: "Paginator" = field()
     """The paginator that this timeout is associated with."""
@@ -53,7 +55,7 @@ class Timeout:
                 self.ping.clear()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Page:
     content: str = field()
     """The content of the page."""
@@ -74,7 +76,7 @@ class Page:
         return Embed(description=f"{self.prefix}\n{self.content}\n{self.suffix}", title=self.title)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Paginator:
     client: "Client" = field()
     """The NAFF client to hook listeners into"""

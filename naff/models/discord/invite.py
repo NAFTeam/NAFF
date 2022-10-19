@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import field
 from naff.models.discord.application import Application
 from naff.models.discord.enums import InviteTargetTypes
 from naff.models.discord.guild import GuildPreview
@@ -21,7 +23,7 @@ if TYPE_CHECKING:
 __all__ = ("Invite",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Invite(ClientObject):
     code: str = field(repr=True)
     """the invite code (unique ID)"""

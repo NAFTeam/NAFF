@@ -2,19 +2,20 @@ import datetime
 from logging import Logger
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Protocol, Union, runtime_checkable
 
+import attrs
 from aiohttp import FormData
 
 import naff.models.discord.message as message
-from naff.models.discord.timestamp import Timestamp
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import optional
+from naff.client.utils.attr_utils import docs, field
 from naff.models.discord.enums import MessageFlags, CommandTypes, Permissions
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
+from naff.models.discord.timestamp import Timestamp
 from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
@@ -50,7 +51,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Resolved:
     """Represents resolved data in an interaction."""
 
@@ -106,7 +107,7 @@ class Resolved:
         return new_cls
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Context:
     """Represents the context of a command."""
 
@@ -140,7 +141,7 @@ class Context:
         return self._client.cache.get_bot_voice_state(self.guild_id)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children."""
 
@@ -289,7 +290,7 @@ class _BaseInteractionContext(Context):
         return modal
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class InteractionContext(_BaseInteractionContext, SendMixin):
     """
     Represents the context of an interaction.
@@ -449,7 +450,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         return thing
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentContext(InteractionContext):
     custom_id: str = field(default="", metadata=docs("The ID given to the component that has been pressed"))
     component_type: int = field(default=0, metadata=docs("The type of component that has been pressed"))
@@ -571,7 +572,7 @@ class ComponentContext(InteractionContext):
             return self.message
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteContext(_BaseInteractionContext):
     focussed_option: str = field(default=MISSING, metadata=docs("The option the user is currently filling in"))
 
@@ -618,7 +619,7 @@ class AutocompleteContext(_BaseInteractionContext):
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalContext(InteractionContext):
     custom_id: str = field(default="")
 
@@ -643,7 +644,7 @@ class ModalContext(InteractionContext):
         return self.kwargs
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PrefixedContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
@@ -678,7 +679,7 @@ class PrefixedContext(Context, SendMixin):
         return await self._client.http.create_message(message_payload, self.channel.id, files=files)
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HybridContext(Context):
     """
     Represents the context for hybrid commands, a slash command that can also be used as a prefixed command.

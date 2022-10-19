@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 __all__ = ("PrefixedHelpCommand",)
 
 
-@attrs.define(slots=True)
+@attrs.define(eq=False, order=False, hash=False, slots=True)
 class PrefixedHelpCommand:
     """A help command for all prefixed commands in a bot."""
 

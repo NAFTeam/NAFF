@@ -2,11 +2,12 @@ from contextlib import suppress
 from logging import Logger
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
+import attrs
 import discord_typings
 
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NotFound, Forbidden
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.cache import TTLCache
 from naff.models import VoiceState
 from naff.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
@@ -52,7 +53,7 @@ def create_cache(
         return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GlobalCache:
     _client: "Client" = field()
 

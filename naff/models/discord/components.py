@@ -6,7 +6,7 @@ import attrs
 from naff.client.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter
-from naff.client.utils.attr_utils import define, field, str_validator
+from naff.client.utils.attr_utils import field, str_validator
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 from naff.models.discord.enums import ButtonStyles, ComponentTypes, ChannelTypes
@@ -57,7 +57,7 @@ class BaseComponent(DictSerializationMixin):
         return component_class.from_dict(data)
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class InteractiveComponent(BaseComponent):
     """
     A base interactive component class.
@@ -74,7 +74,7 @@ class InteractiveComponent(BaseComponent):
         return False
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Button(InteractiveComponent):
     """
     Represents a discord ui button.
@@ -126,7 +126,7 @@ class Button(InteractiveComponent):
             raise TypeError("You must have at least a label or emoji on a button.")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class SelectOption(BaseComponent):
     """
     Represents a select option.
@@ -183,7 +183,7 @@ class SelectOption(BaseComponent):
             raise ValueError("Description length must be 100 or lower.")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BaseSelectMenu(InteractiveComponent):
     """
     Represents a select menu component
@@ -232,7 +232,7 @@ class BaseSelectMenu(InteractiveComponent):
             raise TypeError("Selects max value cannot be less than min value.")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StringSelectMenu(BaseSelectMenu):
     """
     Represents a string select component.
@@ -271,7 +271,7 @@ class StringSelectMenu(BaseSelectMenu):
         self.options.append(option)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class UserSelectMenu(BaseSelectMenu):
     """
     Represents a user select component.
@@ -290,7 +290,7 @@ class UserSelectMenu(BaseSelectMenu):
     )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RoleSelectMenu(BaseSelectMenu):
     """
     Represents a role select component.
@@ -309,7 +309,7 @@ class RoleSelectMenu(BaseSelectMenu):
     )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MentionableSelectMenu(BaseSelectMenu):
     """
     Represents a mentionable select component.
@@ -328,7 +328,7 @@ class MentionableSelectMenu(BaseSelectMenu):
     )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelSelectMenu(BaseSelectMenu):
     """
     Represents a channel select component.
@@ -350,7 +350,7 @@ class ChannelSelectMenu(BaseSelectMenu):
     )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ActionRow(BaseComponent):
     """
     Represents an action row.

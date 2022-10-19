@@ -1,12 +1,13 @@
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import attrs
 import emoji
 
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import list_converter
 from naff.client.utils.attr_converters import optional
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none, no_export_meta
 from naff.models.discord.base import ClientObject
 from naff.models.discord.snowflake import SnowflakeObject, to_snowflake
@@ -23,7 +24,7 @@ __all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_e
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic ("partial") emoji used in discord."""
 
@@ -101,7 +102,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             return self.name
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CustomEmoji(PartialEmoji, ClientObject):
     """Represent a custom emoji in a guild with all its properties."""
 

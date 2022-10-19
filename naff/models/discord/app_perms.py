@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
-from naff.client.utils import define, field
+import attrs
+
+from naff.client.utils import field
 from naff.models.discord.base import DiscordObject, ClientObject
 from naff.models.discord.enums import InteractionPermissionTypes
 from naff.models.discord.snowflake import to_snowflake
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 __all__ = ("ApplicationCommandPermission",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ApplicationCommandPermission(DiscordObject):
     id: "Snowflake_Type" = field(converter=to_snowflake)
     """ID of the role user or channel"""
@@ -21,7 +23,7 @@ class ApplicationCommandPermission(DiscordObject):
     """Whether the command is enabled for this permission"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CommandPermissions(ClientObject):
     command_id: "Snowflake_Type" = field()
     _guild: "Guild" = field()

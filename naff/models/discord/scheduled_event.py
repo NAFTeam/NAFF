@@ -1,17 +1,19 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import attrs
+
 from naff.client.const import MISSING, Absent
 from naff.client.errors import EventLocationNotProvided
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils import to_image_data
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import field
+from naff.models.discord.asset import Asset
+from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
-from naff.models.discord.asset import Asset
-from naff.models.discord.file import UPLOADABLE_TYPE
-from naff.client.utils import to_image_data
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
 __all__ = ("ScheduledEvent",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ScheduledEvent(DiscordObject):
     name: str = field(repr=True)
     description: str = field(default=MISSING)

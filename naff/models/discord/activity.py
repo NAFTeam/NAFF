@@ -1,8 +1,10 @@
 from typing import Optional, List
 
+import attrs
+
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import timestamp_converter, optional
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.enums import ActivityType, ActivityFlags
@@ -18,7 +20,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActivityTimestamps(DictSerializationMixin):
     start: Optional[Timestamp] = field(default=None, converter=optional(timestamp_converter))
     """The start time of the activity. Shows "elapsed" timer on discord client."""
@@ -26,7 +28,7 @@ class ActivityTimestamps(DictSerializationMixin):
     """The end time of the activity. Shows "remaining" timer on discord client."""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActivityParty(DictSerializationMixin):
     id: Optional[str] = field(default=None)
     """A unique identifier for this party"""
@@ -34,7 +36,7 @@ class ActivityParty(DictSerializationMixin):
     """Info about the size of the party"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActivityAssets(DictSerializationMixin):
     large_image: Optional[str] = field(default=None)
     """The large image for this activity. Uses discord's asset image url format."""
@@ -46,7 +48,7 @@ class ActivityAssets(DictSerializationMixin):
     """Hover text for the small image"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActivitySecrets(DictSerializationMixin):
     join: Optional[str] = field(default=None)
     """The secret for joining a party"""
@@ -56,7 +58,7 @@ class ActivitySecrets(DictSerializationMixin):
     """The secret for a specific instanced match"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Activity(DictSerializationMixin):
     """Represents a discord activity object use for rich presence in discord."""
 

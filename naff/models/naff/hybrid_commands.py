@@ -1,15 +1,14 @@
-import inspect
-import functools
 import asyncio
-
+import functools
+import inspect
 from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, TypeGuard
 
+import attrs
 
 from naff.client.const import Absent, GLOBAL_SCOPE, MISSING, T
 from naff.client.errors import BadArgument
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
-from naff.models.naff.command import BaseCommand
 from naff.models.naff.application_commands import (
     SlashCommand,
     LocalisedName,
@@ -18,8 +17,8 @@ from naff.models.naff.application_commands import (
     SlashCommandChoice,
     OptionTypes,
 )
-from naff.models.naff.prefixed_commands import _convert_to_bool, PrefixedCommand
-from naff.models.naff.protocols import Converter
+from naff.models.naff.command import BaseCommand
+from naff.models.naff.context import HybridContext, InteractionContext, PrefixedContext
 from naff.models.naff.converters import (
     _LiteralConverter,
     NoArgumentConverter,
@@ -28,7 +27,8 @@ from naff.models.naff.converters import (
     RoleConverter,
     BaseChannelConverter,
 )
-from naff.models.naff.context import HybridContext, InteractionContext, PrefixedContext
+from naff.models.naff.prefixed_commands import _convert_to_bool, PrefixedCommand
+from naff.models.naff.protocols import Converter
 
 if TYPE_CHECKING:
     from naff.models.naff.checks import TYPE_CHECK_FUNCTION
@@ -228,7 +228,7 @@ class _StackedNoArgConverter(NoArgumentConverter):
         return await maybe_coroutine(self._additional_converter_func, ctx, part_one)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HybridCommand(SlashCommand):
     """A subclass of SlashCommand that handles the logic for hybrid commands."""
 
@@ -281,7 +281,7 @@ class HybridCommand(SlashCommand):
         return wrapper
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _HybridPrefixedCommand(PrefixedCommand):
     _uses_subcommand_func: bool = field(default=False)
 

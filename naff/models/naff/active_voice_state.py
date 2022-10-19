@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional, TYPE_CHECKING
 
+import attrs
 from discord_typings import VoiceStateData
 
 from naff.api.voice.player import Player
@@ -8,7 +9,7 @@ from naff.api.voice.voice_gateway import VoiceGateway
 from naff.client.const import MISSING
 from naff.client.errors import VoiceAlreadyConnected, VoiceConnectionTimeout
 from naff.client.utils import optional
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.voice_state import VoiceState
 
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 __all__ = ("ActiveVoiceState",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActiveVoiceState(VoiceState):
     ws: Optional[VoiceGateway] = field(default=None)
     """The websocket for this voice state"""

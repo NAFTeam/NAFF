@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional
+from naff.client.utils.attr_utils import field
 from naff.models.discord.asset import Asset
 from naff.models.discord.enums import ApplicationFlags
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 __all__ = ("Application",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Application(DiscordObject):
     """Represents a discord application."""
 
