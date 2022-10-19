@@ -1083,7 +1083,7 @@ class Client(
             custom_ids = [str(i) for i in custom_ids]
 
         def _check(event: Component) -> bool:
-            ctx: ComponentContext = event.context
+            ctx: ComponentContext = event.ctx
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.message.id in (
                 [message_ids] if isinstance(message_ids, int) else message_ids
