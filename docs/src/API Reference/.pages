@@ -1,5 +1,6 @@
 nav:
     - Client.md
+    - AutoShardClient.md
     - const.md
     - errors.md
     - API_Communication

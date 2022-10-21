@@ -4,12 +4,12 @@ from typing import Any, TYPE_CHECKING
 import attrs
 
 from naff.client.const import MISSING, T, Missing
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter
 from naff.models.discord.asset import Asset
-from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.color import COLOR_TYPES, Color, process_color
+from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.enums import Permissions
 from .base import DiscordObject
 
@@ -30,7 +30,7 @@ def sentinel_converter(value: bool | T | None, sentinel: T = attrs.NOTHING) -> b
     return value
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 @total_ordering
 class Role(DiscordObject):
     _sentinel = object()

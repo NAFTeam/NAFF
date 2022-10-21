@@ -2,12 +2,14 @@ from io import IOBase
 from pathlib import Path
 from typing import BinaryIO, Optional, Union
 
-from naff.client.utils.attr_utils import define, field
+import attrs
+
+from naff.client.utils.attr_utils import field
 
 __all__ = ("File", "open_file", "UPLOADABLE_TYPE")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class File:
     """
     Representation of a file.

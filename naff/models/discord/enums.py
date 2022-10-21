@@ -543,10 +543,18 @@ class ComponentTypes(CursedIntEnum):
     """Container for other components"""
     BUTTON = 2
     """Button object"""
-    SELECT = 3
-    """Select menu for picking from choices"""
+    STRING_SELECT = 3
+    """Select menu for picking from text choices"""
     INPUT_TEXT = 4
     """Text input object"""
+    USER_SELECT = 5
+    """Select menu for picking from users"""
+    ROLE_SELECT = 6
+    """Select menu for picking from roles"""
+    MENTIONABLE_SELECT = 7
+    """Select menu for picking from mentionable objects"""
+    CHANNEL_SELECT = 8
+    """Select menu for picking from channels"""
 
 
 class CommandTypes(CursedIntEnum):

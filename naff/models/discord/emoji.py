@@ -1,10 +1,13 @@
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import attrs
+import emoji
+
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import list_converter
 from naff.client.utils.attr_converters import optional
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none, no_export_meta
 from naff.models.discord.base import ClientObject
 from naff.models.discord.snowflake import SnowflakeObject, to_snowflake
@@ -21,7 +24,7 @@ __all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_e
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic ("partial") emoji used in discord."""
 
@@ -35,7 +38,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Whether this emoji is animated"""
 
     @classmethod
-    def from_str(cls, emoji_str: str) -> "PartialEmoji":
+    def from_str(cls, emoji_str: str, *, language: str = "alias") -> Optional["PartialEmoji"]:
         """
         Generate a PartialEmoji from a discord Emoji string representation, or unicode emoji.
 
@@ -45,9 +48,11 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             <a:emoji_name:emoji_id>
             a:emoji_name:emoji_id
             👋
+            :wave:
 
         Args:
             emoji_str: The string representation an emoji
+            language: The language to use for the unicode emoji parsing
 
         Returns:
             A PartialEmoji object
@@ -61,10 +66,19 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             parsed = tuple(filter(None, parsed[0]))
             if len(parsed) == 3:
                 return cls(name=parsed[1], id=parsed[2], animated=True)
-            else:
+            elif len(parsed) == 2:
                 return cls(name=parsed[0], id=parsed[1])
+            else:
+                _name = emoji.emojize(emoji_str, language=language)
+                _emoji_list = emoji.distinct_emoji_list(_name)
+                if _emoji_list:
+                    return cls(name=_emoji_list[0])
         else:
-            return cls(name=emoji_str)
+            # check if it's a unicode emoji
+            _emoji_list = emoji.distinct_emoji_list(emoji_str)
+            if _emoji_list:
+                return cls(name=_emoji_list[0])
+        return None
 
     def __str__(self) -> str:
         s = self.req_format
@@ -88,7 +102,7 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             return self.name
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CustomEmoji(PartialEmoji, ClientObject):
     """Represent a custom emoji in a guild with all its properties."""
 

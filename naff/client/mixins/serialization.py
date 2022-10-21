@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Type
 import attrs
 
 import naff.client.const as const
-from naff.client.utils.attr_utils import define, field
 import naff.client.utils.serializer as serializer
+from naff.client.utils.attr_utils import field
 
 __all__ = ("DictSerializationMixin",)
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class DictSerializationMixin:
     logger: Logger = field(init=False, factory=const.get_logger, metadata=serializer.no_export_meta)
 

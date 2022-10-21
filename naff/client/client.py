@@ -16,7 +16,6 @@ from typing import (
     Coroutine,
     Dict,
     List,
-    Mapping,
     NoReturn,
     Optional,
     Sequence,
@@ -210,13 +209,7 @@ class Client(
         delete_unused_application_cmds: Delete any commands from discord that aren't implemented in this client
         enforce_interaction_perms: Enforce discord application command permissions, locally
         fetch_members: Should the client fetch members from guilds upon startup (this will delay the client being ready)
-
-        auto_defer: A system to automatically defer commands after a set duration
-        interaction_context: The object to instantiate for Interaction Context
-        prefixed_context: The object to instantiate for Prefixed Context
-        component_context: The object to instantiate for Component Context
-        autocomplete_context: The object to instantiate for Autocomplete Context
-        modal_context: The object to instantiate for Modal Context
+        send_command_tracebacks: Automatically send uncaught tracebacks if a command throws an exception
 
         auto_defer: AutoDefer: A system to automatically defer commands after a set duration
         interaction_context: Type[InteractionContext]: InteractionContext: The object to instantiate for Interaction Context
@@ -230,6 +223,7 @@ class Client(
         shard_id: The zero based int ID of this shard
 
         debug_scope: Force all application commands to be registered within this scope
+        disable_dm_commands: Should interaction commands be disabled in DMs?
         basic_logging: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
         logging_level: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
         logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
@@ -257,6 +251,7 @@ class Client(
         debug_scope: Absent["Snowflake_Type"] = MISSING,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
         delete_unused_application_cmds: bool = False,
+        disable_dm_commands: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
@@ -339,6 +334,7 @@ class Client(
         self._ready = asyncio.Event()
         self._closed = False
         self._startup = False
+        self.disable_dm_commands = disable_dm_commands
 
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
@@ -821,7 +817,10 @@ class Client(
                 try:  # wait to let guilds cache
                     await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
                 except asyncio.TimeoutError:
-                    self.logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    # this will *mostly* occur when a guild has been shadow deleted by discord T&S.
+                    # there is no way to check for this, so we just need to wait for this to time out.
+                    # We still log it though, just in case.
+                    self.logger.debug("Timeout waiting for guilds cache")
                     break
                 self._guild_event.clear()
 
@@ -1084,7 +1083,7 @@ class Client(
             custom_ids = [str(i) for i in custom_ids]
 
         def _check(event: Component) -> bool:
-            ctx: ComponentContext = event.context
+            ctx: ComponentContext = event.ctx
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.message.id in (
                 [message_ids] if isinstance(message_ids, int) else message_ids
@@ -1178,6 +1177,9 @@ class Client(
         """
         if self.debug_scope:
             command.scopes = [self.debug_scope]
+
+        if self.disable_dm_commands:
+            command.dm_permission = False
 
         # for SlashCommand objs without callback (like objects made to hold group info etc)
         if command.callback is None:
@@ -1719,8 +1721,8 @@ class Client(
                 finally:
                     self.dispatch(events.ComponentCompletion(ctx=ctx))
             if component_type == ComponentTypes.BUTTON:
-                self.dispatch(events.Button(ctx))
-            if component_type == ComponentTypes.SELECT:
+                self.dispatch(events.ButtonPressed(ctx))
+            if component_type == ComponentTypes.STRING_SELECT:
                 self.dispatch(events.Select(ctx))
 
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
@@ -1863,7 +1865,7 @@ class Client(
             return ext[0]
         return None
 
-    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Mapping[str, Any]) -> None:
+    def load_extension(self, name: str, package: str | None = None, **load_kwargs: Any) -> None:
         """
         Load an extension with given arguments.
 
@@ -1873,27 +1875,33 @@ class Client(
             **load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
-        name = importlib.util.resolve_name(name, package)
-        if name in self.__modules:
-            raise Exception(f"{name} already loaded")
+        module_name = importlib.util.resolve_name(name, package)
+        if module_name in self.__modules:
+            raise Exception(f"{module_name} already loaded")
 
-        module = importlib.import_module(name, package)
+        module = importlib.import_module(module_name, package)
         try:
             setup = getattr(module, "setup", None)
-            if not setup:
-                raise ExtensionLoadException(
-                    f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
-                ) from None
-            setup(self, **load_kwargs)
+            if setup:
+                setup(self, **load_kwargs)
+            else:
+                self.logger.debug("No setup function found in %s", module_name)
+
+                objects = {name: obj for name, obj in inspect.getmembers(module) if isinstance(obj, type)}
+                for obj_name, obj in objects.items():
+                    if Extension in obj.__bases__:
+                        self.logger.debug(f"Found extension class {obj_name} in {module_name}: Attempting to load")
+                        obj(self, **load_kwargs)
+
         except ExtensionLoadException:
             raise
         except Exception as e:
-            del sys.modules[name]
-            raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
+            del sys.modules[module_name]
+            raise ExtensionLoadException(f"Unexpected Error loading {module_name}") from e
 
         else:
-            self.logger.debug(f"Loaded Extension: {name}")
-            self.__modules[name] = module
+            self.logger.debug(f"Loaded Extension: {module_name}")
+            self.__modules[module_name] = module
 
             if self.sync_ext and self._ready.is_set():
                 try:
@@ -1902,7 +1910,7 @@ class Client(
                     return
                 asyncio.create_task(self.synchronise_interactions())
 
-    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Mapping[str, Any]) -> None:
+    def unload_extension(self, name: str, package: str | None = None, **unload_kwargs: Any) -> None:
         """
         Unload an extension with given arguments.
 
@@ -1943,8 +1951,8 @@ class Client(
         name: str,
         package: str | None = None,
         *,
-        load_kwargs: Mapping[str, Any] = None,
-        unload_kwargs: Mapping[str, Any] = None,
+        load_kwargs: Any = None,
+        unload_kwargs: Any = None,
     ) -> None:
         """
         Helper method to reload an extension. Simply unloads, then loads the extension with given arguments.

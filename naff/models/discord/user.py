@@ -2,13 +2,15 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
 from warnings import warn
 
+import attrs
+
 from naff.client.const import Absent, MISSING
 from naff.client.errors import HTTPException, TooManyChanges
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import list_converter, optional
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import docs, field
 from naff.client.utils.serializer import to_image_data
 from naff.models.discord.activity import Activity
 from naff.models.discord.asset import Asset
@@ -41,7 +43,7 @@ class _SendDMMixin(SendMixin):
         return await self._client.http.create_message(message_payload, dm_id, files=files)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model."""
 
@@ -102,7 +104,7 @@ class BaseUser(DiscordObject, _SendDMMixin):
         ]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class User(BaseUser):
     bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     system: bool = field(
@@ -154,7 +156,7 @@ class User(BaseUser):
         return [member for member in member_objs if member]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class NaffUser(User):
     verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
     mfa_enabled: bool = field(
@@ -224,7 +226,7 @@ class NaffUser(User):
             self._client.cache.place_user_data(resp)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Member(DiscordObject, _SendDMMixin):
     bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
     nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))

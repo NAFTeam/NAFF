@@ -19,7 +19,7 @@ from naff.client.const import (
 )
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import optional
-from naff.client.utils.attr_utils import define, field, docs, attrs_validator
+from naff.client.utils.attr_utils import attrs_validator, docs, field
 from naff.client.utils.misc_utils import get_parameters
 from naff.client.utils.serializer import no_export_meta
 from naff.models.discord.enums import ChannelTypes, CommandTypes, Permissions
@@ -75,7 +75,9 @@ def desc_validator(_: Any, attr: Attribute, value: str) -> None:
             raise ValueError(f"Description must be between 1 and {SLASH_CMD_MAX_DESC_LENGTH} characters long")
 
 
-@define(field_transformer=attrs_validator(name_validator, skip_fields=["default_locale"]))
+@attrs.define(
+    eq=False, order=False, hash=False, field_transformer=attrs_validator(name_validator, skip_fields=["default_locale"])
+)
 class LocalisedName(LocalisedField):
     """A localisation object for names."""
 
@@ -83,7 +85,9 @@ class LocalisedName(LocalisedField):
         return super().__repr__()
 
 
-@define(field_transformer=attrs_validator(desc_validator, skip_fields=["default_locale"]))
+@attrs.define(
+    eq=False, order=False, hash=False, field_transformer=attrs_validator(desc_validator, skip_fields=["default_locale"])
+)
 class LocalisedDesc(LocalisedField):
     """A localisation object for descriptions."""
 
@@ -150,7 +154,7 @@ class CallbackTypes(IntEnum):
     MODAL = 9
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class InteractionCommand(BaseCommand):
     """
     Represents a discord abstract interaction command.
@@ -273,7 +277,7 @@ class InteractionCommand(BaseCommand):
         return True
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ContextMenu(InteractionCommand):
     """
     Represents a discord context menu.
@@ -304,7 +308,7 @@ class ContextMenu(InteractionCommand):
         return data
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class SlashCommandChoice(DictSerializationMixin):
     """
     Represents a discord slash command choice.
@@ -322,7 +326,7 @@ class SlashCommandChoice(DictSerializationMixin):
         return {"name": str(self.name), "value": self.value, "name_localizations": self.name.to_locale_dict()}
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class SlashCommandOption(DictSerializationMixin):
     """
     Represents a discord slash command option.
@@ -439,7 +443,7 @@ class SlashCommandOption(DictSerializationMixin):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class SlashCommand(InteractionCommand):
     name: LocalisedName = field(converter=LocalisedName.converter)
     description: LocalisedDesc = field(default="No Description Set", converter=LocalisedDesc.converter)
@@ -599,14 +603,14 @@ class SlashCommand(InteractionCommand):
         return wrapper
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
     name: str = field()
     listeners: list[str] = field(factory=list)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalCommand(ComponentCommand):
     ...
 
@@ -1102,6 +1106,8 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "choices": ("choices", []),
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),
+        "max_length": ("max_length", None),
+        "min_length": ("max_length", None),
     }
     post_process: Dict[str, Callable] = {
         "choices": lambda l: [d | {"name_localizations": {}} if len(d) == 2 else d for d in l],

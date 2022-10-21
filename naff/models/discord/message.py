@@ -3,14 +3,17 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Sequence, Union, Mapping
 
+import attrs
+
 import naff.models as models
 from naff.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
 from naff.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none
+from naff.models.discord.channel import BaseChannel
 from naff.models.discord.file import UPLOADABLE_TYPE
 from .base import DiscordObject
 from .enums import (
@@ -23,7 +26,6 @@ from .enums import (
     AutoArchiveDuration,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
-from naff.models.discord.channel import BaseChannel
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -46,7 +48,7 @@ __all__ = (
 channel_mention = re.compile(r"<#(?P<id>[0-9]{17,})>")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Attachment(DiscordObject):
     filename: str = field()
     """name of file attached"""
@@ -73,7 +75,7 @@ class Attachment(DiscordObject):
         return self.height, self.width
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ChannelMention(DiscordObject):
     guild_id: "Snowflake_Type" = field()
     """id of the guild containing the channel"""
@@ -91,7 +93,7 @@ class MessageActivity:
     """party_id from a Rich Presence event"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MessageReference(DictSerializationMixin):
     """
     Reference to an originating message.
@@ -130,7 +132,7 @@ class MessageReference(DictSerializationMixin):
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MessageInteraction(DiscordObject):
     type: InteractionTypes = field(converter=InteractionTypes)
     """the type of interaction"""
@@ -150,7 +152,7 @@ class MessageInteraction(DiscordObject):
         return await self.get_user(self._user_id)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AllowedMentions(DictSerializationMixin):
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
@@ -227,7 +229,7 @@ class AllowedMentions(DictSerializationMixin):
         return cls()
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseMessage(DiscordObject):
     _channel_id: "Snowflake_Type" = field(default=MISSING, converter=to_optional_snowflake)
     _thread_channel_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
@@ -267,7 +269,7 @@ class BaseMessage(DiscordObject):
         return MISSING
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Message(BaseMessage):
     content: str = field(default=MISSING)
     """Contents of the message"""

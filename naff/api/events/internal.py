@@ -23,11 +23,13 @@ These are events dispatched by the client. This is intended as a reference so yo
 import re
 from typing import Any, Optional, TYPE_CHECKING
 
+import attrs
+
 from naff.api.events.base import BaseEvent, RawGatewayEvent
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 
 __all__ = (
-    "Button",
+    "ButtonPressed",
     "Component",
     "Connect",
     "Disconnect",
@@ -65,41 +67,41 @@ if TYPE_CHECKING:
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Login(BaseEvent):
     """The bot has just logged in."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Connect(BaseEvent):
     """The bot is now connected to the discord Gateway."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Resume(BaseEvent):
     """The bot has resumed its connection to the discord Gateway."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Disconnect(BaseEvent):
     """The bot has just disconnected."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShardConnect(Connect):
     """A shard just connected to the discord Gateway."""
 
     shard_id: int = field(metadata=docs("The ID of the shard"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShardDisconnect(Disconnect):
     """A shard just disconnected."""
 
     shard_id: int = field(metadata=docs("The ID of the shard"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Startup(BaseEvent):
     """
     The client is now ready for the first time.
@@ -110,7 +112,7 @@ class Startup(BaseEvent):
     """
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Ready(BaseEvent):
     """
     The client is now ready.
@@ -122,66 +124,66 @@ class Ready(BaseEvent):
     """
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class WebsocketReady(RawGatewayEvent):
     """The gateway has reported that it is ready."""
 
     data: dict = field(metadata=docs("The data from the ready event"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Component(BaseEvent):
     """Dispatched when a user uses a Component."""
 
-    context: "ComponentContext" = field(metadata=docs("The context of the interaction"))
+    ctx: "ComponentContext" = field(metadata=docs("The context of the interaction"))
 
 
-@define(kw_only=False)
-class Button(Component):
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
+class ButtonPressed(Component):
     """Dispatched when a user uses a Button."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Select(Component):
     """Dispatched when a user uses a Select."""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CommandCompletion(BaseEvent):
     """Dispatched after the library ran any command callback."""
 
     ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentCompletion(BaseEvent):
     """Dispatched after the library ran any component callback."""
 
     ctx: "ComponentContext" = field(metadata=docs("The component context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteCompletion(BaseEvent):
     """Dispatched after the library ran any autocomplete callback."""
 
     ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalCompletion(BaseEvent):
     """Dispatched after the library ran any modal callback."""
 
     ctx: "ModalContext" = field(metadata=docs("The modal context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _Error(BaseEvent):
     error: Exception = field(metadata=docs("The error that was encountered"))
     args: tuple[Any] = field(factory=tuple)
     kwargs: dict[str, Any] = field(factory=dict)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Error(_Error):
     """Dispatched when the library encounters an error."""
 
@@ -189,28 +191,28 @@ class Error(_Error):
     ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CommandError(_Error):
     """Dispatched when the library encounters an error in a command."""
 
     ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentError(_Error):
     """Dispatched when the library encounters an error in a component."""
 
     ctx: "ComponentContext" = field(metadata=docs("The component context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteError(_Error):
     """Dispatched when the library encounters an error in an autocomplete."""
 
     ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalError(_Error):
     """Dispatched when the library encounters an error in a modal."""
 

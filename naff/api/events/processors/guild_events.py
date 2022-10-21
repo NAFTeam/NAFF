@@ -34,7 +34,7 @@ class GuildEvents(EventMixinTemplate):
 
         """
         new_guild: bool = True
-        if self.cache.get_guild(event.guild.id):
+        if self.cache.get_guild(event.data["id"]):
             # guild already cached, most likely an unavailable guild coming back online
             new_guild = False
 

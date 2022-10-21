@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any, Union
 
-from naff.client.utils.attr_utils import define, field
+import attrs
+
+from naff.client.utils.attr_utils import field
 from naff.models.discord.asset import Asset
 from naff.models.discord.enums import TeamMembershipState
 from naff.models.discord.snowflake import to_snowflake
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ("TeamMember", "Team")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class TeamMember(DiscordObject):
     membership_state: TeamMembershipState = field(converter=TeamMembershipState)
     """Rhe user's membership state on the team"""
@@ -31,7 +33,7 @@ class TeamMember(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Team(DiscordObject):
     icon: Optional[Asset] = field(default=None)
     """A hash of the image of the team's icon"""

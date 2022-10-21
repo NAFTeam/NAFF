@@ -1,12 +1,14 @@
 from functools import cached_property
 
+import attrs
+
 from naff.client import const
-from naff.client.utils import define, field
+from naff.client.utils import field
 
 __all__ = ("LocalisedField", "LocalizedField")
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class LocalisedField:
     """
     An object that enables support for localising fields.
