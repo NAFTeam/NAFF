@@ -1,9 +1,11 @@
 import re
 from typing import TYPE_CHECKING, Callable, Coroutine
 
+import attrs
+
 import naff.models as models
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 from naff.models.discord.snowflake import to_snowflake
 
 if TYPE_CHECKING:
@@ -16,7 +18,7 @@ __all__ = ("BaseEvent", "GuildEvent", "RawGatewayEvent")
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=False)
 class BaseEvent:
     """A base event that all other events inherit from."""
 
@@ -58,7 +60,7 @@ class BaseEvent:
         return listener
 
 
-@define(slots=False, kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=False)
 class GuildEvent(BaseEvent):
     """A base event that adds guild_id."""
 
@@ -70,7 +72,7 @@ class GuildEvent(BaseEvent):
         return self.bot.cache.get_guild(self.guild_id)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RawGatewayEvent(BaseEvent):
     """
     An event dispatched from the gateway.

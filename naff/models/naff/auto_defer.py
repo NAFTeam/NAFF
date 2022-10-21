@@ -1,8 +1,10 @@
 import asyncio
 from typing import TYPE_CHECKING
 
+import attrs
+
 from naff.client.errors import AlreadyDeferred, NotFound, BadRequest, HTTPException
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 
 if TYPE_CHECKING:
     from naff.models.naff.context import InteractionContext
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 __all__ = ("AutoDefer",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutoDefer:
     """Automatically defer application commands for you!"""
 

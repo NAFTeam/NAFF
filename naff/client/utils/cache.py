@@ -5,7 +5,7 @@ from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
 import attrs
 
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 
 __all__ = ("TTLItem", "TTLCache")
 
@@ -13,7 +13,7 @@ KT = TypeVar("KT")
 VT = TypeVar("VT")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TTLItem(Generic[VT]):
     value: VT = field()
     expire: float = field()

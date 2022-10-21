@@ -9,12 +9,12 @@ import attrs
 
 from naff.client.const import MISSING
 from naff.client.errors import BadArgument
+from naff.client.utils.attr_utils import docs, field
 from naff.client.utils.input_utils import _quotes
-from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
-from naff.models.naff.protocols import Converter
-from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, NAFF_MODEL_TO_CONVERTER
 from naff.models.naff.command import BaseCommand
+from naff.models.naff.converters import _LiteralConverter, NoArgumentConverter, Greedy, NAFF_MODEL_TO_CONVERTER
+from naff.models.naff.protocols import Converter
 
 if TYPE_CHECKING:
     from naff.models.naff.context import PrefixedContext
@@ -28,7 +28,7 @@ __all__ = (
 _STARTING_QUOTES = frozenset(_quotes.keys())
 
 
-@attrs.define(slots=True)
+@attrs.define(eq=False, order=False, hash=False, slots=True)
 class PrefixedCommandParameter:
     """
     An object representing parameters in a prefixed command.
@@ -62,7 +62,7 @@ class PrefixedCommandParameter:
         return self.default != MISSING
 
 
-@attrs.define(slots=True)
+@attrs.define(eq=False, order=False, hash=False, slots=True)
 class _PrefixedArgsIterator:
     """
     An iterator over the arguments of a prefixed command.
@@ -257,7 +257,7 @@ async def _greedy_convert(
     return greedy_args, broke_off
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PrefixedCommand(BaseCommand):
     name: str = field(metadata=docs("The name of the command."))
     parameters: list[PrefixedCommandParameter] = field(metadata=docs("The parameters of the command."), factory=list)

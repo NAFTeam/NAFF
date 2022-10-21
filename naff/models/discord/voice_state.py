@@ -1,11 +1,13 @@
 import copy
 from typing import TYPE_CHECKING, Optional, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field
+from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.mixins.serialization import DictSerializationMixin
+from naff.client.utils.attr_utils import field
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ("VoiceState", "VoiceRegion")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceState(ClientObject):
     user_id: "Snowflake_Type" = field(default=MISSING, converter=to_snowflake)
     """the user id this voice state is for"""
@@ -91,7 +93,7 @@ class VoiceState(ClientObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceRegion(DictSerializationMixin):
     """A voice region."""
 

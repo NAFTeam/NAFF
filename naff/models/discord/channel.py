@@ -6,14 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Callable
 import attrs
 
 import naff.models as models
-
 from naff.client.const import Absent, DISCORD_EPOCH, MISSING
 from naff.client.errors import NotFound, VoiceNotConnected, TooManyChanges
 from naff.client.mixins.send import SendMixin
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.misc_utils import get
 from naff.client.utils.serializer import to_dict, to_image_data
 from naff.models.discord.base import DiscordObject
@@ -156,7 +155,7 @@ class ArchivedForumPosts(AsyncIterator):
         raise QueueEmpty
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
     """
     Channel Permissions Overwrite object.
@@ -219,7 +218,7 @@ class PermissionOverwrite(SnowflakeObject, DictSerializationMixin):
             self.deny |= perm
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class MessageableMixin(SendMixin):
     last_message_id: Optional[Snowflake_Type] = field(
         default=None
@@ -462,7 +461,7 @@ class MessageableMixin(SendMixin):
         return Typing(self)
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class InvitableMixin:
     async def create_invite(
         self,
@@ -524,7 +523,7 @@ class InvitableMixin:
         return models.Invite.from_list(invites_data, self._client)
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class ThreadableMixin:
     async def create_thread(
         self,
@@ -700,7 +699,7 @@ class ThreadableMixin:
         return threads
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class WebhookMixin:
     async def create_webhook(self, name: str, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> "models.Webhook":
         """
@@ -741,7 +740,7 @@ class WebhookMixin:
         return [models.Webhook.from_dict(d, self._client) for d in resp]
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class BaseChannel(DiscordObject):
     name: Optional[str] = field(repr=True, default=None)
     """The name of the channel (1-100 characters)"""
@@ -877,7 +876,7 @@ class BaseChannel(DiscordObject):
 # DMs
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class DMChannel(BaseChannel, MessageableMixin):
     recipients: List["models.User"] = field(factory=list)
     """The users of the DM that will receive messages sent"""
@@ -898,7 +897,7 @@ class DMChannel(BaseChannel, MessageableMixin):
         return self.recipients
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class DM(DMChannel):
     @property
     def recipient(self) -> "models.User":
@@ -906,7 +905,7 @@ class DM(DMChannel):
         return self.recipients[0]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class DMGroup(DMChannel):
     owner_id: Snowflake_Type = field(repr=True)
     """id of the creator of the group DM"""
@@ -971,7 +970,7 @@ class DMGroup(DMChannel):
 # Guild
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class GuildChannel(BaseChannel):
     position: Optional[int] = field(default=0)
     """Sorting position of the channel"""
@@ -1289,7 +1288,7 @@ class GuildChannel(BaseChannel):
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildCategory(GuildChannel):
     @property
     def channels(self) -> List["TYPE_GUILD_CHANNEL"]:
@@ -1556,7 +1555,7 @@ class GuildCategory(GuildChannel):
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = field(default=None)
     """The channel topic (0-1024 characters)"""
@@ -1645,7 +1644,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin, WebhookMixin):
     topic: Optional[str] = field(default=None)
     """The channel topic (0-1024 characters)"""
@@ -1785,7 +1784,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 # Guild Threads
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
     parent_id: Snowflake_Type = field(default=None, converter=optional_c(to_snowflake))
     """id of the text channel this thread was created"""
@@ -1918,7 +1917,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
         return await super().edit(locked=locked, archived=True, reason=reason)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildNewsThread(ThreadChannel):
     async def edit(
         self,
@@ -1956,7 +1955,7 @@ class GuildNewsThread(ThreadChannel):
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildPublicThread(ThreadChannel):
     async def edit(
         self,
@@ -1996,7 +1995,7 @@ class GuildPublicThread(ThreadChannel):
         )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildForumPost(GuildPublicThread):
     """
     A forum post
@@ -2098,7 +2097,7 @@ class GuildForumPost(GuildPublicThread):
         await self.edit(flags=flags, reason=reason)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildPrivateThread(ThreadChannel):
     invitable: bool = field(default=False)
     """Whether non-moderators can add other non-moderators to a thread"""
@@ -2146,7 +2145,7 @@ class GuildPrivateThread(ThreadChannel):
 # Guild Voices
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False, kw_only=True)
 class VoiceChannel(GuildChannel):  # May not be needed, can be directly just GuildVoice.
     bitrate: int = field()
     """The bitrate (in bits) of the voice channel"""
@@ -2254,12 +2253,12 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
             raise VoiceNotConnected
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildVoice(VoiceChannel, InvitableMixin, MessageableMixin):
     pass
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildStageVoice(GuildVoice):
     stage_instance: "models.StageInstance" = field(default=MISSING)
     """The stage instance that this voice channel belongs to"""
@@ -2318,7 +2317,7 @@ class GuildStageVoice(GuildVoice):
         await self.stage_instance.delete(reason=reason)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildForum(GuildChannel):
     available_tags: List[ThreadTag] = field(factory=list)
     """A list of tags available to assign to threads"""

@@ -6,15 +6,19 @@ from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from warnings import warn
 
+import attrs
+
 import naff.models as models
 from naff.client.const import Absent, MISSING, PREMIUM_GUILD_LIMITS
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 from naff.client.utils.deserialise_app_cmds import deserialize_app_cmds
 from naff.client.utils.serializer import to_image_data, no_export_meta
+from naff.models.discord.app_perms import CommandPermissions, ApplicationCommandPermission
+from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.misc.iterator import AsyncIterator
 from .base import DiscordObject, ClientObject
@@ -34,9 +38,7 @@ from .enums import (
     AutoModEvent,
     AutoModTriggerType,
 )
-from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
-from naff.models.discord.app_perms import CommandPermissions, ApplicationCommandPermission
 
 if TYPE_CHECKING:
     from naff.client.client import Client
@@ -60,7 +62,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildBan:
     reason: Optional[str]
     """The reason for the ban"""
@@ -68,7 +70,7 @@ class GuildBan:
     """The banned user"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseGuild(DiscordObject):
     name: str = field(repr=True)
     """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
@@ -97,7 +99,7 @@ class BaseGuild(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildWelcome(ClientObject):
     description: Optional[str] = field(default=None, metadata=docs("Welcome Screen server description"))
     welcome_channels: List["models.GuildWelcomeChannel"] = field(
@@ -105,7 +107,7 @@ class GuildWelcome(ClientObject):
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildPreview(BaseGuild):
     """A partial guild object."""
 
@@ -141,7 +143,7 @@ class MemberIterator(AsyncIterator):
         raise QueueEmpty
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Guild(BaseGuild):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
@@ -1994,7 +1996,7 @@ class Guild(BaseGuild):
         return sorted_channels
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildTemplate(ClientObject):
     code: str = field(repr=True, metadata=docs("the template code (unique ID)"))
     name: str = field(repr=True, metadata=docs("the name"))
@@ -2050,7 +2052,7 @@ class GuildTemplate(ClientObject):
         await self._client.http.delete_guild_template(self.source_guild_id, self.code)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildWelcomeChannel(ClientObject):
     channel_id: Snowflake_Type = field(repr=True, metadata=docs("Welcome Channel ID"))
     description: str = field(metadata=docs("Welcome Channel description"))
@@ -2177,7 +2179,7 @@ class GuildWidget(DiscordObject):
         return [await self._client.fetch_user(member_id) for member_id in self._member_ids]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogChange(ClientObject):
     key: str = field(repr=True)
     """name of audit log change key"""
@@ -2187,7 +2189,7 @@ class AuditLogChange(ClientObject):
     """old value of the key"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogEntry(DiscordObject):
     target_id: Optional["Snowflake_Type"] = field(converter=optional(to_snowflake))
     """id of the affected entity (webhook, user, role, etc.)"""
@@ -2210,7 +2212,7 @@ class AuditLogEntry(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 

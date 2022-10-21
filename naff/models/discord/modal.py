@@ -6,9 +6,9 @@ import attrs
 
 from naff.client.const import MISSING
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.models.naff.application_commands import CallbackTypes
+from naff.client.utils.attr_utils import field, str_validator
 from naff.models.discord.components import InteractiveComponent, ComponentTypes
-from naff.client.utils.attr_utils import define, field, str_validator
+from naff.models.naff.application_commands import CallbackTypes
 
 __all__ = ("InputText", "Modal", "ParagraphText", "ShortText", "TextStyles")
 
@@ -18,7 +18,7 @@ class TextStyles(IntEnum):
     PARAGRAPH = 2
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class InputText(InteractiveComponent):
     """An input component for modals"""
 
@@ -47,21 +47,21 @@ class InputText(InteractiveComponent):
     """the maximum input length for a text input, min 1, max 4000. Must be more than min_length."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShortText(InputText):
     """A single line input component for modals"""
 
     style: Union[TextStyles, int] = field(default=TextStyles.SHORT, kw_only=True)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ParagraphText(InputText):
     """A multi line input component for modals"""
 
     style: Union[TextStyles, int] = field(default=TextStyles.PARAGRAPH, kw_only=True)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Modal(DictSerializationMixin):
     """Form submission style component on discord"""
 

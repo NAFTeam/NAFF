@@ -23,10 +23,12 @@ These are events dispatched by Discord. This is intended as a reference so you k
 
 from typing import TYPE_CHECKING, List, Sequence, Union, Optional
 
+import attrs
+
 import naff.models
 from naff.api.events.base import GuildEvent, BaseEvent
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 
 __all__ = (
     "ApplicationCommandPermissionsUpdate",
@@ -107,7 +109,7 @@ if TYPE_CHECKING:
     from naff.models.discord.app_perms import ApplicationCommandPermission
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AutoModExec(BaseEvent):
     """Dispatched when an auto modation action is executed"""
 
@@ -116,41 +118,41 @@ class AutoModExec(BaseEvent):
     guild: "Guild" = field(metadata=docs("The guild the action was executed in"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AutoModCreated(BaseEvent):
     guild: "Guild" = field(metadata=docs("The guild the rule was modified in"))
     rule: "AutoModRule" = field(metadata=docs("The rule that was modified"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AutoModUpdated(AutoModCreated):
     """Dispatched when an auto mod rule is modified"""
 
     ...
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AutoModDeleted(AutoModCreated):
     """Dispatched when an auto mod rule is deleted"""
 
     ...
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ApplicationCommandPermissionsUpdate(BaseEvent):
     guild_id: "Snowflake_Type" = field(metadata=docs("The guild the command permissions were updated in"))
     application_id: "Snowflake_Type" = field(metadata=docs("The application the command permissions were updated for"))
     permissions: List["ApplicationCommandPermission"] = field(factory=list, metadata=docs("The updated permissions"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelCreate(BaseEvent):
     """Dispatched when a channel is created."""
 
     channel: "BaseChannel" = field(metadata=docs("The channel this event is dispatched from"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelUpdate(BaseEvent):
     """Dispatched when a channel is updated."""
 
@@ -160,12 +162,12 @@ class ChannelUpdate(BaseEvent):
     """Channel after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelDelete(ChannelCreate):
     """Dispatched when a channel is deleted."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelPinsUpdate(ChannelCreate):
     """Dispatched when a channel's pins are updated."""
 
@@ -173,29 +175,29 @@ class ChannelPinsUpdate(ChannelCreate):
     """The time at which the most recent pinned message was pinned"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created, or a thread is new to the client"""
 
     thread: "TYPE_THREAD_CHANNEL" = field(metadata=docs("The thread this event is dispatched from"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class NewThreadCreate(ThreadCreate):
     """Dispatched when a thread is newly created."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadUpdate(ThreadCreate):
     """Dispatched when a thread is updated."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadDelete(ThreadCreate):
     """Dispatched when a thread is deleted."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadListSync(BaseEvent):
     """Dispatched when gaining access to a channel, contains all active threads in that channel."""
 
@@ -208,7 +210,7 @@ class ThreadListSync(BaseEvent):
 
 
 # todo implementation missing
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadMemberUpdate(ThreadCreate):
     """
     Dispatched when the thread member object for the current user is updated.
@@ -223,7 +225,7 @@ class ThreadMemberUpdate(ThreadCreate):
     """The member who was added"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ThreadMembersUpdate(BaseEvent):
     """Dispatched when anyone is added or removed from a thread."""
 
@@ -237,7 +239,7 @@ class ThreadMembersUpdate(BaseEvent):
     """Users removed from the thread"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildJoin(BaseEvent):
     """
     Dispatched when a guild is joined, created, or becomes available.
@@ -251,7 +253,7 @@ class GuildJoin(BaseEvent):
     """The guild that was created"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildUpdate(BaseEvent):
     """Dispatched when a guild is updated."""
 
@@ -261,7 +263,7 @@ class GuildUpdate(BaseEvent):
     """Guild after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildLeft(GuildEvent):
     """Dispatched when a guild is left."""
 
@@ -269,7 +271,7 @@ class GuildLeft(GuildEvent):
     """The guild, if it was cached"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildUnavailable(GuildEvent):
     """Dispatched when a guild is not available."""
 
@@ -277,19 +279,19 @@ class GuildUnavailable(GuildEvent):
     """The guild, if it was cached"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BanCreate(GuildEvent):
     """Dispatched when someone was banned from a guild."""
 
     user: "BaseUser" = field(metadata=docs("The user"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BanRemove(BanCreate):
     """Dispatched when a users ban is removed."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildEmojisUpdate(GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
@@ -299,7 +301,7 @@ class GuildEmojisUpdate(GuildEvent):
     """List of emoji after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildStickersUpdate(GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
@@ -307,14 +309,14 @@ class GuildStickersUpdate(GuildEvent):
     """List of stickers from after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MemberAdd(GuildEvent):
     """Dispatched when a member is added to a guild."""
 
     member: "Member" = field(metadata=docs("The member who was added"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
@@ -323,7 +325,7 @@ class MemberRemove(MemberAdd):
     )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MemberUpdate(GuildEvent):
     """Dispatched when a member is updated."""
 
@@ -333,7 +335,7 @@ class MemberUpdate(GuildEvent):
     """The state of the member after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RoleCreate(GuildEvent):
     """Dispatched when a role is created."""
 
@@ -341,7 +343,7 @@ class RoleCreate(GuildEvent):
     """The created role"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RoleUpdate(GuildEvent):
     """Dispatched when a role is updated."""
 
@@ -351,7 +353,7 @@ class RoleUpdate(GuildEvent):
     """The role after this event"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RoleDelete(GuildEvent):
     """Dispatched when a guild role is deleted."""
 
@@ -361,7 +363,7 @@ class RoleDelete(GuildEvent):
     """The deleted role"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildMembersChunk(GuildEvent):
     """
     Sent in response to Guild Request Members.
@@ -383,19 +385,19 @@ class GuildMembersChunk(GuildEvent):
     """A list of members"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class IntegrationCreate(BaseEvent):
     """Dispatched when a guild integration is created."""
 
     integration: "GuildIntegration" = field()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class IntegrationUpdate(IntegrationCreate):
     """Dispatched when a guild integration is updated."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class IntegrationDelete(GuildEvent):
     """Dispatched when a guild integration is deleted."""
 
@@ -405,26 +407,26 @@ class IntegrationDelete(GuildEvent):
     """The ID of the bot/application for this integration"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created."""
 
     invite: naff.models.Invite = field()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class InviteDelete(InviteCreate):
     """Dispatched when an invite is deleted."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageCreate(BaseEvent):
     """Dispatched when a message is created."""
 
     message: "Message" = field()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageUpdate(BaseEvent):
     """Dispatched when a message is edited."""
 
@@ -434,14 +436,14 @@ class MessageUpdate(BaseEvent):
     """The message after this event was created"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageDelete(BaseEvent):
     """Dispatched when a message is deleted."""
 
     message: "Message" = field()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageDeleteBulk(GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
 
@@ -451,7 +453,7 @@ class MessageDeleteBulk(GuildEvent):
     """A list of message snowflakes"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
@@ -471,12 +473,12 @@ class MessageReactionAdd(BaseEvent):
         return self.reaction.count
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageReactionRemove(MessageReactionAdd):
     """Dispatched when a reaction is removed."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageReactionRemoveAll(GuildEvent):
     """Dispatched when all reactions are removed from a message."""
 
@@ -484,7 +486,7 @@ class MessageReactionRemoveAll(GuildEvent):
     """The message that was reacted to"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class PresenceUpdate(BaseEvent):
     """A user's presence has changed."""
 
@@ -500,24 +502,24 @@ class PresenceUpdate(BaseEvent):
     """The guild this presence update was dispatched from"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created."""
 
     stage_instance: "StageInstance" = field(metadata=docs("The stage instance"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StageInstanceDelete(StageInstanceCreate):
     """Dispatched when a stage instance is deleted."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StageInstanceUpdate(StageInstanceCreate):
     """Dispatched when a stage instance is updated."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TypingStart(BaseEvent):
     """Dispatched when a user starts typing."""
 
@@ -531,7 +533,7 @@ class TypingStart(BaseEvent):
     """unix time (in seconds) of when the user started typing"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class WebhooksUpdate(GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
 
@@ -540,14 +542,14 @@ class WebhooksUpdate(GuildEvent):
     """The ID of the webhook was updated"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
     interaction: dict = field()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceStateUpdate(BaseEvent):
     """Dispatched when a user's voice state changes."""
 
@@ -557,13 +559,13 @@ class VoiceStateUpdate(BaseEvent):
     """The voice state after this event was created or None if the user is no longer in a voice channel"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BaseVoiceEvent(BaseEvent):
     state: "VoiceState" = field()
     """The current voice state of the user"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceUserMove(BaseVoiceEvent):
     """Dispatched when a user moves voice channels."""
 
@@ -575,7 +577,7 @@ class VoiceUserMove(BaseVoiceEvent):
     """The new voice channel the user is in"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceUserMute(BaseVoiceEvent):
     """Dispatched when a user is muted or unmuted."""
 
@@ -587,7 +589,7 @@ class VoiceUserMute(BaseVoiceEvent):
     """The new mute state of the user"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceUserDeafen(BaseVoiceEvent):
     """Dispatched when a user is deafened or undeafened."""
 
@@ -599,7 +601,7 @@ class VoiceUserDeafen(BaseVoiceEvent):
     """The new deaf state of the user"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceUserJoin(BaseVoiceEvent):
     """Dispatched when a user joins a voice channel."""
 
@@ -609,7 +611,7 @@ class VoiceUserJoin(BaseVoiceEvent):
     """The voice channel the user joined"""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceUserLeave(BaseVoiceEvent):
     """Dispatched when a user leaves a voice channel."""
 

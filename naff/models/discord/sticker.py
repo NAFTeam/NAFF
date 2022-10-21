@@ -1,9 +1,11 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING, List, Optional, Union
 
+import attrs
+
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
@@ -33,7 +35,7 @@ class StickerFormatTypes(IntEnum):
     LOTTIE = 3
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StickerItem(DiscordObject):
     name: str = field(repr=True)
     """Name of the sticker."""
@@ -41,7 +43,7 @@ class StickerItem(DiscordObject):
     """Type of sticker image format."""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Sticker(StickerItem):
     """Represents a sticker that can be sent in messages."""
 
@@ -145,7 +147,7 @@ class Sticker(StickerItem):
         await self._client.http.delete_guild_sticker(self._guild_id, self.id, reason)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class StickerPack(DiscordObject):
     """Represents a pack of standard stickers."""
 
