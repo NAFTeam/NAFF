@@ -37,10 +37,19 @@ from naff.api.gateway.websocket import WebsocketClient
 from naff.api.http.route import Route
 from naff.api.voice.audio import AudioVolume
 from naff.client.errors import NotFound
+from naff.client.utils.misc_utils import find
+from naff.models.discord.timestamp import Timestamp
 
 __all__ = ()
 
 from tests.utils import generate_dummy_context
+
+try:
+    import dotenv
+
+    dotenv.load_dotenv()
+except ImportError:
+    pass
 
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
@@ -64,7 +73,14 @@ async def bot() -> Client:
 
 
 @pytest.fixture(scope="module")
-async def guild(bot) -> Guild:
+async def guild(bot: Client) -> Guild:
+    if len(bot.guilds) > 9:
+        leftover = find(lambda g: g.is_owner(bot.user.id) and g.name == "test_suite_guild", bot.guilds)
+        if leftover:
+            age = Timestamp.now() - leftover.created_at
+            if age.days > 0:
+                # This from a failed run, let's clean it up
+                await leftover.delete()
     guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
     community_channel = await guild.create_text_channel("community_channel")
 

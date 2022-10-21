@@ -232,7 +232,9 @@ class Member(DiscordObject, _SendDMMixin):
     nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
     deaf: bool = field(default=False, metadata=docs("Has this user been deafened in voice channels?"))
     mute: bool = field(default=False, metadata=docs("Has this user been muted in voice channels?"))
-    joined_at: "Timestamp" = field(converter=timestamp_converter, metadata=docs("When the user joined this guild"))
+    joined_at: "Timestamp" = field(
+        default=MISSING, converter=optional(timestamp_converter), metadata=docs("When the user joined this guild")
+    )
     premium_since: Optional["Timestamp"] = field(
         default=None,
         converter=optional_c(timestamp_converter),
