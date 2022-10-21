@@ -29,6 +29,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optio
 
 if TYPE_CHECKING:
     from naff.client import Client
+    from naff import InteractionContext
 
 __all__ = (
     "Attachment",
@@ -559,27 +560,29 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: Absent[Optional[int]] = MISSING) -> None:
+    async def delete(self, delay: int = 0, *, context: "InteractionContext") -> None:
         """
         Delete message.
 
         Args:
             delay: Seconds to wait before deleting message.
+            context: An optional interaction context to delete ephemeral messages.
 
         """
-        if delay and delay > 0:
 
-            async def delayed_delete() -> None:
+        async def _delete() -> None:
+            if delay:
                 await asyncio.sleep(delay)
-                try:
-                    await self._client.http.delete_message(self._channel_id, self.id)
-                except Exception:  # noqa: S110
-                    pass  # No real way to handle this
 
-            asyncio.create_task(delayed_delete())
+            if MessageFlags.EPHEMERAL in self.flags:
+                await context.delete(self.id)
+            else:
+                await self._client.http.delete_message(self._channel_id, self.id)
 
+        if delay:
+            asyncio.create_task(_delete())
         else:
-            await self._client.http.delete_message(self._channel_id, self.id)
+            return await _delete()
 
     async def reply(
         self,

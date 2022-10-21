@@ -166,6 +166,20 @@ class InteractionRequests(CanRequest):
         )
         return cast(discord_typings.MessageData, result)
 
+    async def delete_interaction_message(
+        self, application_id: "Snowflake_Type", token: str, message_id: "str | Snowflake_Type" = "@original"
+    ) -> None:
+        """
+        Deletes an existing interaction message.
+
+        Args:
+            application_id: The id of the application.
+            token: The token of the interaction.
+            message_id: The target message to delete. Defaults to @original which represents the initial response message.
+
+        """
+        return await self.request(Route("DELETE", f"/webhooks/{int(application_id)}/{token}/messages/{message_id}"))
+
     async def get_interaction_message(
         self, application_id: "Snowflake_Type", token: str, message_id: str = "@original"
     ) -> discord_typings.MessageData:

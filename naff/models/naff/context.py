@@ -414,6 +414,16 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             flags=flags,
         )
 
+    async def delete(self, message: "Snowflake_Type") -> None:
+        """
+        Delete a message sent in response to this interaction.
+
+        Args:
+            message: The message to delete
+
+        """
+        await self._client.http.delete_interaction_message(self._client.app.id, self._token, to_snowflake(message))
+
     @property
     def target(self) -> "Absent[Member | User | Message]":
         """For context menus, this will be the object of which was clicked on."""
