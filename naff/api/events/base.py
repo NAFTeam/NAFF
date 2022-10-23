@@ -5,7 +5,7 @@ import attrs
 
 import naff.models as models
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 from naff.models.discord.snowflake import to_snowflake
 
 if TYPE_CHECKING:
@@ -22,9 +22,9 @@ _event_reg = re.compile("(?<!^)(?=[A-Z])")
 class BaseEvent:
     """A base event that all other events inherit from."""
 
-    override_name: str = field(kw_only=True, default=None)
+    override_name: str = attrs.field(repr=False, kw_only=True, default=None)
     """Custom name of the event to be used when dispatching."""
-    bot: "Client" = field(kw_only=True, default=MISSING)
+    bot: "Client" = attrs.field(repr=False, kw_only=True, default=MISSING)
     """The client instance that dispatched this event."""
 
     @property
@@ -64,7 +64,7 @@ class BaseEvent:
 class GuildEvent(BaseEvent):
     """A base event that adds guild_id."""
 
-    guild_id: "Snowflake_Type" = field(metadata=docs("The ID of the guild"), converter=to_snowflake)
+    guild_id: "Snowflake_Type" = attrs.field(repr=False, metadata=docs("The ID of the guild"), converter=to_snowflake)
 
     @property
     def guild(self) -> "Guild":
@@ -81,5 +81,5 @@ class RawGatewayEvent(BaseEvent):
 
     """
 
-    data: dict = field(factory=dict)
+    data: dict = attrs.field(repr=False, factory=dict)
     """Raw Data from the gateway"""

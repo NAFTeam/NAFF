@@ -6,7 +6,7 @@ import attrs
 from naff.client.const import SELECTS_MAX_OPTIONS, SELECT_MAX_NAME_LENGTH, ACTION_ROW_MAX_ITEMS, MISSING
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter
-from naff.client.utils.attr_utils import field, str_validator
+from naff.client.utils.attr_utils import str_validator
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 from naff.models.discord.enums import ButtonStyles, ComponentTypes, ChannelTypes
@@ -89,15 +89,15 @@ class Button(InteractiveComponent):
 
     """
 
-    style: Union[ButtonStyles, int] = field(repr=True)
-    label: Optional[str] = field(default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = field(
+    style: Union[ButtonStyles, int] = attrs.field(repr=True)
+    label: Optional[str] = attrs.field(repr=False, default=None)
+    emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
         repr=True, default=None, metadata=export_converter(process_emoji)
     )
-    custom_id: Optional[str] = field(repr=True, default=MISSING, validator=str_validator)
-    url: Optional[str] = field(repr=True, default=None)
-    disabled: bool = field(repr=True, default=False)
-    type: Union[ComponentTypes, int] = field(
+    custom_id: Optional[str] = attrs.field(repr=True, default=MISSING, validator=str_validator)
+    url: Optional[str] = attrs.field(repr=True, default=None)
+    disabled: bool = attrs.field(repr=True, default=False)
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.BUTTON, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -140,13 +140,13 @@ class SelectOption(BaseComponent):
 
     """
 
-    label: str = field(repr=True, validator=str_validator)
-    value: str = field(repr=True, validator=str_validator)
-    description: Optional[str] = field(repr=True, default=None)
-    emoji: Optional[Union["PartialEmoji", dict, str]] = field(
+    label: str = attrs.field(repr=True, validator=str_validator)
+    value: str = attrs.field(repr=True, validator=str_validator)
+    description: Optional[str] = attrs.field(repr=True, default=None)
+    emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
         repr=True, default=None, metadata=export_converter(process_emoji)
     )
-    default: bool = field(repr=True, default=False)
+    default: bool = attrs.field(repr=True, default=False)
 
     @classmethod
     def converter(cls, value: Any) -> "SelectOption":
@@ -197,14 +197,14 @@ class BaseSelectMenu(InteractiveComponent):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    min_values: int = field(repr=True, default=1, kw_only=True)
-    max_values: int = field(repr=True, default=1, kw_only=True)
-    placeholder: Optional[str] = field(repr=True, default=None, kw_only=True)
+    min_values: int = attrs.field(repr=True, default=1, kw_only=True)
+    max_values: int = attrs.field(repr=True, default=1, kw_only=True)
+    placeholder: Optional[str] = attrs.field(repr=True, default=None, kw_only=True)
 
     # generic component attributes
-    disabled: bool = field(repr=True, default=False, kw_only=True)
-    custom_id: str = field(repr=True, factory=lambda: str(uuid.uuid4()), validator=str_validator, kw_only=True)
-    type: Union[ComponentTypes, int] = field(
+    disabled: bool = attrs.field(repr=True, default=False, kw_only=True)
+    custom_id: str = attrs.field(repr=True, factory=lambda: str(uuid.uuid4()), validator=str_validator, kw_only=True)
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.STRING_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -247,8 +247,8 @@ class StringSelectMenu(BaseSelectMenu):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    options: list[SelectOption | str] = field(repr=True, converter=list_converter(SelectOption.converter))
-    type: Union[ComponentTypes, int] = field(
+    options: list[SelectOption | str] = attrs.field(repr=True, converter=list_converter(SelectOption.converter))
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.STRING_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -285,7 +285,7 @@ class UserSelectMenu(BaseSelectMenu):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    type: Union[ComponentTypes, int] = field(
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.USER_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -304,7 +304,7 @@ class RoleSelectMenu(BaseSelectMenu):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    type: Union[ComponentTypes, int] = field(
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.ROLE_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -323,7 +323,7 @@ class MentionableSelectMenu(BaseSelectMenu):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    type: Union[ComponentTypes, int] = field(
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.MENTIONABLE_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -343,9 +343,9 @@ class ChannelSelectMenu(BaseSelectMenu):
         type Union[ComponentTypes, int]: The action role type number defined by discord. This cannot be modified.
     """
 
-    channel_types: list[ChannelTypes] = field(factory=list, repr=True, converter=list_converter(ChannelTypes))
+    channel_types: list[ChannelTypes] = attrs.field(factory=list, repr=True, converter=list_converter(ChannelTypes))
 
-    type: Union[ComponentTypes, int] = field(
+    type: Union[ComponentTypes, int] = attrs.field(
         repr=True, default=ComponentTypes.CHANNEL_SELECT, init=False, on_setattr=attrs.setters.frozen
     )
 
@@ -363,9 +363,9 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: Sequence[Union[dict, StringSelectMenu, Button]] = field(repr=True, factory=list)
-    type: Union[ComponentTypes, int] = field(
-        default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
+    components: Sequence[Union[dict, StringSelectMenu, Button]] = attrs.field(repr=True, factory=list)
+    type: Union[ComponentTypes, int] = attrs.field(
+        repr=False, default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
 
     def __init__(self, *components: Union[dict, StringSelectMenu, Button]) -> None:

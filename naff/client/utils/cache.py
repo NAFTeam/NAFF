@@ -5,8 +5,6 @@ from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
 import attrs
 
-from naff.client.utils.attr_utils import field
-
 __all__ = ("TTLItem", "TTLCache")
 
 KT = TypeVar("KT")
@@ -15,8 +13,12 @@ VT = TypeVar("VT")
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TTLItem(Generic[VT]):
-    value: VT = field()
-    expire: float = field()
+    value: VT = attrs.field(
+        repr=False,
+    )
+    expire: float = attrs.field(
+        repr=False,
+    )
     """When the item expires in cache."""
 
     def is_expired(self, timestamp: float) -> bool:

@@ -2,8 +2,8 @@ from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine, List, Optional
 
 import aiohttp
 
-from . import const
 from naff.client.utils.misc_utils import escape_mentions
+from . import const
 
 if TYPE_CHECKING:
     from naff.models.naff.command import BaseCommand

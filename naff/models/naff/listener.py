@@ -2,10 +2,10 @@ import asyncio
 import inspect
 from typing import Coroutine, Callable
 
-from naff.models.naff.callback import CallbackObject
 from naff.api.events.internal import BaseEvent
 from naff.client.const import MISSING, Absent
 from naff.client.utils import get_event_name
+from naff.models.naff.callback import CallbackObject
 
 __all__ = ("Listener", "listen")
 

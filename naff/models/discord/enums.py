@@ -5,7 +5,6 @@ from typing import Iterator, Tuple, TypeVar, Type
 
 from naff.client.const import get_logger
 
-
 __all__ = (
     "WebSocketOPCodes",
     "Intents",

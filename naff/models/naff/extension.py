@@ -5,8 +5,8 @@ from typing import Awaitable, Dict, List, TYPE_CHECKING, Callable, Coroutine, Op
 import naff.models.naff as naff
 from naff.client.const import MISSING
 from naff.client.utils.misc_utils import wrap_partial
-from naff.models.naff.tasks import Task
 from naff.models.naff import ContextMenu
+from naff.models.naff.tasks import Task
 
 if TYPE_CHECKING:
     from naff.client import Client

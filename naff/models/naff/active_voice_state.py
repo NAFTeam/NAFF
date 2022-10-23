@@ -9,7 +9,6 @@ from naff.api.voice.voice_gateway import VoiceGateway
 from naff.client.const import MISSING
 from naff.client.errors import VoiceAlreadyConnected, VoiceConnectionTimeout
 from naff.client.utils import optional
-from naff.client.utils.attr_utils import field
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.voice_state import VoiceState
 
@@ -22,16 +21,16 @@ __all__ = ("ActiveVoiceState",)
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActiveVoiceState(VoiceState):
-    ws: Optional[VoiceGateway] = field(default=None)
+    ws: Optional[VoiceGateway] = attrs.field(repr=False, default=None)
     """The websocket for this voice state"""
-    player: Optional[Player] = field(default=None)
+    player: Optional[Player] = attrs.field(repr=False, default=None)
     """The playback task that broadcasts audio data to discord"""
-    _volume: float = field(default=0.5)
+    _volume: float = attrs.field(repr=False, default=0.5)
 
     # standard voice states expect this data, this voice state lacks it initially; so we make them optional
-    user_id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
-    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
-    _member_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
+    user_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
+    _guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
+    _member_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
         # jank line to handle the two inherently incompatible data structures

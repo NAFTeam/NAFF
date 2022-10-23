@@ -3,7 +3,6 @@ from typing import cast
 import discord_typings
 
 from naff.models.naff.protocols import CanRequest
-
 from ..route import Route
 
 __all__ = ("BotRequests",)

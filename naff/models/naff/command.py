@@ -12,7 +12,7 @@ import attrs
 from naff.client.const import MISSING
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 from naff.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from naff.client.utils.serializer import no_export_meta
 from naff.models.naff.callback import CallbackObject
@@ -45,33 +45,41 @@ class BaseCommand(DictSerializationMixin, CallbackObject):
 
     """
 
-    extension: Any = field(default=None, metadata=docs("The extension this command belongs to") | no_export_meta)
+    extension: Any = attrs.field(
+        repr=False, default=None, metadata=docs("The extension this command belongs to") | no_export_meta
+    )
 
-    enabled: bool = field(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
-    checks: list = field(
-        factory=list, metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta
+    enabled: bool = attrs.field(
+        repr=False, default=True, metadata=docs("Whether this can be run at all") | no_export_meta
     )
-    cooldown: Cooldown = field(
-        default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
+    checks: list = attrs.field(
+        repr=False,
+        factory=list,
+        metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta,
     )
-    max_concurrency: MaxConcurrency = field(
+    cooldown: Cooldown = attrs.field(
+        repr=False, default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
+    )
+    max_concurrency: MaxConcurrency = attrs.field(
         default=MISSING,
         metadata=docs("An optional maximum number of concurrent instances to apply to the command") | no_export_meta,
     )
 
-    callback: Callable[..., Coroutine] = field(
-        default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
+    callback: Callable[..., Coroutine] = attrs.field(
+        repr=False, default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
     )
-    error_callback: Callable[..., Coroutine] = field(
-        default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
+    error_callback: Callable[..., Coroutine] = attrs.field(
+        repr=False, default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
     )
-    pre_run_callback: Callable[..., Coroutine] = field(
+    pre_run_callback: Callable[..., Coroutine] = attrs.field(
         default=None,
         metadata=no_export_meta
         | docs("The coroutine to be called before the command is executed, **but** after the checks"),
     )
-    post_run_callback: Callable[..., Coroutine] = field(
-        default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
+    post_run_callback: Callable[..., Coroutine] = attrs.field(
+        repr=False,
+        default=None,
+        metadata=no_export_meta | docs("The coroutine to be called after the command has executed"),
     )
 
     def __attrs_post_init__(self) -> None:

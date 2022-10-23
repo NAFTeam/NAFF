@@ -6,9 +6,7 @@ from typing import Callable
 
 import naff
 from naff.client.const import get_logger
-
 from .triggers import BaseTrigger
-
 
 __all__ = ("Task",)
 

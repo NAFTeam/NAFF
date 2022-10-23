@@ -10,7 +10,6 @@ import naff
 from naff.api import events
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NaffException, WebSocketClosed
-from naff.client.utils.attr_utils import field
 from naff.models.discord.activity import Activity
 from naff.models.discord.enums import Intents, Status, ActivityType
 from .gateway import GatewayClient
@@ -29,7 +28,7 @@ class ConnectionState:
     """The event intents in use"""
     shard_id: int
     """The shard ID of this state"""
-    _shard_ready: asyncio.Event = field(default=None)
+    _shard_ready: asyncio.Event = attrs.field(repr=False, default=None)
     """Indicates that this state is now ready"""
 
     gateway: Absent[GatewayClient] = MISSING
@@ -46,7 +45,7 @@ class ConnectionState:
 
     _shard_task: asyncio.Task | None = None
 
-    logger: Logger = field(init=False, factory=get_logger)
+    logger: Logger = attrs.field(repr=False, init=False, factory=get_logger)
 
     def __attrs_post_init__(self, *args, **kwargs) -> None:
         self._shard_ready = asyncio.Event()
