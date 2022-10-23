@@ -1,4 +1,4 @@
-from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
+from enum import Enum, EnumMeta, IntEnum, IntFlag
 from functools import reduce
 from operator import or_
 from typing import Iterator, Tuple, TypeVar, Type
@@ -76,8 +76,7 @@ class DistinctFlag(EnumMeta):
 
 
 class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
-    def __iter__(self) -> Iterator:
-        yield from _decompose(self.__class__, self)[0]
+    pass
 
 
 SELF = TypeVar("SELF")
