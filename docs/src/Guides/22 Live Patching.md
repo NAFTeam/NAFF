@@ -1,6 +1,6 @@
-# Jurigged
+# Live Patching
 
-NAFF has a few built-in extensions that add some features, primarily for debugging. One of these extensions that you can enable separately is to add [`jurigged`](https://github.com/breuleux/jurigged) for hot reloading of code.
+NAFF has a few built-in extensions that add some features, primarily for debugging. One of these extensions that you can enable separately is to add [`jurigged`](https://github.com/breuleux/jurigged) for live patching of code.
 
 ## How to enable
 
