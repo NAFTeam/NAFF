@@ -62,6 +62,36 @@ def _distinct(source) -> Tuple:
     return (x for x in source if (x.value & (x.value - 1)) == 0 and x.value != 0)
 
 
+def _decompose(flag, value):
+    """
+    Extract all members from the value.
+    """
+    # _decompose is only called if the value is not named
+    not_covered = value
+    negative = value < 0
+    members = []
+    for member in flag:
+        member_value = member.value
+        if member_value and member_value & value == member_value:
+            members.append(member)
+            not_covered &= ~member_value
+    if not negative:
+        tmp = not_covered
+        while tmp:
+            flag_value = 2 ** (tmp.bit_length() - 1)
+            if flag_value in flag._value2member_map_:
+                members.append(flag._value2member_map_[flag_value])
+                not_covered &= ~flag_value
+            tmp &= ~flag_value
+    if not members and value in flag._value2member_map_:
+        members.append(flag._value2member_map_[value])
+    members.sort(key=lambda m: m._value_, reverse=True)
+    if len(members) > 1 and members[0].value == value:
+        # we have the breakdown, don't need the value member itself
+        members.pop(0)
+    return members, not_covered
+
+
 class DistinctFlag(EnumMeta):
     def __iter__(cls) -> Iterator:
         yield from _distinct(super().__iter__())
@@ -76,7 +106,8 @@ class DistinctFlag(EnumMeta):
 
 
 class DiscordIntFlag(IntFlag, metaclass=DistinctFlag):
-    pass
+    def __iter__(self) -> Iterator:
+        yield from _decompose(self.__class__, self)[0]
 
 
 SELF = TypeVar("SELF")
