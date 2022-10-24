@@ -318,7 +318,7 @@ class CommandCheckFailure(CommandException):
     def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context") -> None:
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
-        self.context = context
+        self.ctx = context
 
 
 class BadArgument(CommandException):
