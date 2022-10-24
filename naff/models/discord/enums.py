@@ -62,9 +62,11 @@ def _distinct(source) -> Tuple:
     return (x for x in source if (x.value & (x.value - 1)) == 0 and x.value != 0)
 
 
-def _decompose(flag, value):
+def _decompose(flag, value):  # noqa
     """
     Extract all members from the value.
+
+    Source: Python 3.10.8 source
     """
     # _decompose is only called if the value is not named
     not_covered = value
