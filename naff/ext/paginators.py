@@ -16,7 +16,7 @@ from naff import (
     Message,
     MISSING,
     Snowflake_Type,
-    Select,
+    SelectMenu,
     SelectOption,
     Color,
     BrandColors,

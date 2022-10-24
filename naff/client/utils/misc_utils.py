@@ -1,12 +1,10 @@
 import functools
 import inspect
 import re
-from types import ModuleType
-from typing import Callable, Dict, Iterable, List, Optional, Any, Union
+from typing import Callable, Iterable, List, Optional, Any, Union
 
 import naff.api.events as events
 from naff.client.const import T
-from naff.models import Extension, SlashCommand
 
 __all__ = (
     "escape_mentions",
@@ -19,7 +17,6 @@ __all__ = (
     "get_event_name",
     "get_object_name",
     "maybe_coroutine",
-    "get_all_commands",
 )
 
 mention_reg = re.compile(r"@(everyone|here|[!&]?[0-9]{17,20})")
@@ -236,30 +233,3 @@ async def maybe_coroutine(func: Callable, *args, **kwargs) -> Any:
         return await func(*args, **kwargs)
     else:
         return func(*args, **kwargs)
-
-
-def get_all_commands(module: ModuleType) -> Dict[str, Callable]:
-    """
-    Get all SlashCommands from a specified module.
-
-    Args:
-        module: Module to extract commands from
-    """
-    commands = {}
-
-    def is_extension(e) -> bool:
-        """Check that an object is an extension."""
-        return inspect.isclass(e) and issubclass(e, Extension) and e is not Extension
-
-    def is_slashcommand(e) -> bool:
-        """Check that an object is a slash command."""
-        return isinstance(e, SlashCommand)
-
-    for _name, item in inspect.getmembers(module, is_extension):
-        inspect_result = inspect.getmembers(item, is_slashcommand)
-        exts = []
-        for _, val in inspect_result:
-            exts.append(val)
-        commands[f"{module.__name__}"] = exts
-
-    return {k: v for k, v in commands.items() if v is not None}

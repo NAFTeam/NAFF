@@ -1,4 +1,7 @@
+import inspect
 from pathlib import Path
+from types import ModuleType
+from typing import Callable, Dict
 
 from jurigged import watch, CodeFile
 from jurigged.live import WatchOperation
@@ -8,11 +11,38 @@ from jurigged.codetools import (
     UpdateOperation,
     LineDefinition,
 )
-from naff import Extension, listen
+from naff import Extension, SlashCommand, listen
 from naff.client.errors import ExtensionLoadException, ExtensionNotFound
-from naff.client.utils.misc_utils import find, get_all_commands
+from naff.client.utils.misc_utils import find
 
 __all__ = ("Jurigged",)
+
+
+def get_all_commands(module: ModuleType) -> Dict[str, Callable]:
+    """
+    Get all SlashCommands from a specified module.
+
+    Args:
+        module: Module to extract commands from
+    """
+    commands = {}
+
+    def is_extension(e) -> bool:
+        """Check that an object is an extension."""
+        return inspect.isclass(e) and issubclass(e, Extension) and e is not Extension
+
+    def is_slashcommand(e) -> bool:
+        """Check that an object is a slash command."""
+        return isinstance(e, SlashCommand)
+
+    for _name, item in inspect.getmembers(module, is_extension):
+        inspect_result = inspect.getmembers(item, is_slashcommand)
+        exts = []
+        for _, val in inspect_result:
+            exts.append(val)
+        commands[f"{module.__name__}"] = exts
+
+    return {k: v for k, v in commands.items() if v is not None}
 
 
 class Jurigged(Extension):
