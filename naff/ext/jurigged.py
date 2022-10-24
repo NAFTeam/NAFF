@@ -3,19 +3,28 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Dict
 
-from jurigged import watch, CodeFile
-from jurigged.live import WatchOperation
-from jurigged.codetools import (
-    AddOperation,
-    DeleteOperation,
-    UpdateOperation,
-    LineDefinition,
-)
 from naff import Extension, SlashCommand, listen
 from naff.client.errors import ExtensionLoadException, ExtensionNotFound
 from naff.client.utils.misc_utils import find
+from naff.client.const import get_logger
 
-__all__ = ("Jurigged",)
+try:
+    from jurigged import watch, CodeFile
+    from jurigged.live import WatchOperation
+    from jurigged.codetools import (
+        AddOperation,
+        DeleteOperation,
+        UpdateOperation,
+        LineDefinition,
+    )
+except ModuleNotFoundError:
+    get_logger().error(
+        "jurigged not installed, cannot enable jurigged integration.  Install with `pip install naff[jurigged]`"
+    )
+    raise
+
+
+__all__ = ("Jurigged", "setup")
 
 
 def get_all_commands(module: ModuleType) -> Dict[str, Callable]:
