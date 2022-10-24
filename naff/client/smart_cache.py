@@ -1,11 +1,13 @@
 from contextlib import suppress
+from logging import Logger
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
+import attrs
 import discord_typings
 
-from naff.client.const import MISSING, logger, Absent
+from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NotFound, Forbidden
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.cache import TTLCache
 from naff.models import VoiceState
 from naff.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
@@ -51,7 +53,7 @@ def create_cache(
         return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GlobalCache:
     _client: "Client" = field()
 
@@ -75,9 +77,11 @@ class GlobalCache:
     dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
     user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
 
+    logger: Logger = field(init=False, factory=get_logger)
+
     def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):
-            logger.warning(
+            self.logger.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
 
@@ -446,7 +450,7 @@ class GlobalCache:
                 data = await self._client.http.get_channel(channel_id)
                 channel = self.place_channel_data(data)
             except Forbidden:
-                logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
+                self.logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
                 channel = BaseChannel.from_dict({"id": channel_id, "type": MISSING}, self._client)
         return channel
 

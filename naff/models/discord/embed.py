@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import attrs
 from attrs.validators import instance_of
 from attrs.validators import optional as v_optional
 
@@ -12,9 +13,9 @@ from naff.client.const import (
     EMBED_FIELD_VALUE_LENGTH,
 )
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
-from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.attr_converters import optional as c_optional
+from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import no_export_meta, export_converter
 from naff.models.discord.color import Color, process_color
 from naff.models.discord.enums import EmbedTypes
@@ -32,7 +33,7 @@ __all__ = (
 )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedField(DictSerializationMixin):
     """
     Representation of an embed field.
@@ -62,7 +63,7 @@ class EmbedField(DictSerializationMixin):
         return len(self.name) + len(self.value)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
@@ -89,7 +90,7 @@ class EmbedAuthor(DictSerializationMixin):
         return len(self.name)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
@@ -118,7 +119,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
         return self.height, self.width
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedFooter(DictSerializationMixin):
     """
     Representation of an Embed Footer.
@@ -154,7 +155,7 @@ class EmbedFooter(DictSerializationMixin):
         return len(self.text)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
@@ -172,7 +173,7 @@ class EmbedProvider(DictSerializationMixin):
     url: Optional[str] = field(default=None)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Embed(DictSerializationMixin):
     """Represents a discord embed object."""
 

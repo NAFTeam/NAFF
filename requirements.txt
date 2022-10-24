@@ -1,5 +1,6 @@
 aiohttp
 attrs
 discord-typings>=0.5.1
+emoji
 jurigged>=0.5.3
 tomli

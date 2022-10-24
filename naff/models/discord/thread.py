@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING, List, Dict, Any, Union, Optional
 
+import attrs
+
 import naff.models as models
 from naff.client.const import MISSING
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
@@ -27,7 +29,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ThreadMember(DiscordObject, SendMixin):
     """A thread member is used to indicate whether a user has joined a thread or not."""
 
@@ -85,7 +87,7 @@ class ThreadMember(DiscordObject, SendMixin):
         return await self._client.http.create_message(message_payload, dm_id, files=files)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ThreadList(ClientObject):
     """Represents a list of one or more threads."""
 
@@ -108,7 +110,7 @@ class ThreadList(ClientObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ThreadTag(DiscordObject):
     name: str = field()
     emoji_id: "Snowflake_Type" = field(default=None)

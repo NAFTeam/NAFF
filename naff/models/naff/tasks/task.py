@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Callable
 
 import naff
-from naff.client.const import logger
+from naff.client.const import get_logger
 
 from .triggers import BaseTrigger
 
@@ -72,8 +72,12 @@ class Task:
         next_run = self.next_run
         return next_run - datetime.now() if next_run is not None else None
 
+    def on_error_sentry_hook(self, error: Exception) -> None:
+        """A dummy method for naff.ext.sentry to hook"""
+
     def on_error(self, error: Exception) -> None:
         """Error handler for this task. Called when an exception is raised during execution of the task."""
+        self.on_error_sentry_hook(error)
         naff.Client.default_error_handler("Task", error)
 
     async def __call__(self) -> None:
@@ -116,7 +120,7 @@ class Task:
             self._stop.clear()
             self.task = asyncio.create_task(self._task_loop())
         except RuntimeError:
-            logger.error(
+            get_logger().error(
                 "Unable to start task without a running event loop! We recommend starting tasks within an `on_startup` event."
             )
 

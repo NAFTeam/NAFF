@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
-
-from ._template import EventMixinTemplate, Processor
 from naff.models import to_snowflake
+from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
@@ -14,7 +13,10 @@ __all__ = ("ThreadEvents",)
 class ThreadEvents(EventMixinTemplate):
     @Processor.define()
     async def _on_raw_thread_create(self, event: "RawGatewayEvent") -> None:
-        self.dispatch(events.ThreadCreate(self.cache.place_channel_data(event.data)))
+        thread = self.cache.place_channel_data(event.data)
+        if event.data.get("newly_created"):
+            self.dispatch(events.NewThreadCreate(thread))
+        self.dispatch(events.ThreadCreate(thread))
 
     @Processor.define()
     async def _on_raw_thread_update(self, event: "RawGatewayEvent") -> None:

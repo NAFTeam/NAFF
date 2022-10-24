@@ -88,7 +88,7 @@ class DebugAppCMD(Extension):
                 )
 
             if not remote:
-                data = application_commands_to_dict(self.bot.interactions)[scope]
+                data = application_commands_to_dict(self.bot.interactions, self.bot)[scope]
                 cmd_obj = self.bot.get_application_cmd_by_id(cmd_id)
                 for cmd in data:
                     if cmd["name"] == cmd_obj.name:

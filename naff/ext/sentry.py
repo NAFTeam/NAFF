@@ -4,20 +4,23 @@ Sets up a Sentry Logger
 And then call `bot.load_extension('naff.ext.sentry', token=SENTRY_TOKEN)`
 Optionally takes a filter function that will be called before sending the event to Sentry.
 """
+import functools
 import logging
 from typing import Any, Callable, Optional
 
 from naff.api.events.internal import Error
-from naff.client.const import logger
+from naff.client.const import get_logger
+from naff.models.naff.tasks.task import Task
 
 try:
     import sentry_sdk
 except ModuleNotFoundError:
-    logger.error("sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`")
+    get_logger().error(
+        "sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`"
+    )
     raise
 
-from naff import Extension, Client, listen
-
+from naff import Client, Extension, listen
 
 __all__ = ("setup", "default_sentry_filter")
 
@@ -68,15 +71,30 @@ class SentryExtension(Extension):
             sentry_sdk.capture_exception(event.error)
 
 
+class HookedTask(Task):
+    """We're subclassing purely for the type hinting.  The following method will be transplanted onto Task."""
+
+    def on_error_sentry_hook(self: Task, error: Exception) -> None:
+        with sentry_sdk.configure_scope() as scope:
+            if isinstance(self.callback, functools.partial):
+                scope.set_tag("task", self.callback.func.__name__)
+            else:
+                scope.set_tag("task", self.callback.__name__)
+
+            scope.set_tag("iteration", self.iteration)
+            sentry_sdk.capture_exception(error)
+
+
 def setup(
     bot: Client,
     token: str = None,
     filter: Optional[Callable[[dict[str, Any], dict[str, Any]], Optional[dict[str, Any]]]] = None,
 ) -> None:
     if not token:
-        logger.error("Cannot enable sentry integration, no token provided")
+        bot.logger.error("Cannot enable sentry integration, no token provided")
         return
     if filter is None:
         filter = default_sentry_filter
     sentry_sdk.init(token, before_send=filter)
+    Task.on_error_sentry_hook = HookedTask.on_error_sentry_hook  # type: ignore
     SentryExtension(bot)

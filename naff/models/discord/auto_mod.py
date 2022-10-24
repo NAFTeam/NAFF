@@ -2,10 +2,10 @@ from typing import Any, Optional, TYPE_CHECKING
 
 import attrs
 
-from naff.client.const import logger, MISSING, Absent
+from naff.client.const import get_logger, MISSING, Absent
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter, optional
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 from naff.models.discord.base import ClientObject, DiscordObject
 from naff.models.discord.enums import AutoModTriggerType, AutoModAction, AutoModEvent, AutoModLanuguageType
 from naff.models.discord.snowflake import to_snowflake_list, to_snowflake
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 __all__ = ("AutoModerationAction", "AutoModRule")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseAction(DictSerializationMixin):
     """A base implementation of a moderation action
 
@@ -37,7 +37,7 @@ class BaseAction(DictSerializationMixin):
     def from_dict_factory(cls, data: dict) -> "BaseAction":
         action_class = ACTION_MAPPING.get(data.get("type"))
         if not action_class:
-            logger.error(f"Unknown action type for {data}")
+            get_logger().error(f"Unknown action type for {data}")
             action_class = cls
 
         return action_class.from_dict({"type": data.get("type")} | data["metadata"])
@@ -48,7 +48,7 @@ class BaseAction(DictSerializationMixin):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseTrigger(DictSerializationMixin):
     """A base implementation of an auto-mod trigger
 
@@ -73,7 +73,7 @@ class BaseTrigger(DictSerializationMixin):
         trigger_class = TRIGGER_MAPPING.get(data.get("trigger_type"))
         meta = data.get("trigger_metadata", {})
         if not trigger_class:
-            logger.error(f"Unknown trigger type for {data}")
+            get_logger().error(f"Unknown trigger type for {data}")
             trigger_class = cls
 
         payload = {"type": data.get("trigger_type"), "trigger_metadata": meta}
@@ -93,7 +93,7 @@ def _keyword_converter(filter: str | list[str]) -> list[str]:
     return [filter]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class KeywordTrigger(BaseTrigger):
     """A trigger that checks if content contains words from a user defined list of keywords"""
 
@@ -108,7 +108,7 @@ class KeywordTrigger(BaseTrigger):
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HarmfulLinkFilter(BaseTrigger):
     """A trigger that checks if content contains any harmful links"""
 
@@ -121,7 +121,7 @@ class HarmfulLinkFilter(BaseTrigger):
     ...
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class KeywordPresetTrigger(BaseTrigger):
     """A trigger that checks if content contains words from internal pre-defined wordsets"""
 
@@ -139,14 +139,14 @@ class KeywordPresetTrigger(BaseTrigger):
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MentionSpamTrigger(BaseTrigger):
     """A trigger that checks if content contains more mentions than allowed"""
 
     mention_total_limit: int = field(default=3, repr=True, metadata=docs("The maximum number of mentions allowed"))
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BlockMessage(BaseAction):
     """blocks the content of a message according to the rule"""
 
@@ -154,7 +154,7 @@ class BlockMessage(BaseAction):
     ...
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AlertMessage(BaseAction):
     """logs user content to a specified channel"""
 
@@ -162,7 +162,7 @@ class AlertMessage(BaseAction):
     type: AutoModAction = field(default=AutoModAction.ALERT_MESSAGE, converter=AutoModAction)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TimeoutUser(BaseAction):
     """timeout user for a specified duration"""
 
@@ -170,7 +170,7 @@ class TimeoutUser(BaseAction):
     type: AutoModAction = field(default=AutoModAction.TIMEOUT_USER, converter=AutoModAction)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutoModRule(DiscordObject):
     """A representation of an auto mod rule"""
 
@@ -282,7 +282,7 @@ class AutoModRule(DiscordObject):
         return AutoModRule.from_dict(out, self._client)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutoModerationAction(ClientObject):
     rule_trigger_type: AutoModTriggerType = field(converter=AutoModTriggerType)
     rule_id: "Snowflake_Type" = field()

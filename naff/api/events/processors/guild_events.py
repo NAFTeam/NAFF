@@ -33,6 +33,11 @@ class GuildEvents(EventMixinTemplate):
             event: raw guild create event
 
         """
+        new_guild: bool = True
+        if self.cache.get_guild(event.data["id"]):
+            # guild already cached, most likely an unavailable guild coming back online
+            new_guild = False
+
         guild = self.cache.place_guild_data(event.data)
 
         self._user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
@@ -43,7 +48,10 @@ class GuildEvents(EventMixinTemplate):
             # delays events until chunking has completed
             await guild.chunk()
 
-        self.dispatch(events.GuildJoin(guild))
+        if new_guild:
+            self.dispatch(events.GuildJoin(guild))
+        else:
+            self.dispatch(events.GuildAvailable(guild))
 
     @Processor.define()
     async def _on_raw_guild_update(self, event: "RawGatewayEvent") -> None:

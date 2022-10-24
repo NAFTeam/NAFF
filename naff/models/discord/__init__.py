@@ -1,5 +1,6 @@
 from .activity import *
 from .application import *
+from .app_perms import *
 from .asset import *
 from .channel import *
 from .color import *

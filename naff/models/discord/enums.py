@@ -3,7 +3,7 @@ from functools import reduce
 from operator import or_
 from typing import Iterator, Tuple, TypeVar, Type
 
-from naff.client.const import logger
+from naff.client.const import get_logger
 
 
 __all__ = (
@@ -44,6 +44,7 @@ __all__ = (
     "ScheduledEventType",
     "ScheduledEventStatus",
     "AuditLogEventType",
+    "InteractionPermissionTypes",
 )
 
 
@@ -83,7 +84,7 @@ SELF = TypeVar("SELF")
 
 
 def _log_type_mismatch(cls, value) -> None:
-    logger.error(
+    get_logger().error(
         f"Class `{cls.__name__}` received an invalid and unexpected value `{value}`. Please update NAFF or report this issue on GitHub - https://github.com/NAFTeam/NAFF/issues"
     )
 
@@ -542,10 +543,18 @@ class ComponentTypes(CursedIntEnum):
     """Container for other components"""
     BUTTON = 2
     """Button object"""
-    SELECT = 3
-    """Select menu for picking from choices"""
+    STRING_SELECT = 3
+    """Select menu for picking from text choices"""
     INPUT_TEXT = 4
     """Text input object"""
+    USER_SELECT = 5
+    """Select menu for picking from users"""
+    ROLE_SELECT = 6
+    """Select menu for picking from roles"""
+    MENTIONABLE_SELECT = 7
+    """Select menu for picking from mentionable objects"""
+    CHANNEL_SELECT = 8
+    """Select menu for picking from channels"""
 
 
 class CommandTypes(CursedIntEnum):
@@ -567,6 +576,14 @@ class InteractionTypes(CursedIntEnum):
     MESSAGE_COMPONENT = 3
     AUTOCOMPLETE = 4
     MODAL_RESPONSE = 5
+
+
+class InteractionPermissionTypes(CursedIntEnum):
+    """The type of interaction permission received by discord."""
+
+    ROLE = 1
+    USER = 2
+    CHANNEL = 3
 
 
 class ButtonStyles(CursedIntEnum):

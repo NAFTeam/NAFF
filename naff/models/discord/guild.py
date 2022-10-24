@@ -6,15 +6,19 @@ from functools import cmp_to_key
 from typing import List, Optional, Union, Set, Dict, Any, TYPE_CHECKING
 from warnings import warn
 
+import attrs
+
 import naff.models as models
-from naff.client.const import MISSING, PREMIUM_GUILD_LIMITS, logger, Absent
+from naff.client.const import Absent, MISSING, PREMIUM_GUILD_LIMITS
 from naff.client.errors import EventLocationNotProvided, NotFound
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 from naff.client.utils.deserialise_app_cmds import deserialize_app_cmds
 from naff.client.utils.serializer import to_image_data, no_export_meta
+from naff.models.discord.app_perms import CommandPermissions, ApplicationCommandPermission
+from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.misc.iterator import AsyncIterator
 from .base import DiscordObject, ClientObject
@@ -34,7 +38,6 @@ from .enums import (
     AutoModEvent,
     AutoModTriggerType,
 )
-from naff.models.discord.auto_mod import AutoModRule, BaseAction, BaseTrigger
 from .snowflake import to_snowflake, Snowflake_Type, to_optional_snowflake, to_snowflake_list
 
 if TYPE_CHECKING:
@@ -59,7 +62,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildBan:
     reason: Optional[str]
     """The reason for the ban"""
@@ -67,7 +70,7 @@ class GuildBan:
     """The banned user"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseGuild(DiscordObject):
     name: str = field(repr=True)
     """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
@@ -96,7 +99,7 @@ class BaseGuild(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildWelcome(ClientObject):
     description: Optional[str] = field(default=None, metadata=docs("Welcome Screen server description"))
     welcome_channels: List["models.GuildWelcomeChannel"] = field(
@@ -104,7 +107,7 @@ class GuildWelcome(ClientObject):
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildPreview(BaseGuild):
     """A partial guild object."""
 
@@ -140,7 +143,7 @@ class MemberIterator(AsyncIterator):
         raise QueueEmpty
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Guild(BaseGuild):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
@@ -207,6 +210,8 @@ class Guild(BaseGuild):
     """Stage instances in the guild."""
     chunked = field(factory=asyncio.Event, metadata=no_export_meta)
     """An event that is fired when this guild has been chunked"""
+    command_permissions: dict[Snowflake_Type, CommandPermissions] = field(factory=dict, metadata=no_export_meta)
+    """A cache of all command permissions for this guild"""
 
     _owner_id: Snowflake_Type = field(converter=to_snowflake)
     _channel_ids: Set[Snowflake_Type] = field(factory=set)
@@ -218,7 +223,6 @@ class Guild(BaseGuild):
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
-        # todo: find a away to prevent this loop from blocking the event loop
         data = super()._process_dict(data, client)
         guild_id = data["id"]
 
@@ -489,6 +493,26 @@ class Guild(BaseGuild):
         data = await self._client.http.get_guild_channels(self.id)
         return [self._client.cache.place_channel_data(channel_data) for channel_data in data]
 
+    async def fetch_app_cmd_perms(self) -> dict[Snowflake_Type, "CommandPermissions"]:
+        """
+        Fetch the application command permissions for this guild.
+
+        Returns:
+            The application command permissions for this guild.
+
+        """
+        data = await self._client.http.batch_get_application_command_permissions(self._client.app.id, self.id)
+
+        for command in data:
+            command_permissions = CommandPermissions(client=self._client, command_id=command["id"], guild=self)
+            perms = [ApplicationCommandPermission.from_dict(perm, self) for perm in command["permissions"]]
+
+            command_permissions.update_permissions(*perms)
+
+            self.command_permissions[int(command["id"])] = command_permissions
+
+        return self.command_permissions
+
     def is_owner(self, user: Snowflake_Type) -> bool:
         """
         Whether the user is owner of the guild.
@@ -528,7 +552,7 @@ class Guild(BaseGuild):
             self._client.cache.place_member_data(self.id, member)
 
         self.chunked.set()
-        logger.info(
+        self.logger.info(
             f"Cached {iterator.total_retrieved} members for {self.id} in {time.perf_counter() - start_time:.2f} seconds"
         )
 
@@ -596,10 +620,10 @@ class Guild(BaseGuild):
             self._chunk_cache = self._chunk_cache + chunk.get("members")
 
         if chunk.get("chunk_index") != chunk.get("chunk_count") - 1:
-            return logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
+            return self.logger.debug(f"Cached chunk of {len(chunk.get('members'))} members for {self.id}")
         else:
             members = self._chunk_cache
-            logger.info(f"Processing {len(members)} members for {self.id}")
+            self.logger.info(f"Processing {len(members)} members for {self.id}")
 
             s = time.monotonic()
             start_time = time.perf_counter()
@@ -615,7 +639,7 @@ class Guild(BaseGuild):
 
             total_time = time.perf_counter() - start_time
             self.chunk_cache = []
-            logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
+            self.logger.info(f"Cached members for {self.id} in {total_time:.2f} seconds")
             self.chunked.set()
 
     async def fetch_audit_log(
@@ -1972,7 +1996,7 @@ class Guild(BaseGuild):
         return sorted_channels
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildTemplate(ClientObject):
     code: str = field(repr=True, metadata=docs("the template code (unique ID)"))
     name: str = field(repr=True, metadata=docs("the name"))
@@ -2028,7 +2052,7 @@ class GuildTemplate(ClientObject):
         await self._client.http.delete_guild_template(self.source_guild_id, self.code)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildWelcomeChannel(ClientObject):
     channel_id: Snowflake_Type = field(repr=True, metadata=docs("Welcome Channel ID"))
     description: str = field(metadata=docs("Welcome Channel description"))
@@ -2155,7 +2179,7 @@ class GuildWidget(DiscordObject):
         return [await self._client.fetch_user(member_id) for member_id in self._member_ids]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogChange(ClientObject):
     key: str = field(repr=True)
     """name of audit log change key"""
@@ -2165,7 +2189,7 @@ class AuditLogChange(ClientObject):
     """old value of the key"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogEntry(DiscordObject):
     target_id: Optional["Snowflake_Type"] = field(converter=optional(to_snowflake))
     """id of the affected entity (webhook, user, role, etc.)"""
@@ -2188,7 +2212,7 @@ class AuditLogEntry(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 

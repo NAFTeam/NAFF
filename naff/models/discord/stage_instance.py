@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 
+import attrs
+
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.models.discord.enums import StagePrivacyLevel
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
 __all__ = ("StageInstance",)
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class StageInstance(DiscordObject):
     topic: str = field()
     privacy_level: StagePrivacyLevel = field()

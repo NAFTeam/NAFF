@@ -1,19 +1,21 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
+from logging import Logger
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Protocol, Union, runtime_checkable
 
+import attrs
 from aiohttp import FormData
 
 import naff.models.discord.message as message
-from naff.models.discord.timestamp import Timestamp
-from naff.client.const import MISSING, logger, Absent
+from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import optional
+from naff.client.utils.attr_utils import docs, field
 from naff.models.discord.enums import MessageFlags, CommandTypes, Permissions
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
+from naff.models.discord.timestamp import Timestamp
 from naff.models.naff.application_commands import CallbackTypes, OptionTypes
 
 if TYPE_CHECKING:
@@ -49,7 +51,7 @@ __all__ = (
 )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Resolved:
     """Represents resolved data in an interaction."""
 
@@ -105,7 +107,7 @@ class Resolved:
         return new_cls
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Context:
     """Represents the context of a command."""
 
@@ -123,6 +125,8 @@ class Context:
     )
     message: "Message" = field(default=None, metadata=docs("The message associated with this context"))
 
+    logger: Logger = field(init=False, factory=get_logger)
+
     @property
     def guild(self) -> Optional["Guild"]:
         return self._client.cache.get_guild(self.guild_id)
@@ -137,7 +141,7 @@ class Context:
         return self._client.cache.get_bot_voice_state(self.guild_id)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children."""
 
@@ -286,7 +290,7 @@ class _BaseInteractionContext(Context):
         return modal
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class InteractionContext(_BaseInteractionContext, SendMixin):
     """
     Represents the context of an interaction.
@@ -320,7 +324,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         self.deferred = True
 
     async def _send_http_request(
-        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+        self, message_payload: Union[dict, "FormData"], files: Iterable["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         if self.responded:
             message_data = await self._client.http.post_followup(
@@ -345,15 +349,20 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Iterable[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         suppress_embeds: bool = False,
@@ -424,7 +433,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
                 caches = ((self._client.cache.get_message, (self.channel.id, self.target_id)),)
             case _:
                 # Most likely a new context type, check all rational caches for the target_id
-                logger.warning(f"New Context Type Detected. Please Report: {self._context_type}")
+                self.logger.warning(f"New Context Type Detected. Please Report: {self._context_type}")
                 caches = (
                     (self._client.cache.get_message, (self.channel.id, self.target_id)),
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
@@ -441,7 +450,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
         return thing
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentContext(InteractionContext):
     custom_id: str = field(default="", metadata=docs("The ID given to the component that has been pressed"))
     component_type: int = field(default=0, metadata=docs("The type of component that has been pressed"))
@@ -456,6 +465,7 @@ class ComponentContext(InteractionContext):
         new_cls = super().from_dict(data, client)
         new_cls.token = data["token"]
         new_cls.interaction_id = data["id"]
+        new_cls.invoke_target = data["data"]["custom_id"]
         new_cls.custom_id = data["data"]["custom_id"]
         new_cls.component_type = data["data"]["component_type"]
         new_cls.message = client.cache.place_message_data(data["message"])
@@ -494,13 +504,18 @@ class ComponentContext(InteractionContext):
     async def edit_origin(
         self,
         content: str = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
-            Union[List[List[Union["BaseComponent", dict]]], List[Union["BaseComponent", dict]], "BaseComponent", dict]
+            Union[
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
+                "BaseComponent",
+                dict,
+            ]
         ] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
-        files: Optional[Union[UPLOADABLE_TYPE, List[UPLOADABLE_TYPE]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Iterable[UPLOADABLE_TYPE]]] = None,
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
     ) -> "Message":
@@ -536,7 +551,7 @@ class ComponentContext(InteractionContext):
         message_data = None
         if self.deferred:
             if not self.defer_edit_origin:
-                logger.warning(
+                self.logger.warning(
                     "If you want to edit the original message, and need to defer, you must set the `edit_origin` kwarg to True!"
                 )
 
@@ -557,7 +572,7 @@ class ComponentContext(InteractionContext):
             return self.message
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteContext(_BaseInteractionContext):
     focussed_option: str = field(default=MISSING, metadata=docs("The option the user is currently filling in"))
 
@@ -573,7 +588,7 @@ class AutocompleteContext(_BaseInteractionContext):
         """The text the user has entered so far."""
         return self.kwargs.get(self.focussed_option, "")
 
-    async def send(self, choices: List[Union[str, int, float, Dict[str, Union[str, int, float]]]]) -> None:
+    async def send(self, choices: Iterable[Union[str, int, float, Dict[str, Union[str, int, float]]]]) -> None:
         """
         Send your autocomplete choices to discord. Choices must be either a list of strings, or a dictionary following the following format:
 
@@ -604,7 +619,7 @@ class AutocompleteContext(_BaseInteractionContext):
         await self._client.http.post_initial_response(payload, self.interaction_id, self._token)
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalContext(InteractionContext):
     custom_id: str = field(default="")
 
@@ -629,7 +644,7 @@ class ModalContext(InteractionContext):
         return self.kwargs
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PrefixedContext(Context, SendMixin):
     prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
@@ -651,7 +666,7 @@ class PrefixedContext(Context, SendMixin):
     async def reply(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
@@ -659,12 +674,12 @@ class PrefixedContext(Context, SendMixin):
         return await self.send(content=content, reply_to=self.message, embeds=embeds or embed, **kwargs)
 
     async def _send_http_request(
-        self, message_payload: Union[dict, "FormData"], files: list["UPLOADABLE_TYPE"] | None = None
+        self, message_payload: Union[dict, "FormData"], files: Iterable["UPLOADABLE_TYPE"] | None = None
     ) -> dict:
         return await self._client.http.create_message(message_payload, self.channel.id, files=files)
 
 
-@define
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HybridContext(Context):
     """
     Represents the context for hybrid commands, a slash command that can also be used as a prefixed command.
@@ -779,7 +794,7 @@ class HybridContext(Context):
     async def reply(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         **kwargs,
     ) -> "Message":
@@ -805,17 +820,17 @@ class HybridContext(Context):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[
-                List[List[Union["BaseComponent", dict]]],
-                List[Union["BaseComponent", dict]],
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
                 "BaseComponent",
                 dict,
             ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,
@@ -887,16 +902,16 @@ class SendableContext(Protocol):
     async def send(
         self,
         content: Optional[str] = None,
-        embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
             Union[
-                List[List[Union["BaseComponent", dict]]],
-                List[Union["BaseComponent", dict]],
+                Iterable[Iterable[Union["BaseComponent", dict]]],
+                Iterable[Union["BaseComponent", dict]],
                 "BaseComponent",
                 dict,
             ]
         ] = None,
-        stickers: Optional[Union[List[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
+        stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
         file: Optional[Union["File", "IOBase", "Path", str]] = None,

@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Union
 
-from naff.client.utils.attr_utils import define, field
+import attrs
+
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import no_export_meta
 
 if TYPE_CHECKING:
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 __all__ = ("Asset",)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Asset:
     """
     Represents a discord asset.

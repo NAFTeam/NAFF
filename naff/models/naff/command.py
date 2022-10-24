@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 import copy
 import functools
@@ -6,13 +7,15 @@ import re
 import typing
 from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
-from naff.models.naff.callback import CallbackObject
+import attrs
+
 from naff.client.const import MISSING
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs, field
 from naff.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from naff.client.utils.serializer import no_export_meta
+from naff.models.naff.callback import CallbackObject
 from naff.models.naff.cooldowns import Cooldown, Buckets, MaxConcurrency
 from naff.models.naff.protocols import Converter
 
@@ -26,7 +29,7 @@ kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseCommand(DictSerializationMixin, CallbackObject):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.

@@ -1,11 +1,13 @@
+import re
 from enum import IntEnum
 from typing import Optional, TYPE_CHECKING, Union, Dict, Any, List
-import re
+
+import attrs
 
 from naff.client.const import MISSING, Absent
 from naff.client.errors import ForeignWebhookException, EmptyMessageException
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import define, field
+from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import to_image_data
 from naff.models.discord.message import process_message_payload
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
@@ -39,7 +41,7 @@ class WebhookTypes(IntEnum):
     """Application webhooks are webhooks used with Interactions"""
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Webhook(DiscordObject, SendMixin):
     type: WebhookTypes = field()
     """The type of webhook"""

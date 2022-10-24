@@ -15,7 +15,6 @@ jobs:
           - .[speedup]
           - .[voice]
           - .[all]
-          - .[docs]
 
     steps:
       - name: Create check run

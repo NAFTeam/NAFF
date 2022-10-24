@@ -1,11 +1,13 @@
 import copy
 from typing import TYPE_CHECKING, Optional, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field
+from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.mixins.serialization import DictSerializationMixin
+from naff.client.utils.attr_utils import field
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ("VoiceState", "VoiceRegion")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceState(ClientObject):
     user_id: "Snowflake_Type" = field(default=MISSING, converter=to_snowflake)
     """the user id this voice state is for"""
@@ -57,21 +59,22 @@ class VoiceState(ClientObject):
         """The channel the user is connected to."""
         channel: "TYPE_VOICE_CHANNEL" = self._client.cache.get_channel(self._channel_id)
 
-        # make sure the member is showing up as a part of the channel
-        # this is relevant for VoiceStateUpdate.before
-        # noinspection PyProtectedMember
-        if self._member_id not in channel._voice_member_ids:
-            # the list of voice members need to be deepcopied, otherwise the cached obj will be updated
+        if channel:
+            # make sure the member is showing up as a part of the channel
+            # this is relevant for VoiceStateUpdate.before
             # noinspection PyProtectedMember
-            voice_member_ids = copy.deepcopy(channel._voice_member_ids)
+            if self._member_id not in channel._voice_member_ids:
+                # the list of voice members need to be deepcopied, otherwise the cached obj will be updated
+                # noinspection PyProtectedMember
+                voice_member_ids = copy.deepcopy(channel._voice_member_ids)
 
-            # create a copy of the obj
-            channel = copy.copy(channel)
-            channel._voice_member_ids = voice_member_ids
+                # create a copy of the obj
+                channel = copy.copy(channel)
+                channel._voice_member_ids = voice_member_ids
 
-            # add the member to that list
-            # noinspection PyProtectedMember
-            channel._voice_member_ids.append(self._member_id)
+                # add the member to that list
+                # noinspection PyProtectedMember
+                channel._voice_member_ids.append(self._member_id)
 
         return channel
 
@@ -90,7 +93,7 @@ class VoiceState(ClientObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceRegion(DictSerializationMixin):
     """A voice region."""
 

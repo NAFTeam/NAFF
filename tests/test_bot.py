@@ -37,10 +37,19 @@ from naff.api.gateway.websocket import WebsocketClient
 from naff.api.http.route import Route
 from naff.api.voice.audio import AudioVolume
 from naff.client.errors import NotFound
+from naff.client.utils.misc_utils import find
+from naff.models.discord.timestamp import Timestamp
 
 __all__ = ()
 
 from tests.utils import generate_dummy_context
+
+try:
+    import dotenv
+
+    dotenv.load_dotenv()
+except ImportError:
+    pass
 
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
@@ -64,7 +73,14 @@ async def bot() -> Client:
 
 
 @pytest.fixture(scope="module")
-async def guild(bot) -> Guild:
+async def guild(bot: Client) -> Guild:
+    if len(bot.guilds) > 9:
+        leftover = find(lambda g: g.is_owner(bot.user.id) and g.name == "test_suite_guild", bot.guilds)
+        if leftover:
+            age = Timestamp.now() - leftover.created_at
+            if age.days > 0:
+                # This from a failed run, let's clean it up
+                await leftover.delete()
     guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
     community_channel = await guild.create_text_channel("community_channel")
 
@@ -117,7 +133,6 @@ async def test_channels(bot: Client, guild: Guild) -> None:
                 assert channel.category == guild_category
 
             if isinstance(channel, MessageableMixin) and not isinstance(channel, GuildVoice):
-                # todo: remove the guild voice exception when text-in-voice releases
                 _m = await channel.send("test")
                 assert _m.channel == channel
 
@@ -383,8 +398,8 @@ async def test_components(bot: Client, channel: GuildText) -> None:
             components=naff.ActionRow(*[naff.Button(1, "test"), naff.Button(1, "test")]),
         )
         await thread.send(
-            "Test - SelectMenu",
-            components=naff.SelectMenu([SelectOption("test", "test")]),
+            "Test - StringSelectMenu",
+            components=naff.StringSelectMenu([SelectOption("test", "test")]),
         )
 
         Modal("Test Modal", [ParagraphText("test", value="test value, press send")])

@@ -3,7 +3,7 @@ import inspect
 from typing import Awaitable, Dict, List, TYPE_CHECKING, Callable, Coroutine, Optional
 
 import naff.models.naff as naff
-from naff.client.const import logger, MISSING
+from naff.client.const import MISSING
 from naff.client.utils.misc_utils import wrap_partial
 from naff.models.naff.tasks import Task
 from naff.models.naff import ContextMenu
@@ -103,12 +103,16 @@ class Extension:
                             if group is None or isinstance(val, ContextMenu):
                                 new_cls.interaction_tree[scope][val.resolved_name] = val
                             elif group is not None:
-                                if base not in new_cls.interaction_tree[scope]:
+                                if not (current := new_cls.interaction_tree[scope].get(base)) or isinstance(
+                                    current, naff.InteractionCommand
+                                ):
                                     new_cls.interaction_tree[scope][base] = {}
                                 if sub is None:
                                     new_cls.interaction_tree[scope][base][group] = val
                                 else:
-                                    if group not in new_cls.interaction_tree[scope][base]:
+                                    if not (current := new_cls.interaction_tree[scope][base].get(group)) or isinstance(
+                                        current, naff.InteractionCommand
+                                    ):
                                         new_cls.interaction_tree[scope][base][group] = {}
                                     new_cls.interaction_tree[scope][base][group][sub] = val
                     else:
@@ -121,7 +125,7 @@ class Extension:
             elif isinstance(val, Task):
                 wrap_partial(val, new_cls)
 
-        logger.debug(
+        bot.logger.debug(
             f"{len(new_cls._commands)} commands and {len(new_cls.listeners)} listeners"
             f" have been loaded from `{new_cls.name}`"
         )
@@ -218,7 +222,7 @@ class Extension:
             self.bot.listeners[func.event].remove(func)
 
         self.bot.ext.pop(self.name, None)
-        logger.debug(f"{self.name} has been drop")
+        self.bot.logger.debug(f"{self.name} has been drop")
 
     def add_ext_auto_defer(self, ephemeral: bool = False, time_until_defer: float = 0.0) -> None:
         """
@@ -326,5 +330,5 @@ class Extension:
             raise TypeError("Callback must be a coroutine")
 
         if self.extension_error:
-            logger.warning("Extension error callback has been overridden!")
+            self.bot.logger.warning("Extension error callback has been overridden!")
         self.extension_error = coroutine
