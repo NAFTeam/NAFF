@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, cast
 import discord_typings
 
 from naff.models.naff.protocols import CanRequest
-
 from ..route import Route
 
 __all__ = ("MessageRequests",)

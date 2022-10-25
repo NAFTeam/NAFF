@@ -66,6 +66,7 @@ class BaseAudio(ABC):
     def __del__(self) -> None:
         self.cleanup()
 
+    @abstractmethod
     def cleanup(self) -> None:
         """A method to optionally cleanup after this object is no longer required."""
         ...

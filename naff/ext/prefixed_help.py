@@ -3,6 +3,7 @@ from logging import Logger
 from typing import TYPE_CHECKING
 
 import attrs
+
 from naff import Embed, get_logger
 from naff.ext.paginators import Paginator
 from naff.models.discord.color import BrandColors, Color

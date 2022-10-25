@@ -1817,9 +1817,7 @@ class Client(
                 if command and command.enabled:
                     # yeah, this looks ugly
                     context.command = command
-                    context.invoke_target = (
-                        message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
-                    )
+                    context.invoke_target = message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:

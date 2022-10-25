@@ -26,7 +26,7 @@ from typing import Any, Optional, TYPE_CHECKING
 import attrs
 
 from naff.api.events.base import BaseEvent, RawGatewayEvent
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 
 __all__ = (
     "ButtonPressed",
@@ -91,14 +91,14 @@ class Disconnect(BaseEvent):
 class ShardConnect(Connect):
     """A shard just connected to the discord Gateway."""
 
-    shard_id: int = field(metadata=docs("The ID of the shard"))
+    shard_id: int = attrs.field(repr=False, metadata=docs("The ID of the shard"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShardDisconnect(Disconnect):
     """A shard just disconnected."""
 
-    shard_id: int = field(metadata=docs("The ID of the shard"))
+    shard_id: int = attrs.field(repr=False, metadata=docs("The ID of the shard"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -128,14 +128,14 @@ class Ready(BaseEvent):
 class WebsocketReady(RawGatewayEvent):
     """The gateway has reported that it is ready."""
 
-    data: dict = field(metadata=docs("The data from the ready event"))
+    data: dict = attrs.field(repr=False, metadata=docs("The data from the ready event"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Component(BaseEvent):
     """Dispatched when a user uses a Component."""
 
-    ctx: "ComponentContext" = field(metadata=docs("The context of the interaction"))
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The context of the interaction"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -152,68 +152,72 @@ class Select(Component):
 class CommandCompletion(BaseEvent):
     """Dispatched after the library ran any command callback."""
 
-    ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = attrs.field(
+        repr=False, metadata=docs("The command context")
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentCompletion(BaseEvent):
     """Dispatched after the library ran any component callback."""
 
-    ctx: "ComponentContext" = field(metadata=docs("The component context"))
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The component context"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteCompletion(BaseEvent):
     """Dispatched after the library ran any autocomplete callback."""
 
-    ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
+    ctx: "AutocompleteContext" = attrs.field(repr=False, metadata=docs("The autocomplete context"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalCompletion(BaseEvent):
     """Dispatched after the library ran any modal callback."""
 
-    ctx: "ModalContext" = field(metadata=docs("The modal context"))
+    ctx: "ModalContext" = attrs.field(repr=False, metadata=docs("The modal context"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _Error(BaseEvent):
-    error: Exception = field(metadata=docs("The error that was encountered"))
-    args: tuple[Any] = field(factory=tuple)
-    kwargs: dict[str, Any] = field(factory=dict)
+    error: Exception = attrs.field(repr=False, metadata=docs("The error that was encountered"))
+    args: tuple[Any] = attrs.field(repr=False, factory=tuple)
+    kwargs: dict[str, Any] = attrs.field(repr=False, factory=dict)
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Error(_Error):
     """Dispatched when the library encounters an error."""
 
-    source: str = field(metadata=docs("The source of the error"))
-    ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))
+    source: str = attrs.field(repr=False, metadata=docs("The source of the error"))
+    ctx: Optional["Context"] = attrs.field(repr=False, default=None, metadata=docs("The Context, if one was active"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CommandError(_Error):
     """Dispatched when the library encounters an error in a command."""
 
-    ctx: "InteractionContext | PrefixedContext | HybridContext" = field(metadata=docs("The command context"))
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = attrs.field(
+        repr=False, metadata=docs("The command context")
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentError(_Error):
     """Dispatched when the library encounters an error in a component."""
 
-    ctx: "ComponentContext" = field(metadata=docs("The component context"))
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The component context"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteError(_Error):
     """Dispatched when the library encounters an error in an autocomplete."""
 
-    ctx: "AutocompleteContext" = field(metadata=docs("The autocomplete context"))
+    ctx: "AutocompleteContext" = attrs.field(repr=False, metadata=docs("The autocomplete context"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalError(_Error):
     """Dispatched when the library encounters an error in a modal."""
 
-    ctx: "ModalContext" = field(metadata=docs("The modal context"))
+    ctx: "ModalContext" = attrs.field(repr=False, metadata=docs("The modal context"))

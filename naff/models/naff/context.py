@@ -10,7 +10,7 @@ from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import AlreadyDeferred
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_converters import optional
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 from naff.models.discord.enums import MessageFlags, CommandTypes, Permissions
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.message import Attachment
@@ -55,23 +55,23 @@ __all__ = (
 class Resolved:
     """Represents resolved data in an interaction."""
 
-    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = field(
-        factory=dict, metadata=docs("A dictionary of channels mentioned in the interaction")
+    channels: Dict["Snowflake_Type", "TYPE_MESSAGEABLE_CHANNEL"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of channels mentioned in the interaction")
     )
-    members: Dict["Snowflake_Type", "Member"] = field(
-        factory=dict, metadata=docs("A dictionary of members mentioned in the interaction")
+    members: Dict["Snowflake_Type", "Member"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of members mentioned in the interaction")
     )
-    users: Dict["Snowflake_Type", "User"] = field(
-        factory=dict, metadata=docs("A dictionary of users mentioned in the interaction")
+    users: Dict["Snowflake_Type", "User"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of users mentioned in the interaction")
     )
-    roles: Dict["Snowflake_Type", "Role"] = field(
-        factory=dict, metadata=docs("A dictionary of roles mentioned in the interaction")
+    roles: Dict["Snowflake_Type", "Role"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of roles mentioned in the interaction")
     )
-    messages: Dict["Snowflake_Type", "Message"] = field(
-        factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
+    messages: Dict["Snowflake_Type", "Message"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of messages mentioned in the interaction")
     )
-    attachments: Dict["Snowflake_Type", "Attachment"] = field(
-        factory=dict, metadata=docs("A dictionary of attachments tied to the interaction")
+    attachments: Dict["Snowflake_Type", "Attachment"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("A dictionary of attachments tied to the interaction")
     )
 
     @classmethod
@@ -111,21 +111,30 @@ class Resolved:
 class Context:
     """Represents the context of a command."""
 
-    _client: "Client" = field(default=None)
-    invoke_target: str = field(default=None, metadata=docs("The name of the command to be invoked"))
-    command: Optional["BaseCommand"] = field(default=None, metadata=docs("The command to be invoked"))
+    _client: "Client" = attrs.field(repr=False, default=None)
+    invoke_target: str = attrs.field(repr=False, default=None, metadata=docs("The name of the command to be invoked"))
+    command: Optional["BaseCommand"] = attrs.field(repr=False, default=None, metadata=docs("The command to be invoked"))
 
-    args: List = field(factory=list, metadata=docs("The list of arguments to be passed to the command"))
-    kwargs: Dict = field(factory=dict, metadata=docs("The list of keyword arguments to be passed"))
-
-    author: Union["Member", "User"] = field(default=None, metadata=docs("The author of the message"))
-    channel: "TYPE_MESSAGEABLE_CHANNEL" = field(default=None, metadata=docs("The channel this was sent within"))
-    guild_id: "Snowflake_Type" = field(
-        default=None, converter=to_optional_snowflake, metadata=docs("The guild this was sent within, if not a DM")
+    args: List = attrs.field(
+        repr=False, factory=list, metadata=docs("The list of arguments to be passed to the command")
     )
-    message: "Message" = field(default=None, metadata=docs("The message associated with this context"))
+    kwargs: Dict = attrs.field(repr=False, factory=dict, metadata=docs("The list of keyword arguments to be passed"))
 
-    logger: Logger = field(init=False, factory=get_logger)
+    author: Union["Member", "User"] = attrs.field(repr=False, default=None, metadata=docs("The author of the message"))
+    channel: "TYPE_MESSAGEABLE_CHANNEL" = attrs.field(
+        repr=False, default=None, metadata=docs("The channel this was sent within")
+    )
+    guild_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+        default=None,
+        converter=to_optional_snowflake,
+        metadata=docs("The guild this was sent within, if not a DM"),
+    )
+    message: "Message" = attrs.field(
+        repr=False, default=None, metadata=docs("The message associated with this context")
+    )
+
+    logger: Logger = attrs.field(repr=False, init=False, factory=get_logger)
 
     @property
     def guild(self) -> Optional["Guild"]:
@@ -145,32 +154,38 @@ class Context:
 class _BaseInteractionContext(Context):
     """An internal object used to define the attributes of interaction context and its children."""
 
-    _token: str = field(default=None, metadata=docs("The token for the interaction"))
-    _context_type: int = field()  # we don't want to convert this in case of a new context type, which is expected
-    interaction_id: str = field(default=None, metadata=docs("The id of the interaction"))
-    target_id: "Snowflake_Type" = field(
+    _token: str = attrs.field(repr=False, default=None, metadata=docs("The token for the interaction"))
+    _context_type: int = attrs.field(
+        repr=False,
+    )  # we don't want to convert this in case of a new context type, which is expected
+    interaction_id: str = attrs.field(repr=False, default=None, metadata=docs("The id of the interaction"))
+    target_id: "Snowflake_Type" = attrs.field(
         default=None,
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
         converter=optional(to_snowflake),
     )
-    app_permissions: Permissions = field(
-        default=0, converter=Permissions, metadata=docs("The permissions this interaction has")
+    app_permissions: Permissions = attrs.field(
+        repr=False, default=0, converter=Permissions, metadata=docs("The permissions this interaction has")
     )
-    locale: str = field(
+    locale: str = attrs.field(
         default=None,
         metadata=docs(
             "The selected language of the invoking user \n(https://discord.com/developers/docs/reference#locales)"
         ),
     )
-    guild_locale: str = field(default=None, metadata=docs("The guild's preferred locale"))
+    guild_locale: str = attrs.field(repr=False, default=None, metadata=docs("The guild's preferred locale"))
 
-    deferred: bool = field(default=False, metadata=docs("Is this interaction deferred?"))
-    responded: bool = field(default=False, metadata=docs("Have we responded to the interaction?"))
-    ephemeral: bool = field(default=False, metadata=docs("Are responses to this interaction *hidden*"))
+    deferred: bool = attrs.field(repr=False, default=False, metadata=docs("Is this interaction deferred?"))
+    responded: bool = attrs.field(repr=False, default=False, metadata=docs("Have we responded to the interaction?"))
+    ephemeral: bool = attrs.field(
+        repr=False, default=False, metadata=docs("Are responses to this interaction *hidden*")
+    )
 
-    resolved: Resolved = field(default=Resolved(), metadata=docs("Discord objects mentioned within this interaction"))
+    resolved: Resolved = attrs.field(
+        repr=False, default=Resolved(), metadata=docs("Discord objects mentioned within this interaction")
+    )
 
-    data: Dict = field(factory=dict, metadata=docs("The raw data of this interaction"))
+    data: Dict = attrs.field(repr=False, factory=dict, metadata=docs("The raw data of this interaction"))
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Client") -> "Context":
@@ -452,12 +467,18 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentContext(InteractionContext):
-    custom_id: str = field(default="", metadata=docs("The ID given to the component that has been pressed"))
-    component_type: int = field(default=0, metadata=docs("The type of component that has been pressed"))
+    custom_id: str = attrs.field(
+        repr=False, default="", metadata=docs("The ID given to the component that has been pressed")
+    )
+    component_type: int = attrs.field(
+        repr=False, default=0, metadata=docs("The type of component that has been pressed")
+    )
 
-    values: List = field(factory=list, metadata=docs("The values set"))
+    values: List = attrs.field(repr=False, factory=list, metadata=docs("The values set"))
 
-    defer_edit_origin: bool = field(default=False, metadata=docs("Are we editing the message the component is on"))
+    defer_edit_origin: bool = attrs.field(
+        repr=False, default=False, metadata=docs("Are we editing the message the component is on")
+    )
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Client") -> "ComponentContext":
@@ -574,7 +595,9 @@ class ComponentContext(InteractionContext):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutocompleteContext(_BaseInteractionContext):
-    focussed_option: str = field(default=MISSING, metadata=docs("The option the user is currently filling in"))
+    focussed_option: str = attrs.field(
+        repr=False, default=MISSING, metadata=docs("The option the user is currently filling in")
+    )
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Client") -> "ComponentContext":
@@ -621,7 +644,7 @@ class AutocompleteContext(_BaseInteractionContext):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ModalContext(InteractionContext):
-    custom_id: str = field(default="")
+    custom_id: str = attrs.field(repr=False, default="")
 
     @classmethod
     def from_dict(cls, data: Dict, client: "Client") -> "ModalContext":
@@ -646,7 +669,7 @@ class ModalContext(InteractionContext):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PrefixedContext(Context, SendMixin):
-    prefix: str = field(default=MISSING, metadata=docs("The prefix used to invoke this command"))
+    prefix: str = attrs.field(repr=False, default=MISSING, metadata=docs("The prefix used to invoke this command"))
 
     @classmethod
     def from_message(cls, client: "Client", message: "Message") -> "PrefixedContext":
@@ -687,14 +710,14 @@ class HybridContext(Context):
     This attempts to create a compatibility layer to allow contexts for an interaction or a message to be used seamlessly.
     """
 
-    deferred: bool = field(default=False, metadata=docs("Is this context deferred?"))
-    responded: bool = field(default=False, metadata=docs("Have we responded to this?"))
-    app_permissions: Permissions = field(
-        default=0, converter=Permissions, metadata=docs("The permissions this context has")
+    deferred: bool = attrs.field(repr=False, default=False, metadata=docs("Is this context deferred?"))
+    responded: bool = attrs.field(repr=False, default=False, metadata=docs("Have we responded to this?"))
+    app_permissions: Permissions = attrs.field(
+        repr=False, default=0, converter=Permissions, metadata=docs("The permissions this context has")
     )
 
-    _interaction_context: Optional[InteractionContext] = field(default=None)
-    _prefixed_context: Optional[PrefixedContext] = field(default=None)
+    _interaction_context: Optional[InteractionContext] = attrs.field(repr=False, default=None)
+    _prefixed_context: Optional[PrefixedContext] = attrs.field(repr=False, default=None)
 
     @classmethod
     def from_interaction_context(cls, context: InteractionContext) -> "HybridContext":
@@ -903,6 +926,7 @@ class SendableContext(Protocol):
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[
                 Iterable[Iterable[Union["BaseComponent", dict]]],
@@ -914,9 +938,12 @@ class SendableContext(Protocol):
         stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", Iterable["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
+        delete_after: Optional[float] = None,
         **kwargs: Any,
     ) -> "Message":
         ...

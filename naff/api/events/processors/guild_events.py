@@ -2,10 +2,6 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
-
-from naff.client.const import MISSING
-from ._template import EventMixinTemplate, Processor
-from naff.models import GuildIntegration, Sticker, to_snowflake
 from naff.api.events.discord import (
     GuildEmojisUpdate,
     IntegrationCreate,
@@ -16,6 +12,9 @@ from naff.api.events.discord import (
     GuildStickersUpdate,
     WebhooksUpdate,
 )
+from naff.client.const import MISSING
+from naff.models import GuildIntegration, Sticker, to_snowflake
+from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent

@@ -5,8 +5,6 @@ from random import randint
 
 import attrs
 
-from naff.client.utils.attr_utils import field
-
 __all__ = (
     "COLOR_TYPES",
     "Color",
@@ -30,7 +28,7 @@ hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
 @attrs.define(eq=False, order=False, hash=False, init=False)
 class Color:
-    value: int = field(repr=True)
+    value: int = attrs.field(repr=True)
     """The color value as an integer."""
 
     def __init__(self, color: COLOR_TYPES | None = None) -> None:

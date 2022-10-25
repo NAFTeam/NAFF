@@ -9,7 +9,7 @@ import attrs
 
 from naff.client.const import MISSING
 from naff.client.errors import BadArgument
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 from naff.client.utils.input_utils import _quotes
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
 from naff.models.naff.command import BaseCommand
@@ -259,38 +259,42 @@ async def _greedy_convert(
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class PrefixedCommand(BaseCommand):
-    name: str = field(metadata=docs("The name of the command."))
-    parameters: list[PrefixedCommandParameter] = field(metadata=docs("The parameters of the command."), factory=list)
-    aliases: list[str] = field(
+    name: str = attrs.field(repr=False, metadata=docs("The name of the command."))
+    parameters: list[PrefixedCommandParameter] = attrs.field(
+        repr=False, metadata=docs("The parameters of the command."), factory=list
+    )
+    aliases: list[str] = attrs.field(
         metadata=docs("The list of aliases the command can be invoked under."),
         factory=list,
     )
-    hidden: bool = field(
+    hidden: bool = attrs.field(
         metadata=docs("If `True`, help commands should not show this in the help output (unless toggled to do so)."),
         default=False,
     )
-    ignore_extra: bool = field(
+    ignore_extra: bool = attrs.field(
         metadata=docs(
             "If `True`, ignores extraneous strings passed to a command if all its requirements are met (e.g. ?foo a b c"
             " when only expecting a and b). Otherwise, an error is raised. Defaults to True."
         ),
         default=True,
     )
-    hierarchical_checking: bool = field(
+    hierarchical_checking: bool = attrs.field(
         metadata=docs(
             "If `True` and if the base of a subcommand, every subcommand underneath it will run this command's checks"
             " and cooldowns before its own. Otherwise, only the subcommand's checks are checked."
         ),
         default=True,
     )
-    help: Optional[str] = field(metadata=docs("The long help text for the command."), default=None)
-    brief: Optional[str] = field(metadata=docs("The short help text for the command."), default=None)
-    parent: Optional["PrefixedCommand"] = field(metadata=docs("The parent command, if applicable."), default=None)
-    subcommands: dict[str, "PrefixedCommand"] = field(
-        metadata=docs("A dict of all subcommands for the command."), factory=dict
+    help: Optional[str] = attrs.field(repr=False, metadata=docs("The long help text for the command."), default=None)
+    brief: Optional[str] = attrs.field(repr=False, metadata=docs("The short help text for the command."), default=None)
+    parent: Optional["PrefixedCommand"] = attrs.field(
+        repr=False, metadata=docs("The parent command, if applicable."), default=None
     )
-    _usage: Optional[str] = field(default=None)
-    _inspect_signature: Optional[inspect.Signature] = field(default=None)
+    subcommands: dict[str, "PrefixedCommand"] = attrs.field(
+        repr=False, metadata=docs("A dict of all subcommands for the command."), factory=dict
+    )
+    _usage: Optional[str] = attrs.field(repr=False, default=None)
+    _inspect_signature: Optional[inspect.Signature] = attrs.field(repr=False, default=None)
 
     def __attrs_post_init__(self) -> None:
         super().__attrs_post_init__()  # we want checks to work

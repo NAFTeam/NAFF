@@ -11,6 +11,7 @@ import discord_typings
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
+import naff.client.const as constants
 from naff import models
 from naff.api.http.http_requests import (
     BotRequests,
@@ -34,7 +35,6 @@ from naff.client.const import (
     __version__,
     __api_version__,
 )
-import naff.client.const as constants
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.input_utils import response_decode, OverriddenJson

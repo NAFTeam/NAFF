@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.app_perms import ApplicationCommandPermission, CommandPermissions
+from naff.models.discord.snowflake import to_snowflake
 from ._template import EventMixinTemplate, Processor
 from ... import events
 
