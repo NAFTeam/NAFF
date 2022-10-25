@@ -54,6 +54,8 @@ except ImportError:
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
+if os.environ.get("GITHUB_ACTIONS") and not os.environ.get("RUN_TESTBOT"):
+    pytest.skip(f"Skipping {os.path.basename(__file__)} - RUN_TESTBOT not set", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")
