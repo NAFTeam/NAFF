@@ -172,6 +172,7 @@ class Webhook(DiscordObject, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embed: Optional[Union["Embed", dict]] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[

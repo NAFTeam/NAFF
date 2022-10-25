@@ -24,6 +24,7 @@ class SendMixin:
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[

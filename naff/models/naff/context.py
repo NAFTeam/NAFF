@@ -364,6 +364,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
@@ -843,6 +844,7 @@ class HybridContext(Context):
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
@@ -925,6 +927,7 @@ class SendableContext(Protocol):
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
