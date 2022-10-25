@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 from urllib.parse import quote as _uriquote
+
 from naff.client.const import __api_version__
 
 if TYPE_CHECKING:

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 import attrs
 
 from naff.client.errors import AlreadyDeferred, NotFound, BadRequest, HTTPException
-from naff.client.utils.attr_utils import field
 
 if TYPE_CHECKING:
     from naff.models.naff.context import InteractionContext
@@ -16,13 +15,13 @@ __all__ = ("AutoDefer",)
 class AutoDefer:
     """Automatically defer application commands for you!"""
 
-    enabled: bool = field(default=False)
+    enabled: bool = attrs.field(repr=False, default=False)
     """Whether or not auto-defer is enabled"""
 
-    ephemeral: bool = field(default=False)
+    ephemeral: bool = attrs.field(repr=False, default=False)
     """Should the command be deferred as ephemeral or not"""
 
-    time_until_defer: float = field(default=1.5)
+    time_until_defer: float = attrs.field(repr=False, default=1.5)
     """How long to wait before automatically deferring"""
 
     async def __call__(self, ctx: "InteractionContext") -> None:

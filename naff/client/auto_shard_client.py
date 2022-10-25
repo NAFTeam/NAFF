@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Optional
 
 import naff.api.events as events
+from naff.api.events import ShardConnect
 from naff.api.gateway.state import ConnectionState
 from naff.client.client import Client
 from naff.client.const import MISSING
@@ -11,9 +12,8 @@ from naff.models import (
     Guild,
     to_snowflake,
 )
-from naff.models.naff.listener import Listener
 from naff.models.discord import Status, Activity
-from naff.api.events import ShardConnect
+from naff.models.naff.listener import Listener
 
 if TYPE_CHECKING:
     from naff.models import Snowflake_Type

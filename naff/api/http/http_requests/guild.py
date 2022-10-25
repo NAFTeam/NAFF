@@ -4,7 +4,6 @@ import discord_typings
 
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.naff.protocols import CanRequest
-
 from ..route import Route, PAYLOAD_TYPE
 
 __all__ = ("GuildRequests",)

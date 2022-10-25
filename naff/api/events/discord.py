@@ -28,7 +28,7 @@ import attrs
 import naff.models
 from naff.api.events.base import GuildEvent, BaseEvent
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import docs, field
+from naff.client.utils.attr_utils import docs
 
 __all__ = (
     "ApplicationCommandPermissionsUpdate",
@@ -114,15 +114,15 @@ if TYPE_CHECKING:
 class AutoModExec(BaseEvent):
     """Dispatched when an auto modation action is executed"""
 
-    execution: "AutoModerationAction" = field(metadata=docs("The executed auto mod action"))
-    channel: "BaseChannel" = field(metadata=docs("The channel the action was executed in"))
-    guild: "Guild" = field(metadata=docs("The guild the action was executed in"))
+    execution: "AutoModerationAction" = attrs.field(repr=False, metadata=docs("The executed auto mod action"))
+    channel: "BaseChannel" = attrs.field(repr=False, metadata=docs("The channel the action was executed in"))
+    guild: "Guild" = attrs.field(repr=False, metadata=docs("The guild the action was executed in"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AutoModCreated(BaseEvent):
-    guild: "Guild" = field(metadata=docs("The guild the rule was modified in"))
-    rule: "AutoModRule" = field(metadata=docs("The rule that was modified"))
+    guild: "Guild" = attrs.field(repr=False, metadata=docs("The guild the rule was modified in"))
+    rule: "AutoModRule" = attrs.field(repr=False, metadata=docs("The rule that was modified"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -141,25 +141,35 @@ class AutoModDeleted(AutoModCreated):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ApplicationCommandPermissionsUpdate(BaseEvent):
-    guild_id: "Snowflake_Type" = field(metadata=docs("The guild the command permissions were updated in"))
-    application_id: "Snowflake_Type" = field(metadata=docs("The application the command permissions were updated for"))
-    permissions: List["ApplicationCommandPermission"] = field(factory=list, metadata=docs("The updated permissions"))
+    guild_id: "Snowflake_Type" = attrs.field(
+        repr=False, metadata=docs("The guild the command permissions were updated in")
+    )
+    application_id: "Snowflake_Type" = attrs.field(
+        repr=False, metadata=docs("The application the command permissions were updated for")
+    )
+    permissions: List["ApplicationCommandPermission"] = attrs.field(
+        repr=False, factory=list, metadata=docs("The updated permissions")
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelCreate(BaseEvent):
     """Dispatched when a channel is created."""
 
-    channel: "BaseChannel" = field(metadata=docs("The channel this event is dispatched from"))
+    channel: "BaseChannel" = attrs.field(repr=False, metadata=docs("The channel this event is dispatched from"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelUpdate(BaseEvent):
     """Dispatched when a channel is updated."""
 
-    before: "BaseChannel" = field()
+    before: "BaseChannel" = attrs.field(
+        repr=False,
+    )
     """Channel before this event. MISSING if it was not cached before"""
-    after: "BaseChannel" = field()
+    after: "BaseChannel" = attrs.field(
+        repr=False,
+    )
     """Channel after this event"""
 
 
@@ -172,7 +182,9 @@ class ChannelDelete(ChannelCreate):
 class ChannelPinsUpdate(ChannelCreate):
     """Dispatched when a channel's pins are updated."""
 
-    last_pin_timestamp: "Timestamp" = field()
+    last_pin_timestamp: "Timestamp" = attrs.field(
+        repr=False,
+    )
     """The time at which the most recent pinned message was pinned"""
 
 
@@ -180,7 +192,7 @@ class ChannelPinsUpdate(ChannelCreate):
 class ThreadCreate(BaseEvent):
     """Dispatched when a thread is created, or a thread is new to the client"""
 
-    thread: "TYPE_THREAD_CHANNEL" = field(metadata=docs("The thread this event is dispatched from"))
+    thread: "TYPE_THREAD_CHANNEL" = attrs.field(repr=False, metadata=docs("The thread this event is dispatched from"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -202,11 +214,17 @@ class ThreadDelete(ThreadCreate):
 class ThreadListSync(BaseEvent):
     """Dispatched when gaining access to a channel, contains all active threads in that channel."""
 
-    channel_ids: Sequence["Snowflake_Type"] = field()
+    channel_ids: Sequence["Snowflake_Type"] = attrs.field(
+        repr=False,
+    )
     """The parent channel ids whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data."""
-    threads: List["BaseChannel"] = field()
+    threads: List["BaseChannel"] = attrs.field(
+        repr=False,
+    )
     """all active threads in the given channels that the current user can access"""
-    members: List["Member"] = field()
+    members: List["Member"] = attrs.field(
+        repr=False,
+    )
     """all thread member objects from the synced threads for the current user, indicating which threads the current user has been added to"""
 
 
@@ -222,7 +240,9 @@ class ThreadMemberUpdate(ThreadCreate):
 
     """
 
-    member: "Member" = field()
+    member: "Member" = attrs.field(
+        repr=False,
+    )
     """The member who was added"""
 
 
@@ -230,13 +250,15 @@ class ThreadMemberUpdate(ThreadCreate):
 class ThreadMembersUpdate(BaseEvent):
     """Dispatched when anyone is added or removed from a thread."""
 
-    id: "Snowflake_Type" = field()
+    id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The ID of the thread"""
-    member_count: int = field(default=50)
+    member_count: int = attrs.field(repr=False, default=50)
     """the approximate number of members in the thread, capped at 50"""
-    added_members: List["Member"] = field(factory=list)
+    added_members: List["Member"] = attrs.field(repr=False, factory=list)
     """Users added to the thread"""
-    removed_member_ids: List["Snowflake_Type"] = field(factory=list)
+    removed_member_ids: List["Snowflake_Type"] = attrs.field(repr=False, factory=list)
     """Users removed from the thread"""
 
 
@@ -250,7 +272,9 @@ class GuildJoin(BaseEvent):
 
     """
 
-    guild: "Guild" = field()
+    guild: "Guild" = attrs.field(
+        repr=False,
+    )
     """The guild that was created"""
 
 
@@ -258,9 +282,13 @@ class GuildJoin(BaseEvent):
 class GuildUpdate(BaseEvent):
     """Dispatched when a guild is updated."""
 
-    before: "Guild" = field()
+    before: "Guild" = attrs.field(
+        repr=False,
+    )
     """Guild before this event"""
-    after: "Guild" = field()
+    after: "Guild" = attrs.field(
+        repr=False,
+    )
     """Guild after this event"""
 
 
@@ -268,7 +296,7 @@ class GuildUpdate(BaseEvent):
 class GuildLeft(GuildEvent):
     """Dispatched when a guild is left."""
 
-    guild: Optional["Guild"] = field(default=MISSING)
+    guild: Optional["Guild"] = attrs.field(repr=False, default=MISSING)
     """The guild, if it was cached"""
 
 
@@ -276,7 +304,9 @@ class GuildLeft(GuildEvent):
 class GuildAvailable(GuildEvent):
     """Dispatched when a guild becomes available."""
 
-    guild: "Guild" = field()
+    guild: "Guild" = attrs.field(
+        repr=False,
+    )
     """The guild that became available"""
 
 
@@ -284,7 +314,7 @@ class GuildAvailable(GuildEvent):
 class GuildUnavailable(GuildEvent):
     """Dispatched when a guild is not available."""
 
-    guild: Optional["Guild"] = field(default=MISSING)
+    guild: Optional["Guild"] = attrs.field(repr=False, default=MISSING)
     """The guild, if it was cached"""
 
 
@@ -292,7 +322,7 @@ class GuildUnavailable(GuildEvent):
 class BanCreate(GuildEvent):
     """Dispatched when someone was banned from a guild."""
 
-    user: "BaseUser" = field(metadata=docs("The user"))
+    user: "BaseUser" = attrs.field(repr=False, metadata=docs("The user"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -304,9 +334,9 @@ class BanRemove(BanCreate):
 class GuildEmojisUpdate(GuildEvent):
     """Dispatched when a guild's emojis are updated."""
 
-    before: List["CustomEmoji"] = field(factory=list)
+    before: List["CustomEmoji"] = attrs.field(repr=False, factory=list)
     """List of emoji before this event. Only includes emojis that were cached. To enable the emoji cache (and this field), start your bot with `Client(enable_emoji_cache=True)`"""
-    after: List["CustomEmoji"] = field(factory=list)
+    after: List["CustomEmoji"] = attrs.field(repr=False, factory=list)
     """List of emoji after this event"""
 
 
@@ -314,7 +344,7 @@ class GuildEmojisUpdate(GuildEvent):
 class GuildStickersUpdate(GuildEvent):
     """Dispatched when a guild's stickers are updated."""
 
-    stickers: List["Sticker"] = field(factory=list)
+    stickers: List["Sticker"] = attrs.field(repr=False, factory=list)
     """List of stickers from after this event"""
 
 
@@ -322,15 +352,15 @@ class GuildStickersUpdate(GuildEvent):
 class MemberAdd(GuildEvent):
     """Dispatched when a member is added to a guild."""
 
-    member: "Member" = field(metadata=docs("The member who was added"))
+    member: "Member" = attrs.field(repr=False, metadata=docs("The member who was added"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MemberRemove(MemberAdd):
     """Dispatched when a member is removed from a guild."""
 
-    member: Union["Member", "User"] = field(
-        metadata=docs("The member who was added, can be user if the member is not cached")
+    member: Union["Member", "User"] = attrs.field(
+        repr=False, metadata=docs("The member who was added, can be user if the member is not cached")
     )
 
 
@@ -338,9 +368,13 @@ class MemberRemove(MemberAdd):
 class MemberUpdate(GuildEvent):
     """Dispatched when a member is updated."""
 
-    before: "Member" = field()
+    before: "Member" = attrs.field(
+        repr=False,
+    )
     """The state of the member before this event"""
-    after: "Member" = field()
+    after: "Member" = attrs.field(
+        repr=False,
+    )
     """The state of the member after this event"""
 
 
@@ -348,7 +382,9 @@ class MemberUpdate(GuildEvent):
 class RoleCreate(GuildEvent):
     """Dispatched when a role is created."""
 
-    role: "Role" = field()
+    role: "Role" = attrs.field(
+        repr=False,
+    )
     """The created role"""
 
 
@@ -356,9 +392,13 @@ class RoleCreate(GuildEvent):
 class RoleUpdate(GuildEvent):
     """Dispatched when a role is updated."""
 
-    before: Absent["Role"] = field()
+    before: Absent["Role"] = attrs.field(
+        repr=False,
+    )
     """The role before this event"""
-    after: "Role" = field()
+    after: "Role" = attrs.field(
+        repr=False,
+    )
     """The role after this event"""
 
 
@@ -366,9 +406,13 @@ class RoleUpdate(GuildEvent):
 class RoleDelete(GuildEvent):
     """Dispatched when a guild role is deleted."""
 
-    id: "Snowflake_Type" = field()
+    id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The ID of the deleted role"""
-    role: Absent["Role"] = field()
+    role: Absent["Role"] = attrs.field(
+        repr=False,
+    )
     """The deleted role"""
 
 
@@ -382,15 +426,23 @@ class GuildMembersChunk(GuildEvent):
 
     """
 
-    chunk_index: int = field()
+    chunk_index: int = attrs.field(
+        repr=False,
+    )
     """The chunk index in the expected chunks for this response (0 <= chunk_index < chunk_count)"""
-    chunk_count: int = field()
+    chunk_count: int = attrs.field(
+        repr=False,
+    )
     """the total number of expected chunks for this response"""
-    presences: List = field()
+    presences: List = attrs.field(
+        repr=False,
+    )
     """if passing true to `REQUEST_GUILD_MEMBERS`, presences of the returned members will be here"""
-    nonce: str = field()
+    nonce: str = attrs.field(
+        repr=False,
+    )
     """The nonce used in the request, if any"""
-    members: List["Member"] = field(factory=list)
+    members: List["Member"] = attrs.field(repr=False, factory=list)
     """A list of members"""
 
 
@@ -398,7 +450,9 @@ class GuildMembersChunk(GuildEvent):
 class IntegrationCreate(BaseEvent):
     """Dispatched when a guild integration is created."""
 
-    integration: "GuildIntegration" = field()
+    integration: "GuildIntegration" = attrs.field(
+        repr=False,
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -410,9 +464,11 @@ class IntegrationUpdate(IntegrationCreate):
 class IntegrationDelete(GuildEvent):
     """Dispatched when a guild integration is deleted."""
 
-    id: "Snowflake_Type" = field()
+    id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The ID of the integration"""
-    application_id: "Snowflake_Type" = field(default=None)
+    application_id: "Snowflake_Type" = attrs.field(repr=False, default=None)
     """The ID of the bot/application for this integration"""
 
 
@@ -420,7 +476,9 @@ class IntegrationDelete(GuildEvent):
 class InviteCreate(BaseEvent):
     """Dispatched when a guild invite is created."""
 
-    invite: naff.models.Invite = field()
+    invite: naff.models.Invite = attrs.field(
+        repr=False,
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -432,16 +490,22 @@ class InviteDelete(InviteCreate):
 class MessageCreate(BaseEvent):
     """Dispatched when a message is created."""
 
-    message: "Message" = field()
+    message: "Message" = attrs.field(
+        repr=False,
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageUpdate(BaseEvent):
     """Dispatched when a message is edited."""
 
-    before: "Message" = field()
+    before: "Message" = attrs.field(
+        repr=False,
+    )
     """The message before this event was created"""
-    after: "Message" = field()
+    after: "Message" = attrs.field(
+        repr=False,
+    )
     """The message after this event was created"""
 
 
@@ -449,16 +513,20 @@ class MessageUpdate(BaseEvent):
 class MessageDelete(BaseEvent):
     """Dispatched when a message is deleted."""
 
-    message: "Message" = field()
+    message: "Message" = attrs.field(
+        repr=False,
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MessageDeleteBulk(GuildEvent):
     """Dispatched when multiple messages are deleted at once."""
 
-    channel_id: "Snowflake_Type" = field()
+    channel_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The ID of the channel these were deleted in"""
-    ids: List["Snowflake_Type"] = field(factory=list)
+    ids: List["Snowflake_Type"] = attrs.field(repr=False, factory=list)
     """A list of message snowflakes"""
 
 
@@ -466,12 +534,12 @@ class MessageDeleteBulk(GuildEvent):
 class MessageReactionAdd(BaseEvent):
     """Dispatched when a reaction is added to a message."""
 
-    message: "Message" = field(metadata=docs("The message that was reacted to"))
-    emoji: "PartialEmoji" = field(metadata=docs("The emoji that was added to the message"))
-    author: Union["Member", "User"] = field(metadata=docs("The user who added the reaction"))
+    message: "Message" = attrs.field(repr=False, metadata=docs("The message that was reacted to"))
+    emoji: "PartialEmoji" = attrs.field(repr=False, metadata=docs("The emoji that was added to the message"))
+    author: Union["Member", "User"] = attrs.field(repr=False, metadata=docs("The user who added the reaction"))
     # reaction can be None when the message is not in the cache, and it was the last reaction, and it was deleted in the event
-    reaction: Optional["Reaction"] = field(
-        default=None, metadata=docs("The reaction object corresponding to the emoji")
+    reaction: Optional["Reaction"] = attrs.field(
+        repr=False, default=None, metadata=docs("The reaction object corresponding to the emoji")
     )
 
     @property
@@ -491,7 +559,9 @@ class MessageReactionRemove(MessageReactionAdd):
 class MessageReactionRemoveAll(GuildEvent):
     """Dispatched when all reactions are removed from a message."""
 
-    message: "Message" = field()
+    message: "Message" = attrs.field(
+        repr=False,
+    )
     """The message that was reacted to"""
 
 
@@ -499,15 +569,25 @@ class MessageReactionRemoveAll(GuildEvent):
 class PresenceUpdate(BaseEvent):
     """A user's presence has changed."""
 
-    user: "User" = field()
+    user: "User" = attrs.field(
+        repr=False,
+    )
     """The user in question"""
-    status: str = field()
+    status: str = attrs.field(
+        repr=False,
+    )
     """'Either `idle`, `dnd`, `online`, or `offline`'"""
-    activities: List["Activity"] = field()
+    activities: List["Activity"] = attrs.field(
+        repr=False,
+    )
     """The users current activities"""
-    client_status: dict = field()
+    client_status: dict = attrs.field(
+        repr=False,
+    )
     """What platform the user is reported as being on"""
-    guild_id: "Snowflake_Type" = field()
+    guild_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The guild this presence update was dispatched from"""
 
 
@@ -515,7 +595,7 @@ class PresenceUpdate(BaseEvent):
 class StageInstanceCreate(BaseEvent):
     """Dispatched when a stage instance is created."""
 
-    stage_instance: "StageInstance" = field(metadata=docs("The stage instance"))
+    stage_instance: "StageInstance" = attrs.field(repr=False, metadata=docs("The stage instance"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -532,13 +612,21 @@ class StageInstanceUpdate(StageInstanceCreate):
 class TypingStart(BaseEvent):
     """Dispatched when a user starts typing."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
     """The user who started typing"""
-    channel: "BaseChannel" = field()
+    channel: "BaseChannel" = attrs.field(
+        repr=False,
+    )
     """The channel typing is in"""
-    guild: "Guild" = field()
+    guild: "Guild" = attrs.field(
+        repr=False,
+    )
     """The ID of the guild this typing is in"""
-    timestamp: "Timestamp" = field()
+    timestamp: "Timestamp" = attrs.field(
+        repr=False,
+    )
     """unix time (in seconds) of when the user started typing"""
 
 
@@ -547,7 +635,9 @@ class WebhooksUpdate(GuildEvent):
     """Dispatched when a guild channel webhook is created, updated, or deleted."""
 
     # Discord doesnt sent the webhook object for this event, for some reason
-    channel_id: "Snowflake_Type" = field()
+    channel_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """The ID of the webhook was updated"""
 
 
@@ -555,22 +645,30 @@ class WebhooksUpdate(GuildEvent):
 class InteractionCreate(BaseEvent):
     """Dispatched when a user uses an Application Command."""
 
-    interaction: dict = field()
+    interaction: dict = attrs.field(
+        repr=False,
+    )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class VoiceStateUpdate(BaseEvent):
     """Dispatched when a user's voice state changes."""
 
-    before: Optional["VoiceState"] = field()
+    before: Optional["VoiceState"] = attrs.field(
+        repr=False,
+    )
     """The voice state before this event was created or None if the user was not in a voice channel"""
-    after: Optional["VoiceState"] = field()
+    after: Optional["VoiceState"] = attrs.field(
+        repr=False,
+    )
     """The voice state after this event was created or None if the user is no longer in a voice channel"""
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BaseVoiceEvent(BaseEvent):
-    state: "VoiceState" = field()
+    state: "VoiceState" = attrs.field(
+        repr=False,
+    )
     """The current voice state of the user"""
 
 
@@ -578,11 +676,17 @@ class BaseVoiceEvent(BaseEvent):
 class VoiceUserMove(BaseVoiceEvent):
     """Dispatched when a user moves voice channels."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
 
-    previous_channel: "VoiceChannel" = field()
+    previous_channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The previous voice channel the user was in"""
-    new_channel: "VoiceChannel" = field()
+    new_channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The new voice channel the user is in"""
 
 
@@ -590,11 +694,17 @@ class VoiceUserMove(BaseVoiceEvent):
 class VoiceUserMute(BaseVoiceEvent):
     """Dispatched when a user is muted or unmuted."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
     """The user who was muted or unmuted"""
-    channel: "VoiceChannel" = field()
+    channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The voice channel the user was muted or unmuted in"""
-    mute: bool = field()
+    mute: bool = attrs.field(
+        repr=False,
+    )
     """The new mute state of the user"""
 
 
@@ -602,11 +712,17 @@ class VoiceUserMute(BaseVoiceEvent):
 class VoiceUserDeafen(BaseVoiceEvent):
     """Dispatched when a user is deafened or undeafened."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
     """The user who was deafened or undeafened"""
-    channel: "VoiceChannel" = field()
+    channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The voice channel the user was deafened or undeafened in"""
-    deaf: bool = field()
+    deaf: bool = attrs.field(
+        repr=False,
+    )
     """The new deaf state of the user"""
 
 
@@ -614,9 +730,13 @@ class VoiceUserDeafen(BaseVoiceEvent):
 class VoiceUserJoin(BaseVoiceEvent):
     """Dispatched when a user joins a voice channel."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
     """The user who joined the voice channel"""
-    channel: "VoiceChannel" = field()
+    channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The voice channel the user joined"""
 
 
@@ -624,7 +744,11 @@ class VoiceUserJoin(BaseVoiceEvent):
 class VoiceUserLeave(BaseVoiceEvent):
     """Dispatched when a user leaves a voice channel."""
 
-    author: Union["User", "Member"] = field()
+    author: Union["User", "Member"] = attrs.field(
+        repr=False,
+    )
     """The user who left the voice channel"""
-    channel: "VoiceChannel" = field()
+    channel: "VoiceChannel" = attrs.field(
+        repr=False,
+    )
     """The voice channel the user left"""

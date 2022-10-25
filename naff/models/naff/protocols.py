@@ -1,10 +1,9 @@
 import typing
 from typing import Protocol, Any, TYPE_CHECKING
 
-from naff.client.const import T_co
 from naff.api.http.route import Route
+from naff.client.const import T_co
 from naff.models.discord.file import UPLOADABLE_TYPE
-
 
 if TYPE_CHECKING:
     from naff.models.naff.context import Context

@@ -4,7 +4,6 @@ import attrs
 
 import naff.models as models
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import field
 
 __all__ = ("to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type")
 
@@ -56,7 +55,7 @@ def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
 
 @attrs.define(eq=False, order=False, hash=False, slots=False)
 class SnowflakeObject:
-    id: int = field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
+    id: int = attrs.field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
         if hasattr(other, "id"):

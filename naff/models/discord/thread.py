@@ -7,7 +7,6 @@ from naff.client.const import MISSING
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import field
 from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
@@ -33,12 +32,14 @@ __all__ = (
 class ThreadMember(DiscordObject, SendMixin):
     """A thread member is used to indicate whether a user has joined a thread or not."""
 
-    join_timestamp: Timestamp = field(converter=timestamp_converter)
+    join_timestamp: Timestamp = attrs.field(repr=False, converter=timestamp_converter)
     """The time the current user last joined the thread."""
-    flags: int = field()
+    flags: int = attrs.field(
+        repr=False,
+    )
     """Any user-thread settings, currently only used for notifications."""
 
-    _user_id: "Snowflake_Type" = field(converter=optional(to_snowflake))
+    _user_id: "Snowflake_Type" = attrs.field(repr=False, converter=optional(to_snowflake))
 
     async def fetch_thread(self) -> "TYPE_THREAD_CHANNEL":
         """
@@ -91,11 +92,13 @@ class ThreadMember(DiscordObject, SendMixin):
 class ThreadList(ClientObject):
     """Represents a list of one or more threads."""
 
-    threads: List["TYPE_THREAD_CHANNEL"] = field(factory=list)  # TODO Reference the cache or store actual object?
+    threads: List["TYPE_THREAD_CHANNEL"] = attrs.field(
+        repr=False, factory=list
+    )  # TODO Reference the cache or store actual object?
     """The active threads."""
-    members: List[ThreadMember] = field(factory=list)
+    members: List[ThreadMember] = attrs.field(repr=False, factory=list)
     """A thread member object for each returned thread the current user has joined."""
-    has_more: bool = field(default=False)
+    has_more: bool = attrs.field(repr=False, default=False)
     """Whether there are potentially additional threads that could be returned on a subsequent call."""
 
     @classmethod
@@ -112,11 +115,13 @@ class ThreadList(ClientObject):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ThreadTag(DiscordObject):
-    name: str = field()
-    emoji_id: "Snowflake_Type" = field(default=None)
-    emoji_name: str | None = field(default=None)
+    name: str = attrs.field(
+        repr=False,
+    )
+    emoji_id: "Snowflake_Type" = attrs.field(repr=False, default=None)
+    emoji_name: str | None = attrs.field(repr=False, default=None)
 
-    _parent_channel_id: "Snowflake_Type" = field(default=MISSING)
+    _parent_channel_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING)
 
     @property
     def parent_channel(self) -> "GuildForum":

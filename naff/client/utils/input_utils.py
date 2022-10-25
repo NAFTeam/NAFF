@@ -3,7 +3,6 @@ from typing import Any, Dict, Union, Optional
 
 import aiohttp  # type: ignore
 
-
 from naff.client.const import get_logger
 
 __all__ = ("OverriddenJson", "response_decode", "get_args", "get_first_word")

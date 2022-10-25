@@ -7,7 +7,6 @@ import attrs
 from naff.client.const import MISSING, Absent
 from naff.client.errors import ForeignWebhookException, EmptyMessageException
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import to_image_data
 from naff.models.discord.message import process_message_payload
 from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
@@ -43,31 +42,33 @@ class WebhookTypes(IntEnum):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Webhook(DiscordObject, SendMixin):
-    type: WebhookTypes = field()
+    type: WebhookTypes = attrs.field(
+        repr=False,
+    )
     """The type of webhook"""
 
-    application_id: Optional["Snowflake_Type"] = field(default=None)
+    application_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the bot/OAuth2 application that created this webhook"""
 
-    guild_id: Optional["Snowflake_Type"] = field(default=None)
+    guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the guild id this webhook is for, if any"""
-    channel_id: Optional["Snowflake_Type"] = field(default=None)
+    channel_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the channel id this webhook is for, if any"""
-    user_id: Optional["Snowflake_Type"] = field(default=None)
+    user_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the user this webhook was created by"""
 
-    name: Optional[str] = field(default=None)
+    name: Optional[str] = attrs.field(repr=False, default=None)
     """the default name of the webhook"""
-    avatar: Optional[str] = field(default=None)
+    avatar: Optional[str] = attrs.field(repr=False, default=None)
     """the default user avatar hash of the webhook"""
-    token: str = field(default=MISSING)
+    token: str = attrs.field(repr=False, default=MISSING)
     """the secure token of the webhook (returned for Incoming Webhooks)"""
-    url: Optional[str] = field(default=None)
+    url: Optional[str] = attrs.field(repr=False, default=None)
     """the url used for executing the webhook (returned by the webhooks OAuth2 flow)"""
 
-    source_guild_id: Optional["Snowflake_Type"] = field(default=None)
+    source_guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the guild of the channel that this webhook is following (returned for Channel Follower Webhooks)"""
-    source_channel_id: Optional["Snowflake_Type"] = field(default=None)
+    source_channel_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """the channel that this webhook is following (returned for Channel Follower Webhooks)"""
 
     @classmethod

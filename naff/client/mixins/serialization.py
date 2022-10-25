@@ -5,14 +5,13 @@ import attrs
 
 import naff.client.const as const
 import naff.client.utils.serializer as serializer
-from naff.client.utils.attr_utils import field
 
 __all__ = ("DictSerializationMixin",)
 
 
 @attrs.define(eq=False, order=False, hash=False, slots=False)
 class DictSerializationMixin:
-    logger: Logger = field(init=False, factory=const.get_logger, metadata=serializer.no_export_meta)
+    logger: Logger = attrs.field(init=False, factory=const.get_logger, metadata=serializer.no_export_meta, repr=False)
 
     @classmethod
     def _get_keys(cls) -> frozenset:

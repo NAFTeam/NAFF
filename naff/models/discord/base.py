@@ -4,7 +4,6 @@ import attrs
 
 from naff.client.const import T
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import no_export_meta
 from naff.models.discord.snowflake import SnowflakeObject
 
@@ -18,7 +17,7 @@ __all__ = ("ClientObject", "DiscordObject")
 class ClientObject(DictSerializationMixin):
     """Serializable object that requires client reference."""
 
-    _client: "Client" = field(metadata=no_export_meta)
+    _client: "Client" = attrs.field(repr=False, metadata=no_export_meta)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:

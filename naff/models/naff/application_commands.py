@@ -19,7 +19,7 @@ from naff.client.const import (
 )
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import optional
-from naff.client.utils.attr_utils import attrs_validator, docs, field
+from naff.client.utils.attr_utils import attrs_validator, docs
 from naff.client.utils.misc_utils import get_parameters
 from naff.client.utils.serializer import no_export_meta
 from naff.models.discord.enums import ChannelTypes, CommandTypes, Permissions
@@ -63,7 +63,7 @@ __all__ = (
 
 def name_validator(_: Any, attr: Attribute, value: str) -> None:
     if value:
-        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():
+        if not re.match(rf"^[\w-]{{1,{SLASH_CMD_NAME_LENGTH}}}$", value) or value != value.lower():  # noqa: W605
             raise ValueError(
                 f"Slash Command names must be lower case and match this regex: ^[\w-]{1, {SLASH_CMD_NAME_LENGTH} }$"  # noqa: W605
             )
@@ -168,30 +168,32 @@ class InteractionCommand(BaseCommand):
 
     """
 
-    name: LocalisedName = field(
-        metadata=docs("1-32 character name") | no_export_meta, converter=LocalisedName.converter
+    name: LocalisedName = attrs.field(
+        repr=False, metadata=docs("1-32 character name") | no_export_meta, converter=LocalisedName.converter
     )
-    scopes: List["Snowflake_Type"] = field(
+    scopes: List["Snowflake_Type"] = attrs.field(
         default=[GLOBAL_SCOPE],
         converter=to_snowflake_list,
         metadata=docs("The scopes of this interaction. Global or guild ids") | no_export_meta,
     )
-    default_member_permissions: Optional["Permissions"] = field(
-        default=None, metadata=docs("What permissions members need to have by default to use this command")
+    default_member_permissions: Optional["Permissions"] = attrs.field(
+        repr=False, default=None, metadata=docs("What permissions members need to have by default to use this command")
     )
-    dm_permission: bool = field(default=True, metadata=docs("Whether this command is enabled in DMs"))
-    cmd_id: Dict[str, "Snowflake_Type"] = field(
-        factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
+    dm_permission: bool = attrs.field(repr=False, default=True, metadata=docs("Whether this command is enabled in DMs"))
+    cmd_id: Dict[str, "Snowflake_Type"] = attrs.field(
+        repr=False, factory=dict, metadata=docs("The unique IDs of this commands") | no_export_meta
     )  # scope: cmd_id
-    callback: Callable[..., Coroutine] = field(
-        default=None, metadata=docs("The coroutine to call when this interaction is received") | no_export_meta
+    callback: Callable[..., Coroutine] = attrs.field(
+        repr=False,
+        default=None,
+        metadata=docs("The coroutine to call when this interaction is received") | no_export_meta,
     )
-    auto_defer: "AutoDefer" = field(
+    auto_defer: "AutoDefer" = attrs.field(
         default=MISSING,
         metadata=docs("A system to automatically defer this command after a set duration") | no_export_meta,
     )
-    nsfw: bool = field(default=False, metadata=docs("This command should only work in NSFW channels"))
-    _application_id: "Snowflake_Type" = field(default=None, converter=optional(to_snowflake))
+    nsfw: bool = attrs.field(repr=False, default=False, metadata=docs("This command should only work in NSFW channels"))
+    _application_id: "Snowflake_Type" = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
         if self.callback is not None:
@@ -288,8 +290,10 @@ class ContextMenu(InteractionCommand):
 
     """
 
-    name: LocalisedField = field(metadata=docs("1-32 character name"), converter=LocalisedField.converter)
-    type: CommandTypes = field(metadata=docs("The type of command, defaults to 1 if not specified"))
+    name: LocalisedField = attrs.field(
+        repr=False, metadata=docs("1-32 character name"), converter=LocalisedField.converter
+    )
+    type: CommandTypes = attrs.field(repr=False, metadata=docs("The type of command, defaults to 1 if not specified"))
 
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
@@ -319,8 +323,10 @@ class SlashCommandChoice(DictSerializationMixin):
 
     """
 
-    name: LocalisedField = field(converter=LocalisedField.converter)
-    value: Union[str, int, float] = field()
+    name: LocalisedField = attrs.field(repr=False, converter=LocalisedField.converter)
+    value: Union[str, int, float] = attrs.field(
+        repr=False,
+    )
 
     def as_dict(self) -> dict:
         return {"name": str(self.name), "value": self.value, "name_localizations": self.name.to_locale_dict()}
@@ -345,17 +351,21 @@ class SlashCommandOption(DictSerializationMixin):
 
     """
 
-    name: LocalisedName = field(converter=LocalisedName.converter)
-    type: Union[OptionTypes, int] = field()
-    description: LocalisedDesc = field(default="No Description Set", converter=LocalisedDesc.converter)
-    required: bool = field(default=True)
-    autocomplete: bool = field(default=False)
-    choices: List[Union[SlashCommandChoice, Dict]] = field(factory=list)
-    channel_types: Optional[list[Union[ChannelTypes, int]]] = field(default=None)
-    min_value: Optional[float] = field(default=None)
-    max_value: Optional[float] = field(default=None)
-    min_length: Optional[int] = field(default=None)
-    max_length: Optional[int] = field(default=None)
+    name: LocalisedName = attrs.field(repr=False, converter=LocalisedName.converter)
+    type: Union[OptionTypes, int] = attrs.field(
+        repr=False,
+    )
+    description: LocalisedDesc = attrs.field(
+        repr=False, default="No Description Set", converter=LocalisedDesc.converter
+    )
+    required: bool = attrs.field(repr=False, default=True)
+    autocomplete: bool = attrs.field(repr=False, default=False)
+    choices: List[Union[SlashCommandChoice, Dict]] = attrs.field(repr=False, factory=list)
+    channel_types: Optional[list[Union[ChannelTypes, int]]] = attrs.field(repr=False, default=None)
+    min_value: Optional[float] = attrs.field(repr=False, default=None)
+    max_value: Optional[float] = attrs.field(repr=False, default=None)
+    min_length: Optional[int] = attrs.field(repr=False, default=None)
+    max_length: Optional[int] = attrs.field(repr=False, default=None)
 
     @type.validator
     def _type_validator(self, attribute: str, value: int) -> None:
@@ -445,21 +455,27 @@ class SlashCommandOption(DictSerializationMixin):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class SlashCommand(InteractionCommand):
-    name: LocalisedName = field(converter=LocalisedName.converter)
-    description: LocalisedDesc = field(default="No Description Set", converter=LocalisedDesc.converter)
-
-    group_name: LocalisedName = field(default=None, metadata=no_export_meta, converter=LocalisedName.converter)
-    group_description: LocalisedDesc = field(
-        default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
+    name: LocalisedName = attrs.field(repr=False, converter=LocalisedName.converter)
+    description: LocalisedDesc = attrs.field(
+        repr=False, default="No Description Set", converter=LocalisedDesc.converter
     )
 
-    sub_cmd_name: LocalisedName = field(default=None, metadata=no_export_meta, converter=LocalisedName.converter)
-    sub_cmd_description: LocalisedDesc = field(
-        default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
+    group_name: LocalisedName = attrs.field(
+        repr=False, default=None, metadata=no_export_meta, converter=LocalisedName.converter
+    )
+    group_description: LocalisedDesc = attrs.field(
+        repr=False, default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
     )
 
-    options: List[Union[SlashCommandOption, Dict]] = field(factory=list)
-    autocomplete_callbacks: dict = field(factory=dict, metadata=no_export_meta)
+    sub_cmd_name: LocalisedName = attrs.field(
+        repr=False, default=None, metadata=no_export_meta, converter=LocalisedName.converter
+    )
+    sub_cmd_description: LocalisedDesc = attrs.field(
+        repr=False, default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
+    )
+
+    options: List[Union[SlashCommandOption, Dict]] = attrs.field(repr=False, factory=list)
+    autocomplete_callbacks: dict = attrs.field(repr=False, factory=dict, metadata=no_export_meta)
 
     @property
     def resolved_name(self) -> str:
@@ -606,8 +622,10 @@ class SlashCommand(InteractionCommand):
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ComponentCommand(InteractionCommand):
     # right now this adds no extra functionality, but for future dev ive implemented it
-    name: str = field()
-    listeners: list[str] = field(factory=list)
+    name: str = attrs.field(
+        repr=False,
+    )
+    listeners: list[str] = attrs.field(repr=False, factory=list)
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
