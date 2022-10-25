@@ -926,6 +926,7 @@ class SendableContext(Protocol):
         self,
         content: Optional[str] = None,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
+        embed: Optional[Union["Embed", dict]] = None,
         components: Optional[
             Union[
                 Iterable[Iterable[Union["BaseComponent", dict]]],
@@ -937,9 +938,12 @@ class SendableContext(Protocol):
         stickers: Optional[Union[Iterable[Union["Sticker", "Snowflake_Type"]], "Sticker", "Snowflake_Type"]] = None,
         allowed_mentions: Optional[Union["AllowedMentions", dict]] = None,
         reply_to: Optional[Union["MessageReference", "Message", dict, "Snowflake_Type"]] = None,
-        file: Optional[Union["File", "IOBase", "Path", str]] = None,
+        files: Optional[Union["UPLOADABLE_TYPE", Iterable["UPLOADABLE_TYPE"]]] = None,
+        file: Optional["UPLOADABLE_TYPE"] = None,
         tts: bool = False,
+        suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
+        delete_after: Optional[float] = None,
         **kwargs: Any,
     ) -> "Message":
         ...
