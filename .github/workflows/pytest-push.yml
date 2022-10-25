@@ -15,7 +15,14 @@ jobs:
           - .[docs]
         python-version:
           - "3.10"
-          - "3.11"
+          - "3.11-dev"
+        include:
+          - extras: .[all]
+            python-version: "3.10"
+            RUN_TESTBOT: true
+          - extras: .[all]
+            python-version: "3.11-dev"
+            RUN_TESTBOT: true
 
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +39,7 @@ jobs:
       - name: Run Tests
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          RUN_TESTBOT: ${{ matrix.RUN_TESTBOT }}
         run: |
           pytest
           coverage xml -i

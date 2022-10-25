@@ -18,6 +18,13 @@ jobs:
         python-version:
           - "3.10"
           - "3.11"
+        include:
+          - extras: .[all]
+            python-version: "3.10"
+            BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          - extras: .[all]
+            python-version: "3.11"
+            BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
     steps:
       - name: Create check run
