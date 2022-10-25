@@ -560,7 +560,7 @@ class Message(BaseMessage):
         if message_data:
             return self._client.cache.place_message_data(message_data)
 
-    async def delete(self, delay: int = 0, *, context: "InteractionContext") -> None:
+    async def delete(self, delay: int = 0, *, context: "InteractionContext | None" = None) -> None:
         """
         Delete message.
 
@@ -575,6 +575,8 @@ class Message(BaseMessage):
                 await asyncio.sleep(delay)
 
             if MessageFlags.EPHEMERAL in self.flags:
+                if not context:
+                    raise ValueError("Cannot delete ephemeral message without interaction context parameter")
                 await context.delete(self.id)
             else:
                 await self._client.http.delete_message(self._channel_id, self.id)
