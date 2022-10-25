@@ -142,7 +142,7 @@ class InteractionRequests(CanRequest):
         payload: dict,
         application_id: "Snowflake_Type",
         token: str,
-        message_id: str = "@original",
+        message_id: "str|Snowflake_Type" = "@original",
         files: list["UPLOADABLE_TYPE"] | None = None,
     ) -> discord_typings.MessageData:
         """
