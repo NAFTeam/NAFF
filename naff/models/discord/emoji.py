@@ -163,6 +163,7 @@ class CustomEmoji(PartialEmoji, ClientObject):
 
     async def edit(
         self,
+        *,
         name: Optional[str] = None,
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,

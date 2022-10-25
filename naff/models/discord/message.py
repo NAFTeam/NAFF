@@ -524,6 +524,7 @@ class Message(BaseMessage):
 
     async def edit(
         self,
+        *,
         content: Optional[str] = None,
         embeds: Optional[Union[Sequence[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
         embed: Optional[Union["models.Embed", dict]] = None,

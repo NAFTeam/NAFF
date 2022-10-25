@@ -104,6 +104,7 @@ class Sticker(StickerItem):
 
     async def edit(
         self,
+        *,
         name: Absent[Optional[str]] = MISSING,
         description: Absent[Optional[str]] = MISSING,
         tags: Absent[Optional[str]] = MISSING,

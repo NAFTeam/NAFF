@@ -715,6 +715,7 @@ class Guild(BaseGuild):
 
     async def edit(
         self,
+        *,
         name: Absent[Optional[str]] = MISSING,
         description: Absent[Optional[str]] = MISSING,
         verification_level: Absent[Optional["VerificationLevels"]] = MISSING,

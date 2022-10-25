@@ -140,6 +140,7 @@ class Webhook(DiscordObject, SendMixin):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         avatar: Absent["UPLOADABLE_TYPE"] = MISSING,
         channel_id: Absent["Snowflake_Type"] = MISSING,
