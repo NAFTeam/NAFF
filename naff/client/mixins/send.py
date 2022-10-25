@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 
 import naff.models as models
 
@@ -43,7 +43,7 @@ class SendMixin:
         suppress_embeds: bool = False,
         flags: Optional[Union[int, "MessageFlags"]] = None,
         delete_after: Optional[float] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "Message":
         """
         Send a message.
