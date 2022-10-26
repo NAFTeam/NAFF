@@ -251,6 +251,7 @@ class Webhook(DiscordObject, SendMixin):
     async def edit_message(
         self,
         message: Union["Message", "Snowflake_Type"],
+        *,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[

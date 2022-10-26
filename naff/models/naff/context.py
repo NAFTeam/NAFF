@@ -525,6 +525,7 @@ class ComponentContext(InteractionContext):
 
     async def edit_origin(
         self,
+        *,
         content: str = None,
         embeds: Optional[Union[Iterable[Union["Embed", dict]], Union["Embed", dict]]] = None,
         embed: Optional[Union["Embed", dict]] = None,
