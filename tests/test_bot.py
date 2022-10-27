@@ -180,7 +180,7 @@ async def test_messages(bot: Client, guild: Guild, channel: GuildText) -> None:
         _m = await thread.send("Test")
         ensure_attributes(_m)
 
-        await _m.edit("Test Edit")
+        await _m.edit(content="Test Edit")
         assert _m.content == "Test Edit"
         await _m.add_reaction("❌")
         with suppress(asyncio.exceptions.TimeoutError):

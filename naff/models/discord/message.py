@@ -28,6 +28,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optio
 
 if TYPE_CHECKING:
     from naff.client import Client
+    from naff import InteractionContext
 
 __all__ = (
     "Attachment",
@@ -524,6 +525,7 @@ class Message(BaseMessage):
 
     async def edit(
         self,
+        *,
         content: Optional[str] = None,
         embeds: Optional[Union[Sequence[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
         embed: Optional[Union["models.Embed", dict]] = None,
@@ -541,6 +543,7 @@ class Message(BaseMessage):
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
+        context: "InteractionContext | None" = None,
     ) -> "Message":
         """
         Edits the message.
@@ -556,49 +559,72 @@ class Message(BaseMessage):
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
+            context: The interaction context to use for the edit
 
         Returns:
             New message object with edits applied
 
         """
-        message_payload = process_message_payload(
-            content=content,
-            embeds=embeds or embed,
-            components=components,
-            allowed_mentions=allowed_mentions,
-            attachments=attachments,
-            tts=tts,
-            flags=flags,
-        )
+        if context:
+            return await context.edit(
+                self,
+                content=content,
+                embeds=embeds,
+                embed=embed,
+                components=components,
+                allowed_mentions=allowed_mentions,
+                attachments=attachments,
+                files=files,
+                file=file,
+                tts=tts,
+            )
+        else:
+            if self.flags == MessageFlags.EPHEMERAL:
+                raise EphemeralEditException
+            message_payload = process_message_payload(
+                content=content,
+                embeds=embeds or embed,
+                components=components,
+                allowed_mentions=allowed_mentions,
+                attachments=attachments,
+                tts=tts,
+                flags=flags,
+            )
+            if file:
+                if files:
+                    files = [file, *files]
+                else:
+                    files = [file]
 
-        if self.flags == MessageFlags.EPHEMERAL:
-            raise EphemeralEditException
+            message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id, files=files)
+            if message_data:
+                return self._client.cache.place_message_data(message_data)
 
-        message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id, files=files)
-        if message_data:
-            return self._client.cache.place_message_data(message_data)
-
-    async def delete(self, delay: Absent[Optional[int]] = MISSING) -> None:
+    async def delete(self, delay: int = 0, *, context: "InteractionContext | None" = None) -> None:
         """
         Delete message.
 
         Args:
             delay: Seconds to wait before deleting message.
+            context: An optional interaction context to delete ephemeral messages.
 
         """
-        if delay and delay > 0:
 
-            async def delayed_delete() -> None:
+        async def _delete() -> None:
+            if delay:
                 await asyncio.sleep(delay)
-                try:
-                    await self._client.http.delete_message(self._channel_id, self.id)
-                except Exception:  # noqa: S110
-                    pass  # No real way to handle this
 
-            asyncio.create_task(delayed_delete())
+            if MessageFlags.EPHEMERAL in self.flags:
+                if not context:
+                    raise ValueError("Cannot delete ephemeral message without interaction context parameter")
+                await context.delete(self.id)
+            else:
+                await self._client.http.delete_message(self._channel_id, self.id)
 
+        if delay:
+            asyncio.create_task(_delete())
         else:
-            await self._client.http.delete_message(self._channel_id, self.id)
+            return await _delete()
 
     async def reply(
         self,

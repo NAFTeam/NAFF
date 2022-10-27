@@ -1,10 +1,11 @@
 import datetime
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Protocol, Union, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Protocol, Union, runtime_checkable, Sequence
 
 import attrs
 from aiohttp import FormData
 
+import naff.models as models
 import naff.models.discord.message as message
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import AlreadyDeferred
@@ -428,6 +429,62 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             tts=tts,
             flags=flags,
         )
+
+    async def delete(self, message: "Snowflake_Type") -> None:
+        """
+        Delete a message sent in response to this interaction.
+
+        Args:
+            message: The message to delete
+
+        """
+        await self._client.http.delete_interaction_message(self._client.app.id, self._token, to_snowflake(message))
+
+    async def edit(
+        self,
+        message: "Snowflake_Type",
+        *,
+        content: Optional[str] = None,
+        embeds: Optional[Union[Sequence[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
+        embed: Optional[Union["models.Embed", dict]] = None,
+        components: Optional[
+            Union[
+                Sequence[Sequence[Union["models.BaseComponent", dict]]],
+                Sequence[Union["models.BaseComponent", dict]],
+                "models.BaseComponent",
+                dict,
+            ]
+        ] = None,
+        allowed_mentions: Optional[Union["models.AllowedMentions", dict]] = None,
+        attachments: Optional[Optional[Sequence[Union[Attachment, dict]]]] = None,
+        files: Optional[Union[UPLOADABLE_TYPE, Sequence[UPLOADABLE_TYPE]]] = None,
+        file: Optional[UPLOADABLE_TYPE] = None,
+        tts: bool = False,
+    ) -> "models.Message":
+        message_payload = models.process_message_payload(
+            content=content,
+            embeds=embeds or embed,
+            components=components,
+            allowed_mentions=allowed_mentions,
+            attachments=attachments,
+            tts=tts,
+        )
+
+        if file:
+            if files:
+                files = [file, *files]
+            else:
+                files = [file]
+
+        message_data = await self._client.http.edit_interaction_message(
+            payload=message_payload,
+            application_id=self._client.app.id,
+            token=self._token,
+            message_id=to_snowflake(message),
+            files=files,
+        )
+        if message_data:
+            return self._client.cache.place_message_data(message_data)
 
     @property
     def target(self) -> "Absent[Member | User | Message]":

@@ -350,7 +350,9 @@ class EphemeralEditException(MessageException):
     """
 
     def __init__(self) -> None:
-        super().__init__("Ephemeral messages cannot be edited.")
+        super().__init__(
+            "Ephemeral messages can only be edited with component's `edit_origin` method or using InteractionContext"
+        )
 
 
 class ThreadException(BotException):
