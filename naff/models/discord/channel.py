@@ -786,6 +786,7 @@ class BaseChannel(DiscordObject):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         icon: Absent[UPLOADABLE_TYPE] = MISSING,
         type: Absent[ChannelTypes] = MISSING,
@@ -919,6 +920,7 @@ class DMGroup(DMChannel):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         icon: Absent[UPLOADABLE_TYPE] = MISSING,
         reason: Absent[str] = MISSING,
@@ -1326,6 +1328,7 @@ class GuildCategory(GuildChannel):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         position: Absent[int] = MISSING,
         permission_overwrites: Absent[
@@ -1567,6 +1570,7 @@ class GuildNews(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         position: Absent[int] = MISSING,
         permission_overwrites: Absent[
@@ -1658,6 +1662,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         position: Absent[int] = MISSING,
         permission_overwrites: Absent[
@@ -1930,6 +1935,7 @@ class ThreadChannel(BaseChannel, MessageableMixin, WebhookMixin):
 class GuildNewsThread(ThreadChannel):
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
@@ -1968,6 +1974,7 @@ class GuildNewsThread(ThreadChannel):
 class GuildPublicThread(ThreadChannel):
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
@@ -2023,6 +2030,7 @@ class GuildForumPost(GuildPublicThread):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
@@ -2113,6 +2121,7 @@ class GuildPrivateThread(ThreadChannel):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         archived: Absent[bool] = MISSING,
         auto_archive_duration: Absent[AutoArchiveDuration] = MISSING,
@@ -2172,6 +2181,7 @@ class VoiceChannel(GuildChannel):  # May not be needed, can be directly just Gui
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         position: Absent[int] = MISSING,
         permission_overwrites: Absent[

@@ -172,6 +172,7 @@ class Role(DiscordObject):
 
     async def edit(
         self,
+        *,
         name: str | None = None,
         permissions: str | None = None,
         color: Color | COLOR_TYPES | None = None,

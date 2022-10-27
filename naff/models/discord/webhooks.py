@@ -140,6 +140,7 @@ class Webhook(DiscordObject, SendMixin):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         avatar: Absent["UPLOADABLE_TYPE"] = MISSING,
         channel_id: Absent["Snowflake_Type"] = MISSING,
@@ -171,6 +172,7 @@ class Webhook(DiscordObject, SendMixin):
     async def send(
         self,
         content: Optional[str] = None,
+        *,
         embed: Optional[Union["Embed", dict]] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[
@@ -249,6 +251,7 @@ class Webhook(DiscordObject, SendMixin):
     async def edit_message(
         self,
         message: Union["Message", "Snowflake_Type"],
+        *,
         content: Optional[str] = None,
         embeds: Optional[Union[List[Union["Embed", dict]], Union["Embed", dict]]] = None,
         components: Optional[

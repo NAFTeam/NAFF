@@ -160,6 +160,7 @@ class ScheduledEvent(DiscordObject):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         start_time: Absent["Timestamp"] = MISSING,
         end_time: Absent["Timestamp"] = MISSING,

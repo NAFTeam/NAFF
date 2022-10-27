@@ -254,7 +254,7 @@ async def test_roles(bot: Client, guild: Guild) -> None:
         await guild.me.add_role(roles[0])
         await guild.me.remove_role(roles[0])
 
-        await roles[0].edit("_test_renamed", color=BrandColors.RED)
+        await roles[0].edit(name="_test_renamed", color=BrandColors.RED)
 
         for role in roles:
             await role.delete()

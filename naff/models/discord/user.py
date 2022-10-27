@@ -197,7 +197,7 @@ class NaffUser(User):
         """The guilds the user is in."""
         return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
+    async def edit(self, *, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
         """
         Edit the client's user.
 
