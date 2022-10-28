@@ -3,13 +3,8 @@ import typing
 from typing import Any, Optional, List
 
 from naff.client.const import T, T_co
+from naff.client.errors import BadArgument
 from naff.client.errors import Forbidden, HTTPException
-from naff.models.discord.role import Role
-from naff.models.discord.guild import Guild
-from naff.models.discord.message import Message
-from naff.models.discord.user import User, Member
-from naff.models.discord.snowflake import SnowflakeObject
-from naff.models.discord.emoji import PartialEmoji, CustomEmoji
 from naff.models.discord.channel import (
     BaseChannel,
     DMChannel,
@@ -33,10 +28,14 @@ from naff.models.discord.channel import (
     TYPE_VOICE_CHANNEL,
     TYPE_MESSAGEABLE_CHANNEL,
 )
-from naff.models.naff.protocols import Converter
+from naff.models.discord.emoji import PartialEmoji, CustomEmoji
+from naff.models.discord.guild import Guild
+from naff.models.discord.message import Message
+from naff.models.discord.role import Role
+from naff.models.discord.snowflake import SnowflakeObject
+from naff.models.discord.user import User, Member
 from naff.models.naff.context import Context
-from naff.client.errors import BadArgument
-
+from naff.models.naff.protocols import Converter
 
 __all__ = (
     "NoArgumentConverter",

@@ -54,6 +54,8 @@ except ImportError:
 TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     pytest.skip(f"Skipping {os.path.basename(__file__)} - no token provided", allow_module_level=True)
+if os.environ.get("GITHUB_ACTIONS") and not os.environ.get("RUN_TESTBOT"):
+    pytest.skip(f"Skipping {os.path.basename(__file__)} - RUN_TESTBOT not set", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")
@@ -178,7 +180,7 @@ async def test_messages(bot: Client, guild: Guild, channel: GuildText) -> None:
         _m = await thread.send("Test")
         ensure_attributes(_m)
 
-        await _m.edit("Test Edit")
+        await _m.edit(content="Test Edit")
         assert _m.content == "Test Edit"
         await _m.add_reaction("❌")
         with suppress(asyncio.exceptions.TimeoutError):
@@ -252,7 +254,7 @@ async def test_roles(bot: Client, guild: Guild) -> None:
         await guild.me.add_role(roles[0])
         await guild.me.remove_role(roles[0])
 
-        await roles[0].edit("_test_renamed", color=BrandColors.RED)
+        await roles[0].edit(name="_test_renamed", color=BrandColors.RED)
 
         for role in roles:
             await role.delete()

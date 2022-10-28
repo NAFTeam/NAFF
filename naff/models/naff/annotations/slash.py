@@ -1,7 +1,6 @@
 from typing import Union, List, Optional, Type, TYPE_CHECKING
 
 import naff.models as models
-
 from naff.models.naff.application_commands import SlashCommandOption
 
 __all__ = (

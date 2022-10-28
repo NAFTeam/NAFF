@@ -7,7 +7,6 @@ from naff.client.errors import EventLocationNotProvided
 from naff.client.utils import to_image_data
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import field
 from naff.models.discord.asset import Asset
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
@@ -27,36 +26,38 @@ __all__ = ("ScheduledEvent",)
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ScheduledEvent(DiscordObject):
-    name: str = field(repr=True)
-    description: str = field(default=MISSING)
-    entity_type: Union[ScheduledEventType, int] = field(converter=ScheduledEventType)
+    name: str = attrs.field(repr=True)
+    description: str = attrs.field(repr=False, default=MISSING)
+    entity_type: Union[ScheduledEventType, int] = attrs.field(repr=False, converter=ScheduledEventType)
     """The type of the scheduled event"""
-    start_time: Timestamp = field(converter=timestamp_converter)
+    start_time: Timestamp = attrs.field(repr=False, converter=timestamp_converter)
     """A Timestamp object representing the scheduled start time of the event """
-    end_time: Optional[Timestamp] = field(default=None, converter=optional(timestamp_converter))
+    end_time: Optional[Timestamp] = attrs.field(repr=False, default=None, converter=optional(timestamp_converter))
     """Optional Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
-    privacy_level: Union[ScheduledEventPrivacyLevel, int] = field(converter=ScheduledEventPrivacyLevel)
+    privacy_level: Union[ScheduledEventPrivacyLevel, int] = attrs.field(
+        repr=False, converter=ScheduledEventPrivacyLevel
+    )
     """
     Privacy level of the scheduled event
 
     ??? note
         Discord only has `GUILD_ONLY` at the momment.
     """
-    status: Union[ScheduledEventStatus, int] = field(converter=ScheduledEventStatus)
+    status: Union[ScheduledEventStatus, int] = attrs.field(repr=False, converter=ScheduledEventStatus)
     """Current status of the scheduled event"""
-    entity_id: Optional["Snowflake_Type"] = field(default=MISSING, converter=optional(to_snowflake))
+    entity_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
     """The id of an entity associated with a guild scheduled event"""
-    entity_metadata: Optional[Dict[str, Any]] = field(default=MISSING)  # TODO make this
+    entity_metadata: Optional[Dict[str, Any]] = attrs.field(repr=False, default=MISSING)  # TODO make this
     """The metadata associated with the entity_type"""
-    user_count: int = field(default=MISSING)
+    user_count: int = attrs.field(repr=False, default=MISSING)
     """Amount of users subscribed to the scheduled event"""
-    cover: Asset | None = field(default=None)
+    cover: Asset | None = attrs.field(repr=False, default=None)
     """The cover image of this event"""
 
-    _guild_id: "Snowflake_Type" = field(converter=to_snowflake)
-    _creator: Optional["User"] = field(default=MISSING)
-    _creator_id: Optional["Snowflake_Type"] = field(default=MISSING, converter=optional(to_snowflake))
-    _channel_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
+    _guild_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
+    _creator: Optional["User"] = attrs.field(repr=False, default=MISSING)
+    _creator_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
+    _channel_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
 
     @property
     async def creator(self) -> Optional["User"]:
@@ -159,6 +160,7 @@ class ScheduledEvent(DiscordObject):
 
     async def edit(
         self,
+        *,
         name: Absent[str] = MISSING,
         start_time: Absent["Timestamp"] = MISSING,
         end_time: Absent["Timestamp"] = MISSING,

@@ -5,7 +5,6 @@ import attrs
 
 from naff.client.const import MISSING, T, Missing
 from naff.client.utils.attr_converters import optional as optional_c
-from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter
 from naff.models.discord.asset import Asset
 from naff.models.discord.color import COLOR_TYPES, Color, process_color
@@ -35,19 +34,25 @@ def sentinel_converter(value: bool | T | None, sentinel: T = attrs.NOTHING) -> b
 class Role(DiscordObject):
     _sentinel = object()
 
-    name: str = field(repr=True)
-    color: "Color" = field(converter=Color)
-    hoist: bool = field(default=False)
-    position: int = field(repr=True)
-    permissions: "Permissions" = field(converter=Permissions)
-    managed: bool = field(default=False)
-    mentionable: bool = field(default=True)
-    premium_subscriber: bool = field(default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel))
-    _icon: Asset | None = field(default=None)
-    _unicode_emoji: PartialEmoji | None = field(default=None, converter=optional_c(PartialEmoji.from_str))
-    _guild_id: "Snowflake_Type" = field()
-    _bot_id: "Snowflake_Type | None" = field(default=None)
-    _integration_id: "Snowflake_Type | None" = field(default=None)  # todo integration object?
+    name: str = attrs.field(repr=True)
+    color: "Color" = attrs.field(repr=False, converter=Color)
+    hoist: bool = attrs.field(repr=False, default=False)
+    position: int = attrs.field(repr=True)
+    permissions: "Permissions" = attrs.field(repr=False, converter=Permissions)
+    managed: bool = attrs.field(repr=False, default=False)
+    mentionable: bool = attrs.field(repr=False, default=True)
+    premium_subscriber: bool = attrs.field(
+        repr=False, default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel)
+    )
+    _icon: Asset | None = attrs.field(repr=False, default=None)
+    _unicode_emoji: PartialEmoji | None = attrs.field(
+        repr=False, default=None, converter=optional_c(PartialEmoji.from_str)
+    )
+    _guild_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
+    _bot_id: "Snowflake_Type | None" = attrs.field(repr=False, default=None)
+    _integration_id: "Snowflake_Type | None" = attrs.field(repr=False, default=None)  # todo integration object?
 
     def __lt__(self: "Role", other: "Role") -> bool:
         if not isinstance(self, Role) or not isinstance(other, Role):
@@ -167,6 +172,7 @@ class Role(DiscordObject):
 
     async def edit(
         self,
+        *,
         name: str | None = None,
         permissions: str | None = None,
         color: Color | COLOR_TYPES | None = None,

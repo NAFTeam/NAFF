@@ -7,7 +7,6 @@ import discord_typings
 
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NotFound, Forbidden
-from naff.client.utils.attr_utils import field
 from naff.client.utils.cache import TTLCache
 from naff.models import VoiceState
 from naff.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
@@ -55,29 +54,31 @@ def create_cache(
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GlobalCache:
-    _client: "Client" = field()
+    _client: "Client" = attrs.field(
+        repr=False,
+    )
 
     # Non expiring discord objects cache
-    user_cache: dict = field(factory=dict)  # key: user_id
-    member_cache: dict = field(factory=dict)  # key: (guild_id, user_id)
-    channel_cache: dict = field(factory=dict)  # key: channel_id
-    guild_cache: dict = field(factory=dict)  # key: guild_id
+    user_cache: dict = attrs.field(repr=False, factory=dict)  # key: user_id
+    member_cache: dict = attrs.field(repr=False, factory=dict)  # key: (guild_id, user_id)
+    channel_cache: dict = attrs.field(repr=False, factory=dict)  # key: channel_id
+    guild_cache: dict = attrs.field(repr=False, factory=dict)  # key: guild_id
 
     # Expiring discord objects cache
-    message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
-    role_cache: TTLCache = field(factory=dict)  # key: role_id
-    voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
-    bot_voice_state_cache: dict = field(factory=dict)  # key: guild_id
+    message_cache: TTLCache = attrs.field(repr=False, factory=TTLCache)  # key: (channel_id, message_id)
+    role_cache: TTLCache = attrs.field(repr=False, factory=dict)  # key: role_id
+    voice_state_cache: TTLCache = attrs.field(repr=False, factory=dict)  # key: user_id
+    bot_voice_state_cache: dict = attrs.field(repr=False, factory=dict)  # key: guild_id
 
-    enable_emoji_cache: bool = field(default=False)
+    enable_emoji_cache: bool = attrs.field(repr=False, default=False)
     """If the emoji cache should be enabled. Default: False"""
-    emoji_cache: Optional[dict] = field(default=None, init=False)  # key: emoji_id
+    emoji_cache: Optional[dict] = attrs.field(repr=False, default=None, init=False)  # key: emoji_id
 
     # Expiring id reference cache
-    dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
-    user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
+    dm_channels: TTLCache = attrs.field(repr=False, factory=TTLCache)  # key: user_id
+    user_guilds: TTLCache = attrs.field(repr=False, factory=dict)  # key: user_id; value: set[guild_id]
 
-    logger: Logger = field(init=False, factory=get_logger)
+    logger: Logger = attrs.field(repr=False, init=False, factory=get_logger)
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):

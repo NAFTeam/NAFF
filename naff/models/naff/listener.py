@@ -2,10 +2,10 @@ import asyncio
 import inspect
 from typing import Coroutine, Callable
 
-from naff.models.naff.callback import CallbackObject
 from naff.api.events.internal import BaseEvent
 from naff.client.const import MISSING, Absent
 from naff.client.utils import get_event_name
+from naff.models.naff.callback import CallbackObject
 
 __all__ = ("Listener", "listen")
 
@@ -26,7 +26,7 @@ class Listener(CallbackObject):
         func: Callable[..., Coroutine],
         event: str,
         *,
-        delay_until_ready: bool = True,
+        delay_until_ready: bool = False,
         delete_if_overridden: bool = False,
     ) -> None:
         super().__init__()
@@ -41,7 +41,7 @@ class Listener(CallbackObject):
         cls,
         event_name: Absent[str | BaseEvent] = MISSING,
         *,
-        delay_until_ready: bool = True,
+        delay_until_ready: bool = False,
         delete_if_overridden: bool = False,
     ) -> Callable[[Coroutine], "Listener"]:
         """

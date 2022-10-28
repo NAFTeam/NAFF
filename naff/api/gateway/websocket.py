@@ -5,13 +5,13 @@ import time
 import zlib
 from abc import abstractmethod
 from types import TracebackType
-from aiohttp import WSMsgType
 from typing import TypeVar, TYPE_CHECKING
 
-from naff.client.errors import WebSocketClosed
-from naff.models.naff.cooldowns import CooldownSystem
+from aiohttp import WSMsgType
 
+from naff.client.errors import WebSocketClosed
 from naff.client.utils.input_utils import OverriddenJson
+from naff.models.naff.cooldowns import CooldownSystem
 
 if TYPE_CHECKING:
     from naff.api.gateway.state import ConnectionState

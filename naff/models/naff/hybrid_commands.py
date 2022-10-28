@@ -7,7 +7,6 @@ import attrs
 
 from naff.client.const import Absent, GLOBAL_SCOPE, MISSING, T
 from naff.client.errors import BadArgument
-from naff.client.utils.attr_utils import field
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
 from naff.models.naff.application_commands import (
     SlashCommand,
@@ -283,7 +282,7 @@ class HybridCommand(SlashCommand):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _HybridPrefixedCommand(PrefixedCommand):
-    _uses_subcommand_func: bool = field(default=False)
+    _uses_subcommand_func: bool = attrs.field(repr=False, default=False)
 
     async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
         new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
@@ -353,13 +352,9 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             if ori_param := old_params.pop(str(option.name), None):
                 if ori_param.annotation != inspect._empty and _check_if_annotation(ori_param.annotation, Converter):
                     if option.type != OptionTypes.ATTACHMENT:
-                        annotation = _StackedConverter(
-                            annotation, _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
-                        )
+                        annotation = _StackedConverter(annotation, _get_converter_function(ori_param.annotation, str(option.name)))  # type: ignore
                     else:
-                        annotation = _StackedNoArgConverter(
-                            _get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
-                        )
+                        annotation = _StackedNoArgConverter(_get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name)))  # type: ignore
 
                 if not option.required and ori_param.default == inspect._empty:
                     # prefixed commands would automatically fill this in, slash commands don't

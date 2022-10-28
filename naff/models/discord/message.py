@@ -11,7 +11,6 @@ from naff.client.errors import EphemeralEditException, ThreadOutsideOfGuild
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.utils.attr_utils import field
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.channel import BaseChannel
 from naff.models.discord.file import UPLOADABLE_TYPE
@@ -29,6 +28,7 @@ from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optio
 
 if TYPE_CHECKING:
     from naff.client import Client
+    from naff import InteractionContext
 
 __all__ = (
     "Attachment",
@@ -50,23 +50,31 @@ channel_mention = re.compile(r"<#(?P<id>[0-9]{17,})>")
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Attachment(DiscordObject):
-    filename: str = field()
+    filename: str = attrs.field(
+        repr=False,
+    )
     """name of file attached"""
-    description: Optional[str] = field(default=None)
+    description: Optional[str] = attrs.field(repr=False, default=None)
     """description for the file"""
-    content_type: Optional[str] = field(default=None)
+    content_type: Optional[str] = attrs.field(repr=False, default=None)
     """the attachment's media type"""
-    size: int = field()
+    size: int = attrs.field(
+        repr=False,
+    )
     """size of file in bytes"""
-    url: str = field()
+    url: str = attrs.field(
+        repr=False,
+    )
     """source url of file"""
-    proxy_url: str = field()
+    proxy_url: str = attrs.field(
+        repr=False,
+    )
     """a proxied url of file"""
-    height: Optional[int] = field(default=None)
+    height: Optional[int] = attrs.field(repr=False, default=None)
     """height of file (if image)"""
-    width: Optional[int] = field(default=None)
+    width: Optional[int] = attrs.field(repr=False, default=None)
     """width of file (if image)"""
-    ephemeral: bool = field(default=False)
+    ephemeral: bool = attrs.field(repr=False, default=False)
     """whether this attachment is ephemeral"""
 
     @property
@@ -77,11 +85,15 @@ class Attachment(DiscordObject):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ChannelMention(DiscordObject):
-    guild_id: "Snowflake_Type" = field()
+    guild_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
     """id of the guild containing the channel"""
-    type: ChannelTypes = field(converter=ChannelTypes)
+    type: ChannelTypes = attrs.field(repr=False, converter=ChannelTypes)
     """the type of channel"""
-    name: str = field()
+    name: str = attrs.field(
+        repr=False,
+    )
     """the name of the channel"""
 
 
@@ -102,13 +114,13 @@ class MessageReference(DictSerializationMixin):
 
     """
 
-    message_id: int = field(default=None, converter=optional_c(to_snowflake))
+    message_id: int = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message."""
-    channel_id: Optional[int] = field(default=None, converter=optional_c(to_snowflake))
+    channel_id: Optional[int] = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message's channel."""
-    guild_id: Optional[int] = field(default=None, converter=optional_c(to_snowflake))
+    guild_id: Optional[int] = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message's guild."""
-    fail_if_not_exists: bool = field(default=True)
+    fail_if_not_exists: bool = attrs.field(repr=False, default=True)
     """When sending a message, whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message, default true."""
 
     @classmethod
@@ -134,12 +146,16 @@ class MessageReference(DictSerializationMixin):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MessageInteraction(DiscordObject):
-    type: InteractionTypes = field(converter=InteractionTypes)
+    type: InteractionTypes = attrs.field(repr=False, converter=InteractionTypes)
     """the type of interaction"""
-    name: str = field()
+    name: str = attrs.field(
+        repr=False,
+    )
     """the name of the application command"""
 
-    _user_id: "Snowflake_Type" = field()
+    _user_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -162,13 +178,13 @@ class AllowedMentions(DictSerializationMixin):
 
     """
 
-    parse: Optional[List[str]] = field(factory=list)
+    parse: Optional[List[str]] = attrs.field(repr=False, factory=list)
     """An array of allowed mention types to parse from the content."""
-    roles: Optional[List["Snowflake_Type"]] = field(factory=list, converter=to_snowflake_list)
+    roles: Optional[List["Snowflake_Type"]] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
     """Array of role_ids to mention. (Max size of 100)"""
-    users: Optional[List["Snowflake_Type"]] = field(factory=list, converter=to_snowflake_list)
+    users: Optional[List["Snowflake_Type"]] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
     """Array of user_ids to mention. (Max size of 100)"""
-    replied_user = field(default=False)
+    replied_user = attrs.field(repr=False, default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
     def add_parse(self, *mention_types: Union["MentionTypes", str]) -> None:
@@ -231,10 +247,12 @@ class AllowedMentions(DictSerializationMixin):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseMessage(DiscordObject):
-    _channel_id: "Snowflake_Type" = field(default=MISSING, converter=to_optional_snowflake)
-    _thread_channel_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
-    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
-    _author_id: "Snowflake_Type" = field(default=MISSING, converter=to_optional_snowflake)
+    _channel_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=to_optional_snowflake)
+    _thread_channel_id: Optional["Snowflake_Type"] = attrs.field(
+        repr=False, default=None, converter=to_optional_snowflake
+    )
+    _guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=to_optional_snowflake)
+    _author_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=to_optional_snowflake)
 
     @property
     def guild(self) -> "models.Guild":
@@ -271,53 +289,55 @@ class BaseMessage(DiscordObject):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Message(BaseMessage):
-    content: str = field(default=MISSING)
+    content: str = attrs.field(repr=False, default=MISSING)
     """Contents of the message"""
-    timestamp: "models.Timestamp" = field(default=MISSING, converter=optional_c(timestamp_converter))
+    timestamp: "models.Timestamp" = attrs.field(repr=False, default=MISSING, converter=optional_c(timestamp_converter))
     """When this message was sent"""
-    edited_timestamp: Optional["models.Timestamp"] = field(default=None, converter=optional_c(timestamp_converter))
+    edited_timestamp: Optional["models.Timestamp"] = attrs.field(
+        repr=False, default=None, converter=optional_c(timestamp_converter)
+    )
     """When this message was edited (or `None` if never)"""
-    tts: bool = field(default=False)
+    tts: bool = attrs.field(repr=False, default=False)
     """Whether this was a TTS message"""
-    mention_everyone: bool = field(default=False)
+    mention_everyone: bool = attrs.field(repr=False, default=False)
     """Whether this message mentions everyone"""
-    mention_channels: List[ChannelMention] = field(factory=list)
+    mention_channels: List[ChannelMention] = attrs.field(repr=False, factory=list)
     """Channels specifically mentioned in this message"""
-    attachments: List[Attachment] = field(factory=list)
+    attachments: List[Attachment] = attrs.field(repr=False, factory=list)
     """Any attached files"""
-    embeds: List["models.Embed"] = field(factory=list)
+    embeds: List["models.Embed"] = attrs.field(repr=False, factory=list)
     """Any embedded content"""
-    reactions: List["models.Reaction"] = field(factory=list)
+    reactions: List["models.Reaction"] = attrs.field(repr=False, factory=list)
     """Reactions to the message"""
-    nonce: Optional[Union[int, str]] = field(default=None)
+    nonce: Optional[Union[int, str]] = attrs.field(repr=False, default=None)
     """Used for validating a message was sent"""
-    pinned: bool = field(default=False)
+    pinned: bool = attrs.field(repr=False, default=False)
     """Whether this message is pinned"""
-    webhook_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    webhook_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=to_optional_snowflake)
     """If the message is generated by a webhook, this is the webhook's id"""
-    type: MessageTypes = field(default=MISSING, converter=optional_c(MessageTypes))
+    type: MessageTypes = attrs.field(repr=False, default=MISSING, converter=optional_c(MessageTypes))
     """Type of message"""
-    activity: Optional[MessageActivity] = field(default=None, converter=optional_c(MessageActivity))
+    activity: Optional[MessageActivity] = attrs.field(repr=False, default=None, converter=optional_c(MessageActivity))
     """Activity sent with Rich Presence-related chat embeds"""
-    application: Optional["models.Application"] = field(default=None)  # TODO: partial application
+    application: Optional["models.Application"] = attrs.field(repr=False, default=None)  # TODO: partial application
     """Application sent with Rich Presence-related chat embeds"""
-    application_id: Optional["Snowflake_Type"] = field(default=None, converter=to_optional_snowflake)
+    application_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=to_optional_snowflake)
     """If the message is an Interaction or application-owned webhook, this is the id of the application"""
-    message_reference: Optional[MessageReference] = field(
-        default=None, converter=optional_c(MessageReference.from_dict)
+    message_reference: Optional[MessageReference] = attrs.field(
+        repr=False, default=None, converter=optional_c(MessageReference.from_dict)
     )
     """Data showing the source of a crosspost, channel follow add, pin, or reply message"""
-    flags: MessageFlags = field(default=MessageFlags.NONE, converter=MessageFlags)
+    flags: MessageFlags = attrs.field(repr=False, default=MessageFlags.NONE, converter=MessageFlags)
     """Message flags combined as a bitfield"""
-    interaction: Optional["MessageInteraction"] = field(default=None)
+    interaction: Optional["MessageInteraction"] = attrs.field(repr=False, default=None)
     """Sent if the message is a response to an Interaction"""
-    components: Optional[List["models.ActionRow"]] = field(default=None)
+    components: Optional[List["models.ActionRow"]] = attrs.field(repr=False, default=None)
     """Sent if the message contains components like buttons, action rows, or other interactive components"""
-    sticker_items: Optional[List["models.StickerItem"]] = field(default=None)
+    sticker_items: Optional[List["models.StickerItem"]] = attrs.field(repr=False, default=None)
     """Sent if the message contains stickers"""
-    _mention_ids: List["Snowflake_Type"] = field(factory=list)
-    _mention_roles: List["Snowflake_Type"] = field(factory=list)
-    _referenced_message_id: Optional["Snowflake_Type"] = field(default=None)
+    _mention_ids: List["Snowflake_Type"] = attrs.field(repr=False, factory=list)
+    _mention_roles: List["Snowflake_Type"] = attrs.field(repr=False, factory=list)
+    _referenced_message_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
 
     @property
     async def mention_users(self) -> AsyncGenerator["models.Member", None]:
@@ -505,6 +525,7 @@ class Message(BaseMessage):
 
     async def edit(
         self,
+        *,
         content: Optional[str] = None,
         embeds: Optional[Union[Sequence[Union["models.Embed", dict]], Union["models.Embed", dict]]] = None,
         embed: Optional[Union["models.Embed", dict]] = None,
@@ -522,6 +543,7 @@ class Message(BaseMessage):
         file: Optional[UPLOADABLE_TYPE] = None,
         tts: bool = False,
         flags: Optional[Union[int, MessageFlags]] = None,
+        context: "InteractionContext | None" = None,
     ) -> "Message":
         """
         Edits the message.
@@ -537,49 +559,72 @@ class Message(BaseMessage):
             file: Files to send, the path, bytes or File() instance, defaults to None. You may have up to 10 files.
             tts: Should this message use Text To Speech.
             flags: Message flags to apply.
+            context: The interaction context to use for the edit
 
         Returns:
             New message object with edits applied
 
         """
-        message_payload = process_message_payload(
-            content=content,
-            embeds=embeds or embed,
-            components=components,
-            allowed_mentions=allowed_mentions,
-            attachments=attachments,
-            tts=tts,
-            flags=flags,
-        )
+        if context:
+            return await context.edit(
+                self,
+                content=content,
+                embeds=embeds,
+                embed=embed,
+                components=components,
+                allowed_mentions=allowed_mentions,
+                attachments=attachments,
+                files=files,
+                file=file,
+                tts=tts,
+            )
+        else:
+            if self.flags == MessageFlags.EPHEMERAL:
+                raise EphemeralEditException
+            message_payload = process_message_payload(
+                content=content,
+                embeds=embeds or embed,
+                components=components,
+                allowed_mentions=allowed_mentions,
+                attachments=attachments,
+                tts=tts,
+                flags=flags,
+            )
+            if file:
+                if files:
+                    files = [file, *files]
+                else:
+                    files = [file]
 
-        if self.flags == MessageFlags.EPHEMERAL:
-            raise EphemeralEditException
+            message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id, files=files)
+            if message_data:
+                return self._client.cache.place_message_data(message_data)
 
-        message_data = await self._client.http.edit_message(message_payload, self._channel_id, self.id, files=files)
-        if message_data:
-            return self._client.cache.place_message_data(message_data)
-
-    async def delete(self, delay: Absent[Optional[int]] = MISSING) -> None:
+    async def delete(self, delay: int = 0, *, context: "InteractionContext | None" = None) -> None:
         """
         Delete message.
 
         Args:
             delay: Seconds to wait before deleting message.
+            context: An optional interaction context to delete ephemeral messages.
 
         """
-        if delay and delay > 0:
 
-            async def delayed_delete() -> None:
+        async def _delete() -> None:
+            if delay:
                 await asyncio.sleep(delay)
-                try:
-                    await self._client.http.delete_message(self._channel_id, self.id)
-                except Exception:  # noqa: S110
-                    pass  # No real way to handle this
 
-            asyncio.create_task(delayed_delete())
+            if MessageFlags.EPHEMERAL in self.flags:
+                if not context:
+                    raise ValueError("Cannot delete ephemeral message without interaction context parameter")
+                await context.delete(self.id)
+            else:
+                await self._client.http.delete_message(self._channel_id, self.id)
 
+        if delay:
+            asyncio.create_task(_delete())
         else:
-            await self._client.http.delete_message(self._channel_id, self.id)
+            return await _delete()
 
     async def reply(
         self,

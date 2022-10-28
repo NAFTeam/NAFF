@@ -2,8 +2,8 @@ from typing import Dict, Any, TYPE_CHECKING, Callable, Coroutine, List, Optional
 
 import aiohttp
 
-from . import const
 from naff.client.utils.misc_utils import escape_mentions
+from . import const
 
 if TYPE_CHECKING:
     from naff.models.naff.command import BaseCommand
@@ -318,7 +318,7 @@ class CommandCheckFailure(CommandException):
     def __init__(self, command: "BaseCommand", check: Callable[..., Coroutine], context: "Context") -> None:
         self.command: "BaseCommand" = command
         self.check: Callable[..., Coroutine] = check
-        self.context = context
+        self.ctx = context
 
 
 class BadArgument(CommandException):
@@ -350,7 +350,9 @@ class EphemeralEditException(MessageException):
     """
 
     def __init__(self) -> None:
-        super().__init__("Ephemeral messages cannot be edited.")
+        super().__init__(
+            "Ephemeral messages can only be edited with component's `edit_origin` method or using InteractionContext"
+        )
 
 
 class ThreadException(BotException):

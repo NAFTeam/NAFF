@@ -1036,14 +1036,14 @@ class Client(
         author = to_snowflake(author) if author else None
 
         def predicate(event) -> bool:
-            if modal.custom_id != event.context.custom_id:
+            if modal.custom_id != event.ctx.custom_id:
                 return False
-            if author and author != to_snowflake(event.context.author):
+            if author and author != to_snowflake(event.ctx.author):
                 return False
             return True
 
-        resp = await self.wait_for("modal_response", predicate, timeout)
-        return resp.context
+        resp = await self.wait_for("modal_completion", predicate, timeout)
+        return resp.ctx
 
     async def wait_for_component(
         self,
@@ -1064,7 +1064,7 @@ class Client(
             timeout: The number of seconds to wait before timing out.
 
         Returns:
-            `Component` that was invoked. Use `.context` to get the `ComponentContext`.
+            `Component` that was invoked. Use `.ctx` to get the `ComponentContext`.
 
         Raises:
             asyncio.TimeoutError: if timed out
@@ -1817,9 +1817,7 @@ class Client(
                 if command and command.enabled:
                     # yeah, this looks ugly
                     context.command = command
-                    context.invoke_target = (
-                        message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
-                    )
+                    context.invoke_target = message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:
