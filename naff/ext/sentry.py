@@ -68,6 +68,8 @@ class SentryExtension(Extension):
                         "message": event.ctx.message,
                     },
                 )
+                if event.ctx.author:
+                    scope.set_user({"id": event.ctx.author.id, "username": event.ctx.author.tag})
             sentry_sdk.capture_exception(event.error)
 
 
