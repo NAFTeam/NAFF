@@ -19,9 +19,16 @@ emoji = "^2.1.0"
 version = "^3.6.8"
 optional = true
 
+[tool.poetry.dependencies.jurigged]
+version = "^0.5.3"
+optional = true
+
 [tool.poetry.extras]
 orjson = [
     "orjson",
+]
+jurigged = [
+    "jurigged",
 ]
 
 [tool.poetry.dev-dependencies]
