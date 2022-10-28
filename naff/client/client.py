@@ -835,13 +835,6 @@ class Client(
                         self.logger.debug(f"Waiting for {guild.id} to chunk")
                         await guild.chunked.wait()
 
-            # run any pending startup tasks
-            if self.async_startup_tasks:
-                try:
-                    await asyncio.gather(*self.async_startup_tasks)
-                except Exception as e:
-                    self.dispatch(events.Error(source="async-extension-loader", error=e))
-
             # cache slash commands
             if not self._startup:
                 await self._init_interactions()
@@ -914,8 +907,7 @@ class Client(
             try:
                 await asyncio.gather(*self.async_startup_tasks)
             except Exception as e:
-                self.dispatch(events.Error("async-extension-loader", e))
-
+                self.dispatch(events.Error(source="async-extension-loader", error=e))
         try:
             await self._connection_state.start()
         finally:
