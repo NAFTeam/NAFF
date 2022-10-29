@@ -16,8 +16,10 @@ class Listener(CallbackObject):
     """Name of the event to listen to."""
     callback: Coroutine
     """Coroutine to call when the event is triggered."""
-    delete_if_overridden: bool
-    """Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users"""
+    is_default_listener: bool
+    """Whether this listener is provided automatically by the library, and might be unwanted by users."""
+    disable_default_listeners: bool
+    """Whether this listener supersedes default listeners.  If true, any default listeners will be unregistered."""
     delay_until_ready: bool
     """whether to delay the event until the client is ready"""
 
@@ -27,14 +29,19 @@ class Listener(CallbackObject):
         event: str,
         *,
         delay_until_ready: bool = False,
-        delete_if_overridden: bool = False,
+        is_default_listener: bool = False,
+        disable_default_listeners: bool = False,
     ) -> None:
         super().__init__()
+
+        if is_default_listener:
+            disable_default_listeners = False
 
         self.event = event
         self.callback = func
         self.delay_until_ready = delay_until_ready
-        self.delete_if_overridden = delete_if_overridden
+        self.is_default_listener = is_default_listener
+        self.disable_default_listeners = disable_default_listeners
 
     @classmethod
     def create(
@@ -42,7 +49,8 @@ class Listener(CallbackObject):
         event_name: Absent[str | BaseEvent] = MISSING,
         *,
         delay_until_ready: bool = False,
-        delete_if_overridden: bool = False,
+        is_default_listener: bool = False,
+        disable_default_listeners: bool = False,
     ) -> Callable[[Coroutine], "Listener"]:
         """
         Decorator for creating an event listener.
@@ -50,7 +58,9 @@ class Listener(CallbackObject):
         Args:
             event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
             delay_until_ready: Whether to delay the listener until the client is ready.
-            delete_if_overridden: Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users
+            is_default_listener: Whether this listener is provided automatically by the library, and might be unwanted by users.
+            disable_default_listeners: Whether this listener supersedes default listeners.  If true, any default listeners will be unregistered.
+
 
         Returns:
             A listener object.
@@ -80,7 +90,8 @@ class Listener(CallbackObject):
                 coro,
                 get_event_name(name),
                 delay_until_ready=delay_until_ready,
-                delete_if_overridden=delete_if_overridden,
+                is_default_listener=is_default_listener,
+                disable_default_listeners=disable_default_listeners,
             )
 
         return wrapper
@@ -90,7 +101,8 @@ def listen(
     event_name: Absent[str | BaseEvent] = MISSING,
     *,
     delay_until_ready: bool = True,
-    delete_if_overridden: bool = False,
+    is_default_listener: bool = False,
+    disable_default_listeners: bool = False,
 ) -> Callable[[Callable[..., Coroutine]], Listener]:
     """
     Decorator to make a function an event listener.
@@ -98,10 +110,17 @@ def listen(
     Args:
         event_name: The name of the event to listen to. If left blank, event name will be inferred from the function name or parameter.
         delay_until_ready: Whether to delay the listener until the client is ready.
-        delete_if_overridden: Should the listener be deleted if another listener is added for the same event. Used for builtin error events that can be overwritten by advanced users
+        is_default_listener: Whether this listener is provided automatically by the library, and might be unwanted by users.
+        disable_default_listeners: Whether this listener supersedes default listeners.  If true, any default listeners will be unregistered.
+
 
     Returns:
         A listener object.
 
     """
-    return Listener.create(event_name, delay_until_ready=delay_until_ready, delete_if_overridden=delete_if_overridden)
+    return Listener.create(
+        event_name,
+        delay_until_ready=delay_until_ready,
+        is_default_listener=is_default_listener,
+        disable_default_listeners=disable_default_listeners,
+    )

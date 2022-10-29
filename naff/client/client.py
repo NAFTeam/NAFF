@@ -602,7 +602,7 @@ class Client(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_error(self, event: events.Error) -> None:
         """
         Catches all errors dispatched by the library.
@@ -614,7 +614,7 @@ class Client(
         """
         self.default_error_handler(event.source, event.error)
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_command_error(self, event: events.CommandError) -> None:
         """
         Catches all errors dispatched by commands.
@@ -671,7 +671,7 @@ class Client(
         except errors.NaffException:
             pass
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_command_completion(self, event: events.CommandCompletion) -> None:
         """
         Called *after* any command is ran.
@@ -693,7 +693,7 @@ class Client(
             f"Command Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_component_error(self, event: events.ComponentError) -> None:
         """
         Catches all errors dispatched by components.
@@ -713,7 +713,7 @@ class Client(
             )
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_component_completion(self, event: events.ComponentCompletion) -> None:
         """
         Called *after* any component callback is ran.
@@ -728,7 +728,7 @@ class Client(
             f"Component Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_autocomplete_error(self, event: events.AutocompleteError) -> None:
         """
         Catches all errors dispatched by autocompletion options.
@@ -748,7 +748,7 @@ class Client(
             )
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_autocomplete_completion(self, event: events.AutocompleteCompletion) -> None:
         """
         Called *after* any autocomplete callback is ran.
@@ -763,7 +763,7 @@ class Client(
             f"Autocomplete Called: {symbol}{event.ctx.invoke_target} with {event.ctx.focussed_option = } | {event.ctx.kwargs = }"
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_modal_error(self, event: events.ModalError) -> None:
         """
         Catches all errors dispatched by modals.
@@ -783,7 +783,7 @@ class Client(
             )
         )
 
-    @Listener.create(delete_if_overridden=True)
+    @Listener.create(is_default_listener=True)
     async def on_modal_completion(self, event: events.ModalCompletion) -> None:
         """
         Called *after* any modal callback is ran.
@@ -1153,10 +1153,12 @@ class Client(
         self.listeners[listener.event].append(listener)
 
         # check if other listeners are to be deleted
-        potential_deletes = [c_listener.delete_if_overridden for c_listener in self.listeners[listener.event]]
-        if any(potential_deletes) and not all(potential_deletes):
+        default_listeners = [c_listener.is_default_listener for c_listener in self.listeners[listener.event]]
+        removes_defaults = [c_listener.disable_default_listeners for c_listener in self.listeners[listener.event]]
+
+        if any(default_listeners) and any(removes_defaults):
             self.listeners[listener.event] = [
-                c_listener for c_listener in self.listeners[listener.event] if not c_listener.delete_if_overridden
+                c_listener for c_listener in self.listeners[listener.event] if not c_listener.is_default_listener
             ]
 
     def add_interaction(self, command: InteractionCommand) -> bool:
