@@ -235,7 +235,7 @@ class Intents(DiscordIntFlag):  # type: ignore
         typing=False,
         privileged=False,
         non_privileged=False,
-        default=True,
+        default=False,
         all=False,
     ) -> "Intents":
         """Set your desired intents."""
