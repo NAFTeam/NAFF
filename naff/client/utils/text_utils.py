@@ -24,6 +24,6 @@ def mentions(text: str, query: "str | re.Pattern[str] | models.BaseUser | models
         # mentions with <@!ID> aren't detected without the replacement
         return (query.mention in text.replace("@!", "@")) or (query.tag in text if const.tag_as_mention else False)
     elif isinstance(query, (models.BaseChannel, models.Role)):
-        return (query.mention in text) or (query.name in text)
+        return query.mention in text
     else:
         return False
