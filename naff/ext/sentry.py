@@ -55,7 +55,7 @@ class SentryExtension(Extension):
         )
         sentry_sdk.set_tag("bot_name", str(self.bot.user))
 
-    @listen()
+    @listen(disable_default_listeners=False)
     async def on_error(self, event: Error) -> None:
         with sentry_sdk.configure_scope() as scope:
             scope.set_tag("source", event.source)
