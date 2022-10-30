@@ -799,7 +799,7 @@ class Client(
     async def on_resume(self) -> None:
         self._ready.set()
 
-    @Listener.create()
+    @Listener.create(is_default_listener=True)
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
@@ -1139,14 +1139,16 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
-        # check that the required intents are enabled
-        event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
-        if event_class := globals().get(event_class_name):
-            if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
-                if not any(required_intent in self.intents for required_intent in required_intents):
-                    self.logger.warning(
-                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
-                    )
+        if not listener.is_default_listener:
+            # check that the required intents are enabled
+
+            event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
+            if event_class := globals().get(event_class_name):
+                if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
+                    if not any(required_intent in self.intents for required_intent in required_intents):
+                        self.logger.warning(
+                            f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
+                        )
 
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
@@ -1739,7 +1741,7 @@ class Client(
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @Listener.create("message_create")
+    @Listener.create("message_create", is_default_listener=True)
     async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
         """Determine if a prefixed command is being triggered, and dispatch it."""
         message = event.message
@@ -1824,7 +1826,7 @@ class Client(
                     finally:
                         self.dispatch(events.CommandCompletion(ctx=context))
 
-    @Listener.create("disconnect")
+    @Listener.create("disconnect", is_default_listener=True)
     async def _disconnect(self) -> None:
         self._ready.clear()
 
