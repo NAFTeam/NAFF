@@ -381,7 +381,9 @@ class Message(BaseMessage):
             return None
         return self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
-    def does_mention(self, query: "str | re.Pattern[str] | models.BaseUser | models.BaseChannel | models.Role") -> bool:
+    def contains_mention(
+        self, query: "str | re.Pattern[str] | models.BaseUser | models.BaseChannel | models.Role"
+    ) -> bool:
         """
         Check whether the message contains the query or not.
 
