@@ -799,7 +799,7 @@ class Client(
     async def on_resume(self) -> None:
         self._ready.set()
 
-    @Listener.create()
+    @Listener.create(is_default_listener=True)
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
@@ -1739,7 +1739,7 @@ class Client(
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @Listener.create("message_create")
+    @Listener.create("message_create", is_default_listener=True)
     async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
         """Determine if a prefixed command is being triggered, and dispatch it."""
         message = event.message
@@ -1824,7 +1824,7 @@ class Client(
                     finally:
                         self.dispatch(events.CommandCompletion(ctx=context))
 
-    @Listener.create("disconnect")
+    @Listener.create("disconnect", is_default_listener=True)
     async def _disconnect(self) -> None:
         self._ready.clear()
 
