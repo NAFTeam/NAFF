@@ -48,9 +48,9 @@ class GuildEvents(EventMixinTemplate):
             await guild.chunk()
 
         if new_guild:
-            self.dispatch(events.GuildJoin(guild))
+            self.dispatch(events.GuildJoin(guild.id))
         else:
-            self.dispatch(events.GuildAvailable(guild))
+            self.dispatch(events.GuildAvailable(guild.id))
 
     @Processor.define()
     async def _on_raw_guild_update(self, event: "RawGatewayEvent") -> None:
@@ -61,12 +61,7 @@ class GuildEvents(EventMixinTemplate):
     async def _on_raw_guild_delete(self, event: "RawGatewayEvent") -> None:
         guild_id = int(event.data.get("id"))
         if event.data.get("unavailable", False):
-            self.dispatch(
-                events.GuildUnavailable(
-                    guild_id,
-                    self.cache.get_guild(guild_id) or MISSING,
-                )
-            )
+            self.dispatch(events.GuildUnavailable(guild_id))
         else:
             # noinspection PyProtectedMember
             if guild_id in self._user._guild_ids:

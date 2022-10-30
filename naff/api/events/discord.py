@@ -27,7 +27,7 @@ import attrs
 
 import naff.models
 from naff.api.events.base import GuildEvent, BaseEvent
-from naff.client.const import MISSING, Absent
+from naff.client.const import Absent
 from naff.client.utils.attr_utils import docs
 
 __all__ = (
@@ -263,7 +263,7 @@ class ThreadMembersUpdate(BaseEvent):
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class GuildJoin(BaseEvent):
+class GuildJoin(GuildEvent):
     """
     Dispatched when a guild is joined, created, or becomes available.
 
@@ -271,11 +271,6 @@ class GuildJoin(BaseEvent):
         This is called multiple times during startup, check the bot is ready before responding to this.
 
     """
-
-    guild: "Guild" = attrs.field(
-        repr=False,
-    )
-    """The guild that was created"""
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -296,26 +291,15 @@ class GuildUpdate(BaseEvent):
 class GuildLeft(GuildEvent):
     """Dispatched when a guild is left."""
 
-    guild: Optional["Guild"] = attrs.field(repr=False, default=MISSING)
-    """The guild, if it was cached"""
-
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildAvailable(GuildEvent):
     """Dispatched when a guild becomes available."""
 
-    guild: "Guild" = attrs.field(
-        repr=False,
-    )
-    """The guild that became available"""
-
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GuildUnavailable(GuildEvent):
     """Dispatched when a guild is not available."""
-
-    guild: Optional["Guild"] = attrs.field(repr=False, default=MISSING)
-    """The guild, if it was cached"""
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
