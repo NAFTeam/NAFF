@@ -385,6 +385,9 @@ class Message(BaseMessage):
         """
         Check whether the message contains the query or not.
 
+        Args:
+            query: The query to search for
+
         Returns:
             A boolean indicating whether the query could be found or not
         """
