@@ -8,6 +8,7 @@ Attributes:
     logger_name str: The name of NAFFs default logger. Invalid if a custom logger is passed to `Client` to replace the default logger.
     logger logging.Logger: The logger used throughout NAFF. If a custom logger is passed to `Client`, this obj is replaced with the new logger.
     kwarg_spam bool: Should ``unused kwargs`` be logged.
+    tag_as_mention bool: Should utils interpret ``BaseUser.tag`` as a mention of it.
 
     ACTION_ROW_MAX_ITEMS int: The maximum number of items in an action row.
     SELECTS_MAX_OPTIONS int: The maximum number of options a select may have.
@@ -48,6 +49,7 @@ __all__ = (
     "get_logger",
     "logger_name",
     "kwarg_spam",
+    "tag_as_mention",
     "DISCORD_EPOCH",
     "ACTION_ROW_MAX_ITEMS",
     "SELECTS_MAX_OPTIONS",
@@ -96,6 +98,7 @@ def get_logger() -> logging.Logger:
 
 default_locale = "english_us"
 kwarg_spam = False
+tag_as_mention = True
 
 DISCORD_EPOCH = 1420070400000
 

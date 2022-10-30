@@ -1,4 +1,5 @@
 import re
+import naff.client.const as const
 import naff.models as models
 
 __all__ = ("mentions",)
@@ -21,7 +22,7 @@ def mentions(text: str, query: "str | re.Pattern[str] | models.BaseUser | models
         return query.match(text) is not None
     elif isinstance(query, models.BaseUser):
         # mentions with <@!ID> aren't detected without the replacement
-        return (query.mention in text.replace("@!", "@")) or (query.username in text)
+        return (query.mention in text.replace("@!", "@")) or (query.tag in text if const.tag_as_mention else False)
     elif isinstance(query, (models.BaseChannel, models.Role)):
         return (query.mention in text) or (query.name in text)
     else:
