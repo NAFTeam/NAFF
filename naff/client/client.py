@@ -1139,14 +1139,16 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
-        # check that the required intents are enabled
-        event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
-        if event_class := globals().get(event_class_name):
-            if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
-                if not any(required_intent in self.intents for required_intent in required_intents):
-                    self.logger.warning(
-                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
-                    )
+        if not listener.is_default_listener:
+            # check that the required intents are enabled
+
+            event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
+            if event_class := globals().get(event_class_name):
+                if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
+                    if not any(required_intent in self.intents for required_intent in required_intents):
+                        self.logger.warning(
+                            f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
+                        )
 
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
