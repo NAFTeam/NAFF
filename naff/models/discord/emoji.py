@@ -77,6 +77,9 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             _emoji_list = emoji.distinct_emoji_list(emoji_str)
             if _emoji_list:
                 return cls(name=_emoji_list[0])
+            if len(emoji_str) == 1:
+                # likely a regional indicator
+                return cls(name=emoji_str)
         return None
 
     def __str__(self) -> str:
