@@ -159,7 +159,9 @@ class _BaseInteractionContext(Context):
     _context_type: int = attrs.field(
         repr=False,
     )  # we don't want to convert this in case of a new context type, which is expected
-    interaction_id: str = attrs.field(repr=False, default=None, metadata=docs("The id of the interaction"))
+    interaction_id: "Snowflake_Type" = attrs.field(
+        repr=False, default=None, metadata=docs("The id of the interaction"), converter=to_snowflake
+    )
     target_id: "Snowflake_Type" = attrs.field(
         default=None,
         metadata=docs("The ID of the target, used for context menus to show what was clicked on"),
