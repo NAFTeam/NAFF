@@ -15,7 +15,7 @@ def mentions(
     Args:
         text: The text to search in
         query: The query to search for
-        tag_as_mention: Should ``BaseUser.tag`` be checked *(only if query is an instance of BaseUser)*
+        tag_as_mention: Should `BaseUser.tag` be checked *(only if query is an instance of BaseUser)*
 
     Returns:
         Whether the query could be found in the text
