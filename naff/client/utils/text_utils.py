@@ -20,7 +20,6 @@ def mentions(
     Returns:
         Whether the query could be found in the text
     """
-    # don't use match/case witch type(query) since subclasses aren't checked
     if isinstance(query, str):
         return query in text
     elif isinstance(query, re.Pattern):
