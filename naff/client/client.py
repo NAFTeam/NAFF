@@ -49,6 +49,7 @@ from naff.client.errors import (
     NotFound,
 )
 from naff.client.smart_cache import GlobalCache
+from naff.client.utils import NullCache
 from naff.client.utils.input_utils import get_first_word, get_args
 from naff.client.utils.misc_utils import get_event_name, wrap_partial
 from naff.client.utils.serializer import to_image_data
@@ -526,6 +527,16 @@ class Client(
 
         if len(self.processors) == 0:
             self.logger.warning("No Processors are loaded! This means no events will be processed!")
+
+        caches = [
+            c[0]
+            for c in inspect.getmembers(self.cache, predicate=lambda x: isinstance(x, dict))
+            if not c[0].startswith("__")
+        ]
+        for cache in caches:
+            _cache_obj = getattr(self.cache, cache)
+            if isinstance(_cache_obj, NullCache):
+                self.logger.warning(f"{cache} has been disabled")
 
     async def generate_prefixes(self, bot: "Client", message: Message) -> str | Iterable[str]:
         """
