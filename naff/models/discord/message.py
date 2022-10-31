@@ -392,7 +392,7 @@ class Message(BaseMessage):
 
         Args:
             query: The query to search for
-            tag_as_mention: Should ``BaseUser.tag`` be checked *(only if query is an instance of BaseUser)*
+            tag_as_mention: Should `BaseUser.tag` be checked *(only if query is an instance of BaseUser)*
 
         Returns:
             A boolean indicating whether the query could be found or not
