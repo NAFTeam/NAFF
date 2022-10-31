@@ -168,7 +168,7 @@ class InteractionCommand(BaseCommand):
 
     """
 
-    name: LocalisedName = attrs.field(
+    name: LocalisedName | str = attrs.field(
         repr=False, metadata=docs("1-32 character name") | no_export_meta, converter=LocalisedName.converter
     )
     scopes: List["Snowflake_Type"] = attrs.field(
@@ -323,7 +323,7 @@ class SlashCommandChoice(DictSerializationMixin):
 
     """
 
-    name: LocalisedField = attrs.field(repr=False, converter=LocalisedField.converter)
+    name: LocalisedField | str = attrs.field(repr=False, converter=LocalisedField.converter)
     value: Union[str, int, float] = attrs.field(
         repr=False,
     )
@@ -351,11 +351,11 @@ class SlashCommandOption(DictSerializationMixin):
 
     """
 
-    name: LocalisedName = attrs.field(repr=False, converter=LocalisedName.converter)
+    name: LocalisedName | str = attrs.field(repr=False, converter=LocalisedName.converter)
     type: Union[OptionTypes, int] = attrs.field(
         repr=False,
     )
-    description: LocalisedDesc = attrs.field(
+    description: LocalisedDesc | str = attrs.field(
         repr=False, default="No Description Set", converter=LocalisedDesc.converter
     )
     required: bool = attrs.field(repr=False, default=True)
@@ -455,19 +455,19 @@ class SlashCommandOption(DictSerializationMixin):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class SlashCommand(InteractionCommand):
-    name: LocalisedName = attrs.field(repr=False, converter=LocalisedName.converter)
+    name: LocalisedName | str = attrs.field(repr=False, converter=LocalisedName.converter)
     description: LocalisedDesc = attrs.field(
         repr=False, default="No Description Set", converter=LocalisedDesc.converter
     )
 
-    group_name: LocalisedName = attrs.field(
+    group_name: LocalisedName | str = attrs.field(
         repr=False, default=None, metadata=no_export_meta, converter=LocalisedName.converter
     )
     group_description: LocalisedDesc = attrs.field(
         repr=False, default="No Description Set", metadata=no_export_meta, converter=LocalisedDesc.converter
     )
 
-    sub_cmd_name: LocalisedName = attrs.field(
+    sub_cmd_name: LocalisedName | str = attrs.field(
         repr=False, default=None, metadata=no_export_meta, converter=LocalisedName.converter
     )
     sub_cmd_description: LocalisedDesc = attrs.field(
