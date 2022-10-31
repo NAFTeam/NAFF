@@ -8,7 +8,7 @@ def mentions(
     text: str,
     query: "str | re.Pattern[str] | models.BaseUser | models.BaseChannel | models.Role",
     *,
-    tag_as_mention: bool = False
+    tag_as_mention: bool = False,
 ) -> bool:
     """Checks whether a query is present in a text.
 
