@@ -1,8 +1,9 @@
 import datetime
 import inspect
+import weakref
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from naff.client.utils.cache import TTLCache
+from naff.client.utils.cache import TTLCache, NullCache
 from naff.models import Embed, MaterialColors
 
 if TYPE_CHECKING:
@@ -28,29 +29,32 @@ def debug_embed(title: str, **kwargs) -> Embed:
 
 def get_cache_state(bot: "Client") -> str:
     """Create a nicely formatted table of internal cache state."""
-    caches = [
-        c[0]
+    caches = {
+        c[0]: getattr(bot.cache, c[0])
         for c in inspect.getmembers(bot.cache, predicate=lambda x: isinstance(x, dict))
         if not c[0].startswith("__")
-    ]
+    }
+    caches["endpoints"] = bot.http._endpoints
+    caches["rate_limits"] = bot.http.ratelimit_locks
     table = []
 
-    for cache in caches:
-        val = getattr(bot.cache, cache)
+    for cache, val in caches.items():
 
         if isinstance(val, TTLCache):
             amount = [len(val), f"{val.hard_limit}({val.soft_limit})"]
             expire = f"{val.ttl}s"
+        elif isinstance(val, NullCache):
+            amount = ("DISABLED",)
+            expire = "N/A"
+        elif isinstance(val, (weakref.WeakValueDictionary, weakref.WeakKeyDictionary)):
+            amount = [len(val), "∞"]
+            expire = "w_ref"
         else:
             amount = [len(val), "∞"]
             expire = "none"
 
         row = [cache.removesuffix("_cache"), amount, expire]
         table.append(row)
-
-    # http caches
-    table.append(["endpoints", [len(bot.http._endpoints), "∞"], "none"])
-    table.append(["ratelimits", [len(bot.http.ratelimit_locks), "∞"], "w_ref"])
 
     adjust_subcolumn(table, 1, aligns=[">", "<"])
 
