@@ -382,18 +382,22 @@ class Message(BaseMessage):
         return self._client.cache.get_message(self._channel_id, self._referenced_message_id)
 
     def contains_mention(
-        self, query: "str | re.Pattern[str] | models.BaseUser | models.BaseChannel | models.Role"
+        self,
+        query: "str | re.Pattern[str] | models.BaseUser | models.BaseChannel | models.Role",
+        *,
+        tag_as_mention: bool = False,
     ) -> bool:
         """
         Check whether the message contains the query or not.
 
         Args:
             query: The query to search for
+            tag_as_mention: Should ``BaseUser.tag`` be checked *(only if query is an instance of BaseUser)*
 
         Returns:
             A boolean indicating whether the query could be found or not
         """
-        return mentions(self.content or self.system_content, query)
+        return mentions(text=self.content or self.system_content, query=query, tag_as_mention=tag_as_mention)
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Client") -> dict:
