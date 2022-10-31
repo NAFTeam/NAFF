@@ -1105,6 +1105,9 @@ def _compare_commands(local_cmd: dict, remote_cmd: dict) -> bool:
         "name_localized": ("name_localizations", None),
         "description_localized": ("description_localizations", None),
     }
+    if remote_cmd.get("guild_id"):
+        # non-global command
+        del lookup["dm_permission"]
 
     for local_name, comparison_data in lookup.items():
         remote_name, default_value = comparison_data
@@ -1125,7 +1128,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),
         "max_length": ("max_length", None),
-        "min_length": ("max_length", None),
+        "min_length": ("min_length", None),
     }
     post_process: Dict[str, Callable] = {
         "choices": lambda l: [d | {"name_localizations": {}} if len(d) == 2 else d for d in l],
