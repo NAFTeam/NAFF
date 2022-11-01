@@ -1,3 +1,7 @@
+import string
+
+import emoji
+
 from naff.models.discord.emoji import PartialEmoji, process_emoji, process_emoji_req_format
 
 __all__ = ()
@@ -54,3 +58,52 @@ def test_emoji_processing() -> None:
     assert str(from_str) == raw_sample
 
     assert PartialEmoji.from_str("<a:sparklesnek:910496037708374016>").animated is True
+
+
+def test_unicode_recognition() -> None:
+    for _e in emoji.EMOJI_DATA:
+        assert PartialEmoji.from_str(_e) is not None
+
+
+def test_regional_indicators() -> None:
+    regional_indicators = [
+        "🇦",
+        "🇧",
+        "🇨",
+        "🇩",
+        "🇪",
+        "🇫",
+        "🇬",
+        "🇭",
+        "🇮",
+        "🇯",
+        "🇰",
+        "🇱",
+        "🇲",
+        "🇳",
+        "🇴",
+        "🇵",
+        "🇶",
+        "🇷",
+        "🇸",
+        "🇹",
+        "🇺",
+        "🇻",
+        "🇼",
+        "🇽",
+        "🇾",
+        "🇿",
+    ]
+    for _e in regional_indicators:
+        assert PartialEmoji.from_str(_e) is not None
+
+
+def test_numerical_emoji() -> None:
+    numerical_emoji = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]
+    for _e in numerical_emoji:
+        assert PartialEmoji.from_str(_e) is not None
+
+
+def test_false_positives() -> None:
+    for _e in string.printable:
+        assert PartialEmoji.from_str(_e) is None
