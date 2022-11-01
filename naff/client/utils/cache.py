@@ -5,10 +5,21 @@ from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
 import attrs
 
-__all__ = ("TTLItem", "TTLCache")
+__all__ = ("TTLItem", "TTLCache", "NullCache")
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
+
+
+class NullCache(dict):
+    """
+    A special cache that will always return None
+
+    Effectively just a lazy way to disable caching.
+    """
+
+    def __setitem__(self, key, value) -> None:
+        pass
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)

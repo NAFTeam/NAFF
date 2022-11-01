@@ -7,7 +7,7 @@ import discord_typings
 
 from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NotFound, Forbidden
-from naff.client.utils.cache import TTLCache
+from naff.client.utils.cache import TTLCache, NullCache
 from naff.models import VoiceState
 from naff.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
 from naff.models.discord.emoji import CustomEmoji
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 def create_cache(
     ttl: Optional[int] = 60, hard_limit: Optional[int] = 250, soft_limit: Absent[Optional[int]] = MISSING
-) -> Union[dict, TTLCache]:
+) -> Union[dict, TTLCache, NullCache]:
     """
     Create a cache object based on the parameters passed.
 
@@ -46,6 +46,8 @@ def create_cache(
     """
     if ttl is None and hard_limit is None:
         return {}
+    if ttl == 0 and hard_limit == 0 and soft_limit == 0:
+        return NullCache()
     else:
         if not soft_limit:
             soft_limit = int(hard_limit / 4) if hard_limit else 50
