@@ -106,5 +106,11 @@ These guides are meant to help you get started with the library and offer a poin
 
     Whats different between NAFF and discord.py?
 
+-   [__:material-package-up: Migration from discord.py__](98 2.x Migration.md)
+
+    ---
+
+    How do I migrate from 1.x to 2.x?
+
 
 </div>
