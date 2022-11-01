@@ -288,8 +288,11 @@ class GuildUpdate(BaseEvent):
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class GuildLeft(GuildEvent):
+class GuildLeft(BaseEvent):
     """Dispatched when a guild is left."""
+
+    guild: "Guild" = attrs.field(repr=True)
+    """The guild this event is dispatched from"""
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)

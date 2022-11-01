@@ -72,12 +72,7 @@ class GuildEvents(EventMixinTemplate):
             guild = self.cache.get_guild(guild_id)
             self.cache.delete_guild(guild_id)
 
-            self.dispatch(
-                events.GuildLeft(
-                    guild_id,
-                    guild or MISSING,
-                )
-            )
+            self.dispatch(events.GuildLeft(guild))
 
     @Processor.define()
     async def _on_raw_guild_ban_add(self, event: "RawGatewayEvent") -> None:
