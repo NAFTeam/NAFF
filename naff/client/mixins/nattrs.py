@@ -25,15 +25,23 @@ class Field:
         factory: typing.Callable = NOTSET,
         export: bool = True,
         repr: bool = False,
+        export_converter: typing.Callable = NOTSET,
+        **kwargs,
     ) -> None:
         self.converter = converter
         self.default = default
         self.factory = factory
         self.export = export
         self.repr = repr
+        self.export_converter = export_converter
 
         if self.default and self.factory:
             self.default = NOTSET
+
+        if kwargs.get("metadata"):
+            # attrs compatibility
+            self.export = not kwargs["metadata"].get("no_export", False)
+            self.export_converter = kwargs["metadata"].get("export_converter", NOTSET)
 
 
 T = typing.TypeVar("T")
@@ -114,4 +122,16 @@ class Nattrs:
 
     def to_dict(self) -> dict[str, typing.Any]:
         var = self.__get_default()
-        return {k: getattr(self, k) for k in var if k if var[k].export}
+        payload = {}
+
+        for key in var:
+            if not var[key].export:
+                continue
+            value = getattr(self, key)
+            if value is NOTSET:
+                continue
+            if var[key].export_converter:
+                value = var[key].export_converter(value)
+            payload[key] = value
+
+        return payload
