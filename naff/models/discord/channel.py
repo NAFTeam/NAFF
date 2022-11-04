@@ -441,7 +441,7 @@ class MessageableMixin(SendMixin):
                 continue
 
             if avoid_loading_msg:
-                if message._author_id == self._client.user.id and MessageFlags.LOADING in message.flags:
+                if message.author_id == self._client.user.id and MessageFlags.LOADING in message.flags:
                     continue
 
             if message.id < fourteen_days_ago:

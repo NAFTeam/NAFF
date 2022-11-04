@@ -739,7 +739,7 @@ class PrefixedContext(Context, SendMixin):
             message=message,
             author=message.author,
             channel=message.channel,
-            guild_id=message._guild_id,
+            guild_id=message.guild_id,
         )
         return new_cls
 

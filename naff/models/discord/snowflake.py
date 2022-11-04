@@ -1,12 +1,13 @@
 from typing import Union, List, SupportsInt, Optional
 
-import attrs
+from typing_extensions import dataclass_transform
 
 import naff.models as models
 from naff.client.const import MISSING, Absent
 
 __all__ = ("to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type")
 
+from naff.client.mixins.nattrs import Field
 
 # Snowflake_Type should be used in FUNCTION args of user-facing APIs (combined with to_snowflake to sanitize input)
 # For MODEL id fields, just use int as type-hinting instead;
@@ -53,9 +54,10 @@ def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
     return [to_snowflake(c) for c in snowflakes]
 
 
-@attrs.define(eq=False, order=False, hash=False, slots=False)
+@dataclass_transform()
 class SnowflakeObject:
-    id: int = attrs.field(repr=True, converter=to_snowflake, metadata={"docs": "Discord unique snowflake ID"})
+    id: int = Field(converter=to_snowflake, repr=True)
+    """Unique snowflake ID"""
 
     def __eq__(self, other: "SnowflakeObject") -> bool:
         if hasattr(other, "id"):

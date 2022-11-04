@@ -205,17 +205,14 @@ class GlobalCache:
         Returns:
             The processed member
         """
-        guild_id = to_snowflake(guild_id)
-        is_user = "member" in data
-        user_id = to_snowflake(data["user"]["id"] if "user" in data else data["id"])
+        guild_id = int(guild_id)
+        user_id = int(data.get("user", data)["id"])
 
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            member_extra = {"guild_id": guild_id}
-            member = data["member"] if is_user else data
-            member.update(member_extra)
+            member = data.get("member", data) | {"guild_id": guild_id}
 
-            member = Member.from_dict(data, self._client)
+            member = Member.from_dict(member, self._client)
             self.member_cache[(guild_id, user_id)] = member
         else:
             member.update_from_dict(data)
@@ -382,7 +379,7 @@ class GlobalCache:
                 await self.fetch_channel(channel_id)
 
             if not message.guild and isinstance(message.channel, GuildChannel):
-                message._guild_id = message.channel._guild_id
+                message.guild_id = message.channel._guild_id
         return message
 
     def get_message(

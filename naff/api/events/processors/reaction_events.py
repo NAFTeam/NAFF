@@ -43,7 +43,7 @@ class ReactionEvents(EventMixinTemplate):
                         "me": author.id == self.user.id,  # type: ignore
                         "emoji": emoji.to_dict(),
                         "message_id": message.id,
-                        "channel_id": message._channel_id,
+                        "channel_id": message.channel_id,
                     },
                     self,  # type: ignore
                 )

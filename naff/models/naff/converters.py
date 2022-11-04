@@ -412,7 +412,7 @@ class MessageConverter(Converter[Message]):
         try:
             # this takes less possible requests than getting the guild and/or channel
             mes = await ctx.bot.cache.fetch_message(channel_id, message_id)
-            if mes._guild_id != guild_id:
+            if mes.guild_id != guild_id:
                 raise BadArgument(f'Message "{argument}" not found.')
             return mes
         except Forbidden as e:

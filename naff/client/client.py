@@ -1642,7 +1642,7 @@ class Client(
         else:
             cls = self.prefixed_context.from_message(self, data)
             if not cls.channel:
-                cls.channel = await self.cache.fetch_channel(data._channel_id)
+                cls.channel = await self.cache.fetch_channel(data.channel_id)
 
         return cls
 

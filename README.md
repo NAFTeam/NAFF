@@ -6,6 +6,16 @@
 [![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/naff)
 [![Documentation Status](https://readthedocs.org/projects/naff-docs/badge/?version=latest)](https://naff-docs.readthedocs.io/en/latest/?version=latest)
 
+# BRANCH NOTE
+This is a performance bikeshed branch. It is not intended for production use.
+As of right now, it is not even intended for testing use. It is a playground.
+
+### What works?
+- Message deserialization/serialization
+
+### What doesn't work?
+- Everything else
+
 # What is this?
 This is `NAFF`, a python API wrapper for Discord.
 NAFF is intended to be fast, easy to use, and easily modified to suit your needs.

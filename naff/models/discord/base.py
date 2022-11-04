@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Type
 
-import attrs
+from typing_extensions import dataclass_transform
 
 from naff.client.const import T
-from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.serializer import no_export_meta
+from naff.client.mixins.nattrs import Nattrs, Field
 from naff.models.discord.snowflake import SnowflakeObject
 
 if TYPE_CHECKING:
@@ -13,33 +12,32 @@ if TYPE_CHECKING:
 __all__ = ("ClientObject", "DiscordObject")
 
 
-@attrs.define(eq=False, order=False, hash=False, slots=False)
-class ClientObject(DictSerializationMixin):
+@dataclass_transform()
+class ClientObject(Nattrs):
     """Serializable object that requires client reference."""
 
-    _client: "Client" = attrs.field(repr=False, metadata=no_export_meta)
+    _client: "Client" = Field(export=False)
 
     @classmethod
-    def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
-        return super()._process_dict(data)
+    def from_dict(cls: Type[T], payload: Dict[str, Any], client: "Client") -> T:
+        payload = cls._process_dict(payload, client)
+
+        instance = cls(**payload)
+        instance._client = client
+        return instance
 
     @classmethod
-    def from_dict(cls: Type[T], data: Dict[str, Any], client: "Client") -> T:
-        data = cls._process_dict(data, client)
-        return cls(client=client, **cls._filter_kwargs(data, cls._get_init_keys()))
+    def from_list(cls: Type[T], payload: list[dict[str, Any]], client: "Client") -> List[T]:
+        return [cls.from_dict(data, client) for data in payload]
 
     @classmethod
-    def from_list(cls: Type[T], datas: List[Dict[str, Any]], client: "Client") -> List[T]:
-        return [cls.from_dict(data, client) for data in datas]
+    def _process_dict(cls, payload: dict, client: "Client") -> dict:
+        return payload
 
-    def update_from_dict(self, data) -> T:
-        data = self._process_dict(data, self._client)
-        for key, value in self._filter_kwargs(data, self._get_keys()).items():
-            setattr(self, key, value)
-
-        return self
+    def update_from_dict(self, data, *args) -> T:
+        return super().update_from_dict(data, self._client)
 
 
-@attrs.define(eq=False, order=False, hash=False, slots=False)
+@dataclass_transform()
 class DiscordObject(SnowflakeObject, ClientObject):
     pass
