@@ -4,7 +4,7 @@ from typing import Any, TYPE_CHECKING
 import attrs
 
 from naff.client.const import MISSING, T, Missing
-from naff.client.utils.attr_converters import optional as optional_c
+from naff.client.mixins.nattrs import Field
 from naff.client.utils.serializer import dict_filter
 from naff.models.discord.asset import Asset
 from naff.models.discord.color import COLOR_TYPES, Color, process_color
@@ -29,30 +29,27 @@ def sentinel_converter(value: bool | T | None, sentinel: T = attrs.NOTHING) -> b
     return value
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 @total_ordering
 class Role(DiscordObject):
     _sentinel = object()
 
-    name: str = attrs.field(repr=True)
-    color: "Color" = attrs.field(repr=False, converter=Color)
-    hoist: bool = attrs.field(repr=False, default=False)
-    position: int = attrs.field(repr=True)
-    permissions: "Permissions" = attrs.field(repr=False, converter=Permissions)
-    managed: bool = attrs.field(repr=False, default=False)
-    mentionable: bool = attrs.field(repr=False, default=True)
-    premium_subscriber: bool = attrs.field(
+    name: str = Field(repr=True)
+    color: "Color" = Field(repr=False, converter=Color)
+    hoist: bool = Field(repr=False, default=False)
+    position: int = Field(repr=True)
+    permissions: "Permissions" = Field(repr=False, converter=Permissions)
+    managed: bool = Field(repr=False, default=False)
+    mentionable: bool = Field(repr=False, default=True)
+    premium_subscriber: bool = Field(
         repr=False, default=_sentinel, converter=partial(sentinel_converter, sentinel=_sentinel)
     )
-    _icon: Asset | None = attrs.field(repr=False, default=None)
-    _unicode_emoji: PartialEmoji | None = attrs.field(
-        repr=False, default=None, converter=optional_c(PartialEmoji.from_str)
-    )
-    _guild_id: "Snowflake_Type" = attrs.field(
+    icon_hash: str | None = Field(repr=False, default=None)
+    _unicode_emoji: PartialEmoji | None = Field(repr=False, default=None, converter=PartialEmoji.from_str)
+    _guild_id: "Snowflake_Type" = Field(
         repr=False,
     )
-    _bot_id: "Snowflake_Type | None" = attrs.field(repr=False, default=None)
-    _integration_id: "Snowflake_Type | None" = attrs.field(repr=False, default=None)  # todo integration object?
+    _bot_id: "Snowflake_Type | None" = Field(repr=False, default=None)
+    _integration_id: "Snowflake_Type | None" = Field(repr=False, default=None)  # todo integration object?
 
     def __lt__(self: "Role", other: "Role") -> bool:
         if not isinstance(self, Role) or not isinstance(other, Role):
@@ -80,9 +77,7 @@ class Role(DiscordObject):
     def _process_dict(cls, data: dict[str, Any], client: "Client") -> dict[str, Any]:
         data.update(data.pop("tags", {}))
 
-        if icon_hash := data.get("icon"):
-            data["icon"] = Asset.from_path_hash(client, f"role-icons/{data['id']}/{{}}", icon_hash)
-
+        data["icon_hash"] = data.pop("icon", None)
         return data
 
     async def fetch_bot(self) -> "Member | None":
@@ -147,7 +142,11 @@ class Role(DiscordObject):
         !!! note
             You have to use this method instead of the `_icon` attribute, because the first does account for unicode emojis
         """
-        return self._icon or self._unicode_emoji
+        if self._unicode_emoji is not None:
+            return self._unicode_emoji
+        if self.icon_hash is not None:
+            return Asset.from_path_hash(self._client, f"role-icons/{self.id}/{{}}", self.icon_hash)
+        return None
 
     @property
     def is_assignable(self) -> bool:

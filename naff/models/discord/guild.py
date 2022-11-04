@@ -11,8 +11,7 @@ import attrs
 import naff.models as models
 from naff.client.const import Absent, MISSING, PREMIUM_GUILD_LIMITS
 from naff.client.errors import EventLocationNotProvided, NotFound
-from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_converters import optional
+from naff.client.mixins.nattrs import Field, Nattrs
 from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.attr_utils import docs
 from naff.client.utils.deserialise_app_cmds import deserialize_app_cmds
@@ -62,7 +61,6 @@ __all__ = (
 )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildBan:
     reason: Optional[str]
     """The reason for the ban"""
@@ -70,54 +68,71 @@ class GuildBan:
     """The banned user"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseGuild(DiscordObject):
-    name: str = attrs.field(repr=True)
+    name: str = Field(repr=True)
     """Name of guild. (2-100 characters, excluding trailing and leading whitespace)"""
-    description: Optional[str] = attrs.field(repr=True, default=None)
+    description: Optional[str] = Field(repr=True, default=None)
     """The description for the guild, if the guild is discoverable"""
 
-    icon: Optional["models.Asset"] = attrs.field(repr=False, default=None)
+    icon_hash: str = Field(repr=False, default=None)
     """Icon image asset"""
-    splash: Optional["models.Asset"] = attrs.field(repr=False, default=None)
+    splash_hash: str = Field(repr=False, default=None)
     """Splash image asset"""
-    discovery_splash: Optional["models.Asset"] = attrs.field(repr=False, default=None)
+    discovery_splash_hash: str = Field(repr=False, default=None)
     """Discovery splash image. Only present for guilds with the "DISCOVERABLE" feature."""
-    features: List[str] = attrs.field(repr=False, factory=list)
+    features: List[str] = Field(repr=False, factory=list)
     """The features of this guild"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        self.icon_hash = kwargs.get("icon_hash", None)
+        self.splash_hash = kwargs.get("splash_hash", None)
+        self.discovery_splash_hash = kwargs.get("discovery_splash_hash", None)
+        self.features = kwargs.get("features", [])
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
-        if icon_hash := data.pop("icon", None):
-            data["icon"] = models.Asset.from_path_hash(client, f"icons/{data['id']}/{{}}", icon_hash)
-        if splash_hash := data.pop("splash", None):
-            data["splash"] = models.Asset.from_path_hash(client, f"splashes/{data['id']}/{{}}", splash_hash)
-        if disco_splash := data.pop("discovery_splash", None):
-            data["discovery_splash"] = models.Asset.from_path_hash(
-                client, f"discovery-splashes/{data['id']}/{{}}", disco_splash
-            )
+        data["icon_hash"] = data.pop("icon", None)
+        data["splash_hash"] = data.pop("splash", None)
+        data["discovery_splash_hash"] = data.pop("discovery_splash", None)
+
         return data
 
+    @property
+    def icon(self) -> Optional["models.Asset"]:
+        """The icon for this guild"""
+        if self.icon_hash:
+            return models.Asset.from_path_hash(self._client, f"icons/{self.id}/{{}}", self.icon_hash)
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+    @property
+    def splash(self) -> Optional["models.Asset"]:
+        """The splash for this guild"""
+        if self.splash_hash:
+            return models.Asset.from_path_hash(self._client, f"splashes/{self.id}/{{}}", self.splash_hash)
+
+    @property
+    def discovery_splash(self) -> Optional["models.Asset"]:
+        """The discovery splash for this guild"""
+        if self.discovery_splash_hash:
+            return models.Asset.from_path_hash(
+                self._client, f"discovery-splashes/{self.id}/{{}}", self.discovery_splash_hash
+            )
+
+
 class GuildWelcome(ClientObject):
-    description: Optional[str] = attrs.field(
-        repr=False, default=None, metadata=docs("Welcome Screen server description")
-    )
-    welcome_channels: List["models.GuildWelcomeChannel"] = attrs.field(
+    description: Optional[str] = Field(repr=False, default=None, metadata=docs("Welcome Screen server description"))
+    welcome_channels: List["models.GuildWelcomeChannel"] = Field(
         repr=False, metadata=docs("List of Welcome Channel objects, up to 5")
     )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildPreview(BaseGuild):
     """A partial guild object."""
 
-    emoji: list["models.PartialEmoji"] = attrs.field(repr=False, factory=list)
+    emoji: list["models.PartialEmoji"] = Field(repr=False, factory=list)
     """A list of custom emoji from this guild"""
-    approximate_member_count: int = attrs.field(repr=False, default=0)
+    approximate_member_count: int = Field(repr=False, default=0)
     """Approximate number of members in this guild"""
-    approximate_presence_count: int = attrs.field(repr=False, default=0)
+    approximate_presence_count: int = Field(repr=False, default=0)
     """Approximate number of online members in this guild"""
 
     @classmethod
@@ -145,113 +160,137 @@ class MemberIterator(AsyncIterator):
         raise QueueEmpty
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Guild(BaseGuild):
     """Guilds in Discord represent an isolated collection of users and channels, and are often referred to as "servers" in the UI."""
 
-    unavailable: bool = attrs.field(repr=False, default=False)
+    unavailable: bool = Field(repr=False, default=False)
     """True if this guild is unavailable due to an outage."""
-    # owner: bool = attrs.field(repr=False, default=False)  # we get this from api but it's kinda useless to store
-    afk_channel_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None)
+    # owner: bool = Field(repr=False, default=False)  # we get this from api but it's kinda useless to store
+    afk_channel_id: Optional[Snowflake_Type] = Field(repr=False, default=None)
     """The channel id for afk."""
-    afk_timeout: Optional[int] = attrs.field(repr=False, default=None)
+    afk_timeout: Optional[int] = Field(repr=False, default=None)
     """afk timeout in seconds."""
-    widget_enabled: bool = attrs.field(repr=False, default=False)
+    widget_enabled: bool = Field(repr=False, default=False)
     """True if the server widget is enabled."""
-    widget_channel_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None)
+    widget_channel_id: Optional[Snowflake_Type] = Field(repr=False, default=None)
     """The channel id that the widget will generate an invite to, or None if set to no invite."""
-    verification_level: Union[VerificationLevels, int] = attrs.field(repr=False, default=VerificationLevels.NONE)
+    verification_level: Union[VerificationLevels, int] = Field(repr=False, default=VerificationLevels.NONE)
     """The verification level required for the guild."""
-    default_message_notifications: Union[DefaultNotificationLevels, int] = attrs.field(
+    default_message_notifications: Union[DefaultNotificationLevels, int] = Field(
         repr=False, default=DefaultNotificationLevels.ALL_MESSAGES
     )
     """The default message notifications level."""
-    explicit_content_filter: Union[ExplicitContentFilterLevels, int] = attrs.field(
+    explicit_content_filter: Union[ExplicitContentFilterLevels, int] = Field(
         repr=False, default=ExplicitContentFilterLevels.DISABLED
     )
     """The explicit content filter level."""
-    mfa_level: Union[MFALevels, int] = attrs.field(repr=False, default=MFALevels.NONE)
+    mfa_level: Union[MFALevels, int] = Field(repr=False, default=MFALevels.NONE)
     """The required MFA (Multi Factor Authentication) level for the guild."""
-    system_channel_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None)
+    system_channel_id: Optional[Snowflake_Type] = Field(repr=False, default=None)
     """The id of the channel where guild notices such as welcome messages and boost events are posted."""
-    system_channel_flags: SystemChannelFlags = attrs.field(
+    system_channel_flags: SystemChannelFlags = Field(
         repr=False, default=SystemChannelFlags.NONE, converter=SystemChannelFlags
     )
     """The system channel flags."""
-    rules_channel_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None)
+    rules_channel_id: Optional[Snowflake_Type] = Field(repr=False, default=None)
     """The id of the channel where Community guilds can display rules and/or guidelines."""
-    joined_at: str = attrs.field(repr=False, default=None, converter=optional(timestamp_converter))
+    joined_at: str = Field(repr=False, default=None, converter=timestamp_converter)
     """When this guild was joined at."""
-    large: bool = attrs.field(repr=False, default=False)
+    large: bool = Field(repr=False, default=False)
     """True if this is considered a large guild."""
-    member_count: int = attrs.field(repr=False, default=0)
+    member_count: int = Field(repr=False, default=0)
     """The total number of members in this guild."""
-    presences: List[dict] = attrs.field(repr=False, factory=list)
+    presences: List[dict] = Field(repr=False, factory=list)
     """The presences of the members in the guild, will only include non-offline members if the size is greater than large threshold."""
-    max_presences: Optional[int] = attrs.field(repr=False, default=None)
+    max_presences: Optional[int] = Field(repr=False, default=None)
     """The maximum number of presences for the guild. (None is always returned, apart from the largest of guilds)"""
-    max_members: Optional[int] = attrs.field(repr=False, default=None)
+    max_members: Optional[int] = Field(repr=False, default=None)
     """The maximum number of members for the guild."""
-    vanity_url_code: Optional[str] = attrs.field(repr=False, default=None)
+    vanity_url_code: Optional[str] = Field(repr=False, default=None)
     """The vanity url code for the guild."""
-    banner: Optional[str] = attrs.field(repr=False, default=None)
+    banner: Optional[str] = Field(repr=False, default=None)
     """Hash for banner image."""
-    premium_tier: Optional[str] = attrs.field(repr=False, default=None)
+    premium_tier: Optional[str] = Field(repr=False, default=None)
     """The premium tier level. (Server Boost level)"""
-    premium_subscription_count: int = attrs.field(repr=False, default=0)
+    premium_subscription_count: int = Field(repr=False, default=0)
     """The number of boosts this guild currently has."""
-    preferred_locale: str = attrs.field(
+    preferred_locale: str = Field(
         repr=False,
     )
     """The preferred locale of a Community guild. Used in server discovery and notices from Discord. Defaults to \"en-US\""""
-    public_updates_channel_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None)
+    public_updates_channel_id: Optional[Snowflake_Type] = Field(repr=False, default=None)
     """The id of the channel where admins and moderators of Community guilds receive notices from Discord."""
-    max_video_channel_users: int = attrs.field(repr=False, default=0)
+    max_video_channel_users: int = Field(repr=False, default=0)
     """The maximum amount of users in a video channel."""
-    welcome_screen: Optional["GuildWelcome"] = attrs.field(repr=False, default=None)
+    welcome_screen: Optional["GuildWelcome"] = Field(repr=False, default=None)
     """The welcome screen of a Community guild, shown to new members, returned in an Invite's guild object."""
-    nsfw_level: Union[NSFWLevels, int] = attrs.field(repr=False, default=NSFWLevels.DEFAULT)
+    nsfw_level: Union[NSFWLevels, int] = Field(repr=False, default=NSFWLevels.DEFAULT)
     """The guild NSFW level."""
-    stage_instances: List[dict] = attrs.field(repr=False, factory=list)  # TODO stage instance objects
+    stage_instances: List[dict] = Field(repr=False, factory=list)  # TODO stage instance objects
     """Stage instances in the guild."""
-    chunked = attrs.field(repr=False, factory=asyncio.Event, metadata=no_export_meta)
+    chunked = Field(repr=False, factory=asyncio.Event, metadata=no_export_meta)
     """An event that is fired when this guild has been chunked"""
-    command_permissions: dict[Snowflake_Type, CommandPermissions] = attrs.field(
+    command_permissions: dict[Snowflake_Type, CommandPermissions] = Field(
         repr=False, factory=dict, metadata=no_export_meta
     )
     """A cache of all command permissions for this guild"""
 
-    _owner_id: Snowflake_Type = attrs.field(repr=False, converter=to_snowflake)
-    _channel_ids: Set[Snowflake_Type] = attrs.field(repr=False, factory=set)
-    _thread_ids: Set[Snowflake_Type] = attrs.field(repr=False, factory=set)
-    _member_ids: Set[Snowflake_Type] = attrs.field(repr=False, factory=set)
-    _role_ids: Set[Snowflake_Type] = attrs.field(repr=False, factory=set)
-    _chunk_cache: list = attrs.field(repr=False, factory=list)
-    _channel_gui_positions: Dict[Snowflake_Type, int] = attrs.field(repr=False, factory=dict)
+    _owner_id: Snowflake_Type = Field(repr=False, converter=to_snowflake)
+    _channel_ids: Set[Snowflake_Type] = Field(repr=False, factory=set)
+    _thread_ids: Set[Snowflake_Type] = Field(repr=False, factory=set)
+    _member_ids: Set[Snowflake_Type] = Field(repr=False, factory=set)
+    _role_ids: Set[Snowflake_Type] = Field(repr=False, factory=set)
+    _chunk_cache: list = Field(repr=False, factory=list)
+    _channel_gui_positions: Dict[Snowflake_Type, int] = Field(repr=False, factory=dict)
+
+    def __new__(cls, **kwargs) -> "Guild":
+        # guilds are expensive to create, so we explicitly create them
+        # this loses the dynamic nature of other naff objects, but it's worth it
+        instance = object.__new__(cls)
+        client: "Client" = kwargs.pop("_client", None)
+        defaults = instance._Nattrs__get_default()
+
+        instance.name = kwargs["name"]
+        instance.id = kwargs["id"]
+        instance._owner_id = kwargs["owner_id"]
+
+        instance.default_message_notifications = DefaultNotificationLevels(
+            kwargs.pop("default_message_notifications", defaults["default_message_notifications"])
+        )
+        instance.verification_level = VerificationLevels(kwargs.get("verification_level", VerificationLevels.NONE))
+
+        instance._channel_ids = [
+            client.cache.place_channel_data(c | {"guild_id": instance.id}).id for c in kwargs.get("channels", [])
+        ]
+        instance._thread_ids = [client.cache.place_channel_data(c).id for c in kwargs.get("threads", [])]
+        instance._member_ids = [client.cache.place_member_data(instance.id, m).id for m in kwargs.get("members", [])]
+        instance._role_ids = set(client.cache.place_role_data(instance.id, kwargs.get("roles", [])).keys())
+
+        instance.large = kwargs.get("large", False)
+        instance.member_count = kwargs.get("member_count", 0)
+        instance.max_members = kwargs.get("max_members", None)
+        instance.vanity_url_code = kwargs.get("vanity_url_code", None)
+        instance.joined_at = models.Timestamp.fromisoformat(kwargs["joined_at"])
+        instance.nsfw_level = NSFWLevels(kwargs.get("nsfw_level", NSFWLevels.DEFAULT))
+        instance.nsfw = kwargs.get("nsfw", False)
+        instance.system_channel_flags = SystemChannelFlags(kwargs.get("system_channel_flags", 0))
+        instance.system_channel_id = kwargs.get("system_channel_id", None)
+        instance.public_updates_channel_id = kwargs.get("public_updates_channel_id", None)
+        instance.afk_timeout = kwargs.get("afk_timeout", 0)
+        instance.afk_channel_id = kwargs.get("afk_channel_id", None)
+        instance.rules_channel_id = kwargs.get("rules_channel_id", None)
+        instance.mfa_level = MFALevels(kwargs.get("mfa_level", 0))
+
+        return instance
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
         data = super()._process_dict(data, client)
         guild_id = data["id"]
 
-        channels_data = data.pop("channels", [])
-        for c in channels_data:
-            c["guild_id"] = guild_id
-        data["channel_ids"] = {client.cache.place_channel_data(channel_data).id for channel_data in channels_data}
+        data["_client"] = client
 
-        threads_data = data.pop("threads", [])
-        data["thread_ids"] = {client.cache.place_channel_data(thread_data).id for thread_data in threads_data}
-
-        members_data = data.pop("members", [])
-        data["member_ids"] = {client.cache.place_member_data(guild_id, member_data).id for member_data in members_data}
-
-        roles_data = data.pop("roles", [])
-        data["role_ids"] = set(client.cache.place_role_data(guild_id, roles_data).keys())
-
-        if welcome_screen := data.get("welcome_screen"):
-            data["welcome_screen"] = GuildWelcome.from_dict(welcome_screen, client)
-
-        if voice_states := data.get("voice_states"):
+        if voice_states := data.pop("voice_states"):
             [
                 asyncio.create_task(client.cache.place_voice_state_data(state | {"guild_id": guild_id}))
                 for state in voice_states
@@ -2005,34 +2044,27 @@ class Guild(BaseGuild):
         return sorted_channels
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildTemplate(ClientObject):
-    code: str = attrs.field(repr=True, metadata=docs("the template code (unique ID)"))
-    name: str = attrs.field(repr=True, metadata=docs("the name"))
-    description: Optional[str] = attrs.field(repr=False, default=None, metadata=docs("the description"))
+    code: str = Field(repr=True, metadata=docs("the template code (unique ID)"))
+    name: str = Field(repr=True, metadata=docs("the name"))
+    description: Optional[str] = Field(repr=False, default=None, metadata=docs("the description"))
 
-    usage_count: int = attrs.field(repr=False, default=0, metadata=docs("number of times this template has been used"))
+    usage_count: int = Field(repr=False, default=0, metadata=docs("number of times this template has been used"))
 
-    creator_id: Snowflake_Type = attrs.field(repr=False, metadata=docs("The ID of the user who created this template"))
-    creator: Optional["models.User"] = attrs.field(
+    creator_id: Snowflake_Type = Field(repr=False, metadata=docs("The ID of the user who created this template"))
+    creator: Optional["models.User"] = Field(
         repr=False, default=None, metadata=docs("the user who created this template")
     )
 
-    created_at: "models.Timestamp" = attrs.field(repr=False, metadata=docs("When this template was created"))
-    updated_at: "models.Timestamp" = attrs.field(
+    created_at: "models.Timestamp" = Field(repr=False, metadata=docs("When this template was created"))
+    updated_at: "models.Timestamp" = Field(
         repr=False, metadata=docs("When this template was last synced to the source guild")
     )
 
-    source_guild_id: Snowflake_Type = attrs.field(
-        repr=False, metadata=docs("The ID of the guild this template is based on")
-    )
-    guild_snapshot: "models.Guild" = attrs.field(
-        repr=False, metadata=docs("A snapshot of the guild this template contains")
-    )
+    source_guild_id: Snowflake_Type = Field(repr=False, metadata=docs("The ID of the guild this template is based on"))
+    guild_snapshot: "models.Guild" = Field(repr=False, metadata=docs("A snapshot of the guild this template contains"))
 
-    is_dirty: bool = attrs.field(
-        repr=False, default=False, metadata=docs("Whether this template has un-synced changes")
-    )
+    is_dirty: bool = Field(repr=False, default=False, metadata=docs("Whether this template has un-synced changes"))
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -2073,52 +2105,52 @@ class GuildTemplate(ClientObject):
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class GuildWelcomeChannel(ClientObject):
-    channel_id: Snowflake_Type = attrs.field(repr=True, metadata=docs("Welcome Channel ID"))
-    description: str = attrs.field(repr=False, metadata=docs("Welcome Channel description"))
-    emoji_id: Optional[Snowflake_Type] = attrs.field(
+    channel_id: Snowflake_Type = Field(repr=True, metadata=docs("Welcome Channel ID"))
+    description: str = Field(repr=False, metadata=docs("Welcome Channel description"))
+    emoji_id: Optional[Snowflake_Type] = Field(
         repr=False, default=None, metadata=docs("Welcome Channel emoji ID if the emoji is custom")
     )
-    emoji_name: Optional[str] = attrs.field(
+    emoji_name: Optional[str] = Field(
         repr=False, default=None, metadata=docs("Emoji name if custom, unicode character if standard")
     )
 
 
 class GuildIntegration(DiscordObject):
-    name: str = attrs.field(repr=True)
+    name: str = Field(repr=True)
     """The name of the integration"""
-    type: str = attrs.field(repr=True)
+    type: str = Field(repr=True)
     """integration type (twitch, youtube, or discord)"""
-    enabled: bool = attrs.field(repr=True)
+    enabled: bool = Field(repr=True)
     """is this integration enabled"""
-    account: dict = attrs.field(
+    account: dict = Field(
         repr=False,
     )
     """integration account information"""
-    application: Optional["models.Application"] = attrs.field(repr=False, default=None)
+    application: Optional["models.Application"] = Field(repr=False, default=None)
     """The bot/OAuth2 application for discord integrations"""
-    _guild_id: Snowflake_Type = attrs.field(
+    _guild_id: Snowflake_Type = Field(
         repr=False,
     )
 
-    syncing: Optional[bool] = attrs.field(repr=False, default=MISSING)
+    syncing: Optional[bool] = Field(repr=False, default=MISSING)
     """is this integration syncing"""
-    role_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=MISSING)
+    role_id: Optional[Snowflake_Type] = Field(repr=False, default=MISSING)
     """id that this integration uses for "subscribers\""""
-    enable_emoticons: bool = attrs.field(repr=False, default=MISSING)
+    enable_emoticons: bool = Field(repr=False, default=MISSING)
     """whether emoticons should be synced for this integration (twitch only currently)"""
-    expire_behavior: IntegrationExpireBehaviour = attrs.field(
-        repr=False, default=MISSING, converter=optional(IntegrationExpireBehaviour)
+    expire_behavior: IntegrationExpireBehaviour = Field(
+        repr=False, default=MISSING, converter=IntegrationExpireBehaviour
     )
     """the behavior of expiring subscribers"""
-    expire_grace_period: int = attrs.field(repr=False, default=MISSING)
+    expire_grace_period: int = Field(repr=False, default=MISSING)
     """the grace period (in days) before expiring subscribers"""
-    user: "models.BaseUser" = attrs.field(repr=False, default=MISSING)
+    user: "models.BaseUser" = Field(repr=False, default=MISSING)
     """user for this integration"""
-    synced_at: "models.Timestamp" = attrs.field(repr=False, default=MISSING, converter=optional(timestamp_converter))
+    synced_at: "models.Timestamp" = Field(repr=False, default=MISSING, converter=timestamp_converter)
     """when this integration was last synced"""
-    subscriber_count: int = attrs.field(repr=False, default=MISSING)
+    subscriber_count: int = Field(repr=False, default=MISSING)
     """how many subscribers this integration has"""
-    revoked: bool = attrs.field(repr=False, default=MISSING)
+    revoked: bool = Field(repr=False, default=MISSING)
     """has this integration been revoked"""
 
     @classmethod
@@ -2135,24 +2167,24 @@ class GuildIntegration(DiscordObject):
         await self._client.http.delete_guild_integration(self._guild_id, self.id, reason)
 
 
-class GuildWidgetSettings(DictSerializationMixin):
-    enabled: bool = attrs.field(repr=True, default=False)
+class GuildWidgetSettings(Nattrs):
+    enabled: bool = Field(repr=True, default=False)
     """Whether the widget is enabled."""
-    channel_id: Optional["Snowflake_Type"] = attrs.field(repr=True, default=None, converter=to_optional_snowflake)
+    channel_id: Optional["Snowflake_Type"] = Field(repr=True, default=None, converter=to_optional_snowflake)
     """The widget channel id. None if widget is not enabled."""
 
 
 class GuildWidget(DiscordObject):
-    name: str = attrs.field(repr=True)
+    name: str = Field(repr=True)
     """Guild name (2-100 characters)"""
-    instant_invite: str = attrs.field(repr=True, default=None)
+    instant_invite: str = Field(repr=True, default=None)
     """Instant invite for the guilds specified widget invite channel"""
-    presence_count: int = attrs.field(repr=True, default=0)
+    presence_count: int = Field(repr=True, default=0)
     """Number of online members in this guild"""
 
-    _channel_ids: List["Snowflake_Type"] = attrs.field(repr=False, default=[])
+    _channel_ids: List["Snowflake_Type"] = Field(repr=False, default=[])
     """Voice and stage channels which are accessible by @everyone"""
-    _member_ids: List["Snowflake_Type"] = attrs.field(repr=False, default=[])
+    _member_ids: List["Snowflake_Type"] = Field(repr=False, default=[])
     """Special widget user objects that includes users presence (Limit 100)"""
 
     @classmethod
@@ -2204,29 +2236,27 @@ class GuildWidget(DiscordObject):
         return [await self._client.fetch_user(member_id) for member_id in self._member_ids]
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogChange(ClientObject):
-    key: str = attrs.field(repr=True)
+    key: str = Field(repr=True)
     """name of audit log change key"""
-    new_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attrs.field(repr=False, default=MISSING)
+    new_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = Field(repr=False, default=MISSING)
     """new value of the key"""
-    old_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = attrs.field(repr=False, default=MISSING)
+    old_value: Optional[Union[list, str, int, bool, "Snowflake_Type"]] = Field(repr=False, default=MISSING)
     """old value of the key"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLogEntry(DiscordObject):
-    target_id: Optional["Snowflake_Type"] = attrs.field(repr=False, converter=optional(to_snowflake))
+    target_id: Optional["Snowflake_Type"] = Field(repr=False, converter=to_snowflake)
     """id of the affected entity (webhook, user, role, etc.)"""
-    user_id: "Snowflake_Type" = attrs.field(repr=False, converter=optional(to_snowflake))
+    user_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
     """the user who made the changes"""
-    action_type: "AuditLogEventType" = attrs.field(repr=False, converter=AuditLogEventType)
+    action_type: "AuditLogEventType" = Field(repr=False, converter=AuditLogEventType)
     """type of action that occurred"""
-    changes: Optional[List[AuditLogChange]] = attrs.field(repr=False, default=MISSING)
+    changes: Optional[List[AuditLogChange]] = Field(repr=False, default=MISSING)
     """changes made to the target_id"""
-    options: Optional[Union["Snowflake_Type", str]] = attrs.field(repr=False, default=MISSING)
+    options: Optional[Union["Snowflake_Type", str]] = Field(repr=False, default=MISSING)
     """additional info for certain action types"""
-    reason: Optional[str] = attrs.field(repr=False, default=MISSING)
+    reason: Optional[str] = Field(repr=False, default=MISSING)
     """the reason for the change (0-512 characters)"""
 
     @classmethod
@@ -2237,25 +2267,22 @@ class AuditLogEntry(DiscordObject):
         return data
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AuditLog(ClientObject):
     """Contains entries and other data given from selected"""
 
-    application_commands: list["InteractionCommand"] = attrs.field(
-        repr=False, factory=list, converter=optional(deserialize_app_cmds)
-    )
+    application_commands: list["InteractionCommand"] = Field(repr=False, factory=list, converter=deserialize_app_cmds)
     """list of application commands that have had their permissions updated"""
-    entries: Optional[List["AuditLogEntry"]] = attrs.field(repr=False, default=MISSING)
+    entries: Optional[List["AuditLogEntry"]] = Field(repr=False, default=MISSING)
     """list of audit log entries"""
-    scheduled_events: Optional[List["models.ScheduledEvent"]] = attrs.field(repr=False, default=MISSING)
+    scheduled_events: Optional[List["models.ScheduledEvent"]] = Field(repr=False, default=MISSING)
     """list of guild scheduled events found in the audit log"""
-    integrations: Optional[List["GuildIntegration"]] = attrs.field(repr=False, default=MISSING)
+    integrations: Optional[List["GuildIntegration"]] = Field(repr=False, default=MISSING)
     """list of partial integration objects"""
-    threads: Optional[List["models.ThreadChannel"]] = attrs.field(repr=False, default=MISSING)
+    threads: Optional[List["models.ThreadChannel"]] = Field(repr=False, default=MISSING)
     """list of threads found in the audit log"""
-    users: Optional[List["models.User"]] = attrs.field(repr=False, default=MISSING)
+    users: Optional[List["models.User"]] = Field(repr=False, default=MISSING)
     """list of users found in the audit log"""
-    webhooks: Optional[List["models.Webhook"]] = attrs.field(repr=False, default=MISSING)
+    webhooks: Optional[List["models.Webhook"]] = Field(repr=False, default=MISSING)
     """list of webhooks found in the audit log"""
 
     @classmethod
