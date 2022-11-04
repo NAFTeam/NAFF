@@ -14,7 +14,7 @@ from naff.models.discord.emoji import CustomEmoji
 from naff.models.discord.guild import Guild
 from naff.models.discord.message import Message
 from naff.models.discord.role import Role
-from naff.models.discord.snowflake import to_snowflake, to_optional_snowflake
+from naff.models.discord.snowflake import to_optional_snowflake
 from naff.models.discord.user import Member, User
 from naff.models.naff.active_voice_state import ActiveVoiceState
 
@@ -105,7 +105,7 @@ class GlobalCache:
             User object if found
 
         """
-        user_id = to_snowflake(user_id)
+        user_id = int(user_id)
 
         user = self.user_cache.get(user_id)
         if user is None:
@@ -135,7 +135,7 @@ class GlobalCache:
         Returns:
             The processed User data
         """
-        user_id = to_snowflake(data["id"])
+        user_id = int(data["id"])
 
         user = self.user_cache.get(user_id)
 
@@ -153,7 +153,7 @@ class GlobalCache:
         Args:
             user_id: The user's ID
         """
-        self.user_cache.pop(to_snowflake(user_id), None)
+        self.user_cache.pop(int(user_id), None)
 
     # endregion User cache
 
@@ -171,8 +171,8 @@ class GlobalCache:
             Member object if found
 
         """
-        guild_id = to_snowflake(guild_id)
-        user_id = to_snowflake(user_id)
+        guild_id = int(guild_id)
+        user_id = int(user_id)
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
             data = await self._client.http.get_member(guild_id, user_id)
@@ -232,8 +232,8 @@ class GlobalCache:
             guild_id: The ID of the guild this user belongs to
             user_id: The ID of the user
         """
-        user_id = to_snowflake(user_id)
-        guild_id = to_snowflake(guild_id)
+        user_id = int(user_id)
+        guild_id = int(guild_id)
 
         if member := self.member_cache.pop((guild_id, user_id), None):
             if member.guild:
@@ -249,8 +249,8 @@ class GlobalCache:
             user_id: The ID of the user
             guild_id: The ID of the guild to add
         """
-        user_id = to_snowflake(user_id)
-        guild_id = to_snowflake(guild_id)
+        user_id = int(user_id)
+        guild_id = int(guild_id)
         if user_id == self._client.user.id:
             # noinspection PyProtectedMember
             self._client.user._add_guilds({guild_id})
@@ -270,8 +270,8 @@ class GlobalCache:
             user_id: The ID of the user
             guild_id: The ID of the guild to add
         """
-        user_id = to_snowflake(user_id)
-        guild_id = to_snowflake(guild_id)
+        user_id = int(user_id)
+        guild_id = int(guild_id)
 
         if user_id == self._client.user.id:
             # noinspection PyProtectedMember
@@ -297,8 +297,8 @@ class GlobalCache:
             guild_id: The ID of the guild
 
         """
-        user_id = to_snowflake(user_id)
-        guild_id = to_snowflake(guild_id)
+        user_id = int(user_id)
+        guild_id = int(guild_id)
 
         # Try to get guild members list from the cache, without sending requests
         guild = self.get_guild(guild_id)
@@ -328,7 +328,7 @@ class GlobalCache:
         Returns:
             A list of snowflakes for the guilds the client can see the user is within
         """
-        user_id = to_snowflake(user_id)
+        user_id = int(user_id)
         guild_ids = self.user_guilds.get(user_id)
         if not guild_ids:
             guild_ids = [
@@ -347,7 +347,7 @@ class GlobalCache:
         Returns:
             A list of snowflakes for the guilds the client can see the user is within
         """
-        return list(self.user_guilds.get(to_snowflake(user_id)))
+        return list(self.user_guilds.get(int(user_id)))
 
     # endregion Member cache
 
@@ -368,8 +368,8 @@ class GlobalCache:
         Returns:
             The message if found
         """
-        channel_id = to_snowflake(channel_id)
-        message_id = to_snowflake(message_id)
+        channel_id = int(channel_id)
+        message_id = int(message_id)
         message = self.message_cache.get((channel_id, message_id))
 
         if message is None:
@@ -407,8 +407,8 @@ class GlobalCache:
         Returns:
             The processed message
         """
-        channel_id = to_snowflake(data["channel_id"])
-        message_id = to_snowflake(data["id"])
+        channel_id = int(data["channel_id"])
+        message_id = int(data["id"])
         message = self.message_cache.get((channel_id, message_id))
         if message is None:
             message = Message.from_dict(data, self._client)
@@ -425,7 +425,7 @@ class GlobalCache:
             channel_id: The ID of the channel the message is in
             message_id: The ID of the message
         """
-        self.message_cache.pop((to_snowflake(channel_id), to_snowflake(message_id)), None)
+        self.message_cache.pop((int(channel_id), int(message_id)), None)
 
     # endregion Message cache
 
@@ -443,7 +443,7 @@ class GlobalCache:
         Returns:
             The channel if found
         """
-        channel_id = to_snowflake(channel_id)
+        channel_id = int(channel_id)
         channel = self.channel_cache.get(channel_id)
         if channel is None:
             try:
@@ -476,7 +476,7 @@ class GlobalCache:
         Returns:
             The processed channel
         """
-        channel_id = to_snowflake(data["id"])
+        channel_id = int(data["id"])
         channel = self.channel_cache.get(channel_id)
         if channel is None:
             channel = BaseChannel.from_dict_factory(data, self._client)
@@ -509,7 +509,7 @@ class GlobalCache:
             channel_id: The id of the DM channel
 
         """
-        self.dm_channels[to_snowflake(user_id)] = to_snowflake(channel_id)
+        self.dm_channels[int(user_id)] = int(channel_id)
 
     async def fetch_dm_channel_id(self, user_id: "Snowflake_Type") -> "Snowflake_Type":
         """
@@ -518,7 +518,7 @@ class GlobalCache:
         Args:
             user_id: The ID of the user
         """
-        user_id = to_snowflake(user_id)
+        user_id = int(user_id)
         channel_id = self.dm_channels.get(user_id)
         if channel_id is None:
             data = await self._client.http.create_dm(user_id)
@@ -533,7 +533,7 @@ class GlobalCache:
         Args:
             user_id: The ID of the user
         """
-        user_id = to_snowflake(user_id)
+        user_id = int(user_id)
         channel_id = await self.fetch_dm_channel_id(user_id)
         channel = await self.fetch_channel(channel_id)
         return channel
@@ -559,7 +559,7 @@ class GlobalCache:
             channel_id: The channel to be deleted
             guild_id: A guild to delete references of this channel from.
         """
-        channel_id = to_snowflake(channel_id)
+        channel_id = int(channel_id)
         channel = self.channel_cache.pop(channel_id, None)
         if guild := getattr(channel, "guild", None):
             if isinstance(channel, ThreadChannel):
@@ -582,7 +582,7 @@ class GlobalCache:
         Returns:
             The guild if found
         """
-        guild_id = to_snowflake(guild_id)
+        guild_id = int(guild_id)
         guild = self.guild_cache.get(guild_id)
         if guild is None:
             data = await self._client.http.get_guild(guild_id)
@@ -611,7 +611,7 @@ class GlobalCache:
         Returns:
             The processed guild
         """
-        guild_id = to_snowflake(data["id"])
+        guild_id = int(data["id"])
         guild: Guild = self.guild_cache.get(guild_id)
         if guild is None:
             guild = Guild.from_dict(data, self._client)
@@ -627,7 +627,7 @@ class GlobalCache:
         Args:
             guild_id: The ID of the guild
         """
-        guild = self.guild_cache.pop(to_snowflake(guild_id), None)
+        guild = self.guild_cache.pop(int(guild_id), None)
 
         if guild:
             # delete associated objects
@@ -655,8 +655,8 @@ class GlobalCache:
         Returns:
             The role if found
         """
-        guild_id = to_snowflake(guild_id)
-        role_id = to_snowflake(role_id)
+        guild_id = int(guild_id)
+        role_id = int(role_id)
         role = self.role_cache.get(role_id)
         if role is None:
             data = await self._client.http.get_roles(guild_id)
@@ -690,12 +690,12 @@ class GlobalCache:
         Returns:
             The processed role
         """
-        guild_id = to_snowflake(guild_id)
+        guild_id = int(guild_id)
 
         roles: Dict["Snowflake_Type", Role] = {}
         for role_data in data:  # todo not update cache expiration order for roles
             role_data.update({"guild_id": guild_id})
-            role_id = to_snowflake(role_data["id"])
+            role_id = int(role_data["id"])
 
             role = self.role_cache.get(role_id)
             if role is None:
@@ -715,7 +715,7 @@ class GlobalCache:
         Args:
             role_id: The ID of the role
         """
-        role = self.role_cache.pop(to_snowflake(role_id), None)
+        role = self.role_cache.pop(int(role_id), None)
         if role:
             if guild := self.get_guild(role._guild_id):
                 # noinspection PyProtectedMember
@@ -748,7 +748,7 @@ class GlobalCache:
         Returns:
             The processed VoiceState object
         """
-        user_id = to_snowflake(data["user_id"])
+        user_id = int(data["user_id"])
 
         # try to remove the user from the _voice_member_ids list of the old channel obj, if that exists
         old_state = self.get_voice_state(user_id)
@@ -784,7 +784,7 @@ class GlobalCache:
         Args:
             user_id: The ID of the user
         """
-        self.voice_state_cache.pop(to_snowflake(user_id), None)
+        self.voice_state_cache.pop(int(user_id), None)
 
     # endregion Voice cache
 
@@ -813,7 +813,7 @@ class GlobalCache:
             return
 
         # noinspection PyProtectedMember
-        self.bot_voice_state_cache[to_snowflake(state._guild_id)] = state
+        self.bot_voice_state_cache[int(state._guild_id)] = state
 
     def delete_bot_voice_state(self, guild_id: "Snowflake_Type") -> None:
         """
@@ -822,7 +822,7 @@ class GlobalCache:
         Args:
             guild_id: The id of the guild
         """
-        self.bot_voice_state_cache.pop(to_snowflake(guild_id), None)
+        self.bot_voice_state_cache.pop(int(guild_id), None)
 
     # endregion Bot Voice cache
 
@@ -845,8 +845,8 @@ class GlobalCache:
         Returns:
             The Emoji if found
         """
-        guild_id = to_snowflake(guild_id)
-        emoji_id = to_snowflake(emoji_id)
+        guild_id = int(guild_id)
+        emoji_id = int(emoji_id)
         emoji = self.emoji_cache.get(emoji_id) if self.emoji_cache is not None else None
         if emoji is None:
             data = await self._client.http.get_guild_emoji(guild_id, emoji_id)
@@ -882,7 +882,7 @@ class GlobalCache:
         with suppress(KeyError):
             del data["guild_id"]  # discord sometimes packages a guild_id - this will cause an exception
 
-        emoji = CustomEmoji.from_dict(data, self._client, to_snowflake(guild_id))
+        emoji = CustomEmoji.from_dict(data, self._client, int(guild_id))
         if self.emoji_cache is not None:
             self.emoji_cache[emoji.id] = emoji
 
@@ -896,6 +896,6 @@ class GlobalCache:
             emoji_id: The ID of the emoji
         """
         if self.emoji_cache is not None:
-            self.emoji_cache.pop(to_snowflake(emoji_id), None)
+            self.emoji_cache.pop(int(emoji_id), None)
 
     # endregion Emoji cache
