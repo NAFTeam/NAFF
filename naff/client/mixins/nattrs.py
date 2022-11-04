@@ -65,6 +65,10 @@ class Nattrs:
         payload = cls._process_dict(payload)
         return cls(**payload)
 
+    @classmethod
+    def from_list(cls, payload: list[dict]) -> list[T]:
+        return [cls.from_dict(x) for x in payload]
+
     def update_from_dict(self, payload: dict, *args) -> T:
         # todo: needs optimisation
         payload = self._process_dict(payload, *args)
