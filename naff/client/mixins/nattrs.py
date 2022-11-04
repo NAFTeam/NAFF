@@ -2,7 +2,6 @@ import inspect
 import typing
 from logging import Logger
 
-from attr._make import _CountingAttr as AttrField
 
 from naff.client import const
 from naff.client.const import Sentinel
@@ -49,19 +48,7 @@ class Nattrs:
         if cls.__default__:
             return cls.__default__
 
-        cls.__default__ = dict(inspect.getmembers(cls, lambda x: isinstance(x, (Field, AttrField))))
-        for k, v in cls.__default__.items():
-            if isinstance(v, AttrField):
-                # convert Attrs CountingField to Nattrs Field
-                const.get_logger().warning(
-                    f"{cls.__name__}:: {k} required conversion from attrs.CountingField to Nattrs.Field"
-                )
-                cls.__default__[k] = Field(
-                    default=v.default,
-                    converter=v.converter,
-                    export=not v.metadata.get("no_export", False),
-                )
-
+        cls.__default__ = dict(inspect.getmembers(cls, lambda x: isinstance(x, Field)))
         # cache the result so all subsequent calls are faster
         return cls.__default__
 
