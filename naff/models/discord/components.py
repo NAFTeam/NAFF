@@ -42,8 +42,8 @@ class BaseComponent(Nattrs):
 
     """
 
-    def __init__(self) -> None:
-        raise NotImplementedError
+    # def __init__(self) -> None:
+    #     raise NotImplementedError
 
     @classmethod
     def from_dict_factory(cls, data: dict) -> "TYPE_ALL_COMPONENT":
@@ -124,7 +124,6 @@ class Button(InteractiveComponent):
             raise TypeError("You must have at least a label or emoji on a button.")
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class SelectOption(BaseComponent):
     """
     Represents a select option.
@@ -181,7 +180,6 @@ class SelectOption(BaseComponent):
     #         raise ValueError("Description length must be 100 or lower.")
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class BaseSelectMenu(InteractiveComponent):
     """
     Represents a select menu component
@@ -230,7 +228,6 @@ class BaseSelectMenu(InteractiveComponent):
     #         raise TypeError("Selects max value cannot be less than min value.")
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class StringSelectMenu(BaseSelectMenu):
     """
     Represents a string select component.
@@ -269,7 +266,6 @@ class StringSelectMenu(BaseSelectMenu):
         self.options.append(option)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class UserSelectMenu(BaseSelectMenu):
     """
     Represents a user select component.
@@ -288,7 +284,6 @@ class UserSelectMenu(BaseSelectMenu):
     )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class RoleSelectMenu(BaseSelectMenu):
     """
     Represents a role select component.
@@ -307,7 +302,6 @@ class RoleSelectMenu(BaseSelectMenu):
     )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class MentionableSelectMenu(BaseSelectMenu):
     """
     Represents a mentionable select component.
@@ -326,7 +320,6 @@ class MentionableSelectMenu(BaseSelectMenu):
     )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ChannelSelectMenu(BaseSelectMenu):
     """
     Represents a channel select component.
@@ -348,7 +341,6 @@ class ChannelSelectMenu(BaseSelectMenu):
     )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ActionRow(BaseComponent):
     """
     Represents an action row.
@@ -361,7 +353,9 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: Sequence[Union[dict, StringSelectMenu, Button]] = Field(repr=True, factory=list)
+    components: Sequence[Union[dict, StringSelectMenu, Button]] = Field(
+        repr=True, factory=list, converter=list_converter(BaseComponent.from_dict_factory)
+    )
     type: Union[ComponentTypes, int] = Field(
         repr=False, default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
@@ -371,7 +365,7 @@ class ActionRow(BaseComponent):
 
     @classmethod
     def from_dict(cls, data) -> "ActionRow":
-        return cls(*data["components"])
+        return cls(components=[BaseComponent.from_dict_factory(c) for c in data["components"]])
 
     def _component_checks(self, component: Union[dict, StringSelectMenu, Button]) -> Union[StringSelectMenu, Button]:
         # todo: optimise and re-enable
