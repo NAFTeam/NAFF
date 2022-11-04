@@ -1,3 +1,4 @@
+import typing
 from typing import TYPE_CHECKING, Any, Dict, List, Type
 
 from typing_extensions import dataclass_transform
@@ -17,13 +18,16 @@ class ClientObject(Nattrs):
     """Serializable object that requires client reference."""
 
     _client: "Client" = Field(export=False)
+    __data__: dict[str, typing.Any]
 
     @classmethod
     def from_dict(cls: Type[T], payload: Dict[str, Any], client: "Client") -> T:
+        _original = payload.copy()
         payload = cls._process_dict(payload, client)
 
         instance = cls(**payload)
         instance._client = client
+        instance.__data__ = _original
         return instance
 
     @classmethod
@@ -35,6 +39,8 @@ class ClientObject(Nattrs):
         return payload
 
     def update_from_dict(self, data, *args) -> T:
+        if data == self.__data__:
+            return self
         return super().update_from_dict(data, self._client)
 
 
