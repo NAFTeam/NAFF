@@ -47,8 +47,6 @@ class BaseComponent(Nattrs):
 
     @classmethod
     def from_dict_factory(cls, data: dict) -> "TYPE_ALL_COMPONENT":
-        data.pop("hash", None)  # Zero clue why discord sometimes include a hash attribute...
-
         component_type = data.pop("type", None)
         component_class = TYPE_COMPONENT_MAPPING.get(component_type, None)
         if not component_class:
@@ -353,9 +351,7 @@ class ActionRow(BaseComponent):
 
     _max_items = ACTION_ROW_MAX_ITEMS
 
-    components: Sequence[Union[dict, StringSelectMenu, Button]] = Field(
-        repr=True, factory=list, converter=list_converter(BaseComponent.from_dict_factory)
-    )
+    components: Sequence[Union[dict, StringSelectMenu, Button]] = Field(repr=True, factory=list)
     type: Union[ComponentTypes, int] = Field(
         repr=False, default=ComponentTypes.ACTION_ROW, init=False, on_setattr=attrs.setters.frozen
     )
@@ -365,7 +361,7 @@ class ActionRow(BaseComponent):
 
     @classmethod
     def from_dict(cls, data) -> "ActionRow":
-        return cls(components=[BaseComponent.from_dict_factory(c) for c in data["components"]])
+        return cls(components=data["components"])
 
     def _component_checks(self, component: Union[dict, StringSelectMenu, Button]) -> Union[StringSelectMenu, Button]:
         # todo: optimise and re-enable

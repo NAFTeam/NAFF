@@ -82,7 +82,7 @@ class Nattrs:
         default_vars = self.__default__
 
         for key, value in payload.items():
-            if field := default_vars.get(key, NOTSET):
+            if (field := default_vars.get(key, NOTSET)) is not NOTSET:
                 if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
                     setattr(self, key, value)
                     continue
@@ -105,7 +105,7 @@ class Nattrs:
             if slotted:
                 if key not in cls.__slots__:
                     continue
-            if field := default_vars.get(key, NOTSET):
+            if (field := default_vars.get(key, NOTSET)) is not NOTSET:
                 if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
                     setattr(inst, key, value)
                     continue
