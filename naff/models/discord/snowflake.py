@@ -1,13 +1,12 @@
 from typing import Union, List, SupportsInt, Optional
 
-from typing_extensions import dataclass_transform
 
 import naff.models as models
 from naff.client.const import MISSING, Absent
 
 __all__ = ("to_snowflake", "to_optional_snowflake", "to_snowflake_list", "SnowflakeObject", "Snowflake_Type")
 
-from naff.client.mixins.nattrs import Field
+from naff.client.mixins.nattrs import Field, Nattrs
 
 # Snowflake_Type should be used in FUNCTION args of user-facing APIs (combined with to_snowflake to sanitize input)
 # For MODEL id fields, just use int as type-hinting instead;
@@ -37,10 +36,8 @@ def to_snowflake(snowflake: Snowflake_Type) -> int:
 
 
 def to_optional_snowflake(snowflake: Absent[Optional[Snowflake_Type]] = MISSING) -> Optional[int]:
-    if snowflake is MISSING:
-        return MISSING
-    if snowflake is None:
-        return None
+    if snowflake is MISSING or snowflake is None:
+        return snowflake
     return to_snowflake(snowflake)
 
 
@@ -48,8 +45,7 @@ def to_snowflake_list(snowflakes: List[Snowflake_Type]) -> List[int]:
     return [to_snowflake(c) for c in snowflakes]
 
 
-@dataclass_transform()
-class SnowflakeObject:
+class SnowflakeObject(Nattrs):
     id: int = Field(converter=to_snowflake, repr=True)
     """Unique snowflake ID"""
 
