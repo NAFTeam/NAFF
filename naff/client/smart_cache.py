@@ -48,10 +48,9 @@ def create_cache(
         return {}
     if ttl == 0 and hard_limit == 0 and soft_limit == 0:
         return NullCache()
-    else:
-        if not soft_limit:
-            soft_limit = int(hard_limit / 4) if hard_limit else 50
-        return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
+    if not soft_limit:
+        soft_limit = int(hard_limit / 4) if hard_limit else 50
+    return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -210,7 +209,8 @@ class GlobalCache:
 
         member = self.member_cache.get((guild_id, user_id))
         if member is None:
-            member = data.get("member", data) | {"guild_id": guild_id}
+            member = data.get("member", data)
+            member["guild_id"] = guild_id
 
             member = Member.from_dict(member, self._client)
             self.member_cache[(guild_id, user_id)] = member
@@ -482,9 +482,9 @@ class GlobalCache:
             channel = BaseChannel.from_dict_factory(data, self._client)
             self.channel_cache[channel_id] = channel
             if guild := getattr(channel, "guild", None):
-                if isinstance(channel, ThreadChannel):
+                if 10 <= data["type"] <= 12:
                     guild._thread_ids.add(channel.id)
-                elif isinstance(channel, GuildChannel):
+                else:
                     guild._channel_ids.add(channel.id)
                 guild._channel_gui_positions = {}
         else:
@@ -693,9 +693,9 @@ class GlobalCache:
         guild_id = int(guild_id)
 
         roles: Dict["Snowflake_Type", Role] = {}
-        for role_data in data:  # todo not update cache expiration order for roles
-            role_data.update({"guild_id": guild_id})
+        for role_data in data:
             role_id = int(role_data["id"])
+            role_data["guild_id"] = guild_id
 
             role = self.role_cache.get(role_id)
             if role is None:
