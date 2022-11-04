@@ -248,38 +248,57 @@ class Guild(BaseGuild):
         # this loses the dynamic nature of other naff objects, but it's worth it
         instance = object.__new__(cls)
         client: "Client" = kwargs.pop("_client", None)
-        defaults = instance._Nattrs__get_default()
 
         instance.name = kwargs["name"]
         instance.id = kwargs["id"]
         instance._owner_id = kwargs["owner_id"]
+        instance.large = kwargs["large"]
+        instance.member_count = kwargs["member_count"]
+        instance.max_members = kwargs["max_members"]
+        instance.vanity_url_code = kwargs["vanity_url_code"]
+        instance.nsfw = kwargs["nsfw"]
+        instance.afk_timeout = kwargs["afk_timeout"]
+        instance.features = kwargs["features"]
 
-        instance.default_message_notifications = DefaultNotificationLevels(
-            kwargs.pop("default_message_notifications", defaults["default_message_notifications"])
-        )
-        instance.verification_level = VerificationLevels(kwargs.get("verification_level", VerificationLevels.NONE))
-
-        instance._channel_ids = [
-            client.cache.place_channel_data(c | {"guild_id": instance.id}).id for c in kwargs.get("channels", [])
-        ]
-        instance._thread_ids = [client.cache.place_channel_data(c).id for c in kwargs.get("threads", [])]
-        instance._member_ids = [client.cache.place_member_data(instance.id, m).id for m in kwargs.get("members", [])]
-        instance._role_ids = set(client.cache.place_role_data(instance.id, kwargs.get("roles", [])).keys())
-
-        instance.large = kwargs.get("large", False)
-        instance.member_count = kwargs.get("member_count", 0)
-        instance.max_members = kwargs.get("max_members", None)
-        instance.vanity_url_code = kwargs.get("vanity_url_code", None)
+        instance.default_message_notifications = DefaultNotificationLevels(kwargs["default_message_notifications"])
+        instance.verification_level = VerificationLevels(kwargs["verification_level"])
         instance.joined_at = models.Timestamp.fromisoformat(kwargs["joined_at"])
-        instance.nsfw_level = NSFWLevels(kwargs.get("nsfw_level", NSFWLevels.DEFAULT))
-        instance.nsfw = kwargs.get("nsfw", False)
-        instance.system_channel_flags = SystemChannelFlags(kwargs.get("system_channel_flags", 0))
-        instance.system_channel_id = kwargs.get("system_channel_id", None)
-        instance.public_updates_channel_id = kwargs.get("public_updates_channel_id", None)
-        instance.afk_timeout = kwargs.get("afk_timeout", 0)
-        instance.afk_channel_id = kwargs.get("afk_channel_id", None)
-        instance.rules_channel_id = kwargs.get("rules_channel_id", None)
-        instance.mfa_level = MFALevels(kwargs.get("mfa_level", 0))
+        instance.nsfw_level = NSFWLevels(kwargs["nsfw_level"])
+        instance.system_channel_flags = SystemChannelFlags(kwargs["system_channel_flags"])
+        instance.mfa_level = MFALevels(kwargs["mfa_level"])
+        instance.afk_channel_id = to_optional_snowflake(kwargs["afk_channel_id"])
+
+        instance._channel_ids = {
+            client.cache.place_channel_data(c | {"guild_id": instance.id}).id for c in kwargs["channels"]
+        }
+        instance._thread_ids = {client.cache.place_channel_data(c).id for c in kwargs["threads"]}
+
+        if "members" in kwargs:
+            instance._member_ids = {client.cache.place_member_data(instance.id, m).id for m in kwargs["members"]}
+        else:
+            instance._member_ids = set()
+
+        if "roles" in kwargs:
+            instance._role_ids = set(client.cache.place_role_data(instance.id, kwargs["roles"]).keys())
+        else:
+            instance._role_ids = set()
+
+        if "COMMUNITY" in instance.features:
+            instance.system_channel_id = to_optional_snowflake(kwargs["system_channel_id"])
+            instance.public_updates_channel_id = to_optional_snowflake(kwargs["public_updates_channel_id"])
+            instance.rules_channel_id = to_optional_snowflake(kwargs["rules_channel_id"])
+
+        # required to respect default values
+        # sadly this means sacrificing performance
+        # 0.094ms -> 0.108ms
+        for pair in instance._Nattrs__get_default():
+            v = getattr(instance, pair)
+            if not v:  # bool(Field) is False
+                if type(v) is Field:  # this makes it impossible to subclass Field, but that's an acceptable tradeoff
+                    if pair[0] in kwargs:  # dict.get is slow
+                        setattr(instance, pair[0], kwargs[pair[0]])
+                    else:
+                        setattr(instance, pair[0], v.default)
 
         return instance
 
