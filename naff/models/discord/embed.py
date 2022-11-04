@@ -1,18 +1,10 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import attrs
 from attrs.validators import instance_of
 from attrs.validators import optional as v_optional
 
-from naff.client.const import (
-    EMBED_MAX_NAME_LENGTH,
-    EMBED_MAX_FIELDS,
-    EMBED_MAX_DESC_LENGTH,
-    EMBED_TOTAL_MAX,
-    EMBED_FIELD_VALUE_LENGTH,
-)
-from naff.client.mixins.serialization import DictSerializationMixin
+from naff.client.mixins.nattrs import Nattrs, Field
 from naff.client.utils.attr_converters import optional as c_optional
 from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.serializer import no_export_meta, export_converter
@@ -32,8 +24,7 @@ __all__ = (
 )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class EmbedField(DictSerializationMixin):
+class EmbedField(Nattrs):
     """
     Representation of an embed field.
 
@@ -44,30 +35,29 @@ class EmbedField(DictSerializationMixin):
 
     """
 
-    name: str = attrs.field(
+    name: str = Field(
         repr=False,
     )
-    value: str = attrs.field(
+    value: str = Field(
         repr=False,
     )
-    inline: bool = attrs.field(repr=False, default=False)
+    inline: bool = Field(repr=False, default=False)
 
-    @name.validator
-    def _name_validation(self, attribute: str, value: Any) -> None:
-        if len(value) > EMBED_MAX_NAME_LENGTH:
-            raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
-
-    @value.validator
-    def _value_validation(self, attribute: str, value: Any) -> None:
-        if len(value) > EMBED_FIELD_VALUE_LENGTH:
-            raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
+    # @name.validator
+    # def _name_validation(self, attribute: str, value: Any) -> None:
+    #     if len(value) > EMBED_MAX_NAME_LENGTH:
+    #         raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
+    #
+    # @value.validator
+    # def _value_validation(self, attribute: str, value: Any) -> None:
+    #     if len(value) > EMBED_FIELD_VALUE_LENGTH:
+    #         raise ValueError(f"Field value cannot exceed {EMBED_FIELD_VALUE_LENGTH} characters")
 
     def __len__(self) -> int:
         return len(self.name) + len(self.value)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class EmbedAuthor(DictSerializationMixin):
+class EmbedAuthor(Nattrs):
     """
     Representation of an embed author.
 
@@ -79,22 +69,21 @@ class EmbedAuthor(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attrs.field(repr=False, default=None)
-    url: Optional[str] = attrs.field(repr=False, default=None)
-    icon_url: Optional[str] = attrs.field(repr=False, default=None)
-    proxy_icon_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
-
-    @name.validator
-    def _name_validation(self, attribute: str, value: Any) -> None:
-        if len(value) > EMBED_MAX_NAME_LENGTH:
-            raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
+    name: Optional[str] = Field(repr=False, default=None)
+    url: Optional[str] = Field(repr=False, default=None)
+    icon_url: Optional[str] = Field(repr=False, default=None)
+    proxy_icon_url: Optional[str] = Field(repr=False, default=None, metadata=no_export_meta)
+    #
+    # @name.validator
+    # def _name_validation(self, attribute: str, value: Any) -> None:
+    #     if len(value) > EMBED_MAX_NAME_LENGTH:
+    #         raise ValueError(f"Field name cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
 
     def __len__(self) -> int:
         return len(self.name)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
+class EmbedAttachment(Nattrs):  # thumbnail or image or video
     """
     Representation of an attachment.
 
@@ -106,10 +95,10 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
 
     """
 
-    url: Optional[str] = attrs.field(repr=False, default=None)
-    proxy_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
-    height: Optional[int] = attrs.field(repr=False, default=None, metadata=no_export_meta)
-    width: Optional[int] = attrs.field(repr=False, default=None, metadata=no_export_meta)
+    url: Optional[str] = Field(repr=False, default=None)
+    proxy_url: Optional[str] = Field(repr=False, default=None, metadata=no_export_meta)
+    height: Optional[int] = Field(repr=False, default=None, metadata=no_export_meta)
+    width: Optional[int] = Field(repr=False, default=None, metadata=no_export_meta)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,8 +111,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
         return self.height, self.width
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class EmbedFooter(DictSerializationMixin):
+class EmbedFooter(Nattrs):
     """
     Representation of an Embed Footer.
 
@@ -134,11 +122,11 @@ class EmbedFooter(DictSerializationMixin):
 
     """
 
-    text: str = attrs.field(
+    text: str = Field(
         repr=False,
     )
-    icon_url: Optional[str] = attrs.field(repr=False, default=None)
-    proxy_icon_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
+    icon_url: Optional[str] = Field(repr=False, default=None)
+    proxy_icon_url: Optional[str] = Field(repr=False, default=None, metadata=no_export_meta)
 
     @classmethod
     def converter(cls, ingest: Union[dict, str, "EmbedFooter"]) -> "EmbedFooter":
@@ -160,8 +148,7 @@ class EmbedFooter(DictSerializationMixin):
         return len(self.text)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class EmbedProvider(DictSerializationMixin):
+class EmbedProvider(Nattrs):
     """
     Represents an embed's provider.
 
@@ -174,93 +161,90 @@ class EmbedProvider(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = attrs.field(repr=False, default=None)
-    url: Optional[str] = attrs.field(repr=False, default=None)
+    name: Optional[str] = Field(repr=False, default=None)
+    url: Optional[str] = Field(repr=False, default=None)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class Embed(DictSerializationMixin):
+class Embed(Nattrs):
     """Represents a discord embed object."""
 
-    title: Optional[str] = attrs.field(default=None, repr=True)
+    title: Optional[str] = Field(default=None, repr=True)
     """The title of the embed"""
-    description: Optional[str] = attrs.field(default=None, repr=True)
+    description: Optional[str] = Field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[Union[Color, dict, tuple, list, str, int]] = attrs.field(
+    color: Optional[Union[Color, dict, tuple, list, str, int]] = Field(
         default=None, repr=True, metadata=export_converter(process_color)
     )
     """The colour of the embed"""
-    url: Optional[str] = attrs.field(default=None, validator=v_optional(instance_of(str)), repr=True)
+    url: Optional[str] = Field(default=None, validator=v_optional(instance_of(str)), repr=True)
     """The url the embed should direct to when clicked"""
-    timestamp: Optional[Timestamp] = attrs.field(
+    timestamp: Optional[Timestamp] = Field(
         default=None,
         converter=c_optional(timestamp_converter),
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
     """Timestamp of embed content"""
-    fields: List[EmbedField] = attrs.field(factory=list, converter=EmbedField.from_list, repr=True)
+    fields: List[EmbedField] = Field(factory=list, converter=EmbedField.from_list, repr=True)
     """A list of [fields][naff.models.discord.embed.EmbedField] to go in the embed"""
-    author: Optional[EmbedAuthor] = attrs.field(repr=False, default=None, converter=c_optional(EmbedAuthor.from_dict))
+    author: Optional[EmbedAuthor] = Field(repr=False, default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
-    thumbnail: Optional[EmbedAttachment] = attrs.field(
+    thumbnail: Optional[EmbedAttachment] = Field(
         repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict)
     )
     """The thumbnail of the embed"""
-    image: Optional[EmbedAttachment] = attrs.field(
-        repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict)
-    )
+    image: Optional[EmbedAttachment] = Field(repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict))
     """The image of the embed"""
-    video: Optional[EmbedAttachment] = attrs.field(
+    video: Optional[EmbedAttachment] = Field(
         repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
-    footer: Optional[EmbedFooter] = attrs.field(repr=False, default=None, converter=c_optional(EmbedFooter.converter))
+    footer: Optional[EmbedFooter] = Field(repr=False, default=None, converter=c_optional(EmbedFooter.converter))
     """The footer of the embed"""
-    provider: Optional[EmbedProvider] = attrs.field(
+    provider: Optional[EmbedProvider] = Field(
         repr=False, default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
-    type: EmbedTypes = attrs.field(
+    type: EmbedTypes = Field(
         repr=False, default=EmbedTypes.RICH, converter=c_optional(EmbedTypes), metadata=no_export_meta
     )
 
-    @title.validator
-    def _name_validation(self, attribute: str, value: Any) -> None:
-        """Validate the embed title."""
-        if value is not None:
-            if isinstance(value, str):
-                if len(value) > EMBED_MAX_NAME_LENGTH:
-                    raise ValueError(f"Title cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
-                return
-            raise TypeError("Title must be of type String")
+    # @title.validator
+    # def _name_validation(self, attribute: str, value: Any) -> None:
+    #     """Validate the embed title."""
+    #     if value is not None:
+    #         if isinstance(value, str):
+    #             if len(value) > EMBED_MAX_NAME_LENGTH:
+    #                 raise ValueError(f"Title cannot exceed {EMBED_MAX_NAME_LENGTH} characters")
+    #             return
+    #         raise TypeError("Title must be of type String")
+    #
+    # @description.validator
+    # def _description_validation(self, attribute: str, value: Any) -> None:
+    #     """Validate the description."""
+    #     if value is not None:
+    #         if isinstance(value, str):
+    #             if len(value) > EMBED_MAX_DESC_LENGTH:
+    #                 raise ValueError(f"Description cannot exceed {EMBED_MAX_DESC_LENGTH} characters")
+    #             return
+    #         raise TypeError("Description must be of type String")
+    #
+    # @fields.validator
+    # def _fields_validation(self, attribute: str, value: Any) -> None:
+    #     """Validate the fields."""
+    #     if isinstance(value, list):
+    #         if len(value) > EMBED_MAX_FIELDS:
+    #             raise ValueError(f"Embeds can only hold {EMBED_MAX_FIELDS} fields")
 
-    @description.validator
-    def _description_validation(self, attribute: str, value: Any) -> None:
-        """Validate the description."""
-        if value is not None:
-            if isinstance(value, str):
-                if len(value) > EMBED_MAX_DESC_LENGTH:
-                    raise ValueError(f"Description cannot exceed {EMBED_MAX_DESC_LENGTH} characters")
-                return
-            raise TypeError("Description must be of type String")
-
-    @fields.validator
-    def _fields_validation(self, attribute: str, value: Any) -> None:
-        """Validate the fields."""
-        if isinstance(value, list):
-            if len(value) > EMBED_MAX_FIELDS:
-                raise ValueError(f"Embeds can only hold {EMBED_MAX_FIELDS} fields")
-
-    def _check_object(self) -> None:
-        self._name_validation("title", self.title)
-        self._description_validation("description", self.description)
-        self._fields_validation("fields", self.fields)
-
-        if len(self) > EMBED_TOTAL_MAX:
-            raise ValueError(
-                "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
-            )
+    # def _check_object(self) -> None:
+    #     self._name_validation("title", self.title)
+    #     self._description_validation("description", self.description)
+    #     self._fields_validation("fields", self.fields)
+    #
+    #     if len(self) > EMBED_TOTAL_MAX:
+    #         raise ValueError(
+    #             "Your embed is too large, more info at https://discord.com/developers/docs/resources/channel#embed-limits"
+    #         )
 
     def __len__(self) -> int:
         # yes i know there are far more optimal ways to write this
@@ -351,7 +335,7 @@ class Embed(DictSerializationMixin):
 
         """
         self.fields.append(EmbedField(name, str(value), inline))
-        self._fields_validation("fields", self.fields)
+        # self._fields_validation("fields", self.fields)
 
     def add_fields(self, *fields: EmbedField | str | dict) -> None:
         """
@@ -364,7 +348,7 @@ class Embed(DictSerializationMixin):
         for _field in fields:
             if isinstance(_field, EmbedField):
                 self.fields.append(_field)
-                self._fields_validation("fields", self.fields)
+                # self._fields_validation("fields", self.fields)
             elif isinstance(_field, str):
                 self.add_field(_field, _field)
             elif isinstance(_field, dict):
