@@ -109,6 +109,8 @@ class Nattrs:
             elif value.factory is not NOTSET:
                 setattr(inst, key, value.factory())
 
+        if hasattr(inst.__class__, "__post_init__"):
+            inst.__post_init__()  # noqa
         return inst
 
     @classmethod
