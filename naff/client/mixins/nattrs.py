@@ -4,7 +4,7 @@ from logging import Logger
 
 
 from naff.client import const
-from naff.client.const import Sentinel
+from naff.client.const import Sentinel, MISSING
 
 __all__ = ("Field", "Nattrs", "NOTSET")
 
@@ -26,6 +26,8 @@ class Field:
         export: bool = True,
         repr: bool = False,
         export_converter: typing.Callable = NOTSET,
+        convert_if_none: bool = False,
+        convert_if_missing: bool = False,
         **kwargs,
     ) -> None:
         self.converter = converter
@@ -34,6 +36,8 @@ class Field:
         self.export = export
         self.repr = repr
         self.export_converter = export_converter
+        self.convert_if_none = convert_if_none
+        self.convert_if_missing = convert_if_missing
 
         if self.default and self.factory:
             self.default = NOTSET
@@ -76,6 +80,9 @@ class Nattrs:
 
         for key, value in payload.items():
             if field := default_vars.get(key, NOTSET):
+                if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
+                    setattr(self, key, value)
+                    continue
                 if field.converter:
                     value = field.converter(value)
             setattr(self, key, value)
@@ -96,6 +103,9 @@ class Nattrs:
                 if key not in cls.__slots__:
                     continue
             if field := default_vars.get(key, NOTSET):
+                if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
+                    setattr(inst, key, value)
+                    continue
                 if field.converter:
                     value = field.converter(value)
             setattr(inst, key, value)
