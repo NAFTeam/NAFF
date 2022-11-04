@@ -1,4 +1,5 @@
 import re
+import string
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attrs
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji")
 
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
+unicode_emoji_reg = re.compile(r"[^\w\s,]")
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=False)
@@ -77,9 +79,15 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             _emoji_list = emoji.distinct_emoji_list(emoji_str)
             if _emoji_list:
                 return cls(name=_emoji_list[0])
-            if len(emoji_str) == 1:
-                # likely a regional indicator
-                return cls(name=emoji_str)
+
+            # the emoji lib handles *most* emoji, however there are certain ones that it misses
+            # this acts as a fallback check
+            if matches := unicode_emoji_reg.search(emoji_str):
+                match = matches.group()
+
+                # the regex will match certain special characters, so this acts as a final failsafe
+                if match not in string.printable:
+                    return cls(name=match)
         return None
 
     def __str__(self) -> str:
