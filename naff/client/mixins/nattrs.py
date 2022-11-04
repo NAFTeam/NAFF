@@ -47,6 +47,9 @@ class Field:
             self.export = not kwargs["metadata"].get("no_export", False)
             self.export_converter = kwargs["metadata"].get("export_converter", NOTSET)
 
+    def __bool__(self) -> bool:
+        return False
+
 
 T = typing.TypeVar("T")
 
