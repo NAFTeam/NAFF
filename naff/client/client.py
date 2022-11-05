@@ -1701,7 +1701,7 @@ class Client(
                             if new_command.error_callback:
                                 await new_command.error_callback(e, context)
                             elif new_command.extension and new_command.extension.extension_error:
-                                await new_command.extension.extension_error(context)
+                                await new_command.extension.extension_error(e, context)
                             else:
                                 await self.on_command_error(context, e)
                             return
