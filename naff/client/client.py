@@ -1892,11 +1892,15 @@ class Client(
             else:
                 self.logger.debug("No setup function found in %s", module_name)
 
+                found = False
                 objects = {name: obj for name, obj in inspect.getmembers(module) if isinstance(obj, type)}
                 for obj_name, obj in objects.items():
                     if Extension in obj.__bases__:
                         self.logger.debug(f"Found extension class {obj_name} in {module_name}: Attempting to load")
                         obj(self, **load_kwargs)
+                        found = True
+                if not found:
+                    raise Exception(f"{module_name} contains no Extensions")
 
         except ExtensionLoadException:
             raise
