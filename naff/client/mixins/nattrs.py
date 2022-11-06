@@ -81,13 +81,15 @@ class Nattrs:
         payload = self._process_dict(payload, *args)
         default_vars = self.__default__
 
-        for key, value in payload.items():
-            if (field := default_vars.get(key, NOTSET)) is not NOTSET:
-                if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
-                    setattr(self, key, value)
-                    continue
+        for key in payload:
+            value = payload[key]
+            if key in default_vars:
+                field = default_vars[key]
                 if field.converter:
-                    value = field.converter(value)
+                    if value is not None and value is not MISSING:
+                        value = field.converter(value)
+                    elif (value is None and field.convert_if_none) or (value is MISSING and field.convert_if_missing):
+                        value = field.converter(value)
             setattr(self, key, value)
 
         return self
