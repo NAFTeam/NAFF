@@ -384,7 +384,8 @@ class Guild(BaseGuild):
     @property
     def channels(self) -> List["models.TYPE_GUILD_CHANNEL"]:
         """Returns a list of channels associated with this guild."""
-        return [self._client.cache.get_channel(c_id) for c_id in self._channel_ids]
+        channels = [self._client.cache.get_channel(c_id) for c_id in self._channel_ids]
+        return [c for c in channels if c]
 
     @property
     def threads(self) -> List["models.TYPE_THREAD_CHANNEL"]:
