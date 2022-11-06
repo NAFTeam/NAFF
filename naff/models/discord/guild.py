@@ -291,14 +291,14 @@ class Guild(BaseGuild):
         # required to respect default values
         # sadly this means sacrificing performance
         # 0.094ms -> 0.108ms
-        for pair in instance._Nattrs__get_default():
-            v = getattr(instance, pair)
+        for key in instance._Nattrs__get_default():
+            v = getattr(instance, key)
             if not v:  # bool(Field) is False
                 if type(v) is Field:  # this makes it impossible to subclass Field, but that's an acceptable tradeoff
-                    if pair[0] in kwargs:  # dict.get is slow
-                        setattr(instance, pair[0], kwargs[pair[0]])
+                    if key in kwargs:  # dict.get is slow
+                        setattr(instance, key, kwargs[key])
                     else:
-                        setattr(instance, pair[0], v.default)
+                        setattr(instance, key, v.default)
 
         return instance
 
@@ -309,7 +309,8 @@ class Guild(BaseGuild):
 
         data["_client"] = client
 
-        if voice_states := data.pop("voice_states"):
+        if "voice_states" in data:
+            voice_states = data["voice_states"]
             [
                 asyncio.create_task(client.cache.place_voice_state_data(state | {"guild_id": guild_id}))
                 for state in voice_states
