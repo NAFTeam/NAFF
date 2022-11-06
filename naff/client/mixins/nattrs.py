@@ -92,35 +92,35 @@ class Nattrs:
 
         return self
 
-    def __new__(cls, *args, **kwargs) -> T:
+    def __new__(cls, **kwargs) -> T:
         # a convoluted way to take a payload and construct a class
         # allows an attrs-like developer experience, without the performance hit
         # ie: 120ms -> 20ms
 
-        inst = super().__new__(cls)
+        inst = object.__new__(cls)
         default_vars = cls.__get_default()
         slotted = hasattr(cls, "__slots__")
 
-        for key, value in kwargs.items():
-            if slotted:
-                if key not in cls.__slots__:
-                    continue
+        for key in kwargs:
+            if slotted and key not in cls.__slots__:
+                continue
+            value = kwargs[key]
             if (field := default_vars.get(key, NOTSET)) is not NOTSET:
-                if (value is None and not field.convert_if_none) or (value is MISSING and not field.convert_if_missing):
-                    setattr(inst, key, value)
-                    continue
                 if field.converter:
-                    value = field.converter(value)
+                    if value is not None and value is not MISSING:
+                        value = field.converter(value)
+                    elif (value is None and field.convert_if_none) or (value is MISSING and field.convert_if_missing):
+                        value = field.converter(value)
             setattr(inst, key, value)
 
         # default assignment
-        for key, value in default_vars.items():
-            if slotted:
-                if key not in cls.__slots__:
-                    continue
+        for key in default_vars:
             if key in kwargs:
                 # already assigned
                 continue
+            if slotted and key not in cls.__slots__:
+                continue
+            value = default_vars[key]
             if value.default is not NOTSET:
                 setattr(inst, key, value.default)
             elif value.factory is not NOTSET:
