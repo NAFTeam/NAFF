@@ -6,6 +6,7 @@ from typing_extensions import dataclass_transform
 
 from naff.client.const import Absent, MISSING
 from naff.client.errors import HTTPException, TooManyChanges
+from naff.client.mixins.nattrs import Field
 from naff.client.mixins.send import SendMixin
 from naff.client.utils.attr_converters import list_converter, optional
 from naff.client.utils.attr_converters import optional as optional_c
@@ -20,7 +21,6 @@ from naff.models.discord.role import Role
 from naff.models.discord.snowflake import Snowflake_Type
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
-from ...client.mixins.nattrs import Field
 
 if TYPE_CHECKING:
     from aiohttp import FormData
