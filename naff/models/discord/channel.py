@@ -1082,7 +1082,12 @@ class GuildChannel(BaseChannel):
             reason: The reason for this change
         """
         await self._client.http.edit_channel_permission(
-            self.id, overwrite.id, overwrite.allow, overwrite.deny, overwrite.type, reason
+            self.id,
+            overwrite_id=overwrite.id,
+            allow=overwrite.allow,
+            deny=overwrite.deny,
+            perm_type=overwrite.type,
+            reason=reason,
         )
 
     async def delete_permission(
