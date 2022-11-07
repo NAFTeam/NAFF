@@ -1,8 +1,6 @@
 from typing import Optional, List
 
-import attrs
-
-from naff.client.mixins.serialization import DictSerializationMixin
+from naff.client.mixins.nattrs import Field, Nattrs
 from naff.client.utils.attr_converters import timestamp_converter, optional
 from naff.client.utils.serializer import dict_filter_none
 from naff.models.discord.emoji import PartialEmoji
@@ -19,83 +17,74 @@ __all__ = (
 )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
-class ActivityTimestamps(DictSerializationMixin):
-    start: Optional[Timestamp] = attrs.field(repr=False, default=None, converter=optional(timestamp_converter))
+class ActivityTimestamps(Nattrs):
+    start: Optional[Timestamp] = Field(repr=False, default=None, converter=optional(timestamp_converter))
     """The start time of the activity. Shows "elapsed" timer on discord client."""
-    end: Optional[Timestamp] = attrs.field(repr=False, default=None, converter=optional(timestamp_converter))
+    end: Optional[Timestamp] = Field(repr=False, default=None, converter=optional(timestamp_converter))
     """The end time of the activity. Shows "remaining" timer on discord client."""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
-class ActivityParty(DictSerializationMixin):
-    id: Optional[str] = attrs.field(repr=False, default=None)
+class ActivityParty(Nattrs):
+    id: Optional[str] = Field(repr=False, default=None)
     """A unique identifier for this party"""
-    size: Optional[List[int]] = attrs.field(repr=False, default=None)
+    size: Optional[List[int]] = Field(repr=False, default=None)
     """Info about the size of the party"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
-class ActivityAssets(DictSerializationMixin):
-    large_image: Optional[str] = attrs.field(repr=False, default=None)
+class ActivityAssets(Nattrs):
+    large_image: Optional[str] = Field(repr=False, default=None)
     """The large image for this activity. Uses discord's asset image url format."""
-    large_text: Optional[str] = attrs.field(repr=False, default=None)
+    large_text: Optional[str] = Field(repr=False, default=None)
     """Hover text for the large image"""
-    small_image: Optional[str] = attrs.field(repr=False, default=None)
+    small_image: Optional[str] = Field(repr=False, default=None)
     """The large image for this activity. Uses discord's asset image url format."""
-    small_text: Optional[str] = attrs.field(repr=False, default=None)
+    small_text: Optional[str] = Field(repr=False, default=None)
     """Hover text for the small image"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
-class ActivitySecrets(DictSerializationMixin):
-    join: Optional[str] = attrs.field(repr=False, default=None)
+class ActivitySecrets(Nattrs):
+    join: Optional[str] = Field(repr=False, default=None)
     """The secret for joining a party"""
-    spectate: Optional[str] = attrs.field(repr=False, default=None)
+    spectate: Optional[str] = Field(repr=False, default=None)
     """The secret for spectating a party"""
-    match: Optional[str] = attrs.field(repr=False, default=None)
+    match: Optional[str] = Field(repr=False, default=None)
     """The secret for a specific instanced match"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
-class Activity(DictSerializationMixin):
+class Activity(Nattrs):
     """Represents a discord activity object use for rich presence in discord."""
 
-    name: str = attrs.field(repr=True)
+    name: str = Field(repr=True)
     """The activity's name"""
-    type: ActivityType = attrs.field(repr=True, default=ActivityType.GAME)
+    type: ActivityType = Field(repr=True, default=ActivityType.GAME)
     """The type of activity"""
-    url: Optional[str] = attrs.field(repr=True, default=None)
+    url: Optional[str] = Field(repr=True, default=None)
     """Stream url, is validated when type is 1"""
-    created_at: Optional[Timestamp] = attrs.field(repr=True, default=None, converter=optional(timestamp_converter))
+    created_at: Optional[Timestamp] = Field(repr=True, default=None, converter=optional(timestamp_converter))
     """When the activity was added to the user's session"""
-    timestamps: Optional[ActivityTimestamps] = attrs.field(
+    timestamps: Optional[ActivityTimestamps] = Field(
         repr=False, default=None, converter=optional(ActivityTimestamps.from_dict)
     )
     """Start and/or end of the game"""
-    application_id: "Snowflake_Type" = attrs.field(repr=False, default=None)
+    application_id: "Snowflake_Type" = Field(repr=False, default=None)
     """Application id for the game"""
-    details: Optional[str] = attrs.field(repr=False, default=None)
+    details: Optional[str] = Field(repr=False, default=None)
     """What the player is currently doing"""
-    state: Optional[str] = attrs.field(repr=False, default=None)
+    state: Optional[str] = Field(repr=False, default=None)
     """The user's current party status"""
-    emoji: Optional[PartialEmoji] = attrs.field(repr=False, default=None, converter=optional(PartialEmoji.from_dict))
+    emoji: Optional[PartialEmoji] = Field(repr=False, default=None, converter=optional(PartialEmoji.from_dict))
     """The emoji used for a custom status"""
-    party: Optional[ActivityParty] = attrs.field(repr=False, default=None, converter=optional(ActivityParty.from_dict))
+    party: Optional[ActivityParty] = Field(repr=False, default=None, converter=optional(ActivityParty.from_dict))
     """Information for the current party of the player"""
-    assets: Optional[ActivityAssets] = attrs.field(
-        repr=False, default=None, converter=optional(ActivityAssets.from_dict)
-    )
+    assets: Optional[ActivityAssets] = Field(repr=False, default=None, converter=optional(ActivityAssets.from_dict))
     """Assets to display on the player's profile"""
-    secrets: Optional[ActivitySecrets] = attrs.field(
-        repr=False, default=None, converter=optional(ActivitySecrets.from_dict)
-    )
+    secrets: Optional[ActivitySecrets] = Field(repr=False, default=None, converter=optional(ActivitySecrets.from_dict))
     """Secrets for Rich Presence joining and spectating"""
-    instance: Optional[bool] = attrs.field(repr=False, default=False)
+    instance: Optional[bool] = Field(repr=False, default=False)
     """Whether or not the activity is an instanced game session"""
-    flags: Optional[ActivityFlags] = attrs.field(repr=False, default=None, converter=optional(ActivityFlags))
+    flags: Optional[ActivityFlags] = Field(repr=False, default=None, converter=optional(ActivityFlags))
     """Activity flags bitwise OR together, describes what the payload includes"""
-    buttons: List[str] = attrs.field(repr=False, factory=list)
+    buttons: List[str] = Field(repr=False, factory=list)
     """The custom buttons shown in the Rich Presence (max 2)"""
 
     @classmethod

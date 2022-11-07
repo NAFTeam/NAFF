@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import attrs
 import emoji
 
+from naff.client.mixins.nattrs import Field
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import list_converter
 from naff.client.utils.attr_converters import optional
@@ -25,17 +26,16 @@ emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
 unicode_emoji_reg = re.compile(r"[^\w\s,]")
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic ("partial") emoji used in discord."""
 
-    id: Optional["Snowflake_Type"] = attrs.field(
+    id: Optional["Snowflake_Type"] = Field(
         repr=True, default=None, converter=optional(to_snowflake)
     )  # can be None for Standard Emoji
     """The custom emoji id. Leave empty if you are using standard unicode emoji."""
-    name: Optional[str] = attrs.field(repr=True, default=None)
+    name: Optional[str] = Field(repr=True, default=None)
     """The custom emoji name, or standard unicode emoji in string"""
-    animated: bool = attrs.field(repr=True, default=False)
+    animated: bool = Field(repr=True, default=False)
     """Whether this emoji is animated"""
 
     @classmethod
@@ -116,20 +116,20 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
 class CustomEmoji(PartialEmoji, ClientObject):
     """Represent a custom emoji in a guild with all its properties."""
 
-    _client: "Client" = attrs.field(repr=False, metadata=no_export_meta)
+    _client: "Client" = Field(repr=False, metadata=no_export_meta)
 
-    require_colons: bool = attrs.field(repr=False, default=False)
+    require_colons: bool = Field(repr=False, default=False)
     """Whether this emoji must be wrapped in colons"""
-    managed: bool = attrs.field(repr=False, default=False)
+    managed: bool = Field(repr=False, default=False)
     """Whether this emoji is managed"""
-    available: bool = attrs.field(repr=False, default=False)
+    available: bool = Field(repr=False, default=False)
     """Whether this emoji can be used, may be false due to loss of Server Boosts."""
 
-    _creator_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
-    _role_ids: List["Snowflake_Type"] = attrs.field(
+    _creator_id: Optional["Snowflake_Type"] = Field(repr=False, default=None, converter=optional(to_snowflake))
+    _role_ids: List["Snowflake_Type"] = Field(
         repr=False, factory=list, converter=optional(list_converter(to_snowflake))
     )
-    _guild_id: "Snowflake_Type" = attrs.field(repr=False, default=None, converter=to_snowflake)
+    _guild_id: "Snowflake_Type" = Field(repr=False, default=None, converter=to_snowflake)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:

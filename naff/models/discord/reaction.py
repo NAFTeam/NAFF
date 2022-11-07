@@ -2,13 +2,13 @@ from asyncio import QueueEmpty
 from collections import namedtuple
 from typing import TYPE_CHECKING, List, Optional
 
-import attrs
 
 from naff.client.const import MISSING
 from naff.models.discord.emoji import PartialEmoji
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.misc.iterator import AsyncIterator
 from .base import ClientObject
+from ...client.mixins.nattrs import Field
 
 if TYPE_CHECKING:
     from naff.models.discord.snowflake import Snowflake_Type
@@ -65,19 +65,18 @@ class ReactionUsers(AsyncIterator):
             raise QueueEmpty
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Reaction(ClientObject):
-    count: int = attrs.field(
+    count: int = Field(
         repr=False,
     )
     """times this emoji has been used to react"""
-    me: bool = attrs.field(repr=False, default=False)
+    me: bool = Field(repr=False, default=False)
     """whether the current user reacted using this emoji"""
-    emoji: "PartialEmoji" = attrs.field(repr=False, converter=PartialEmoji.from_dict)
+    emoji: "PartialEmoji" = Field(repr=False, converter=PartialEmoji.from_dict)
     """emoji information"""
 
-    _channel_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
-    _message_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
+    _channel_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
+    _message_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
 
     def users(self, limit: int = 0, after: "Snowflake_Type" = None) -> ReactionUsers:
         """Users who reacted using this emoji."""

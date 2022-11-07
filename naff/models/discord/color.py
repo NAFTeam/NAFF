@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from random import randint
 
-import attrs
+from naff.client.mixins.nattrs import Field
 
 __all__ = (
     "COLOR_TYPES",
@@ -21,14 +21,14 @@ __all__ = (
     "process_colour",
 )
 
+
 COLOR_TYPES = tuple[int, int, int] | list[int] | str | int
 
 hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
 
-@attrs.define(eq=False, order=False, hash=False, init=False)
 class Color:
-    value: int = attrs.field(repr=True)
+    value: int = Field(repr=True)
     """The color value as an integer."""
 
     def __init__(self, color: COLOR_TYPES | None = None) -> None:

@@ -3,12 +3,12 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Sequence, Union, Mapping
 
-import attrs
 from typing_extensions import dataclass_transform
 
 import naff.models as models
 from naff.client.const import GUILD_WELCOME_MESSAGES, MISSING, Absent
 from naff.client.errors import EphemeralEditException, ThreadOutsideOfGuild
+from naff.client.mixins.nattrs import Field
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
@@ -27,11 +27,10 @@ from .enums import (
     AutoArchiveDuration,
 )
 from .snowflake import to_snowflake, Snowflake_Type, to_snowflake_list, to_optional_snowflake
-from ...client.mixins.nattrs import Field
 
 if TYPE_CHECKING:
     from naff.client import Client
-    from naff import InteractionContext
+    from naff.models import InteractionContext
 
 __all__ = (
     "Attachment",
@@ -51,33 +50,32 @@ __all__ = (
 channel_mention = re.compile(r"<#(?P<id>[0-9]{17,})>")
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Attachment(DiscordObject):
-    filename: str = attrs.field(
+    filename: str = Field(
         repr=False,
     )
     """name of file attached"""
-    description: Optional[str] = attrs.field(repr=False, default=None)
+    description: Optional[str] = Field(repr=False, default=None)
     """description for the file"""
-    content_type: Optional[str] = attrs.field(repr=False, default=None)
+    content_type: Optional[str] = Field(repr=False, default=None)
     """the attachment's media type"""
-    size: int = attrs.field(
+    size: int = Field(
         repr=False,
     )
     """size of file in bytes"""
-    url: str = attrs.field(
+    url: str = Field(
         repr=False,
     )
     """source url of file"""
-    proxy_url: str = attrs.field(
+    proxy_url: str = Field(
         repr=False,
     )
     """a proxied url of file"""
-    height: Optional[int] = attrs.field(repr=False, default=None)
+    height: Optional[int] = Field(repr=False, default=None)
     """height of file (if image)"""
-    width: Optional[int] = attrs.field(repr=False, default=None)
+    width: Optional[int] = Field(repr=False, default=None)
     """width of file (if image)"""
-    ephemeral: bool = attrs.field(repr=False, default=False)
+    ephemeral: bool = Field(repr=False, default=False)
     """whether this attachment is ephemeral"""
 
     @property
@@ -86,15 +84,14 @@ class Attachment(DiscordObject):
         return self.height, self.width
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ChannelMention(DiscordObject):
-    guild_id: "Snowflake_Type" = attrs.field(
+    guild_id: "Snowflake_Type" = Field(
         repr=False,
     )
     """id of the guild containing the channel"""
-    type: ChannelTypes = attrs.field(repr=False, converter=ChannelTypes)
+    type: ChannelTypes = Field(repr=False, converter=ChannelTypes)
     """the type of channel"""
-    name: str = attrs.field(
+    name: str = Field(
         repr=False,
     )
     """the name of the channel"""
@@ -108,7 +105,6 @@ class MessageActivity:
     """party_id from a Rich Presence event"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MessageReference(DictSerializationMixin):
     """
     Reference to an originating message.
@@ -117,13 +113,13 @@ class MessageReference(DictSerializationMixin):
 
     """
 
-    message_id: int = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
+    message_id: int = Field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message."""
-    channel_id: Optional[int] = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
+    channel_id: Optional[int] = Field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message's channel."""
-    guild_id: Optional[int] = attrs.field(repr=False, default=None, converter=optional_c(to_snowflake))
+    guild_id: Optional[int] = Field(repr=False, default=None, converter=optional_c(to_snowflake))
     """id of the originating message's guild."""
-    fail_if_not_exists: bool = attrs.field(repr=False, default=True)
+    fail_if_not_exists: bool = Field(repr=False, default=True)
     """When sending a message, whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message, default true."""
 
     @classmethod
@@ -147,16 +143,15 @@ class MessageReference(DictSerializationMixin):
         )
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MessageInteraction(DiscordObject):
-    type: InteractionTypes = attrs.field(repr=False, converter=InteractionTypes)
+    type: InteractionTypes = Field(repr=False, converter=InteractionTypes)
     """the type of interaction"""
-    name: str = attrs.field(
+    name: str = Field(
         repr=False,
     )
     """the name of the application command"""
 
-    _user_id: "Snowflake_Type" = attrs.field(
+    _user_id: "Snowflake_Type" = Field(
         repr=False,
     )
 
@@ -171,7 +166,6 @@ class MessageInteraction(DiscordObject):
         return await self.get_user(self._user_id)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class AllowedMentions(DictSerializationMixin):
     """
     The allowed mention field allows for more granular control over mentions without various hacks to the message content.
@@ -181,13 +175,13 @@ class AllowedMentions(DictSerializationMixin):
 
     """
 
-    parse: Optional[List[str]] = attrs.field(repr=False, factory=list)
+    parse: Optional[List[str]] = Field(repr=False, factory=list)
     """An array of allowed mention types to parse from the content."""
-    roles: Optional[List["Snowflake_Type"]] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
+    roles: Optional[List["Snowflake_Type"]] = Field(repr=False, factory=list, converter=to_snowflake_list)
     """Array of role_ids to mention. (Max size of 100)"""
-    users: Optional[List["Snowflake_Type"]] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
+    users: Optional[List["Snowflake_Type"]] = Field(repr=False, factory=list, converter=to_snowflake_list)
     """Array of user_ids to mention. (Max size of 100)"""
-    replied_user = attrs.field(repr=False, default=False)
+    replied_user = Field(repr=False, default=False)
     """For replies, whether to mention the author of the message being replied to. (default false)"""
 
     def add_parse(self, *mention_types: Union["MentionTypes", str]) -> None:

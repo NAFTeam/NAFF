@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
-import attrs
-
 from naff.client.const import MISSING, Absent
+from naff.client.mixins.nattrs import Field
 from naff.models.discord.enums import StagePrivacyLevel
 from naff.models.discord.snowflake import to_snowflake
 from .base import DiscordObject
@@ -13,20 +12,19 @@ if TYPE_CHECKING:
 __all__ = ("StageInstance",)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class StageInstance(DiscordObject):
-    topic: str = attrs.field(
+    topic: str = Field(
         repr=False,
     )
-    privacy_level: StagePrivacyLevel = attrs.field(
+    privacy_level: StagePrivacyLevel = Field(
         repr=False,
     )
-    discoverable_disabled: bool = attrs.field(
+    discoverable_disabled: bool = Field(
         repr=False,
     )
 
-    _guild_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
-    _channel_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
+    _guild_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
+    _channel_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
 
     @property
     def guild(self) -> "Guild":

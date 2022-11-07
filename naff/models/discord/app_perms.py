@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-import attrs
-
+from naff.client.mixins.nattrs import Field
 from naff.models.discord.base import DiscordObject, ClientObject
 from naff.models.discord.enums import InteractionPermissionTypes
 from naff.models.discord.snowflake import to_snowflake
@@ -12,28 +11,24 @@ if TYPE_CHECKING:
 __all__ = ("ApplicationCommandPermission",)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ApplicationCommandPermission(DiscordObject):
-    id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
+    id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
     """ID of the role user or channel"""
-    type: InteractionPermissionTypes = attrs.field(repr=False, converter=InteractionPermissionTypes)
+    type: InteractionPermissionTypes = Field(repr=False, converter=InteractionPermissionTypes)
     """Type of permission (role user or channel)"""
-    permission: bool = attrs.field(repr=False, default=False)
+    permission: bool = Field(repr=False, default=False)
     """Whether the command is enabled for this permission"""
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CommandPermissions(ClientObject):
-    command_id: "Snowflake_Type" = attrs.field(
+    command_id: "Snowflake_Type" = Field(
         repr=False,
     )
-    _guild: "Guild" = attrs.field(
+    _guild: "Guild" = Field(
         repr=False,
     )
 
-    permissions: dict["Snowflake_Type", ApplicationCommandPermission] = attrs.field(
-        repr=False, factory=dict, init=False
-    )
+    permissions: dict["Snowflake_Type", ApplicationCommandPermission] = Field(repr=False, factory=dict, init=False)
 
     def is_enabled(self, *object_id) -> bool:
         """

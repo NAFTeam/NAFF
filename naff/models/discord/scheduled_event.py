@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import attrs
 
 from naff.client.const import MISSING, Absent
 from naff.client.errors import EventLocationNotProvided
@@ -13,6 +12,7 @@ from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import DiscordObject
 from .enums import ScheduledEventPrivacyLevel, ScheduledEventType, ScheduledEventStatus
+from naff.client.mixins.nattrs import Field
 
 if TYPE_CHECKING:
     from naff.client import Client
@@ -24,40 +24,37 @@ if TYPE_CHECKING:
 __all__ = ("ScheduledEvent",)
 
 
-@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ScheduledEvent(DiscordObject):
-    name: str = attrs.field(repr=True)
-    description: str = attrs.field(repr=False, default=MISSING)
-    entity_type: Union[ScheduledEventType, int] = attrs.field(repr=False, converter=ScheduledEventType)
+    name: str = Field(repr=True)
+    description: str = Field(repr=False, default=MISSING)
+    entity_type: Union[ScheduledEventType, int] = Field(repr=False, converter=ScheduledEventType)
     """The type of the scheduled event"""
-    start_time: Timestamp = attrs.field(repr=False, converter=timestamp_converter)
+    start_time: Timestamp = Field(repr=False, converter=timestamp_converter)
     """A Timestamp object representing the scheduled start time of the event """
-    end_time: Optional[Timestamp] = attrs.field(repr=False, default=None, converter=optional(timestamp_converter))
+    end_time: Optional[Timestamp] = Field(repr=False, default=None, converter=optional(timestamp_converter))
     """Optional Timstamp object representing the scheduled end time, required if entity_type is EXTERNAL"""
-    privacy_level: Union[ScheduledEventPrivacyLevel, int] = attrs.field(
-        repr=False, converter=ScheduledEventPrivacyLevel
-    )
+    privacy_level: Union[ScheduledEventPrivacyLevel, int] = Field(repr=False, converter=ScheduledEventPrivacyLevel)
     """
     Privacy level of the scheduled event
 
     ??? note
         Discord only has `GUILD_ONLY` at the momment.
     """
-    status: Union[ScheduledEventStatus, int] = attrs.field(repr=False, converter=ScheduledEventStatus)
+    status: Union[ScheduledEventStatus, int] = Field(repr=False, converter=ScheduledEventStatus)
     """Current status of the scheduled event"""
-    entity_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
+    entity_id: Optional["Snowflake_Type"] = Field(repr=False, default=MISSING, converter=optional(to_snowflake))
     """The id of an entity associated with a guild scheduled event"""
-    entity_metadata: Optional[Dict[str, Any]] = attrs.field(repr=False, default=MISSING)  # TODO make this
+    entity_metadata: Optional[Dict[str, Any]] = Field(repr=False, default=MISSING)  # TODO make this
     """The metadata associated with the entity_type"""
-    user_count: int = attrs.field(repr=False, default=MISSING)
+    user_count: int = Field(repr=False, default=MISSING)
     """Amount of users subscribed to the scheduled event"""
-    cover: Asset | None = attrs.field(repr=False, default=None)
+    cover: Asset | None = Field(repr=False, default=None)
     """The cover image of this event"""
 
-    _guild_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
-    _creator: Optional["User"] = attrs.field(repr=False, default=MISSING)
-    _creator_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
-    _channel_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
+    _guild_id: "Snowflake_Type" = Field(repr=False, converter=to_snowflake)
+    _creator: Optional["User"] = Field(repr=False, default=MISSING)
+    _creator_id: Optional["Snowflake_Type"] = Field(repr=False, default=MISSING, converter=optional(to_snowflake))
+    _channel_id: Optional["Snowflake_Type"] = Field(repr=False, default=None, converter=optional(to_snowflake))
 
     @property
     async def creator(self) -> Optional["User"]:
