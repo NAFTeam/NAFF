@@ -2,7 +2,6 @@ import inspect
 import typing
 from logging import Logger
 
-
 from naff.client import const
 from naff.client.const import Sentinel, MISSING
 
@@ -21,7 +20,7 @@ class Field:
     def __init__(
         self,
         converter: typing.Callable = NOTSET,
-        default: typing.Any = None,
+        default: typing.Any = NOTSET,
         factory: typing.Callable = NOTSET,
         export: bool = True,
         repr: bool = False,
@@ -94,10 +93,12 @@ class Nattrs:
 
         return self
 
-    def __new__(cls, **kwargs) -> T:
+    def __new__(cls, *args, **kwargs) -> T:
         # a convoluted way to take a payload and construct a class
         # allows an attrs-like developer experience, without the performance hit
         # ie: 120ms -> 20ms
+        if not kwargs:
+            kwargs = {**args[0]}
 
         inst = object.__new__(cls)
         default_vars = cls.__get_default()
