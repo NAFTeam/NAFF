@@ -3,6 +3,8 @@ import os
 from asyncio import AbstractEventLoop
 from contextlib import suppress
 from datetime import datetime
+import random
+import warnings
 
 import pytest
 
@@ -36,8 +38,9 @@ from naff import (
 from naff.api.gateway.websocket import WebsocketClient
 from naff.api.http.route import Route
 from naff.api.voice.audio import AudioVolume
+from naff.client.const import MISSING
 from naff.client.errors import NotFound
-from naff.client.utils.misc_utils import find
+from naff.client.utils.misc_utils import find, find_all
 from naff.models.discord.timestamp import Timestamp
 
 __all__ = ()
@@ -83,7 +86,17 @@ async def guild(bot: Client) -> Guild:
             if age.days > 0:
                 # This from a failed run, let's clean it up
                 await leftover.delete()
-    guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
+    try:
+        guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
+    except naff.client.errors.HTTPException as e:
+        text = e.text
+        if text is not MISSING and "Maximum number of guilds reached" in text:
+            warnings.warn("Reusing old guild.  Tests may be flaky")
+            guilds = find_all(lambda g: g.is_owner(bot.user.id) and g.name == "test_suite_guild", bot.guilds)
+            random.shuffle(guilds)  # Pick one at random to *reduce* chances two race conditions
+            guild = guilds[0]
+        else:
+            raise
     community_channel = await guild.create_text_channel("community_channel")
 
     await guild.edit(
@@ -287,6 +300,10 @@ async def test_members(bot: Client, guild: Guild, channel: GuildText) -> None:
     with suppress(asyncio.exceptions.TimeoutError):
         await bot.wait_for("member_update", timeout=2)
     assert len(member.roles) != 0
+    await member.remove_role(role)
+    with suppress(asyncio.exceptions.TimeoutError):
+        await bot.wait_for("member_update", timeout=2)
+    assert len(member.roles) == 0
 
     assert member.display_avatar is not None
     assert member.display_name is not None
@@ -545,3 +562,5 @@ async def test_checks(bot: Client, guild: Guild) -> None:
     assert await naff.has_any_role(has_role)(context) is True
     assert await naff.has_any_role(lacks_role)(context) is False
     assert await naff.has_any_role(has_role)(generate_dummy_context(dm=True)) is False
+
+    await member.remove_role(has_role)
