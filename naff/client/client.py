@@ -33,13 +33,12 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.models.naff.context import SendableContext
 from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
 from naff.client import errors
-from naff.client.const import GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH, logger
+from naff.client.const import GLOBAL_SCOPE, MISSING, MENTION_PREFIX, Absent, EMBED_MAX_DESC_LENGTH, get_logger
 from naff.client.errors import (
     BotException,
     ExtensionLoadException,
@@ -50,6 +49,7 @@ from naff.client.errors import (
     NotFound,
 )
 from naff.client.smart_cache import GlobalCache
+from naff.client.utils import NullCache
 from naff.client.utils.input_utils import get_first_word, get_args
 from naff.client.utils.misc_utils import get_event_name, wrap_partial
 from naff.client.utils.serializer import to_image_data
@@ -82,7 +82,6 @@ from naff.models import (
     AutocompleteContext,
     HybridContext,
     ComponentCommand,
-    Context,
     application_commands_to_dict,
     sync_needed,
     VoiceRegion,
@@ -96,7 +95,7 @@ from naff.models.discord.enums import ComponentTypes, Intents, InteractionTypes,
 from naff.models.discord.file import UPLOADABLE_TYPE
 from naff.models.discord.modal import Modal
 from naff.models.naff.active_voice_state import ActiveVoiceState
-from naff.models.naff.application_commands import ModalCommand
+from naff.models.naff.application_commands import ContextMenu, ModalCommand
 from naff.models.naff.auto_defer import AutoDefer
 from naff.models.naff.hybrid_commands import _prefixed_from_slash, _base_subcommand_generator
 from naff.models.naff.listener import Listener
@@ -185,6 +184,7 @@ class Client(
     processors.AutoModEvents,
     processors.ChannelEvents,
     processors.GuildEvents,
+    processors.IntegrationEvents,
     processors.MemberEvents,
     processors.MessageEvents,
     processors.ReactionEvents,
@@ -224,6 +224,7 @@ class Client(
         shard_id: The zero based int ID of this shard
 
         debug_scope: Force all application commands to be registered within this scope
+        disable_dm_commands: Should interaction commands be disabled in DMs?
         basic_logging: Utilise basic logging to output library data to console. Do not use in combination with `Client.logger`
         logging_level: The level of logging to use for basic_logging. Do not use in combination with `Client.logger`
         logger: The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`. Note: Different loggers with multiple clients are not supported
@@ -251,6 +252,7 @@ class Client(
         debug_scope: Absent["Snowflake_Type"] = MISSING,
         default_prefix: str | Iterable[str] = MENTION_PREFIX,
         delete_unused_application_cmds: bool = False,
+        disable_dm_commands: bool = False,
         enforce_interaction_perms: bool = True,
         fetch_members: bool = False,
         generate_prefixes: Absent[Callable[..., Coroutine]] = MISSING,
@@ -258,7 +260,7 @@ class Client(
         global_pre_run_callback: Absent[Callable[..., Coroutine]] = MISSING,
         intents: Union[int, Intents] = Intents.DEFAULT,
         interaction_context: Type[InteractionContext] = InteractionContext,
-        logger: logging.Logger = logger,
+        logger: logging.Logger = MISSING,
         owner_ids: Iterable["Snowflake_Type"] = (),
         modal_context: Type[ModalContext] = ModalContext,
         prefixed_context: Type[PrefixedContext] = PrefixedContext,
@@ -273,6 +275,9 @@ class Client(
         logging_level: int = logging.INFO,
         **kwargs,
     ) -> None:
+        if logger is MISSING:
+            logger = constants.get_logger()
+
         if basic_logging:
             logging.basicConfig()
             logger.setLevel(logging_level)
@@ -282,7 +287,7 @@ class Client(
         """The logger NAFF should use. Do not use in combination with `Client.basic_logging` and `Client.logging_level`.
         !!! note
             Different loggers with multiple clients are not supported"""
-        constants.logger = logger
+        constants._logger = logger
 
         # Configuration
         self.sync_interactions: bool = sync_interactions
@@ -309,7 +314,7 @@ class Client(
 
         # resources
 
-        self.http: HTTPClient = HTTPClient()
+        self.http: HTTPClient = HTTPClient(logger=self.logger)
         """The HTTP client to use when interacting with discord endpoints"""
 
         # context objects
@@ -330,6 +335,7 @@ class Client(
         self._ready = asyncio.Event()
         self._closed = False
         self._startup = False
+        self.disable_dm_commands = disable_dm_commands
 
         self._guild_event = asyncio.Event()
         self.guild_event_timeout = 3
@@ -363,6 +369,10 @@ class Client(
         """A dictionary of registered prefixed commands: `{name: command}`"""
         self.interactions: Dict["Snowflake_Type", Dict[str, InteractionCommand]] = {}
         """A dictionary of registered application commands: `{cmd_id: command}`"""
+        self.interaction_tree: Dict[
+            "Snowflake_Type", Dict[str, InteractionCommand | Dict[str, InteractionCommand]]
+        ] = {}
+        """A dictionary of registered application commands in a tree"""
         self._component_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._modal_callbacks: Dict[str, Callable[..., Coroutine]] = {}
         self._interaction_scopes: Dict["Snowflake_Type", "Snowflake_Type"] = {}
@@ -370,7 +380,7 @@ class Client(
         self.__modules = {}
         self.ext = {}
         """A dictionary of mounted ext"""
-        self.listeners: Dict[str, List] = {}
+        self.listeners: Dict[str, list[Listener]] = {}
         self.waits: Dict[str, List] = {}
         self.owner_ids: set[Snowflake_Type] = set(owner_ids)
 
@@ -489,7 +499,7 @@ class Client(
 
     def _sanity_check(self) -> None:
         """Checks for possible and common errors in the bot's configuration."""
-        logger.debug("Running client sanity checks...")
+        self.logger.debug("Running client sanity checks...")
         contexts = {
             self.interaction_context: InteractionContext,
             self.prefixed_context: PrefixedContext,
@@ -503,20 +513,30 @@ class Client(
                 raise TypeError(f"{obj.__name__} must inherit from {expected.__name__}")
 
         if self.del_unused_app_cmd:
-            logger.warning(
+            self.logger.warning(
                 "As `delete_unused_application_cmds` is enabled, the client must cache all guilds app-commands, this could take a while."
             )
 
         if Intents.GUILDS not in self._connection_state.intents:
-            logger.warning("GUILD intent has not been enabled; this is very likely to cause errors")
+            self.logger.warning("GUILD intent has not been enabled; this is very likely to cause errors")
 
         if self.fetch_members and Intents.GUILD_MEMBERS not in self._connection_state.intents:
             raise BotException("Members Intent must be enabled in order to use fetch members")
         elif self.fetch_members:
-            logger.warning("fetch_members enabled; startup will be delayed")
+            self.logger.warning("fetch_members enabled; startup will be delayed")
 
         if len(self.processors) == 0:
-            logger.warning("No Processors are loaded! This means no events will be processed!")
+            self.logger.warning("No Processors are loaded! This means no events will be processed!")
+
+        caches = [
+            c[0]
+            for c in inspect.getmembers(self.cache, predicate=lambda x: isinstance(x, dict))
+            if not c[0].startswith("__")
+        ]
+        for cache in caches:
+            _cache_obj = getattr(self.cache, cache)
+            if isinstance(_cache_obj, NullCache):
+                self.logger.warning(f"{cache} has been disabled")
 
     async def generate_prefixes(self, bot: "Client", message: Message) -> str | Iterable[str]:
         """
@@ -548,6 +568,10 @@ class Client(
     def _queue_task(self, coro: Listener, event: BaseEvent, *args, **kwargs) -> asyncio.Task:
         async def _async_wrap(_coro: Listener, _event: BaseEvent, *_args, **_kwargs) -> None:
             try:
+                if not isinstance(_event, (events.Error, events.RawGatewayEvent)):
+                    if coro.delay_until_ready and not self.is_ready:
+                        await self.wait_until_ready()
+
                 if len(_event.__attrs_attrs__) == 2:
                     # override_name & bot
                     await _coro()
@@ -560,7 +584,7 @@ class Client(
                     # No infinite loops please
                     self.default_error_handler(repr(event), e)
                 else:
-                    self.dispatch(events.Error(repr(event), e))
+                    self.dispatch(events.Error(source=repr(event), error=e))
 
         wrapped = _async_wrap(coro, event, *args, **kwargs)
 
@@ -581,71 +605,76 @@ class Client(
         if isinstance(error, HTTPException):
             # HTTPException's are of 3 known formats, we can parse them for human readable errors
             try:
-                errors = error.search_for_message(error.errors)
-                out = f"HTTPException: {error.status}|{error.response.reason}: " + "\n".join(errors)
+                out = [str(error)]
             except Exception:  # noqa : S110
                 pass
 
-        logger.error(
+        get_logger().error(
             "Ignoring exception in {}:{}{}".format(source, "\n" if len(out) > 1 else " ", "".join(out)),
         )
 
-    @Listener.create()
-    async def _on_error(self, event: events.Error) -> None:
-        await self.on_error(event.source, event.error, *event.args, **event.kwargs)
-
-    async def on_error(self, source: str, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(is_default_listener=True)
+    async def on_error(self, event: events.Error) -> None:
         """
         Catches all errors dispatched by the library.
 
-        By default it will format and print them to console
+        By default it will format and print them to console.
 
-        Override this to change error handling behaviour
+        Listen to the `Error` event to overwrite this behaviour.
 
         """
-        self.default_error_handler(source, error)
+        self.default_error_handler(event.source, event.error)
 
-    async def on_command_error(self, ctx: SendableContext, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(is_default_listener=True)
+    async def on_command_error(self, event: events.CommandError) -> None:
         """
         Catches all errors dispatched by commands.
 
-        By default it will call `Client.on_error`
+        By default it will dispatch the `Error` event.
 
-        Override this to change error handling behavior
+        Listen to the `CommandError` event to overwrite this behaviour.
 
         """
-        self.dispatch(events.Error(f"cmd /`{ctx.invoke_target}`", error, args, kwargs, ctx))
+        self.dispatch(
+            events.Error(
+                source=f"cmd `/{event.ctx.invoke_target}`",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
         try:
-            if isinstance(error, errors.CommandOnCooldown):
-                await ctx.send(
+            if isinstance(event.error, errors.CommandOnCooldown):
+                await event.ctx.send(
                     embeds=Embed(
                         description=f"This command is on cooldown!\n"
-                        f"Please try again in {int(error.cooldown.get_cooldown_time())} seconds",
+                        f"Please try again in {int(event.error.cooldown.get_cooldown_time())} seconds",
                         color=BrandColors.FUCHSIA,
                     )
                 )
-            elif isinstance(error, errors.MaxConcurrencyReached):
-                await ctx.send(
+            elif isinstance(event.error, errors.MaxConcurrencyReached):
+                await event.ctx.send(
                     embeds=Embed(
                         description="This command has reached its maximum concurrent usage!\n"
                         "Please try again shortly.",
                         color=BrandColors.FUCHSIA,
                     )
                 )
-            elif isinstance(error, errors.CommandCheckFailure):
-                await ctx.send(
+            elif isinstance(event.error, errors.CommandCheckFailure):
+                await event.ctx.send(
                     embeds=Embed(
                         description="You do not have permission to run this command!",
                         color=BrandColors.YELLOW,
                     )
                 )
             elif self.send_command_tracebacks:
-                out = "".join(traceback.format_exception(error))
+                out = "".join(traceback.format_exception(event.error))
                 if self.http.token is not None:
                     out = out.replace(self.http.token, "[REDACTED TOKEN]")
-                await ctx.send(
+                await event.ctx.send(
                     embeds=Embed(
-                        title=f"Error: {type(error).__name__}",
+                        title=f"Error: {type(event.error).__name__}",
                         color=BrandColors.RED,
                         description=f"```\n{out[:EMBED_MAX_DESC_LENGTH-8]}```",
                     )
@@ -653,85 +682,135 @@ class Client(
         except errors.NaffException:
             pass
 
-    async def on_command(self, ctx: Context) -> None:
+    @Listener.create(is_default_listener=True)
+    async def on_command_completion(self, event: events.CommandCompletion) -> None:
         """
         Called *after* any command is ran.
 
-        By default, it will simply log the command, override this to change that behaviour
+        By default, it will simply log the command.
 
-        Args:
-            ctx: The context of the command that was called
+        Listen to the `CommandCompletion` event to overwrite this behaviour.
 
         """
-        if isinstance(ctx, PrefixedContext):
+        if isinstance(event.ctx, PrefixedContext):
             symbol = "@"
-        elif isinstance(ctx, InteractionContext):
+        elif isinstance(event.ctx, InteractionContext):
             symbol = "/"
+        elif isinstance(event.ctx, HybridContext):
+            symbol = "@/"
         else:
             symbol = "?"  # likely custom context
-        logger.info(f"Command Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(
+            f"Command Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
+        )
 
-    async def on_component_error(self, ctx: ComponentContext, error: Exception, *args, **kwargs) -> None:
+    @Listener.create(is_default_listener=True)
+    async def on_component_error(self, event: events.ComponentError) -> None:
         """
         Catches all errors dispatched by components.
 
-        By default it will call `Naff.on_error`
+        By default it will dispatch the `Error` event.
 
-        Override this to change error handling behavior
-
-        """
-        return self.dispatch(events.Error(f"Component Callback for {ctx.custom_id}", error, args, kwargs, ctx))
-
-    async def on_component(self, ctx: ComponentContext) -> None:
-        """
-        Called *after* any component callback is ran.
-
-        By default, it will simply log the component use, override this to change that behaviour
-
-        Args:
-            ctx: The context of the component that was called
+        Listen to the `ComponentError` event to overwrite this behaviour.
 
         """
-        symbol = "¢"
-        logger.info(f"Component Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
-
-    async def on_autocomplete_error(self, ctx: AutocompleteContext, error: Exception, *args, **kwargs) -> None:
-        """
-        Catches all errors dispatched by autocompletion options.
-
-        By default it will call `Naff.on_error`
-
-        Override this to change error handling behavior
-
-        """
-        return self.dispatch(
+        self.dispatch(
             events.Error(
-                f"Autocomplete Callback for /{ctx.invoke_target} - Option: {ctx.focussed_option}",
-                error,
-                args,
-                kwargs,
-                ctx,
+                source=f"Component Callback for {event.ctx.custom_id}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
             )
         )
 
-    async def on_autocomplete(self, ctx: AutocompleteContext) -> None:
+    @Listener.create(is_default_listener=True)
+    async def on_component_completion(self, event: events.ComponentCompletion) -> None:
+        """
+        Called *after* any component callback is ran.
+
+        By default, it will simply log the component use.
+
+        Listen to the `ComponentCompletion` event to overwrite this behaviour.
+
+        """
+        symbol = "¢"
+        self.logger.info(
+            f"Component Called: {symbol}{event.ctx.invoke_target} with {event.ctx.args = } | {event.ctx.kwargs = }"
+        )
+
+    @Listener.create(is_default_listener=True)
+    async def on_autocomplete_error(self, event: events.AutocompleteError) -> None:
+        """
+        Catches all errors dispatched by autocompletion options.
+
+        By default it will dispatch the `Error` event.
+
+        Listen to the `AutocompleteError` event to overwrite this behaviour.
+
+        """
+        self.dispatch(
+            events.Error(
+                source=f"Autocomplete Callback for /{event.ctx.invoke_target} - Option: {event.ctx.focussed_option}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
+
+    @Listener.create(is_default_listener=True)
+    async def on_autocomplete_completion(self, event: events.AutocompleteCompletion) -> None:
         """
         Called *after* any autocomplete callback is ran.
 
-        By default, it will simply log the autocomplete callback, override this to change that behaviour
+        By default, it will simply log the autocomplete callback.
 
-        Args:
-            ctx: The context of the command that was called
+        Listen to the `AutocompleteCompletion` event to overwrite this behaviour.
 
         """
         symbol = "$"
-        logger.info(f"Autocomplete Called: {symbol}{ctx.invoke_target} with {ctx.args = } | {ctx.kwargs = }")
+        self.logger.info(
+            f"Autocomplete Called: {symbol}{event.ctx.invoke_target} with {event.ctx.focussed_option = } | {event.ctx.kwargs = }"
+        )
+
+    @Listener.create(is_default_listener=True)
+    async def on_modal_error(self, event: events.ModalError) -> None:
+        """
+        Catches all errors dispatched by modals.
+
+        By default it will dispatch the `Error` event.
+
+        Listen to the `ModalError` event to overwrite this behaviour.
+
+        """
+        self.dispatch(
+            events.Error(
+                source=f"Modal Callback for custom_id {event.ctx.custom_id}",
+                error=event.error,
+                args=event.args,
+                kwargs=event.kwargs,
+                ctx=event.ctx,
+            )
+        )
+
+    @Listener.create(is_default_listener=True)
+    async def on_modal_completion(self, event: events.ModalCompletion) -> None:
+        """
+        Called *after* any modal callback is ran.
+
+        By default, it will simply log the modal callback.
+
+        Listen to the `ModalCompletion` event to overwrite this behaviour.
+
+        """
+        self.logger.info(f"Modal Called: {event.ctx.custom_id = } with {event.ctx.responses = }")
 
     @Listener.create()
     async def on_resume(self) -> None:
         self._ready.set()
 
-    @Listener.create()
+    @Listener.create(is_default_listener=True)
     async def _on_websocket_ready(self, event: events.RawGatewayEvent) -> None:
         """
         Catches websocket ready and determines when to dispatch the client `READY` signal.
@@ -749,7 +828,10 @@ class Client(
                 try:  # wait to let guilds cache
                     await asyncio.wait_for(self._guild_event.wait(), self.guild_event_timeout)
                 except asyncio.TimeoutError:
-                    logger.warning("Timeout waiting for guilds cache: Not all guilds will be in cache")
+                    # this will *mostly* occur when a guild has been shadow deleted by discord T&S.
+                    # there is no way to check for this, so we just need to wait for this to time out.
+                    # We still log it though, just in case.
+                    self.logger.debug("Timeout waiting for guilds cache")
                     break
                 self._guild_event.clear()
 
@@ -761,15 +843,8 @@ class Client(
                 # ensure all guilds have completed chunking
                 for guild in self.guilds:
                     if guild and not guild.chunked.is_set():
-                        logger.debug(f"Waiting for {guild.id} to chunk")
+                        self.logger.debug(f"Waiting for {guild.id} to chunk")
                         await guild.chunked.wait()
-
-            # run any pending startup tasks
-            if self.async_startup_tasks:
-                try:
-                    await asyncio.gather(*self.async_startup_tasks)
-                except Exception as e:
-                    self.dispatch(events.Error("async-extension-loader", e))
 
             # cache slash commands
             if not self._startup:
@@ -817,7 +892,7 @@ class Client(
         # so im gathering commands here
         self._gather_commands()
 
-        logger.debug("Attempting to login")
+        self.logger.debug("Attempting to login")
         me = await self.http.login(token.strip())
         self._user = NaffUser.from_dict(me, self)
         self.cache.place_user_data(me)
@@ -837,6 +912,13 @@ class Client(
             token: Your bot's token
         """
         await self.login(token)
+
+        # run any pending startup tasks
+        if self.async_startup_tasks:
+            try:
+                await asyncio.gather(*self.async_startup_tasks)
+            except Exception as e:
+                self.dispatch(events.Error(source="async-extension-loader", error=e))
         try:
             await self._connection_state.start()
         finally:
@@ -865,7 +947,7 @@ class Client(
 
     async def stop(self) -> None:
         """Shutdown the bot."""
-        logger.debug("Stopping the bot.")
+        self.logger.debug("Stopping the bot.")
         self._ready.clear()
         await self.http.close()
         await self._connection_state.stop()
@@ -880,7 +962,7 @@ class Client(
         """
         listeners = self.listeners.get(event.resolved_name, [])
         if listeners:
-            logger.debug(f"Dispatching Event: {event.resolved_name}")
+            self.logger.debug(f"Dispatching Event: {event.resolved_name}")
             event.bot = self
             for _listen in listeners:
                 try:
@@ -957,14 +1039,14 @@ class Client(
         author = to_snowflake(author) if author else None
 
         def predicate(event) -> bool:
-            if modal.custom_id != event.context.custom_id:
+            if modal.custom_id != event.ctx.custom_id:
                 return False
-            if author and author != to_snowflake(event.context.author):
+            if author and author != to_snowflake(event.ctx.author):
                 return False
             return True
 
-        resp = await self.wait_for("modal_response", predicate, timeout)
-        return resp.context
+        resp = await self.wait_for("modal_completion", predicate, timeout)
+        return resp.ctx
 
     async def wait_for_component(
         self,
@@ -985,7 +1067,7 @@ class Client(
             timeout: The number of seconds to wait before timing out.
 
         Returns:
-            `Component` that was invoked. Use `.context` to get the `ComponentContext`.
+            `Component` that was invoked. Use `.ctx` to get the `ComponentContext`.
 
         Raises:
             asyncio.TimeoutError: if timed out
@@ -1004,7 +1086,7 @@ class Client(
             custom_ids = [str(i) for i in custom_ids]
 
         def _check(event: Component) -> bool:
-            ctx: ComponentContext = event.context
+            ctx: ComponentContext = event.ctx
             # if custom_ids is empty or there is a match
             wanted_message = not message_ids or ctx.message.id in (
                 [message_ids] if isinstance(message_ids, int) else message_ids
@@ -1068,18 +1150,29 @@ class Client(
             listener Listener: The listener to add to the client
 
         """
-        # check that the required intents are enabled
-        event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
-        if event_class := globals().get(event_class_name):
-            if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
-                if not any(required_intent in self.intents for required_intent in required_intents):
-                    self.logger.warning(
-                        f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
-                    )
+        if not listener.is_default_listener:
+            # check that the required intents are enabled
+
+            event_class_name = "".join([name.capitalize() for name in listener.event.split("_")])
+            if event_class := globals().get(event_class_name):
+                if required_intents := _INTENT_EVENTS.get(event_class):  # noqa
+                    if not any(required_intent in self.intents for required_intent in required_intents):
+                        self.logger.warning(
+                            f"Event `{listener.event}` will not work since the required intent is not set -> Requires any of: `{required_intents}`"
+                        )
 
         if listener.event not in self.listeners:
             self.listeners[listener.event] = []
         self.listeners[listener.event].append(listener)
+
+        # check if other listeners are to be deleted
+        default_listeners = [c_listener.is_default_listener for c_listener in self.listeners[listener.event]]
+        removes_defaults = [c_listener.disable_default_listeners for c_listener in self.listeners[listener.event]]
+
+        if any(default_listeners) and any(removes_defaults):
+            self.listeners[listener.event] = [
+                c_listener for c_listener in self.listeners[listener.event] if not c_listener.is_default_listener
+            ]
 
     def add_interaction(self, command: InteractionCommand) -> bool:
         """
@@ -1092,9 +1185,14 @@ class Client(
         if self.debug_scope:
             command.scopes = [self.debug_scope]
 
+        if self.disable_dm_commands:
+            command.dm_permission = False
+
         # for SlashCommand objs without callback (like objects made to hold group info etc)
         if command.callback is None:
             return False
+
+        base, group, sub, *_ = command.resolved_name.split(" ") + [None, None]
 
         for scope in command.scopes:
             if scope not in self.interactions:
@@ -1107,6 +1205,23 @@ class Client(
                 command.checks.append(command._permission_enforcer)  # noqa : w0212
 
             self.interactions[scope][command.resolved_name] = command
+
+            if scope not in self.interaction_tree:
+                self.interaction_tree[scope] = {}
+
+            if group is None or isinstance(command, ContextMenu):
+                self.interaction_tree[scope][command.resolved_name] = command
+            elif group is not None:
+                if not (current := self.interaction_tree[scope].get(base)) or isinstance(current, SlashCommand):
+                    self.interaction_tree[scope][base] = {}
+                if sub is None:
+                    self.interaction_tree[scope][base][group] = command
+                else:
+                    if not (current := self.interaction_tree[scope][base].get(group)) or isinstance(
+                        current, SlashCommand
+                    ):
+                        self.interaction_tree[scope][base][group] = {}
+                    self.interaction_tree[scope][base][group][sub] = command
 
         return True
 
@@ -1121,7 +1236,7 @@ class Client(
             prefixed_base = self.prefixed_commands.get(str(command.name))
             if not prefixed_base:
                 prefixed_base = _base_subcommand_generator(
-                    str(command.name), list((command.name.to_locale_dict() or {}).values()), str(command.description)
+                    str(command.name), list(command.name.to_locale_dict().values()), str(command.description)
                 )
                 self.add_prefixed_command(prefixed_base)
 
@@ -1132,7 +1247,7 @@ class Client(
                 if not prefixed_base:
                     prefixed_base = _base_subcommand_generator(
                         str(command.group_name),
-                        list((command.group_name.to_locale_dict() or {}).values()),
+                        list(command.group_name.to_locale_dict().values()),
                         str(command.group_description),
                         group=True,
                     )
@@ -1228,7 +1343,7 @@ class Client(
                 elif isinstance(func, Listener):
                     self.add_listener(func)
 
-            logger.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
+            self.logger.debug(f"{len(_cmds)} commands have been loaded from `__main__` and `client`")
 
         process(
             [obj for _, obj in inspect.getmembers(sys.modules["__main__"]) if isinstance(obj, (BaseCommand, Listener))]
@@ -1259,7 +1374,7 @@ class Client(
             else:
                 await self._cache_interactions(warn_missing=False)
         except Exception as e:
-            self.dispatch(events.Error("Interaction Syncing", e))
+            self.dispatch(events.Error(source="Interaction Syncing", error=e))
 
     async def _cache_interactions(self, warn_missing: bool = False) -> None:
         """Get all interactions used by this bot and cache them."""
@@ -1285,7 +1400,7 @@ class Client(
 
         for scope, remote_cmds in results.items():
             if remote_cmds == MISSING:
-                logger.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
+                self.logger.debug(f"Bot was not invited to guild {scope} with `application.commands` scope")
                 continue
 
             remote_cmds = {cmd_data["name"]: cmd_data for cmd_data in remote_cmds}
@@ -1297,7 +1412,7 @@ class Client(
                     if cmd_data is MISSING:
                         if cmd_name not in found:
                             if warn_missing:
-                                logger.error(
+                                self.logger.error(
                                     f'Detected yet to sync slash command "/{cmd_name}" for scope '
                                     f"{'global' if scope == GLOBAL_SCOPE else scope}"
                                 )
@@ -1309,7 +1424,7 @@ class Client(
 
             if warn_missing:
                 for cmd_data in remote_cmds.values():
-                    logger.error(
+                    self.logger.error(
                         f"Detected unimplemented slash command \"/{cmd_data['name']}\" for scope "
                         f"{'global' if scope == GLOBAL_SCOPE else scope}"
                     )
@@ -1337,7 +1452,7 @@ class Client(
             # if we're not deleting, just check the scopes we have cmds registered in
             cmd_scopes = list(set(self.interactions) | {GLOBAL_SCOPE})
 
-        local_cmds_json = application_commands_to_dict(self.interactions)
+        local_cmds_json = application_commands_to_dict(self.interactions, self)
 
         async def sync_scope(cmd_scope) -> None:
 
@@ -1348,7 +1463,7 @@ class Client(
                 try:
                     remote_commands = await self.http.get_application_commands(self.app.id, cmd_scope)
                 except Forbidden:
-                    logger.warning(f"Bot is lacking `application.commands` scope in {cmd_scope}!")
+                    self.logger.warning(f"Bot is lacking `application.commands` scope in {cmd_scope}!")
                     return
 
                 for local_cmd in self.interactions.get(cmd_scope, {}).values():
@@ -1378,13 +1493,13 @@ class Client(
 
                 if sync_needed_flag or (_delete_cmds and len(sync_payload) < len(remote_commands)):
                     # synchronise commands if flag is set, or commands are to be deleted
-                    logger.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
+                    self.logger.info(f"Overwriting {cmd_scope} with {len(sync_payload)} application commands")
                     sync_response: list[dict] = await self.http.overwrite_application_commands(
                         self.app.id, sync_payload, cmd_scope
                     )
                     self._cache_sync_response(sync_response, cmd_scope)
                 else:
-                    logger.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
+                    self.logger.debug(f"{cmd_scope} is already up-to-date with {len(remote_commands)} commands.")
 
             except Forbidden as e:
                 raise InteractionMissingAccess(cmd_scope) from e
@@ -1394,7 +1509,7 @@ class Client(
         await asyncio.gather(*[sync_scope(scope) for scope in cmd_scopes])
 
         t = time.perf_counter() - s
-        logger.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
+        self.logger.debug(f"Sync of {len(cmd_scopes)} scopes took {t} seconds")
 
     def get_application_cmd_by_id(self, cmd_id: "Snowflake_Type") -> Optional[InteractionCommand]:
         """
@@ -1415,8 +1530,7 @@ class Client(
                     return cmd
         return None
 
-    @staticmethod
-    def _raise_sync_exception(e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type") -> NoReturn:
+    def _raise_sync_exception(self, e: HTTPException, cmds_json: dict, cmd_scope: "Snowflake_Type") -> NoReturn:
         try:
             if isinstance(e.errors, dict):
                 for cmd_num in e.errors.keys():
@@ -1424,9 +1538,9 @@ class Client(
                     output = e.search_for_message(e.errors[cmd_num], cmd)
                     if len(output) > 1:
                         output = "\n".join(output)
-                        logger.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
+                        self.logger.error(f"Multiple Errors found in command `{cmd['name']}`:\n{output}")
                     else:
-                        logger.error(f"Error in command `{cmd['name']}`: {output[0]}")
+                        self.logger.error(f"Error in command `{cmd['name']}`: {output[0]}")
             else:
                 raise e from None
         except Exception:
@@ -1564,7 +1678,7 @@ class Client(
                 ctx = await self.get_context(interaction_data, True)
 
                 ctx.command: SlashCommand = self.interactions[scope][ctx.invoke_target]  # type: ignore
-                logger.debug(f"{scope} :: {ctx.command.name} should be called")
+                self.logger.debug(f"{scope} :: {ctx.command.name} should be called")
 
                 if ctx.command.auto_defer:
                     auto_defer = ctx.command.auto_defer
@@ -1577,9 +1691,9 @@ class Client(
                     try:
                         await ctx.command.autocomplete_callbacks[auto_opt](ctx, **ctx.kwargs)
                     except Exception as e:
-                        await self.on_autocomplete_error(ctx, e)
+                        self.dispatch(events.AutocompleteError(ctx=ctx, error=e))
                     finally:
-                        await self.on_autocomplete(ctx)
+                        self.dispatch(events.AutocompleteCompletion(ctx=ctx))
                 else:
                     try:
                         await auto_defer(ctx)
@@ -1589,18 +1703,18 @@ class Client(
                         if self.post_run_callback:
                             await self.post_run_callback(ctx, **ctx.kwargs)
                     except Exception as e:
-                        await self.on_command_error(ctx, e)
+                        self.dispatch(events.CommandError(ctx=ctx, error=e))
                     finally:
-                        await self.on_command(ctx)
+                        self.dispatch(events.CommandCompletion(ctx=ctx))
             else:
-                logger.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
+                self.logger.error(f"Unknown cmd_id received:: {interaction_id} ({name})")
 
         elif interaction_data["type"] == InteractionTypes.MESSAGE_COMPONENT:
             # Buttons, Selects, ContextMenu::Message
             ctx = await self.get_context(interaction_data, True)
             component_type = interaction_data["data"]["component_type"]
 
-            self.dispatch(events.Component(ctx))
+            self.dispatch(events.Component(ctx=ctx))
             if callback := self._component_callbacks.get(ctx.custom_id):
                 ctx.command = callback
                 try:
@@ -1610,17 +1724,17 @@ class Client(
                     if self.post_run_callback:
                         await self.post_run_callback(ctx)
                 except Exception as e:
-                    await self.on_component_error(ctx, e)
+                    self.dispatch(events.ComponentError(ctx=ctx, error=e))
                 finally:
-                    await self.on_component(ctx)
+                    self.dispatch(events.ComponentCompletion(ctx=ctx))
             if component_type == ComponentTypes.BUTTON:
-                self.dispatch(events.Button(ctx))
-            if component_type == ComponentTypes.SELECT:
+                self.dispatch(events.ButtonPressed(ctx))
+            if component_type == ComponentTypes.STRING_SELECT:
                 self.dispatch(events.Select(ctx))
 
         elif interaction_data["type"] == InteractionTypes.MODAL_RESPONSE:
             ctx = await self.get_context(interaction_data, True)
-            self.dispatch(events.ModalResponse(ctx))
+            self.dispatch(events.ModalCompletion(ctx=ctx))
 
             # todo: Polls remove this icky code duplication - love from past-polls ❤️
             if callback := self._modal_callbacks.get(ctx.custom_id):
@@ -1633,14 +1747,12 @@ class Client(
                     if self.post_run_callback:
                         await self.post_run_callback(ctx)
                 except Exception as e:
-                    await self.on_component_error(ctx, e)
-                finally:
-                    await self.on_component(ctx)
+                    self.dispatch(events.ModalError(ctx=ctx, error=e))
 
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @Listener.create("message_create")
+    @Listener.create("message_create", is_default_listener=True)
     async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
         """Determine if a prefixed command is being triggered, and dispatch it."""
         message = event.message
@@ -1703,7 +1815,7 @@ class Client(
                             elif new_command.extension and new_command.extension.extension_error:
                                 await new_command.extension.extension_error(e, context)
                             else:
-                                await self.on_command_error(context, e)
+                                self.dispatch(events.CommandError(ctx=context, error=e))
                             return
 
                 if not isinstance(command, PrefixedCommand):
@@ -1712,9 +1824,7 @@ class Client(
                 if command and command.enabled:
                     # yeah, this looks ugly
                     context.command = command
-                    context.invoke_target = (
-                        message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
-                    )
+                    context.invoke_target = message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
                     context.args = get_args(context.content_parameters)
                     try:
                         if self.pre_run_callback:
@@ -1723,11 +1833,11 @@ class Client(
                         if self.post_run_callback:
                             await self.post_run_callback(context)
                     except Exception as e:
-                        await self.on_command_error(context, e)
+                        self.dispatch(events.CommandError(ctx=context, error=e))
                     finally:
-                        await self.on_command(context)
+                        self.dispatch(events.CommandCompletion(ctx=context))
 
-    @Listener.create("disconnect")
+    @Listener.create("disconnect", is_default_listener=True)
     async def _disconnect(self) -> None:
         self._ready.clear()
 
@@ -1770,27 +1880,37 @@ class Client(
             **load_kwargs: The auto-filled mapping of the load keyword arguments
 
         """
-        name = importlib.util.resolve_name(name, package)
-        if name in self.__modules:
-            raise Exception(f"{name} already loaded")
+        module_name = importlib.util.resolve_name(name, package)
+        if module_name in self.__modules:
+            raise Exception(f"{module_name} already loaded")
 
-        module = importlib.import_module(name, package)
+        module = importlib.import_module(module_name, package)
         try:
             setup = getattr(module, "setup", None)
-            if not setup:
-                raise ExtensionLoadException(
-                    f"{name} lacks an entry point. Ensure you have a function called `setup` defined in that file"
-                ) from None
-            setup(self, **load_kwargs)
+            if setup:
+                setup(self, **load_kwargs)
+            else:
+                self.logger.debug("No setup function found in %s", module_name)
+
+                found = False
+                objects = {name: obj for name, obj in inspect.getmembers(module) if isinstance(obj, type)}
+                for obj_name, obj in objects.items():
+                    if Extension in obj.__bases__:
+                        self.logger.debug(f"Found extension class {obj_name} in {module_name}: Attempting to load")
+                        obj(self, **load_kwargs)
+                        found = True
+                if not found:
+                    raise Exception(f"{module_name} contains no Extensions")
+
         except ExtensionLoadException:
             raise
         except Exception as e:
-            del sys.modules[name]
-            raise ExtensionLoadException(f"Unexpected Error loading {name}") from e
+            del sys.modules[module_name]
+            raise ExtensionLoadException(f"Unexpected Error loading {module_name}") from e
 
         else:
-            logger.debug(f"Loaded Extension: {name}")
-            self.__modules[name] = module
+            self.logger.debug(f"Loaded Extension: {module_name}")
+            self.__modules[module_name] = module
 
             if self.sync_ext and self._ready.is_set():
                 try:
@@ -1857,7 +1977,7 @@ class Client(
         module = self.__modules.get(name)
 
         if module is None:
-            logger.warning("Attempted to reload extension thats not loaded. Loading extension instead")
+            self.logger.warning("Attempted to reload extension thats not loaded. Loading extension instead")
             return self.load_extension(name, package)
 
         if not load_kwargs:

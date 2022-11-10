@@ -2,10 +2,10 @@ from typing import Any, Optional, TYPE_CHECKING
 
 import attrs
 
-from naff.client.const import logger, MISSING, Absent
+from naff.client.const import get_logger, MISSING, Absent
 from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils import list_converter, optional
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs
 from naff.models.discord.base import ClientObject, DiscordObject
 from naff.models.discord.enums import AutoModTriggerType, AutoModAction, AutoModEvent, AutoModLanuguageType
 from naff.models.discord.snowflake import to_snowflake_list, to_snowflake
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 __all__ = ("AutoModerationAction", "AutoModRule")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseAction(DictSerializationMixin):
     """A base implementation of a moderation action
 
@@ -31,13 +31,13 @@ class BaseAction(DictSerializationMixin):
         type: The type of action that was taken
     """
 
-    type: AutoModAction = field(converter=AutoModAction)
+    type: AutoModAction = attrs.field(repr=False, converter=AutoModAction)
 
     @classmethod
     def from_dict_factory(cls, data: dict) -> "BaseAction":
         action_class = ACTION_MAPPING.get(data.get("type"))
         if not action_class:
-            logger.error(f"Unknown action type for {data}")
+            get_logger().error(f"Unknown action type for {data}")
             action_class = cls
 
         return action_class.from_dict({"type": data.get("type")} | data["metadata"])
@@ -48,7 +48,7 @@ class BaseAction(DictSerializationMixin):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseTrigger(DictSerializationMixin):
     """A base implementation of an auto-mod trigger
 
@@ -56,7 +56,9 @@ class BaseTrigger(DictSerializationMixin):
         type: The type of event this trigger is for
     """
 
-    type: AutoModTriggerType = field(converter=AutoModTriggerType, repr=True, metadata=docs("The type of trigger"))
+    type: AutoModTriggerType = attrs.field(
+        converter=AutoModTriggerType, repr=True, metadata=docs("The type of trigger")
+    )
 
     @classmethod
     def _process_dict(cls, data: dict[str, Any]) -> dict[str, Any]:
@@ -73,7 +75,7 @@ class BaseTrigger(DictSerializationMixin):
         trigger_class = TRIGGER_MAPPING.get(data.get("trigger_type"))
         meta = data.get("trigger_metadata", {})
         if not trigger_class:
-            logger.error(f"Unknown trigger type for {data}")
+            get_logger().error(f"Unknown trigger type for {data}")
             trigger_class = cls
 
         payload = {"type": data.get("trigger_type"), "trigger_metadata": meta}
@@ -93,26 +95,26 @@ def _keyword_converter(filter: str | list[str]) -> list[str]:
     return [filter]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class KeywordTrigger(BaseTrigger):
     """A trigger that checks if content contains words from a user defined list of keywords"""
 
-    type: AutoModTriggerType = field(
+    type: AutoModTriggerType = attrs.field(
         default=AutoModTriggerType.KEYWORD,
         converter=AutoModTriggerType,
         repr=True,
         metadata=docs("The type of trigger"),
     )
-    keyword_filter: str | list[str] = field(
+    keyword_filter: str | list[str] = attrs.field(
         factory=list, repr=True, metadata=docs("What words will trigger this"), converter=_keyword_converter
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HarmfulLinkFilter(BaseTrigger):
     """A trigger that checks if content contains any harmful links"""
 
-    type: AutoModTriggerType = field(
+    type: AutoModTriggerType = attrs.field(
         default=AutoModTriggerType.HARMFUL_LINK,
         converter=AutoModTriggerType,
         repr=True,
@@ -121,17 +123,17 @@ class HarmfulLinkFilter(BaseTrigger):
     ...
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class KeywordPresetTrigger(BaseTrigger):
     """A trigger that checks if content contains words from internal pre-defined wordsets"""
 
-    type: AutoModTriggerType = field(
+    type: AutoModTriggerType = attrs.field(
         default=AutoModTriggerType.KEYWORD_PRESET,
         converter=AutoModTriggerType,
         repr=True,
         metadata=docs("The type of trigger"),
     )
-    keyword_lists: list[AutoModLanuguageType] = field(
+    keyword_lists: list[AutoModLanuguageType] = attrs.field(
         factory=list,
         converter=list_converter(AutoModLanuguageType),
         repr=True,
@@ -139,62 +141,70 @@ class KeywordPresetTrigger(BaseTrigger):
     )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class MentionSpamTrigger(BaseTrigger):
     """A trigger that checks if content contains more mentions than allowed"""
 
-    mention_total_limit: int = field(default=3, repr=True, metadata=docs("The maximum number of mentions allowed"))
+    mention_total_limit: int = attrs.field(
+        default=3, repr=True, metadata=docs("The maximum number of mentions allowed")
+    )
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BlockMessage(BaseAction):
     """blocks the content of a message according to the rule"""
 
-    type: AutoModAction = field(default=AutoModAction.BLOCK_MESSAGE, converter=AutoModAction)
+    type: AutoModAction = attrs.field(repr=False, default=AutoModAction.BLOCK_MESSAGE, converter=AutoModAction)
     ...
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AlertMessage(BaseAction):
     """logs user content to a specified channel"""
 
-    channel_id: "Snowflake_Type" = field(repr=True)
-    type: AutoModAction = field(default=AutoModAction.ALERT_MESSAGE, converter=AutoModAction)
+    channel_id: "Snowflake_Type" = attrs.field(repr=True)
+    type: AutoModAction = attrs.field(repr=False, default=AutoModAction.ALERT_MESSAGE, converter=AutoModAction)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TimeoutUser(BaseAction):
     """timeout user for a specified duration"""
 
-    duration_seconds: int = field(repr=True, default=60)
-    type: AutoModAction = field(default=AutoModAction.TIMEOUT_USER, converter=AutoModAction)
+    duration_seconds: int = attrs.field(repr=True, default=60)
+    type: AutoModAction = attrs.field(repr=False, default=AutoModAction.TIMEOUT_USER, converter=AutoModAction)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutoModRule(DiscordObject):
     """A representation of an auto mod rule"""
 
-    name: str = field()
+    name: str = attrs.field(
+        repr=False,
+    )
     """The name of the rule"""
-    enabled: bool = field(default=False)
+    enabled: bool = attrs.field(repr=False, default=False)
     """whether the rule is enabled"""
 
-    actions: list[BaseAction] = field(factory=list)
+    actions: list[BaseAction] = attrs.field(repr=False, factory=list)
     """the actions which will execute when the rule is triggered"""
-    event_type: AutoModEvent = field()
+    event_type: AutoModEvent = attrs.field(
+        repr=False,
+    )
     """the rule event type"""
-    trigger: BaseTrigger = field()
+    trigger: BaseTrigger = attrs.field(
+        repr=False,
+    )
     """The trigger for this rule"""
-    exempt_roles: list["Snowflake_Type"] = field(factory=list, converter=to_snowflake_list)
+    exempt_roles: list["Snowflake_Type"] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
     """the role ids that should not be affected by the rule (Maximum of 20)"""
-    exempt_channels: list["Snowflake_Type"] = field(factory=list, converter=to_snowflake_list)
+    exempt_channels: list["Snowflake_Type"] = attrs.field(repr=False, factory=list, converter=to_snowflake_list)
     """the channel ids that should not be affected by the rule (Maximum of 50)"""
 
-    _guild_id: "Snowflake_Type" = field(default=MISSING)
+    _guild_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING)
     """the guild which this rule belongs to"""
-    _creator_id: "Snowflake_Type" = field(default=MISSING)
+    _creator_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING)
     """the user which first created this rule"""
-    id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
+    id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Client") -> dict:
@@ -282,21 +292,25 @@ class AutoModRule(DiscordObject):
         return AutoModRule.from_dict(out, self._client)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class AutoModerationAction(ClientObject):
-    rule_trigger_type: AutoModTriggerType = field(converter=AutoModTriggerType)
-    rule_id: "Snowflake_Type" = field()
+    rule_trigger_type: AutoModTriggerType = attrs.field(repr=False, converter=AutoModTriggerType)
+    rule_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
 
-    action: BaseAction = field(default=MISSING, repr=True)
+    action: BaseAction = attrs.field(default=MISSING, repr=True)
 
-    matched_keyword: str = field(repr=True)
-    matched_content: Optional[str] = field(default=None)
-    content: Optional[str] = field(default=None)
+    matched_keyword: str = attrs.field(repr=True)
+    matched_content: Optional[str] = attrs.field(repr=False, default=None)
+    content: Optional[str] = attrs.field(repr=False, default=None)
 
-    _message_id: Optional["Snowflake_Type"] = field(default=None)
-    _alert_system_message_id: Optional["Snowflake_Type"] = field(default=None)
-    _channel_id: Optional["Snowflake_Type"] = field(default=None)
-    _guild_id: "Snowflake_Type" = field()
+    _message_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
+    _alert_system_message_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
+    _channel_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
+    _guild_id: "Snowflake_Type" = attrs.field(
+        repr=False,
+    )
 
     @classmethod
     def _process_dict(cls, data: dict, client: "Client") -> dict:

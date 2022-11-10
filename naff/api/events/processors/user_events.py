@@ -1,9 +1,9 @@
 from typing import Union, TYPE_CHECKING
-import naff.api.events as events
 
-from ._template import EventMixinTemplate, Processor
+import naff.api.events as events
 from naff.models import User, Member, BaseChannel, Timestamp, to_snowflake, Activity
 from naff.models.discord.enums import Status
+from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent

@@ -21,130 +21,87 @@ These are events dispatched by the client. This is intended as a reference so yo
 
 """
 import re
-from typing import TYPE_CHECKING, Any, Optional, Callable, Coroutine
+from typing import Any, Optional, TYPE_CHECKING
 
-from naff.client.const import MISSING
-from naff.models.discord.snowflake import to_snowflake
-from naff.client.utils.attr_utils import define, field, docs
-import naff.models as models
+import attrs
+
+from naff.api.events.base import BaseEvent, RawGatewayEvent
+from naff.client.utils.attr_utils import docs
 
 __all__ = (
-    "BaseEvent",
-    "Button",
+    "ButtonPressed",
     "Component",
     "Connect",
     "Disconnect",
     "Error",
     "ShardConnect",
     "ShardDisconnect",
-    "GuildEvent",
     "Login",
     "Ready",
     "Resume",
     "Select",
     "Startup",
     "WebsocketReady",
+    "CommandError",
+    "ComponentError",
+    "AutocompleteError",
+    "ModalError",
+    "CommandCompletion",
+    "ComponentCompletion",
+    "AutocompleteCompletion",
+    "ModalCompletion",
 )
 
 
 if TYPE_CHECKING:
-    from naff import Client
-    from naff.models.naff.context import ComponentContext, Context
-    from naff.models.discord.snowflake import Snowflake_Type
-    from naff.models.discord.guild import Guild
+    from naff.models.naff.context import (
+        ComponentContext,
+        Context,
+        AutocompleteContext,
+        ModalContext,
+        InteractionContext,
+        PrefixedContext,
+        HybridContext,
+    )
 
 _event_reg = re.compile("(?<!^)(?=[A-Z])")
 
 
-@define(slots=False)
-class BaseEvent:
-    """A base event that all other events inherit from."""
-
-    override_name: str = field(kw_only=True, default=None)
-    """Custom name of the event to be used when dispatching."""
-    bot: "Client" = field(kw_only=True, default=MISSING)
-    """The client instance that dispatched this event."""
-
-    @property
-    def resolved_name(self) -> str:
-        """The name of the event, defaults to the class name if not overridden."""
-        name = self.override_name or self.__class__.__name__
-        return _event_reg.sub("_", name).lower()
-
-    @classmethod
-    def listen(cls, coro: Callable[..., Coroutine], client: "Client") -> "models.Listener":
-        """
-        A shortcut for creating a listener for this event
-
-        Args:
-            coro: The coroutine to call when the event is triggered.
-            client: The client instance to listen to.
-
-
-        ??? Hint "Example Usage:"
-            ```python
-            class SomeClass:
-                def __init__(self, bot: Client):
-                    Ready.listen(self.some_func, bot)
-
-                async def some_func(self, event):
-                    print(f"{event.resolved_name} triggered")
-            ```
-        Returns:
-            A listener object.
-        """
-        listener = models.Listener.create(cls().resolved_name)(coro)
-        client.add_listener(listener)
-        return listener
-
-
-@define(slots=False, kw_only=False)
-class GuildEvent:
-    """A base event that adds guild_id."""
-
-    guild_id: "Snowflake_Type" = field(metadata=docs("The ID of the guild"), converter=to_snowflake)
-
-    @property
-    def guild(self) -> "Guild":
-        """Guild related to event"""
-        return self.bot.cache.get_guild(self.guild_id)
-
-
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Login(BaseEvent):
     """The bot has just logged in."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Connect(BaseEvent):
     """The bot is now connected to the discord Gateway."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Resume(BaseEvent):
     """The bot has resumed its connection to the discord Gateway."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Disconnect(BaseEvent):
     """The bot has just disconnected."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShardConnect(Connect):
     """A shard just connected to the discord Gateway."""
 
-    shard_id: int = field(metadata=docs("The ID of the shard"))
+    shard_id: int = attrs.field(repr=False, metadata=docs("The ID of the shard"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ShardDisconnect(Disconnect):
     """A shard just disconnected."""
 
-    shard_id: int = field(metadata=docs("The ID of the shard"))
+    shard_id: int = attrs.field(repr=False, metadata=docs("The ID of the shard"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Startup(BaseEvent):
     """
     The client is now ready for the first time.
@@ -155,7 +112,7 @@ class Startup(BaseEvent):
     """
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Ready(BaseEvent):
     """
     The client is now ready.
@@ -167,36 +124,100 @@ class Ready(BaseEvent):
     """
 
 
-@define(kw_only=False)
-class WebsocketReady(BaseEvent):
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
+class WebsocketReady(RawGatewayEvent):
     """The gateway has reported that it is ready."""
 
-    data: dict = field(metadata=docs("The data from the ready event"))
+    data: dict = attrs.field(repr=False, metadata=docs("The data from the ready event"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Component(BaseEvent):
     """Dispatched when a user uses a Component."""
 
-    context: "ComponentContext" = field(metadata=docs("The context of the interaction"))
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The context of the interaction"))
 
 
-@define(kw_only=False)
-class Button(Component):
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
+class ButtonPressed(Component):
     """Dispatched when a user uses a Button."""
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Select(Component):
     """Dispatched when a user uses a Select."""
 
 
-@define(kw_only=False)
-class Error(BaseEvent):
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class CommandCompletion(BaseEvent):
+    """Dispatched after the library ran any command callback."""
+
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = attrs.field(
+        repr=False, metadata=docs("The command context")
+    )
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class ComponentCompletion(BaseEvent):
+    """Dispatched after the library ran any component callback."""
+
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The component context"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class AutocompleteCompletion(BaseEvent):
+    """Dispatched after the library ran any autocomplete callback."""
+
+    ctx: "AutocompleteContext" = attrs.field(repr=False, metadata=docs("The autocomplete context"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class ModalCompletion(BaseEvent):
+    """Dispatched after the library ran any modal callback."""
+
+    ctx: "ModalContext" = attrs.field(repr=False, metadata=docs("The modal context"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class _Error(BaseEvent):
+    error: Exception = attrs.field(repr=False, metadata=docs("The error that was encountered"))
+    args: tuple[Any] = attrs.field(repr=False, factory=tuple)
+    kwargs: dict[str, Any] = attrs.field(repr=False, factory=dict)
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class Error(_Error):
     """Dispatched when the library encounters an error."""
 
-    source: str = field(metadata=docs("The source of the error"))
-    error: Exception = field(metadata=docs("The error that was encountered"))
-    args: tuple[Any] = field(factory=tuple)
-    kwargs: dict[str, Any] = field(factory=dict)
-    ctx: Optional["Context"] = field(default=None, metadata=docs("The Context, if one was active"))
+    source: str = attrs.field(repr=False, metadata=docs("The source of the error"))
+    ctx: Optional["Context"] = attrs.field(repr=False, default=None, metadata=docs("The Context, if one was active"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class CommandError(_Error):
+    """Dispatched when the library encounters an error in a command."""
+
+    ctx: "InteractionContext | PrefixedContext | HybridContext" = attrs.field(
+        repr=False, metadata=docs("The command context")
+    )
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class ComponentError(_Error):
+    """Dispatched when the library encounters an error in a component."""
+
+    ctx: "ComponentContext" = attrs.field(repr=False, metadata=docs("The component context"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class AutocompleteError(_Error):
+    """Dispatched when the library encounters an error in an autocomplete."""
+
+    ctx: "AutocompleteContext" = attrs.field(repr=False, metadata=docs("The autocomplete context"))
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class ModalError(_Error):
+    """Dispatched when the library encounters an error in a modal."""
+
+    ctx: "ModalContext" = attrs.field(repr=False, metadata=docs("The modal context"))

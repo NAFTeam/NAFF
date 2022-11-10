@@ -9,13 +9,15 @@ import logging
 from typing import Any, Callable, Optional
 
 from naff.api.events.internal import Error
-from naff.client.const import logger
+from naff.client.const import get_logger
 from naff.models.naff.tasks.task import Task
 
 try:
     import sentry_sdk
 except ModuleNotFoundError:
-    logger.error("sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`")
+    get_logger().error(
+        "sentry-sdk not installed, cannot enable sentry integration.  Install with `pip install naff[sentry]`"
+    )
     raise
 
 from naff import Client, Extension, listen
@@ -53,7 +55,7 @@ class SentryExtension(Extension):
         )
         sentry_sdk.set_tag("bot_name", str(self.bot.user))
 
-    @listen()
+    @listen(disable_default_listeners=False)
     async def on_error(self, event: Error) -> None:
         with sentry_sdk.configure_scope() as scope:
             scope.set_tag("source", event.source)
@@ -66,6 +68,8 @@ class SentryExtension(Extension):
                         "message": event.ctx.message,
                     },
                 )
+                if event.ctx.author:
+                    scope.set_user({"id": event.ctx.author.id, "username": event.ctx.author.tag})
             sentry_sdk.capture_exception(event.error)
 
 
@@ -89,7 +93,7 @@ def setup(
     filter: Optional[Callable[[dict[str, Any], dict[str, Any]], Optional[dict[str, Any]]]] = None,
 ) -> None:
     if not token:
-        logger.error("Cannot enable sentry integration, no token provided")
+        bot.logger.error("Cannot enable sentry integration, no token provided")
         return
     if filter is None:
         filter = default_sentry_filter

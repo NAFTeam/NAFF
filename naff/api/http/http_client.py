@@ -1,6 +1,7 @@
 """This file handles the interaction with discords http endpoints."""
 import asyncio
 import time
+from logging import Logger
 from typing import Any, cast
 from urllib.parse import quote as _uriquote
 from weakref import WeakValueDictionary
@@ -10,6 +11,7 @@ import discord_typings
 from aiohttp import BaseConnector, ClientSession, ClientWebSocketResponse, FormData
 from multidict import CIMultiDictProxy
 
+import naff.client.const as constants
 from naff import models
 from naff.api.http.http_requests import (
     BotRequests,
@@ -27,13 +29,14 @@ from naff.api.http.http_requests import (
     ScheduledEventsRequests,
 )
 from naff.client.const import (
+    MISSING,
     __py_version__,
     __repo_url__,
     __version__,
-    logger,
     __api_version__,
 )
 from naff.client.errors import DiscordError, Forbidden, GatewayNotFound, HTTPException, NotFound, LoginError
+from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.input_utils import response_decode, OverriddenJson
 from naff.client.utils.serializer import dict_filter
 from naff.models.discord.file import UPLOADABLE_TYPE
@@ -46,7 +49,7 @@ class GlobalLock:
     def __init__(self) -> None:
         self._lock = asyncio.Lock()
         self.max_requests = 45
-        self._calls = 0
+        self._calls = self.max_requests
         self._reset_time = 0
 
     @property
@@ -78,7 +81,7 @@ class GlobalLock:
             elif self._calls <= 0:
                 await asyncio.sleep(self._reset_time - time.perf_counter())
                 self.reset_calls()
-            self._calls -= 1
+        self._calls -= 1
 
 
 class BucketLock:
@@ -156,7 +159,7 @@ class HTTPClient(
 ):
     """A http client for sending requests to the Discord API."""
 
-    def __init__(self, connector: BaseConnector | None = None) -> None:
+    def __init__(self, connector: BaseConnector | None = None, logger: Logger = MISSING) -> None:
         self.connector: BaseConnector | None = connector
         self.__session: ClientSession | None = None
         self.token: str | None = None
@@ -169,6 +172,10 @@ class HTTPClient(
         self.user_agent: str = (
             f"DiscordBot ({__repo_url__} {__version__} Python/{__py_version__}) aiohttp/{aiohttp.__version__}"
         )
+
+        if logger is MISSING:
+            logger = constants.get_logger()
+        self.logger = logger
 
     def get_ratelimit(self, route: Route) -> BucketLock:
         """
@@ -203,7 +210,7 @@ class HTTPClient(
 
         if bucket_lock.bucket_hash:
             # We only ever try and cache the bucket if the bucket hash has been set (ignores unlimited endpoints)
-            logger.debug(f"Caching ingested rate limit data for: {bucket_lock.bucket_hash}")
+            self.logger.debug(f"Caching ingested rate limit data for: {bucket_lock.bucket_hash}")
             self._endpoints[route.rl_bucket] = bucket_lock.bucket_hash
             self.ratelimit_locks[bucket_lock.bucket_hash] = bucket_lock
 
@@ -226,6 +233,13 @@ class HTTPClient(
 
         if isinstance(payload, dict):
             payload = dict_filter(payload)
+
+            for k, v in payload.items():
+                if isinstance(v, DictSerializationMixin):
+                    payload[k] = v.to_dict()
+                if isinstance(v, (list, tuple, set)):
+                    payload[k] = [i.to_dict() if isinstance(i, DictSerializationMixin) else i for i in v]
+
         else:
             payload = [dict_filter(x) if isinstance(x, dict) else x for x in payload]
 
@@ -305,14 +319,14 @@ class HTTPClient(
                             if result.get("global", False):
                                 # global ratelimit is reached
                                 # if we get a global, that's pretty bad, this would usually happen if the user is hitting the api from 2 clients sharing a token
-                                logger.error(
+                                self.logger.error(
                                     f"Bot has exceeded global ratelimit, locking REST API for {result['retry_after']} seconds"
                                 )
                                 self.global_lock.set_reset_time(float(result["retry_after"]))
                                 continue
                             elif result.get("message") == "The resource is being rate limited.":
                                 # resource ratelimit is reached
-                                logger.warning(
+                                self.logger.warning(
                                     f"{route.endpoint} The resource is being rate limited! "
                                     f"Reset in {result.get('retry_after')} seconds"
                                 )
@@ -323,21 +337,21 @@ class HTTPClient(
                                 # endpoint ratelimit is reached
                                 # 429's are unfortunately unavoidable, but we can attempt to avoid them
                                 # so long as these are infrequent we're doing well
-                                logger.warning(
+                                self.logger.warning(
                                     f"{route.endpoint} Has exceeded it's ratelimit ({lock.limit})! Reset in {lock.delta} seconds"
                                 )
                                 await lock.defer_unlock()  # lock this route and wait for unlock
                                 continue
                         elif lock.remaining == 0:
                             # Last call available in the bucket, lock until reset
-                            logger.debug(
+                            self.logger.debug(
                                 f"{route.endpoint} Has exhausted its ratelimit ({lock.limit})! Locking route for {lock.delta} seconds"
                             )
                             await lock.blind_defer_unlock()  # lock this route, but continue processing the current response
 
                         elif response.status in {500, 502, 504}:
                             # Server issues, retry
-                            logger.warning(
+                            self.logger.warning(
                                 f"{route.endpoint} Received {response.status}... retrying in {1 + attempt * 2} seconds"
                             )
                             await asyncio.sleep(1 + attempt * 2)
@@ -346,7 +360,7 @@ class HTTPClient(
                         if not 300 > response.status >= 200:
                             await self._raise_exception(response, route, result)
 
-                        logger.debug(
+                        self.logger.debug(
                             f"{route.endpoint} Received {response.status} :: [{lock.remaining}/{lock.limit} calls remaining]"
                         )
                         return result
@@ -357,7 +371,7 @@ class HTTPClient(
                     raise
 
     async def _raise_exception(self, response, route, result) -> None:
-        logger.error(f"{route.method}::{route.url}: {response.status}")
+        self.logger.error(f"{route.method}::{route.url}: {response.status}")
 
         if response.status == 403:
             raise Forbidden(response, response_data=result, route=route)
@@ -369,7 +383,7 @@ class HTTPClient(
             raise HTTPException(response, response_data=result, route=route)
 
     async def request_cdn(self, url, asset) -> bytes:  # pyright: ignore [reportGeneralTypeIssues]
-        logger.debug(f"{asset} requests {url} from CDN")
+        self.logger.debug(f"{asset} requests {url} from CDN")
         async with self.__session.get(url) as response:
             if response.status == 200:
                 return await response.read()

@@ -5,18 +5,31 @@ from typing import Any, Callable, Generic, Iterator, Optional, Tuple, TypeVar
 
 import attrs
 
-from naff.client.utils.attr_utils import define, field
-
-__all__ = ("TTLItem", "TTLCache")
+__all__ = ("TTLItem", "TTLCache", "NullCache")
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
 
 
-@define(kw_only=False)
+class NullCache(dict):
+    """
+    A special cache that will always return None
+
+    Effectively just a lazy way to disable caching.
+    """
+
+    def __setitem__(self, key, value) -> None:
+        pass
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class TTLItem(Generic[VT]):
-    value: VT = field()
-    expire: float = field()
+    value: VT = attrs.field(
+        repr=False,
+    )
+    expire: float = attrs.field(
+        repr=False,
+    )
     """When the item expires in cache."""
 
     def is_expired(self, timestamp: float) -> bool:

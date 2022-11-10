@@ -1,12 +1,13 @@
 from contextlib import suppress
+from logging import Logger
 from typing import TYPE_CHECKING, List, Dict, Any, Optional, Union
 
+import attrs
 import discord_typings
 
-from naff.client.const import MISSING, logger, Absent
+from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NotFound, Forbidden
-from naff.client.utils.attr_utils import define, field
-from naff.client.utils.cache import TTLCache
+from naff.client.utils.cache import TTLCache, NullCache
 from naff.models import VoiceState
 from naff.models.discord.channel import BaseChannel, GuildChannel, ThreadChannel
 from naff.models.discord.emoji import CustomEmoji
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
 
 def create_cache(
     ttl: Optional[int] = 60, hard_limit: Optional[int] = 250, soft_limit: Absent[Optional[int]] = MISSING
-) -> Union[dict, TTLCache]:
+) -> Union[dict, TTLCache, NullCache]:
     """
     Create a cache object based on the parameters passed.
 
@@ -45,39 +46,45 @@ def create_cache(
     """
     if ttl is None and hard_limit is None:
         return {}
+    if ttl == 0 and hard_limit == 0 and soft_limit == 0:
+        return NullCache()
     else:
         if not soft_limit:
             soft_limit = int(hard_limit / 4) if hard_limit else 50
         return TTLCache(hard_limit=hard_limit or float("inf"), soft_limit=soft_limit or 0, ttl=ttl or float("inf"))
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class GlobalCache:
-    _client: "Client" = field()
+    _client: "Client" = attrs.field(
+        repr=False,
+    )
 
     # Non expiring discord objects cache
-    user_cache: dict = field(factory=dict)  # key: user_id
-    member_cache: dict = field(factory=dict)  # key: (guild_id, user_id)
-    channel_cache: dict = field(factory=dict)  # key: channel_id
-    guild_cache: dict = field(factory=dict)  # key: guild_id
+    user_cache: dict = attrs.field(repr=False, factory=dict)  # key: user_id
+    member_cache: dict = attrs.field(repr=False, factory=dict)  # key: (guild_id, user_id)
+    channel_cache: dict = attrs.field(repr=False, factory=dict)  # key: channel_id
+    guild_cache: dict = attrs.field(repr=False, factory=dict)  # key: guild_id
 
     # Expiring discord objects cache
-    message_cache: TTLCache = field(factory=TTLCache)  # key: (channel_id, message_id)
-    role_cache: TTLCache = field(factory=dict)  # key: role_id
-    voice_state_cache: TTLCache = field(factory=dict)  # key: user_id
-    bot_voice_state_cache: dict = field(factory=dict)  # key: guild_id
+    message_cache: TTLCache = attrs.field(repr=False, factory=TTLCache)  # key: (channel_id, message_id)
+    role_cache: TTLCache = attrs.field(repr=False, factory=dict)  # key: role_id
+    voice_state_cache: TTLCache = attrs.field(repr=False, factory=dict)  # key: user_id
+    bot_voice_state_cache: dict = attrs.field(repr=False, factory=dict)  # key: guild_id
 
-    enable_emoji_cache: bool = field(default=False)
+    enable_emoji_cache: bool = attrs.field(repr=False, default=False)
     """If the emoji cache should be enabled. Default: False"""
-    emoji_cache: Optional[dict] = field(default=None, init=False)  # key: emoji_id
+    emoji_cache: Optional[dict] = attrs.field(repr=False, default=None, init=False)  # key: emoji_id
 
     # Expiring id reference cache
-    dm_channels: TTLCache = field(factory=TTLCache)  # key: user_id
-    user_guilds: TTLCache = field(factory=dict)  # key: user_id; value: set[guild_id]
+    dm_channels: TTLCache = attrs.field(repr=False, factory=TTLCache)  # key: user_id
+    user_guilds: TTLCache = attrs.field(repr=False, factory=dict)  # key: user_id; value: set[guild_id]
+
+    logger: Logger = attrs.field(repr=False, init=False, factory=get_logger)
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self.message_cache, TTLCache):
-            logger.warning(
+            self.logger.warning(
                 "Disabling cache limits for message_cache is not recommended! This can result in very high memory usage"
             )
 
@@ -446,7 +453,7 @@ class GlobalCache:
                 data = await self._client.http.get_channel(channel_id)
                 channel = self.place_channel_data(data)
             except Forbidden:
-                logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
+                self.logger.warning(f"Forbidden access to channel {channel_id}. Generating fallback channel object")
                 channel = BaseChannel.from_dict({"id": channel_id, "type": MISSING}, self._client)
         return channel
 

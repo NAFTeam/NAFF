@@ -3,6 +3,8 @@ import textwrap
 import uuid
 from typing import Callable, Coroutine, List, Optional, Sequence, TYPE_CHECKING, Union
 
+import attrs
+
 from naff import (
     Embed,
     ComponentContext,
@@ -16,12 +18,11 @@ from naff import (
     Message,
     MISSING,
     Snowflake_Type,
-    Select,
+    StringSelectMenu,
     SelectOption,
     Color,
     BrandColors,
 )
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.serializer import export_converter
 from naff.models.discord.emoji import process_emoji
 
@@ -32,11 +33,13 @@ if TYPE_CHECKING:
 __all__ = ("Paginator",)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Timeout:
-    paginator: "Paginator" = field()
+    paginator: "Paginator" = attrs.field(
+        repr=False,
+    )
     """The paginator that this timeout is associated with."""
-    run: bool = field(default=True)
+    run: bool = attrs.field(repr=False, default=True)
     """Whether or not this timeout is currently running."""
     ping: asyncio.Event = asyncio.Event()
     """The event that is used to wait the paginator action."""
@@ -53,15 +56,17 @@ class Timeout:
                 self.ping.clear()
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Page:
-    content: str = field()
+    content: str = attrs.field(
+        repr=False,
+    )
     """The content of the page."""
-    title: Optional[str] = field(default=None)
+    title: Optional[str] = attrs.field(repr=False, default=None)
     """The title of the page."""
-    prefix: str = field(kw_only=True, default="")
+    prefix: str = attrs.field(repr=False, kw_only=True, default="")
     """Content that is prepended to the page."""
-    suffix: str = field(kw_only=True, default="")
+    suffix: str = attrs.field(repr=False, kw_only=True, default="")
     """Content that is appended to the page."""
 
     @property
@@ -74,68 +79,70 @@ class Page:
         return Embed(description=f"{self.prefix}\n{self.content}\n{self.suffix}", title=self.title)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Paginator:
-    client: "Client" = field()
+    client: "Client" = attrs.field(
+        repr=False,
+    )
     """The NAFF client to hook listeners into"""
 
-    page_index: int = field(kw_only=True, default=0)
+    page_index: int = attrs.field(repr=False, kw_only=True, default=0)
     """The index of the current page being displayed"""
-    pages: Sequence[Page | Embed] = field(factory=list, kw_only=True)
+    pages: Sequence[Page | Embed] = attrs.field(repr=False, factory=list, kw_only=True)
     """The pages this paginator holds"""
-    timeout_interval: int = field(default=0, kw_only=True)
+    timeout_interval: int = attrs.field(repr=False, default=0, kw_only=True)
     """How long until this paginator disables itself"""
-    callback: Callable[..., Coroutine] = field(default=None)
+    callback: Callable[..., Coroutine] = attrs.field(repr=False, default=None)
     """A coroutine to call should the select button be pressed"""
 
-    show_first_button: bool = field(default=True)
+    show_first_button: bool = attrs.field(repr=False, default=True)
     """Should a `First` button be shown"""
-    show_back_button: bool = field(default=True)
+    show_back_button: bool = attrs.field(repr=False, default=True)
     """Should a `Back` button be shown"""
-    show_next_button: bool = field(default=True)
+    show_next_button: bool = attrs.field(repr=False, default=True)
     """Should a `Next` button be shown"""
-    show_last_button: bool = field(default=True)
+    show_last_button: bool = attrs.field(repr=False, default=True)
     """Should a `Last` button be shown"""
-    show_callback_button: bool = field(default=False)
+    show_callback_button: bool = attrs.field(repr=False, default=False)
     """Show a button which will call the `callback`"""
-    show_select_menu: bool = field(default=False)
+    show_select_menu: bool = attrs.field(repr=False, default=False)
     """Should a select menu be shown for navigation"""
 
-    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
-        default="⏮️", metadata=export_converter(process_emoji)
+    first_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
+        repr=False, default="⏮️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the first button"""
-    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
-        default="⬅️", metadata=export_converter(process_emoji)
+    back_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
+        repr=False, default="⬅️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the back button"""
-    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
-        default="➡️", metadata=export_converter(process_emoji)
+    next_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
+        repr=False, default="➡️", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the next button"""
-    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
-        default="⏩", metadata=export_converter(process_emoji)
+    last_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
+        repr=False, default="⏩", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the last button"""
-    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = field(
-        default="✅", metadata=export_converter(process_emoji)
+    callback_button_emoji: Optional[Union["PartialEmoji", dict, str]] = attrs.field(
+        repr=False, default="✅", metadata=export_converter(process_emoji)
     )
     """The emoji to use for the callback button"""
 
-    wrong_user_message: str = field(default="This paginator is not for you")
+    wrong_user_message: str = attrs.field(repr=False, default="This paginator is not for you")
     """The message to be sent when the wrong user uses this paginator"""
 
-    default_title: Optional[str] = field(default=None)
+    default_title: Optional[str] = attrs.field(repr=False, default=None)
     """The default title to show on the embeds"""
-    default_color: Color = field(default=BrandColors.BLURPLE)
+    default_color: Color = attrs.field(repr=False, default=BrandColors.BLURPLE)
     """The default colour to show on the embeds"""
-    default_button_color: Union[ButtonStyles, int] = field(default=ButtonStyles.BLURPLE)
+    default_button_color: Union[ButtonStyles, int] = attrs.field(repr=False, default=ButtonStyles.BLURPLE)
     """The color of the buttons"""
 
-    _uuid: str = field(factory=uuid.uuid4)
-    _message: Message = field(default=MISSING)
-    _timeout_task: Timeout = field(default=MISSING)
-    _author_id: Snowflake_Type = field(default=MISSING)
+    _uuid: str = attrs.field(repr=False, factory=uuid.uuid4)
+    _message: Message = attrs.field(repr=False, default=MISSING)
+    _timeout_task: Timeout = attrs.field(repr=False, default=MISSING)
+    _author_id: Snowflake_Type = attrs.field(repr=False, default=MISSING)
 
     def __attrs_post_init__(self) -> None:
         self.client.add_component_callback(
@@ -257,7 +264,7 @@ class Paginator:
         if self.show_select_menu:
             current = self.pages[self.page_index]
             output.append(
-                Select(
+                StringSelectMenu(
                     [
                         SelectOption(f"{i+1} {p.get_summary if isinstance(p, Page) else p.title}", str(i))
                         for i, p in enumerate(self.pages)

@@ -1,16 +1,18 @@
+from logging import Logger
 from typing import Any, Dict, List, Type
 
 import attrs
 
 import naff.client.const as const
-from naff.client.utils.attr_utils import define
 import naff.client.utils.serializer as serializer
 
 __all__ = ("DictSerializationMixin",)
 
 
-@define(slots=False)
+@attrs.define(eq=False, order=False, hash=False, slots=False)
 class DictSerializationMixin:
+    logger: Logger = attrs.field(init=False, factory=const.get_logger, metadata=serializer.no_export_meta, repr=False)
+
     @classmethod
     def _get_keys(cls) -> frozenset:
         if (keys := getattr(cls, "_keys", None)) is None:
@@ -30,7 +32,7 @@ class DictSerializationMixin:
     def _filter_kwargs(cls, kwargs_dict: dict, keys: frozenset) -> dict:
         if const.kwarg_spam:
             unused = {k: v for k, v in kwargs_dict.items() if k not in keys}
-            const.logger.debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
+            const.get_logger().debug(f"Unused kwargs: {cls.__name__}: {unused}")  # for debug
         return {k: v for k, v in kwargs_dict.items() if k in keys}
 
     @classmethod
@@ -91,7 +93,6 @@ class DictSerializationMixin:
         """
         data = self._process_dict(data)
         for key, value in self._filter_kwargs(data, self._get_keys()).items():
-            # todo improve
             setattr(self, key, value)
 
         return self

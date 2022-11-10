@@ -1,8 +1,11 @@
 import re
+import string
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import attrs
+import emoji
+
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import list_converter
 from naff.client.utils.attr_converters import optional
 from naff.client.utils.serializer import dict_filter_none, no_export_meta
@@ -19,23 +22,24 @@ if TYPE_CHECKING:
 __all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji")
 
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
+unicode_emoji_reg = re.compile(r"[^\w\s,]")
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
     """Represent a basic ("partial") emoji used in discord."""
 
-    id: Optional["Snowflake_Type"] = field(
+    id: Optional["Snowflake_Type"] = attrs.field(
         repr=True, default=None, converter=optional(to_snowflake)
     )  # can be None for Standard Emoji
     """The custom emoji id. Leave empty if you are using standard unicode emoji."""
-    name: Optional[str] = field(repr=True, default=None)
+    name: Optional[str] = attrs.field(repr=True, default=None)
     """The custom emoji name, or standard unicode emoji in string"""
-    animated: bool = field(repr=True, default=False)
+    animated: bool = attrs.field(repr=True, default=False)
     """Whether this emoji is animated"""
 
     @classmethod
-    def from_str(cls, emoji_str: str) -> "PartialEmoji":
+    def from_str(cls, emoji_str: str, *, language: str = "alias") -> Optional["PartialEmoji"]:
         """
         Generate a PartialEmoji from a discord Emoji string representation, or unicode emoji.
 
@@ -45,9 +49,11 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             <a:emoji_name:emoji_id>
             a:emoji_name:emoji_id
             👋
+            :wave:
 
         Args:
             emoji_str: The string representation an emoji
+            language: The language to use for the unicode emoji parsing
 
         Returns:
             A PartialEmoji object
@@ -61,10 +67,28 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             parsed = tuple(filter(None, parsed[0]))
             if len(parsed) == 3:
                 return cls(name=parsed[1], id=parsed[2], animated=True)
-            else:
+            elif len(parsed) == 2:
                 return cls(name=parsed[0], id=parsed[1])
+            else:
+                _name = emoji.emojize(emoji_str, language=language)
+                _emoji_list = emoji.distinct_emoji_list(_name)
+                if _emoji_list:
+                    return cls(name=_emoji_list[0])
         else:
-            return cls(name=emoji_str)
+            # check if it's a unicode emoji
+            _emoji_list = emoji.distinct_emoji_list(emoji_str)
+            if _emoji_list:
+                return cls(name=_emoji_list[0])
+
+            # the emoji lib handles *most* emoji, however there are certain ones that it misses
+            # this acts as a fallback check
+            if matches := unicode_emoji_reg.search(emoji_str):
+                match = matches.group()
+
+                # the regex will match certain special characters, so this acts as a final failsafe
+                if match not in string.printable:
+                    return cls(name=match)
+        return None
 
     def __str__(self) -> str:
         s = self.req_format
@@ -88,22 +112,24 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
             return self.name
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class CustomEmoji(PartialEmoji, ClientObject):
     """Represent a custom emoji in a guild with all its properties."""
 
-    _client: "Client" = field(metadata=no_export_meta)
+    _client: "Client" = attrs.field(repr=False, metadata=no_export_meta)
 
-    require_colons: bool = field(default=False)
+    require_colons: bool = attrs.field(repr=False, default=False)
     """Whether this emoji must be wrapped in colons"""
-    managed: bool = field(default=False)
+    managed: bool = attrs.field(repr=False, default=False)
     """Whether this emoji is managed"""
-    available: bool = field(default=False)
+    available: bool = attrs.field(repr=False, default=False)
     """Whether this emoji can be used, may be false due to loss of Server Boosts."""
 
-    _creator_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
-    _role_ids: List["Snowflake_Type"] = field(factory=list, converter=optional(list_converter(to_snowflake)))
-    _guild_id: "Snowflake_Type" = field(default=None, converter=to_snowflake)
+    _creator_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
+    _role_ids: List["Snowflake_Type"] = attrs.field(
+        repr=False, factory=list, converter=optional(list_converter(to_snowflake))
+    )
+    _guild_id: "Snowflake_Type" = attrs.field(repr=False, default=None, converter=to_snowflake)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -148,6 +174,7 @@ class CustomEmoji(PartialEmoji, ClientObject):
 
     async def edit(
         self,
+        *,
         name: Optional[str] = None,
         roles: Optional[List[Union["Snowflake_Type", "Role"]]] = None,
         reason: Optional[str] = None,

@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
 from naff.models.discord.application import Application
@@ -21,47 +22,51 @@ if TYPE_CHECKING:
 __all__ = ("Invite",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Invite(ClientObject):
-    code: str = field(repr=True)
+    code: str = attrs.field(repr=True)
     """the invite code (unique ID)"""
 
     # metadata
-    uses: int = field(default=0, repr=True)
+    uses: int = attrs.field(default=0, repr=True)
     """the guild this invite is for"""
-    max_uses: int = field(default=0)
+    max_uses: int = attrs.field(repr=False, default=0)
     """max number of times this invite can be used"""
-    max_age: int = field(default=0)
+    max_age: int = attrs.field(repr=False, default=0)
     """duration (in seconds) after which the invite expires"""
-    created_at: Timestamp = field(default=MISSING, converter=optional_c(timestamp_converter), repr=True)
+    created_at: Timestamp = attrs.field(default=MISSING, converter=optional_c(timestamp_converter), repr=True)
     """when this invite was created"""
-    temporary: bool = field(default=False, repr=True)
+    temporary: bool = attrs.field(default=False, repr=True)
     """whether this invite only grants temporary membership"""
 
     # target data
-    target_type: Optional[Union[InviteTargetTypes, int]] = field(
+    target_type: Optional[Union[InviteTargetTypes, int]] = attrs.field(
         default=None, converter=optional_c(InviteTargetTypes), repr=True
     )
     """the type of target for this voice channel invite"""
-    approximate_presence_count: Optional[int] = field(default=MISSING)
+    approximate_presence_count: Optional[int] = attrs.field(repr=False, default=MISSING)
     """approximate count of online members, returned from the `GET /invites/<code>` endpoint when `with_counts` is `True`"""
-    approximate_member_count: Optional[int] = field(default=MISSING)
+    approximate_member_count: Optional[int] = attrs.field(repr=False, default=MISSING)
     """approximate count of total members, returned from the `GET /invites/<code>` endpoint when `with_counts` is `True`"""
-    scheduled_event: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake), repr=True)
+    scheduled_event: Optional["Snowflake_Type"] = attrs.field(
+        default=None, converter=optional_c(to_snowflake), repr=True
+    )
     """guild scheduled event data, only included if `guild_scheduled_event_id` contains a valid guild scheduled event id"""
-    expires_at: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter), repr=True)
+    expires_at: Optional[Timestamp] = attrs.field(default=None, converter=optional_c(timestamp_converter), repr=True)
     """the expiration date of this invite, returned from the `GET /invites/<code>` endpoint when `with_expiration` is `True`"""
-    stage_instance: Optional[StageInstance] = field(default=None)
+    stage_instance: Optional[StageInstance] = attrs.field(repr=False, default=None)
     """stage instance data if there is a public Stage instance in the Stage channel this invite is for (deprecated)"""
-    target_application: Optional[dict] = field(default=None)
+    target_application: Optional[dict] = attrs.field(repr=False, default=None)
     """the embedded application to open for this voice channel embedded application invite"""
-    guild_preview: Optional[GuildPreview] = field(default=MISSING)
+    guild_preview: Optional[GuildPreview] = attrs.field(repr=False, default=MISSING)
     """the guild this invite is for"""
 
     # internal for props
-    _channel_id: "Snowflake_Type" = field(converter=to_snowflake, repr=True)
-    _inviter_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake), repr=True)
-    _target_user_id: Optional["Snowflake_Type"] = field(default=None, converter=optional_c(to_snowflake))
+    _channel_id: "Snowflake_Type" = attrs.field(converter=to_snowflake, repr=True)
+    _inviter_id: Optional["Snowflake_Type"] = attrs.field(default=None, converter=optional_c(to_snowflake), repr=True)
+    _target_user_id: Optional["Snowflake_Type"] = attrs.field(
+        repr=False, default=None, converter=optional_c(to_snowflake)
+    )
 
     @property
     def channel(self) -> "TYPE_GUILD_CHANNEL":

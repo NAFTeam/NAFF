@@ -1,5 +1,6 @@
-from .base import DiscordObject
 from datetime import datetime
+from typing import Iterable, List, Optional, Union, Set
+
 from naff.client.const import Absent
 from naff.client.mixins.send import SendMixin
 from naff.models.discord.activity import Activity
@@ -13,7 +14,7 @@ from naff.models.discord.role import Role
 from naff.models.discord.snowflake import Snowflake_Type
 from naff.models.discord.timestamp import Timestamp
 from naff.models.discord.voice_state import VoiceState
-from typing import Iterable, List, Optional, Union, Set
+from .base import DiscordObject
 
 class _SendDMMixin(SendMixin):
     id: Snowflake_Type

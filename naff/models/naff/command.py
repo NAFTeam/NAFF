@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 import copy
 import functools
@@ -6,13 +7,15 @@ import re
 import typing
 from typing import Annotated, Awaitable, Callable, Coroutine, Optional, Tuple, Any, TYPE_CHECKING
 
-from naff.models.naff.callback import CallbackObject
+import attrs
+
 from naff.client.const import MISSING
 from naff.client.errors import CommandOnCooldown, CommandCheckFailure, MaxConcurrencyReached
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field, docs
+from naff.client.utils.attr_utils import docs
 from naff.client.utils.misc_utils import get_parameters, get_object_name, maybe_coroutine
 from naff.client.utils.serializer import no_export_meta
+from naff.models.naff.callback import CallbackObject
 from naff.models.naff.cooldowns import Cooldown, Buckets, MaxConcurrency
 from naff.models.naff.protocols import Converter
 
@@ -26,7 +29,7 @@ kwargs_reg = re.compile(r"^\*\*\w")
 args_reg = re.compile(r"^\*\w")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseCommand(DictSerializationMixin, CallbackObject):
     """
     An object all commands inherit from. Outlines the basic structure of a command, and handles checks.
@@ -42,33 +45,41 @@ class BaseCommand(DictSerializationMixin, CallbackObject):
 
     """
 
-    extension: Any = field(default=None, metadata=docs("The extension this command belongs to") | no_export_meta)
+    extension: Any = attrs.field(
+        repr=False, default=None, metadata=docs("The extension this command belongs to") | no_export_meta
+    )
 
-    enabled: bool = field(default=True, metadata=docs("Whether this can be run at all") | no_export_meta)
-    checks: list = field(
-        factory=list, metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta
+    enabled: bool = attrs.field(
+        repr=False, default=True, metadata=docs("Whether this can be run at all") | no_export_meta
     )
-    cooldown: Cooldown = field(
-        default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
+    checks: list = attrs.field(
+        repr=False,
+        factory=list,
+        metadata=docs("Any checks that must be *checked* before the command can run") | no_export_meta,
     )
-    max_concurrency: MaxConcurrency = field(
+    cooldown: Cooldown = attrs.field(
+        repr=False, default=MISSING, metadata=docs("An optional cooldown to apply to the command") | no_export_meta
+    )
+    max_concurrency: MaxConcurrency = attrs.field(
         default=MISSING,
         metadata=docs("An optional maximum number of concurrent instances to apply to the command") | no_export_meta,
     )
 
-    callback: Callable[..., Coroutine] = field(
-        default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
+    callback: Callable[..., Coroutine] = attrs.field(
+        repr=False, default=None, metadata=docs("The coroutine to be called for this command") | no_export_meta
     )
-    error_callback: Callable[..., Coroutine] = field(
-        default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
+    error_callback: Callable[..., Coroutine] = attrs.field(
+        repr=False, default=None, metadata=no_export_meta | docs("The coroutine to be called when an error occurs")
     )
-    pre_run_callback: Callable[..., Coroutine] = field(
+    pre_run_callback: Callable[..., Coroutine] = attrs.field(
         default=None,
         metadata=no_export_meta
         | docs("The coroutine to be called before the command is executed, **but** after the checks"),
     )
-    post_run_callback: Callable[..., Coroutine] = field(
-        default=None, metadata=no_export_meta | docs("The coroutine to be called after the command has executed")
+    post_run_callback: Callable[..., Coroutine] = attrs.field(
+        repr=False,
+        default=None,
+        metadata=no_export_meta | docs("The coroutine to be called after the command has executed"),
     )
 
     def __attrs_post_init__(self) -> None:

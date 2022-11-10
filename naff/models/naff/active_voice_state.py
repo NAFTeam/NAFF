@@ -1,14 +1,14 @@
 import asyncio
 from typing import Optional, TYPE_CHECKING
 
+import attrs
 from discord_typings import VoiceStateData
 
 from naff.api.voice.player import Player
 from naff.api.voice.voice_gateway import VoiceGateway
-from naff.client.const import logger, MISSING
+from naff.client.const import MISSING
 from naff.client.errors import VoiceAlreadyConnected, VoiceConnectionTimeout
 from naff.client.utils import optional
-from naff.client.utils.attr_utils import define, field
 from naff.models.discord.snowflake import Snowflake_Type, to_snowflake
 from naff.models.discord.voice_state import VoiceState
 
@@ -19,18 +19,18 @@ if TYPE_CHECKING:
 __all__ = ("ActiveVoiceState",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class ActiveVoiceState(VoiceState):
-    ws: Optional[VoiceGateway] = field(default=None)
+    ws: Optional[VoiceGateway] = attrs.field(repr=False, default=None)
     """The websocket for this voice state"""
-    player: Optional[Player] = field(default=None)
+    player: Optional[Player] = attrs.field(repr=False, default=None)
     """The playback task that broadcasts audio data to discord"""
-    _volume: float = field(default=0.5)
+    _volume: float = attrs.field(repr=False, default=0.5)
 
     # standard voice states expect this data, this voice state lacks it initially; so we make them optional
-    user_id: "Snowflake_Type" = field(default=MISSING, converter=optional(to_snowflake))
-    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
-    _member_id: Optional["Snowflake_Type"] = field(default=None, converter=optional(to_snowflake))
+    user_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=optional(to_snowflake))
+    _guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
+    _member_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
 
     def __attrs_post_init__(self) -> None:
         # jank line to handle the two inherently incompatible data structures
@@ -141,7 +141,7 @@ class ActiveVoiceState(VoiceState):
             raise VoiceAlreadyConnected
         await self.gateway.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
-        logger.debug("Waiting for voice connection data...")
+        self.logger.debug("Waiting for voice connection data...")
 
         try:
             self._voice_state, self._voice_server = await asyncio.gather(
@@ -151,7 +151,7 @@ class ActiveVoiceState(VoiceState):
         except asyncio.TimeoutError:
             raise VoiceConnectionTimeout from None
 
-        logger.debug("Attempting to initialise voice gateway...")
+        self.logger.debug("Attempting to initialise voice gateway...")
         await self.ws_connect()
 
     async def disconnect(self) -> None:
@@ -176,7 +176,7 @@ class ActiveVoiceState(VoiceState):
             self._channel_id = target_channel
             await self.gateway.voice_state_update(self._guild_id, self._channel_id, self.self_mute, self.self_deaf)
 
-            logger.debug("Waiting for voice connection data...")
+            self.logger.debug("Waiting for voice connection data...")
             try:
                 await self._client.wait_for("raw_voice_state_update", self._guild_predicate, timeout=timeout)
             except asyncio.TimeoutError:
@@ -246,7 +246,7 @@ class ActiveVoiceState(VoiceState):
         """
         if after is None:
             # bot disconnected
-            logger.info(f"Disconnecting from voice channel {self._channel_id}")
+            self.logger.info(f"Disconnecting from voice channel {self._channel_id}")
             await self._close_connection()
             self._client.cache.delete_bot_voice_state(self._guild_id)
             return

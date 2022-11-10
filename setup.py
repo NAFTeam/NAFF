@@ -11,6 +11,7 @@ extras_require = {
     "voice": ["PyNaCl>=1.5.0,<1.6"],
     "speedup": ["aiodns", "orjson", "Brotli"],
     "sentry": ["sentry-sdk"],
+    "jurigged": ["jurigged"],
 }
 extras_require["all"] = list(itertools.chain.from_iterable(extras_require.values()))
 extras_require["docs"] = extras_require["all"] + [

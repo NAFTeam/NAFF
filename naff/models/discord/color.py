@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from random import randint
 
-from naff.client.utils.attr_utils import define, field
+import attrs
 
 __all__ = (
     "COLOR_TYPES",
@@ -26,9 +26,9 @@ COLOR_TYPES = tuple[int, int, int] | list[int] | str | int
 hex_regex = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
 
-@define(init=False)
+@attrs.define(eq=False, order=False, hash=False, init=False)
 class Color:
-    value: int = field(repr=True)
+    value: int = attrs.field(repr=True)
     """The color value as an integer."""
 
     def __init__(self, color: COLOR_TYPES | None = None) -> None:
@@ -42,7 +42,7 @@ class Color:
             if re.match(hex_regex, color):
                 self.hex = color
             else:
-                self.value = BrandColors[color].value  # todo exception handling for better message
+                self.value = BrandColors[color].value
         else:
             raise TypeError
 

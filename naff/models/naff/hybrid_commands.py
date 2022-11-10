@@ -1,15 +1,13 @@
-import inspect
-import functools
 import asyncio
-
+import functools
+import inspect
 from typing import Any, Callable, Coroutine, TYPE_CHECKING, Optional, TypeGuard
 
+import attrs
 
 from naff.client.const import Absent, GLOBAL_SCOPE, MISSING, T
 from naff.client.errors import BadArgument
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.misc_utils import get_object_name, maybe_coroutine
-from naff.models.naff.command import BaseCommand
 from naff.models.naff.application_commands import (
     SlashCommand,
     LocalisedName,
@@ -18,8 +16,8 @@ from naff.models.naff.application_commands import (
     SlashCommandChoice,
     OptionTypes,
 )
-from naff.models.naff.prefixed_commands import _convert_to_bool, PrefixedCommand
-from naff.models.naff.protocols import Converter
+from naff.models.naff.command import BaseCommand
+from naff.models.naff.context import HybridContext, InteractionContext, PrefixedContext
 from naff.models.naff.converters import (
     _LiteralConverter,
     NoArgumentConverter,
@@ -28,7 +26,8 @@ from naff.models.naff.converters import (
     RoleConverter,
     BaseChannelConverter,
 )
-from naff.models.naff.context import HybridContext, InteractionContext, PrefixedContext
+from naff.models.naff.prefixed_commands import _convert_to_bool, PrefixedCommand
+from naff.models.naff.protocols import Converter
 
 if TYPE_CHECKING:
     from naff.models.naff.checks import TYPE_CHECK_FUNCTION
@@ -228,7 +227,7 @@ class _StackedNoArgConverter(NoArgumentConverter):
         return await maybe_coroutine(self._additional_converter_func, ctx, part_one)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class HybridCommand(SlashCommand):
     """A subclass of SlashCommand that handles the logic for hybrid commands."""
 
@@ -281,9 +280,9 @@ class HybridCommand(SlashCommand):
         return wrapper
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class _HybridPrefixedCommand(PrefixedCommand):
-    _uses_subcommand_func: bool = field(default=False)
+    _uses_subcommand_func: bool = attrs.field(repr=False, default=False)
 
     async def __call__(self, context: PrefixedContext, *args, **kwargs) -> None:
         new_ctx = context.bot.hybrid_context.from_prefixed_context(context)
@@ -353,13 +352,9 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
             if ori_param := old_params.pop(str(option.name), None):
                 if ori_param.annotation != inspect._empty and _check_if_annotation(ori_param.annotation, Converter):
                     if option.type != OptionTypes.ATTACHMENT:
-                        annotation = _StackedConverter(
-                            annotation, _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
-                        )
+                        annotation = _StackedConverter(annotation, _get_converter_function(ori_param.annotation, str(option.name)))  # type: ignore
                     else:
-                        annotation = _StackedNoArgConverter(
-                            _get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name))  # type: ignore
-                        )
+                        annotation = _StackedNoArgConverter(_get_converter_function(annotation, ""), _get_converter_function(ori_param.annotation, str(option.name)))  # type: ignore
 
                 if not option.required and ori_param.default == inspect._empty:
                     # prefixed commands would automatically fill this in, slash commands don't
@@ -394,9 +389,9 @@ def _prefixed_from_slash(cmd: SlashCommand) -> _HybridPrefixedCommand:
 
     prefixed_cmd = _HybridPrefixedCommand(
         name=str(cmd.sub_cmd_name) if cmd.is_subcommand else str(cmd.name),
-        aliases=list((cmd.sub_cmd_name.to_locale_dict() or {}).values())
+        aliases=list(cmd.sub_cmd_name.to_locale_dict().values())
         if cmd.is_subcommand
-        else list((cmd.name.to_locale_dict() or {}).values()),
+        else list(cmd.name.to_locale_dict().values()),
         help=str(cmd.sub_cmd_description) if cmd.is_subcommand else str(cmd.description),
         callback=cmd.callback,
         extension=cmd.extension,

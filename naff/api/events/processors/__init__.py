@@ -1,5 +1,6 @@
 from .channel_events import *
 from .guild_events import *
+from .integrations import *
 from .member_events import *
 from .message_events import *
 from .reaction_events import *

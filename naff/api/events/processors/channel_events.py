@@ -2,9 +2,9 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
+from naff.client.const import MISSING
 from naff.models.discord.channel import BaseChannel
 from naff.models.discord.invite import Invite
-from naff.client.const import MISSING
 from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:

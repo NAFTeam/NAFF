@@ -1,6 +1,8 @@
 from .activity import *
+from .app_perms import *
 from .application import *
 from .asset import *
+from .auto_mod import *
 from .channel import *
 from .color import *
 from .components import *
@@ -24,4 +26,3 @@ from .timestamp import *
 from .user import *
 from .voice_state import *
 from .webhooks import *
-from .auto_mod import *
