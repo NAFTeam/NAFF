@@ -449,49 +449,53 @@ async def test_webhooks(bot: Client, guild: Guild, channel: GuildText) -> None:
 
 @pytest.mark.asyncio
 async def test_voice(bot: Client, guild: Guild) -> None:
-    try:
-        import nacl  # noqa
-    except ImportError:
-        # testing on a non-voice extra
-        return
     test_channel = await guild.create_voice_channel(f"_test_voice-{bot.suffix}")
     test_channel_two = await guild.create_voice_channel(f"_test_voice_two-{bot.suffix}")
+    try:
+        try:
+            import nacl  # noqa
+        except ImportError:
+            # testing on a non-voice extra
+            return
 
-    vc = await test_channel.connect(deafened=True)
-    assert vc == bot.get_bot_voice_state(guild.id)
+        vc = await test_channel.connect(deafened=True)
+        assert vc == bot.get_bot_voice_state(guild.id)
 
-    audio = AudioVolume("tests/test_audio.mp3")
-    vc.play_no_wait(audio)
-    await asyncio.sleep(2)
+        audio = AudioVolume("tests/test_audio.mp3")
+        vc.play_no_wait(audio)
+        await asyncio.sleep(2)
 
-    assert len(vc.current_audio.buffer) != 0
-    assert vc.player._sent_payloads != 0
+        assert len(vc.current_audio.buffer) != 0
+        assert vc.player._sent_payloads != 0
 
-    await vc.move(test_channel_two)
-    await asyncio.sleep(2)
+        await vc.move(test_channel_two)
+        await asyncio.sleep(2)
 
-    _before = vc.player._sent_payloads
+        _before = vc.player._sent_payloads
 
-    await test_channel_two.connect(deafened=True)
+        await test_channel_two.connect(deafened=True)
 
-    await asyncio.sleep(2)
+        await asyncio.sleep(2)
 
-    assert vc.player._sent_payloads != _before
+        assert vc.player._sent_payloads != _before
 
-    vc.volume = 1
-    await asyncio.sleep(1)
-    vc.volume = 0.5
+        vc.volume = 1
+        await asyncio.sleep(1)
+        vc.volume = 0.5
 
-    vc.pause()
-    await asyncio.sleep(0.1)
-    assert vc.player.paused
-    vc.resume()
-    await asyncio.sleep(0.1)
-    assert not vc.player.paused
+        vc.pause()
+        await asyncio.sleep(0.1)
+        assert vc.player.paused
+        vc.resume()
+        await asyncio.sleep(0.1)
+        assert not vc.player.paused
 
-    await vc.disconnect()
-    await vc._close_connection()
-    await vc.ws._closed.wait()
+        await vc.disconnect()
+        await vc._close_connection()
+        await vc.ws._closed.wait()
+    finally:
+        await test_channel.delete()
+        await test_channel_two.delete()
 
 
 @pytest.mark.asyncio
