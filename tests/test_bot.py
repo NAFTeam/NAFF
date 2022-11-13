@@ -291,22 +291,25 @@ async def test_members(bot: Client, guild: Guild, channel: GuildText) -> None:
 
     assert len(member.roles) == base_line
     role = await guild.create_role(f"test-{bot.suffix}")
-    await member.add_role(role)
-    with suppress(asyncio.exceptions.TimeoutError):
-        await bot.wait_for("member_update", timeout=2)
-    assert len(member.roles) != base_line
-    await member.remove_role(role)
-    with suppress(asyncio.exceptions.TimeoutError):
-        await bot.wait_for("member_update", timeout=2)
-    assert len(member.roles) == base_line
+    try:
+        await member.add_role(role)
+        with suppress(asyncio.exceptions.TimeoutError):
+            await bot.wait_for("member_update", timeout=2)
+        assert len(member.roles) != base_line
+        await member.remove_role(role)
+        with suppress(asyncio.exceptions.TimeoutError):
+            await bot.wait_for("member_update", timeout=2)
+        assert len(member.roles) == base_line
 
-    assert member.display_avatar is not None
-    assert member.display_name is not None
+        assert member.display_avatar is not None
+        assert member.display_name is not None
 
-    assert member.has_permission(Permissions.SEND_MESSAGES)
-    assert member.channel_permissions(channel)
+        assert member.has_permission(Permissions.SEND_MESSAGES)
+        assert member.channel_permissions(channel)
 
-    assert member.guild_permissions is not None
+        assert member.guild_permissions is not None
+    finally:
+        await role.delete()
 
 
 @pytest.mark.asyncio
