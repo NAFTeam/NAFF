@@ -290,6 +290,8 @@ class UserFlags(DiscordIntFlag):  # type: ignore
     """A user who is suspected of spamming"""
     DISABLE_PREMIUM = 1 << 21
     """Nitro features disabled for this user. Only used by Discord Staff for testing"""
+    ACTIVE_DEVELOPER = 1 << 22
+    """This user is an active developer"""
 
     # Shortcuts/grouping/aliases
     HYPESQUAD = HOUSE_BRAVERY | HOUSE_BRILLIANCE | HOUSE_BALANCE
