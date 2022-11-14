@@ -20,6 +20,9 @@ class TimestampStyles(str, Enum):
     LongDateTime = "F"
     RelativeTime = "R"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class Timestamp(datetime):
     """
