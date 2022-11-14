@@ -1,10 +1,9 @@
 import asyncio
+import logging
 import os
 from asyncio import AbstractEventLoop
 from contextlib import suppress
 from datetime import datetime
-import random
-import warnings
 
 import pytest
 
@@ -38,10 +37,7 @@ from naff import (
 from naff.api.gateway.websocket import WebsocketClient
 from naff.api.http.route import Route
 from naff.api.voice.audio import AudioVolume
-from naff.client.const import MISSING
 from naff.client.errors import NotFound
-from naff.client.utils.misc_utils import find, find_all
-from naff.models.discord.timestamp import Timestamp
 
 __all__ = ()
 
@@ -60,6 +56,8 @@ if not TOKEN:
 if os.environ.get("GITHUB_ACTIONS") and not os.environ.get("RUN_TESTBOT"):
     pytest.skip(f"Skipping {os.path.basename(__file__)} - RUN_TESTBOT not set", allow_module_level=True)
 
+log = logging.getLogger("NAFF-Integration-Tests")
+
 
 @pytest.fixture(scope="module")
 def event_loop() -> AbstractEventLoop:
@@ -67,56 +65,51 @@ def event_loop() -> AbstractEventLoop:
 
 
 @pytest.fixture(scope="module")
-async def bot() -> Client:
+async def bot(github_commit) -> Client:
     bot = naff.Client(activity="Testing someones code")
     await bot.login(TOKEN)
     asyncio.create_task(bot.start_gateway())
 
     await bot._ready.wait()
+    bot.suffix = github_commit
+    log.info(f"Logged in as {bot.user} ({bot.user.id}) -- {bot.suffix}")
 
     yield bot
 
 
 @pytest.fixture(scope="module")
 async def guild(bot: Client) -> Guild:
-    if len(bot.guilds) > 9:
-        leftover = find(lambda g: g.is_owner(bot.user.id) and g.name == "test_suite_guild", bot.guilds)
-        if leftover:
-            age = Timestamp.now() - leftover.created_at
-            if age.days > 0:
-                # This from a failed run, let's clean it up
-                await leftover.delete()
-    try:
-        guild: naff.Guild = await naff.Guild.create("test_suite_guild", bot)
-    except naff.client.errors.HTTPException as e:
-        text = e.text
-        if text is not MISSING and "Maximum number of guilds reached" in text:
-            warnings.warn("Reusing old guild.  Tests may be flaky")
-            guilds = find_all(lambda g: g.is_owner(bot.user.id) and g.name == "test_suite_guild", bot.guilds)
-            random.shuffle(guilds)  # Pick one at random to *reduce* chances two race conditions
-            guild = guilds[0]
-        else:
-            raise
-    community_channel = await guild.create_text_channel("community_channel")
+    guild = next((g for g in bot.guilds if g.name == "NAFF Test Suite"), None)
+    if not guild:
+        log.info("No guild found, creating one...")
 
-    await guild.edit(
-        features=["COMMUNITY"],
-        rules_channel=community_channel,
-        system_channel=community_channel,
-        public_updates_channel=community_channel,
-        explicit_content_filter=ExplicitContentFilterLevels.ALL_MEMBERS,
-        verification_level=VerificationLevels.LOW,
-    )
+        guild: naff.Guild = await naff.Guild.create("NAFF Test Suite", bot)
+        community_channel = await guild.create_text_channel("community_channel")
+
+        await guild.edit(
+            features=["COMMUNITY"],
+            rules_channel=community_channel,
+            system_channel=community_channel,
+            public_updates_channel=community_channel,
+            explicit_content_filter=ExplicitContentFilterLevels.ALL_MEMBERS,
+            verification_level=VerificationLevels.LOW,
+        )
 
     yield guild
-
-    await guild.delete()
 
 
 @pytest.fixture(scope="module")
 async def channel(bot, guild) -> GuildText:
-    channel = await guild.create_text_channel("test_scene")
-    return channel
+    channel = await guild.create_text_channel(f"test_scene - {bot.suffix}")
+    yield channel
+    await channel.delete()
+
+
+@pytest.fixture(scope="module")
+async def github_commit() -> str:
+    import subprocess  # noqa: S404
+
+    return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()  # noqa: S603, S607
 
 
 def ensure_attributes(target_object) -> None:
@@ -129,10 +122,10 @@ def ensure_attributes(target_object) -> None:
 async def test_channels(bot: Client, guild: Guild) -> None:
     channels = [
         guild_category := await guild.create_category("_test_category"),
-        await guild.create_text_channel("_test_text"),
-        await guild.create_news_channel("_test_news"),
-        await guild.create_stage_channel("_test_stage"),
-        await guild.create_voice_channel("_test_voice"),
+        await guild.create_text_channel(f"_test_text-{bot.suffix}"),
+        await guild.create_news_channel(f"_test_news-{bot.suffix}"),
+        await guild.create_stage_channel(f"_test_stage-{bot.suffix}"),
+        await guild.create_voice_channel(f"_test_voice-{bot.suffix}"),
     ]
 
     assert all(c in guild.channels for c in channels)
@@ -294,24 +287,29 @@ async def test_members(bot: Client, guild: Guild, channel: GuildText) -> None:
         await bot.wait_for("member_update", timeout=2)
     assert member.display_name == (bot.get_user(member.id)).username
 
-    assert len(member.roles) == 0
-    role = await guild.create_role("test")
-    await member.add_role(role)
-    with suppress(asyncio.exceptions.TimeoutError):
-        await bot.wait_for("member_update", timeout=2)
-    assert len(member.roles) != 0
-    await member.remove_role(role)
-    with suppress(asyncio.exceptions.TimeoutError):
-        await bot.wait_for("member_update", timeout=2)
-    assert len(member.roles) == 0
+    base_line = len(member.roles)
 
-    assert member.display_avatar is not None
-    assert member.display_name is not None
+    assert len(member.roles) == base_line
+    role = await guild.create_role(f"test-{bot.suffix}")
+    try:
+        await member.add_role(role)
+        with suppress(asyncio.exceptions.TimeoutError):
+            await bot.wait_for("member_update", timeout=2)
+        assert len(member.roles) != base_line
+        await member.remove_role(role)
+        with suppress(asyncio.exceptions.TimeoutError):
+            await bot.wait_for("member_update", timeout=2)
+        assert len(member.roles) == base_line
 
-    assert member.has_permission(Permissions.SEND_MESSAGES)
-    assert member.channel_permissions(channel)
+        assert member.display_avatar is not None
+        assert member.display_name is not None
 
-    assert member.guild_permissions is not None
+        assert member.has_permission(Permissions.SEND_MESSAGES)
+        assert member.channel_permissions(channel)
+
+        assert member.guild_permissions is not None
+    finally:
+        await role.delete()
 
 
 @pytest.mark.asyncio
@@ -431,77 +429,76 @@ async def test_components(bot: Client, channel: GuildText) -> None:
 
 
 @pytest.mark.asyncio
-async def test_webhooks(bot: Client, guild: Guild) -> None:
-    test_channel = await guild.create_text_channel("_test_webhooks")
-    test_thread = await test_channel.create_thread("Test Thread")
+async def test_webhooks(bot: Client, guild: Guild, channel: GuildText) -> None:
+    test_thread = await channel.create_thread("Test Thread")
 
-    try:
-        hook = await test_channel.create_webhook("Test")
-        await hook.send("Test 123")
-        await hook.delete()
+    hook = await channel.create_webhook("Test")
+    await hook.send("Test 123")
+    await hook.delete()
 
-        hook = await test_channel.create_webhook("Test-Avatar", r"tests/LordOfPolls.png")
+    hook = await channel.create_webhook("Test-Avatar", r"tests/LordOfPolls.png")
 
-        _m = await hook.send("Test", wait=True)
-        assert isinstance(_m, Message)
-        assert _m.webhook_id == hook.id
-        await hook.send("Test", username="Different Name", wait=True)
-        await hook.send("Test", avatar_url=bot.user.avatar.url, wait=True)
-        _m = await hook.send("Test", thread=test_thread, wait=True)
-        assert _m is not None
-        assert _m.channel == test_thread
+    _m = await hook.send("Test", wait=True)
+    assert isinstance(_m, Message)
+    assert _m.webhook_id == hook.id
+    await hook.send("Test", username="Different Name", wait=True)
+    await hook.send("Test", avatar_url=bot.user.avatar.url, wait=True)
+    _m = await hook.send("Test", thread=test_thread, wait=True)
+    assert _m is not None
+    assert _m.channel == test_thread
 
-        await hook.delete()
-    finally:
-        await test_channel.delete()
+    await hook.delete()
 
 
 @pytest.mark.asyncio
 async def test_voice(bot: Client, guild: Guild) -> None:
+    test_channel = await guild.create_voice_channel(f"_test_voice-{bot.suffix}")
+    test_channel_two = await guild.create_voice_channel(f"_test_voice_two-{bot.suffix}")
     try:
-        import nacl  # noqa
-    except ImportError:
-        # testing on a non-voice extra
-        return
-    test_channel = await guild.create_voice_channel("_test_voice")
-    test_channel_two = await guild.create_voice_channel("_test_voice_two")
+        try:
+            import nacl  # noqa
+        except ImportError:
+            # testing on a non-voice extra
+            return
 
-    vc = await test_channel.connect(deafened=True)
-    assert vc == bot.get_bot_voice_state(guild.id)
+        vc = await test_channel.connect(deafened=True)
+        assert vc == bot.get_bot_voice_state(guild.id)
 
-    audio = AudioVolume("tests/test_audio.mp3")
+        audio = AudioVolume("tests/test_audio.mp3")
+        vc.play_no_wait(audio)
+        await asyncio.sleep(2)
 
-    vc.play_no_wait(audio)
-    await asyncio.sleep(2)
+        assert len(vc.current_audio.buffer) != 0
+        assert vc.player._sent_payloads != 0
 
-    assert len(vc.current_audio.buffer) != 0
-    assert vc.player._sent_payloads != 0
+        await vc.move(test_channel_two)
+        await asyncio.sleep(2)
 
-    await vc.move(test_channel_two)
-    await asyncio.sleep(2)
+        _before = vc.player._sent_payloads
 
-    _before = vc.player._sent_payloads
+        await test_channel_two.connect(deafened=True)
 
-    await test_channel_two.connect(deafened=True)
+        await asyncio.sleep(2)
 
-    await asyncio.sleep(2)
+        assert vc.player._sent_payloads != _before
 
-    assert vc.player._sent_payloads != _before
+        vc.volume = 1
+        await asyncio.sleep(1)
+        vc.volume = 0.5
 
-    vc.volume = 1
-    await asyncio.sleep(1)
-    vc.volume = 0.5
+        vc.pause()
+        await asyncio.sleep(0.1)
+        assert vc.player.paused
+        vc.resume()
+        await asyncio.sleep(0.1)
+        assert not vc.player.paused
 
-    vc.pause()
-    await asyncio.sleep(0.1)
-    assert vc.player.paused
-    vc.resume()
-    await asyncio.sleep(0.1)
-    assert not vc.player.paused
-
-    await vc.disconnect()
-    await vc._close_connection()
-    await vc.ws._closed.wait()
+        await vc.disconnect()
+        await vc._close_connection()
+        await vc.ws._closed.wait()
+    finally:
+        await test_channel.delete()
+        await test_channel_two.delete()
 
 
 @pytest.mark.asyncio
