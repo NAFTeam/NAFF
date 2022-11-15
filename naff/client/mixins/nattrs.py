@@ -105,9 +105,15 @@ class Nattrs:
         slotted = hasattr(cls, "__slots__")
 
         for key in kwargs:
+            kwargs_key = key
+            if key not in default_vars:
+                trial_key = f"_{key}"
+                if trial_key in default_vars:
+                    key = trial_key
+
             if slotted and key not in cls.__slots__:
                 continue
-            value = kwargs[key]
+            value = kwargs[kwargs_key]
             if (field := default_vars.get(key, NOTSET)) is not NOTSET:
                 if field.converter:
                     if value is not None and value is not MISSING:
@@ -118,7 +124,7 @@ class Nattrs:
 
         # default assignment
         for key in default_vars:
-            if key in kwargs:
+            if key in kwargs or key[1:] in kwargs:
                 # already assigned
                 continue
             if slotted and key not in cls.__slots__:
