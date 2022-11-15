@@ -5,7 +5,6 @@ from aiohttp import FormData
 
 from naff.api.http.route import Route
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_converters import timestamp_converter
 from naff.models.discord.enums import ChannelTypes
 from naff.models.discord.timestamp import Timestamp
 
