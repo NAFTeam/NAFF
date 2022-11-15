@@ -1,5 +1,6 @@
 import re
 import string
+import unicodedata
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import attrs
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 __all__ = ("PartialEmoji", "CustomEmoji", "process_emoji_req_format", "process_emoji")
 
 emoji_regex = re.compile(r"<?(a)?:(\w*):(\d*)>?")
-unicode_emoji_reg = re.compile(r"[^\w\s,]")
+unicode_emoji_reg = re.compile(r"[^\w\s,’‘“”…–—•◦‣⁃⁎⁏⁒⁓⁺⁻⁼⁽⁾ⁿ₊₋₌₍₎]")
 
 
 class PartialEmoji(SnowflakeObject, DictSerializationMixin):
@@ -87,7 +88,8 @@ class PartialEmoji(SnowflakeObject, DictSerializationMixin):
 
                 # the regex will match certain special characters, so this acts as a final failsafe
                 if match not in string.printable:
-                    return cls(name=match)
+                    if unicodedata.category(match) == "So":
+                        return cls(name=match)
         return None
 
     def __str__(self) -> str:

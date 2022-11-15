@@ -501,7 +501,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
                 # This can only be in the member or user cache
                 caches = (
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
-                    (self._client.cache.get_user, self.target_id),
+                    (self._client.cache.get_user, (self.target_id,)),
                 )
             case CommandTypes.MESSAGE:
                 # This can only be in the message cache
@@ -512,10 +512,10 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
                 caches = (
                     (self._client.cache.get_message, (self.channel.id, self.target_id)),
                     (self._client.cache.get_member, (self.guild_id, self.target_id)),
-                    (self._client.cache.get_user, self.target_id),
-                    (self._client.cache.get_channel, self.target_id),
-                    (self._client.cache.get_role, self.target_id),
-                    (self._client.cache.get_emoji, self.target_id),  # unlikely, so check last
+                    (self._client.cache.get_user, (self.target_id,)),
+                    (self._client.cache.get_channel, (self.target_id,)),
+                    (self._client.cache.get_role, (self.target_id,)),
+                    (self._client.cache.get_emoji, (self.target_id,)),  # unlikely, so check last
                 )
 
         for cache, keys in caches:

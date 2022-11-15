@@ -107,3 +107,34 @@ def test_numerical_emoji() -> None:
 def test_false_positives() -> None:
     for _e in string.printable:
         assert PartialEmoji.from_str(_e) is None
+
+    unicode_general_punctuation = [
+        "’",
+        "‘",
+        "“",
+        "”",
+        "…",
+        "–",
+        "—",
+        "•",
+        "◦",
+        "‣",
+        "⁃",
+        "⁎",
+        "⁏",
+        "⁒",
+        "⁓",
+        "⁺",
+        "⁻",
+        "⁼",
+        "⁽",
+        "⁾",
+        "ⁿ",
+        "₊",
+        "₋",
+        "₌",
+        "₍",
+        "₎",
+    ]
+    for _e in unicode_general_punctuation:
+        assert PartialEmoji.from_str(_e) is None
