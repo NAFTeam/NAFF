@@ -142,7 +142,7 @@ class ArchivedForumPosts(AsyncIterator):
             expected = self.get_limit
 
             rcv = await self.channel._client.http.list_public_archived_threads(
-                self.channel.id, limit=expected, before=self.last
+                self.channel.id, limit=expected, before=to_snowflake(self.last) if self.last else None
             )
             threads = [self.channel._client.cache.place_channel_data(data) for data in rcv["threads"]]
 

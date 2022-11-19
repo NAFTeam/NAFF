@@ -5,8 +5,8 @@ from aiohttp import FormData
 
 from naff.api.http.route import Route
 from naff.client.const import MISSING, Absent
-from naff.client.utils.attr_converters import timestamp_converter
 from naff.models.discord.enums import ChannelTypes
+from naff.models.discord.timestamp import Timestamp
 
 __all__ = ("ThreadRequests",)
 
@@ -93,7 +93,7 @@ class ThreadRequests:
         if limit:
             payload["limit"] = limit
         if before:
-            payload["before"] = timestamp_converter(before)
+            payload["before"] = Timestamp.from_snowflake(before).isoformat()
         return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/public"), params=payload)
 
     async def list_private_archived_threads(
@@ -115,7 +115,7 @@ class ThreadRequests:
         if limit:
             payload["limit"] = limit
         if before:
-            payload["before"] = before
+            payload["before"] = Timestamp.from_snowflake(before).isoformat()
         return await self.request(Route("GET", f"/channels/{channel_id}/threads/archived/private"), params=payload)
 
     async def list_joined_private_archived_threads(
