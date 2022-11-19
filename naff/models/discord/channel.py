@@ -512,7 +512,14 @@ class InvitableMixin:
             target_type = InviteTargetTypes.EMBEDDED_APPLICATION
 
         invite_data = await self._client.http.create_channel_invite(
-            self.id, max_age, max_uses, temporary, unique, target_type, target_user, target_application, reason
+            self.id,
+            max_age,
+            max_uses,
+            temporary,
+            unique,
+            target_user_id=target_user,
+            target_application_id=target_application,
+            reason=reason,
         )
         return models.Invite.from_dict(invite_data, self._client)
 
