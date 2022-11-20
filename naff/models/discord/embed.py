@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import attrs
 from attrs.validators import instance_of
 from attrs.validators import optional as v_optional
 
@@ -12,9 +13,8 @@ from naff.client.const import (
     EMBED_FIELD_VALUE_LENGTH,
 )
 from naff.client.mixins.serialization import DictSerializationMixin
-from naff.client.utils.attr_utils import define, field
-from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.attr_converters import optional as c_optional
+from naff.client.utils.attr_converters import timestamp_converter
 from naff.client.utils.serializer import no_export_meta, export_converter
 from naff.models.discord.color import Color, process_color
 from naff.models.discord.enums import EmbedTypes
@@ -32,7 +32,7 @@ __all__ = (
 )
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedField(DictSerializationMixin):
     """
     Representation of an embed field.
@@ -44,9 +44,13 @@ class EmbedField(DictSerializationMixin):
 
     """
 
-    name: str = field()
-    value: str = field()
-    inline: bool = field(default=False)
+    name: str = attrs.field(
+        repr=False,
+    )
+    value: str = attrs.field(
+        repr=False,
+    )
+    inline: bool = attrs.field(repr=False, default=False)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -62,7 +66,7 @@ class EmbedField(DictSerializationMixin):
         return len(self.name) + len(self.value)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedAuthor(DictSerializationMixin):
     """
     Representation of an embed author.
@@ -75,10 +79,10 @@ class EmbedAuthor(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = field(default=None)
-    url: Optional[str] = field(default=None)
-    icon_url: Optional[str] = field(default=None)
-    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
+    name: Optional[str] = attrs.field(repr=False, default=None)
+    url: Optional[str] = attrs.field(repr=False, default=None)
+    icon_url: Optional[str] = attrs.field(repr=False, default=None)
+    proxy_icon_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
 
     @name.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -89,7 +93,7 @@ class EmbedAuthor(DictSerializationMixin):
         return len(self.name)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
     """
     Representation of an attachment.
@@ -102,10 +106,10 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
 
     """
 
-    url: Optional[str] = field(default=None)
-    proxy_url: Optional[str] = field(default=None, metadata=no_export_meta)
-    height: Optional[int] = field(default=None, metadata=no_export_meta)
-    width: Optional[int] = field(default=None, metadata=no_export_meta)
+    url: Optional[str] = attrs.field(repr=False, default=None)
+    proxy_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
+    height: Optional[int] = attrs.field(repr=False, default=None, metadata=no_export_meta)
+    width: Optional[int] = attrs.field(repr=False, default=None, metadata=no_export_meta)
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -118,7 +122,7 @@ class EmbedAttachment(DictSerializationMixin):  # thumbnail or image or video
         return self.height, self.width
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedFooter(DictSerializationMixin):
     """
     Representation of an Embed Footer.
@@ -130,9 +134,11 @@ class EmbedFooter(DictSerializationMixin):
 
     """
 
-    text: str = field()
-    icon_url: Optional[str] = field(default=None)
-    proxy_icon_url: Optional[str] = field(default=None, metadata=no_export_meta)
+    text: str = attrs.field(
+        repr=False,
+    )
+    icon_url: Optional[str] = attrs.field(repr=False, default=None)
+    proxy_icon_url: Optional[str] = attrs.field(repr=False, default=None, metadata=no_export_meta)
 
     @classmethod
     def converter(cls, ingest: Union[dict, str, "EmbedFooter"]) -> "EmbedFooter":
@@ -154,7 +160,7 @@ class EmbedFooter(DictSerializationMixin):
         return len(self.text)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class EmbedProvider(DictSerializationMixin):
     """
     Represents an embed's provider.
@@ -168,50 +174,56 @@ class EmbedProvider(DictSerializationMixin):
 
     """
 
-    name: Optional[str] = field(default=None)
-    url: Optional[str] = field(default=None)
+    name: Optional[str] = attrs.field(repr=False, default=None)
+    url: Optional[str] = attrs.field(repr=False, default=None)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class Embed(DictSerializationMixin):
     """Represents a discord embed object."""
 
-    title: Optional[str] = field(default=None, repr=True)
+    title: Optional[str] = attrs.field(default=None, repr=True)
     """The title of the embed"""
-    description: Optional[str] = field(default=None, repr=True)
+    description: Optional[str] = attrs.field(default=None, repr=True)
     """The description of the embed"""
-    color: Optional[Union[Color, dict, tuple, list, str, int]] = field(
+    color: Optional[Union[Color, dict, tuple, list, str, int]] = attrs.field(
         default=None, repr=True, metadata=export_converter(process_color)
     )
     """The colour of the embed"""
-    url: Optional[str] = field(default=None, validator=v_optional(instance_of(str)), repr=True)
+    url: Optional[str] = attrs.field(default=None, validator=v_optional(instance_of(str)), repr=True)
     """The url the embed should direct to when clicked"""
-    timestamp: Optional[Timestamp] = field(
+    timestamp: Optional[Timestamp] = attrs.field(
         default=None,
         converter=c_optional(timestamp_converter),
         validator=v_optional(instance_of((datetime, float, int))),
         repr=True,
     )
     """Timestamp of embed content"""
-    fields: List[EmbedField] = field(factory=list, converter=EmbedField.from_list, repr=True)
+    fields: List[EmbedField] = attrs.field(factory=list, converter=EmbedField.from_list, repr=True)
     """A list of [fields][naff.models.discord.embed.EmbedField] to go in the embed"""
-    author: Optional[EmbedAuthor] = field(default=None, converter=c_optional(EmbedAuthor.from_dict))
+    author: Optional[EmbedAuthor] = attrs.field(repr=False, default=None, converter=c_optional(EmbedAuthor.from_dict))
     """The author of the embed"""
-    thumbnail: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
+    thumbnail: Optional[EmbedAttachment] = attrs.field(
+        repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict)
+    )
     """The thumbnail of the embed"""
-    image: Optional[EmbedAttachment] = field(default=None, converter=c_optional(EmbedAttachment.from_dict))
+    image: Optional[EmbedAttachment] = attrs.field(
+        repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict)
+    )
     """The image of the embed"""
-    video: Optional[EmbedAttachment] = field(
-        default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
+    video: Optional[EmbedAttachment] = attrs.field(
+        repr=False, default=None, converter=c_optional(EmbedAttachment.from_dict), metadata=no_export_meta
     )
     """The video of the embed, only used by system embeds"""
-    footer: Optional[EmbedFooter] = field(default=None, converter=c_optional(EmbedFooter.converter))
+    footer: Optional[EmbedFooter] = attrs.field(repr=False, default=None, converter=c_optional(EmbedFooter.converter))
     """The footer of the embed"""
-    provider: Optional[EmbedProvider] = field(
-        default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
+    provider: Optional[EmbedProvider] = attrs.field(
+        repr=False, default=None, converter=c_optional(EmbedProvider.from_dict), metadata=no_export_meta
     )
     """The provider of the embed, only used for system embeds"""
-    type: EmbedTypes = field(default=EmbedTypes.RICH, converter=c_optional(EmbedTypes), metadata=no_export_meta)
+    type: EmbedTypes = attrs.field(
+        repr=False, default=EmbedTypes.RICH, converter=c_optional(EmbedTypes), metadata=no_export_meta
+    )
 
     @title.validator
     def _name_validation(self, attribute: str, value: Any) -> None:
@@ -340,6 +352,25 @@ class Embed(DictSerializationMixin):
         """
         self.fields.append(EmbedField(name, str(value), inline))
         self._fields_validation("fields", self.fields)
+
+    def add_fields(self, *fields: EmbedField | str | dict) -> None:
+        """
+        Add multiple fields to the embed.
+
+        Args:
+            fields: The fields to add
+
+        """
+        for _field in fields:
+            if isinstance(_field, EmbedField):
+                self.fields.append(_field)
+                self._fields_validation("fields", self.fields)
+            elif isinstance(_field, str):
+                self.add_field(_field, _field)
+            elif isinstance(_field, dict):
+                self.add_field(**_field)
+            else:
+                raise TypeError(f"Expected EmbedField, str or dict, got {type(_field).__name__}")
 
 
 def process_embeds(embeds: Optional[Union[List[Union[Embed, Dict]], Union[Embed, Dict]]]) -> Optional[List[dict]]:

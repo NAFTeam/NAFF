@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any, Union
 
-from naff.client.utils.attr_utils import define, field
+import attrs
+
 from naff.models.discord.asset import Asset
 from naff.models.discord.enums import TeamMembershipState
 from naff.models.discord.snowflake import to_snowflake
@@ -14,14 +15,16 @@ if TYPE_CHECKING:
 __all__ = ("TeamMember", "Team")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class TeamMember(DiscordObject):
-    membership_state: TeamMembershipState = field(converter=TeamMembershipState)
+    membership_state: TeamMembershipState = attrs.field(repr=False, converter=TeamMembershipState)
     """Rhe user's membership state on the team"""
-    # permissions: List[str] = field(default=["*"])  # disabled until discord adds more team roles
-    team_id: "Snowflake_Type" = field(repr=True)
+    # permissions: List[str] = attrs.field(repr=False, default=["*"])  # disabled until discord adds more team roles
+    team_id: "Snowflake_Type" = attrs.field(repr=True)
     """Rhe id of the parent team of which they are a member"""
-    user: "User" = field()  # TODO: cache partial user (avatar, discrim, id, username)
+    user: "User" = attrs.field(
+        repr=False,
+    )  # TODO: cache partial user (avatar, discrim, id, username)
     """Rhe avatar, discriminator, id, and username of the user"""
 
     @classmethod
@@ -31,15 +34,15 @@ class TeamMember(DiscordObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Team(DiscordObject):
-    icon: Optional[Asset] = field(default=None)
+    icon: Optional[Asset] = attrs.field(repr=False, default=None)
     """A hash of the image of the team's icon"""
-    members: List[TeamMember] = field(factory=list)
+    members: List[TeamMember] = attrs.field(repr=False, factory=list)
     """The members of the team"""
-    name: str = field(repr=True)
+    name: str = attrs.field(repr=True)
     """The name of the team"""
-    owner_user_id: "Snowflake_Type" = field(converter=to_snowflake)
+    owner_user_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
     """The user id of the current team owner"""
 
     @classmethod

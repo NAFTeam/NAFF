@@ -99,20 +99,18 @@ await channel.send("Look a Button!", components=components)
 
 Sometimes there might be more than a handful options which users need to decide between. That's when a `Select` should probably be used.
 
-Selects are very similar to Buttons. The main difference is that they need options, which you supply by passing a list of `SelectOption`.
+Selects are very similar to Buttons. The main difference is that you get a list of options to choose from.
+
+If you want to use string options, then you use `StringSelect`. Simply pass a list of strings to `options` and you are good to go. You can also explicitly pass `SelectOptions` to control the value attribute.
 
 You can also define how many options users can choose by setting `min_values` and `max_values`.
+
 ```python
-components = Select(
+from naff import StringSelectMenu, SelectOption
+
+components = StringSelectMenu(
     options=[
-        SelectOption(
-            label="Pizza",
-            value="Pizza"
-        ),
-        SelectOption(
-            label="Egg Sandwich",
-            value="Egg Sandwich"
-        ),
+        "Pizza", "Pasta", "Burger", "Salad"
     ],
     placeholder="What is your favourite food?",
     min_values=1,
@@ -123,6 +121,10 @@ await channel.send("Look a Select!", components=components)
 ```
     ??? note
         You can only have upto 25 options in a Select
+
+Alternatively, you can use `RoleSelectMenu`, `UserSelectMenu` and `ChannelSelectMenu` to select roles, users and channels respectively. These select menus are very similar to `StringSelectMenu`, but they don't allow you to pass a list of options; it's all done behind the scenes.
+
+```python
 
 For more information, please visit the API reference [here](/API Reference/models/Discord/components/#naff.models.discord.components.Select).
 

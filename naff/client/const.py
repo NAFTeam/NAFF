@@ -45,7 +45,7 @@ __all__ = (
     "__repo_url__",
     "__py_version__",
     "__api_version__",
-    "logger",
+    "get_logger",
     "logger_name",
     "kwarg_spam",
     "DISCORD_EPOCH",
@@ -86,7 +86,14 @@ __repo_url__ = "https://github.com/Discord-Snake-Pit/NAFF"
 __py_version__ = f"{_ver_info[0]}.{_ver_info[1]}"
 __api_version__ = 10
 logger_name = "naff"
-logger = logging.getLogger(logger_name)
+_logger = logging.getLogger(logger_name)
+
+
+def get_logger() -> logging.Logger:
+    global _logger
+    return _logger
+
+
 default_locale = "english_us"
 kwarg_spam = False
 

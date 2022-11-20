@@ -1,9 +1,10 @@
 import functools
+from logging import Logger
 from typing import TYPE_CHECKING
 
 import attrs
-from naff import Embed
-from naff.client.const import logger
+
+from naff import Embed, get_logger
 from naff.ext.paginators import Paginator
 from naff.models.discord.color import BrandColors, Color
 from naff.models.naff.context import PrefixedContext
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ("PrefixedHelpCommand",)
 
 
-@attrs.define(slots=True)
+@attrs.define(eq=False, order=False, hash=False, slots=True)
 class PrefixedHelpCommand:
     """A help command for all prefixed commands in a bot."""
 
@@ -49,6 +50,7 @@ class PrefixedHelpCommand:
     """The text to display when a command does not have a brief string defined."""
 
     _cmd: PrefixedCommand = attrs.field(init=False, default=None)
+    logger: Logger = attrs.field(init=False, factory=get_logger)
 
     def __attrs_post_init__(self) -> None:
         if not self._cmd:
@@ -62,7 +64,7 @@ class PrefixedHelpCommand:
 
         # replace existing help command if found
         if "help" in self.client.prefixed_commands:
-            logger.warning("Replacing existing help command.")
+            self.logger.warning("Replacing existing help command.")
             del self.client.prefixed_commands["help"]
 
         self.client.add_prefixed_command(self._cmd)  # type: ignore

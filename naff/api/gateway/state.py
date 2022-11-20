@@ -1,13 +1,15 @@
 import asyncio
 import traceback
 from datetime import datetime
+from logging import Logger
 from typing import TYPE_CHECKING, Optional, Union
+
+import attrs
 
 import naff
 from naff.api import events
-from naff.client.const import logger, MISSING, Absent
+from naff.client.const import Absent, MISSING, get_logger
 from naff.client.errors import NaffException, WebSocketClosed
-from naff.client.utils.attr_utils import define, field
 from naff.models.discord.activity import Activity
 from naff.models.discord.enums import Intents, Status, ActivityType
 from .gateway import GatewayClient
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
 __all__ = ("ConnectionState",)
 
 
-@define(kw_only=False)
+@attrs.define(eq=False, order=False, hash=False, kw_only=False)
 class ConnectionState:
     client: "Client"
     """The bot's client"""
@@ -26,7 +28,7 @@ class ConnectionState:
     """The event intents in use"""
     shard_id: int
     """The shard ID of this state"""
-    _shard_ready: asyncio.Event = field(default=None)
+    _shard_ready: asyncio.Event = attrs.field(repr=False, default=None)
     """Indicates that this state is now ready"""
 
     gateway: Absent[GatewayClient] = MISSING
@@ -42,6 +44,8 @@ class ConnectionState:
     """Event to check if the gateway has been started."""
 
     _shard_task: asyncio.Task | None = None
+
+    logger: Logger = attrs.field(repr=False, init=False, factory=get_logger)
 
     def __attrs_post_init__(self, *args, **kwargs) -> None:
         self._shard_ready = asyncio.Event()
@@ -68,7 +72,7 @@ class ConnectionState:
         """Connect to the Discord Gateway."""
         self.gateway_url = await self.client.http.get_gateway()
 
-        logger.debug(f"Starting Shard ID {self.shard_id}")
+        self.logger.debug(f"Starting Shard ID {self.shard_id}")
         self.start_time = datetime.now()
         self._shard_task = asyncio.create_task(self._ws_connect())
 
@@ -80,7 +84,7 @@ class ConnectionState:
 
     async def stop(self) -> None:
         """Disconnect from the Discord Gateway."""
-        logger.debug(f"Shutting down shard ID {self.shard_id}")
+        self.logger.debug(f"Shutting down shard ID {self.shard_id}")
         if self.gateway is not None:
             self.gateway.close()
             self.gateway = None
@@ -98,7 +102,7 @@ class ConnectionState:
 
     async def _ws_connect(self) -> None:
         """Connect to the Discord Gateway."""
-        logger.info(f"Shard {self.shard_id} is attempting to connect to gateway...")
+        self.logger.info(f"Shard {self.shard_id} is attempting to connect to gateway...")
         try:
             async with GatewayClient(self, (self.shard_id, self.client.total_shards)) as self.gateway:
                 try:
@@ -123,7 +127,7 @@ class ConnectionState:
 
         except Exception as e:
             self.client.dispatch(events.Disconnect())
-            logger.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+            self.logger.error("".join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     async def change_presence(
         self, status: Optional[Union[str, Status]] = Status.ONLINE, activity: Absent[Union[Activity, str]] = MISSING
@@ -149,7 +153,7 @@ class ConnectionState:
 
                 if activity.type == ActivityType.STREAMING:
                     if not activity.url:
-                        logger.warning("Streaming activity cannot be set without a valid URL attribute")
+                        self.logger.warning("Streaming activity cannot be set without a valid URL attribute")
                 elif activity.type not in [
                     ActivityType.GAME,
                     ActivityType.STREAMING,
@@ -157,7 +161,9 @@ class ConnectionState:
                     ActivityType.WATCHING,
                     ActivityType.COMPETING,
                 ]:
-                    logger.warning(f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots")
+                    self.logger.warning(
+                        f"Activity type `{ActivityType(activity.type).name}` may not be enabled for bots"
+                    )
         else:
             activity = self.client.activity
 
@@ -172,7 +178,7 @@ class ConnectionState:
             if self.client.status:
                 status = self.client.status
             else:
-                logger.warning("Status must be set to a valid status type, defaulting to online")
+                self.logger.warning("Status must be set to a valid status type, defaulting to online")
                 status = Status.ONLINE
 
         self.client._status = status

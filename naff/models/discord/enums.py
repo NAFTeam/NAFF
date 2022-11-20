@@ -1,10 +1,9 @@
-from enum import Enum, EnumMeta, IntEnum, IntFlag, _decompose
+from enum import Enum, EnumMeta, IntEnum, IntFlag
 from functools import reduce
 from operator import or_
 from typing import Iterator, Tuple, TypeVar, Type
 
-from naff.client.const import logger
-
+from naff.client.const import get_logger
 
 __all__ = (
     "WebSocketOPCodes",
@@ -44,6 +43,7 @@ __all__ = (
     "ScheduledEventType",
     "ScheduledEventStatus",
     "AuditLogEventType",
+    "InteractionPermissionTypes",
 )
 
 
@@ -59,6 +59,38 @@ class AntiFlag:
 
 def _distinct(source) -> Tuple:
     return (x for x in source if (x.value & (x.value - 1)) == 0 and x.value != 0)
+
+
+def _decompose(flag, value):  # noqa
+    """
+    Extract all members from the value.
+
+    Source: Python 3.10.8 source
+    """
+    # _decompose is only called if the value is not named
+    not_covered = value
+    negative = value < 0
+    members = []
+    for member in flag:
+        member_value = member.value
+        if member_value and member_value & value == member_value:
+            members.append(member)
+            not_covered &= ~member_value
+    if not negative:
+        tmp = not_covered
+        while tmp:
+            flag_value = 2 ** (tmp.bit_length() - 1)
+            if flag_value in flag._value2member_map_:
+                members.append(flag._value2member_map_[flag_value])
+                not_covered &= ~flag_value
+            tmp &= ~flag_value
+    if not members and value in flag._value2member_map_:
+        members.append(flag._value2member_map_[value])
+    members.sort(key=lambda m: m._value_, reverse=True)
+    if len(members) > 1 and members[0].value == value:
+        # we have the breakdown, don't need the value member itself
+        members.pop(0)
+    return members, not_covered
 
 
 class DistinctFlag(EnumMeta):
@@ -83,7 +115,7 @@ SELF = TypeVar("SELF")
 
 
 def _log_type_mismatch(cls, value) -> None:
-    logger.error(
+    get_logger().error(
         f"Class `{cls.__name__}` received an invalid and unexpected value `{value}`. Please update NAFF or report this issue on GitHub - https://github.com/NAFTeam/NAFF/issues"
     )
 
@@ -203,7 +235,7 @@ class Intents(DiscordIntFlag):  # type: ignore
         typing=False,
         privileged=False,
         non_privileged=False,
-        default=True,
+        default=False,
         all=False,
     ) -> "Intents":
         """Set your desired intents."""
@@ -258,6 +290,8 @@ class UserFlags(DiscordIntFlag):  # type: ignore
     """A user who is suspected of spamming"""
     DISABLE_PREMIUM = 1 << 21
     """Nitro features disabled for this user. Only used by Discord Staff for testing"""
+    ACTIVE_DEVELOPER = 1 << 22
+    """This user is an active developer"""
 
     # Shortcuts/grouping/aliases
     HYPESQUAD = HOUSE_BRAVERY | HOUSE_BRILLIANCE | HOUSE_BALANCE
@@ -542,10 +576,18 @@ class ComponentTypes(CursedIntEnum):
     """Container for other components"""
     BUTTON = 2
     """Button object"""
-    SELECT = 3
-    """Select menu for picking from choices"""
+    STRING_SELECT = 3
+    """Select menu for picking from text choices"""
     INPUT_TEXT = 4
     """Text input object"""
+    USER_SELECT = 5
+    """Select menu for picking from users"""
+    ROLE_SELECT = 6
+    """Select menu for picking from roles"""
+    MENTIONABLE_SELECT = 7
+    """Select menu for picking from mentionable objects"""
+    CHANNEL_SELECT = 8
+    """Select menu for picking from channels"""
 
 
 class CommandTypes(CursedIntEnum):
@@ -567,6 +609,14 @@ class InteractionTypes(CursedIntEnum):
     MESSAGE_COMPONENT = 3
     AUTOCOMPLETE = 4
     MODAL_RESPONSE = 5
+
+
+class InteractionPermissionTypes(CursedIntEnum):
+    """The type of interaction permission received by discord."""
+
+    ROLE = 1
+    USER = 2
+    CHANNEL = 3
 
 
 class ButtonStyles(CursedIntEnum):

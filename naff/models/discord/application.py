@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, List, Optional, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field
 from naff.client.utils.attr_converters import optional
 from naff.models.discord.asset import Asset
 from naff.models.discord.enums import ApplicationFlags
@@ -16,50 +17,52 @@ if TYPE_CHECKING:
 __all__ = ("Application",)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Application(DiscordObject):
     """Represents a discord application."""
 
-    name: str = field(repr=True)
+    name: str = attrs.field(repr=True)
     """The name of the application"""
-    icon: Optional[Asset] = field(default=None)
+    icon: Optional[Asset] = attrs.field(repr=False, default=None)
     """The icon of the application"""
-    description: Optional[str] = field(default=None)
+    description: Optional[str] = attrs.field(repr=False, default=None)
     """The description of the application"""
-    rpc_origins: Optional[List[str]] = field(default=None)
+    rpc_origins: Optional[List[str]] = attrs.field(repr=False, default=None)
     """An array of rpc origin urls, if rpc is enabled"""
-    bot_public: bool = field(default=True)
+    bot_public: bool = attrs.field(repr=False, default=True)
     """When false only app owner can join the app's bot to guilds"""
-    bot_require_code_grant: bool = field(default=False)
+    bot_require_code_grant: bool = attrs.field(repr=False, default=False)
     """When true the app's bot will only join upon completion of the full oauth2 code grant flow"""
-    terms_of_service_url: Optional[str] = field(default=None)
+    terms_of_service_url: Optional[str] = attrs.field(repr=False, default=None)
     """The url of the app's terms of service"""
-    privacy_policy_url: Optional[str] = field(default=None)
+    privacy_policy_url: Optional[str] = attrs.field(repr=False, default=None)
     """The url of the app's privacy policy"""
-    owner_id: Optional[Snowflake_Type] = field(default=None, converter=optional(to_snowflake))
+    owner_id: Optional[Snowflake_Type] = attrs.field(repr=False, default=None, converter=optional(to_snowflake))
     """The id of the owner of the application"""
-    summary: str = field()
+    summary: str = attrs.field(
+        repr=False,
+    )
     """If this application is a game sold on Discord, this field will be the summary field for the store page of its primary sku"""
-    verify_key: Optional[str] = field(default=MISSING)
+    verify_key: Optional[str] = attrs.field(repr=False, default=MISSING)
     """The hex encoded key for verification in interactions and the GameSDK's GetTicket"""
-    team: Optional["Team"] = field(default=None)
+    team: Optional["Team"] = attrs.field(repr=False, default=None)
     """If the application belongs to a team, this will be a list of the members of that team"""
-    guild_id: Optional["Snowflake_Type"] = field(default=None)
+    guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """If this application is a game sold on Discord, this field will be the guild to which it has been linked"""
-    primary_sku_id: Optional["Snowflake_Type"] = field(default=None)
+    primary_sku_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None)
     """If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists"""
-    slug: Optional[str] = field(default=None)
+    slug: Optional[str] = attrs.field(repr=False, default=None)
     """If this application is a game sold on Discord, this field will be the URL slug that links to the store page"""
-    cover_image: Optional[Asset] = field(default=None)
+    cover_image: Optional[Asset] = attrs.field(repr=False, default=None)
     """The application's default rich presence invite cover"""
-    flags: Optional["ApplicationFlags"] = field(default=None, converter=optional(ApplicationFlags))
+    flags: Optional["ApplicationFlags"] = attrs.field(repr=False, default=None, converter=optional(ApplicationFlags))
     """The application's public flags"""
-    tags: Optional[List[str]] = field(default=None)
+    tags: Optional[List[str]] = attrs.field(repr=False, default=None)
     """The application's tags describing its functionality and content"""
     # todo: implement an ApplicationInstallParams object. See https://discord.com/developers/docs/resources/application#install-params-object
-    install_params: Optional[dict] = field(default=None)
+    install_params: Optional[dict] = attrs.field(repr=False, default=None)
     """The application's settings for in-app invitation to guilds"""
-    custom_install_url: Optional[str] = field(default=None)
+    custom_install_url: Optional[str] = attrs.field(repr=False, default=None)
     """The application's custom authorization link for invitation to a guild"""
 
     @classmethod

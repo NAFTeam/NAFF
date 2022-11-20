@@ -4,7 +4,6 @@ import inspect
 from typing import TYPE_CHECKING, Callable, Coroutine
 
 from naff.client.const import Absent, MISSING
-
 from naff.models.discord.user import NaffUser
 
 if TYPE_CHECKING:

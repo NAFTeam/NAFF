@@ -1,11 +1,12 @@
 import copy
 from typing import TYPE_CHECKING, Optional, Dict, Any
 
+import attrs
+
 from naff.client.const import MISSING
-from naff.client.utils.attr_utils import define, field
+from naff.client.mixins.serialization import DictSerializationMixin
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
-from naff.client.mixins.serialization import DictSerializationMixin
 from naff.models.discord.snowflake import to_snowflake
 from naff.models.discord.timestamp import Timestamp
 from .base import ClientObject
@@ -19,33 +20,35 @@ if TYPE_CHECKING:
 __all__ = ("VoiceState", "VoiceRegion")
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceState(ClientObject):
-    user_id: "Snowflake_Type" = field(default=MISSING, converter=to_snowflake)
+    user_id: "Snowflake_Type" = attrs.field(repr=False, default=MISSING, converter=to_snowflake)
     """the user id this voice state is for"""
-    session_id: str = field(default=MISSING)
+    session_id: str = attrs.field(repr=False, default=MISSING)
     """the session id for this voice state"""
-    deaf: bool = field(default=False)
+    deaf: bool = attrs.field(repr=False, default=False)
     """whether this user is deafened by the server"""
-    mute: bool = field(default=False)
+    mute: bool = attrs.field(repr=False, default=False)
     """whether this user is muted by the server"""
-    self_deaf: bool = field(default=False)
+    self_deaf: bool = attrs.field(repr=False, default=False)
     """whether this user is locally deafened"""
-    self_mute: bool = field(default=False)
+    self_mute: bool = attrs.field(repr=False, default=False)
     """whether this user is locally muted"""
-    self_stream: Optional[bool] = field(default=False)
+    self_stream: Optional[bool] = attrs.field(repr=False, default=False)
     """whether this user is streaming using "Go Live\""""
-    self_video: bool = field(default=False)
+    self_video: bool = attrs.field(repr=False, default=False)
     """whether this user's camera is enabled"""
-    suppress: bool = field(default=False)
+    suppress: bool = attrs.field(repr=False, default=False)
     """whether this user is muted by the current user"""
-    request_to_speak_timestamp: Optional[Timestamp] = field(default=None, converter=optional_c(timestamp_converter))
+    request_to_speak_timestamp: Optional[Timestamp] = attrs.field(
+        repr=False, default=None, converter=optional_c(timestamp_converter)
+    )
     """the time at which the user requested to speak"""
 
     # internal for props
-    _guild_id: Optional["Snowflake_Type"] = field(default=None, converter=to_snowflake)
-    _channel_id: "Snowflake_Type" = field(converter=to_snowflake)
-    _member_id: Optional["Snowflake_Type"] = field(default=None, converter=to_snowflake)
+    _guild_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=to_snowflake)
+    _channel_id: "Snowflake_Type" = attrs.field(repr=False, converter=to_snowflake)
+    _member_id: Optional["Snowflake_Type"] = attrs.field(repr=False, default=None, converter=to_snowflake)
 
     @property
     def guild(self) -> "Guild":
@@ -91,21 +94,21 @@ class VoiceState(ClientObject):
         return data
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class VoiceRegion(DictSerializationMixin):
     """A voice region."""
 
-    id: str = field(repr=True)
+    id: str = attrs.field(repr=True)
     """unique ID for the region"""
-    name: str = field(repr=True)
+    name: str = attrs.field(repr=True)
     """name of the region"""
-    vip: bool = field(default=False, repr=True)
+    vip: bool = attrs.field(default=False, repr=True)
     """whether this is a VIP-only voice region"""
-    optimal: bool = field(default=False)
+    optimal: bool = attrs.field(repr=False, default=False)
     """true for a single server that is closest to the current user's client"""
-    deprecated: bool = field(default=False)
+    deprecated: bool = attrs.field(repr=False, default=False)
     """whether this is a deprecated voice region (avoid switching to these)"""
-    custom: bool = field(default=False)
+    custom: bool = attrs.field(repr=False, default=False)
     """whether this is a custom voice region (used for events/etc)"""
 
     def __str__(self) -> str:

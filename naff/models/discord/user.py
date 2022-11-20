@@ -2,13 +2,15 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Iterable, Set, Dict, List, Optional, Union
 from warnings import warn
 
-from naff.client.const import MISSING, logger, Absent
+import attrs
+
+from naff.client.const import Absent, MISSING
 from naff.client.errors import HTTPException, TooManyChanges
 from naff.client.mixins.send import SendMixin
-from naff.client.utils.attr_utils import define, field, docs
 from naff.client.utils.attr_converters import list_converter, optional
 from naff.client.utils.attr_converters import optional as optional_c
 from naff.client.utils.attr_converters import timestamp_converter
+from naff.client.utils.attr_utils import docs
 from naff.client.utils.serializer import to_image_data
 from naff.models.discord.activity import Activity
 from naff.models.discord.asset import Asset
@@ -41,13 +43,13 @@ class _SendDMMixin(SendMixin):
         return await self._client.http.create_message(message_payload, dm_id, files=files)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class BaseUser(DiscordObject, _SendDMMixin):
     """Base class for User, essentially partial user discord model."""
 
-    username: str = field(repr=True, metadata=docs("The user's username, not unique across the platform"))
-    discriminator: int = field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
-    avatar: "Asset" = field(metadata=docs("The user's default avatar"))
+    username: str = attrs.field(repr=True, metadata=docs("The user's username, not unique across the platform"))
+    discriminator: int = attrs.field(repr=True, metadata=docs("The user's 4-digit discord-tag"))
+    avatar: "Asset" = attrs.field(repr=False, metadata=docs("The user's default avatar"))
 
     def __str__(self) -> str:
         return self.tag
@@ -102,32 +104,37 @@ class BaseUser(DiscordObject, _SendDMMixin):
         ]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class User(BaseUser):
-    bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
-    system: bool = field(
+    bot: bool = attrs.field(repr=True, default=False, metadata=docs("Is this user a bot?"))
+    system: bool = attrs.field(
         default=False,
         metadata=docs("whether the user is an Official Discord System user (part of the urgent message system)"),
     )
-    public_flags: "UserFlags" = field(
+    public_flags: "UserFlags" = attrs.field(
         repr=True, default=0, converter=UserFlags, metadata=docs("The flags associated with this user")
     )
-    premium_type: "PremiumTypes" = field(
-        default=0, converter=PremiumTypes, metadata=docs("The type of nitro subscription on a user's account")
+    premium_type: "PremiumTypes" = attrs.field(
+        repr=False,
+        default=0,
+        converter=PremiumTypes,
+        metadata=docs("The type of nitro subscription on a user's account"),
     )
 
-    banner: Optional["Asset"] = field(default=None, metadata=docs("The user's banner"))
-    accent_color: Optional["Color"] = field(
+    banner: Optional["Asset"] = attrs.field(repr=False, default=None, metadata=docs("The user's banner"))
+    accent_color: Optional["Color"] = attrs.field(
         default=None,
         converter=optional_c(Color),
         metadata=docs("The user's banner color"),
     )
-    activities: list[Activity] = field(
+    activities: list[Activity] = attrs.field(
         factory=list,
         converter=list_converter(optional(Activity.from_dict)),
         metadata=docs("A list of activities the user is in"),
     )
-    status: Absent[Status] = field(default=MISSING, metadata=docs("The user's status"), converter=optional(Status))
+    status: Absent[Status] = attrs.field(
+        repr=False, default=MISSING, metadata=docs("The user's status"), converter=optional(Status)
+    )
 
     @classmethod
     def _process_dict(cls, data: Dict[str, Any], client: "Client") -> Dict[str, Any]:
@@ -154,18 +161,26 @@ class User(BaseUser):
         return [member for member in member_objs if member]
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class NaffUser(User):
-    verified: bool = field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
-    mfa_enabled: bool = field(
-        default=False, metadata={"docs": "Whether the user has two factor enabled on their account"}
+    verified: bool = attrs.field(repr=True, metadata={"docs": "Whether the email on this account has been verified"})
+    mfa_enabled: bool = attrs.field(
+        repr=False, default=False, metadata={"docs": "Whether the user has two factor enabled on their account"}
     )
-    email: Optional[str] = field(default=None, metadata={"docs": "the user's email"})  # needs special permissions?
-    locale: Optional[str] = field(default=None, metadata={"docs": "the user's chosen language option"})
-    bio: Optional[str] = field(default=None, metadata={"docs": ""})
-    flags: "UserFlags" = field(default=0, converter=UserFlags, metadata={"docs": "the flags on a user's account"})
+    email: Optional[str] = attrs.field(
+        repr=False, default=None, metadata={"docs": "the user's email"}
+    )  # needs special permissions?
+    locale: Optional[str] = attrs.field(
+        repr=False, default=None, metadata={"docs": "the user's chosen language option"}
+    )
+    bio: Optional[str] = attrs.field(repr=False, default=None, metadata={"docs": ""})
+    flags: "UserFlags" = attrs.field(
+        repr=False, default=0, converter=UserFlags, metadata={"docs": "the flags on a user's account"}
+    )
 
-    _guild_ids: Set["Snowflake_Type"] = field(factory=set, metadata={"docs": "All the guilds the user is in"})
+    _guild_ids: Set["Snowflake_Type"] = attrs.field(
+        repr=False, factory=set, metadata={"docs": "All the guilds the user is in"}
+    )
 
     def _add_guilds(self, guild_ids: Set["Snowflake_Type"]) -> None:
         """
@@ -182,7 +197,7 @@ class NaffUser(User):
         """The guilds the user is in."""
         return [self._client.cache.get_guild(g_id) for g_id in self._guild_ids]
 
-    async def edit(self, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
+    async def edit(self, *, username: Absent[str] = MISSING, avatar: Absent[UPLOADABLE_TYPE] = MISSING) -> None:
         """
         Edit the client's user.
 
@@ -224,33 +239,38 @@ class NaffUser(User):
             self._client.cache.place_user_data(resp)
 
 
-@define()
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
 class Member(DiscordObject, _SendDMMixin):
-    bot: bool = field(repr=True, default=False, metadata=docs("Is this user a bot?"))
-    nick: Optional[str] = field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
-    deaf: bool = field(default=False, metadata=docs("Has this user been deafened in voice channels?"))
-    mute: bool = field(default=False, metadata=docs("Has this user been muted in voice channels?"))
-    joined_at: "Timestamp" = field(
-        default=MISSING, converter=optional(timestamp_converter), metadata=docs("When the user joined this guild")
+    bot: bool = attrs.field(repr=True, default=False, metadata=docs("Is this user a bot?"))
+    nick: Optional[str] = attrs.field(repr=True, default=None, metadata=docs("The user's nickname in this guild'"))
+    deaf: bool = attrs.field(repr=False, default=False, metadata=docs("Has this user been deafened in voice channels?"))
+    mute: bool = attrs.field(repr=False, default=False, metadata=docs("Has this user been muted in voice channels?"))
+    joined_at: "Timestamp" = attrs.field(
+        repr=False,
+        default=MISSING,
+        converter=optional(timestamp_converter),
+        metadata=docs("When the user joined this guild"),
     )
-    premium_since: Optional["Timestamp"] = field(
+    premium_since: Optional["Timestamp"] = attrs.field(
         default=None,
         converter=optional_c(timestamp_converter),
         metadata=docs("When the user started boosting the guild"),
     )
-    pending: Optional[bool] = field(
-        default=None, metadata=docs("Whether the user has **not** passed guild's membership screening requirements")
+    pending: Optional[bool] = attrs.field(
+        repr=False,
+        default=None,
+        metadata=docs("Whether the user has **not** passed guild's membership screening requirements"),
     )
-    guild_avatar: "Asset" = field(default=None, metadata=docs("The user's guild avatar"))
-    communication_disabled_until: Optional["Timestamp"] = field(
+    guild_avatar: "Asset" = attrs.field(repr=False, default=None, metadata=docs("The user's guild avatar"))
+    communication_disabled_until: Optional["Timestamp"] = attrs.field(
         default=None,
         converter=optional_c(timestamp_converter),
         metadata=docs("When a member's timeout will expire, `None` or a time in the past if the user is not timed out"),
     )
 
-    _guild_id: "Snowflake_Type" = field(repr=True, metadata=docs("The ID of the guild"))
-    _role_ids: List["Snowflake_Type"] = field(
-        factory=list, converter=list_converter(to_snowflake), metadata=docs("The roles IDs this user has")
+    _guild_id: "Snowflake_Type" = attrs.field(repr=True, metadata=docs("The ID of the guild"))
+    _role_ids: List["Snowflake_Type"] = attrs.field(
+        repr=False, factory=list, converter=list_converter(to_snowflake), metadata=docs("The roles IDs this user has")
     )
 
     @classmethod
@@ -274,7 +294,7 @@ class Member(DiscordObject, _SendDMMixin):
                     client, f"guilds/{data['guild_id']}/users/{data['id']}/avatars/{{}}", data.pop("avatar", None)
                 )
             except Exception as e:
-                logger.warning(
+                client.logger.warning(
                     f"[DEBUG NEEDED - REPORT THIS] Incomplete dictionary has been passed to member object: {e}"
                 )
                 raise

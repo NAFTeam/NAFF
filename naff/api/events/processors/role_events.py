@@ -2,7 +2,6 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
-
 from naff.client.const import MISSING
 from ._template import EventMixinTemplate, Processor
 

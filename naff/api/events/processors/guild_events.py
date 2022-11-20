@@ -2,10 +2,6 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
-
-from naff.client.const import MISSING
-from ._template import EventMixinTemplate, Processor
-from naff.models import GuildIntegration, Sticker, to_snowflake
 from naff.api.events.discord import (
     GuildEmojisUpdate,
     IntegrationCreate,
@@ -16,6 +12,9 @@ from naff.api.events.discord import (
     GuildStickersUpdate,
     WebhooksUpdate,
 )
+from naff.client.const import MISSING
+from naff.models import GuildIntegration, Sticker, to_snowflake
+from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
@@ -33,6 +32,11 @@ class GuildEvents(EventMixinTemplate):
             event: raw guild create event
 
         """
+        new_guild: bool = True
+        if self.cache.get_guild(event.data["id"]):
+            # guild already cached, most likely an unavailable guild coming back online
+            new_guild = False
+
         guild = self.cache.place_guild_data(event.data)
 
         self._user._guild_ids.add(to_snowflake(event.data.get("id")))  # noqa : w0212
@@ -43,7 +47,10 @@ class GuildEvents(EventMixinTemplate):
             # delays events until chunking has completed
             await guild.chunk()
 
-        self.dispatch(events.GuildJoin(guild))
+        if new_guild:
+            self.dispatch(events.GuildJoin(guild.id))
+        else:
+            self.dispatch(events.GuildAvailable(guild.id))
 
     @Processor.define()
     async def _on_raw_guild_update(self, event: "RawGatewayEvent") -> None:
@@ -54,12 +61,7 @@ class GuildEvents(EventMixinTemplate):
     async def _on_raw_guild_delete(self, event: "RawGatewayEvent") -> None:
         guild_id = int(event.data.get("id"))
         if event.data.get("unavailable", False):
-            self.dispatch(
-                events.GuildUnavailable(
-                    guild_id,
-                    self.cache.get_guild(guild_id) or MISSING,
-                )
-            )
+            self.dispatch(events.GuildUnavailable(guild_id))
         else:
             # noinspection PyProtectedMember
             if guild_id in self._user._guild_ids:
@@ -70,12 +72,7 @@ class GuildEvents(EventMixinTemplate):
             guild = self.cache.get_guild(guild_id)
             self.cache.delete_guild(guild_id)
 
-            self.dispatch(
-                events.GuildLeft(
-                    guild_id,
-                    guild or MISSING,
-                )
-            )
+            self.dispatch(events.GuildLeft(guild))
 
     @Processor.define()
     async def _on_raw_guild_ban_add(self, event: "RawGatewayEvent") -> None:

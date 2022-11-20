@@ -2,10 +2,8 @@ import copy
 from typing import TYPE_CHECKING
 
 import naff.api.events as events
-
-from naff.client.const import logger
-from ._template import EventMixinTemplate, Processor
 from naff.models import to_snowflake, BaseMessage
+from ._template import EventMixinTemplate, Processor
 
 if TYPE_CHECKING:
     from naff.api.events import RawGatewayEvent
@@ -55,7 +53,7 @@ class MessageEvents(EventMixinTemplate):
         if not message:
             message = BaseMessage.from_dict(event.data, self)
         self.cache.delete_message(event.data["channel_id"], event.data["id"])
-        logger.debug(f"Dispatching Event: {event.resolved_name}")
+        self.logger.debug(f"Dispatching Event: {event.resolved_name}")
         self.dispatch(events.MessageDelete(message))
 
     @Processor.define()
