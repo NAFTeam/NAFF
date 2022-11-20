@@ -47,7 +47,7 @@ async def user_context(ctx):
 
 bot.start("TOKEN")
 ```
-For more examples check out [our examples repo](https://github.com/NAFTeam/examples) or the [docs](https://naff-docs.readthedocs.io/). You also can [explore projects with the `NAFF` topic](https://github.com/topics/naff) or older [`dis-snek` topic](https://github.com/topics/dis-snek).
+For more examples check out [our examples repo](https://github.com/NAFTeam/examples) or the [docs](https://naff.info). You also can [explore projects with the `NAFF` topic](https://github.com/topics/naff) or older [`dis-snek` topic](https://github.com/topics/dis-snek).
 
 If you get stuck join our [Discord server](https://discord.gg/naff).
 
