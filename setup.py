@@ -61,7 +61,7 @@ setup(
         "Typing :: Typed",
     ],
     project_urls={
-        "Discord": "https://discord.gg/naff",
+        "Discord": "https://discord.gg/hpfNhH8BsY",
         "Documentation": "https://naff-docs.readthedocs.io/en/latest/",
     },
     extras_require=extras_require,

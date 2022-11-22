@@ -3,7 +3,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![black-formatted](https://img.shields.io/github/workflow/status/NAFTeam/NAFF/black-action/master?label=Black%20Format&logo=github)](https://github.com/NAFTeam/NAFF/actions/workflows/black.yml)
 [![CodeQL](https://img.shields.io/github/workflow/status/NAFTeam/NAFF/CodeQL/master?label=CodeQL&logo=Github)](https://github.com/NAFTeam/NAFF/actions/workflows/codeql-analysis.yml)
-[![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/naff)
+[![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/hpfNhH8BsY)
 [![Documentation Status](https://readthedocs.org/projects/naff-docs/badge/?version=latest)](https://naff-docs.readthedocs.io/en/latest/?version=latest)
 
 # What is this?
@@ -49,7 +49,7 @@ bot.start("TOKEN")
 ```
 For more examples check out [our examples repo](https://github.com/NAFTeam/examples) or the [docs](https://naff.info). You also can [explore projects with the `NAFF` topic](https://github.com/topics/naff) or older [`dis-snek` topic](https://github.com/topics/dis-snek).
 
-If you get stuck join our [Discord server](https://discord.gg/naff).
+If you get stuck join our [Discord server](https://discord.gg/hpfNhH8BsY).
 
 
 ## "Can I contribute to this project?"
@@ -57,5 +57,5 @@ Of course, we welcome all contributions to this library. Just ensure you follow 
 If youre stuck for things to contribute, check out our [GitHub Projects](https://github.com/orgs/NAFTeam/projects/1) for inspiration.
 
 ## Links:
-- Support Server: https://discord.gg/naff
+- Support Server: https://discord.gg/hpfNhH8BsY
 - Documentation:  https://naff-docs.readthedocs.io/en/latest/
