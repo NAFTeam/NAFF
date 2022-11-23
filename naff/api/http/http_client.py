@@ -358,7 +358,7 @@ class HTTPClient(
                             continue
 
                         if not 300 > response.status >= 200:
-                            await self._raise_exception(response, route, result)
+                            await self._raise_exception(response, route, result, kwargs)
 
                         self.logger.debug(
                             f"{route.endpoint} Received {response.status} :: [{lock.remaining}/{lock.limit} calls remaining]"
@@ -370,24 +370,27 @@ class HTTPClient(
                         continue
                     raise
 
-    async def _raise_exception(self, response, route, result) -> None:
-        self.logger.error(f"{route.method}::{route.url}: {response.status}")
+    async def _raise_exception(self, response, route, result, kwargs) -> None:
+        payload = kwargs.get("json")
+        data = kwargs.get("data")
+
+        self.logger.error(f"{route.method}::{route.endpoint}:  {data = } | {payload = } | {result = }")
 
         if response.status == 403:
-            raise Forbidden(response, response_data=result, route=route)
+            raise Forbidden(response, response_data=result, route=route, data=data, payload=payload)
         elif response.status == 404:
-            raise NotFound(response, response_data=result, route=route)
+            raise NotFound(response, response_data=result, route=route, kwargs=kwargs, data=data, payload=payload)
         elif response.status >= 500:
-            raise DiscordError(response, response_data=result, route=route)
+            raise DiscordError(response, response_data=result, route=route, kwargs=kwargs, data=data, payload=payload)
         else:
-            raise HTTPException(response, response_data=result, route=route)
+            raise HTTPException(response, response_data=result, route=route, kwargs=kwargs, data=data, payload=payload)
 
     async def request_cdn(self, url, asset) -> bytes:  # pyright: ignore [reportGeneralTypeIssues]
         self.logger.debug(f"{asset} requests {url} from CDN")
         async with self.__session.get(url) as response:
             if response.status == 200:
                 return await response.read()
-            await self._raise_exception(response, asset, await response_decode(response))
+            await self._raise_exception(response, asset, await response_decode(response), {})
 
     async def login(self, token: str) -> dict[str, Any]:
         """

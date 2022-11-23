@@ -102,17 +102,25 @@ class HTTPException(NaffException):
                 self.errors = data.get("errors", const.MISSING)
             else:
                 self.text = data
+        self.data = kwargs.get("data", const.MISSING)
+        self.payload = kwargs.get("payload", const.MISSING)
+
         super().__init__(f"{self.status}|{self.response.reason}: {f'({self.code}) ' if self.code else ''}{self.text}")
 
     def __str__(self) -> str:
+        if self.payload or self.data:
+            extra = f" || {f'payload = {self.payload}' if self.payload else ''} {f'data = {self.data}' if self.data else ''}"
+        else:
+            extra = ""
         if self.errors:
             try:
                 errors = self.search_for_message(self.errors)
             except (KeyError, ValueError, TypeError):
                 errors = [self.text]
-            out = f"HTTPException: {self.status}|{self.response.reason}: " + "\n".join(errors)
+
+            out = f"HTTPException: {self.status}|{self.response.reason}: " + "\n".join(errors) + extra
         else:
-            out = f"HTTPException: {self.status}|{self.response.reason} || {self.text}"
+            out = f"HTTPException: {self.status}|{self.response.reason} || {self.text}" + extra
         return out
 
     def __repr__(self) -> str:
