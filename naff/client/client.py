@@ -1752,90 +1752,114 @@ class Client(
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @Listener.create("message_create", is_default_listener=True)
-    async def _dispatch_prefixed_commands(self, event: MessageCreate) -> None:
+    @Listener.create("raw_message_create")
+    async def _dispatch_prefixed_commands(self, event: RawGatewayEvent) -> None:
         """Determine if a prefixed command is being triggered, and dispatch it."""
-        message = event.message
-
-        if not message.content:
+        # don't waste time processing this if there are no prefixed commands
+        if not self.prefixed_commands:
             return
 
-        if not message.author.bot:
-            prefixes: str | Iterable[str] = await self.generate_prefixes(self, message)
+        data = event.data
 
-            if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
-                # its easier to treat everything as if it may be an iterable
-                # rather than building a special case for this
-                prefixes = (prefixes,)  # type: ignore
+        # many bots will not have the message content intent, and so will not have content
+        # for most messages. since there's nothing for prefixed commands to work off of,
+        # we might as well not waste time
+        if not data.get("content"):
+            return
 
-            prefix_used = None
+        # webhooks and users labeled with the bot property are bots, and should be ignored
+        if data.get("webhook_id") or data["author"].get("bot", False):
+            return
 
-            for prefix in prefixes:
-                if prefix == MENTION_PREFIX:
-                    if mention := self._mention_reg.search(message.content):  # type: ignore
-                        prefix = mention.group()
+        # now, we've done the basic filtering out, but everything from here on out relies
+        # on a proper message object, so we do the same thing as the message create
+        # processor
+        message = self.cache.place_message_data(event.data)
+        if not message._guild_id and event.data.get("guild_id"):
+            message._guild_id = event.data["guild_id"]
+
+        if message._guild_id and not message.guild:
+            await self.cache.fetch_guild(message._guild_id)
+
+        if not message.channel:
+            await self.cache.fetch_channel(to_snowflake(message._channel_id))
+
+        # here starts the actual prefixed command parsing part
+        prefixes: str | Iterable[str] = await self.generate_prefixes(self, message)
+
+        if isinstance(prefixes, str) or prefixes == MENTION_PREFIX:
+            # its easier to treat everything as if it may be an iterable
+            # rather than building a special case for this
+            prefixes = (prefixes,)  # type: ignore
+
+        prefix_used = None
+
+        for prefix in prefixes:
+            if prefix == MENTION_PREFIX:
+                if mention := self._mention_reg.search(message.content):  # type: ignore
+                    prefix = mention.group()
+                else:
+                    continue
+
+            if message.content.startswith(prefix):
+                prefix_used = prefix
+                break
+
+        if not prefix_used:
+            return
+
+        context = await self.get_context(message)
+        context.prefix = prefix_used
+
+        # interestingly enough, we cannot count on ctx.invoke_target
+        # being correct as its hard to account for newlines and the like
+        # with the way we get subcommands here
+        # we'll have to reconstruct it by getting the content_parameters
+        # then removing the prefix and the parameters from the message
+        # content
+        content_parameters = message.content.removeprefix(prefix_used)  # type: ignore
+        command: "Client | PrefixedCommand" = self  # yes, this is a hack
+
+        while True:
+            first_word: str = get_first_word(content_parameters)  # type: ignore
+            if isinstance(command, PrefixedCommand):
+                new_command = command.subcommands.get(first_word)
+            else:
+                new_command = command.prefixed_commands.get(first_word)
+            if not new_command or not new_command.enabled:
+                break
+
+            command = new_command
+            content_parameters = content_parameters.removeprefix(first_word).strip()
+
+            if command.subcommands and command.hierarchical_checking:
+                try:
+                    await new_command._can_run(context)  # will error out if we can't run this command
+                except Exception as e:
+                    if new_command.error_callback:
+                        await new_command.error_callback(e, context)
+                    elif new_command.extension and new_command.extension.extension_error:
+                        await new_command.extension.extension_error(e, context)
                     else:
-                        continue
-
-                if message.content.startswith(prefix):
-                    prefix_used = prefix
-                    break
-
-            if prefix_used:
-                context = await self.get_context(message)
-                context.prefix = prefix_used
-
-                # interestingly enough, we cannot count on ctx.invoke_target
-                # being correct as its hard to account for newlines and the like
-                # with the way we get subcommands here
-                # we'll have to reconstruct it by getting the content_parameters
-                # then removing the prefix and the parameters from the message
-                # content
-                content_parameters = message.content.removeprefix(prefix_used)  # type: ignore
-                command = self  # yes, this is a hack
-
-                while True:
-                    first_word: str = get_first_word(content_parameters)  # type: ignore
-                    if isinstance(command, PrefixedCommand):
-                        new_command = command.subcommands.get(first_word)
-                    else:
-                        new_command = command.prefixed_commands.get(first_word)
-                    if not new_command or not new_command.enabled:
-                        break
-
-                    command = new_command
-                    content_parameters = content_parameters.removeprefix(first_word).strip()
-
-                    if command.subcommands and command.hierarchical_checking:
-                        try:
-                            await new_command._can_run(context)  # will error out if we can't run this command
-                        except Exception as e:
-                            if new_command.error_callback:
-                                await new_command.error_callback(e, context)
-                            elif new_command.extension and new_command.extension.extension_error:
-                                await new_command.extension.extension_error(e, context)
-                            else:
-                                self.dispatch(events.CommandError(ctx=context, error=e))
-                            return
-
-                if not isinstance(command, PrefixedCommand):
-                    command = None
-
-                if command and command.enabled:
-                    # yeah, this looks ugly
-                    context.command = command
-                    context.invoke_target = message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
-                    context.args = get_args(context.content_parameters)
-                    try:
-                        if self.pre_run_callback:
-                            await self.pre_run_callback(context)
-                        await self._run_prefixed_command(command, context)
-                        if self.post_run_callback:
-                            await self.post_run_callback(context)
-                    except Exception as e:
                         self.dispatch(events.CommandError(ctx=context, error=e))
-                    finally:
-                        self.dispatch(events.CommandCompletion(ctx=context))
+                    return
+
+        if not isinstance(command, PrefixedCommand) or not command.enabled:
+            return
+
+        context.command = command
+        context.invoke_target = message.content.removeprefix(prefix_used).removesuffix(content_parameters).strip()  # type: ignore
+        context.args = get_args(context.content_parameters)
+        try:
+            if self.pre_run_callback:
+                await self.pre_run_callback(context)
+            await self._run_prefixed_command(command, context)
+            if self.post_run_callback:
+                await self.post_run_callback(context)
+        except Exception as e:
+            self.dispatch(events.CommandError(ctx=context, error=e))
+        finally:
+            self.dispatch(events.CommandCompletion(ctx=context))
 
     @Listener.create("disconnect", is_default_listener=True)
     async def _disconnect(self) -> None:
