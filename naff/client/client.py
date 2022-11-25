@@ -33,7 +33,7 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.api.events import BaseEvent, Component, RawGatewayEvent, processors
+from naff.api.events import BaseEvent, Component, RawGatewayEvent, processors, MessageCreate
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
@@ -1772,17 +1772,33 @@ class Client(
             return
 
         # now, we've done the basic filtering out, but everything from here on out relies
-        # on a proper message object, so we do the same thing as the message create
-        # processor
-        message = self.cache.place_message_data(event.data)
-        if not message._guild_id and event.data.get("guild_id"):
-            message._guild_id = event.data["guild_id"]
+        # on a proper message object, so now we either hope its already in the cache or wait
+        # on the processor
 
-        if message._guild_id and not message.guild:
-            await self.cache.fetch_guild(message._guild_id)
+        # first, let's check the cache...
+        message = self.cache.get_message(int(data["channel_id"]), int(data["id"]))
 
-        if not message.channel:
-            await self.cache.fetch_channel(to_snowflake(message._channel_id))
+        # this huge if statement basically checks if the message hasn't been fully processed by
+        # the processor yet, which would mean that these fields aren't fully filled
+        if message and (
+            not message._guild_id
+            and event.data.get("guild_id")
+            or message._guild_id
+            and not message.guild
+            or not message.channel
+        ):
+            message = None
+
+        # if we didn't get a message, then we know we should wait for the message create event
+        if not message:
+            try:
+                # i think 10 seconds is a very generous timeout limit
+                event: MessageCreate = await self.wait_for(
+                    MessageCreate, checks=lambda e: int(e.message.id) == int(data["id"]), timeout=10
+                )
+                message = event.message
+            except asyncio.TimeoutError:
+                return
 
         # here starts the actual prefixed command parsing part
         prefixes: str | Iterable[str] = await self.generate_prefixes(self, message)
