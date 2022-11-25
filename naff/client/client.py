@@ -1752,7 +1752,7 @@ class Client(
         else:
             raise NotImplementedError(f"Unknown Interaction Received: {interaction_data['type']}")
 
-    @Listener.create("raw_message_create")
+    @Listener.create("raw_message_create", is_default_listener=True)
     async def _dispatch_prefixed_commands(self, event: RawGatewayEvent) -> None:
         """Determine if a prefixed command is being triggered, and dispatch it."""
         # don't waste time processing this if there are no prefixed commands
