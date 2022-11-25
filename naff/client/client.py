@@ -1781,10 +1781,8 @@ class Client(
         # this huge if statement basically checks if the message hasn't been fully processed by
         # the processor yet, which would mean that these fields aren't fully filled
         if message and (
-            not message._guild_id
-            and event.data.get("guild_id")
-            or message._guild_id
-            and not message.guild
+            (not message._guild_id and event.data.get("guild_id"))
+            or (message._guild_id and not message.guild)
             or not message.channel
         ):
             message = None
