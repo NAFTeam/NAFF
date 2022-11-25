@@ -33,7 +33,7 @@ from discord_typings.interactions.receiving import (
 
 import naff.api.events as events
 import naff.client.const as constants
-from naff.api.events import MessageCreate, RawGatewayEvent, processors, Component, BaseEvent
+from naff.api.events import BaseEvent, Component, RawGatewayEvent, processors
 from naff.api.gateway.gateway import GatewayClient
 from naff.api.gateway.state import ConnectionState
 from naff.api.http.http_client import HTTPClient
