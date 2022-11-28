@@ -1790,9 +1790,9 @@ class Client(
         # if we didn't get a message, then we know we should wait for the message create event
         if not message:
             try:
-                # i think 10 seconds is a very generous timeout limit
+                # i think 2 seconds is a very generous timeout limit
                 event: MessageCreate = await self.wait_for(
-                    MessageCreate, checks=lambda e: int(e.message.id) == int(data["id"]), timeout=10
+                    MessageCreate, checks=lambda e: int(e.message.id) == int(data["id"]), timeout=2
                 )
                 message = event.message
             except asyncio.TimeoutError:
