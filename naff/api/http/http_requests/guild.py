@@ -386,7 +386,7 @@ class GuildRequests(CanRequest):
             List of guild roles
 
         """
-        payload: PAYLOAD_TYPE = {"id": int(role_id), "position": position}
+        payload: PAYLOAD_TYPE = [{"id": int(role_id), "position": position}]
         result = await self.request(Route("PATCH", f"/guilds/{int(guild_id)}/roles"), payload=payload, reason=reason)
         return cast(list[discord_typings.RoleData], result)
 
