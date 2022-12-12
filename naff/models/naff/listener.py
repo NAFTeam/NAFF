@@ -100,7 +100,7 @@ class Listener(CallbackObject):
 def listen(
     event_name: Absent[str | BaseEvent] = MISSING,
     *,
-    delay_until_ready: bool = True,
+    delay_until_ready: bool = False,
     is_default_listener: bool = False,
     disable_default_listeners: bool = False,
 ) -> Callable[[Callable[..., Coroutine]], Listener]:
