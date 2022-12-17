@@ -57,6 +57,7 @@ __all__ = (
     "GuildForum",
     "GuildNewsThread",
     "GuildPublicThread",
+    "GuildForumPost",
     "GuildPrivateThread",
     "GuildVoice",
     "GuildStageVoice",
@@ -2645,17 +2646,35 @@ TYPE_ALL_CHANNEL = Union[
 TYPE_DM_CHANNEL = Union[DM, DMGroup]
 
 
-TYPE_GUILD_CHANNEL = Union[GuildCategory, GuildNews, GuildText, GuildVoice, GuildStageVoice, GuildForum]
+TYPE_GUILD_CHANNEL = Union[
+    GuildCategory,
+    GuildNews,
+    GuildText,
+    GuildVoice,
+    GuildStageVoice,
+    GuildForum,
+    GuildPublicThread,
+    GuildForumPost,
+    GuildPrivateThread,
+]
 
 
-TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildPrivateThread]
+TYPE_THREAD_CHANNEL = Union[GuildNewsThread, GuildPublicThread, GuildForumPost, GuildPrivateThread]
 
 
 TYPE_VOICE_CHANNEL = Union[GuildVoice, GuildStageVoice]
 
 
 TYPE_MESSAGEABLE_CHANNEL = Union[
-    DM, DMGroup, GuildNews, GuildText, GuildPublicThread, GuildPrivateThread, GuildNewsThread, GuildVoice
+    DM,
+    DMGroup,
+    GuildNews,
+    GuildText,
+    GuildPublicThread,
+    GuildForumPost,
+    GuildPrivateThread,
+    GuildNewsThread,
+    GuildVoice,
 ]
 
 
