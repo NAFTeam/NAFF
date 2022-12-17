@@ -1717,6 +1717,7 @@ class GuildText(GuildChannel, MessageableMixin, InvitableMixin, ThreadableMixin,
             topic=topic,
             type=channel_type,
             default_auto_archive_duration=default_auto_archive_duration,
+            rate_limit_per_user=rate_limit_per_user,
             reason=reason,
             **kwargs,
         )
