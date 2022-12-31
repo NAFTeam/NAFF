@@ -27,7 +27,6 @@ class MemberEvents(EventMixinTemplate):
         member = self.cache.get_member(g_id, user.id)
 
         self.cache.delete_member(g_id, user.id)
-        guild = self.cache.get_guild(g_id)
         if guild := self.cache.get_guild(g_id):
             guild.member_count -= 1
 
