@@ -1,7 +1,7 @@
 [![PyPI](https://img.shields.io/pypi/v/naff)](https://pypi.org/project/naff/)
 [![Downloads](https://static.pepy.tech/personalized-badge/dis-snek?period=total&units=abbreviation&left_color=grey&right_color=green&left_text=pip%20installs)](https://pepy.tech/project/dis-snek)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![pre-commit](https://img.shields.io/github/actions/workflow/status/NAFTeam/NAFF/precommit.yml?branch=master&label=pre-commit&logo=github)](https://github.com/NAFTeam/NAFF/actions/workflows/black.yml)
+[![pre-commit](https://img.shields.io/github/actions/workflow/status/NAFTeam/NAFF/precommit.yml?branch=master&label=pre-commit&logo=github)](https://github.com/NAFTeam/NAFF/actions/workflows/precommit.yml)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/NAFTeam/NAFF/codeql-analysis.yml?branch=master&label=CodeQL&logo=Github)](https://github.com/NAFTeam/NAFF/actions/workflows/codeql-analysis.yml)
 [![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/hpfNhH8BsY)
 [![Documentation Status](https://readthedocs.org/projects/naff-docs/badge/?version=latest)](https://naff-docs.readthedocs.io/en/latest/?version=latest)
