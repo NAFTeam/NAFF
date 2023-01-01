@@ -63,7 +63,7 @@ class SnowflakeObject:
         return self.id == other
 
     def __ne__(self, other: "SnowflakeObject") -> bool:
-        return self.id != other.id
+        return not self.__eq__(other)
 
     def __hash__(self) -> int:
         return self.id << 32
