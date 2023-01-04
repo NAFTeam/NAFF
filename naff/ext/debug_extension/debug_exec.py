@@ -124,8 +124,8 @@ class DebugExec(Extension):
         # prevent token leak
         result = result.replace(self.bot.http.token, "[REDACTED TOKEN]")
 
-        if len(result) <= 2000:
-            return await ctx.send(f"```py\n{result}```")
+        if len(cmd_result := f"```py\n{result}```") <= 2000:
+            return await ctx.send(cmd_result)
 
         else:
             paginator = Paginator.create_from_string(self.bot, result, prefix="```py", suffix="```", page_size=4000)
