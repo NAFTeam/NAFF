@@ -9,7 +9,7 @@ authors = [
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 aiohttp = "^3.8.3"
-attrs = "^21.4.0"
+attrs = ">=22.1.0"
 mypy = ">0.930"
 discord-typings = "^0.5.1"
 tomli = "^2.0.1"
