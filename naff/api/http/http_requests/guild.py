@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, cast, Mapping, Any
+from typing import TYPE_CHECKING, List, cast, Mapping, Any
 
 import discord_typings
 
@@ -371,14 +371,19 @@ class GuildRequests(CanRequest):
         return cast(discord_typings.RoleData, result)
 
     async def modify_guild_role_positions(
-        self, guild_id: "Snowflake_Type", role_id: "Snowflake_Type", position: int, reason: str | None = None
+        self,
+        guild_id: "Snowflake_Type",
+        position_changes: List[dict["Snowflake_Type", int]],
+        reason: str | None = None,
     ) -> list[discord_typings.RoleData]:
         """
         Modify the position of a role in the guild.
 
         Args:
             guild_id: The ID of the guild
-            role_id: The ID of the role to move
+            position_changes: A list of dicts representing the roles to move and their new positions
+
+            ``{"id": role_id, "position": new_position}``
             position: The new position of this role in the hierarchy
             reason: The reason for this action
 
@@ -386,7 +391,9 @@ class GuildRequests(CanRequest):
             List of guild roles
 
         """
-        payload: PAYLOAD_TYPE = {"id": int(role_id), "position": position}
+        payload: PAYLOAD_TYPE = [
+            {"id": int(role["id"]), "position": int(role["position"])} for role in position_changes
+        ]
         result = await self.request(Route("PATCH", f"/guilds/{int(guild_id)}/roles"), payload=payload, reason=reason)
         return cast(list[discord_typings.RoleData], result)
 

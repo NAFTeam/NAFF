@@ -1124,6 +1124,7 @@ def _compare_options(local_opt_list: dict, remote_opt_list: dict) -> bool:
         "autocomplete": ("autocomplete", False),
         "name_localized": ("name_localizations", None),
         "description_localized": ("description_localizations", None),
+        "channel_types": ("channel_types", None),
         "choices": ("choices", []),
         "max_value": ("max_value", None),
         "min_value": ("min_value", None),

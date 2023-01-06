@@ -203,3 +203,20 @@ class Role(DiscordObject):
         r_data = dict(r_data)  # to convert typed dict to regular dict
         r_data["guild_id"] = self._guild_id
         return self.from_dict(r_data, self._client)
+
+    async def move(self, position: int, reason: str | Missing = MISSING) -> "Role":
+        """
+        Move this role to a new position.
+
+        Args:
+            position: The new position of the role
+            reason: An optional reason for this move
+
+        Returns:
+            The role object
+
+        """
+        await self._client.http.modify_guild_role_positions(
+            self._guild_id, [{"id": self.id, "position": position}], reason
+        )
+        return self
