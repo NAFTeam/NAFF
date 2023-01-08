@@ -224,6 +224,7 @@ class Role(DiscordObject):
     # START: fail if not all permissions are manageable
     async def clone(self) -> "Role":
         return await self.guild.create_role(**self.to_dict())
+
     # END: fail if not all permissions are manageable
 
     # START: only set manageable permissions
@@ -239,7 +240,9 @@ class Role(DiscordObject):
             mentionable=self.mentionable,
             icon=self.icon,
         )
-        return ClonedRole.from_dict(data=role.to_dict() | {"missing_permissions": missing_permissions}, client=self._client)
+        return ClonedRole.from_dict(
+            data=role.to_dict() | {"missing_permissions": missing_permissions}, client=self._client
+        )
 
 
 @attrs.define(eq=False, order=False, hash=False, kw_only=True)
