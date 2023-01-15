@@ -85,7 +85,25 @@ class SendMixin:
             **kwargs,
         )
 
-        message_data = await self._send_http_request(message_payload, files=files or file)
+        files = files or file
+        if not isinstance(files, list):
+            files = [files]
+
+        if files:
+            attachments = []
+            for i, file in enumerate(files):
+                if isinstance(file, models.File):
+                    # NOTE: This adds the ability to send files with a description
+                    attachments.append(
+                        {
+                            "id": i,
+                            "description": file.description,
+                            "filename": file.file_name,
+                        }
+                    )
+            message_payload.update({"attachments": attachments})
+
+        message_data = await self._send_http_request(message_payload, files=files)
         if message_data:
             message = self._client.cache.place_message_data(message_data)
             if delete_after:
