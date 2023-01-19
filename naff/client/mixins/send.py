@@ -86,10 +86,10 @@ class SendMixin:
         )
 
         files = files or file
-        if not isinstance(files, list):
-            files = [files]
-
         if files:
+            if not isinstance(files, list):
+                files = [files]
+
             attachments = []
             for i, file in enumerate(files):
                 if isinstance(file, models.File):
