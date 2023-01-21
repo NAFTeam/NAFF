@@ -404,7 +404,7 @@ class InteractionContext(_BaseInteractionContext, SendMixin):
             tts: Should this message use Text To Speech.
             suppress_embeds: Should embeds be suppressed on this send
             flags: Message flags to apply.
-            ephemeral bool: Should this message be sent as ephemeral (hidden)
+            ephemeral: Should this message be sent as ephemeral (hidden)
 
         Returns:
             New message object that was sent.
