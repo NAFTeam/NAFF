@@ -45,6 +45,7 @@ __all__ = (
     "ForeignWebhookException",
     "EventLocationNotProvided",
     "VoiceAlreadyConnected",
+    "VoiceNotConnected",
     "VoiceConnectionTimeout",
 )
 
