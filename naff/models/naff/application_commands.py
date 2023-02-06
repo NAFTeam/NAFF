@@ -574,7 +574,6 @@ class SlashCommand(InteractionCommand):
         return wrapper
 
     def group(self, name: str = None, description: str = "No Description Set") -> "SlashCommand":
-
         return SlashCommand(
             name=self.name,
             description=self.description,
