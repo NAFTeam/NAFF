@@ -575,7 +575,7 @@ class PrefixedCommand(BaseCommand):
         hidden: bool = False,
         ignore_extra: bool = True,
         hierarchical_checking: bool = True,
-    ) -> (Callable[..., "PrefixedCommand"]):
+    ) -> Callable[..., "PrefixedCommand"]:
         """
         A decorator to declare a subcommand for a prefixed command.
 

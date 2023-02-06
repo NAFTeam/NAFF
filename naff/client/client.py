@@ -1326,7 +1326,6 @@ class Client(
         """Gathers commands from __main__ and self."""
 
         def process(_cmds) -> None:
-
             for func in _cmds:
                 if isinstance(func, ModalCommand):
                     self.add_modal_callback(func)
@@ -1455,7 +1454,6 @@ class Client(
         local_cmds_json = application_commands_to_dict(self.interactions, self)
 
         async def sync_scope(cmd_scope) -> None:
-
             sync_needed_flag = False  # a flag to force this scope to synchronise
             sync_payload = []  # the payload to be pushed to discord
 
