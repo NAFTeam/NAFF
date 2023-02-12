@@ -254,7 +254,9 @@ class Role(DiscordObject):
                 **kwargs,
             )
             return ClonedRole.from_dict(
-                data=role.to_dict() | {"missing_permissions": missing_permissions, "guild_id": self._guild_id, "color": self.color.value}, client=self._client
+                data=role.to_dict()
+                | {"missing_permissions": missing_permissions, "guild_id": self._guild_id, "color": self.color.value},
+                client=self._client,
             )
 
 
