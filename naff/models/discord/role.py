@@ -220,3 +220,46 @@ class Role(DiscordObject):
             self._guild_id, [{"id": self.id, "position": position}], reason
         )
         return self
+
+    async def clone(self, *, force: bool = True) -> "Role | ClonedRole":
+        """
+        Clone an existing role.
+
+        Args:
+            force: Whether all permissions should be forced or not
+
+        Returns:
+            A role object if force is set to `True`, otherwise a ClonedRole object
+
+        """
+        kwargs = {
+            "name": self.name,
+            "color": self.color,
+            "hoist": self.hoist,
+            "mentionable": self.mentionable,
+            "icon": self.icon,
+        }
+        if force:
+            return await self.guild.create_role(
+                permissions=self.permissions,
+                **kwargs,
+            )
+
+        else:
+            cloneable_permissions = Permissions(self.permissions.value & self.guild.me.guild_permissions.value)
+            missing_permissions = Permissions(self.permissions.value & ~self.guild.me.guild_permissions.value)
+
+            role = await self.guild.create_role(
+                permissions=cloneable_permissions,
+                **kwargs,
+            )
+            return ClonedRole.from_dict(
+                data=role.to_dict()
+                | {"missing_permissions": missing_permissions, "guild_id": self._guild_id, "color": self.color.value},
+                client=self._client,
+            )
+
+
+@attrs.define(eq=False, order=False, hash=False, kw_only=True)
+class ClonedRole(Role):
+    missing_permissions: "Permissions" = attrs.field(repr=False, converter=Permissions)
