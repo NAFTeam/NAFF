@@ -6,6 +6,10 @@
 [![Discord](https://img.shields.io/discord/870046872864165888?color=%235865F2&label=Server&logo=discord&logoColor=%235865F2)](https://discord.gg/hpfNhH8BsY)
 [![Documentation Status](https://readthedocs.org/projects/naff-docs/badge/?version=latest)](https://naff-docs.readthedocs.io/en/latest/?version=latest)
 
+# Depreciation Notice
+Please note the naff package is now deprecated. Please migrate to interactions.py, where future development will continue. https://github.com/interactions-py/interactions.py
+Interactions.py V5 is a combined release between interactions.py and naff. Migration is easy, and should only take an hour at most.
+
 # What is this?
 This is `NAFF`, a python API wrapper for Discord.
 NAFF is intended to be fast, easy to use, and easily modified to suit your needs.

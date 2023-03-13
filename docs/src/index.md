@@ -5,7 +5,9 @@ hide:
   - feedback
 ---
 !!! danger "Remember"
-    These docs are not completed. Please do not panic if something is missing or inaccurate.
+    Please note the naff package is now deprecated. Please migrate to [interactions.py](https://github.com/interactions-py/interactions.py), where future development will continue. 
+    Interactions.py V5 is a combined release between interactions.py and naff. Migration is easy, and should only take an hour at most.
+
 
 We hope this documentation is helpful for you, but don't just ++ctrl+c++ and ++ctrl+v++.
 

@@ -9,7 +9,7 @@ site_url: https://naff.info/
 theme:
   name: material
   favicon: images/favicon.png
-  #  custom_dir: docs/overrides
+  custom_dir: docs/overrides
   features:
     - header.autohide
     - navigation.instant
@@ -124,9 +124,9 @@ plugins:
   - minify:
       minify_html: true
   # keep these at the bottom of the plugins list
-  - privacy:
-      externals: bundle
-      enabled: !ENV [ DEPLOY, False ]
+#  - privacy:
+#      externals: bundle
+#      enabled: !ENV [ DEPLOY, False ]
   - offline:
       enabled: !ENV [ DEPLOY, False ]
 
